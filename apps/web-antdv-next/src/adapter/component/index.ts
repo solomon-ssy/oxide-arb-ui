@@ -741,14 +741,14 @@ async function initComponentAdapter() {
     Rate,
     RichEditor: withDefaultPlaceholder(VbenTiptap, 'input', {
       imageUpload: {
-        upload: (file: any, onProgress: any) => {
+        upload: (file: File, onProgress?: (percent: number) => void) => {
           return new Promise((resolve, reject) => {
             upload_file({
               file,
-              onProgress({ percent }) {
+              onProgress({ percent }: { percent: number }) {
                 onProgress?.(percent);
               },
-              onSuccess(response) {
+              onSuccess(response: { data?: { url?: string }; url?: string }) {
                 // 从响应中提取图片URL
                 resolve(response?.data?.url ?? response?.url ?? '');
               },

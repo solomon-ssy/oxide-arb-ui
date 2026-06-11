@@ -1,17 +1,16 @@
 {
-  "title": "治理确认",
-  "field": {
+  "modal": {
     "actingRole": "执行角色",
-    "actingRolePlaceholder": "选择本次操作使用的角色",
-    "reason": "操作原因",
-    "reasonPlaceholder": "请输入操作原因（至少 {min} 个字符）",
+    "actingRoleTip": "选择本次治理动作所代表的角色",
     "confirmWord": "确认词",
-    "confirmWordPlaceholder": "请输入 {word} 以确认操作"
+    "confirmWordPlaceholder": "请输入确认词以继续",
+    "confirmWordTip": "输入「{word}」以确认此高风险操作",
+    "reason": "原因",
+    "reasonPlaceholder": "请说明执行此操作的原因（至少 4 个字符）",
+    "reasonRequired": "请填写原因（至少 4 个字符）",
+    "summary": "操作摘要"
   },
   "error": {
-    "noActingRole": "当前账号没有可用角色，无法执行治理操作",
-    "actingRoleRequired": "请选择执行角色",
-    "reasonTooShort": "操作原因至少需要 {min} 个字符",
-    "confirmWordMismatch": "确认词不匹配，请输入 {word}"
+    "actingRoleForbidden": "所选执行角色无权执行此操作"
   }
 }

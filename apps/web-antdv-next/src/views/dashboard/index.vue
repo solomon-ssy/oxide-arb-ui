@@ -1,15 +1,9 @@
 <script lang="ts" setup>
-import { Fallback } from '@vben/common-ui';
+import PagePlaceholder from '#/shared/components/page-placeholder.vue';
 
-import { $t } from '#/locales';
-
-defineOptions({ name: 'DashboardPage' });
+defineOptions({ name: 'DashboardOverview' });
 </script>
 
 <template>
-  <Fallback
-    :description="$t('page.common.underConstruction')"
-    :title="$t('page.menu.dashboard')"
-    status="coming-soon"
-  />
+  <PagePlaceholder />
 </template>

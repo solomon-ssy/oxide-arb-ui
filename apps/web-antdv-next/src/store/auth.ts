@@ -1,4 +1,10 @@
-import type { Recordable, UserInfo } from '@vben/types';
+import type {
+  MenuTreeNode,
+  MeResponse,
+  Recordable,
+  RoleView,
+  UserInfo,
+} from '@vben/types';
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -10,7 +16,7 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'antdv-next';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import { getMeApi, loginApi, logoutApi, mapMeToUserInfo } from '#/api';
 import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -19,74 +25,85 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter();
 
   const loginLoading = ref(false);
+  const cachedMenus = ref<MenuTreeNode[] | null>(null);
+  const meRoles = ref<RoleView[]>([]);
 
-  /**
-   * 异步处理登录操作
-   * Asynchronously handle the login process
-   * @param params 登录表单数据
-   */
+  async function applyMeResponse(me: MeResponse) {
+    const userInfo = mapMeToUserInfo(me);
+    userStore.setUserInfo(userInfo);
+    cachedMenus.value = me.menus;
+    meRoles.value = me.roles;
+    return userInfo;
+  }
+
+  function clearSessionCredentials() {
+    accessStore.setAccessToken(null);
+    accessStore.setRefreshToken(null);
+    cachedMenus.value = null;
+    meRoles.value = [];
+  }
+
   async function authLogin(
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
-  ) {
-    // 异步处理用户登录操作并获取 accessToken
-    let userInfo: null | UserInfo = null;
+  ): Promise<{ userInfo: null | UserInfo }> {
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      const tokens = await loginApi({
+        password: String(params.password ?? ''),
+        username: String(params.username ?? ''),
+      });
 
-      // 如果成功获取到 accessToken
-      if (accessToken) {
-        accessStore.setAccessToken(accessToken);
+      accessStore.setAccessToken(tokens.access_token);
+      accessStore.setRefreshToken(tokens.refresh_token);
 
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
-        ]);
-
-        userInfo = fetchUserInfoResult;
-
-        userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
-
-        if (accessStore.loginExpired) {
-          accessStore.setLoginExpired(false);
-        } else {
-          onSuccess
-            ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
-        }
-
-        if (userInfo?.realName) {
-          notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
-            duration: 3,
-            title: $t('authentication.loginSuccess'),
-          });
-        }
+      let userInfo: UserInfo;
+      try {
+        userInfo = await applyMeResponse(await getMeApi());
+      } catch (error) {
+        clearSessionCredentials();
+        throw error;
       }
+
+      if (accessStore.loginExpired) {
+        accessStore.setLoginExpired(false);
+      } else {
+        onSuccess
+          ? await onSuccess?.()
+          : await router.push(
+              userInfo.homePath || preferences.app.defaultHomePath,
+            );
+      }
+
+      if (userInfo.realName) {
+        notification.success({
+          description: `${$t('authentication.loginSuccessDesc')}:${userInfo.realName}`,
+          duration: 3,
+          title: $t('authentication.loginSuccess'),
+        });
+      }
+
+      return { userInfo };
     } finally {
       loginLoading.value = false;
     }
-
-    return {
-      userInfo,
-    };
   }
 
   async function logout(redirect: boolean = true) {
     try {
-      await logoutApi();
+      await logoutApi(
+        { refresh_token: accessStore.refreshToken ?? undefined },
+        accessStore.accessToken,
+      );
     } catch {
-      // 不做任何处理
+      // Best-effort server revoke; always clear local session.
     }
+
+    cachedMenus.value = null;
+    meRoles.value = [];
     resetAllStores();
     accessStore.setLoginExpired(false);
 
-    // 回登录页带上当前路由地址
     await router.replace({
       path: LOGIN_PATH,
       query: redirect
@@ -98,20 +115,24 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchUserInfo() {
-    const userInfo = await getUserInfoApi();
-    userStore.setUserInfo(userInfo);
-    return userInfo;
+    const me = await getMeApi();
+    return applyMeResponse(me);
   }
 
   function $reset() {
     loginLoading.value = false;
+    cachedMenus.value = null;
+    meRoles.value = [];
   }
 
   return {
     $reset,
+    applyMeResponse,
     authLogin,
+    cachedMenus,
     fetchUserInfo,
     loginLoading,
     logout,
+    meRoles,
   };
 });

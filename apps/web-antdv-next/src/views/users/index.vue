@@ -1,15 +1,9 @@
 <script lang="ts" setup>
-import { Fallback } from '@vben/common-ui';
-
-import { $t } from '#/locales';
+import PagePlaceholder from '#/shared/components/page-placeholder.vue';
 
 defineOptions({ name: 'UsersPage' });
 </script>
 
 <template>
-  <Fallback
-    :description="$t('page.common.underConstruction')"
-    :title="$t('page.menu.users')"
-    status="coming-soon"
-  />
+  <PagePlaceholder />
 </template>

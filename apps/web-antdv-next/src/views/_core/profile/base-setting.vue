@@ -1,63 +1,61 @@
-<script setup lang="ts">
-import type { BasicOption } from '@vben/types';
-
+<script lang="ts" setup>
 import type { VbenFormSchema } from '#/adapter/form';
 
 import { computed, onMounted, ref } from 'vue';
 
 import { ProfileBaseSetting } from '@vben/common-ui';
+import { useUserStore } from '@vben/stores';
 
-import { getUserInfoApi } from '#/api';
+import { useAuthStore } from '#/store';
 
-const profileBaseSettingRef = ref();
-
-const MOCK_ROLES_OPTIONS: BasicOption[] = [
-  {
-    label: '管理员',
-    value: 'super',
-  },
-  {
-    label: '用户',
-    value: 'user',
-  },
-  {
-    label: '测试',
-    value: 'test',
-  },
-];
+const authStore = useAuthStore();
+const userStore = useUserStore();
+const profileBaseSettingRef = ref<{
+  getFormApi: () => { setValues: (v: Record<string, string>) => void };
+}>();
 
 const formSchema = computed((): VbenFormSchema[] => {
   return [
     {
+      component: 'Input',
+      componentProps: { disabled: true },
       fieldName: 'realName',
-      component: 'Input',
-      label: '姓名',
+      label: 'Nickname',
     },
     {
+      component: 'Input',
+      componentProps: { disabled: true },
       fieldName: 'username',
+      label: 'Username',
+    },
+    {
       component: 'Input',
-      label: '用户名',
-    },
-    {
+      componentProps: { disabled: true },
       fieldName: 'roles',
-      component: 'Select',
-      componentProps: {
-        mode: 'tags',
-        options: MOCK_ROLES_OPTIONS,
-      },
-      label: '角色',
-    },
-    {
-      fieldName: 'introduction',
-      component: 'Textarea',
-      label: '个人简介',
+      label: 'Roles',
     },
   ];
 });
 
+function applyUserInfoToForm() {
+  const userInfo = userStore.userInfo;
+  if (!userInfo) {
+    return;
+  }
+  profileBaseSettingRef.value?.getFormApi()?.setValues({
+    realName: userInfo.realName,
+    roles: userInfo.roles?.join(', ') ?? '',
+    username: userInfo.username,
+  });
+}
+
 onMounted(async () => {
-  const data = await getUserInfoApi();
-  profileBaseSettingRef.value.getFormApi().setValues(data);
+  if (userStore.userInfo) {
+    applyUserInfoToForm();
+    return;
+  }
+  await authStore.fetchUserInfo();
+  applyUserInfoToForm();
 });
 </script>
 <template>

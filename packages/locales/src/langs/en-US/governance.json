@@ -1,17 +1,16 @@
 {
-  "title": "Governance Confirmation",
-  "field": {
-    "actingRole": "Acting Role",
-    "actingRolePlaceholder": "Select the role to act as",
+  "modal": {
+    "actingRole": "Acting role",
+    "actingRoleTip": "Select the role this governed action is performed under",
+    "confirmWord": "Confirmation word",
+    "confirmWordPlaceholder": "Type the confirmation word to proceed",
+    "confirmWordTip": "Type \"{word}\" to confirm this high-risk action",
     "reason": "Reason",
-    "reasonPlaceholder": "Enter the reason (at least {min} characters)",
-    "confirmWord": "Confirmation Word",
-    "confirmWordPlaceholder": "Type {word} to confirm"
+    "reasonPlaceholder": "Explain why you are performing this action (min. 4 characters)",
+    "reasonRequired": "Reason is required (min. 4 characters)",
+    "summary": "Summary"
   },
   "error": {
-    "noActingRole": "Your account has no enabled role; governed actions are not available",
-    "actingRoleRequired": "Please select an acting role",
-    "reasonTooShort": "The reason must be at least {min} characters",
-    "confirmWordMismatch": "Confirmation word does not match; type {word}"
+    "actingRoleForbidden": "The selected acting role is not permitted for this action"
   }
 }

@@ -16,8 +16,11 @@ import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { $t } from '#/locales';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
+
+const { GovernedActionHost } = useGovernedAction();
 
 // Phase 7.2 wires real alert/notification data (WS channels) into this list.
 const notifications = ref<NotificationItem[]>([]);
@@ -132,6 +135,7 @@ watch(
       />
     </template>
     <template #extra>
+      <GovernedActionHost />
       <AuthenticationLoginExpiredModal
         v-model:open="accessStore.loginExpired"
         :avatar

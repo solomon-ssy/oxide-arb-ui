@@ -1,10 +1,12 @@
-import type { RouteRecordStringComponent } from '@vben/types';
+import type { MenuTreeNode } from '@vben/types';
 
 import { requestClient } from '#/api/request';
 
-/**
- * 获取用户所有菜单
- */
-export async function getAllMenusApi() {
-  return requestClient.get<RouteRecordStringComponent[]>('/menu/all');
+export namespace MenuApi {
+  export const base = '/menus';
+  export const accessible = `${base}/accessible`;
+}
+
+export async function getAccessibleMenusApi() {
+  return requestClient.get<MenuTreeNode[]>(MenuApi.accessible);
 }

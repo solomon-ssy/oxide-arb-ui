@@ -10,6 +10,13 @@ import { useAuthStore } from '#/store';
 
 import { generateAccess } from './access';
 
+/** Core routes reachable without authentication. */
+const PUBLIC_CORE_ROUTE_NAMES = new Set([
+  'Authentication',
+  'FallbackNotFound',
+  'Login',
+]);
+
 /**
  * 通用守卫配置
  * @param router
@@ -59,6 +66,22 @@ function setupAccessGuard(router: Router) {
             preferences.app.defaultHomePath,
         );
       }
+
+      if (PUBLIC_CORE_ROUTE_NAMES.has(to.name as string)) {
+        return true;
+      }
+
+      if (!accessStore.accessToken) {
+        if (to.fullPath !== LOGIN_PATH) {
+          return {
+            path: LOGIN_PATH,
+            query: { redirect: encodeURIComponent(to.fullPath) },
+            replace: true,
+          };
+        }
+        return to;
+      }
+
       return true;
     }
 
@@ -103,7 +126,7 @@ function setupAccessGuard(router: Router) {
       routes: accessRoutes,
     });
 
-    // 保存菜单信息和路由信息
+    // 保存菜单信息和路由信息（name 保留 i18n key，由 BasicLayout.wrapperMenus 翻译）
     accessStore.setAccessMenus(accessibleMenus);
     accessStore.setAccessRoutes(accessibleRoutes);
     accessStore.setIsAccessChecked(true);

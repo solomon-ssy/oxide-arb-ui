@@ -1,51 +1,65 @@
+import type {
+  LoginRequest,
+  LogoutRequest,
+  MeResponse,
+  RefreshRequest,
+  TokenResponse,
+  UserInfo,
+} from '@vben/types';
+
+import type { ApiRawResponse } from '#/api/envelope';
+
+import { unwrapApiResponse } from '#/api/envelope';
+import { buildAuthApiHeaders } from '#/api/headers';
 import { baseRequestClient, requestClient } from '#/api/request';
 
 export namespace AuthApi {
-  /** 登录接口参数 */
-  export interface LoginParams {
-    password?: string;
-    username?: string;
-  }
+  export const base = '/auth';
+  export const login = `${base}/login`;
+  export const refresh = `${base}/refresh`;
+  export const logout = `${base}/logout`;
+  export const me = `${base}/me`;
 
-  /** 登录接口返回值 */
-  export interface LoginResult {
-    accessToken: string;
-  }
-
-  export interface RefreshTokenResult {
-    data: string;
-    status: number;
-  }
+  export type LoginParams = LoginRequest;
 }
 
-/**
- * 登录
- */
+/** Map `/auth/me` into vben `UserInfo`. */
+export function mapMeToUserInfo(me: MeResponse): UserInfo {
+  const { user, roles } = me;
+  return {
+    avatar: user.avatar ?? '',
+    desc: user.nickname,
+    homePath: '/dashboard',
+    realName: user.nickname || user.username,
+    roles: roles.map((role) => role.code),
+    token: '',
+    userId: user.id,
+    username: user.username,
+  };
+}
+
 export async function loginApi(data: AuthApi.LoginParams) {
-  return requestClient.post<AuthApi.LoginResult>('/auth/login', data);
+  return requestClient.post<TokenResponse>(AuthApi.login, data);
 }
 
-/**
- * 刷新accessToken
- */
-export async function refreshTokenApi() {
-  return baseRequestClient.post<AuthApi.RefreshTokenResult>('/auth/refresh', {
-    withCredentials: true,
-  });
+export async function refreshTokenApi(data: RefreshRequest) {
+  const response = (await baseRequestClient.post(
+    AuthApi.refresh,
+    data,
+  )) as ApiRawResponse<TokenResponse>;
+  return unwrapApiResponse(response);
 }
 
-/**
- * 退出登录
- */
-export async function logoutApi() {
-  return baseRequestClient.post('/auth/logout', {
-    withCredentials: true,
-  });
+export async function logoutApi(
+  data: LogoutRequest,
+  accessToken?: null | string,
+) {
+  const response = (await baseRequestClient.post(AuthApi.logout, data, {
+    headers: buildAuthApiHeaders(accessToken),
+  })) as ApiRawResponse<null>;
+  return unwrapApiResponse(response);
 }
 
-/**
- * 获取用户权限码
- */
-export async function getAccessCodesApi() {
-  return requestClient.get<string[]>('/auth/codes');
+export async function getMeApi() {
+  return requestClient.get<MeResponse>(AuthApi.me);
 }

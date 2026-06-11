@@ -5,12 +5,15 @@ import type {
 
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
+import { useAccessStore } from '@vben/stores';
 
 import { message } from 'antdv-next';
 
-import { getAllMenusApi } from '#/api';
 import { BasicLayout, IFrameView } from '#/layouts';
 import { $t } from '#/locales';
+import { useAuthStore } from '#/store';
+
+import { adaptMenuTree } from './menu-adapter';
 
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
 
@@ -29,11 +32,17 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
         content: `${$t('common.loadingMenu')}...`,
         duration: 1.5,
       });
-      return await getAllMenusApi();
+
+      const authStore = useAuthStore();
+      if (!authStore.cachedMenus) {
+        await authStore.fetchUserInfo();
+      }
+      const menus = authStore.cachedMenus ?? [];
+      const { routes, permissionCodes } = adaptMenuTree(menus);
+      useAccessStore().setAccessCodes(permissionCodes);
+      return routes;
     },
-    // 可以指定没有权限跳转403页面
     forbiddenComponent,
-    // 如果 route.meta.menuVisibleWithForbidden = true
     layoutMap,
     pageMap,
   });
