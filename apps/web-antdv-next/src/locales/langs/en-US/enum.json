@@ -1,0 +1,14 @@
+{
+  "executionMode": {
+    "dry_run": "Dry Run",
+    "paper": "Paper",
+    "live": "Live"
+  },
+  "breakerState": {
+    "closed": "Closed",
+    "open": "Open",
+    "half_open": "Half-Open",
+    "recovered": "Recovered",
+    "halted": "Halted"
+  }
+}

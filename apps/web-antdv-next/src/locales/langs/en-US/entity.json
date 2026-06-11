@@ -1,0 +1,14 @@
+{
+  "market": "Market",
+  "opportunity": "Opportunity",
+  "trade": "Trade",
+  "position": "Position",
+  "blacklistEntry": "Blacklist Entry",
+  "runtimeConfigVersion": "Config Version",
+  "controlFactor": "Control Factor",
+  "publication": "Publication",
+  "replayRun": "Replay Run",
+  "user": "User",
+  "role": "Role",
+  "menu": "Menu"
+}

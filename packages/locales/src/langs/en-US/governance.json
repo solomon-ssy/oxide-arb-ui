@@ -1,0 +1,17 @@
+{
+  "title": "Governance Confirmation",
+  "field": {
+    "actingRole": "Acting Role",
+    "actingRolePlaceholder": "Select the role to act as",
+    "reason": "Reason",
+    "reasonPlaceholder": "Enter the reason (at least {min} characters)",
+    "confirmWord": "Confirmation Word",
+    "confirmWordPlaceholder": "Type {word} to confirm"
+  },
+  "error": {
+    "noActingRole": "Your account has no enabled role; governed actions are not available",
+    "actingRoleRequired": "Please select an acting role",
+    "reasonTooShort": "The reason must be at least {min} characters",
+    "confirmWordMismatch": "Confirmation word does not match; type {word}"
+  }
+}

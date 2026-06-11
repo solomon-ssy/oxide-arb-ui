@@ -7,9 +7,32 @@
     "forgetPassword": "忘记密码",
     "profile": "个人中心"
   },
-  "dashboard": {
-    "title": "概览",
-    "analytics": "分析页",
-    "workspace": "工作台"
+  "common": {
+    "underConstruction": "页面建设中，将在后续 Phase 落地"
+  },
+  "menu": {
+    "group": {
+      "trading": "交易",
+      "risk": "风险",
+      "analytics": "分析",
+      "operations": "运维治理",
+      "accessControl": "访问控制"
+    },
+    "dashboard": "概览",
+    "markets": "市场",
+    "opportunities": "机会",
+    "trades": "交易",
+    "risk": "风险总览",
+    "blacklist": "黑名单",
+    "analytics": "分析",
+    "runtimeConfig": "运行时配置",
+    "controlFactors": "控制因子",
+    "publications": "发布管理",
+    "replay": "回放",
+    "audit": "审计链",
+    "operationLog": "操作日志",
+    "users": "用户管理",
+    "roles": "角色管理",
+    "menus": "菜单管理"
   }
 }

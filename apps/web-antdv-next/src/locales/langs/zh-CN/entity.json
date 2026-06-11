@@ -1,0 +1,14 @@
+{
+  "market": "市场",
+  "opportunity": "机会",
+  "trade": "交易",
+  "position": "持仓",
+  "blacklistEntry": "黑名单条目",
+  "runtimeConfigVersion": "配置版本",
+  "controlFactor": "控制因子",
+  "publication": "发布",
+  "replayRun": "回放任务",
+  "user": "用户",
+  "role": "角色",
+  "menu": "菜单"
+}

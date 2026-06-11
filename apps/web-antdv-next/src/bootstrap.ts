@@ -23,6 +23,9 @@ async function bootstrap(namespace: string) {
   // 初始化表单组件
   await initSetupVbenForm();
 
+  // 初始化表格适配器(注册全局 grid 配置与 Cell* 渲染器)
+  await import('./adapter/vxe-table');
+
   // // 设置弹窗的默认配置
   // setDefaultModalProps({
   //   fullscreenButton: false,

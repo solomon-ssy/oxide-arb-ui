@@ -7,9 +7,32 @@
     "forgetPassword": "Forget Password",
     "profile": "Profile"
   },
-  "dashboard": {
-    "title": "Dashboard",
+  "common": {
+    "underConstruction": "This page is under construction and will land in a later phase"
+  },
+  "menu": {
+    "group": {
+      "trading": "Trading",
+      "risk": "Risk",
+      "analytics": "Analytics",
+      "operations": "Operations",
+      "accessControl": "Access Control"
+    },
+    "dashboard": "Overview",
+    "markets": "Markets",
+    "opportunities": "Opportunities",
+    "trades": "Trades",
+    "risk": "Risk Overview",
+    "blacklist": "Blacklist",
     "analytics": "Analytics",
-    "workspace": "Workspace"
+    "runtimeConfig": "Runtime Config",
+    "controlFactors": "Control Factors",
+    "publications": "Publications",
+    "replay": "Replay",
+    "audit": "Audit Chain",
+    "operationLog": "Operation Log",
+    "users": "Users",
+    "roles": "Roles",
+    "menus": "Menus"
   }
 }

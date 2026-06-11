@@ -2,6 +2,30 @@ import type { Linter } from 'eslint';
 
 const restrictedImportIgnores = ['**/vite.config.mts'];
 
+/** Base import restrictions applied to every app (see the `apps/**` block). */
+const appRestrictedImportPatterns = [
+  {
+    group: ['#/api/*'],
+    message:
+      'The #/api package cannot be imported, please use the @core package itself',
+  },
+  {
+    group: ['#/layouts/*'],
+    message:
+      'The #/layouts package cannot be imported, please use the @core package itself',
+  },
+  {
+    group: ['#/locales/*'],
+    message:
+      'The #/locales package cannot be imported, please use the @core package itself',
+  },
+  {
+    group: ['#/stores/*'],
+    message:
+      'The #/stores package cannot be imported, please use the @core package itself',
+  },
+];
+
 const customConfig: Linter.Config[] = [
   // shadcn-ui 内部组件是自动生成的，不做太多限制
   {
@@ -31,26 +55,25 @@ const customConfig: Linter.Config[] = [
       'no-restricted-imports': [
         'error',
         {
+          patterns: appRestrictedImportPatterns,
+        },
+      ],
+    },
+  },
+  {
+    // oxide-arb-ui: 页面禁止绕过 adapter 层直接使用 vxe-table 插件
+    files: ['apps/web-antdv-next/**/**'],
+    ignores: [...restrictedImportIgnores, 'apps/web-antdv-next/src/adapter/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
           patterns: [
+            ...appRestrictedImportPatterns,
             {
-              group: ['#/api/*'],
+              group: ['@vben/plugins/vxe-table'],
               message:
-                'The #/api package cannot be imported, please use the @core package itself',
-            },
-            {
-              group: ['#/layouts/*'],
-              message:
-                'The #/layouts package cannot be imported, please use the @core package itself',
-            },
-            {
-              group: ['#/locales/*'],
-              message:
-                'The #/locales package cannot be imported, please use the @core package itself',
-            },
-            {
-              group: ['#/stores/*'],
-              message:
-                'The #/stores package cannot be imported, please use the @core package itself',
+                'Tables must go through #/adapter/vxe-table, never the raw plugin (oxide-arb-ui rule)',
             },
           ],
         },

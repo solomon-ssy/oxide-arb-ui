@@ -1,0 +1,14 @@
+{
+  "executionMode": {
+    "dry_run": "试运行",
+    "paper": "模拟盘",
+    "live": "实盘"
+  },
+  "breakerState": {
+    "closed": "正常",
+    "open": "熔断",
+    "half_open": "半开",
+    "recovered": "已恢复",
+    "halted": "已停机"
+  }
+}
