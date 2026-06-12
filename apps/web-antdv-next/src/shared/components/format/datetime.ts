@@ -41,3 +41,27 @@ export function formatDateTimeUtc(value: null | string | undefined): string {
     ? `${parsed.format(DATETIME_FORMAT)} UTC`
     : EMPTY_PLACEHOLDER;
 }
+
+/**
+ * Format a duration in whole seconds compactly: `93784` → `1d 2h 3m`.
+ * Sub-minute durations render as seconds (`42s`).
+ */
+export function formatDurationSecs(value: null | number | undefined): string {
+  if (value === null || value === undefined || value < 0) {
+    return EMPTY_PLACEHOLDER;
+  }
+  const days = Math.floor(value / 86_400);
+  const hours = Math.floor((value % 86_400) / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  const parts: string[] = [];
+  if (days > 0) {
+    parts.push(`${days}d`);
+  }
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+  return parts.length > 0 ? parts.join(' ') : `${Math.floor(value)}s`;
+}

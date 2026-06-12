@@ -28,8 +28,16 @@ export interface TimeRangeQuery {
 
 export type UuidString = string;
 export type IsoDateTime = string;
+/** Calendar date serialized as `YYYY-MM-DD` (Rust `NaiveDate`). */
+export type IsoDate = string;
 
 /** rust_decimal serialized as a decimal string — never use `number`. */
 export type UsdString = string;
 export type PriceString = string;
 export type SharesString = string;
+export type BpsString = string;
+
+/** Polymarket `condition_id` (`0x…`, 66 chars) — never mix with a token id. */
+export type MarketId = string;
+/** Decimal CLOB token id. */
+export type TokenId = string;

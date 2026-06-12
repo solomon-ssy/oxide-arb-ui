@@ -114,3 +114,18 @@ export function formatPercent(value: DecimalInput, fractionDigits = 1): string {
   }
   return `${decimal.mul(100).toFixed(fractionDigits)}%`;
 }
+
+/**
+ * Convert a backend decimal string to a JS number for {@link VbenCountToAnimator}
+ * only. Never use this value for money math — display animation input only.
+ */
+export function toAnimatorNumber(
+  value: DecimalInput,
+  decimals = 2,
+): null | number {
+  const decimal = parseDecimal(value);
+  if (decimal === null) {
+    return null;
+  }
+  return decimal.toDecimalPlaces(decimals).toNumber();
+}

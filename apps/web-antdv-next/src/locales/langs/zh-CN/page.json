@@ -31,5 +31,124 @@
     "users": "用户管理",
     "roles": "角色管理",
     "menus": "菜单管理"
+  },
+  "ws": {
+    "status": {
+      "connected": "实时连接正常",
+      "reconnecting": "实时连接重连中",
+      "disconnected": "实时连接已断开"
+    },
+    "lastSync": "上次同步：{at}",
+    "neverSynced": "尚未同步",
+    "statusStale": "系统状态推送已过期（>10 秒）",
+    "alertLevel": {
+      "info": "系统提示",
+      "warning": "系统告警",
+      "critical": "严重告警",
+      "emergency": "紧急告警"
+    },
+    "breakerTripped": "熔断器触发（L{level}）",
+    "configActivated": "运行时配置已激活：{version}",
+    "controlPublished": "控制因子已发布（{mode}）：{id}",
+    "marketResolved": "市场已结算：{market}"
+  },
+  "system": {
+    "indicator": {
+      "running": "运行中",
+      "degraded": "降级",
+      "critical": "已停机",
+      "unknown": "未知"
+    },
+    "field": {
+      "mode": "执行模式",
+      "breaker": "熔断器",
+      "uptime": "运行时长",
+      "activeMarkets": "活跃市场",
+      "openPositions": "持仓数",
+      "exposure": "总敞口",
+      "dailyPnl": "今日盈亏",
+      "catalog": "市场目录",
+      "checkedAt": "更新于"
+    },
+    "catalog": {
+      "ready": "已就绪（{markets} 市场）",
+      "warming": "预热中"
+    },
+    "halt": {
+      "title": "停机交易",
+      "action": "停机",
+      "warning": "将立即触发风控停机与执行端紧急停止，进行中的订单按既有流程收敛。该操作会被记录到操作日志。",
+      "reasonPlaceholder": "请填写停机原因（必填，将记录审计）",
+      "submitted": "停机指令已提交，等待系统状态回显"
+    },
+    "resume": {
+      "title": "恢复交易",
+      "action": "恢复",
+      "summary": "恢复前请确认熔断原因已排除。操作确认信息将记录到风控审计。",
+      "ackCheckbox": "我已确认风险已排除，可以恢复交易",
+      "ackLabel": "操作确认信息",
+      "ackPlaceholder": "例如：ops-zhang 确认日内亏损已复核",
+      "ackTip": "确认文本将原样写入风控审计（1–256 字符）",
+      "submitted": "恢复指令已提交，等待系统状态回显"
+    },
+    "mode": {
+      "title": "切换执行模式",
+      "summary": "目标模式：{target}。切换将经过治理流程并记录审计。",
+      "switched": "执行模式已切换：{from} → {to}"
+    }
+  },
+  "dashboard": {
+    "kpi": {
+      "pnl": "盈亏",
+      "totalPnlFooter": "累计 ",
+      "exposure": "资金占用",
+      "exposureTip": "敞口口径（含预留），非钱包余额",
+      "pendingReservations": "待处理预留：{count}",
+      "dailyLossHeadroom": "日损余量",
+      "dailyLossTip": "今日已实现亏损 / 日损上限（来自运行时配置）",
+      "remaining": "余量 ",
+      "execution": "今日执行",
+      "executionSuccess": "成功 {count}",
+      "executionMiss": "未中 {count}"
+    },
+    "pnlCurve": {
+      "title": "盈亏曲线（近 7 日 + 今日实时）",
+      "history": "累计盈亏",
+      "today": "今日实时",
+      "toAnalytics": "查看分析"
+    },
+    "systemCard": {
+      "title": "系统状态"
+    },
+    "breakerCard": {
+      "title": "熔断器",
+      "level": "级别：{level}",
+      "nominal": "运行正常，无熔断事件",
+      "toRisk": "去风控页"
+    },
+    "replayCard": {
+      "title": "回放任务",
+      "hint": "控制因子物化 / 回放流水线中的活跃 run（WS 实时更新）。",
+      "empty": "暂无进行中的回放任务",
+      "toReplay": "查看回放"
+    },
+    "feed": {
+      "title": "实时机会",
+      "toOpportunities": "查看全部"
+    },
+    "trades": {
+      "title": "最近交易",
+      "time": "时间",
+      "market": "市场",
+      "side": "方向",
+      "shares": "数量",
+      "price": "价格",
+      "pnl": "盈亏",
+      "outcome": "结果",
+      "toTrades": "查看全部"
+    },
+    "quickLinks": {
+      "title": "快捷入口"
+    }
   }
 }

@@ -10,5 +10,29 @@
     "half_open": "半开",
     "recovered": "已恢复",
     "halted": "已停机"
+  },
+  "circuitBreakerLevel": {
+    "trade": "交易级",
+    "session": "会话级",
+    "daily": "日级",
+    "system": "系统级"
+  },
+  "side": {
+    "BUY": "买入",
+    "SELL": "卖出"
+  },
+  "tradeOutcome": {
+    "success": "成功",
+    "miss": "未成交",
+    "failed": "失败"
+  },
+  "materializationRunStatus": {
+    "queued": "排队中",
+    "running": "运行中",
+    "completed": "已完成",
+    "completed_with_rejected_factors": "已完成（含拒绝因子）",
+    "report_only": "仅报告",
+    "failed": "失败",
+    "cancelled": "已取消"
   }
 }

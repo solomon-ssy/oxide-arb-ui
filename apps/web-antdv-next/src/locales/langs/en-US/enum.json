@@ -10,5 +10,29 @@
     "half_open": "Half-Open",
     "recovered": "Recovered",
     "halted": "Halted"
+  },
+  "circuitBreakerLevel": {
+    "trade": "Trade",
+    "session": "Session",
+    "daily": "Daily",
+    "system": "System"
+  },
+  "side": {
+    "BUY": "Buy",
+    "SELL": "Sell"
+  },
+  "tradeOutcome": {
+    "success": "Success",
+    "miss": "Miss",
+    "failed": "Failed"
+  },
+  "materializationRunStatus": {
+    "queued": "Queued",
+    "running": "Running",
+    "completed": "Completed",
+    "completed_with_rejected_factors": "Completed (rejected factors)",
+    "report_only": "Report only",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
   }
 }

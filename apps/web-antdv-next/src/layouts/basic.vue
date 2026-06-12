@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-import type { NotificationItem } from '@vben/layouts';
-
-import { computed, ref, watch } from 'vue';
+import { computed, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -16,14 +14,21 @@ import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { $t } from '#/locales';
+import ExecutionModeSwitcher from '#/shared/components/header/execution-mode-switcher.vue';
+import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
+import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useOxideWs } from '#/shared/composables/use-oxide-ws';
+import { useSystemControl } from '#/shared/composables/use-system-control';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const { GovernedActionHost } = useGovernedAction();
+const { HaltModalHost, ResumeModalHost } = useSystemControl();
 
-// Phase 7.2 wires real alert/notification data (WS channels) into this list.
-const notifications = ref<NotificationItem[]>([]);
+const oxideWs = useOxideWs();
+// System alerts + breaker trips pushed over WS feed the bell list.
+const notifications = oxideWs.notifications;
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -34,6 +39,23 @@ const { isDark } = usePreferences();
 const showDot = computed(() =>
   notifications.value.some((item) => !item.isRead),
 );
+
+// Connect once the session is authenticated and the access check completed;
+// drop the socket on logout. A token refresh flips neither flag, so it never
+// forces a reconnect (the next reconnect picks up the newest token).
+watch(
+  () => Boolean(accessStore.accessToken && accessStore.isAccessChecked),
+  (ready) => {
+    if (ready) {
+      oxideWs.connect();
+    } else {
+      oxideWs.disconnect();
+    }
+  },
+  { immediate: true },
+);
+
+onUnmounted(() => oxideWs.disconnect());
 
 const menus = computed(() => [
   {
@@ -114,6 +136,15 @@ watch(
 
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
+    <template #header-right-10>
+      <SystemStatusIndicator />
+    </template>
+    <template #header-right-20>
+      <ExecutionModeSwitcher />
+    </template>
+    <template #header-right-30>
+      <WsStatusBadge />
+    </template>
     <template #user-dropdown>
       <UserDropdown
         :avatar
@@ -136,6 +167,8 @@ watch(
     </template>
     <template #extra>
       <GovernedActionHost />
+      <HaltModalHost />
+      <ResumeModalHost />
       <AuthenticationLoginExpiredModal
         v-model:open="accessStore.loginExpired"
         :avatar

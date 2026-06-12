@@ -1,0 +1,292 @@
+import type { ComputedRef, Ref } from 'vue';
+
+import type { NotificationItem } from '@vben/layouts';
+import type {
+  AlertLevel,
+  MarketId,
+  WsClientCommand,
+  WsEnvelope,
+} from '@vben/types';
+
+import type { WsConnectionStatus } from '#/store';
+
+import { computed, effectScope, ref, watch } from 'vue';
+
+import { useAppConfig } from '@vben/hooks';
+import { preferences } from '@vben/preferences';
+import { useAccessStore } from '@vben/stores';
+import { WS_CHANNELS } from '@vben/types';
+
+import { useWebSocket } from '@vueuse/core';
+import { message, notification } from 'antdv-next';
+
+import { getCircuitBreaker } from '#/api/risk';
+import { $t } from '#/locales';
+import { useOxideAccess } from '#/shared/composables/use-oxide-access';
+import { useRiskStore, useWsStore } from '#/store';
+
+import { authorizedGlobalChannels } from './ws/ws-channel-permissions';
+import { dispatchWsEnvelope } from './ws/ws-dispatch';
+import { buildWsUrl } from './ws/ws-url';
+
+/** Application heartbeat cadence (mirrors the server's 15s ping). */
+const HEARTBEAT_INTERVAL_MS = 15_000;
+/** Close the socket when no frame arrives within this window after a ping. */
+const HEARTBEAT_PONG_TIMEOUT_MS = 30_000;
+/** Initial reconnect delay (first retry within the ≤5s acceptance budget). */
+const RECONNECT_DELAY_MS = 1000;
+/** Exponential backoff ceiling for sustained outages. */
+const RECONNECT_DELAY_MAX_MS = 30_000;
+
+/** Backoff: 1s → 2s → 4s … capped at 30s (phase 7.2 §1.1). */
+function reconnectBackoffMs(retried: number): number {
+  const exponent = Math.max(0, retried);
+  return Math.min(RECONNECT_DELAY_MS * 2 ** exponent, RECONNECT_DELAY_MAX_MS);
+}
+/** Bell notification list capacity. */
+const NOTIFICATION_CAP = 50;
+
+export interface OxideWsApi {
+  /** Tri-state connection status (drives the header badge). */
+  status: ComputedRef<WsConnectionStatus>;
+  /** Bell notification feed (system alerts + breaker trips). */
+  notifications: Ref<NotificationItem[]>;
+  /** Open the socket (idempotent); requires an access token. */
+  connect: () => void;
+  /** Close the socket and stop reconnecting (logout / teardown). */
+  disconnect: () => void;
+  /** Subscribe this caller to a market's book updates (refcounted). */
+  subscribeMarket: (marketId: MarketId) => void;
+  /** Release one subscription refcount; unsubscribes at zero. */
+  unsubscribeMarket: (marketId: MarketId) => void;
+}
+
+/** antd notification severity per alert level. */
+const ALERT_NOTIFY: Record<AlertLevel, 'error' | 'info' | 'warning'> = {
+  critical: 'error',
+  emergency: 'error',
+  info: 'info',
+  warning: 'warning',
+};
+
+let instance: null | OxideWsApi = null;
+
+function createOxideWs(): OxideWsApi {
+  // Detached scope: the singleton must survive any component that first
+  // touched it (useWebSocket auto-closes on scope dispose otherwise).
+  const scope = effectScope(true);
+
+  const api = scope.run(() => {
+    const accessStore = useAccessStore();
+    const wsStore = useWsStore();
+    const riskStore = useRiskStore();
+    const { hasAccessByCodes } = useOxideAccess();
+    const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+
+    /** Whether the app currently wants a live connection. */
+    const desired = ref(false);
+    /** Per-market book subscription refcounts (replayed after reconnect). */
+    const marketRefCounts = new Map<MarketId, number>();
+
+    const notifications = ref<NotificationItem[]>([]);
+    let notificationSeq = 0;
+
+    const url = computed(() => {
+      const token = accessStore.accessToken;
+      // An undefined URL keeps useWebSocket from connecting (fail-closed);
+      // reconnects re-read this computed, so a refreshed token is picked up.
+      return token ? buildWsUrl(apiURL, token) : undefined;
+    });
+
+    function pushNotification(title: string, msg: string) {
+      notificationSeq += 1;
+      notifications.value.unshift({
+        avatar: preferences.app.defaultAvatar,
+        date: new Date().toLocaleString(),
+        id: `oxide-ws-${notificationSeq}`,
+        isRead: false,
+        message: msg,
+        title,
+      });
+      if (notifications.value.length > NOTIFICATION_CAP) {
+        notifications.value.length = NOTIFICATION_CAP;
+      }
+    }
+
+    const socket = useWebSocket(url, {
+      autoReconnect: {
+        delay: reconnectBackoffMs,
+        retries: Number.POSITIVE_INFINITY,
+      },
+      heartbeat: {
+        interval: HEARTBEAT_INTERVAL_MS,
+        message: JSON.stringify({ action: 'ping' } satisfies WsClientCommand),
+        pongTimeout: HEARTBEAT_PONG_TIMEOUT_MS,
+      },
+      immediate: false,
+      onConnected() {
+        // Re-establish the full session contract on every (re)connect:
+        // authorized global channels → full sync → per-market replays.
+        for (const channel of authorizedGlobalChannels(hasAccessByCodes)) {
+          sendCommand({ action: 'subscribe', channel });
+        }
+        sendCommand({ action: 'sync' });
+        for (const [marketId, count] of marketRefCounts) {
+          if (count > 0) {
+            sendCommand({
+              action: 'subscribe',
+              channel: WS_CHANNELS.marketBookUpdate,
+              market_id: marketId,
+            });
+          }
+        }
+      },
+      onMessage(_ws, event) {
+        let envelope: WsEnvelope;
+        try {
+          envelope = JSON.parse(event.data as string) as WsEnvelope;
+        } catch {
+          console.warn('[oxide-ws] non-JSON frame dropped:', event.data);
+          return;
+        }
+        dispatchWsEnvelope(envelope, {
+          onAlert(alert) {
+            wsStore.recordAlert(alert.level);
+            notification[ALERT_NOTIFY[alert.level]]({
+              description: alert.message,
+              title: $t(`page.ws.alertLevel.${alert.level}`),
+            });
+            pushNotification(
+              $t(`page.ws.alertLevel.${alert.level}`),
+              alert.message,
+            );
+          },
+          onBreakerTrip(trip) {
+            notification.error({
+              description: trip.reason,
+              title: $t('page.ws.breakerTripped', { level: trip.level }),
+            });
+            pushNotification(
+              $t('page.ws.breakerTripped', { level: trip.level }),
+              trip.reason,
+            );
+            // The trip frame carries only `{level, reason}` — refetch the
+            // authoritative snapshot instead of rendering a half state.
+            getCircuitBreaker()
+              .then((view) => riskStore.applyBreaker(view))
+              .catch((error) =>
+                console.warn('[oxide-ws] breaker refetch failed:', error),
+              );
+          },
+          onConfigActivated(event) {
+            message.info(
+              $t('page.ws.configActivated', { version: event.version_id }),
+            );
+          },
+          onControlPublished(event) {
+            message.info(
+              $t('page.ws.controlPublished', {
+                id: event.publication_id,
+                mode: event.mode,
+              }),
+            );
+          },
+          onMarketResolved(event) {
+            message.info(
+              $t('page.ws.marketResolved', { market: event.market_id }),
+            );
+          },
+        });
+      },
+    });
+
+    function sendCommand(command: WsClientCommand) {
+      socket.send(JSON.stringify(command));
+    }
+
+    const status = computed<WsConnectionStatus>(() => {
+      switch (socket.status.value) {
+        case 'CONNECTING': {
+          return 'reconnecting';
+        }
+        case 'OPEN': {
+          return 'connected';
+        }
+        default: {
+          // A closed socket the app still wants is mid-reconnect.
+          return desired.value ? 'reconnecting' : 'disconnected';
+        }
+      }
+    });
+
+    watch(status, (next) => wsStore.setStatus(next), { immediate: true });
+
+    function connect() {
+      if (!accessStore.accessToken) {
+        return;
+      }
+      desired.value = true;
+      socket.open();
+    }
+
+    function disconnect() {
+      desired.value = false;
+      marketRefCounts.clear();
+      notifications.value = [];
+      notificationSeq = 0;
+      wsStore.clearRecentAlert();
+      socket.close();
+    }
+
+    function subscribeMarket(marketId: MarketId) {
+      const count = marketRefCounts.get(marketId) ?? 0;
+      marketRefCounts.set(marketId, count + 1);
+      if (count === 0 && socket.status.value === 'OPEN') {
+        sendCommand({
+          action: 'subscribe',
+          channel: WS_CHANNELS.marketBookUpdate,
+          market_id: marketId,
+        });
+      }
+    }
+
+    function unsubscribeMarket(marketId: MarketId) {
+      const count = marketRefCounts.get(marketId) ?? 0;
+      if (count <= 1) {
+        marketRefCounts.delete(marketId);
+        if (count === 1 && socket.status.value === 'OPEN') {
+          sendCommand({
+            action: 'unsubscribe',
+            channel: WS_CHANNELS.marketBookUpdate,
+            market_id: marketId,
+          });
+        }
+      } else {
+        marketRefCounts.set(marketId, count - 1);
+      }
+    }
+
+    return {
+      connect,
+      disconnect,
+      notifications,
+      status,
+      subscribeMarket,
+      unsubscribeMarket,
+    };
+  });
+  if (api === undefined) {
+    throw new Error('oxide WebSocket scope failed to initialize');
+  }
+  return api;
+}
+
+/**
+ * Singleton oxide WebSocket session (one connection shared app-wide).
+ * Lifecycle: `connect()` in the basic layout once access is checked,
+ * `disconnect()` on logout.
+ */
+export function useOxideWs(): OxideWsApi {
+  instance ??= createOxideWs();
+  return instance;
+}

@@ -1,6 +1,14 @@
 import type { IsoDateTime, UsdString } from './common';
 import type { BreakerStateName, ExecutionMode } from './enums';
 
+/**
+ * Market-catalog warmup state (internally tagged on `state`). Detection is
+ * gated off while `warming`; the control plane stays available.
+ */
+export type CatalogState =
+  | { markets: number; state: 'ready'; synced_at: IsoDateTime }
+  | { state: 'warming' };
+
 export interface SystemStatus {
   execution_mode: ExecutionMode;
   breaker_state: BreakerStateName;
@@ -10,6 +18,7 @@ export interface SystemStatus {
   pending_reservations: number;
   total_exposure: UsdString;
   daily_pnl: UsdString;
+  catalog: CatalogState;
   checked_at: IsoDateTime;
 }
 

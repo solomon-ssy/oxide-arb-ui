@@ -31,5 +31,124 @@
     "users": "Users",
     "roles": "Roles",
     "menus": "Menus"
+  },
+  "ws": {
+    "status": {
+      "connected": "Realtime connected",
+      "reconnecting": "Realtime reconnecting",
+      "disconnected": "Realtime disconnected"
+    },
+    "lastSync": "Last sync: {at}",
+    "neverSynced": "Not synced yet",
+    "statusStale": "System status feed stale (>10s)",
+    "alertLevel": {
+      "info": "System Info",
+      "warning": "System Warning",
+      "critical": "Critical Alert",
+      "emergency": "Emergency Alert"
+    },
+    "breakerTripped": "Circuit breaker tripped (L{level})",
+    "configActivated": "Runtime config activated: {version}",
+    "controlPublished": "Control factors published ({mode}): {id}",
+    "marketResolved": "Market resolved: {market}"
+  },
+  "system": {
+    "indicator": {
+      "running": "Running",
+      "degraded": "Degraded",
+      "critical": "Halted",
+      "unknown": "Unknown"
+    },
+    "field": {
+      "mode": "Execution Mode",
+      "breaker": "Circuit Breaker",
+      "uptime": "Uptime",
+      "activeMarkets": "Active Markets",
+      "openPositions": "Open Positions",
+      "exposure": "Total Exposure",
+      "dailyPnl": "Daily PnL",
+      "catalog": "Market Catalog",
+      "checkedAt": "Updated at"
+    },
+    "catalog": {
+      "ready": "Ready ({markets} markets)",
+      "warming": "Warming up"
+    },
+    "halt": {
+      "title": "Halt Trading",
+      "action": "Halt",
+      "warning": "This immediately triggers the risk halt and the execution kill switch; in-flight orders converge through their normal flow. The action is recorded on the operation log.",
+      "reasonPlaceholder": "Reason for halting (required, audited)",
+      "submitted": "Halt submitted, waiting for the system status echo"
+    },
+    "resume": {
+      "title": "Resume Trading",
+      "action": "Resume",
+      "summary": "Confirm the breaker cause is cleared before resuming. The acknowledgement is recorded on the risk audit.",
+      "ackCheckbox": "I confirm the risk has been cleared and trading may resume",
+      "ackLabel": "Operator acknowledgement",
+      "ackPlaceholder": "e.g. ops-zhang reviewed the daily loss cap trip",
+      "ackTip": "Recorded verbatim on the risk audit (1–256 characters)",
+      "submitted": "Resume submitted, waiting for the system status echo"
+    },
+    "mode": {
+      "title": "Switch Execution Mode",
+      "summary": "Target mode: {target}. The switch goes through governance and is audited.",
+      "switched": "Execution mode switched: {from} → {to}"
+    }
+  },
+  "dashboard": {
+    "kpi": {
+      "pnl": "PnL",
+      "totalPnlFooter": "Total ",
+      "exposure": "Capital In Use",
+      "exposureTip": "Exposure basis (incl. reservations), not the wallet balance",
+      "pendingReservations": "Pending reservations: {count}",
+      "dailyLossHeadroom": "Daily Loss Headroom",
+      "dailyLossTip": "Today's realized loss vs the daily loss cap (from runtime config)",
+      "remaining": "Remaining ",
+      "execution": "Today's Execution",
+      "executionSuccess": "Success {count}",
+      "executionMiss": "Miss {count}"
+    },
+    "pnlCurve": {
+      "title": "PnL Curve (7d + today live)",
+      "history": "Cumulative PnL",
+      "today": "Today (live)",
+      "toAnalytics": "Analytics"
+    },
+    "systemCard": {
+      "title": "System Status"
+    },
+    "breakerCard": {
+      "title": "Circuit Breaker",
+      "level": "Level: {level}",
+      "nominal": "Nominal — no breaker events",
+      "toRisk": "Risk page"
+    },
+    "replayCard": {
+      "title": "Replay Runs",
+      "hint": "Active materialization / replay pipeline runs (WS live).",
+      "empty": "No replay runs in progress",
+      "toReplay": "View replay"
+    },
+    "feed": {
+      "title": "Live Opportunities",
+      "toOpportunities": "View all"
+    },
+    "trades": {
+      "title": "Recent Trades",
+      "time": "Time",
+      "market": "Market",
+      "side": "Side",
+      "shares": "Shares",
+      "price": "Price",
+      "pnl": "PnL",
+      "outcome": "Outcome",
+      "toTrades": "View all"
+    },
+    "quickLinks": {
+      "title": "Quick Links"
+    }
   }
 }

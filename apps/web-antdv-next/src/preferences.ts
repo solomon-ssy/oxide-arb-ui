@@ -14,4 +14,16 @@ export const overridesPreferences = defineOverridesPreferences({
     enableRefreshToken: true,
     loginExpiredMode: 'modal',
   },
+  copyright: {
+    companyName: 'Oxide Arb',
+    companySiteLink: '',
+    date: '2026',
+    enable: true,
+    settingShow: true,
+  },
+  logo: {
+    enable: true,
+    fit: 'contain',
+    source: '/static/logo.png',
+  },
 });
