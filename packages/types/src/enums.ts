@@ -161,6 +161,159 @@ export const POSITION_STATUSES = {
 
 export type PositionStatus = WireEnum<typeof POSITION_STATUSES>;
 
+/** Market lifecycle state in the local registry. */
+export const MARKET_STATUSES = {
+  active: 'active',
+  delisted: 'delisted',
+  discovered: 'discovered',
+  filtered: 'filtered',
+  paused: 'paused',
+  settled: 'settled',
+} as const;
+
+export type MarketStatus = WireEnum<typeof MARKET_STATUSES>;
+
+/** Minimum price increment of a CLOB market (wire value is the literal step). */
+export const TICK_SIZES = {
+  hundredth: '0.01',
+  tenThousandth: '0.0001',
+  tenth: '0.1',
+  thousandth: '0.001',
+} as const;
+
+export type TickSize = WireEnum<typeof TICK_SIZES>;
+
+/** Staleness classification of the market-data snapshot behind a decision. */
+export const STALENESS_LEVELS = {
+  acceptable: 'acceptable',
+  expired: 'expired',
+  fresh: 'fresh',
+  stale: 'stale',
+} as const;
+
+export type StalenessLevel = WireEnum<typeof STALENESS_LEVELS>;
+
+/** Endgame calibration price zone (winning-side token price bucket). */
+export const PRICE_ZONES = {
+  z95: 'z95',
+  z96: 'z96',
+  z97: 'z97',
+  z98: 'z98',
+  z99: 'z99',
+} as const;
+
+export type PriceZone = WireEnum<typeof PRICE_ZONES>;
+
+/** Convergence-duration calibration bucket. */
+export const DURATION_BUCKETS = {
+  long: 'long',
+  medium: 'medium',
+  short: 'short',
+  veryLong: 'very_long',
+} as const;
+
+export type DurationBucket = WireEnum<typeof DURATION_BUCKETS>;
+
+// ── Opportunity audit lifecycle ─────────────────────────────────────────────
+
+/** Audit-trail lifecycle stage of an opportunity (one row per stage). */
+export const OPPORTUNITY_AUDIT_STAGES = {
+  detected: 'detected',
+  factorValidationRejected: 'factor_validation_rejected',
+  failed: 'failed',
+  filled: 'filled',
+  missed: 'missed',
+  riskRejected: 'risk_rejected',
+  settled: 'settled',
+  sizingRejected: 'sizing_rejected',
+  validationRejected: 'validation_rejected',
+} as const;
+
+export type OpportunityAuditStage = WireEnum<typeof OPPORTUNITY_AUDIT_STAGES>;
+
+/** Lifecycle display order for the funnel / timeline (mirrors backend `order()`). */
+export const OPPORTUNITY_AUDIT_STAGE_ORDER: readonly OpportunityAuditStage[] = [
+  OPPORTUNITY_AUDIT_STAGES.detected,
+  OPPORTUNITY_AUDIT_STAGES.validationRejected,
+  OPPORTUNITY_AUDIT_STAGES.factorValidationRejected,
+  OPPORTUNITY_AUDIT_STAGES.riskRejected,
+  OPPORTUNITY_AUDIT_STAGES.sizingRejected,
+  OPPORTUNITY_AUDIT_STAGES.filled,
+  OPPORTUNITY_AUDIT_STAGES.missed,
+  OPPORTUNITY_AUDIT_STAGES.failed,
+  OPPORTUNITY_AUDIT_STAGES.settled,
+];
+
+/** Terminal business conclusion recorded on an audit row. */
+export const AUDIT_OUTCOMES = {
+  failed: 'failed',
+  miss: 'miss',
+  rejected: 'rejected',
+  settled: 'settled',
+  success: 'success',
+} as const;
+
+export type AuditOutcome = WireEnum<typeof AUDIT_OUTCOMES>;
+
+/** Pipeline stage at which an opportunity was rejected. */
+export const REJECTION_STAGES = {
+  factorValidation: 'factor_validation',
+  other: 'other',
+  risk: 'risk',
+  sizing: 'sizing',
+  submitPersist: 'submit_persist',
+  validation: 'validation',
+} as const;
+
+export type RejectionStage = WireEnum<typeof REJECTION_STAGES>;
+
+/** Win/loss conclusion of a settled position. */
+export const SETTLEMENT_OUTCOMES = {
+  lost: 'lost',
+  won: 'won',
+} as const;
+
+export type SettlementOutcome = WireEnum<typeof SETTLEMENT_OUTCOMES>;
+
+/** Source that triggered market settlement processing. */
+export const SETTLEMENT_TRIGGERS = {
+  manual: 'manual',
+  periodicRetry: 'periodic_retry',
+  ws: 'ws',
+} as const;
+
+export type SettlementTrigger = WireEnum<typeof SETTLEMENT_TRIGGERS>;
+
+/** Post-redeem accounting lifecycle status. */
+export const SETTLEMENT_ACCOUNTING_STATUSES = {
+  accounted: 'accounted',
+  failed: 'failed',
+  pending: 'pending',
+  redeemed: 'redeemed',
+} as const;
+
+export type SettlementAccountingStatus = WireEnum<
+  typeof SETTLEMENT_ACCOUNTING_STATUSES
+>;
+
+/** Risk audit event type (`GET /trades/decisions` rows). */
+export const RISK_AUDIT_EVENT_TYPES = {
+  accountingRollover: 'accounting_rollover',
+  blacklistAdded: 'blacklist_added',
+  blacklistRemoved: 'blacklist_removed',
+  breakerRecovered: 'breaker_recovered',
+  breakerReset: 'breaker_reset',
+  breakerTripped: 'breaker_tripped',
+  engineHalted: 'engine_halted',
+  engineResumed: 'engine_resumed',
+  postTradeUpdate: 'post_trade_update',
+  reconciliationCompleted: 'reconciliation_completed',
+  tradeAllowed: 'trade_allowed',
+  tradeDenied: 'trade_denied',
+} as const;
+
+export type RiskAuditEventType = WireEnum<typeof RISK_AUDIT_EVENT_TYPES>;
+
 export const REDEEM_STATUSES = {
   completed: 'completed',
   failed: 'failed',

@@ -3,10 +3,10 @@ import { computed } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
+import OpportunityFeed from '#/shared/components/opportunity-feed.vue';
 import { useOxideAccess } from '#/shared/composables/use-oxide-access';
 
 import KpiCards from './modules/widgets/kpi-cards.vue';
-import OpportunityFeed from './modules/widgets/opportunity-feed.vue';
 import PnlCurve from './modules/widgets/pnl-curve.vue';
 import QuickLinks from './modules/widgets/quick-links.vue';
 import RecentTrades from './modules/widgets/recent-trades.vue';

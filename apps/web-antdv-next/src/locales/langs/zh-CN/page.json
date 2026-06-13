@@ -150,5 +150,151 @@
     "quickLinks": {
       "title": "快捷入口"
     }
+  },
+  "markets": {
+    "title": "市场列表",
+    "search": {
+      "keyword": "关键词",
+      "keywordPlaceholder": "问题 / slug 模糊搜索",
+      "status": "状态",
+      "category": "类目"
+    },
+    "columns": {
+      "question": "市场问题",
+      "marketId": "市场 ID",
+      "yesQuote": "Yes 买一 · 卖一",
+      "depth": "盘口深度",
+      "status": "状态",
+      "subscribed": "订阅",
+      "subscribedOn": "已订阅",
+      "subscribedOff": "未订阅",
+      "operation": "操作"
+    },
+    "detail": {
+      "title": "市场详情",
+      "question": "问题",
+      "eventId": "事件 ID",
+      "slug": "Slug",
+      "categories": "类目",
+      "yesToken": "Yes Token",
+      "noToken": "No Token",
+      "tickSize": "最小报价单位",
+      "flags": "标记",
+      "feesEnabled": "收费",
+      "endDate": "截止时间",
+      "resolvedAt": "结算时间",
+      "resolvedLive": "本次会话已结算"
+    },
+    "book": {
+      "title": "订单簿（前 5 档）",
+      "empty": "暂无已发布盘口",
+      "yes": "Yes",
+      "no": "No",
+      "noAsks": "无卖盘",
+      "noBids": "无买盘"
+    }
+  },
+  "opportunities": {
+    "feed": {
+      "pause": "暂停",
+      "resume": "恢复"
+    },
+    "tabs": {
+      "recent": "近 24 小时",
+      "history": "历史",
+      "funnel": "漏斗"
+    },
+    "search": {
+      "range": "时间范围",
+      "marketId": "市场 ID"
+    },
+    "columns": {
+      "detectedAt": "检测时间",
+      "market": "市场",
+      "side": "方向",
+      "entryPrice": "入场价",
+      "shares": "数量",
+      "edge": "价差",
+      "expectedProfit": "期望净利",
+      "confidence": "置信度",
+      "score": "评分",
+      "priceZone": "价格区",
+      "category": "类目",
+      "operation": "操作"
+    },
+    "actions": {
+      "audit": "审计链"
+    },
+    "funnel": {
+      "stage": "阶段",
+      "count": "机会数",
+      "rate": "占检测比"
+    },
+    "audit": {
+      "title": "机会审计链",
+      "entryPrice": "入场价",
+      "fillPrice": "成交价",
+      "requestedShares": "请求数量",
+      "filledShares": "成交数量",
+      "fees": "费用",
+      "netProfit": "净利",
+      "payout": "结算赔付",
+      "realizedPnl": "已实现盈亏",
+      "tradeId": "交易",
+      "snapshot": "评分快照",
+      "noReason": "（无拒绝原因）"
+    }
+  },
+  "trades": {
+    "tabs": {
+      "list": "交易列表",
+      "decisions": "风控决策审计"
+    },
+    "newTrades": "有 {count} 条新交易，点击刷新",
+    "search": {
+      "range": "时间范围",
+      "marketId": "市场 ID",
+      "side": "方向",
+      "outcome": "结果",
+      "state": "状态",
+      "mode": "执行模式"
+    },
+    "columns": {
+      "time": "时间",
+      "market": "市场",
+      "side": "方向",
+      "shares": "数量",
+      "price": "价格",
+      "cost": "成本",
+      "pnl": "盈亏",
+      "state": "状态",
+      "outcome": "结果",
+      "mode": "模式",
+      "operation": "操作"
+    },
+    "decisions": {
+      "time": "时间",
+      "market": "市场",
+      "decision": "决策",
+      "reason": "拒绝原因",
+      "toOpportunity": "关联机会"
+    },
+    "detail": {
+      "title": "交易详情",
+      "tradeId": "交易 ID",
+      "latency": "执行延迟",
+      "orderId": "订单 ID",
+      "txHash": "交易哈希",
+      "submittedAt": "提交时间",
+      "confirmedAt": "确认时间",
+      "error": "错误信息",
+      "decisionChain": "决策链"
+    },
+    "pnl": {
+      "cost": "成本",
+      "fee": "费用",
+      "detectedProfit": "检测期望利润",
+      "netProfit": "净利"
+    }
   }
 }

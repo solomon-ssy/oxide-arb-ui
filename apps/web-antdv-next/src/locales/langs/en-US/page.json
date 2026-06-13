@@ -150,5 +150,151 @@
     "quickLinks": {
       "title": "Quick Links"
     }
+  },
+  "markets": {
+    "title": "Markets",
+    "search": {
+      "keyword": "Keyword",
+      "keywordPlaceholder": "Search question / slug",
+      "status": "Status",
+      "category": "Category"
+    },
+    "columns": {
+      "question": "Question",
+      "marketId": "Market ID",
+      "yesQuote": "Yes Bid · Ask",
+      "depth": "Book Depth",
+      "status": "Status",
+      "subscribed": "Subscription",
+      "subscribedOn": "Subscribed",
+      "subscribedOff": "Off",
+      "operation": "Actions"
+    },
+    "detail": {
+      "title": "Market Detail",
+      "question": "Question",
+      "eventId": "Event ID",
+      "slug": "Slug",
+      "categories": "Categories",
+      "yesToken": "Yes Token",
+      "noToken": "No Token",
+      "tickSize": "Tick Size",
+      "flags": "Flags",
+      "feesEnabled": "Fees",
+      "endDate": "End Date",
+      "resolvedAt": "Resolved At",
+      "resolvedLive": "Resolved this session"
+    },
+    "book": {
+      "title": "Order Book (top 5)",
+      "empty": "No published book yet",
+      "yes": "Yes",
+      "no": "No",
+      "noAsks": "No asks",
+      "noBids": "No bids"
+    }
+  },
+  "opportunities": {
+    "feed": {
+      "pause": "Pause",
+      "resume": "Resume"
+    },
+    "tabs": {
+      "recent": "Last 24h",
+      "history": "History",
+      "funnel": "Funnel"
+    },
+    "search": {
+      "range": "Time Range",
+      "marketId": "Market ID"
+    },
+    "columns": {
+      "detectedAt": "Detected At",
+      "market": "Market",
+      "side": "Side",
+      "entryPrice": "Entry Price",
+      "shares": "Shares",
+      "edge": "Edge",
+      "expectedProfit": "Expected Profit",
+      "confidence": "Confidence",
+      "score": "Score",
+      "priceZone": "Price Zone",
+      "category": "Category",
+      "operation": "Actions"
+    },
+    "actions": {
+      "audit": "Audit Trail"
+    },
+    "funnel": {
+      "stage": "Stage",
+      "count": "Opportunities",
+      "rate": "Of Detected"
+    },
+    "audit": {
+      "title": "Opportunity Audit Trail",
+      "entryPrice": "Entry",
+      "fillPrice": "Fill",
+      "requestedShares": "Requested",
+      "filledShares": "Filled",
+      "fees": "Fees",
+      "netProfit": "Net Profit",
+      "payout": "Payout",
+      "realizedPnl": "Realized PnL",
+      "tradeId": "Trade",
+      "snapshot": "Scored Snapshot",
+      "noReason": "(no rejection reason)"
+    }
+  },
+  "trades": {
+    "tabs": {
+      "list": "Trades",
+      "decisions": "Risk Decision Audit"
+    },
+    "newTrades": "{count} new trades — click to refresh",
+    "search": {
+      "range": "Time Range",
+      "marketId": "Market ID",
+      "side": "Side",
+      "outcome": "Outcome",
+      "state": "State",
+      "mode": "Mode"
+    },
+    "columns": {
+      "time": "Time",
+      "market": "Market",
+      "side": "Side",
+      "shares": "Shares",
+      "price": "Price",
+      "cost": "Cost",
+      "pnl": "PnL",
+      "state": "State",
+      "outcome": "Outcome",
+      "mode": "Mode",
+      "operation": "Actions"
+    },
+    "decisions": {
+      "time": "Time",
+      "market": "Market",
+      "decision": "Decision",
+      "reason": "Rejection Reason",
+      "toOpportunity": "Opportunity"
+    },
+    "detail": {
+      "title": "Trade Detail",
+      "tradeId": "Trade ID",
+      "latency": "Latency",
+      "orderId": "Order ID",
+      "txHash": "Tx Hash",
+      "submittedAt": "Submitted At",
+      "confirmedAt": "Confirmed At",
+      "error": "Error",
+      "decisionChain": "Decision Chain"
+    },
+    "pnl": {
+      "cost": "Cost",
+      "fee": "Fee",
+      "detectedProfit": "Detected Profit",
+      "netProfit": "Net Profit"
+    }
   }
 }

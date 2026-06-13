@@ -23,6 +23,8 @@ import type {
  */
 export interface TradeView {
   trade_id: UuidString;
+  /** Originating opportunity — join key into `GET /opportunities/{id}`. */
+  opportunity_id: UuidString;
   market_id: MarketId;
   event_id: string;
   token_id: TokenId;
@@ -51,6 +53,7 @@ export interface TradeView {
 /** Filter + pagination query for `GET /trades` (AND-combined). */
 export interface TradePageQuery extends PageQuery {
   market_id?: MarketId;
+  side?: Side;
   state?: TradeState;
   business_outcome?: TradeBusinessOutcome;
   execution_mode?: ExecutionMode;

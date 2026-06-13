@@ -26,6 +26,87 @@
     "miss": "未成交",
     "failed": "失败"
   },
+  "tradeState": {
+    "intent": "意向",
+    "submitted": "已提交",
+    "fill_observed": "已成交",
+    "fill_processing": "成交处理中",
+    "miss_observed": "未成交观测",
+    "miss_processing": "未成交处理中",
+    "missed": "未成交",
+    "fail_observed": "失败待处理",
+    "fail_processing": "失败处理中",
+    "failed": "失败",
+    "orphaned": "孤立",
+    "settled": "已结算"
+  },
+  "marketCategory": {
+    "crypto": "加密货币",
+    "culture": "文化",
+    "economics": "经济",
+    "finance": "金融",
+    "geopolitics": "地缘政治",
+    "other": "其他",
+    "politics": "政治",
+    "sports": "体育",
+    "tech": "科技",
+    "weather": "天气"
+  },
+  "priceZone": {
+    "z95": "Z95 (≥0.95)",
+    "z96": "Z96 (≥0.96)",
+    "z97": "Z97 (≥0.97)",
+    "z98": "Z98 (≥0.98)",
+    "z99": "Z99 (≥0.99)"
+  },
+  "marketStatus": {
+    "discovered": "已发现",
+    "filtered": "已过滤",
+    "active": "活跃",
+    "paused": "已暂停",
+    "settled": "已结算",
+    "delisted": "已下架"
+  },
+  "opportunityAuditStage": {
+    "detected": "已检测",
+    "validation_rejected": "校验拒绝",
+    "factor_validation_rejected": "因子校验拒绝",
+    "risk_rejected": "风控拒绝",
+    "sizing_rejected": "头寸拒绝",
+    "filled": "已成交",
+    "missed": "未成交",
+    "failed": "执行失败",
+    "settled": "已结算"
+  },
+  "auditOutcome": {
+    "success": "成功",
+    "miss": "未成交",
+    "rejected": "已拒绝",
+    "failed": "失败",
+    "settled": "已结算"
+  },
+  "rejectionStage": {
+    "validation": "校验",
+    "factor_validation": "因子校验",
+    "risk": "风控",
+    "sizing": "头寸",
+    "submit_persist": "提交持久化",
+    "other": "其他"
+  },
+  "riskAuditEventType": {
+    "trade_allowed": "交易放行",
+    "trade_denied": "交易拒绝",
+    "breaker_tripped": "熔断触发",
+    "breaker_reset": "熔断重置",
+    "breaker_recovered": "熔断恢复",
+    "engine_halted": "引擎停机",
+    "engine_resumed": "引擎恢复",
+    "blacklist_added": "加入黑名单",
+    "blacklist_removed": "移出黑名单",
+    "post_trade_update": "成交后更新",
+    "reconciliation_completed": "对账完成",
+    "accounting_rollover": "账务滚动"
+  },
   "materializationRunStatus": {
     "queued": "排队中",
     "running": "运行中",

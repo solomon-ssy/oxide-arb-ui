@@ -36,6 +36,10 @@ export type UsdString = string;
 export type PriceString = string;
 export type SharesString = string;
 export type BpsString = string;
+/** Probability / confidence in `0..1`, serialized as a decimal string. */
+export type ProbabilityString = string;
+/** Generic decimal (factor, score, rate) serialized as a string. */
+export type DecimalString = string;
 
 /** Polymarket `condition_id` (`0x…`, 66 chars) — never mix with a token id. */
 export type MarketId = string;

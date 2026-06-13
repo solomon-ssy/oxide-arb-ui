@@ -80,6 +80,7 @@ function tradeView(id: string): TradeView {
     latency_ms: 42,
     market_id: '0xabc',
     net_profit_usd: '4.1',
+    opportunity_id: '0197a1b2-0000-7000-8000-000000000001',
     order_id: 'ord1',
     price: '0.93',
     shares: '80',

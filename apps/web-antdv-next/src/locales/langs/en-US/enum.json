@@ -26,6 +26,87 @@
     "miss": "Miss",
     "failed": "Failed"
   },
+  "tradeState": {
+    "intent": "Intent",
+    "submitted": "Submitted",
+    "fill_observed": "Filled",
+    "fill_processing": "Fill Processing",
+    "miss_observed": "Miss Observed",
+    "miss_processing": "Miss Processing",
+    "missed": "Missed",
+    "fail_observed": "Fail Observed",
+    "fail_processing": "Fail Processing",
+    "failed": "Failed",
+    "orphaned": "Orphaned",
+    "settled": "Settled"
+  },
+  "marketCategory": {
+    "crypto": "Crypto",
+    "culture": "Culture",
+    "economics": "Economics",
+    "finance": "Finance",
+    "geopolitics": "Geopolitics",
+    "other": "Other",
+    "politics": "Politics",
+    "sports": "Sports",
+    "tech": "Tech",
+    "weather": "Weather"
+  },
+  "priceZone": {
+    "z95": "Z95 (≥0.95)",
+    "z96": "Z96 (≥0.96)",
+    "z97": "Z97 (≥0.97)",
+    "z98": "Z98 (≥0.98)",
+    "z99": "Z99 (≥0.99)"
+  },
+  "marketStatus": {
+    "discovered": "Discovered",
+    "filtered": "Filtered",
+    "active": "Active",
+    "paused": "Paused",
+    "settled": "Settled",
+    "delisted": "Delisted"
+  },
+  "opportunityAuditStage": {
+    "detected": "Detected",
+    "validation_rejected": "Validation Rejected",
+    "factor_validation_rejected": "Factor Validation Rejected",
+    "risk_rejected": "Risk Rejected",
+    "sizing_rejected": "Sizing Rejected",
+    "filled": "Filled",
+    "missed": "Missed",
+    "failed": "Failed",
+    "settled": "Settled"
+  },
+  "auditOutcome": {
+    "success": "Success",
+    "miss": "Miss",
+    "rejected": "Rejected",
+    "failed": "Failed",
+    "settled": "Settled"
+  },
+  "rejectionStage": {
+    "validation": "Validation",
+    "factor_validation": "Factor Validation",
+    "risk": "Risk",
+    "sizing": "Sizing",
+    "submit_persist": "Submit / Persist",
+    "other": "Other"
+  },
+  "riskAuditEventType": {
+    "trade_allowed": "Trade Allowed",
+    "trade_denied": "Trade Denied",
+    "breaker_tripped": "Breaker Tripped",
+    "breaker_reset": "Breaker Reset",
+    "breaker_recovered": "Breaker Recovered",
+    "engine_halted": "Engine Halted",
+    "engine_resumed": "Engine Resumed",
+    "blacklist_added": "Blacklist Added",
+    "blacklist_removed": "Blacklist Removed",
+    "post_trade_update": "Post-trade Update",
+    "reconciliation_completed": "Reconciliation Completed",
+    "accounting_rollover": "Accounting Rollover"
+  },
   "materializationRunStatus": {
     "queued": "Queued",
     "running": "Running",

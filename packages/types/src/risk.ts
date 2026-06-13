@@ -2,8 +2,10 @@ import type {
   IsoDate,
   IsoDateTime,
   MarketId,
+  PageQuery,
   PriceString,
   SharesString,
+  TimeRangeQuery,
   TokenId,
   UsdString,
   UuidString,
@@ -14,6 +16,7 @@ import type {
   ExecutionMode,
   PositionStatus,
   RedeemStatus,
+  RiskAuditEventType,
   Side,
 } from './enums';
 
@@ -81,3 +84,23 @@ export interface CircuitBreakerTrip {
   level: number;
   reason: string;
 }
+
+/**
+ * Risk-decision audit event (`GET /trades/decisions` rows).
+ *
+ * `market_id` / `rejection_reason` are queryable columns lifted at persist
+ * time; rows written before those columns existed surface `null`. `payload`
+ * is the full forensic `RiskAuditEvent` JSON (check results, sizing trace).
+ */
+export interface RiskAuditEventView {
+  event_type: RiskAuditEventType;
+  market_id: MarketId | null;
+  opportunity_id: null | UuidString;
+  trade_id: null | UuidString;
+  rejection_reason: null | string;
+  payload: Record<string, unknown>;
+  created_at: IsoDateTime;
+}
+
+/** Time-window pagination for `GET /trades/decisions` (max span 90 days). */
+export interface TradeDecisionsQuery extends PageQuery, TimeRangeQuery {}
