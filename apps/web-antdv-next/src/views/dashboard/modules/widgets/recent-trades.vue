@@ -4,7 +4,7 @@ import type { TradeView } from '@vben/types';
 import { onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 import { SIDES } from '@vben/types';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';

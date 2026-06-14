@@ -3,7 +3,7 @@ import type { Component } from 'vue';
 import type { ExecutionMode } from '@vben/types';
 
 import { useVbenModal } from '@vben/common-ui';
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 import { EXECUTION_MODES } from '@vben/types';
 
 import { message } from 'antdv-next';
@@ -49,11 +49,11 @@ function createSystemControlApi(): SystemControlApi {
 
   function halt() {
     haltModalApi.setData({
-      onSubmit: async (reason: string) => {
-        await handleRequest(
-          () => haltSystem({ reason }),
-          () => message.success($t('page.system.halt.submitted')),
-        );
+      onSubmit: async (reason: string): Promise<boolean> => {
+        const result = await handleRequest(() => haltSystem({ reason }), {
+          onSuccess: () => message.success($t('page.system.halt.submitted')),
+        });
+        return result !== null;
       },
     });
     haltModalApi.open();
@@ -61,11 +61,15 @@ function createSystemControlApi(): SystemControlApi {
 
   function resume() {
     resumeModalApi.setData({
-      onSubmit: async (operatorAck: string) => {
-        await handleRequest(
+      onSubmit: async (operatorAck: string): Promise<boolean> => {
+        const result = await handleRequest(
           () => resumeSystem({ operator_ack: operatorAck }),
-          () => message.success($t('page.system.resume.submitted')),
+          {
+            onSuccess: () =>
+              message.success($t('page.system.resume.submitted')),
+          },
         );
+        return result !== null;
       },
     });
     resumeModalApi.open();

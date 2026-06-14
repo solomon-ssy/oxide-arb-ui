@@ -9,7 +9,7 @@ import type {
 import { watch } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -47,9 +47,11 @@ async function onSubscribeToggle(
       checked
         ? subscribeMarket(row.market_id)
         : unsubscribeMarket(row.market_id),
-    () => {
-      succeeded = true;
-      void gridApi.query();
+    {
+      onSuccess: () => {
+        succeeded = true;
+        void gridApi.query();
+      },
     },
   );
   return succeeded ? undefined : false;

@@ -4,7 +4,7 @@ import type { OpportunityAuditView, UuidString } from '@vben/types';
 import { ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 
 import { getOpportunityAudit } from '#/api/opportunities';
 import { $t } from '#/locales';

@@ -14,7 +14,8 @@ export interface GovernedActionPayload {
   confirmWord?: string;
   danger?: boolean;
   onCancel?: () => void;
-  onSubmit: (ctx: { actingRole: string; reason: string }) => Promise<void>;
+  /** Return `true` when the governed mutation succeeded. */
+  onSubmit: (ctx: { actingRole: string; reason: string }) => Promise<boolean>;
   summary?: string;
   title: string;
 }
@@ -59,11 +60,13 @@ const [Modal, modalApi] = useVbenModal({
     }
     modalApi.lock();
     try {
-      await payload.value.onSubmit({
+      const succeeded = await payload.value.onSubmit({
         actingRole: actingRole.value,
         reason: reason.value.trim(),
       });
-      modalApi.close();
+      if (succeeded) {
+        modalApi.close();
+      }
     } finally {
       modalApi.unlock();
     }

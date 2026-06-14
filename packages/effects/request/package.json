@@ -17,6 +17,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./oxide": {
+      "types": "./src/oxide/index.ts",
+      "default": "./src/oxide/index.ts"
     }
   },
   "dependencies": {

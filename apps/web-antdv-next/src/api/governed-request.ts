@@ -1,5 +1,7 @@
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
+import { withSilentError } from '@vben/request/oxide';
+
 import { buildApiHeaders } from '#/api/headers';
 import { requestClient } from '#/api/request';
 
@@ -14,12 +16,16 @@ export function buildGovernedHeaders(
 
 type GovernedBody = Record<string, unknown> & { reason: string };
 
+/** Governed writes suppress global toasts; modal handlers own operator feedback. */
+const GOVERNED_CONFIG = withSilentError({});
+
 export async function governedPost<T>(
   url: string,
   body: GovernedBody,
   ctx: GovernedContext,
 ) {
   return requestClient.post<T>(url, body, {
+    ...GOVERNED_CONFIG,
     headers: buildGovernedHeaders(ctx),
   });
 }
@@ -30,6 +36,7 @@ export async function governedPut<T>(
   ctx: GovernedContext,
 ) {
   return requestClient.put<T>(url, body, {
+    ...GOVERNED_CONFIG,
     headers: buildGovernedHeaders(ctx),
   });
 }
@@ -40,6 +47,7 @@ export async function governedDelete<T>(
   ctx: GovernedContext,
 ) {
   return requestClient.delete<T>(url, {
+    ...GOVERNED_CONFIG,
     data: body,
     headers: buildGovernedHeaders(ctx),
   });

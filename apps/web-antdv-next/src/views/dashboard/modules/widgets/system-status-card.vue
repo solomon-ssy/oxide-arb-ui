@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 
 import { Button } from 'antdv-next';
 

@@ -8,12 +8,11 @@ import { Tag } from 'antdv-next';
 import { $t } from '#/locales';
 import { useOxideAccess } from '#/shared/composables/use-oxide-access';
 import { deriveSystemIndicator } from '#/shared/composables/ws/ws-indicators';
-import { useRiskStore, useSystemStore, useWsStore } from '#/store';
+import { useSystemStore, useWsStore } from '#/store';
 
 defineOptions({ name: 'SystemStatusIndicator' });
 
 const systemStore = useSystemStore();
-const riskStore = useRiskStore();
 const wsStore = useWsStore();
 const { hasAccessByCodes } = useOxideAccess();
 
@@ -21,11 +20,7 @@ const { hasAccessByCodes } = useOxideAccess();
 const visible = computed(() => hasAccessByCodes(['system:read']));
 
 const indicator = computed<SystemIndicator>(() =>
-  deriveSystemIndicator(
-    systemStore.status,
-    riskStore.breaker,
-    wsStore.recentAlertLevel,
-  ),
+  deriveSystemIndicator(systemStore.status, wsStore.recentAlertLevel),
 );
 
 const INDICATOR_COLOR: Record<SystemIndicator, string> = {

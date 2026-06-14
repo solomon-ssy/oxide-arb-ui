@@ -123,6 +123,7 @@
       "unauthorized": "Unauthorized. Please log in to continue.",
       "forbidden": "Forbidden. You do not have permission to access this resource.",
       "notFound": "Not Found. The requested resource could not be found.",
+      "conflict": "The request could not be completed due to a conflict with the current system state.",
       "internalServerError": "Internal Server Error. Something went wrong on our end. Please try again later."
     }
   },

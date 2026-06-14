@@ -9,7 +9,7 @@ import { $t } from '#/locales';
 
 export interface HaltReasonPayload {
   onCancel?: () => void;
-  onSubmit: (reason: string) => Promise<void>;
+  onSubmit: (reason: string) => Promise<boolean>;
 }
 
 defineOptions({ name: 'HaltReasonModal' });
@@ -31,8 +31,10 @@ const [Modal, modalApi] = useVbenModal({
     }
     modalApi.lock();
     try {
-      await payload.value.onSubmit(reason.value.trim());
-      modalApi.close();
+      const succeeded = await payload.value.onSubmit(reason.value.trim());
+      if (succeeded) {
+        modalApi.close();
+      }
     } finally {
       modalApi.unlock();
     }

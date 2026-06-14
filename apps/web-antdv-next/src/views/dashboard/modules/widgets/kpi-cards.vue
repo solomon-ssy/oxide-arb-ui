@@ -3,7 +3,7 @@ import type { KpiAccent } from '#/shared/components/dashboard-accent';
 
 import { computed, onMounted, ref } from 'vue';
 
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 
 import { getLivePnl } from '#/api/pnl';
 import { getCircuitBreaker } from '#/api/risk';

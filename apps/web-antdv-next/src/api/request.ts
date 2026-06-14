@@ -1,6 +1,9 @@
 import type { RequestClientOptions } from '@vben/request';
 /**
- * The file can be adjusted according to business logic.
+ * oxide-arb HTTP client wiring.
+ *
+ * Error pipeline lives in `@vben/request/oxide`:
+ * normalize → auto-toast (unless silent) → useRequestHandler fallback
  */
 import type { TokenResponse } from '@vben/types';
 
@@ -9,9 +12,13 @@ import { preferences } from '@vben/preferences';
 import {
   authenticateResponseInterceptor,
   defaultResponseInterceptor,
-  errorMessageResponseInterceptor,
   RequestClient,
 } from '@vben/request';
+import {
+  configureErrorNotifier,
+  oxideNormalizeErrorInterceptor,
+  wrapRequestClient,
+} from '@vben/request/oxide';
 import { useAccessStore } from '@vben/stores';
 
 import { message } from 'antdv-next';
@@ -20,6 +27,8 @@ import { buildApiHeaders } from '#/api/headers';
 import { useAuthStore } from '#/store';
 
 import { refreshTokenApi } from './core';
+
+configureErrorNotifier((text) => message.error(text));
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
@@ -90,13 +99,10 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }),
   );
 
-  client.addResponseInterceptor(
-    errorMessageResponseInterceptor((msg: string, error) => {
-      const responseData = error?.response?.data ?? {};
-      const errorMessage =
-        responseData?.message ?? responseData?.error ?? responseData?.msg ?? '';
-      message.error(errorMessage || msg);
-    }),
+  client.addResponseInterceptor(oxideNormalizeErrorInterceptor());
+
+  wrapRequestClient(
+    client as unknown as Parameters<typeof wrapRequestClient>[0],
   );
 
   return client;

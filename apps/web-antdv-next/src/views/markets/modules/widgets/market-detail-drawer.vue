@@ -4,7 +4,7 @@ import type { MarketBookView, MarketId, MarketView } from '@vben/types';
 import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
-import { useRequestHandler } from '@vben/hooks';
+import { useRequestHandler } from '@vben/request/oxide';
 
 import { Descriptions, DescriptionsItem, Tag } from 'antdv-next';
 

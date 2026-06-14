@@ -29,7 +29,10 @@ import { useTradeStore } from '#/store/trade';
 import { useWsStore } from '#/store/ws';
 
 import { dispatchWsEnvelope } from '../ws-dispatch';
-import { deriveSystemIndicator } from '../ws-indicators';
+import {
+  deriveSystemIndicator,
+  RECOVERABLE_EXECUTION_EMERGENCY_KEY,
+} from '../ws-indicators';
 
 function hooks(): WsDispatchHooks {
   return {
@@ -163,6 +166,33 @@ describe('dispatchWsEnvelope', () => {
     expect(useWsStore().lastSystemStatusAt).toBe('2026-06-11T12:00:00.000Z');
   });
 
+  it('system.status clears a latched execution emergency alert after recovery', () => {
+    const ws = useWsStore();
+    ws.recordAlert(
+      systemAlert({
+        affects_trading: true,
+        idempotency_key: RECOVERABLE_EXECUTION_EMERGENCY_KEY,
+        level: 'critical',
+      }),
+    );
+    dispatchWsEnvelope(envelope('system.status', systemStatus()), hooks());
+    expect(ws.recentAlertLevel).toBeNull();
+  });
+
+  it('system.status preserves unrelated infrastructure warnings after recovery', () => {
+    const ws = useWsStore();
+    ws.recordAlert(
+      systemAlert({
+        affects_trading: true,
+        category: 'infrastructure',
+        idempotency_key: 'settlement.channel_dropped.0xabc',
+        level: 'warning',
+      }),
+    );
+    dispatchWsEnvelope(envelope('system.status', systemStatus()), hooks());
+    expect(ws.recentAlertLevel).toBe('warning');
+  });
+
   it('sync snapshot hydrates every authorized section and marks sync', () => {
     const snapshot: SyncSnapshot = {
       active_materialization_runs: [materializationRun()],
@@ -294,26 +324,19 @@ describe('dispatchWsEnvelope', () => {
 
 describe('deriveSystemIndicator', () => {
   it('aggregates green / yellow / red per the header light rules', () => {
-    expect(deriveSystemIndicator(null, null)).toBe('unknown');
-    expect(deriveSystemIndicator(systemStatus(), null)).toBe('running');
+    expect(deriveSystemIndicator(null)).toBe('unknown');
+    expect(deriveSystemIndicator(systemStatus())).toBe('running');
+    expect(deriveSystemIndicator(systemStatus({ breaker_state: 'open' }))).toBe(
+      'degraded',
+    );
     expect(
-      deriveSystemIndicator(systemStatus({ breaker_state: 'open' }), null),
+      deriveSystemIndicator(systemStatus({ catalog: { state: 'warming' } })),
     ).toBe('degraded');
     expect(
-      deriveSystemIndicator(
-        systemStatus({ catalog: { state: 'warming' } }),
-        null,
-      ),
-    ).toBe('degraded');
-    expect(
-      deriveSystemIndicator(systemStatus({ breaker_state: 'halted' }), null),
+      deriveSystemIndicator(systemStatus({ breaker_state: 'halted' })),
     ).toBe('critical');
-    expect(deriveSystemIndicator(systemStatus(), null, 'warning')).toBe(
-      'degraded',
-    );
-    expect(deriveSystemIndicator(systemStatus(), null, 'critical')).toBe(
-      'degraded',
-    );
-    expect(deriveSystemIndicator(systemStatus(), null, 'info')).toBe('running');
+    expect(deriveSystemIndicator(systemStatus(), 'warning')).toBe('degraded');
+    expect(deriveSystemIndicator(systemStatus(), 'critical')).toBe('degraded');
+    expect(deriveSystemIndicator(systemStatus(), 'info')).toBe('running');
   });
 });

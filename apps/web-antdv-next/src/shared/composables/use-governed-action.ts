@@ -1,8 +1,8 @@
-import { useVbenModal } from '@vben/common-ui';
-import { useRequestHandler } from '@vben/hooks';
-import { $t } from '@vben/locales';
+import type { ApiError } from '@vben/request/oxide';
 
-import { message } from 'antdv-next';
+import { useVbenModal } from '@vben/common-ui';
+import { $t } from '@vben/locales';
+import { showApiError, useRequestHandler } from '@vben/request/oxide';
 
 import GovernedActionModal from '#/shared/components/governed-action-modal.vue';
 
@@ -27,6 +27,17 @@ type GovernedActionApi = {
 };
 
 let governedActionApi: GovernedActionApi | null = null;
+
+/** Governed modals own toast copy (403 acting-role vs backend detail). */
+function showGovernedApiError(error: ApiError) {
+  if (error.httpStatus === 403 || error.code === 403) {
+    showApiError(error, {
+      message: $t('governance.error.actingRoleForbidden'),
+    });
+    return;
+  }
+  showApiError(error);
+}
 
 function createGovernedActionApi(): GovernedActionApi {
   const { handleRequest } = useRequestHandler();
@@ -58,17 +69,13 @@ function createGovernedActionApi(): GovernedActionApi {
         summary: options.summary,
         title: options.title,
         onCancel: () => resolve(null),
-        onSubmit: async (ctx: GovernedContext) => {
-          const result = await handleRequest(
-            () => execute(ctx),
-            undefined,
-            (error: any) => {
-              if (error?.response?.status === 403) {
-                message.error($t('governance.error.actingRoleForbidden'));
-              }
-            },
-          );
+        onSubmit: async (ctx: GovernedContext): Promise<boolean> => {
+          const result = await handleRequest(() => execute(ctx), {
+            onError: showGovernedApiError,
+            silent: true,
+          });
           resolve(result);
+          return result !== null;
         },
       });
       modalApi.setState({ title: options.title });

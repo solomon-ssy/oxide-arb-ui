@@ -5,8 +5,8 @@ import type { DailyPnlSeriesPoint } from '@vben/types';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useRequestHandler } from '@vben/hooks';
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+import { useRequestHandler } from '@vben/request/oxide';
 
 import Decimal from 'decimal.js';
 

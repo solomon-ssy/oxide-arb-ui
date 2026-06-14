@@ -9,7 +9,7 @@ import { $t } from '#/locales';
 
 export interface ResumeAckPayload {
   onCancel?: () => void;
-  onSubmit: (operatorAck: string) => Promise<void>;
+  onSubmit: (operatorAck: string) => Promise<boolean>;
 }
 
 defineOptions({ name: 'ResumeAckModal' });
@@ -34,8 +34,10 @@ const [Modal, modalApi] = useVbenModal({
     }
     modalApi.lock();
     try {
-      await payload.value.onSubmit(operatorAck.value.trim());
-      modalApi.close();
+      const succeeded = await payload.value.onSubmit(operatorAck.value.trim());
+      if (succeeded) {
+        modalApi.close();
+      }
     } finally {
       modalApi.unlock();
     }

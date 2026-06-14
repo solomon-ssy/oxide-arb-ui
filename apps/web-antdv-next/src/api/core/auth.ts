@@ -1,3 +1,4 @@
+import type { ApiRawResponse } from '@vben/request/oxide';
 import type {
   LoginRequest,
   LogoutRequest,
@@ -7,9 +8,8 @@ import type {
   UserInfo,
 } from '@vben/types';
 
-import type { ApiRawResponse } from '#/api/envelope';
+import { unwrapApiResponse } from '@vben/request/oxide';
 
-import { unwrapApiResponse } from '#/api/envelope';
 import { buildAuthApiHeaders } from '#/api/headers';
 import { baseRequestClient, requestClient } from '#/api/request';
 
