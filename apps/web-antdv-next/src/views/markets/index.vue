@@ -41,14 +41,18 @@ async function onSubscribeToggle(
   checked: boolean,
   row: MarketView,
 ): Promise<boolean | undefined> {
-  const ok = await handleRequest(
+  let succeeded = false;
+  await handleRequest(
     () =>
       checked
         ? subscribeMarket(row.market_id)
         : unsubscribeMarket(row.market_id),
-    () => true,
+    () => {
+      succeeded = true;
+      void gridApi.query();
+    },
   );
-  return ok === true ? undefined : false;
+  return succeeded ? undefined : false;
 }
 
 function openDetailDrawer(row: MarketView) {
@@ -64,8 +68,8 @@ function onActionClick({ code, row }: OnActionClickParams<MarketView>) {
   }
 }
 
-/** Skip interactive columns so switches and row actions do not open the drawer. */
-const DETAIL_SKIP_COLUMNS = new Set(['operation', 'subscribed']);
+/** Skip interactive columns so copy/switches/row actions do not open the drawer. */
+const DETAIL_SKIP_COLUMNS = new Set(['market_id', 'operation', 'subscribed']);
 
 const gridEvents: VxeGridListeners<MarketView> = {
   cellClick: ({ column, row }) => {

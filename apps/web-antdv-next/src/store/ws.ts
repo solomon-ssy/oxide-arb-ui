@@ -1,4 +1,4 @@
-import type { AlertLevel, IsoDateTime } from '@vben/types';
+import type { AlertLevel, IsoDateTime, SystemAlertEvent } from '@vben/types';
 
 import { ref } from 'vue';
 
@@ -44,10 +44,10 @@ export const useWsStore = defineStore('oxide-ws', () => {
     lastSystemStatusAt.value = iso ?? new Date().toISOString();
   }
 
-  /** Record a `system.alert` frame for the aggregated header indicator. */
-  function recordAlert(level: AlertLevel) {
-    if (DEGRADED_ALERT_LEVELS.has(level)) {
-      recentAlertLevel.value = level;
+  /** Record only trading-affecting alerts for the aggregated header indicator. */
+  function recordAlert(alert: SystemAlertEvent) {
+    if (alert.affects_trading && DEGRADED_ALERT_LEVELS.has(alert.level)) {
+      recentAlertLevel.value = alert.level;
     }
   }
 

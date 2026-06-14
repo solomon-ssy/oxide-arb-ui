@@ -93,6 +93,28 @@ export const ALERT_LEVELS = {
 
 export type AlertLevel = WireEnum<typeof ALERT_LEVELS>;
 
+export const ALERT_CATEGORIES = {
+  infrastructure: 'infrastructure',
+  operatorNotice: 'operator_notice',
+  schedulerHealth: 'scheduler_health',
+  tradingSafety: 'trading_safety',
+} as const;
+
+export type AlertCategory = WireEnum<typeof ALERT_CATEGORIES>;
+
+export const ALERT_SOURCES = {
+  dataPipeline: 'data_pipeline',
+  execution: 'execution',
+  healthChecker: 'health_checker',
+  reportGenerator: 'report_generator',
+  riskEngine: 'risk_engine',
+  scheduler: 'scheduler',
+  settlement: 'settlement',
+  system: 'system',
+} as const;
+
+export type AlertSource = WireEnum<typeof ALERT_SOURCES>;
+
 /** Alert severities that degrade the header status light (warning and above). */
 export const DEGRADED_ALERT_LEVELS: ReadonlySet<AlertLevel> = new Set([
   ALERT_LEVELS.critical,

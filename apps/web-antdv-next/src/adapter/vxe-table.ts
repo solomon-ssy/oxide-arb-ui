@@ -414,7 +414,8 @@ setupVbenVxeTable({
         if (!value) {
           return h('span', {}, EMPTY_PLACEHOLDER);
         }
-        async function copy() {
+        async function copy(event: MouseEvent) {
+          event.stopPropagation();
           try {
             await navigator.clipboard.writeText(value as string);
             message.success($t('common.copied'));

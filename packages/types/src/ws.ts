@@ -1,5 +1,10 @@
 import type { IsoDateTime, MarketId, UuidString } from './common';
-import type { AlertLevel, PublicationMode } from './enums';
+import type {
+  AlertCategory,
+  AlertLevel,
+  AlertSource,
+  PublicationMode,
+} from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { OpportunityView } from './opportunity';
 import type { LivePnlView, PnlUpdateEvent } from './pnl';
@@ -9,7 +14,7 @@ import type {
   PositionView,
   RiskEngineStateView,
 } from './risk';
-import type { SystemStatus } from './system';
+import type { MaterializationScheduleStatusView, SystemStatus } from './system';
 import type { TradeSettledEvent, TradeView } from './trade';
 
 /**
@@ -47,8 +52,15 @@ export interface WsEnvelope<T = unknown> {
 
 /** WS `system.alert` payload. */
 export interface SystemAlertEvent {
+  idempotency_key: string;
   level: AlertLevel;
+  category: AlertCategory;
+  source: AlertSource;
+  title: string;
   message: string;
+  affects_trading: boolean;
+  visible_toast: boolean;
+  dedupe_secs: number;
 }
 
 /** WS `config.activated` payload. */
@@ -81,6 +93,8 @@ export interface SyncSnapshot {
   recent_opportunities?: OpportunityView[];
   /** Active materialization runs (`Queued` / `Running`), requires `control_factor:read`. */
   active_materialization_runs?: ControlFactorMaterializationRunView[];
+  /** Mode-aware materialization schedule status, requires `control_factor:read`. */
+  materialization_schedules?: MaterializationScheduleStatusView[];
 }
 
 /** Per-channel payload map for typed envelope narrowing. */

@@ -2,6 +2,7 @@ import type {
   ControlFactorMaterializationRunView,
   OpportunityView,
   SyncSnapshot,
+  SystemAlertEvent,
   SystemStatus,
   TradeView,
   WsEnvelope,
@@ -42,6 +43,23 @@ function hooks(): WsDispatchHooks {
 
 function envelope<T>(type: WsEnvelope['type'], data: T): WsEnvelope<T> {
   return { data, timestamp: '2026-06-11T12:00:00.000Z', type };
+}
+
+function systemAlert(
+  overrides: Partial<SystemAlertEvent> = {},
+): SystemAlertEvent {
+  return {
+    affects_trading: false,
+    category: 'operator_notice',
+    dedupe_secs: 60,
+    idempotency_key: 'test.alert',
+    level: 'warning',
+    message: 'lag',
+    source: 'system',
+    title: 'Test alert',
+    visible_toast: false,
+    ...overrides,
+  };
 }
 
 function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
@@ -257,14 +275,9 @@ describe('dispatchWsEnvelope', () => {
 
   it('system.alert is delegated without store writes', () => {
     const h = hooks();
-    dispatchWsEnvelope(
-      envelope('system.alert', { level: 'warning', message: 'lag' }),
-      h,
-    );
-    expect(h.onAlert).toHaveBeenCalledWith({
-      level: 'warning',
-      message: 'lag',
-    });
+    const alert = systemAlert();
+    dispatchWsEnvelope(envelope('system.alert', alert), h);
+    expect(h.onAlert).toHaveBeenCalledWith(alert);
   });
 
   it('error and unknown frames only warn', () => {

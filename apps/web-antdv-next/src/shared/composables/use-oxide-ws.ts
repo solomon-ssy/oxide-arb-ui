@@ -89,6 +89,7 @@ function createOxideWs(): OxideWsApi {
     const marketRefCounts = new Map<MarketId, number>();
 
     const notifications = ref<NotificationItem[]>([]);
+    const alertToastLastSeen = new Map<string, number>();
     let notificationSeq = 0;
 
     const url = computed(() => {
@@ -98,12 +99,21 @@ function createOxideWs(): OxideWsApi {
       return token ? buildWsUrl(apiURL, token) : undefined;
     });
 
-    function pushNotification(title: string, msg: string) {
+    function pushNotification(title: string, msg: string, key?: string) {
+      const id = key ? `oxide-alert-${key}` : `oxide-ws-${notificationSeq + 1}`;
+      const existing = notifications.value.find((item) => item.id === id);
+      if (existing) {
+        existing.date = new Date().toLocaleString();
+        existing.isRead = false;
+        existing.message = msg;
+        existing.title = title;
+        return;
+      }
       notificationSeq += 1;
       notifications.value.unshift({
         avatar: preferences.app.defaultAvatar,
         date: new Date().toLocaleString(),
-        id: `oxide-ws-${notificationSeq}`,
+        id,
         isRead: false,
         message: msg,
         title,
@@ -111,6 +121,17 @@ function createOxideWs(): OxideWsApi {
       if (notifications.value.length > NOTIFICATION_CAP) {
         notifications.value.length = NOTIFICATION_CAP;
       }
+    }
+
+    function shouldToastAlert(key: string, dedupeSecs: number): boolean {
+      const now = Date.now();
+      const lastSeen = alertToastLastSeen.get(key);
+      const dedupeMs = Math.max(dedupeSecs, 1) * 1000;
+      if (lastSeen !== undefined && now - lastSeen < dedupeMs) {
+        return false;
+      }
+      alertToastLastSeen.set(key, now);
+      return true;
     }
 
     const socket = useWebSocket(url, {
@@ -151,14 +172,20 @@ function createOxideWs(): OxideWsApi {
         }
         dispatchWsEnvelope(envelope, {
           onAlert(alert) {
-            wsStore.recordAlert(alert.level);
-            notification[ALERT_NOTIFY[alert.level]]({
-              description: alert.message,
-              title: $t(`page.ws.alertLevel.${alert.level}`),
-            });
+            wsStore.recordAlert(alert);
+            if (
+              alert.visible_toast &&
+              shouldToastAlert(alert.idempotency_key, alert.dedupe_secs)
+            ) {
+              notification[ALERT_NOTIFY[alert.level]]({
+                description: alert.message,
+                title: alert.title,
+              });
+            }
             pushNotification(
-              $t(`page.ws.alertLevel.${alert.level}`),
+              alert.title || $t(`page.ws.alertLevel.${alert.level}`),
               alert.message,
+              alert.idempotency_key,
             );
           },
           onBreakerTrip(trip) {
@@ -233,6 +260,7 @@ function createOxideWs(): OxideWsApi {
       desired.value = false;
       marketRefCounts.clear();
       notifications.value = [];
+      alertToastLastSeen.clear();
       notificationSeq = 0;
       wsStore.clearRecentAlert();
       socket.close();
