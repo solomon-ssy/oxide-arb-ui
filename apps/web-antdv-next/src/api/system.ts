@@ -1,6 +1,7 @@
 import type {
   HaltRequest,
   HealthReport,
+  MaterializationScheduleStatusView,
   ModeTransitionReport,
   ResumeRequest,
   SwitchModeRequest,
@@ -16,6 +17,7 @@ export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
   export const health = `${base}/health`;
+  export const materializationSchedules = `${base}/materialization-schedules`;
   export const halt = `${base}/halt`;
   export const resume = `${base}/resume`;
   export const mode = `${base}/mode`;
@@ -29,6 +31,13 @@ export async function getSystemStatus() {
 /** `GET /system/health` — per-subsystem health report. */
 export async function getSystemHealth() {
   return requestClient.get<HealthReport>(SystemApi.health);
+}
+
+/** `GET /system/materialization-schedules` — mode-aware schedule cadence status. */
+export async function getMaterializationSchedules() {
+  return requestClient.get<MaterializationScheduleStatusView[]>(
+    SystemApi.materializationSchedules,
+  );
 }
 
 /**

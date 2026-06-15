@@ -47,7 +47,8 @@
       "critical": "严重告警",
       "emergency": "紧急告警"
     },
-    "breakerTripped": "熔断器触发（L{level}）",
+    "breakerStateChanged": "熔断器状态变更：{state}",
+    "breakerStateChangedDescription": "熔断器状态已更新，请查看风控页确认原因。",
     "configActivated": "运行时配置已激活：{version}",
     "controlPublished": "控制因子已发布（{mode}）：{id}",
     "marketResolved": "市场已结算：{market}"
@@ -127,10 +128,31 @@
       "toRisk": "去风控页"
     },
     "replayCard": {
-      "title": "回放任务",
-      "hint": "控制因子物化 / 回放流水线中的活跃 run（WS 实时更新）。",
-      "empty": "暂无进行中的回放任务",
-      "toReplay": "查看回放"
+      "title": "物化任务",
+      "hint": "定时物化调度健康度、进行中的 run（WS 实时）与最近历史（REST）。",
+      "schedulesTitle": "定时调度",
+      "schedulesEmpty": "暂无调度状态（等待 WS sync 或刷新）",
+      "activeTitle": "进行中",
+      "activeEmpty": "暂无进行中的物化 / 回放 run",
+      "historyTitle": "最近历史",
+      "historyEmpty": "暂无物化 run 记录",
+      "lastRun": "末次运行",
+      "lastSuccess": "上次成功",
+      "nextDue": "下次计划",
+      "lastStatus": "末次状态",
+      "runnable": "已启用",
+      "toReplay": "查看全部",
+      "inactiveReason": {
+        "unsupported_execution_mode": "当前模式不支持",
+        "live_only_evidence": "仅 Live 模式",
+        "evidence_warmup": "证据预热中"
+      },
+      "schedules": {
+        "execution-quality-hourly": "执行质量（每小时）",
+        "reconciliation-health-hourly": "对账健康（每小时）",
+        "bucket-risk-daily": "分桶风险（每日）",
+        "portfolio-risk-daily": "组合风险（每日）"
+      }
     },
     "feed": {
       "title": "实时机会",
@@ -297,6 +319,106 @@
       "fee": "费用",
       "detectedProfit": "检测期望利润",
       "netProfit": "净利"
+    }
+  },
+  "risk": {
+    "breaker": {
+      "title": "熔断器",
+      "reset": "重置熔断器",
+      "resetSummary": "该操作会强制将熔断器切回 Closed。请确认风险原因已排除，操作会写入审计。",
+      "resetSubmitted": "重置指令已提交，等待实时状态回显",
+      "reason": "原因",
+      "cooldownUntil": "冷却至",
+      "snapshotAt": "快照时间"
+    },
+    "dailyLoss": {
+      "title": "日亏损",
+      "absoluteOnly": "无运行时配置读取权限，仅显示绝对值"
+    },
+    "exposure": {
+      "total": "总敞口",
+      "totalTooltip": "风险引擎口径：持仓与预留合计，不等同钱包余额",
+      "positions": "持仓数",
+      "dailyBudgetSpent": "日预算占用",
+      "dailyBudgetSpentTooltip": "今日已消耗的风险预算，来自风险快照"
+    },
+    "positions": {
+      "title": "持仓敞口",
+      "columns": {
+        "market": "市场",
+        "side": "方向",
+        "shares": "份额",
+        "cost": "成本",
+        "currentValue": "现值",
+        "unrealizedPnl": "未实现盈亏",
+        "realizedPnl": "已实现盈亏",
+        "status": "状态",
+        "openedAt": "开仓时间"
+      }
+    }
+  },
+  "replay": {
+    "title": "物化 / 回放",
+    "search": {
+      "status": "状态",
+      "statusPlaceholder": "全部状态"
+    },
+    "columns": {
+      "createdAt": "创建时间",
+      "runId": "Run ID",
+      "runKind": "类型",
+      "status": "状态",
+      "windowFrom": "窗口起",
+      "windowTo": "窗口止",
+      "createdBy": "创建人",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情"
+    },
+    "detail": {
+      "title": "物化 Run 详情",
+      "runId": "Run ID",
+      "runKind": "类型",
+      "status": "状态",
+      "window": "时间窗口",
+      "createdBy": "创建人",
+      "startedAt": "开始时间",
+      "finishedAt": "结束时间",
+      "failureCode": "失败码",
+      "failureDetail": "失败详情",
+      "stagesTitle": "阶段报告",
+      "stagesEmpty": "暂无阶段报告"
+    }
+  },
+  "blacklist": {
+    "title": "黑名单",
+    "columns": {
+      "market": "市场",
+      "scope": "范围",
+      "reason": "业务原因",
+      "expiresAt": "过期时间",
+      "missCount": "未中次数",
+      "createdAt": "加入时间",
+      "updatedAt": "最近更新",
+      "operation": "操作"
+    },
+    "actions": {
+      "add": "加入黑名单",
+      "remove": "移除",
+      "removeSummary": "将从运行时黑名单移除市场 {market}，请确认该市场已可恢复交易。"
+    },
+    "form": {
+      "marketId": "市场 ID",
+      "marketPlaceholder": "0x + 64 位 condition_id",
+      "marketInvalid": "请输入合法 MarketId（0x + 64 位十六进制）",
+      "blacklistReason": "业务原因",
+      "reasonPlaceholder": "请选择加入黑名单的业务原因",
+      "reasonRequired": "请选择业务原因"
+    },
+    "feedback": {
+      "added": "黑名单已新增",
+      "removed": "黑名单已移除"
     }
   }
 }

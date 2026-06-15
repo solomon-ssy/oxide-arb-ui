@@ -18,6 +18,7 @@
   "delete": "删除",
   "detail": "详情",
   "create": "新增",
+  "createWithName": "新增{name}",
   "yes": "是",
   "no": "否",
   "copied": "已复制",

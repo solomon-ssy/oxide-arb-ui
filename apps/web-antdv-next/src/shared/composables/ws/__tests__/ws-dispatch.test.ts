@@ -1,6 +1,7 @@
 import type {
   ControlFactorMaterializationRunView,
   OpportunityView,
+  RiskEngineStateView,
   SyncSnapshot,
   SystemAlertEvent,
   SystemStatus,
@@ -37,7 +38,7 @@ import {
 function hooks(): WsDispatchHooks {
   return {
     onAlert: vi.fn(),
-    onBreakerTrip: vi.fn(),
+    onBreakerChanged: vi.fn(),
     onConfigActivated: vi.fn(),
     onControlPublished: vi.fn(),
     onMarketResolved: vi.fn(),
@@ -81,6 +82,40 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
     pending_reservations: 1,
     total_exposure: '120.00',
     uptime_secs: 3600,
+    ...overrides,
+  };
+}
+
+function riskState(
+  overrides: Partial<RiskEngineStateView> = {},
+): RiskEngineStateView {
+  return {
+    breaker_level: null,
+    breaker_state: BREAKER_STATES.closed,
+    consecutive_misses: 0,
+    cooldown_until: null,
+    daily_budget_spent: '0',
+    daily_fee_usd: '0',
+    daily_loss_usd: '0',
+    daily_miss_count: 0,
+    daily_pnl: '0',
+    daily_success_count: 0,
+    daily_trade_count: 0,
+    daily_window_start: '2026-06-11',
+    halt_reason: null,
+    hourly_fee_usd: '0',
+    hourly_loss_usd: '0',
+    hourly_miss_count: 0,
+    hourly_success_count: 0,
+    hourly_trade_count: 0,
+    hwm_equity: '0',
+    is_halted: false,
+    last_emergency_at: null,
+    last_emergency_reason: null,
+    snapshot_at: '2026-06-11T12:00:00Z',
+    total_exposure: '0',
+    weekly_loss_usd: '0',
+    weekly_trade_count: 0,
     ...overrides,
   };
 }
@@ -196,6 +231,17 @@ describe('dispatchWsEnvelope', () => {
   it('sync snapshot hydrates every authorized section and marks sync', () => {
     const snapshot: SyncSnapshot = {
       active_materialization_runs: [materializationRun()],
+      materialization_schedules: [
+        {
+          activation: { state: 'runnable' },
+          last_run_at: '2026-06-11T11:00:00.000Z',
+          last_success_at: '2026-06-11T11:05:00.000Z',
+          last_terminal_status: 'completed',
+          mode_contract: 'all_modes',
+          next_due_at: '2026-06-11T12:00:00.000Z',
+          schedule_id: 'execution-quality-hourly',
+        },
+      ],
       pnl: {
         daily_loss_usd: '0',
         daily_pnl: '15.5',
@@ -211,6 +257,7 @@ describe('dispatchWsEnvelope', () => {
     expect(usePnlStore().live?.total_realized_pnl).toBe('99');
     expect(useOpportunityStore().feed).toHaveLength(1);
     expect(useReplayStore().queuedOrRunning).toHaveLength(1);
+    expect(useReplayStore().schedules).toHaveLength(1);
     expect(useWsStore().lastSyncAt).not.toBeNull();
     expect(useWsStore().lastSystemStatusAt).toBe('2026-06-11T12:00:00.000Z');
   });
@@ -289,20 +336,17 @@ describe('dispatchWsEnvelope', () => {
     expect(useReplayStore().queuedOrRunning).toHaveLength(0);
   });
 
-  it('risk.circuit_breaker records the trip and delegates the refetch', () => {
+  it('risk.circuit_breaker applies the full state and delegates notification', () => {
     const h = hooks();
-    dispatchWsEnvelope(
-      envelope('risk.circuit_breaker', { level: 3, reason: 'daily loss cap' }),
-      h,
-    );
-    expect(useRiskStore().lastTrip).toEqual({
-      level: 3,
-      reason: 'daily loss cap',
+    const state = riskState({
+      breaker_level: 'daily',
+      breaker_state: BREAKER_STATES.halted,
+      halt_reason: 'daily loss cap',
+      is_halted: true,
     });
-    expect(h.onBreakerTrip).toHaveBeenCalledWith({
-      level: 3,
-      reason: 'daily loss cap',
-    });
+    dispatchWsEnvelope(envelope('risk.circuit_breaker', state), h);
+    expect(useRiskStore().breaker).toEqual(state);
+    expect(h.onBreakerChanged).toHaveBeenCalledWith(state);
   });
 
   it('system.alert is delegated without store writes', () => {

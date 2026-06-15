@@ -11,6 +11,8 @@
     "summary": "Summary"
   },
   "error": {
-    "actingRoleForbidden": "The selected acting role is not permitted for this action"
+    "actingRoleForbidden": "You cannot perform this governed action under the selected role",
+    "actingRoleRequired": "Select an acting role",
+    "reasonTooShort": "Governance reason must be at least 4 characters"
   }
 }

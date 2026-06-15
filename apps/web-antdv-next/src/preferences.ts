@@ -26,4 +26,8 @@ export const overridesPreferences = defineOverridesPreferences({
     fit: 'contain',
     source: '/static/logo.png',
   },
+  theme: {
+    builtinType: 'orange',
+    colorPrimary: 'hsl(18 89% 40%)',
+  },
 });

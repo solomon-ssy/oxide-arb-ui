@@ -24,7 +24,11 @@ const canReadOpportunity = computed(() =>
   hasAccessByCodes(['opportunity:read']),
 );
 const canReadTrade = computed(() => hasAccessByCodes(['trade:read']));
-const canReadReplay = computed(() => hasAccessByCodes(['control_factor:read']));
+const canReadReplay = computed(
+  () =>
+    hasAccessByCodes(['control_factor:read']) ||
+    hasAccessByCodes(['replay:read']),
+);
 
 const showKpi = computed(
   () => canReadPnl.value || canReadSystem.value || canReadRisk.value,

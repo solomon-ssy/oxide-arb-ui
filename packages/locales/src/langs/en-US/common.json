@@ -18,6 +18,7 @@
   "delete": "Delete",
   "detail": "Detail",
   "create": "Create",
+  "createWithName": "Create {name}",
   "yes": "Yes",
   "no": "No",
   "copied": "Copied",

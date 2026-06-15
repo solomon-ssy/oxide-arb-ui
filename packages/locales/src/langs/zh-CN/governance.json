@@ -1,8 +1,8 @@
 {
   "modal": {
     "actingRole": "执行角色",
-    "actingRoleTip": "选择本次治理动作所代表的角色",
     "confirmWord": "确认词",
+    "actingRoleTip": "选择本次治理动作所代表的角色",
     "confirmWordPlaceholder": "请输入确认词以继续",
     "confirmWordTip": "输入「{word}」以确认此高风险操作",
     "reason": "原因",
@@ -11,6 +11,8 @@
     "summary": "操作摘要"
   },
   "error": {
-    "actingRoleForbidden": "所选执行角色无权执行此操作"
+    "actingRoleForbidden": "当前用户不能以所选角色执行该治理操作",
+    "actingRoleRequired": "请选择执行角色",
+    "reasonTooShort": "治理说明至少 4 个字符"
   }
 }

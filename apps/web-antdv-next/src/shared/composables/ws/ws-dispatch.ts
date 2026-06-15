@@ -1,5 +1,4 @@
 import type {
-  CircuitBreakerTrip,
   ConfigActivatedEvent,
   ControlFactorMaterializationRunView,
   ControlPublishedEvent,
@@ -8,6 +7,7 @@ import type {
   OpportunityView,
   PnlUpdateEvent,
   PositionView,
+  RiskEngineStateView,
   SyncSnapshot,
   SystemAlertEvent,
   SystemStatus,
@@ -30,17 +30,14 @@ import { useWsStore } from '#/store/ws';
 /**
  * UI side-effects delegated by the dispatcher. Store writes happen inside
  * `dispatchWsEnvelope`; anything user-facing (notifications, toasts) or
- * I/O-bearing (the breaker REST refetch) is owned by the caller, which keeps
- * the dispatcher a pure store reducer that unit tests can drive directly.
+ * I/O-bearing work is owned by the caller, which keeps the dispatcher a pure
+ * store reducer that unit tests can drive directly.
  */
 export interface WsDispatchHooks {
   /** `system.alert` frame — notification center + bell. */
   onAlert: (alert: SystemAlertEvent) => void;
-  /**
-   * `risk.circuit_breaker` trip. The frame carries only `{level, reason}`,
-   * so the handler must refetch the full breaker snapshot via REST.
-   */
-  onBreakerTrip: (trip: CircuitBreakerTrip) => void;
+  /** `risk.circuit_breaker` full-state frame. */
+  onBreakerChanged: (state: RiskEngineStateView) => void;
   /** `config.activated` frame — lightweight info toast. */
   onConfigActivated: (event: ConfigActivatedEvent) => void;
   /** `control.published` frame — lightweight info toast. */
@@ -105,9 +102,9 @@ export function dispatchWsEnvelope(
       break;
     }
     case 'risk.circuit_breaker': {
-      const trip = envelope.data as CircuitBreakerTrip;
-      useRiskStore().recordTrip(trip);
-      hooks.onBreakerTrip(trip);
+      const state = envelope.data as RiskEngineStateView;
+      useRiskStore().applyBreaker(state);
+      hooks.onBreakerChanged(state);
       break;
     }
     case 'risk.position_update': {

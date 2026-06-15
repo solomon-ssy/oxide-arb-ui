@@ -1,5 +1,6 @@
 import type {
   ControlFactorMaterializationRunView,
+  ControlFactorStageReportView,
   ControlFactorType,
   IsoDateTime,
   MaterializationRunStatus,
@@ -46,6 +47,13 @@ export async function fetchReplayPage(params?: ReplayPageParams) {
 export async function getReplayRun(runId: string) {
   return requestClient.get<ControlFactorMaterializationRunView>(
     ReplayApi.run(runId),
+  );
+}
+
+/** `GET /replay/{run_id}/history` — per-stage report history for a run. */
+export async function getReplayHistory(runId: string) {
+  return requestClient.get<ControlFactorStageReportView[]>(
+    `${ReplayApi.run(runId)}/history`,
   );
 }
 

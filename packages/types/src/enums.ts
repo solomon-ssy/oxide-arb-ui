@@ -83,6 +83,25 @@ export const CIRCUIT_BREAKER_LEVELS = {
 
 export type CircuitBreakerLevel = WireEnum<typeof CIRCUIT_BREAKER_LEVELS>;
 
+export const BLACKLIST_SCOPES = {
+  dataPath: 'data_path',
+  full: 'full',
+  tradingPath: 'trading_path',
+} as const;
+
+export type BlacklistScope = WireEnum<typeof BLACKLIST_SCOPES>;
+
+export const BLACKLIST_REASONS = {
+  consecutiveFokFailures: 'consecutive_fok_failures',
+  dataNotFound: 'data_not_found',
+  depthDrop: 'depth_drop',
+  manual: 'manual',
+  tickChange: 'tick_change',
+  tradeFailedAfterMatched: 'trade_failed_after_matched',
+} as const;
+
+export type BlacklistReason = WireEnum<typeof BLACKLIST_REASONS>;
+
 /** Operational alert severity, lowest → highest. */
 export const ALERT_LEVELS = {
   critical: 'critical',
@@ -371,6 +390,8 @@ export type MaterializationRunStatus = WireEnum<
 
 export const MATERIALIZATION_RUN_KINDS = {
   backfill: 'backfill',
+  configComparison: 'config_comparison',
+  forensicReport: 'forensic_report',
   incident: 'incident',
   scheduled: 'scheduled',
 } as const;
@@ -379,6 +400,8 @@ export type MaterializationRunKind = WireEnum<typeof MATERIALIZATION_RUN_KINDS>;
 
 export const RUN_TRIGGER_TYPES = {
   backfill: 'backfill',
+  configComparison: 'config_comparison',
+  forensicReport: 'forensic_report',
   incident: 'incident',
   scheduled: 'scheduled',
 } as const;

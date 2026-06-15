@@ -107,6 +107,24 @@
     "reconciliation_completed": "Reconciliation Completed",
     "accounting_rollover": "Accounting Rollover"
   },
+  "positionStatus": {
+    "open": "Open",
+    "closed": "Closed",
+    "settled": "Settled"
+  },
+  "blacklistScope": {
+    "data_path": "Data Path",
+    "trading_path": "Trading Path",
+    "full": "Full"
+  },
+  "blacklistReason": {
+    "consecutive_fok_failures": "Consecutive FOK Failures",
+    "trade_failed_after_matched": "Trade Failed After Matched",
+    "depth_drop": "Depth Drop",
+    "tick_change": "Tick Change",
+    "manual": "Manual",
+    "data_not_found": "Data Not Found"
+  },
   "materializationRunStatus": {
     "queued": "Queued",
     "running": "Running",
@@ -115,5 +133,39 @@
     "report_only": "Report only",
     "failed": "Failed",
     "cancelled": "Cancelled"
+  },
+  "materializationRunKind": {
+    "scheduled": "Scheduled",
+    "backfill": "Backfill",
+    "incident": "Incident",
+    "config_comparison": "Config comparison",
+    "forensic_report": "Forensic report"
+  },
+  "materializationScheduleModeContract": {
+    "all_modes": "All modes",
+    "live_only": "Live only",
+    "live_after_evidence_warmup": "Live after evidence warmup"
+  },
+  "materializationStageName": {
+    "resolve_inputs": "Resolve inputs",
+    "book_reconstruction": "Book reconstruction",
+    "detector_evidence": "Detector evidence",
+    "execution_evidence": "Execution evidence",
+    "portfolio_risk_evidence": "Portfolio risk evidence",
+    "settlement_reconciliation_evidence": "Settlement reconciliation",
+    "training_example_build": "Training example build",
+    "factor_build": "Factor build",
+    "quality_gate_evaluation": "Quality gate evaluation",
+    "draft_write": "Draft write"
+  },
+  "evidenceStageStatus": {
+    "pending": "Pending",
+    "running": "Running",
+    "completed": "Completed",
+    "completed_with_warnings": "Completed (warnings)",
+    "skipped_not_required": "Skipped",
+    "insufficient_coverage": "Insufficient coverage",
+    "production_ineligible": "Production ineligible",
+    "failed": "Failed"
   }
 }

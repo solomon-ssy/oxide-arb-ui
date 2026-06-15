@@ -62,7 +62,8 @@ const status = computed(() => systemStore.status);
 const breaker = computed(() => riskStore.breaker);
 
 const breakerReason = computed(
-  () => breaker.value?.halt_reason ?? riskStore.lastTrip?.reason ?? null,
+  () =>
+    breaker.value?.halt_reason ?? breaker.value?.last_emergency_reason ?? null,
 );
 
 const dailyPnlSign = computed(() => decimalSign(status.value?.daily_pnl));

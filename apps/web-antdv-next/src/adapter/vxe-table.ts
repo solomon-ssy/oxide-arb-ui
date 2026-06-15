@@ -96,6 +96,11 @@ setupVbenVxeTable({
         round: true,
         showOverflow: true,
         size: 'small',
+        toolbarConfig: {
+          custom: true,
+          refresh: { code: 'query' },
+          zoom: true,
+        },
       } as VxeTableGridOptions,
     });
 
@@ -468,9 +473,35 @@ setupVbenVxeTable({
   useVbenForm,
 });
 
+/** Standard oxide grid toolbar: refresh, fullscreen (zoom), column settings. */
+export const OXIDE_GRID_TOOLBAR_CONFIG = {
+  custom: true,
+  refresh: { code: 'query' },
+  zoom: true,
+} as const;
+
 export const useVbenVxeGrid = <T extends Record<string, any>>(
-  ...rest: Parameters<typeof useGrid<T, ComponentType, ComponentPropsMap>>
-) => useGrid<T, ComponentType, ComponentPropsMap>(...rest);
+  options: Parameters<typeof useGrid<T, ComponentType, ComponentPropsMap>>[0],
+) => {
+  const { gridOptions, ...rest } = options;
+  const toolbarConfig = gridOptions?.toolbarConfig;
+
+  return useGrid<T, ComponentType, ComponentPropsMap>({
+    ...rest,
+    gridOptions: gridOptions
+      ? {
+          ...gridOptions,
+          toolbarConfig:
+            toolbarConfig?.enabled === false
+              ? toolbarConfig
+              : {
+                  ...OXIDE_GRID_TOOLBAR_CONFIG,
+                  ...toolbarConfig,
+                },
+        }
+      : { toolbarConfig: OXIDE_GRID_TOOLBAR_CONFIG },
+  });
+};
 
 /** Payload delivered by the `CellOperation` renderer to page-level handlers. */
 export type OnActionClickParams<T = Recordable<any>> = {

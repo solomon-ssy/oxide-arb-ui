@@ -11,6 +11,8 @@ import type {
   UuidString,
 } from './common';
 import type {
+  BlacklistReason,
+  BlacklistScope,
   BreakerStateName,
   CircuitBreakerLevel,
   ExecutionMode,
@@ -75,14 +77,16 @@ export interface PositionView {
   settled_at: IsoDateTime | null;
 }
 
-/**
- * WS `risk.circuit_breaker` trip notification. `level` is the numeric
- * escalation tier (1 trade … 4 system) — a trip carries only `{level, reason}`,
- * so consumers must refetch the full {@link RiskEngineStateView} via REST.
- */
-export interface CircuitBreakerTrip {
-  level: number;
-  reason: string;
+/** Operator-facing blacklist entry (`GET /risk/blacklist`). */
+export interface BlacklistEntryView {
+  market_id: MarketId;
+  token_id: null | TokenId;
+  scope: BlacklistScope;
+  blacklist_reason: BlacklistReason;
+  expires_at: IsoDateTime | null;
+  miss_count: number;
+  created_at: IsoDateTime;
+  updated_at: IsoDateTime;
 }
 
 /**

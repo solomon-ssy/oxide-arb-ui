@@ -4,6 +4,7 @@ import type { NotificationItem } from '@vben/layouts';
 import type {
   AlertLevel,
   MarketId,
+  RiskEngineStateView,
   WsClientCommand,
   WsEnvelope,
 } from '@vben/types';
@@ -15,15 +16,18 @@ import { computed, effectScope, ref, watch } from 'vue';
 import { useAppConfig } from '@vben/hooks';
 import { preferences } from '@vben/preferences';
 import { useAccessStore } from '@vben/stores';
-import { WS_CHANNELS } from '@vben/types';
+import {
+  BREAKER_NOMINAL_STATES,
+  BREAKER_STATES,
+  WS_CHANNELS,
+} from '@vben/types';
 
 import { useWebSocket } from '@vueuse/core';
 import { message, notification } from 'antdv-next';
 
-import { getCircuitBreaker } from '#/api/risk';
 import { $t } from '#/locales';
 import { useOxideAccess } from '#/shared/composables/use-oxide-access';
-import { useRiskStore, useWsStore } from '#/store';
+import { useWsStore } from '#/store';
 
 import { authorizedGlobalChannels } from './ws/ws-channel-permissions';
 import { dispatchWsEnvelope } from './ws/ws-dispatch';
@@ -79,7 +83,6 @@ function createOxideWs(): OxideWsApi {
   const api = scope.run(() => {
     const accessStore = useAccessStore();
     const wsStore = useWsStore();
-    const riskStore = useRiskStore();
     const { hasAccessByCodes } = useOxideAccess();
     const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
@@ -132,6 +135,28 @@ function createOxideWs(): OxideWsApi {
       }
       alertToastLastSeen.set(key, now);
       return true;
+    }
+
+    function notifyBreakerState(state: RiskEngineStateView) {
+      if (BREAKER_NOMINAL_STATES.has(state.breaker_state)) {
+        return;
+      }
+      const stateLabel = $t(`enum.breakerState.${state.breaker_state}`);
+      const detail =
+        state.halt_reason ??
+        state.last_emergency_reason ??
+        $t('page.ws.breakerStateChangedDescription');
+      const notify =
+        state.breaker_state === BREAKER_STATES.halted ? 'error' : 'warning';
+      notification[notify]({
+        description: detail,
+        title: $t('page.ws.breakerStateChanged', { state: stateLabel }),
+      });
+      pushNotification(
+        $t('page.ws.breakerStateChanged', { state: stateLabel }),
+        detail,
+        `breaker-${state.snapshot_at}`,
+      );
     }
 
     const socket = useWebSocket(url, {
@@ -188,22 +213,8 @@ function createOxideWs(): OxideWsApi {
               alert.idempotency_key,
             );
           },
-          onBreakerTrip(trip) {
-            notification.error({
-              description: trip.reason,
-              title: $t('page.ws.breakerTripped', { level: trip.level }),
-            });
-            pushNotification(
-              $t('page.ws.breakerTripped', { level: trip.level }),
-              trip.reason,
-            );
-            // The trip frame carries only `{level, reason}` — refetch the
-            // authoritative snapshot instead of rendering a half state.
-            getCircuitBreaker()
-              .then((view) => riskStore.applyBreaker(view))
-              .catch((error) =>
-                console.warn('[oxide-ws] breaker refetch failed:', error),
-              );
+          onBreakerChanged(state) {
+            notifyBreakerState(state);
           },
           onConfigActivated(event) {
             message.info(

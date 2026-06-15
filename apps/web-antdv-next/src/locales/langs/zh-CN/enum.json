@@ -107,6 +107,24 @@
     "reconciliation_completed": "对账完成",
     "accounting_rollover": "账务滚动"
   },
+  "positionStatus": {
+    "open": "持仓中",
+    "closed": "已关闭",
+    "settled": "已结算"
+  },
+  "blacklistScope": {
+    "data_path": "数据路径",
+    "trading_path": "交易路径",
+    "full": "全链路"
+  },
+  "blacklistReason": {
+    "consecutive_fok_failures": "连续 FOK 失败",
+    "trade_failed_after_matched": "撮合后失败",
+    "depth_drop": "深度骤降",
+    "tick_change": "报价单位变化",
+    "manual": "人工加入",
+    "data_not_found": "数据缺失"
+  },
   "materializationRunStatus": {
     "queued": "排队中",
     "running": "运行中",
@@ -115,5 +133,39 @@
     "report_only": "仅报告",
     "failed": "失败",
     "cancelled": "已取消"
+  },
+  "materializationRunKind": {
+    "scheduled": "定时",
+    "backfill": "回放",
+    "incident": "事故",
+    "config_comparison": "配置对比",
+    "forensic_report": "取证报告"
+  },
+  "materializationScheduleModeContract": {
+    "all_modes": "全模式",
+    "live_only": "仅 Live",
+    "live_after_evidence_warmup": "Live 证据预热后"
+  },
+  "materializationStageName": {
+    "resolve_inputs": "解析输入",
+    "book_reconstruction": "订单簿重建",
+    "detector_evidence": "检测证据",
+    "execution_evidence": "执行证据",
+    "portfolio_risk_evidence": "组合风险证据",
+    "settlement_reconciliation_evidence": "结算对账证据",
+    "training_example_build": "训练样本构建",
+    "factor_build": "因子构建",
+    "quality_gate_evaluation": "质量门评估",
+    "draft_write": "草稿写入"
+  },
+  "evidenceStageStatus": {
+    "pending": "待处理",
+    "running": "运行中",
+    "completed": "已完成",
+    "completed_with_warnings": "完成（有警告）",
+    "skipped_not_required": "跳过",
+    "insufficient_coverage": "覆盖不足",
+    "production_ineligible": "不可投产",
+    "failed": "失败"
   }
 }

@@ -47,7 +47,8 @@
       "critical": "Critical Alert",
       "emergency": "Emergency Alert"
     },
-    "breakerTripped": "Circuit breaker tripped (L{level})",
+    "breakerStateChanged": "Circuit breaker state changed: {state}",
+    "breakerStateChangedDescription": "The breaker state changed. Open the risk page to review the cause.",
     "configActivated": "Runtime config activated: {version}",
     "controlPublished": "Control factors published ({mode}): {id}",
     "marketResolved": "Market resolved: {market}"
@@ -127,10 +128,31 @@
       "toRisk": "Risk page"
     },
     "replayCard": {
-      "title": "Replay Runs",
-      "hint": "Active materialization / replay pipeline runs (WS live).",
-      "empty": "No replay runs in progress",
-      "toReplay": "View replay"
+      "title": "Materialization",
+      "hint": "Scheduled cadence health, active runs (WS live), and recent history (REST).",
+      "schedulesTitle": "Schedules",
+      "schedulesEmpty": "No schedule status yet (awaiting WS sync or refresh)",
+      "activeTitle": "In progress",
+      "activeEmpty": "No materialization / replay runs in progress",
+      "historyTitle": "Recent history",
+      "historyEmpty": "No materialization run records",
+      "lastRun": "Last run",
+      "lastSuccess": "Last success",
+      "nextDue": "Next due",
+      "lastStatus": "Last status",
+      "runnable": "Enabled",
+      "toReplay": "View all",
+      "inactiveReason": {
+        "unsupported_execution_mode": "Unsupported mode",
+        "live_only_evidence": "Live only",
+        "evidence_warmup": "Evidence warmup"
+      },
+      "schedules": {
+        "execution-quality-hourly": "Execution quality (hourly)",
+        "reconciliation-health-hourly": "Reconciliation health (hourly)",
+        "bucket-risk-daily": "Bucket risk (daily)",
+        "portfolio-risk-daily": "Portfolio risk (daily)"
+      }
     },
     "feed": {
       "title": "Live Opportunities",
@@ -297,6 +319,106 @@
       "fee": "Fee",
       "detectedProfit": "Detected Profit",
       "netProfit": "Net Profit"
+    }
+  },
+  "risk": {
+    "breaker": {
+      "title": "Circuit Breaker",
+      "reset": "Reset Breaker",
+      "resetSummary": "This forces the breaker back to Closed. Confirm the risk cause has been cleared; the action is audited.",
+      "resetSubmitted": "Reset submitted, waiting for realtime state echo",
+      "reason": "Reason",
+      "cooldownUntil": "Cooldown Until",
+      "snapshotAt": "Snapshot At"
+    },
+    "dailyLoss": {
+      "title": "Daily Loss",
+      "absoluteOnly": "No runtime config permission; showing absolute loss only"
+    },
+    "exposure": {
+      "total": "Total Exposure",
+      "totalTooltip": "Risk-engine basis: positions plus reservations, not wallet balance",
+      "positions": "Positions",
+      "dailyBudgetSpent": "Daily Budget Spent",
+      "dailyBudgetSpentTooltip": "Risk budget consumed today from the risk snapshot"
+    },
+    "positions": {
+      "title": "Position Exposure",
+      "columns": {
+        "market": "Market",
+        "side": "Side",
+        "shares": "Shares",
+        "cost": "Cost",
+        "currentValue": "Current Value",
+        "unrealizedPnl": "Unrealized PnL",
+        "realizedPnl": "Realized PnL",
+        "status": "Status",
+        "openedAt": "Opened At"
+      }
+    }
+  },
+  "replay": {
+    "title": "Materialization / Replay",
+    "search": {
+      "status": "Status",
+      "statusPlaceholder": "All statuses"
+    },
+    "columns": {
+      "createdAt": "Created",
+      "runId": "Run ID",
+      "runKind": "Kind",
+      "status": "Status",
+      "windowFrom": "Window from",
+      "windowTo": "Window to",
+      "createdBy": "Created by",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail"
+    },
+    "detail": {
+      "title": "Materialization Run",
+      "runId": "Run ID",
+      "runKind": "Kind",
+      "status": "Status",
+      "window": "Time window",
+      "createdBy": "Created by",
+      "startedAt": "Started",
+      "finishedAt": "Finished",
+      "failureCode": "Failure code",
+      "failureDetail": "Failure detail",
+      "stagesTitle": "Stage reports",
+      "stagesEmpty": "No stage reports yet"
+    }
+  },
+  "blacklist": {
+    "title": "Blacklist",
+    "columns": {
+      "market": "Market",
+      "scope": "Scope",
+      "reason": "Business Reason",
+      "expiresAt": "Expires At",
+      "missCount": "Misses",
+      "createdAt": "Added At",
+      "updatedAt": "Updated At",
+      "operation": "Actions"
+    },
+    "actions": {
+      "add": "Add to Blacklist",
+      "remove": "Remove",
+      "removeSummary": "Remove market {market} from the runtime blacklist. Confirm it is safe to trade again."
+    },
+    "form": {
+      "marketId": "Market ID",
+      "marketPlaceholder": "0x + 64-char condition_id",
+      "marketInvalid": "Enter a valid MarketId (0x + 64 hex chars)",
+      "blacklistReason": "Business Reason",
+      "reasonPlaceholder": "Select why this market is being blacklisted",
+      "reasonRequired": "Select a business reason"
+    },
+    "feedback": {
+      "added": "Blacklist entry added",
+      "removed": "Blacklist entry removed"
     }
   }
 }

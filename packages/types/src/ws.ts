@@ -9,11 +9,7 @@ import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { OpportunityView } from './opportunity';
 import type { LivePnlView, PnlUpdateEvent } from './pnl';
 import type { ControlFactorMaterializationRunView } from './replay';
-import type {
-  CircuitBreakerTrip,
-  PositionView,
-  RiskEngineStateView,
-} from './risk';
+import type { PositionView, RiskEngineStateView } from './risk';
 import type { MaterializationScheduleStatusView, SystemStatus } from './system';
 import type { TradeSettledEvent, TradeView } from './trade';
 
@@ -106,7 +102,7 @@ export interface WsChannelPayloads {
   'materialization.run_update': ControlFactorMaterializationRunView;
   'opportunity.detected': OpportunityView;
   'pnl.update': PnlUpdateEvent;
-  'risk.circuit_breaker': CircuitBreakerTrip;
+  'risk.circuit_breaker': RiskEngineStateView;
   'risk.position_update': PositionView;
   'system.alert': SystemAlertEvent;
   'system.status': SystemStatus;

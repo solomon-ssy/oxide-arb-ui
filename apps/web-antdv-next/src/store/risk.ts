@@ -1,5 +1,4 @@
 import type {
-  CircuitBreakerTrip,
   PositionView,
   RiskEngineStateView,
   SyncSnapshot,
@@ -7,30 +6,33 @@ import type {
 
 import { ref } from 'vue';
 
+import { POSITION_STATUSES } from '@vben/types';
+
 import { defineStore } from 'pinia';
 
 /**
  * Live risk-engine state: breaker snapshot + open positions. A WS
- * `risk.circuit_breaker` frame carries only `{level, reason}`, so consumers
- * record the trip here and refetch the full snapshot via REST.
+ * `risk.circuit_breaker` and `risk.position_update` frames carry the same
+ * outbound views as REST/sync, so the store can apply them directly.
  */
 export const useRiskStore = defineStore('oxide-risk', () => {
   const breaker = ref<null | RiskEngineStateView>(null);
   const positions = ref<PositionView[]>([]);
-  const lastTrip = ref<CircuitBreakerTrip | null>(null);
 
   function applyBreaker(next: RiskEngineStateView) {
     breaker.value = next;
-  }
-
-  function recordTrip(trip: CircuitBreakerTrip) {
-    lastTrip.value = trip;
   }
 
   function upsertPosition(position: PositionView) {
     const index = positions.value.findIndex(
       (p) => p.position_id === position.position_id,
     );
+    if (position.status !== POSITION_STATUSES.open) {
+      if (index !== -1) {
+        positions.value.splice(index, 1);
+      }
+      return;
+    }
     if (index === -1) {
       positions.value.push(position);
     } else {
@@ -50,7 +52,6 @@ export const useRiskStore = defineStore('oxide-risk', () => {
   function $reset() {
     breaker.value = null;
     positions.value = [];
-    lastTrip.value = null;
   }
 
   return {
@@ -58,9 +59,7 @@ export const useRiskStore = defineStore('oxide-risk', () => {
     applyBreaker,
     applySyncSnapshot,
     breaker,
-    lastTrip,
     positions,
-    recordTrip,
     upsertPosition,
   };
 });
