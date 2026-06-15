@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onUnmounted, watch } from 'vue';
+import { computed, onUnmounted, provide, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -8,11 +8,15 @@ import {
   BasicLayout,
   LockScreen,
   Notification,
+  RuntimeConfigGovernedKey,
+  RuntimeConfigRequestClientKey,
+  RuntimeConfigRevisionKey,
   UserDropdown,
 } from '@vben/layouts';
 import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
+import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
 import ExecutionModeSwitcher from '#/shared/components/header/execution-mode-switcher.vue';
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
@@ -20,11 +24,16 @@ import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useOxideWs } from '#/shared/composables/use-oxide-ws';
 import { useSystemControl } from '#/shared/composables/use-system-control';
-import { useAuthStore } from '#/store';
+import { useAuthStore, useSystemStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
-const { GovernedActionHost } = useGovernedAction();
+const systemStore = useSystemStore();
+
+const { GovernedActionHost, governed } = useGovernedAction();
 const { HaltModalHost, ResumeModalHost } = useSystemControl();
+provide(RuntimeConfigGovernedKey, governed);
+provide(RuntimeConfigRequestClientKey, requestClient);
+provide(RuntimeConfigRevisionKey, () => systemStore.activeConfigVersion);
 
 const oxideWs = useOxideWs();
 // System alerts + breaker trips pushed over WS feed the bell list.

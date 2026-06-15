@@ -27,6 +27,8 @@ export const useReplayStore = defineStore('oxide-replay', () => {
   );
   const schedules = ref<MaterializationScheduleStatusView[]>([]);
   const recentRuns = ref<ControlFactorMaterializationRunView[]>([]);
+  /** Bumped on each WS run update so list pages can refresh. */
+  const revision = ref(0);
 
   function mergeRecentRun(run: ControlFactorMaterializationRunView) {
     const id = run.materialization_run_id;
@@ -54,6 +56,7 @@ export const useReplayStore = defineStore('oxide-replay', () => {
     }
     activeRuns.value = next;
     mergeRecentRun(run);
+    revision.value += 1;
     return wasActive && isTerminalMaterializationRun(run.status);
   }
 
@@ -108,6 +111,7 @@ export const useReplayStore = defineStore('oxide-replay', () => {
     queuedOrRunning,
     recentRuns,
     recentRunsExcludingActive,
+    revision,
     schedules,
     setRecentRuns,
     setSchedules,

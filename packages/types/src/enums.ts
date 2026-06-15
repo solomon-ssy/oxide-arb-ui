@@ -374,6 +374,109 @@ export const PUBLICATION_MODES = {
 
 export type PublicationMode = WireEnum<typeof PUBLICATION_MODES>;
 
+export const FACTOR_STATUSES = {
+  candidate: 'candidate',
+  draft: 'draft',
+  expired: 'expired',
+  published: 'published',
+  rejected: 'rejected',
+  reportOnly: 'report_only',
+  rolledBack: 'rolled_back',
+  shadow: 'shadow',
+  superseded: 'superseded',
+} as const;
+
+export type FactorStatus = WireEnum<typeof FACTOR_STATUSES>;
+
+export const PUBLICATION_STATUSES = {
+  active: 'active',
+  expired: 'expired',
+  pending: 'pending',
+  rejected: 'rejected',
+  rolledBack: 'rolled_back',
+  superseded: 'superseded',
+} as const;
+
+export type PublicationStatus = WireEnum<typeof PUBLICATION_STATUSES>;
+
+export const SHADOW_DECISION_TYPES = {
+  noEffect: 'no_effect',
+  wouldReject: 'would_reject',
+  wouldScore: 'would_score',
+  wouldSize: 'would_size',
+} as const;
+
+export type ShadowDecisionType = WireEnum<typeof SHADOW_DECISION_TYPES>;
+
+export const CONTROL_AUDIT_EVENT_TYPES = {
+  factorCreated: 'factor_created',
+  factorExpired: 'factor_expired',
+  factorRejected: 'factor_rejected',
+  factorTransitioned: 'factor_transitioned',
+  publicationActivated: 'publication_activated',
+  publicationCreated: 'publication_created',
+  publicationExpired: 'publication_expired',
+  publicationRolledBack: 'publication_rolled_back',
+  runtimeConfigActivated: 'runtime_config_activated',
+  runtimeConfigRolledBack: 'runtime_config_rolled_back',
+  runtimeConfigVersionCreated: 'runtime_config_version_created',
+  snapshotLoadFailed: 'snapshot_load_failed',
+} as const;
+
+export type ControlAuditEventType = WireEnum<typeof CONTROL_AUDIT_EVENT_TYPES>;
+
+export const AUDIT_RESOURCE_TYPES = {
+  factor: 'factor',
+  materializationRun: 'materialization_run',
+  publication: 'publication',
+  runtimeConfigVersion: 'runtime_config_version',
+  snapshot: 'snapshot',
+} as const;
+
+export type AuditResourceType = WireEnum<typeof AUDIT_RESOURCE_TYPES>;
+
+export const RUNTIME_CONFIG_VERSION_SOURCES = {
+  bootstrap: 'bootstrap',
+  import: 'import',
+  operator: 'operator',
+} as const;
+
+export type RuntimeConfigVersionSource = WireEnum<
+  typeof RUNTIME_CONFIG_VERSION_SOURCES
+>;
+
+export const RUNTIME_CONFIG_ACTIVATION_KINDS = {
+  initial: 'initial',
+  promote: 'promote',
+  rollback: 'rollback',
+} as const;
+
+export type RuntimeConfigActivationKind = WireEnum<
+  typeof RUNTIME_CONFIG_ACTIVATION_KINDS
+>;
+
+export const OPERATION_CATEGORIES = {
+  auth: 'auth',
+  governance: 'governance',
+  market: 'market',
+  other: 'other',
+  rbac: 'rbac',
+  replay: 'replay',
+  risk: 'risk',
+  runtimeConfig: 'runtime_config',
+  system: 'system',
+} as const;
+
+export type OperationCategory = WireEnum<typeof OPERATION_CATEGORIES>;
+
+export const OPERATION_OUTCOMES = {
+  denied: 'denied',
+  failure: 'failure',
+  success: 'success',
+} as const;
+
+export type OperationOutcome = WireEnum<typeof OPERATION_OUTCOMES>;
+
 export const MATERIALIZATION_RUN_STATUSES = {
   cancelled: 'cancelled',
   completed: 'completed',

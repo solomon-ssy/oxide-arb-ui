@@ -1,0 +1,506 @@
+{
+  "detection": {
+    "calibration": {
+      "bootstrap_alpha": {
+        "label": "Bootstrap Alpha 先验",
+        "help": "Bootstrap Alpha 先验。默认：2.0。"
+      },
+      "bootstrap_beta": {
+        "label": "Bootstrap Beta 先验",
+        "help": "Bootstrap Beta 先验。默认：0.2。"
+      },
+      "fused_p_ceiling": {
+        "label": "融合概率上限",
+        "help": "融合概率上限。默认：0.995。"
+      },
+      "fused_p_floor": {
+        "label": "融合概率下限",
+        "help": "融合概率下限。默认：0.80。"
+      },
+      "fusion_prior_strength": {
+        "label": "融合先验强度 n₀",
+        "help": "融合先验强度 n₀。默认：20。"
+      },
+      "min_sample_size": {
+        "label": "桶最小样本量",
+        "help": "桶最小样本量。默认：30。"
+      },
+      "refresh_interval_secs": {
+        "label": "校准刷新间隔 (秒)",
+        "help": "校准刷新间隔 (秒)。默认：3600。"
+      }
+    },
+    "endgame": {
+      "convergence_tracker": {
+        "max_capacity": {
+          "label": "收敛跟踪最大容量",
+          "help": "收敛跟踪最大容量。默认：10000。注意：运行中修改可能重建内部状态或清空在途缓存，请在低流量窗口操作。"
+        },
+        "max_idle_secs": {
+          "label": "收敛空闲淘汰 (秒)",
+          "help": "收敛空闲淘汰 (秒)。默认：7200。"
+        }
+      },
+      "emission_cooldown": {
+        "base_cooldown_secs": {
+          "label": "发射基础冷却 (秒)",
+          "help": "发射基础冷却 (秒)。默认：30。"
+        },
+        "max_capacity": {
+          "label": "发射冷却缓存容量",
+          "help": "发射冷却缓存容量。默认：4096。注意：运行中修改可能重建内部状态或清空在途缓存，请在低流量窗口操作。"
+        },
+        "max_multiplier": {
+          "label": "发射指数退避上限",
+          "help": "发射指数退避上限。默认：16.0。"
+        }
+      },
+      "fill_probability": {
+        "base_fill_prob": {
+          "label": "FOK 基础成交概率",
+          "help": "FOK 基础成交概率。默认：0.90。"
+        },
+        "depth_penalty_per_pct": {
+          "label": "深度惩罚/百分点",
+          "help": "深度惩罚/百分点。默认：0.02。"
+        },
+        "depth_penalty_threshold_pct": {
+          "label": "深度惩罚阈值 (%)",
+          "help": "深度惩罚阈值 (%)。默认：20。"
+        },
+        "resolution_proximity_bonus": {
+          "label": "临近结算奖励",
+          "help": "临近结算奖励。默认：0.05。"
+        },
+        "staleness_penalty_per_level": {
+          "label": "陈旧度逐级惩罚",
+          "help": "陈旧度逐级惩罚。默认：0.05。"
+        }
+      },
+      "high_threshold": {
+        "label": "收敛判定价格阈值",
+        "help": "收敛判定价格阈值。资金关键：该参数会直接影响可交易范围、敞口或检测准入，变更前请仔细评估。默认：0.95。"
+      },
+      "max_investment_usd": {
+        "label": "单次最大 Walk 金额 (USD)",
+        "help": "单次最大 Walk 金额 (USD)。默认：500。"
+      },
+      "min_convergence_duration_secs": {
+        "label": "最小收敛持续时间 (秒)",
+        "help": "最小收敛持续时间 (秒)。默认：300。"
+      },
+      "min_profit_per_share": {
+        "label": "最低每股利润",
+        "help": "最低每股利润。默认：0.005。"
+      },
+      "scorer": {
+        "category_weights": {
+          "label": "分类评分权重",
+          "help": "分类评分权重。"
+        },
+        "max_depth_usage_pct": {
+          "label": "检测器最大深度占用 (%)",
+          "help": "检测器最大深度占用 (%)。默认：50。"
+        },
+        "min_score": {
+          "label": "最低综合分数",
+          "help": "最低综合分数。默认：0.10。"
+        }
+      },
+      "settlement_window_hours": {
+        "label": "结算扫描窗口 (小时)",
+        "help": "结算扫描窗口 (小时)。默认：24。"
+      }
+    },
+    "min_profit_threshold_usd": {
+      "label": "最低净利润阈值 (USD)",
+      "help": "最低净利润阈值 (USD)。默认：0.50。"
+    }
+  },
+  "execution": {
+    "coalescer": {
+      "coalesce_window_ms": {
+        "label": "双 token 合并窗口 (ms)",
+        "help": "双 token 合并窗口 (ms)。默认：40。"
+      }
+    },
+    "endgame_latency": {
+      "dispatch_immediate_threshold": {
+        "label": "即时分发分数阈值",
+        "help": "即时分发分数阈值。默认：0.5。"
+      },
+      "max_book_to_order_ms": {
+        "label": "订单簿到下单 SLO (ms)",
+        "help": "订单簿到下单 SLO (ms)。默认：5。"
+      }
+    },
+    "funnel": {
+      "max_queue_size": {
+        "label": "漏斗队列容量",
+        "help": "漏斗队列容量。默认：50。"
+      },
+      "min_dispatch_interval_ms": {
+        "label": "低优先级分发间隔 (ms)",
+        "help": "低优先级分发间隔 (ms)。默认：75。"
+      }
+    },
+    "timeout": {
+      "dispatcher_timeout_ms": {
+        "label": "执行派发超时 (ms)",
+        "help": "执行派发超时 (ms)。默认：30000。"
+      },
+      "max_validation_slippage_bps": {
+        "label": "校验最大滑点 (bps)",
+        "help": "校验最大滑点 (bps)。默认：50。"
+      },
+      "trade_confirm_poll_interval_secs": {
+        "label": "成交确认轮询间隔 (秒)",
+        "help": "成交确认轮询间隔 (秒)。默认：2。"
+      },
+      "trade_confirm_timeout_secs": {
+        "label": "成交确认总超时 (秒)",
+        "help": "成交确认总超时 (秒)。默认：60。"
+      }
+    }
+  },
+  "market_data": {
+    "enabled_categories": {
+      "label": "启用交易品类",
+      "help": "启用交易品类。空列表表示全部品类可交易；仅收窄热交易集合，不影响全量入库与结算证据。默认：空。"
+    },
+    "staleness_acceptable_ms": {
+      "label": "可接受陈旧度 (ms)",
+      "help": "可接受陈旧度 (ms)。默认：5000。"
+    },
+    "staleness_expired_ms": {
+      "label": "过期陈旧度上界 (ms)",
+      "help": "过期陈旧度上界 (ms)。默认：30000。"
+    },
+    "staleness_fresh_ms": {
+      "label": "新鲜度阈值 (ms)",
+      "help": "新鲜度阈值 (ms)。默认：2000。"
+    },
+    "staleness_stale_ms": {
+      "label": "陈旧阈值 (ms)",
+      "help": "陈旧阈值 (ms)。默认：15000。"
+    }
+  },
+  "notification": {
+    "alert_cooldown_secs": {
+      "label": "告警冷却 (秒)",
+      "help": "告警冷却 (秒)。默认：60。"
+    },
+    "telegram": {
+      "bot_token": {
+        "label": "Telegram Bot Token",
+        "help": "Telegram Bot Token。敏感字段：读取接口会掩码，未修改时不会回传。默认：空。"
+      },
+      "chat_id": {
+        "label": "Telegram Chat ID",
+        "help": "Telegram Chat ID。默认：空。"
+      },
+      "enabled": {
+        "label": "启用 Telegram",
+        "help": "启用 Telegram。默认：false。"
+      }
+    },
+    "webhook": {
+      "enabled": {
+        "label": "启用 Webhook",
+        "help": "启用 Webhook。默认：false。"
+      },
+      "url": {
+        "label": "Webhook URL",
+        "help": "Webhook URL。敏感字段：读取接口会掩码，未修改时不会回传。默认：空。"
+      }
+    }
+  },
+  "risk": {
+    "api_error_rate_threshold": {
+      "label": "API 错误率阈值",
+      "help": "API 错误率阈值。默认：0.10。"
+    },
+    "bankroll_usd": {
+      "label": "Kelly 总资金 (USD)",
+      "help": "Kelly 总资金 (USD)。默认：1000。"
+    },
+    "base_cooldown_secs": {
+      "label": "基础冷却 (秒)",
+      "help": "基础冷却 (秒)。默认：900。"
+    },
+    "circuit_breaker": {
+      "half_open_probes": {
+        "label": "半开成功探测次数",
+        "help": "半开成功探测次数。默认：2。"
+      },
+      "l1_cooldown_secs": {
+        "label": "L1 冷却 (秒)",
+        "help": "L1 冷却 (秒)。默认：60。"
+      },
+      "l2_cooldown_secs": {
+        "label": "L2 冷却 (秒)",
+        "help": "L2 冷却 (秒)。默认：900。"
+      },
+      "l3_cooldown_secs": {
+        "label": "L3 冷却 (秒)",
+        "help": "L3 冷却 (秒)。默认：3600。"
+      },
+      "l4_cooldown_secs": {
+        "label": "L4 冷却 (秒)",
+        "help": "L4 冷却 (秒)。默认：7200。"
+      },
+      "max_cooldown_secs": {
+        "label": "L2 最大冷却 (秒)",
+        "help": "L2 最大冷却 (秒)。默认：14400。"
+      },
+      "recovery_observation_secs": {
+        "label": "恢复观察期 (秒)",
+        "help": "恢复观察期 (秒)。默认：300。"
+      }
+    },
+    "cooldown_multiplier": {
+      "label": "冷却指数倍数",
+      "help": "冷却指数倍数。默认：2.0。"
+    },
+    "daily_budget_usd": {
+      "label": "日预算 (USD)",
+      "help": "日预算 (USD)。默认：50。"
+    },
+    "daily_directional_budget": {
+      "label": "方向日交易预算",
+      "help": "方向日交易预算。默认：10。"
+    },
+    "drawdown": {
+      "drawdown_reduction_factor": {
+        "label": "回撤减仓因子",
+        "help": "回撤减仓因子。默认：0.5。"
+      },
+      "max_drawdown_pct": {
+        "label": "最大回撤 (%)",
+        "help": "最大回撤 (%)。默认：10。"
+      }
+    },
+    "heartbeat_max_failures": {
+      "label": "心跳失败阈值",
+      "help": "心跳失败阈值。默认：3。"
+    },
+    "kelly": {
+      "max_kelly": {
+        "label": "Kelly 上限",
+        "help": "Kelly 上限。默认：0.25。"
+      },
+      "max_probability_staleness_secs": {
+        "label": "Kelly 校准最大陈旧度 (秒)",
+        "help": "Kelly 校准最大陈旧度 (秒)。默认：7200。"
+      },
+      "min_calibration_samples": {
+        "label": "Kelly 最小样本数",
+        "help": "Kelly 最小样本数。默认：10。"
+      },
+      "min_edge_bps": {
+        "label": "Kelly 最小边际 (bps)",
+        "help": "Kelly 最小边际 (bps)。默认：200。"
+      },
+      "min_probability_confidence": {
+        "label": "Kelly 最小置信度",
+        "help": "Kelly 最小置信度。默认：0.3。"
+      }
+    },
+    "kelly_fraction": {
+      "label": "四分之一 Kelly 倍数",
+      "help": "四分之一 Kelly 倍数。默认：0.25。"
+    },
+    "market_miss_blacklist_count": {
+      "label": "未命中拉黑阈值",
+      "help": "未命中拉黑阈值。默认：3。"
+    },
+    "market_miss_blacklist_duration_secs": {
+      "label": "自动拉黑 TTL (秒)",
+      "help": "自动拉黑 TTL (秒)。默认：3600。"
+    },
+    "max_concurrent_directional": {
+      "label": "同方向最大并发",
+      "help": "同方向最大并发。默认：3。"
+    },
+    "max_consecutive_misses": {
+      "label": "会话连续未命中阈值",
+      "help": "会话连续未命中阈值。默认：3。"
+    },
+    "max_cooldown_secs": {
+      "label": "自适应冷却上限 (秒)",
+      "help": "自适应冷却上限 (秒)。默认：7200。"
+    },
+    "max_daily_fee_spend_usd": {
+      "label": "日手续费上限 (USD)",
+      "help": "日手续费上限 (USD)。默认：25。"
+    },
+    "max_daily_loss_usd": {
+      "label": "日亏损上限 (USD)",
+      "help": "日亏损上限 (USD)。默认：75。"
+    },
+    "max_depth_usage_pct": {
+      "label": "最大深度占用 (%)",
+      "help": "最大深度占用 (%)。默认：30。"
+    },
+    "max_hourly_fee_spend_usd": {
+      "label": "小时手续费上限 (USD)",
+      "help": "小时手续费上限 (USD)。默认：10。"
+    },
+    "max_hourly_loss_usd": {
+      "label": "小时亏损上限 (USD)",
+      "help": "小时亏损上限 (USD)。默认：30。"
+    },
+    "max_metrics_staleness_secs": {
+      "label": "Live 指标最大陈旧度 (秒)",
+      "help": "Live 指标最大陈旧度 (秒)。默认：15。"
+    },
+    "max_open_positions": {
+      "label": "最大持仓数",
+      "help": "最大持仓数。默认：3。"
+    },
+    "max_single_bet_usd": {
+      "label": "单笔最大下注 (USD)",
+      "help": "单笔最大下注 (USD)。默认：25。"
+    },
+    "max_single_loss_usd": {
+      "label": "单笔亏损上限 (USD)",
+      "help": "单笔亏损上限 (USD)。默认：30。"
+    },
+    "max_single_market_exposure_usd": {
+      "label": "单市场敞口上限 (USD)",
+      "help": "单市场敞口上限 (USD)。默认：500。"
+    },
+    "max_total_exposure_pct": {
+      "label": "组合敞口占比上限 (%)",
+      "help": "组合敞口占比上限 (%)。默认：80。"
+    },
+    "max_total_exposure_usd": {
+      "label": "总敞口上限 (USD)",
+      "help": "总敞口上限 (USD)。默认：5000。"
+    },
+    "max_weekly_loss_usd": {
+      "label": "周亏损上限 (USD)",
+      "help": "周亏损上限 (USD)。默认：120。"
+    },
+    "metrics_refresh_interval_secs": {
+      "label": "指标刷新间隔 (秒)",
+      "help": "指标刷新间隔 (秒)。默认：5。"
+    },
+    "min_balance_usd": {
+      "label": "最低余额 (USD)",
+      "help": "最低余额 (USD)。默认：50。"
+    },
+    "min_depth_usd": {
+      "label": "最低深度 (USD)",
+      "help": "最低深度 (USD)。默认：200。"
+    },
+    "min_trade_usd": {
+      "label": "最小交易规模 (USD)",
+      "help": "最小交易规模 (USD)。默认：1。"
+    },
+    "permanent_blacklist_markets": {
+      "label": "永久黑名单市场",
+      "help": "永久黑名单市场。默认：空。"
+    },
+    "permanent_blacklist_tokens": {
+      "label": "永久黑名单 Token",
+      "help": "永久黑名单 Token。默认：空。"
+    },
+    "potential_loss_escalation_secs": {
+      "label": "潜在亏损升级超时 (秒)",
+      "help": "潜在亏损升级超时 (秒)。默认：3600。"
+    },
+    "reconciliation_interval_secs": {
+      "label": "对账间隔 (秒)",
+      "help": "对账间隔 (秒)。默认：300。"
+    },
+    "reconciliation_tolerance_usd": {
+      "label": "对账容差 (USD)",
+      "help": "对账容差 (USD)。默认：1.0。"
+    },
+    "reservation_gc_interval_secs": {
+      "label": "预占 GC 间隔 (秒)",
+      "help": "预占 GC 间隔 (秒)。默认：30。"
+    },
+    "reservation_ttl_secs": {
+      "label": "预占 TTL (秒)",
+      "help": "预占 TTL (秒)。默认：300。"
+    },
+    "reserve_balance_usd": {
+      "label": "Kelly 预留余额 (USD)",
+      "help": "Kelly 预留余额 (USD)。默认：100。"
+    },
+    "ws_disconnect_threshold_secs": {
+      "label": "WS 断连阈值 (秒)",
+      "help": "WS 断连阈值 (秒)。默认：30。"
+    }
+  },
+  "schema_version": {
+    "label": "文档 Schema 版本",
+    "help": "文档 Schema 版本。"
+  },
+  "settlement": {
+    "lifecycle": {
+      "dedup_window_secs": {
+        "label": "结算去重窗口 (秒)",
+        "help": "结算去重窗口 (秒)。默认：30。注意：运行中修改可能重建内部状态或清空在途缓存，请在低流量窗口操作。"
+      },
+      "max_redeem_attempts": {
+        "label": "最大赎回尝试次数",
+        "help": "最大赎回尝试次数。默认：5。"
+      },
+      "retry_interval_secs": {
+        "label": "结算重试间隔 (秒)",
+        "help": "结算重试间隔 (秒)。默认：60。"
+      }
+    },
+    "oracle": {
+      "all_sources_down_strategy": {
+        "label": "Oracle 全源不可用策略",
+        "help": "Oracle 全源不可用策略。失败关闭：异常情况下拒绝操作，不会盲目放行。默认：conservative_reject。"
+      },
+      "cross_check_delay_secs": {
+        "label": "交叉校验延迟 (秒)",
+        "help": "交叉校验延迟 (秒)。默认：120。"
+      },
+      "enabled": {
+        "label": "启用 Oracle 交叉校验",
+        "help": "启用 Oracle 交叉校验。默认：true。"
+      },
+      "uma_endpoint": {
+        "label": "UMA 端点",
+        "help": "UMA 端点。默认：https://api.uma.xyz。"
+      },
+      "uma_timeout_secs": {
+        "label": "UMA 超时 (秒)",
+        "help": "UMA 超时 (秒)。默认：10。"
+      },
+      "voting_quorum": {
+        "label": "投票法定人数",
+        "help": "投票法定人数。默认：2。"
+      }
+    },
+    "redeem": {
+      "gas_limit": {
+        "label": "赎回 Gas 上限",
+        "help": "赎回 Gas 上限。默认：500000。"
+      },
+      "holder_address": {
+        "label": "Holder 地址",
+        "help": "Holder 地址。默认：None。"
+      },
+      "output_asset": {
+        "label": "输出资产",
+        "help": "输出资产。默认：usdc_e。"
+      },
+      "proxy_safe_address": {
+        "label": "Proxy Safe 地址",
+        "help": "Proxy Safe 地址。默认：None。"
+      },
+      "route": {
+        "label": "赎回路由",
+        "help": "赎回路由。失败关闭：异常情况下拒绝操作，不会盲目放行。默认：disabled。"
+      }
+    }
+  }
+}

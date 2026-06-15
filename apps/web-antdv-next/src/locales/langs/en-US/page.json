@@ -434,6 +434,23 @@
     "actions": {
       "detail": "Detail"
     },
+    "create": {
+      "title": "Start Replay",
+      "summary": "Enqueue a replay/materialization run for the selected window and factor types.",
+      "created": "Replay enqueued: {id}",
+      "from": "Window From",
+      "to": "Window To",
+      "requestedFactorTypes": "Factor Types",
+      "categories": "Market Categories",
+      "marketIds": "Market IDs",
+      "tokenIds": "Token IDs",
+      "eventIds": "Event IDs",
+      "holderAddress": "Holder Address",
+      "forceNewRun": "Force New Run",
+      "error": {
+        "required": "Set the time window and select at least one factor type"
+      }
+    },
     "detail": {
       "title": "Materialization Run",
       "runId": "Run ID",
@@ -477,6 +494,260 @@
     "feedback": {
       "added": "Blacklist entry added",
       "removed": "Blacklist entry removed"
+    }
+  },
+  "runtimeConfig": {
+    "title": "Runtime Config",
+    "columns": {
+      "version": "Version",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "source": "Source",
+      "schemaVersion": "Schema",
+      "hash": "Config Hash",
+      "createdBy": "Created By",
+      "reason": "Reason",
+      "createdAt": "Created At",
+      "operation": "Actions"
+    },
+    "current": {
+      "title": "Active Version",
+      "version": "Version",
+      "createdBy": "Created By",
+      "createdAt": "Created At",
+      "activatedAt": "Activated At",
+      "activatedBy": "Activated By",
+      "activationKind": "Activation Kind",
+      "viewConfig": "View Config",
+      "empty": "No active version"
+    },
+    "actions": {
+      "detail": "Detail",
+      "activate": "Activate",
+      "rollback": "Rollback",
+      "activateSummary": "Activate runtime config version {id}.",
+      "rollbackSummary": "Rollback to runtime config version {id}."
+    },
+    "detail": {
+      "title": "Version Detail",
+      "versionId": "Version ID",
+      "hash": "Config Hash",
+      "createdBy": "Created By",
+      "createdAt": "Created At",
+      "reason": "Reason",
+      "configTab": "Config JSON",
+      "diffTab": "Diff",
+      "noDiff": "No diff from active config"
+    },
+    "feedback": {
+      "activated": "Version activated",
+      "rolledBack": "Config rolled back"
+    }
+  },
+  "controlFactors": {
+    "title": "Control Factors",
+    "search": {
+      "status": "Status",
+      "factorType": "Factor Type"
+    },
+    "columns": {
+      "factorId": "Factor",
+      "factorType": "Type",
+      "status": "Status",
+      "owner": "Owner",
+      "payloadHash": "Payload Hash",
+      "generatedAt": "Generated At",
+      "expiresAt": "Expires At",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "reject": "Reject",
+      "rejectSummary": "Reject control factor {id}.",
+      "shadow": "Publish Shadow",
+      "publish": "Publish Live",
+      "emergency": "Emergency Publish"
+    },
+    "detail": {
+      "title": "Factor Detail",
+      "factorId": "Factor ID",
+      "runId": "Run ID",
+      "status": "Status",
+      "generatedAt": "Generated At",
+      "payload": "Payload",
+      "dimensions": "Dimensions",
+      "evidence": "Evidence",
+      "governance": "Governance"
+    },
+    "publish": {
+      "factorIds": "Factor IDs",
+      "mode": "Mode",
+      "idempotencyKey": "Idempotency Key",
+      "effectiveFrom": "Effective From",
+      "expiresAt": "Expires At",
+      "manualRiskExpansionApproval": "Approve risk expansion",
+      "shadow": {
+        "title": "Publish Shadow",
+        "tip": "Create a shadow publication for evidence comparison.",
+        "summary": "Publish selected factors in shadow mode."
+      },
+      "live": {
+        "title": "Publish Live",
+        "tip": "Create a live publication and replace the active set.",
+        "summary": "Publish selected factors live."
+      },
+      "emergency": {
+        "title": "Emergency Publish",
+        "tip": "Short-TTL emergency publication. Confirmation word is required.",
+        "summary": "Emergency publish selected factors."
+      },
+      "error": {
+        "noFactors": "Select factors first",
+        "idempotencyKey": "Enter an idempotency key",
+        "expiresAt": "Select an expiry time"
+      }
+    },
+    "feedback": {
+      "published": "Publication submitted",
+      "rejected": "Factor rejected"
+    }
+  },
+  "publications": {
+    "title": "Publications",
+    "search": {
+      "mode": "Mode",
+      "status": "Status",
+      "limit": "Limit",
+      "allModes": "All modes"
+    },
+    "columns": {
+      "publicationId": "Publication",
+      "mode": "Mode",
+      "status": "Status",
+      "factorCount": "Factors",
+      "effectiveFrom": "Effective From",
+      "expiresAt": "Expires At",
+      "approvedBy": "Approved By",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "rollback": "Rollback"
+    },
+    "detail": {
+      "title": "Publication Detail",
+      "baseTab": "Base",
+      "shadowTab": "Shadow Evidence",
+      "publicationId": "Publication ID",
+      "mode": "Mode",
+      "status": "Status",
+      "effectiveFrom": "Effective From",
+      "expiresAt": "Expires At",
+      "reason": "Reason"
+    },
+    "rollback": {
+      "title": "Rollback Publication",
+      "current": "Current publication",
+      "targetPlaceholder": "Select target publication",
+      "summary": "Rollback {source} to {target}.",
+      "error": {
+        "targetRequired": "Select a rollback target"
+      }
+    },
+    "feedback": {
+      "rolledBack": "Publication rolled back"
+    },
+    "shadow": {
+      "total": "Total",
+      "wouldReject": "Would Reject",
+      "wouldSize": "Would Size",
+      "wouldScore": "Would Score",
+      "noEffect": "No Effect",
+      "distinctMarkets": "Distinct Markets",
+      "custom": "Custom",
+      "notShadowMode": "Shadow evidence is only available for shadow publications."
+    }
+  },
+  "audit": {
+    "title": "Audit Chain",
+    "verified": "Audit chain verified",
+    "broken": "Audit chain broken at sequence={sequence}",
+    "columns": {
+      "sequence": "Seq",
+      "createdAt": "Time",
+      "eventType": "Event Type",
+      "summary": "Summary",
+      "actor": "Actor",
+      "actorRole": "Role",
+      "resourceType": "Resource Type",
+      "resourceId": "Resource",
+      "requestId": "Request ID",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "loadMore": "Load More"
+    },
+    "detail": {
+      "title": "Audit Event Detail",
+      "sequence": "Sequence",
+      "createdAt": "Time",
+      "eventType": "Event Type",
+      "actor": "Actor",
+      "resource": "Resource",
+      "requestId": "Request ID",
+      "hashChain": "Hash Chain",
+      "verified": "Verification",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "reason": "Reason",
+      "crosslink": "Cross-link",
+      "openOperationLog": "Filter Operation Log",
+      "openOperationLogByEvent": "Filter by Audit Event"
+    }
+  },
+  "operationLog": {
+    "title": "Operation Log",
+    "search": {
+      "occurredAt": "Occurred At",
+      "actorUserId": "Actor User ID",
+      "requestId": "Request ID",
+      "category": "Category",
+      "resourceType": "Resource Type",
+      "outcome": "Outcome"
+    },
+    "columns": {
+      "occurredAt": "Time",
+      "actor": "Actor",
+      "actingRole": "Acting Role",
+      "action": "Action",
+      "resourceType": "Resource Type",
+      "resourceId": "Resource",
+      "outcome": "Outcome",
+      "requestId": "Request ID",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail"
+    },
+    "detail": {
+      "title": "Operation Log Detail",
+      "occurredAt": "Time",
+      "requestId": "Request ID",
+      "actor": "Actor",
+      "http": "HTTP",
+      "resource": "Resource",
+      "auditEvent": "Audit Event",
+      "openAudit": "Open Audit Chain",
+      "filterByRequestId": "Filter by Request ID"
+    }
+  },
+  "shared": {
+    "governance": {
+      "openAudit": "Open Audit",
+      "openOperationLog": "Open Operation Log",
+      "noEvents": "No governance events"
     }
   }
 }

@@ -26,6 +26,7 @@ import {
   updateCustomPreferences,
   usePreferences,
 } from '@vben/preferences';
+import { useAccessStore } from '@vben/stores';
 
 import { useVbenDrawer } from '@vben-core/popup-ui';
 import {
@@ -54,6 +55,7 @@ import {
   Layout,
   Navigation,
   Radius,
+  RuntimeConfigSettings,
   Sidebar,
   Tabbar,
   Theme,
@@ -63,6 +65,7 @@ import {
 const emit = defineEmits<{ clearPreferencesAndLogout: [] }>();
 
 const message = globalShareState.getMessage();
+const accessStore = useAccessStore();
 
 const appLocale = defineModel<SupportedLanguagesType>('appLocale');
 const appTimezone = defineModel<string>('appTimezone');
@@ -238,6 +241,10 @@ const showCustomTab = computed(() => {
   return (customPreferencesTab.value?.fields.length ?? 0) > 0;
 });
 
+const showRuntimeConfigTab = computed(() => {
+  return accessStore.accessCodes.includes('runtime_config:read');
+});
+
 const tabs = computed((): SegmentedItem[] => {
   const items: SegmentedItem[] = [
     {
@@ -262,6 +269,13 @@ const tabs = computed((): SegmentedItem[] => {
     items.push({
       label: customTabLabel.value,
       value: 'custom',
+    });
+  }
+
+  if (showRuntimeConfigTab.value) {
+    items.push({
+      label: $t('preferences.runtimeConfig.title'),
+      value: 'runtimeConfig',
     });
   }
 
@@ -310,7 +324,7 @@ function handleCustomPreferencesUpdate(updates: CustomPreferencesRecord) {
     <Drawer
       :description="$t('preferences.subtitle')"
       :title="$t('preferences.title')"
-      class="border-0! sm:max-w-sm"
+      class="border-0! sm:max-w-[1100px]"
     >
       <template #extra>
         <div class="flex items-center">
@@ -535,6 +549,9 @@ function handleCustomPreferencesUpdate(updates: CustomPreferencesRecord) {
                 @update="handleCustomPreferencesUpdate"
               />
             </Block>
+          </template>
+          <template #runtimeConfig>
+            <RuntimeConfigSettings />
           </template>
         </VbenSegmented>
       </div>

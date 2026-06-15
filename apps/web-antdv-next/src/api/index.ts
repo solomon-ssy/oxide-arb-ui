@@ -1,5 +1,7 @@
+export * from './control-factors';
 export * from './core';
 export * from './markets';
+export * from './operation-logs';
 export * from './opportunities';
 export * from './pnl';
 export * from './replay';

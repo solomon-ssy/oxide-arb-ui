@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './control';
 export * from './market';
 export * from './opportunity';
 export * from './pnl';

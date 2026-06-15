@@ -167,5 +167,109 @@
     "insufficient_coverage": "覆盖不足",
     "production_ineligible": "不可投产",
     "failed": "失败"
+  },
+  "factorStatus": {
+    "draft": "草稿",
+    "report_only": "仅报告",
+    "candidate": "候选",
+    "rejected": "已拒绝",
+    "shadow": "Shadow",
+    "published": "已发布",
+    "superseded": "已替代",
+    "expired": "已过期",
+    "rolled_back": "已回滚"
+  },
+  "controlFactorType": {
+    "bucket_risk": "桶风险",
+    "execution_quality": "执行质量",
+    "portfolio_risk": "组合风险",
+    "reconciliation_health": "对账健康",
+    "market_anomaly": "市场异常"
+  },
+  "publicationMode": {
+    "shadow": "Shadow",
+    "published": "Published"
+  },
+  "publicationStatus": {
+    "pending": "待处理",
+    "active": "生效中",
+    "superseded": "已替代",
+    "expired": "已过期",
+    "rolled_back": "已回滚",
+    "rejected": "已拒绝"
+  },
+  "shadowDecisionType": {
+    "would_reject": "会拒绝",
+    "would_size": "会调仓",
+    "would_score": "会调分",
+    "no_effect": "无影响"
+  },
+  "runtimeConfigVersionSource": {
+    "bootstrap": "Bootstrap",
+    "operator": "Operator",
+    "import": "Import"
+  },
+  "runtimeConfigActivationKind": {
+    "initial": "初始激活",
+    "promote": "版本激活",
+    "rollback": "回滚激活"
+  },
+  "controlAuditEventType": {
+    "factor_created": "因子创建",
+    "factor_transitioned": "因子流转",
+    "factor_rejected": "因子拒绝",
+    "factor_expired": "因子过期",
+    "publication_created": "发布创建",
+    "publication_activated": "发布激活",
+    "publication_rolled_back": "发布回滚",
+    "publication_expired": "发布过期",
+    "runtime_config_version_created": "配置版本创建",
+    "runtime_config_activated": "配置激活",
+    "runtime_config_rolled_back": "配置回滚",
+    "snapshot_load_failed": "快照加载失败"
+  },
+  "auditResourceType": {
+    "factor": "控制因子",
+    "publication": "发布",
+    "runtime_config_version": "运行时配置版本",
+    "materialization_run": "物化运行",
+    "snapshot": "快照"
+  },
+  "operationCategory": {
+    "auth": "认证",
+    "rbac": "RBAC",
+    "governance": "治理",
+    "runtime_config": "运行时配置",
+    "system": "系统",
+    "risk": "风险",
+    "market": "市场",
+    "replay": "Replay",
+    "other": "其他"
+  },
+  "operationOutcome": {
+    "success": "成功",
+    "failure": "失败",
+    "denied": "拒绝"
+  },
+  "resourceType": {
+    "system": "系统",
+    "market": "市场",
+    "opportunity": "机会",
+    "trade": "交易",
+    "pnl": "PnL",
+    "risk": "风险",
+    "blacklist": "黑名单",
+    "runtime_config": "运行时配置",
+    "control_factor": "控制因子",
+    "publication": "发布",
+    "materialization": "物化",
+    "replay": "Replay",
+    "analytics": "分析",
+    "audit": "审计",
+    "operation_log": "操作日志",
+    "user": "用户",
+    "role": "角色",
+    "menu": "菜单",
+    "permission": "权限"
   }
 }

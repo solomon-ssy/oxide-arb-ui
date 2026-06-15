@@ -136,18 +136,34 @@ setupVbenVxeTable({
 
     // 单元格渲染： Tag
     vxeUI.renderer.add('CellTag', {
-      renderTableDefault({ options, props }, { column, row }) {
+      renderTableDefault({ attrs, options, props }, { column, row }) {
         const value = get(row, column.field);
         const tagOptions = options ?? [
           { color: 'success', label: $t('common.enabled'), value: 1 },
           { color: 'error', label: $t('common.disabled'), value: 0 },
         ];
-        const tagItem = tagOptions.find((item) => item.value === value);
+        let tagItem = tagOptions.find((item) => item.value === value);
+        if (!tagItem && attrs?.colorField) {
+          const colorKey = String(get(row, attrs.colorField) ?? '');
+          tagItem = {
+            color:
+              attrs.colorMap?.[colorKey] ?? attrs.defaultColor ?? 'default',
+            label: value,
+            value,
+          };
+        }
+        if (!tagItem) {
+          tagItem = {
+            color: attrs?.defaultColor ?? 'default',
+            label: value,
+            value,
+          };
+        }
         return h(
           Tag,
           {
             ...props,
-            ...objectOmit(tagItem ?? {}, ['label']),
+            ...objectOmit(tagItem, ['label', 'value']),
           },
           { default: () => tagItem?.label ?? value },
         );
@@ -446,6 +462,39 @@ setupVbenVxeTable({
                 'span',
                 { class: 'cursor-pointer font-mono', onClick: copy },
                 truncateHexId(value),
+              ),
+          },
+        );
+      },
+    });
+
+    // 单元格渲染：可复制文本（点击复制完整值）
+    vxeUI.renderer.add('CellCopy', {
+      renderTableDefault(_renderOpts, { column, row }) {
+        const value = get(row, column.field) as null | string | undefined;
+        if (!value) {
+          return h('span', {}, EMPTY_PLACEHOLDER);
+        }
+        const text = value;
+        async function copy(event: MouseEvent) {
+          event.stopPropagation();
+          try {
+            await navigator.clipboard.writeText(text);
+            message.success($t('common.copied'));
+          } catch {
+            // Clipboard unavailable.
+          }
+        }
+        const label = value.length > 16 ? `${value.slice(0, 12)}…` : value;
+        return h(
+          Tooltip,
+          { title: value },
+          {
+            default: () =>
+              h(
+                'span',
+                { class: 'cursor-pointer font-mono text-xs', onClick: copy },
+                label,
               ),
           },
         );

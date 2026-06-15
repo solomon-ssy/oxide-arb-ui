@@ -5,31 +5,33 @@ import type {
 } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
+import type { ReplayCreateRequest } from '#/api/replay';
 
-import { onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { watch } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
+import { useRequestHandler } from '@vben/request/oxide';
+
+import { Button, message } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { fetchReplayPage } from '#/api/replay';
+import { createReplay, fetchReplayPage } from '#/api/replay';
+import { $t } from '#/locales';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useOxideAccess } from '#/shared/composables/use-oxide-access';
+import { useReplayStore } from '#/store/replay';
 
 import { useReplayRunColumns, useReplaySearchSchema } from './modules/schemas';
+import CreateReplayDrawer from './modules/widgets/create-replay-drawer.vue';
 import RunDetailDrawer from './modules/widgets/run-detail-drawer.vue';
 
 defineOptions({ name: 'ReplayPage' });
 
-const route = useRoute();
-const router = useRouter();
-
-function clearRunQuery() {
-  if (!route.query.run_id) {
-    return;
-  }
-  const nextQuery = { ...route.query };
-  delete nextQuery.run_id;
-  void router.replace({ path: route.path, query: nextQuery });
-}
+const { governed } = useGovernedAction();
+const { handleRequest } = useRequestHandler();
+const { hasAccessByCodes } = useOxideAccess();
+const replayStore = useReplayStore();
+const canCreate = hasAccessByCodes(['replay:create']);
 
 function onActionClick({
   code,
@@ -54,14 +56,26 @@ const [Grid, gridApi] = useVbenVxeGrid<ControlFactorMaterializationRunView>({
         }: {
           form?: { status?: string };
           page: { currentPage: number; pageSize: number };
-        }) =>
-          fetchReplayPage({
-            page: page.currentPage,
-            size: page.pageSize,
-            status: form?.status as
-              | ControlFactorMaterializationRunView['status']
-              | undefined,
-          }),
+        }) => {
+          const result = await handleRequest(() =>
+            fetchReplayPage({
+              page: page.currentPage,
+              size: page.pageSize,
+              status: form?.status as
+                | ControlFactorMaterializationRunView['status']
+                | undefined,
+            }),
+          );
+          return (
+            result ?? {
+              has_next: false,
+              items: [],
+              page: page.currentPage,
+              size: 0,
+              total: 0,
+            }
+          );
+        },
       },
     },
     rowConfig: { keyField: 'materialization_run_id' },
@@ -74,31 +88,67 @@ const [Drawer, drawerApi] = useVbenDrawer({
   destroyOnClose: true,
   onOpenChange(isOpen) {
     if (!isOpen) {
-      clearRunQuery();
       void gridApi.query();
     }
   },
 });
 
+const [CreateDrawer, createDrawerApi] = useVbenDrawer({
+  connectedComponent: CreateReplayDrawer,
+  destroyOnClose: true,
+});
+
 function openDetail(runId: UuidString) {
   drawerApi.setData({ runId }).open();
-  void router.replace({
-    path: route.path,
-    query: { ...route.query, run_id: runId },
-  });
 }
 
-onMounted(() => {
-  const runId = route.query.run_id;
-  if (typeof runId === 'string' && runId.length > 0) {
-    openDetail(runId);
+function openCreateDrawer() {
+  createDrawerApi.setData({ onSubmit: onCreateSubmit }).open();
+}
+
+async function onCreateSubmit(payload: ReplayCreateRequest) {
+  const result = await governed(
+    (ctx) => createReplay({ ...payload, reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.replay.create.summary'),
+      title: $t('page.replay.create.title'),
+    },
+  );
+  if (result) {
+    message.success(
+      $t('page.replay.create.created', {
+        id: result.run.materialization_run_id,
+      }),
+    );
+    openDetail(result.run.materialization_run_id);
+    void gridApi.query();
   }
-});
+  return result !== null;
+}
+
+watch(
+  () => replayStore.revision,
+  () => {
+    void gridApi.query();
+  },
+);
 </script>
 
 <template>
   <Page auto-content-height>
-    <Grid />
+    <Grid>
+      <template #toolbar-tools>
+        <Button
+          v-if="canCreate"
+          v-access:code="'replay:create'"
+          type="primary"
+          @click="openCreateDrawer"
+        >
+          {{ $t('page.replay.create.title') }}
+        </Button>
+      </template>
+    </Grid>
     <Drawer />
+    <CreateDrawer />
   </Page>
 </template>

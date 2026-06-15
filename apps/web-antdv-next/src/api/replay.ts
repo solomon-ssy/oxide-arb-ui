@@ -9,6 +9,9 @@ import type {
   ReplayEnqueueView,
 } from '@vben/types';
 
+import type { GovernedContext } from '#/shared/composables/use-governed-action';
+
+import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
 export namespace ReplayApi {
@@ -22,18 +25,18 @@ export interface ReplayPageParams extends PageQuery {
 }
 
 /** Operator request to enqueue a backfill / replay materialization run. */
-export interface ReplayCreateRequest {
-  from: IsoDateTime;
-  to: IsoDateTime;
-  market_ids?: string[];
-  event_ids?: string[];
-  token_ids?: string[];
+export type ReplayCreateRequest = Record<string, unknown> & {
   categories?: string[];
-  requested_factor_types: ControlFactorType[];
-  holder_address?: string;
-  reason: string;
+  event_ids?: string[];
   force_new_run?: boolean;
-}
+  from: IsoDateTime;
+  holder_address?: string;
+  market_ids?: string[];
+  reason: string;
+  requested_factor_types: ControlFactorType[];
+  to: IsoDateTime;
+  token_ids?: string[];
+};
 
 /** `GET /replay` — paginated materialization / replay run index. */
 export async function fetchReplayPage(params?: ReplayPageParams) {
@@ -58,6 +61,9 @@ export async function getReplayHistory(runId: string) {
 }
 
 /** `POST /replay` — enqueue a backfill / replay materialization run (governed). */
-export async function createReplay(body: ReplayCreateRequest) {
-  return requestClient.post<ReplayEnqueueView>(ReplayApi.base, body);
+export async function createReplay(
+  body: ReplayCreateRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<ReplayEnqueueView>(ReplayApi.base, body, ctx);
 }

@@ -142,6 +142,7 @@ catalog:
   html-minifier-terser: ^7.2.0
   is-ci: ^4.1.0
   json-bigint: ^1.0.0
+  json-editor-vue: ^0.18.1
   jsonwebtoken: ^9.0.3
   knip: ^6.15.0
   lefthook: ^2.1.9
@@ -192,6 +193,7 @@ catalog:
   unplugin-dts: ^1.0.2
   unplugin-element-plus: ^0.11.2
   unplugin-vue: ^7.2.0
+  vanilla-jsoneditor: ^3.10.0
   vee-validate: ^4.15.1
   vite: 8.0.10
   vite-plugin-compression: ^0.5.1
@@ -219,5 +221,6 @@ allowBuilds:
   '@parcel/watcher': true
   core-js: true
   esbuild: true
+  json-editor-vue: set this to true or false
   lefthook: true
   vue-demi: true

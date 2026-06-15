@@ -1,28 +1,26 @@
 <script setup lang="ts">
-import type { SelectOption } from '@vben/types';
-
 import { useSlots } from 'vue';
 
 import { CircleHelp, CircleX } from '@vben/icons';
 
-import { Input, VbenTooltip } from '@vben-core/shadcn-ui';
+import { Input, VbenInputPassword, VbenTooltip } from '@vben-core/shadcn-ui';
 
 defineOptions({
-  name: 'PreferenceSelectItem',
+  name: 'PreferenceInputItem',
 });
 
 withDefaults(
   defineProps<{
     disabled?: boolean;
-    items?: SelectOption[];
     placeholder?: string;
+    sensitive?: boolean;
     tip?: string;
   }>(),
   {
     disabled: false,
     placeholder: '',
+    sensitive: false,
     tip: '',
-    items: () => [],
   },
 );
 
@@ -56,14 +54,23 @@ const slots = useSlots();
       </VbenTooltip>
     </span>
     <div class="relative">
-      <Input
+      <VbenInputPassword
+        v-if="sensitive"
         v-model="inputValue"
+        :disabled="disabled"
         class="h-8 w-41.25"
         :placeholder="placeholder"
       />
+      <Input
+        v-else
+        v-model="inputValue"
+        class="h-8 w-41.25"
+        :disabled="disabled"
+        :placeholder="placeholder"
+      />
       <CircleX
-        v-if="inputValue"
-        class="absolute top-1/2 right-2 size-3 -translate-y-1/2 transform cursor-pointer text-foreground/60 hover:text-foreground"
+        v-if="inputValue && !sensitive"
+        class="text-foreground/60 hover:text-foreground absolute top-1/2 right-2 size-3 -translate-y-1/2 transform cursor-pointer"
         @click="() => (inputValue = '')"
       />
     </div>

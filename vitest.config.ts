@@ -1,9 +1,19 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import Vue from '@vitejs/plugin-vue';
 import VueJsx from '@vitejs/plugin-vue-jsx';
 import { configDefaults, defineConfig } from 'vitest/config';
 
+const rootDir = fileURLToPath(new URL('.', import.meta.url));
+
 export default defineConfig({
   plugins: [Vue(), VueJsx()],
+  resolve: {
+    alias: {
+      '#/': path.resolve(rootDir, 'apps/web-antdv-next/src/'),
+    },
+  },
   test: {
     environment: 'happy-dom',
     environmentOptions: {

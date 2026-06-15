@@ -18,6 +18,7 @@ import type {
 
 // Direct module imports (not the `#/store` barrel) keep this reducer free of
 // the auth/api dependency chain, so unit tests can drive it with bare Pinia.
+import { useControlStore } from '#/store/control';
 import { useMarketStore } from '#/store/market';
 import { useOpportunityStore } from '#/store/opportunity';
 import { usePnlStore } from '#/store/pnl';
@@ -63,7 +64,9 @@ export function dispatchWsEnvelope(
       break;
     }
     case 'control.published': {
-      hooks.onControlPublished(envelope.data as ControlPublishedEvent);
+      const event = envelope.data as ControlPublishedEvent;
+      useControlStore().recordPublished(event, envelope.timestamp);
+      hooks.onControlPublished(event);
       break;
     }
     case 'error': {

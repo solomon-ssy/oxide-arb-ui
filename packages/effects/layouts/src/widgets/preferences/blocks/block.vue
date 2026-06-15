@@ -14,7 +14,7 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <div class="flex flex-col py-4">
-    <h3 class="mb-3 leading-none font-semibold tracking-tight">
+    <h3 v-if="title" class="mb-3 leading-none font-semibold tracking-tight">
       {{ title }}
     </h3>
     <slot></slot>

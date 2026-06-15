@@ -632,6 +632,7 @@ export type ComponentType =
   | 'Input'
   | 'InputNumber'
   | 'InputPassword'
+  | 'JsonEditor'
   | 'Mentions'
   | 'PrimaryButton'
   | 'Radio'
@@ -668,6 +669,11 @@ export interface ComponentPropsMap {
   InputNumber: InputNumberProps;
   InputPassword: InputProps;
   Mentions: MentionsProps;
+  JsonEditor: {
+    mode?: import('vanilla-jsoneditor').Mode;
+    modelValue: unknown;
+    readOnly?: boolean;
+  };
   PrimaryButton: ButtonProps;
   Radio: RadioProps;
   RadioGroup: RadioGroupProps;
@@ -682,6 +688,10 @@ export interface ComponentPropsMap {
   TreeSelect: TreeSelectProps;
   Upload: AdapterUploadProps;
 }
+
+const JsonEditor = defineAsyncComponent(
+  () => import('#/shared/components/json-editor/json-editor-shell.vue'),
+);
 
 async function initComponentAdapter() {
   const components: Partial<Record<ComponentType, Component>> = {
@@ -730,6 +740,7 @@ async function initComponentAdapter() {
       style: { width: '100%' },
     }),
     InputPassword: withDefaultPlaceholder(InputPassword, 'input'),
+    JsonEditor,
     Mentions: withDefaultPlaceholder(Mentions, 'input'),
     // 自定义主要按钮
     PrimaryButton: (props, { attrs, slots }) => {
