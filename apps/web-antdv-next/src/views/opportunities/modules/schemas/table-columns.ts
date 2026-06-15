@@ -67,9 +67,8 @@ export function useDetectionColumns(
       width: 100,
     },
     {
+      cellRender: { name: 'CellScore' },
       field: 'score',
-      formatter: ({ cellValue }: { cellValue: null | string }) =>
-        cellValue ?? '—',
       title: $t('page.opportunities.columns.score'),
       width: 90,
     },

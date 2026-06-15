@@ -195,7 +195,9 @@
     }
   },
   "opportunities": {
+    "title": "机会检测",
     "feed": {
+      "title": "实时机会流",
       "pause": "暂停",
       "resume": "恢复"
     },

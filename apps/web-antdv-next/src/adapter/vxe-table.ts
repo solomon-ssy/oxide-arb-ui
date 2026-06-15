@@ -35,6 +35,7 @@ import {
   formatDateTimeUtc,
   formatPercent,
   formatPrice,
+  formatScore,
   formatUsd,
   parseDecimal,
   truncateHexId,
@@ -359,6 +360,14 @@ setupVbenVxeTable({
           { class: 'font-mono' },
           formatPercent(value, fractionDigits),
         );
+      },
+    });
+
+    // 单元格渲染：composite ranking score(string Decimal → grouped 2dp)
+    vxeUI.renderer.add('CellScore', {
+      renderTableDefault(_renderOpts, { column, row }) {
+        const value = get(row, column.field) as DecimalInput;
+        return h('span', { class: 'font-mono' }, formatScore(value));
       },
     });
 

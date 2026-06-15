@@ -158,13 +158,13 @@ const [FunnelGrid] = useVbenVxeGrid<FunnelStageRow>({
       </div>
       <Tabs v-model:active-key="activeTab" class="min-h-0 flex-1">
         <TabPane key="recent" :tab="$t('page.opportunities.tabs.recent')">
-          <RecentGrid />
+          <RecentGrid :table-title="$t('page.opportunities.tabs.recent')" />
         </TabPane>
         <TabPane key="history" :tab="$t('page.opportunities.tabs.history')">
-          <HistoryGrid />
+          <HistoryGrid :table-title="$t('page.opportunities.tabs.history')" />
         </TabPane>
         <TabPane key="funnel" :tab="$t('page.opportunities.tabs.funnel')">
-          <FunnelGrid />
+          <FunnelGrid :table-title="$t('page.opportunities.tabs.funnel')" />
         </TabPane>
       </Tabs>
     </div>

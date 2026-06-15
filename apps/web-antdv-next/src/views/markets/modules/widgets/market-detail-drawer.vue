@@ -28,19 +28,28 @@ const loading = ref(false);
 /** Market currently subscribed via the WS refcount (for teardown). */
 let subscribedMarket: MarketId | null = null;
 
+/** Drop the active per-market book subscription, if any. */
+function releaseMarketSubscription() {
+  if (subscribedMarket) {
+    oxideWs.unsubscribeMarket(subscribedMarket);
+    subscribedMarket = null;
+  }
+}
+
 const [Drawer, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
       const { marketId } = drawerApi.getData<{ marketId: MarketId }>();
-      void load(marketId);
-      oxideWs.subscribeMarket(marketId);
-      subscribedMarket = marketId;
-    } else {
-      if (subscribedMarket) {
-        oxideWs.unsubscribeMarket(subscribedMarket);
-        subscribedMarket = null;
+      // Switching rows while the drawer stays open must not leak the prior id.
+      if (subscribedMarket !== marketId) {
+        releaseMarketSubscription();
+        oxideWs.subscribeMarket(marketId);
+        subscribedMarket = marketId;
       }
+      void load(marketId);
+    } else {
+      releaseMarketSubscription();
       market.value = null;
       restBook.value = null;
     }

@@ -114,7 +114,11 @@ function onRowClick(entry: OpportunityView) {
     fill
     icon="lucide:zap"
     tone="violet"
-    :title="$t('page.dashboard.feed.title')"
+    :title="
+      isFull
+        ? $t('page.opportunities.feed.title')
+        : $t('page.dashboard.feed.title')
+    "
   >
     <template #extra>
       <a v-if="!isFull" class="cursor-pointer text-xs" @click="goOpportunities">

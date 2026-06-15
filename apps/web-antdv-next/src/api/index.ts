@@ -1,4 +1,6 @@
 export * from './core';
+export * from './markets';
+export * from './opportunities';
 export * from './pnl';
 export * from './replay';
 export * from './risk';

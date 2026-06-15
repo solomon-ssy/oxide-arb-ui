@@ -103,6 +103,17 @@ export function formatBps(value: DecimalInput | number): string {
 }
 
 /**
+ * Format a composite ranking score decimal string with thousands grouping
+ * at 2-decimal precision: `12345.678` → `12,345.68`.
+ */
+export function formatScore(value: DecimalInput): string {
+  const decimal = parseDecimal(value);
+  return decimal === null
+    ? EMPTY_PLACEHOLDER
+    : groupThousands(decimal.toFixed(2));
+}
+
+/**
  * Format a 0–1 ratio decimal string as a percentage: `0.685` → `68.5%`.
  *
  * @param fractionDigits decimal places shown, defaults to 1

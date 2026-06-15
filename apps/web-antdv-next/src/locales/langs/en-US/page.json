@@ -195,7 +195,9 @@
     }
   },
   "opportunities": {
+    "title": "Opportunities",
     "feed": {
+      "title": "Live Opportunity Feed",
       "pause": "Pause",
       "resume": "Resume"
     },

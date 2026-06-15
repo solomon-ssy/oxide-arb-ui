@@ -72,17 +72,13 @@ async function load(tradeId: UuidString) {
   }
 }
 
-// A `trade.settled` push while the drawer is open refreshes the snapshot.
+// Re-fetch when a settlement event targets the trade currently on screen.
 watch(
+  () => tradeStore.settlementVersion,
   () => {
-    const id = trade.value?.trade_id;
-    return id
-      ? tradeStore.recent.find((t) => t.trade_id === id)?.state
-      : undefined;
-  },
-  (state, prev) => {
-    if (state && prev && state !== prev && trade.value) {
-      void load(trade.value.trade_id);
+    const openId = trade.value?.trade_id;
+    if (openId && tradeStore.lastSettledTradeId === openId) {
+      void load(openId);
     }
   },
 );

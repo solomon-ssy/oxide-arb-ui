@@ -256,6 +256,8 @@ describe('dispatchWsEnvelope', () => {
     const settled = store.recent.find((t) => t.trade_id === 't2');
     expect(settled?.net_profit_usd).toBe('9.9');
     expect(settled?.state).toBe('settled');
+    expect(store.lastSettledTradeId).toBe('t2');
+    expect(store.settlementVersion).toBe(1);
   });
 
   it('opportunity.detected prepends and respects the feed cap', () => {
