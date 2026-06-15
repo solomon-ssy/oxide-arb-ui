@@ -4,7 +4,7 @@ import type { PanelTone } from '#/shared/components/dashboard-accent';
 import { ref } from 'vue';
 
 import { useDebounceFn, useResizeObserver } from '@vueuse/core';
-import { Empty, Skeleton } from 'antdv-next';
+import { Alert, Empty, Skeleton } from 'antdv-next';
 
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 
@@ -14,6 +14,8 @@ withDefaults(
   defineProps<{
     /** Renders the empty state instead of the chart slot. */
     empty?: boolean;
+    /** Operator-visible load failure (distinct from empty data). */
+    error?: null | string;
     height?: string;
     icon?: string;
     loading?: boolean;
@@ -22,6 +24,7 @@ withDefaults(
   }>(),
   {
     empty: false,
+    error: null,
     height: '320px',
     icon: 'lucide:line-chart',
     loading: false,
@@ -51,6 +54,12 @@ useResizeObserver(
     </template>
     <div ref="chartAreaRef" :style="{ height }" class="relative">
       <Skeleton v-if="loading" :paragraph="{ rows: 5 }" active />
+      <div
+        v-else-if="error"
+        class="flex h-full items-center justify-center px-4"
+      >
+        <Alert show-icon type="error" :message="error" />
+      </div>
       <div v-else-if="empty" class="flex h-full items-center justify-center">
         <Empty :image="Empty.PRESENTED_IMAGE_SIMPLE" />
       </div>

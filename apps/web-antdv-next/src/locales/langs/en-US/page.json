@@ -275,6 +275,9 @@
       "decisions": "Risk Decision Audit"
     },
     "newTrades": "{count} new trades — click to refresh",
+    "routeSeed": {
+      "active": "Filtered to {from} → {to} from Analytics drill-down"
+    },
     "search": {
       "range": "Time Range",
       "marketId": "Market ID",
@@ -319,6 +322,61 @@
       "fee": "Fee",
       "detectedProfit": "Detected Profit",
       "netProfit": "Net Profit"
+    }
+  },
+  "analytics": {
+    "actions": {
+      "refresh": "Refresh"
+    },
+    "basis": {
+      "settlement": "Settlement ledger",
+      "execution": "Execution fills"
+    },
+    "filters": {
+      "executionMode": "Execution mode"
+    },
+    "weekly": {
+      "title": "Weekly Summary",
+      "period": "Period",
+      "realizedPnl": "Realized PnL",
+      "winRate": "Win Rate",
+      "trades": "Trades"
+    },
+    "charts": {
+      "cumulativePnl": {
+        "title": "Cumulative PnL",
+        "series": "Cumulative PnL",
+        "daily": "Daily PnL",
+        "cumulative": "Cumulative",
+        "trades": "Trades"
+      },
+      "dailyPnl": {
+        "title": "Daily PnL",
+        "series": "Daily PnL",
+        "drilldownHint": "Click a bar to inspect trades"
+      },
+      "edgeDistribution": {
+        "title": "Edge Distribution",
+        "series": "Trades",
+        "bucket": "Bucket",
+        "trades": "Trades"
+      },
+      "winRate": {
+        "title": "Win Rate Trend",
+        "series": "7-day rolling win rate",
+        "window": "7-day rolling"
+      }
+    },
+    "marketPerformance": {
+      "title": "Market Performance",
+      "columns": {
+        "market": "Market",
+        "trades": "Trades",
+        "winRate": "Win Rate",
+        "netPnl": "Net PnL",
+        "totalCost": "Total Cost",
+        "avgEdge": "Avg Edge"
+      }
     }
   },
   "risk": {

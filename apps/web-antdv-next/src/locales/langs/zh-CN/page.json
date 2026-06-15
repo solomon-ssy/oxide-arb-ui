@@ -275,6 +275,9 @@
       "decisions": "风控决策审计"
     },
     "newTrades": "有 {count} 条新交易，点击刷新",
+    "routeSeed": {
+      "active": "已应用分析页钻取过滤：{from} → {to}"
+    },
     "search": {
       "range": "时间范围",
       "marketId": "市场 ID",
@@ -319,6 +322,61 @@
       "fee": "费用",
       "detectedProfit": "检测期望利润",
       "netProfit": "净利"
+    }
+  },
+  "analytics": {
+    "actions": {
+      "refresh": "刷新"
+    },
+    "basis": {
+      "settlement": "结算账本",
+      "execution": "成交执行"
+    },
+    "filters": {
+      "executionMode": "执行模式"
+    },
+    "weekly": {
+      "title": "周报摘要",
+      "period": "周期",
+      "realizedPnl": "已实现盈亏",
+      "winRate": "胜率",
+      "trades": "交易数"
+    },
+    "charts": {
+      "cumulativePnl": {
+        "title": "累计盈亏",
+        "series": "累计盈亏",
+        "daily": "当日盈亏",
+        "cumulative": "累计",
+        "trades": "交易数"
+      },
+      "dailyPnl": {
+        "title": "每日盈亏",
+        "series": "每日盈亏",
+        "drilldownHint": "点击柱子查看交易"
+      },
+      "edgeDistribution": {
+        "title": "Edge 分布",
+        "series": "交易数",
+        "bucket": "分桶",
+        "trades": "交易数"
+      },
+      "winRate": {
+        "title": "胜率趋势",
+        "series": "7 日滚动胜率",
+        "window": "7 日滚动"
+      }
+    },
+    "marketPerformance": {
+      "title": "市场绩效",
+      "columns": {
+        "market": "市场",
+        "trades": "交易数",
+        "winRate": "胜率",
+        "netPnl": "净盈亏",
+        "totalCost": "总成本",
+        "avgEdge": "平均 Edge"
+      }
     }
   },
   "risk": {

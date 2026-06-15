@@ -1,3 +1,4 @@
+export type * from './analytics';
 export type * from './common';
 // Runtime enum const objects (`EXECUTION_MODES`, …) live here alongside types.
 export * from './enums';

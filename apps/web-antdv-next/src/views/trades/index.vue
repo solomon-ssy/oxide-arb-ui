@@ -3,7 +3,8 @@ import type { RiskAuditEventView, TradeView, UuidString } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
@@ -13,6 +14,10 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { fetchTradeDecisions, fetchTradePage } from '#/api/trades';
 import { $t } from '#/locales';
 import OpportunityAuditDrawer from '#/shared/components/opportunity-audit-drawer.vue';
+import {
+  clearRouteTimeWindow,
+  readRouteTimeWindow,
+} from '#/shared/composables/use-route-time-window';
 import { rangeToWindow } from '#/shared/composables/use-time-range-query';
 import { useTradeStore } from '#/store';
 
@@ -26,8 +31,11 @@ import TradeDetailDrawer from './modules/widgets/trade-detail-drawer.vue';
 
 defineOptions({ name: 'TradesPage' });
 
+const route = useRoute();
+const router = useRouter();
 const activeTab = ref('trades');
 const tradeStore = useTradeStore();
+const routeSeedBanner = ref<null | string>(null);
 
 const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
   connectedComponent: TradeDetailDrawer,
@@ -105,6 +113,30 @@ async function refreshTrades() {
   await tradeGridApi.query();
 }
 
+async function applyRouteSeed() {
+  const seed = readRouteTimeWindow(route.query);
+  if (!seed) {
+    return;
+  }
+  const executionMode = route.query.execution_mode;
+  await tradeGridApi.formApi.setValues({
+    range: seed.range,
+    ...(typeof executionMode === 'string'
+      ? { execution_mode: executionMode }
+      : {}),
+  });
+  await tradeGridApi.query();
+  routeSeedBanner.value = $t('page.trades.routeSeed.active', {
+    from: seed.range[0].format('YYYY-MM-DD'),
+    to: seed.range[1].format('YYYY-MM-DD'),
+  });
+  clearRouteTimeWindow(router, ['execution_mode']);
+}
+
+function dismissRouteSeedBanner() {
+  routeSeedBanner.value = null;
+}
+
 const [DecisionGrid] = useVbenVxeGrid<RiskAuditEventView>({
   formOptions: {
     schema: useDecisionSearchSchema(),
@@ -125,9 +157,12 @@ const [DecisionGrid] = useVbenVxeGrid<RiskAuditEventView>({
           }),
       },
     },
-    // No stable wire id on audit rows — let vxe assign internal row keys.
     toolbarConfig: { refresh: { code: 'query' }, search: true },
   },
+});
+
+onMounted(() => {
+  void applyRouteSeed();
 });
 </script>
 
@@ -135,6 +170,16 @@ const [DecisionGrid] = useVbenVxeGrid<RiskAuditEventView>({
   <Page auto-content-height>
     <Tabs v-model:active-key="activeTab" class="h-full">
       <TabPane key="trades" :tab="$t('page.trades.tabs.list')">
+        <Alert
+          v-if="routeSeedBanner"
+          class="mb-2"
+          closable
+          show-icon
+          type="info"
+          @close="dismissRouteSeedBanner"
+        >
+          <template #message>{{ routeSeedBanner }}</template>
+        </Alert>
         <Alert
           v-if="newTradeCount > 0"
           class="mb-2 cursor-pointer"
