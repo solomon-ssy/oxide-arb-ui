@@ -54,6 +54,7 @@ export interface MenuInfo {
   sort: number;
   keep_alive: boolean;
   hide_in_menu: boolean;
+  affix_tab: boolean;
   status: RoleStatus;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;

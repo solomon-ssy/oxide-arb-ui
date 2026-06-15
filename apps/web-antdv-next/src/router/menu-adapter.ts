@@ -60,6 +60,7 @@ function adaptNodes(
         children: childRoutes.length > 0 ? childRoutes : undefined,
         component: node.component ?? '',
         meta: {
+          affixTab: node.affix_tab,
           hideInMenu: node.hide_in_menu,
           icon: node.icon ?? undefined,
           keepAlive: node.keep_alive,
