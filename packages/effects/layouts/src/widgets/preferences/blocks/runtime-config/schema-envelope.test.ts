@@ -17,22 +17,22 @@ const fixture: RuntimeConfigSchemaView = {
   fields: [
     {
       constraints: {
-        enum_values: ['disabled', 'proxy_safe'],
+        enum_values: ['standard_ctf', 'ctf_collateral_adapter'],
       },
-      default: 'disabled',
-      description: 'route',
+      default: 'standard_ctf',
+      description: 'Standard redeem route',
       enum_items: [
         {
-          key: 'proxy_safe',
-          label: uiText('Gnosis Safe (proxy)', 'Gnosis Safe（代理）'),
+          key: 'standard_ctf',
+          label: uiText('Standard CTF', '标准 CTF'),
         },
       ],
       group: 'settlement',
-      help: uiText('Active redemption route', '赎回路由'),
-      label: uiText('Active redemption route', '赎回路由'),
+      help: uiText('Route used for non-neg-risk markets', '普通市场赎回路由'),
+      label: uiText('Standard market redeem route', '普通市场赎回路由'),
       money_critical: true,
       order: 10,
-      path: 'settlement.redeem.route',
+      path: 'settlement.redeem.standard.route',
       sensitive: false,
       value_type: 'enum',
       widget: 'enum_select',
@@ -55,7 +55,7 @@ describe('runtime-config schema envelope', () => {
   it('groups fields using server metadata', () => {
     const groups = groupRuntimeConfigFields(fixture);
     expect(groups).toHaveLength(1);
-    expect(groups[0]?.fields[0]?.path).toBe('settlement.redeem.route');
+    expect(groups[0]?.fields[0]?.path).toBe('settlement.redeem.standard.route');
     expect(resolveUiText(groups[0]?.label, 'zh-CN')).toBe('结算');
   });
 });

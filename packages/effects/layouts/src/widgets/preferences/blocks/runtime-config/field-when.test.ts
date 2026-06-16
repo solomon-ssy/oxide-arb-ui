@@ -8,29 +8,25 @@ import {
 import { fieldStub } from './test-helpers';
 
 describe('field-when', () => {
-  it('hides proxy safe address unless route is proxy_safe', () => {
+  it('hides a field until the target value is active', () => {
     const field = fieldStub({
-      path: 'settlement.redeem.proxy_safe_address',
+      path: 'notification.telegram.chat_id',
       value_type: 'string',
       when: [
         {
           effect: 'if',
           operator: 'eq',
-          target_path: 'settlement.redeem.route',
-          value: 'proxy_safe',
+          target_path: 'notification.telegram.enabled',
+          value: true,
         },
       ],
     });
     const config = {
-      settlement: { redeem: { route: 'disabled' } },
+      notification: { telegram: { enabled: false } },
     };
     expect(isFieldVisible(field, {}, config)).toBe(false);
     expect(
-      isFieldVisible(
-        field,
-        { 'settlement.redeem.route': 'proxy_safe' },
-        config,
-      ),
+      isFieldVisible(field, { 'notification.telegram.enabled': true }, config),
     ).toBe(true);
   });
 
