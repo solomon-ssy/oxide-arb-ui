@@ -16,10 +16,22 @@ export function useDashboardMetrics() {
 
   const dailyPnl = computed(() => pnlStore.live?.daily_pnl);
   const totalPnl = computed(() => pnlStore.live?.total_realized_pnl);
-  const exposure = computed(() => systemStore.status?.total_exposure);
-  const pendingReservations = computed(
-    () => systemStore.status?.pending_reservations,
+  const systemBalance = computed(() => systemStore.balance);
+  const exposure = computed(
+    () =>
+      systemBalance.value?.total_exposure_usd ??
+      systemStore.status?.total_exposure,
   );
+  const pendingReservations = computed(
+    () =>
+      systemBalance.value?.active_reservation_count ??
+      systemStore.status?.pending_reservations,
+  );
+  const availableBeforePotentialLoss = computed(
+    () => systemBalance.value?.available_before_potential_loss_usd,
+  );
+  const cashBalance = computed(() => systemBalance.value?.cash_balance_usd);
+  const balanceSource = computed(() => systemBalance.value?.source);
 
   const dailyLossUsd = computed(
     () => riskStore.breaker?.daily_loss_usd ?? pnlStore.live?.daily_loss_usd,
@@ -64,6 +76,9 @@ export function useDashboardMetrics() {
 
   return {
     applyMaxDailyLoss,
+    availableBeforePotentialLoss,
+    balanceSource,
+    cashBalance,
     dailyHitRate,
     dailyLossRemainingUsd,
     dailyLossUsd,

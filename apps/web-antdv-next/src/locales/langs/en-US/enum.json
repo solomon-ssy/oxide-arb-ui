@@ -4,6 +4,12 @@
     "paper": "Paper",
     "live": "Live"
   },
+  "systemBalanceSource": {
+    "authoritative_clob": "CLOB authoritative",
+    "non_authoritative": "Non-authoritative",
+    "simulated_dry_run": "DryRun simulated ledger",
+    "simulated_paper": "Paper simulated ledger"
+  },
   "breakerState": {
     "closed": "Closed",
     "open": "Open",

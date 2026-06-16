@@ -8,7 +8,7 @@ import { useRequestHandler } from '@vben/request/oxide';
 import { getLivePnl } from '#/api/pnl';
 import { getCircuitBreaker } from '#/api/risk';
 import { getCurrentRuntimeConfig } from '#/api/runtime-config';
-import { getSystemStatus } from '#/api/system';
+import { getSystemBalance, getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
 import {
   decimalSign,
@@ -78,9 +78,14 @@ onMounted(async () => {
     tasks.push(
       (async () => {
         try {
-          await handleRequest(getSystemStatus, (status) =>
-            systemStore.applySystemStatus(status),
-          );
+          await Promise.all([
+            handleRequest(getSystemStatus, (status) =>
+              systemStore.applySystemStatus(status),
+            ),
+            handleRequest(getSystemBalance, (balance) =>
+              systemStore.applySystemBalance(balance),
+            ),
+          ]);
         } finally {
           loadingSystem.value = false;
         }
@@ -227,6 +232,21 @@ function cardLoading(card: KpiCardConfig) {
         </template>
 
         <template v-else-if="card.titleKey === 'page.dashboard.kpi.exposure'">
+          {{
+            $t('page.dashboard.kpi.availableFunds', {
+              value: formatUsd(metrics.availableBeforePotentialLoss.value),
+            })
+          }}
+          <span class="mx-1">·</span>
+          {{
+            $t('page.dashboard.kpi.cashSource', {
+              source: metrics.balanceSource.value
+                ? $t(`enum.systemBalanceSource.${metrics.balanceSource.value}`)
+                : '—',
+              value: formatUsd(metrics.cashBalance.value),
+            })
+          }}
+          <span class="mx-1">·</span>
           {{
             $t('page.dashboard.kpi.pendingReservations', {
               count: metrics.pendingReservations.value ?? '—',

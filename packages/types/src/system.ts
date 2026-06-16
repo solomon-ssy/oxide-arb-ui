@@ -26,6 +26,31 @@ export interface SystemStatus {
   checked_at: IsoDateTime;
 }
 
+export type SystemBalanceSource =
+  | 'authoritative_clob'
+  | 'non_authoritative'
+  | 'simulated_dry_run'
+  | 'simulated_paper';
+
+export interface SystemBalanceView {
+  execution_mode: ExecutionMode;
+  source: SystemBalanceSource;
+  cash_balance_usd: UsdString;
+  position_mark_value_usd: UsdString;
+  equity_usd: UsdString;
+  bankroll_cap_usd: UsdString;
+  reserve_balance_usd: UsdString;
+  reserved_usd: UsdString;
+  total_exposure_usd: UsdString;
+  available_before_potential_loss_usd: UsdString;
+  open_position_count: number;
+  active_reservation_count: number;
+  metrics_age_secs: number;
+  is_authoritative: boolean;
+  is_stale: boolean;
+  checked_at: IsoDateTime;
+}
+
 export interface SubsystemHealth {
   name: string;
   healthy: boolean;

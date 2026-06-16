@@ -4,6 +4,12 @@
     "paper": "模拟盘",
     "live": "实盘"
   },
+  "systemBalanceSource": {
+    "authoritative_clob": "CLOB 权威余额",
+    "non_authoritative": "非权威",
+    "simulated_dry_run": "DryRun 模拟账本",
+    "simulated_paper": "Paper 模拟账本"
+  },
   "breakerState": {
     "closed": "正常",
     "open": "熔断",

@@ -5,6 +5,7 @@ import type {
   ModeTransitionReport,
   ResumeRequest,
   SwitchModeRequest,
+  SystemBalanceView,
   SystemStatus,
 } from '@vben/types';
 
@@ -17,6 +18,7 @@ export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
   export const health = `${base}/health`;
+  export const balance = `${base}/balance`;
   export const materializationSchedules = `${base}/materialization-schedules`;
   export const halt = `${base}/halt`;
   export const resume = `${base}/resume`;
@@ -26,6 +28,11 @@ export namespace SystemApi {
 /** `GET /system/status` — execution mode / breaker / exposure snapshot. */
 export async function getSystemStatus() {
   return requestClient.get<SystemStatus>(SystemApi.status);
+}
+
+/** `GET /system/balance` — single operator money-state view. */
+export async function getSystemBalance() {
+  return requestClient.get<SystemBalanceView>(SystemApi.balance);
 }
 
 /** `GET /system/health` — per-subsystem health report. */
