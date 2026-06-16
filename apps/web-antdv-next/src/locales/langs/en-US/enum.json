@@ -32,6 +32,15 @@
     "miss": "Miss",
     "failed": "Failed"
   },
+  "tradeReconcileResolution": {
+    "filled": "Filled",
+    "miss": "Miss",
+    "unresolvable": "Unresolvable"
+  },
+  "netProfitKind": {
+    "fill_ev": "Fill EV",
+    "none": "None"
+  },
   "tradeState": {
     "intent": "Intent",
     "submitted": "Submitted",

@@ -296,6 +296,9 @@
       "price": "Price",
       "cost": "Cost",
       "pnl": "PnL",
+      "netProfitKind": "PnL Kind",
+      "needsReconcile": "Reconcile?",
+      "reconcileResolution": "Reconcile",
       "state": "State",
       "outcome": "Outcome",
       "mode": "Mode",
@@ -316,6 +319,10 @@
       "txHash": "Tx Hash",
       "submittedAt": "Submitted At",
       "confirmedAt": "Confirmed At",
+      "needsReconcile": "Needs Reconcile",
+      "reconcileResolution": "Reconcile Resolution",
+      "reconciledAt": "Reconciled At",
+      "reconcileNote": "Reconcile Note",
       "error": "Error",
       "decisionChain": "Decision Chain"
     },
@@ -323,7 +330,9 @@
       "cost": "Cost",
       "fee": "Fee",
       "detectedProfit": "Detected Profit",
-      "netProfit": "Net Profit"
+      "netProfit": "Net Profit",
+      "netProfitFillEvHint": "Fill-time EV (not realized PnL)",
+      "netProfitNoneHint": "No fill EV recorded"
     }
   },
   "analytics": {

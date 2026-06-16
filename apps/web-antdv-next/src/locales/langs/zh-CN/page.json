@@ -296,6 +296,9 @@
       "price": "价格",
       "cost": "成本",
       "pnl": "盈亏",
+      "netProfitKind": "盈亏类型",
+      "needsReconcile": "待对账",
+      "reconcileResolution": "对账结论",
       "state": "状态",
       "outcome": "结果",
       "mode": "模式",
@@ -316,6 +319,10 @@
       "txHash": "交易哈希",
       "submittedAt": "提交时间",
       "confirmedAt": "确认时间",
+      "needsReconcile": "需要对账",
+      "reconcileResolution": "对账结论",
+      "reconciledAt": "对账时间",
+      "reconcileNote": "对账备注",
       "error": "错误信息",
       "decisionChain": "决策链"
     },
@@ -323,7 +330,9 @@
       "cost": "成本",
       "fee": "费用",
       "detectedProfit": "检测期望利润",
-      "netProfit": "净利"
+      "netProfit": "净利",
+      "netProfitFillEvHint": "成交时 EV（非已实现盈亏）",
+      "netProfitNoneHint": "未记录成交 EV"
     }
   },
   "analytics": {

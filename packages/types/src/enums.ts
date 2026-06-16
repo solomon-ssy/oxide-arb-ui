@@ -178,6 +178,25 @@ export const TRADE_BUSINESS_OUTCOMES = {
 
 export type TradeBusinessOutcome = WireEnum<typeof TRADE_BUSINESS_OUTCOMES>;
 
+/** Operator/worker conclusion for a trade in reconciliation. */
+export const TRADE_RECONCILE_RESOLUTIONS = {
+  filled: 'filled',
+  miss: 'miss',
+  unresolvable: 'unresolvable',
+} as const;
+
+export type TradeReconcileResolution = WireEnum<
+  typeof TRADE_RECONCILE_RESOLUTIONS
+>;
+
+/** Semantic kind of `net_profit_usd` on the trade wire — fill-time EV, not realized PnL. */
+export const NET_PROFIT_KINDS = {
+  fillEv: 'fill_ev',
+  none: 'none',
+} as const;
+
+export type NetProfitKind = WireEnum<typeof NET_PROFIT_KINDS>;
+
 /** Polymarket event category for fee lookup and scoring. */
 export const MARKET_CATEGORIES = {
   crypto: 'crypto',
@@ -514,6 +533,7 @@ export type RunTriggerType = WireEnum<typeof RUN_TRIGGER_TYPES>;
 export const MATERIALIZATION_OUTPUT_POLICIES = {
   emitDraftCandidates: 'emit_draft_candidates',
   emitDraftOnly: 'emit_draft_only',
+  noFactorOutput: 'no_factor_output',
   reportOnly: 'report_only',
 } as const;
 

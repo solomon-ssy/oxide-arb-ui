@@ -87,7 +87,9 @@ export interface FieldWhenView {
 
 /** Server-extracted JSON Schema constraints for client-side validation. */
 export interface SchemaFieldConstraints {
-  enum_values?: string[];
+  enum_values?: unknown[];
+  exclusive_maximum?: number;
+  exclusive_minimum?: number;
   max_length?: number;
   maximum?: number;
   min_length?: number;

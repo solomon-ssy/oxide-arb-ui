@@ -14,6 +14,7 @@ interface AttributionRow {
   label: string;
   value: string;
   signClass: string;
+  hint?: string;
 }
 
 function signClass(value: null | string): string {
@@ -44,6 +45,10 @@ const rows = computed<AttributionRow[]>(() => [
     label: $t('page.trades.pnl.netProfit'),
     signClass: signClass(props.trade.net_profit_usd),
     value: formatUsd(props.trade.net_profit_usd),
+    hint:
+      props.trade.net_profit_kind === 'fill_ev'
+        ? $t('page.trades.pnl.netProfitFillEvHint')
+        : $t('page.trades.pnl.netProfitNoneHint'),
   },
 ]);
 </script>
@@ -61,6 +66,12 @@ const rows = computed<AttributionRow[]>(() => [
         class="font-mono text-base font-semibold tabular-nums"
       >
         {{ row.value }}
+      </span>
+      <span
+        v-if="row.hint"
+        class="text-muted-foreground text-[10px] leading-tight"
+      >
+        {{ row.hint }}
       </span>
     </div>
   </div>

@@ -49,6 +49,19 @@ const DECISION_TAG_OPTIONS = Object.values(RISK_AUDIT_EVENT_TYPES).map(
   }),
 );
 
+const NET_PROFIT_KIND_TAG_OPTIONS = [
+  {
+    color: 'processing',
+    label: $t('enum.netProfitKind.fill_ev'),
+    value: 'fill_ev',
+  },
+  {
+    color: 'default',
+    label: $t('enum.netProfitKind.none'),
+    value: 'none',
+  },
+];
+
 export function useTradeColumns(
   onActionClick: OnActionClickFn<TradeView>,
 ): VxeTableGridOptions<TradeView>['columns'] {
@@ -95,6 +108,26 @@ export function useTradeColumns(
       field: 'net_profit_usd',
       title: $t('page.trades.columns.pnl'),
       width: 110,
+    },
+    {
+      cellRender: { name: 'CellTag', options: NET_PROFIT_KIND_TAG_OPTIONS },
+      field: 'net_profit_kind',
+      title: $t('page.trades.columns.netProfitKind'),
+      width: 110,
+    },
+    {
+      formatter: ({ cellValue }: { cellValue: boolean }) =>
+        cellValue ? $t('common.yes') : $t('common.no'),
+      field: 'needs_reconcile',
+      title: $t('page.trades.columns.needsReconcile'),
+      width: 100,
+    },
+    {
+      field: 'reconcile_resolution',
+      formatter: ({ cellValue }: { cellValue: null | string }) =>
+        cellValue ? $t(`enum.tradeReconcileResolution.${cellValue}`) : '—',
+      title: $t('page.trades.columns.reconcileResolution'),
+      width: 120,
     },
     {
       cellRender: { name: 'CellTag', options: STATE_TAG_OPTIONS },

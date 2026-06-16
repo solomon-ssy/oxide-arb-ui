@@ -41,6 +41,7 @@ export interface SettledPnlStats {
   failed_accounting_count: number;
   largest_single_profit: UsdString;
   largest_single_loss: UsdString;
+  total_gas_paid: UsdString;
 }
 
 /** Per-period execution (fill) stats. */

@@ -32,6 +32,15 @@
     "miss": "未成交",
     "failed": "失败"
   },
+  "tradeReconcileResolution": {
+    "filled": "已成交",
+    "miss": "未成交",
+    "unresolvable": "无法解析"
+  },
+  "netProfitKind": {
+    "fill_ev": "成交 EV",
+    "none": "无"
+  },
   "tradeState": {
     "intent": "意向",
     "submitted": "已提交",

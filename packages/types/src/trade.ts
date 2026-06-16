@@ -12,10 +12,14 @@ import type {
 import type {
   ExecutionMode,
   MarketCategory,
+  NetProfitKind,
   Side,
   TradeBusinessOutcome,
+  TradeReconcileResolution,
   TradeState,
 } from './enums';
+
+export type { NetProfitKind };
 
 /**
  * Outbound trade projection, shared verbatim by REST `GET /trades` items and
@@ -36,6 +40,12 @@ export interface TradeView {
   detected_edge_bps: BpsString | null;
   detected_profit_usd: null | UsdString;
   net_profit_usd: null | UsdString;
+  /** Fill-time EV semantics — not realized settlement PnL. */
+  net_profit_kind: NetProfitKind;
+  needs_reconcile: boolean;
+  reconcile_resolution: null | TradeReconcileResolution;
+  reconciled_at: IsoDateTime | null;
+  reconcile_note: null | string;
   state: TradeState;
   business_outcome: null | TradeBusinessOutcome;
   category: MarketCategory;
@@ -59,6 +69,12 @@ export interface TradePageQuery extends PageQuery {
   execution_mode?: ExecutionMode;
   from?: IsoDateTime;
   to?: IsoDateTime;
+}
+
+/** Operator request to record a manual reconciliation conclusion (`POST /trades/{id}/reconcile`). */
+export interface ReconcileTradeRequest {
+  resolution: TradeReconcileResolution;
+  note: string;
 }
 
 /** WS `trade.settled` payload — settlement outcome of a previously filled trade. */

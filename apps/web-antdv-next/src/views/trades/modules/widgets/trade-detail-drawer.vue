@@ -135,6 +135,27 @@ watch(
         <DescriptionsItem :label="$t('page.trades.detail.confirmedAt')">
           {{ formatDateTimeLocal(trade.confirmed_at) }}
         </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.trades.detail.needsReconcile')">
+          {{ trade.needs_reconcile ? $t('common.yes') : $t('common.no') }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.trades.detail.reconcileResolution')">
+          {{
+            trade.reconcile_resolution
+              ? $t(
+                  `enum.tradeReconcileResolution.${trade.reconcile_resolution}`,
+                )
+              : '—'
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.trades.detail.reconciledAt')">
+          {{ formatDateTimeLocal(trade.reconciled_at) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.trades.detail.reconcileNote')"
+          :span="2"
+        >
+          {{ trade.reconcile_note ?? '—' }}
+        </DescriptionsItem>
         <DescriptionsItem
           v-if="trade.error_message"
           :label="$t('page.trades.detail.error')"

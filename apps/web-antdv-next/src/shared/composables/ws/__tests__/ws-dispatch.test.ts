@@ -14,6 +14,7 @@ import type { WsDispatchHooks } from '../ws-dispatch';
 import {
   BREAKER_STATES,
   EXECUTION_MODES,
+  NET_PROFIT_KINDS,
   SIDES,
   TRADE_STATES,
 } from '@vben/types';
@@ -136,6 +137,11 @@ function tradeView(id: string): TradeView {
     latency_ms: 42,
     market_id: '0xabc',
     net_profit_usd: '4.1',
+    net_profit_kind: NET_PROFIT_KINDS.fillEv,
+    needs_reconcile: false,
+    reconcile_resolution: null,
+    reconciled_at: null,
+    reconcile_note: null,
     opportunity_id: '0197a1b2-0000-7000-8000-000000000001',
     order_id: 'ord1',
     price: '0.93',
