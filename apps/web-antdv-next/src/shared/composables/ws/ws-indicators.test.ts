@@ -19,6 +19,12 @@ function baseStatus(
     control_factor_publication_id: null,
     control_factor_snapshot_expired: false,
     daily_pnl: '0',
+    execution_emergency: {
+      active: false,
+      class: 'venue_fault',
+      last_reason: null,
+      requires_operator_ack: false,
+    },
     execution_mode: 'dry_run',
     market_data: {
       last_message_age_ms: null,

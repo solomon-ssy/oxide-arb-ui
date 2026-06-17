@@ -401,6 +401,7 @@ const headerSlots = computed(() => {
 
     <!-- 主体内容 -->
     <template #content>
+      <slot name="content-before"></slot>
       <LayoutContent />
     </template>
 

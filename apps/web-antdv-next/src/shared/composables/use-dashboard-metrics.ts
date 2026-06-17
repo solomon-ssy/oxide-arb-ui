@@ -70,6 +70,16 @@ export function useDashboardMetrics() {
     return new Decimal(success).div(total).toNumber();
   });
 
+  const blockingTradeCount = computed(
+    () => systemStore.balance?.blocking_trade_count ?? 0,
+  );
+  const needsReconcileCount = computed(
+    () => systemStore.balance?.needs_reconcile_count ?? 0,
+  );
+  const operationalPhase = computed(
+    () => systemStore.status?.operational_phase.phase ?? null,
+  );
+
   function applyMaxDailyLoss(limit: string | undefined) {
     maxDailyLossUsd.value = limit;
   }
@@ -78,6 +88,7 @@ export function useDashboardMetrics() {
     applyMaxDailyLoss,
     availableForSizing,
     balanceSource,
+    blockingTradeCount,
     cashBalance,
     dailyHitRate,
     dailyLossRemainingUsd,
@@ -89,6 +100,8 @@ export function useDashboardMetrics() {
     dailyTradeCount,
     exposure,
     maxDailyLossUsd,
+    needsReconcileCount,
+    operationalPhase,
     pendingReservations,
     totalPnl,
   };

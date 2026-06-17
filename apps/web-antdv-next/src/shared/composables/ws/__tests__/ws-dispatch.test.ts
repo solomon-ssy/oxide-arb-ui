@@ -77,6 +77,12 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
     control_factor_snapshot_expired: false,
     checked_at: '2026-06-11T12:00:00Z',
     daily_pnl: '15.5',
+    execution_emergency: {
+      active: false,
+      class: 'venue_fault',
+      last_reason: null,
+      requires_operator_ack: false,
+    },
     execution_mode: EXECUTION_MODES.paper,
     market_data: {
       last_message_age_ms: 100,

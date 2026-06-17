@@ -21,6 +21,7 @@ import { $t } from '#/locales';
 import ExecutionModeSwitcher from '#/shared/components/header/execution-mode-switcher.vue';
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
 import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
+import IntegrityBanner from '#/shared/components/integrity-banner.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useOxideWs } from '#/shared/composables/use-oxide-ws';
 import { useSystemControl } from '#/shared/composables/use-system-control';
@@ -31,7 +32,8 @@ import LoginForm from '#/views/_core/authentication/login.vue';
 const systemStore = useSystemStore();
 
 const { GovernedActionHost, governed } = useGovernedAction();
-const { HaltModalHost, ResumeModalHost } = useSystemControl();
+const { EmergencyAckModalHost, HaltModalHost, ResumeModalHost } =
+  useSystemControl();
 provide(RuntimeConfigGovernedKey, governed);
 provide(RuntimeConfigRequestClientKey, requestClient);
 provide(RuntimeConfigRevisionKey, () => systemStore.activeConfigVersion);
@@ -147,6 +149,9 @@ watch(
 
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
+    <template #content-before>
+      <IntegrityBanner />
+    </template>
     <template #header-right-10>
       <SystemStatusIndicator />
     </template>
@@ -178,6 +183,7 @@ watch(
     </template>
     <template #extra>
       <GovernedActionHost />
+      <EmergencyAckModalHost />
       <HaltModalHost />
       <ResumeModalHost />
       <AuthenticationLoginExpiredModal

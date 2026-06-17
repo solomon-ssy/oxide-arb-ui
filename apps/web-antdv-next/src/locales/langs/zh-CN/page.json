@@ -19,6 +19,7 @@
     "markets": "市场",
     "opportunities": "机会",
     "trades": "交易",
+    "tradeReconcile": "标记不可解析",
     "risk": "风险总览",
     "blacklist": "黑名单",
     "analytics": "分析",
@@ -96,6 +97,22 @@
       "ackTip": "确认文本将原样写入风控审计（1–256 字符）",
       "submitted": "恢复指令已提交，等待系统状态回显"
     },
+    "emergencyAck": {
+      "title": "确认执行紧急停机",
+      "banner": "执行端紧急停机需要运维确认",
+      "summary": "清除执行端紧急状态（预留/持久化故障）。与风控恢复不同 — 仅在对账队列清零后使用。",
+      "classLabel": "紧急类型：{class}",
+      "blockingTrades": "仍有 {count} 笔阻塞交易，须先完成对账",
+      "ackCheckbox": "我确认对账队列已清零，可以清除执行端故障",
+      "ackLabel": "操作确认信息",
+      "ackPlaceholder": "例如：t-123 标记不可解析后清除持久化故障",
+      "submitted": "紧急确认已提交，等待系统状态回显",
+      "steps": {
+        "reconcile": "处理对账队列（blocking = 0）",
+        "ack": "确认执行端紧急停机",
+        "resume": "若风控仍停机，再执行恢复"
+      }
+    },
     "mode": {
       "title": "切换执行模式",
       "summary": "目标模式：{target}。切换将经过治理流程并记录审计。",
@@ -124,6 +141,16 @@
       "control_factor_snapshot_expired": "控制因子快照已过期"
     }
   },
+  "integrity": {
+    "emergencyAck": "执行端紧急停机（{class}）需要确认。{reason}",
+    "blockingTrades": "{count} 笔阻塞交易占用资金 — 请先对账再恢复。",
+    "needsReconcile": "{count} 笔交易需要人工对账。",
+    "operationalDegraded": "系统处于降级运营阶段。",
+    "actions": {
+      "emergencyAck": "确认紧急停机",
+      "openReconciliation": "前往对账"
+    }
+  },
   "dashboard": {
     "kpi": {
       "pnl": "盈亏",
@@ -149,10 +176,16 @@
     "systemCard": {
       "title": "系统状态"
     },
+    "integrity": {
+      "blockingTrades": "阻塞交易",
+      "needsReconcile": "待对账",
+      "footer": "阻塞 {blocking} · 待对账 {reconcile}"
+    },
     "breakerCard": {
       "title": "熔断器",
       "level": "级别：{level}",
       "nominal": "运行正常，无熔断事件",
+      "hint": "完整风控快照与重置操作请前往风控页。系统运行态请点顶栏状态灯查看。",
       "toRisk": "去风控页"
     },
     "replayCard": {
@@ -300,7 +333,8 @@
   "trades": {
     "tabs": {
       "list": "交易列表",
-      "decisions": "风控决策审计"
+      "decisions": "风控决策审计",
+      "reconciliation": "对账队列"
     },
     "newTrades": "有 {count} 条新交易，点击刷新",
     "routeSeed": {
@@ -359,6 +393,13 @@
       "netProfit": "净利",
       "netProfitFillEvHint": "成交时 EV（非已实现盈亏）",
       "netProfitNoneHint": "未记录成交 EV"
+    },
+    "reconcile": {
+      "title": "标记不可解析",
+      "action": "标记不可解析",
+      "summary": "将市场 {market} 的交易标记为 {resolution}。备注写入操作日志。",
+      "submitted": "对账结论已记录",
+      "errorMessage": "错误信息"
     }
   },
   "analytics": {

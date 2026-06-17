@@ -19,6 +19,7 @@
     "markets": "Markets",
     "opportunities": "Opportunities",
     "trades": "Trades",
+    "tradeReconcile": "Mark Unresolvable",
     "risk": "Risk Overview",
     "blacklist": "Blacklist",
     "analytics": "Analytics",
@@ -96,6 +97,22 @@
       "ackTip": "Recorded verbatim on the risk audit (1–256 characters)",
       "submitted": "Resume submitted, waiting for the system status echo"
     },
+    "emergencyAck": {
+      "title": "Acknowledge Execution Emergency",
+      "banner": "Execution kill switch requires operator acknowledgement",
+      "summary": "Clears the execution emergency (reservation/persistence fault). This is distinct from risk resume — use only after reconciliation queue is clear.",
+      "classLabel": "Emergency class: {class}",
+      "blockingTrades": "{count} blocking trade(s) must be reconciled before acknowledgement",
+      "ackCheckbox": "I confirm the reconciliation queue is clear and the execution fault may be cleared",
+      "ackLabel": "Operator acknowledgement",
+      "ackPlaceholder": "e.g. persistence fault cleared after trade t-123 marked unresolvable",
+      "submitted": "Emergency ack submitted, waiting for the system status echo",
+      "steps": {
+        "reconcile": "Clear the reconciliation queue (blocking = 0)",
+        "ack": "Acknowledge execution emergency",
+        "resume": "Resume trading if risk halt is still latched"
+      }
+    },
     "mode": {
       "title": "Switch Execution Mode",
       "summary": "Target mode: {target}. The switch goes through governance and is audited.",
@@ -124,6 +141,16 @@
       "control_factor_snapshot_expired": "Control-factor snapshot expired"
     }
   },
+  "integrity": {
+    "emergencyAck": "Execution emergency ({class}) requires acknowledgement. {reason}",
+    "blockingTrades": "{count} blocking trade(s) are holding capital — reconcile before resuming.",
+    "needsReconcile": "{count} trade(s) need manual reconciliation.",
+    "operationalDegraded": "System is in degraded operational phase.",
+    "actions": {
+      "emergencyAck": "Acknowledge Emergency",
+      "openReconciliation": "Open Reconciliation"
+    }
+  },
   "dashboard": {
     "kpi": {
       "pnl": "PnL",
@@ -149,10 +176,16 @@
     "systemCard": {
       "title": "System Status"
     },
+    "integrity": {
+      "blockingTrades": "Blocking trades",
+      "needsReconcile": "Needs reconcile",
+      "footer": "Blocking {blocking} · Reconcile {reconcile}"
+    },
     "breakerCard": {
       "title": "Circuit Breaker",
       "level": "Level: {level}",
       "nominal": "Nominal — no breaker events",
+      "hint": "Open Risk for the full snapshot and reset. Click the header status pill for system runtime.",
       "toRisk": "Risk page"
     },
     "replayCard": {
@@ -300,7 +333,8 @@
   "trades": {
     "tabs": {
       "list": "Trades",
-      "decisions": "Risk Decision Audit"
+      "decisions": "Risk Decision Audit",
+      "reconciliation": "Reconciliation"
     },
     "newTrades": "{count} new trades — click to refresh",
     "routeSeed": {
@@ -359,6 +393,13 @@
       "netProfit": "Net Profit",
       "netProfitFillEvHint": "Fill-time EV (not realized PnL)",
       "netProfitNoneHint": "No fill EV recorded"
+    },
+    "reconcile": {
+      "title": "Mark Unresolvable",
+      "action": "Mark Unresolvable",
+      "summary": "Close trade on market {market} as {resolution}. The note is recorded on the operation log.",
+      "submitted": "Reconciliation recorded",
+      "errorMessage": "Error"
     }
   },
   "analytics": {

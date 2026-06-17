@@ -8,14 +8,23 @@ import { EXECUTION_MODES } from '@vben/types';
 
 import { message } from 'antdv-next';
 
-import { haltSystem, resumeSystem, switchExecutionMode } from '#/api/system';
+import {
+  ackExecutionEmergency,
+  haltSystem,
+  resumeSystem,
+  switchExecutionMode,
+} from '#/api/system';
 import { $t } from '#/locales';
+import EmergencyAckModal from '#/shared/components/emergency-ack-modal.vue';
 import HaltReasonModal from '#/shared/components/halt-reason-modal.vue';
 import ResumeAckModal from '#/shared/components/resume-ack-modal.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useSystemStore } from '#/store';
 
 type SystemControlApi = {
+  /** Open the emergency-ack modal; on confirm `POST /system/emergency/ack`. */
+  emergencyAck: () => void;
+  EmergencyAckModalHost: Component;
   /** Open the halt-reason modal; on confirm `POST /system/halt`. */
   halt: () => void;
   /** Modal hosts — mounted once in the basic layout. */
@@ -47,6 +56,27 @@ function createSystemControlApi(): SystemControlApi {
     connectedComponent: ResumeAckModal,
     destroyOnClose: true,
   });
+
+  const [EmergencyAckModalHost, emergencyAckModalApi] = useVbenModal({
+    connectedComponent: EmergencyAckModal,
+    destroyOnClose: true,
+  });
+
+  function emergencyAck() {
+    emergencyAckModalApi.setData({
+      onSubmit: async (operatorAck: string): Promise<boolean> => {
+        const result = await handleRequest(
+          () => ackExecutionEmergency({ operator_ack: operatorAck }),
+          {
+            onSuccess: () =>
+              message.success($t('page.system.emergencyAck.submitted')),
+          },
+        );
+        return result !== null;
+      },
+    });
+    emergencyAckModalApi.open();
+  }
 
   function halt() {
     haltModalApi.setData({
@@ -111,6 +141,8 @@ function createSystemControlApi(): SystemControlApi {
   }
 
   return {
+    emergencyAck,
+    EmergencyAckModalHost,
     halt,
     HaltModalHost,
     resume,

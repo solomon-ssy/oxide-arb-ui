@@ -252,6 +252,19 @@ function cardLoading(card: KpiCardConfig) {
               count: metrics.pendingReservations.value ?? '—',
             })
           }}
+          <span class="mx-1">·</span>
+          {{
+            $t('page.dashboard.integrity.footer', {
+              blocking: metrics.blockingTradeCount.value,
+              reconcile: metrics.needsReconcileCount.value,
+            })
+          }}
+          <template v-if="metrics.operationalPhase.value === 'degraded'">
+            <span class="mx-1">·</span>
+            <span class="text-amber-600 dark:text-amber-400">
+              {{ $t(`page.system.phase.${metrics.operationalPhase.value}`) }}
+            </span>
+          </template>
         </template>
 
         <template

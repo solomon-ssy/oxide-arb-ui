@@ -6,12 +6,12 @@ import { Page } from '@vben/common-ui';
 import OpportunityFeed from '#/shared/components/opportunity-feed.vue';
 import { useOxideAccess } from '#/shared/composables/use-oxide-access';
 
+import BreakerHealthCard from './modules/widgets/breaker-health-card.vue';
 import KpiCards from './modules/widgets/kpi-cards.vue';
 import PnlCurve from './modules/widgets/pnl-curve.vue';
 import QuickLinks from './modules/widgets/quick-links.vue';
 import RecentTrades from './modules/widgets/recent-trades.vue';
 import ReplayRunsCard from './modules/widgets/replay-runs-card.vue';
-import SystemStatusCard from './modules/widgets/system-status-card.vue';
 
 defineOptions({ name: 'DashboardOverview' });
 
@@ -41,11 +41,14 @@ const showKpi = computed(
       <KpiCards v-if="showKpi" />
 
       <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <div v-if="canReadPnl" class="xl:col-span-2">
+        <div
+          v-if="canReadPnl"
+          :class="canReadRisk ? 'xl:col-span-2' : 'xl:col-span-3'"
+        >
           <PnlCurve />
         </div>
-        <SystemStatusCard
-          v-if="canReadSystem || canReadRisk"
+        <BreakerHealthCard
+          v-if="canReadRisk"
           :class="canReadPnl ? '' : 'xl:col-span-3'"
         />
       </div>

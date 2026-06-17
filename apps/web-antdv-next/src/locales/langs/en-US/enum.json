@@ -23,6 +23,11 @@
     "daily": "Daily",
     "system": "System"
   },
+  "executionEmergencyClass": {
+    "venue_fault": "Venue fault",
+    "reservation_fault": "Reservation fault",
+    "persistence_fault": "Persistence fault"
+  },
   "side": {
     "BUY": "Buy",
     "SELL": "Sell"

@@ -22,6 +22,7 @@ export namespace SystemApi {
   export const materializationSchedules = `${base}/materialization-schedules`;
   export const halt = `${base}/halt`;
   export const resume = `${base}/resume`;
+  export const emergencyAck = `${base}/emergency/ack`;
   export const mode = `${base}/mode`;
 }
 
@@ -61,6 +62,14 @@ export async function haltSystem(body: HaltRequest) {
  */
 export async function resumeSystem(body: ResumeRequest) {
   return requestClient.post<null>(SystemApi.resume, body);
+}
+
+/**
+ * `POST /system/emergency/ack` — clear reservation/persistence execution
+ * emergency after operator acknowledgement (distinct from risk resume).
+ */
+export async function ackExecutionEmergency(body: ResumeRequest) {
+  return requestClient.post<null>(SystemApi.emergencyAck, body);
 }
 
 /**

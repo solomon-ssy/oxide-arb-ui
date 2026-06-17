@@ -3,27 +3,37 @@ import type { RiskAuditEventView, TradeView, UuidString } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, onActivated, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
-import { Alert, TabPane, Tabs } from 'antdv-next';
+import { Alert, Badge, message, TabPane, Tabs } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { fetchTradeDecisions, fetchTradePage } from '#/api/trades';
+import {
+  fetchReconciliationQueue,
+  fetchTradeDecisions,
+  fetchTradePage,
+  reconcileTrade,
+} from '#/api/trades';
 import { $t } from '#/locales';
 import OpportunityAuditDrawer from '#/shared/components/opportunity-audit-drawer.vue';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useOxideAccess } from '#/shared/composables/use-oxide-access';
 import {
   clearRouteTimeWindow,
   readRouteTimeWindow,
 } from '#/shared/composables/use-route-time-window';
 import { rangeToWindow } from '#/shared/composables/use-time-range-query';
-import { useTradeStore } from '#/store';
+import { useTradesPageTab } from '#/shared/composables/use-trades-page-tab';
+import { useSystemStore, useTradeStore } from '#/store';
 
 import {
+  RECONCILE_UNRESOLVABLE,
   useDecisionColumns,
   useDecisionSearchSchema,
+  useReconciliationColumns,
   useTradeColumns,
   useTradeSearchSchema,
 } from './modules/schemas';
@@ -33,9 +43,18 @@ defineOptions({ name: 'TradesPage' });
 
 const route = useRoute();
 const router = useRouter();
-const activeTab = ref('trades');
+const { activeTab, syncTabOnEnter } = useTradesPageTab();
+const tradeRouteSeedBanner = ref<null | string>(null);
+
+const systemStore = useSystemStore();
 const tradeStore = useTradeStore();
-const routeSeedBanner = ref<null | string>(null);
+const { governed } = useGovernedAction();
+const { hasAccessByCodes } = useOxideAccess();
+
+const canReconcile = computed(() => hasAccessByCodes(['trade:update']));
+const reconcileBadgeCount = computed(
+  () => systemStore.balance?.needs_reconcile_count ?? 0,
+);
 
 const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
   connectedComponent: TradeDetailDrawer,
@@ -44,9 +63,49 @@ const [AuditDrawer, auditDrawerApi] = useVbenDrawer({
   connectedComponent: OpportunityAuditDrawer,
 });
 
+function openTradeDetail(tradeId: UuidString) {
+  detailDrawerApi.setData({ tradeId }).open();
+}
+
 function onTradeAction({ code, row }: OnActionClickParams<TradeView>) {
   if (code === 'detail') {
-    detailDrawerApi.setData({ tradeId: row.trade_id }).open();
+    openTradeDetail(row.trade_id);
+  }
+}
+
+async function onReconcileAction({
+  code,
+  row,
+}: OnActionClickParams<TradeView>) {
+  if (code === 'detail') {
+    openTradeDetail(row.trade_id);
+    return;
+  }
+  if (code !== 'reconcile' || !canReconcile.value) {
+    return;
+  }
+  const result = await governed(
+    (ctx) =>
+      reconcileTrade(
+        row.trade_id,
+        { note: ctx.reason, resolution: RECONCILE_UNRESOLVABLE },
+        ctx,
+      ),
+    {
+      confirmWord: 'unresolvable',
+      danger: true,
+      summary: $t('page.trades.reconcile.summary', {
+        market: row.market_id,
+        resolution: $t(
+          `enum.tradeReconcileResolution.${RECONCILE_UNRESOLVABLE}`,
+        ),
+      }),
+      title: $t('page.trades.reconcile.title'),
+    },
+  );
+  if (result !== null) {
+    message.success($t('page.trades.reconcile.submitted'));
+    await reconGridApi.query();
   }
 }
 
@@ -96,6 +155,27 @@ const [TradeGrid, tradeGridApi] = useVbenVxeGrid<TradeView>({
   },
 });
 
+const [ReconGrid, reconGridApi] = useVbenVxeGrid<TradeView>({
+  gridOptions: {
+    columns: useReconciliationColumns(onReconcileAction),
+    proxyConfig: {
+      ajax: {
+        query: async ({
+          page,
+        }: {
+          page: { currentPage: number; pageSize: number };
+        }) =>
+          fetchReconciliationQueue({
+            page: page.currentPage,
+            size: page.pageSize,
+          }),
+      },
+    },
+    rowConfig: { keyField: 'trade_id' },
+    toolbarConfig: { refresh: { code: 'query' } },
+  },
+});
+
 /** WS pushes ahead of the rendered first page → "N new trades" banner. */
 const newTradeCount = computed(() => {
   const head = pageHeadTradeId.value;
@@ -126,7 +206,7 @@ async function applyRouteSeed() {
       : {}),
   });
   await tradeGridApi.query();
-  routeSeedBanner.value = $t('page.trades.routeSeed.active', {
+  tradeRouteSeedBanner.value = $t('page.trades.routeSeed.active', {
     from: seed.range[0].format('YYYY-MM-DD'),
     to: seed.range[1].format('YYYY-MM-DD'),
   });
@@ -134,7 +214,7 @@ async function applyRouteSeed() {
 }
 
 function dismissRouteSeedBanner() {
-  routeSeedBanner.value = null;
+  tradeRouteSeedBanner.value = null;
 }
 
 const [DecisionGrid] = useVbenVxeGrid<RiskAuditEventView>({
@@ -161,8 +241,32 @@ const [DecisionGrid] = useVbenVxeGrid<RiskAuditEventView>({
   },
 });
 
+function onTabEnter() {
+  syncTabOnEnter();
+}
+
+watch(
+  () => tradeStore.recent[0],
+  (trade) => {
+    if (activeTab.value === 'reconciliation' && trade?.needs_reconcile) {
+      void reconGridApi.query();
+    }
+  },
+);
+
+watch(activeTab, (tab) => {
+  if (tab === 'reconciliation') {
+    void reconGridApi.query();
+  }
+});
+
 onMounted(() => {
+  onTabEnter();
   void applyRouteSeed();
+});
+
+onActivated(() => {
+  onTabEnter();
 });
 </script>
 
@@ -171,14 +275,14 @@ onMounted(() => {
     <Tabs v-model:active-key="activeTab" class="h-full">
       <TabPane key="trades" :tab="$t('page.trades.tabs.list')">
         <Alert
-          v-if="routeSeedBanner"
+          v-if="tradeRouteSeedBanner"
           class="mb-2"
           closable
           show-icon
           type="info"
           @close="dismissRouteSeedBanner"
         >
-          <template #message>{{ routeSeedBanner }}</template>
+          <template #message>{{ tradeRouteSeedBanner }}</template>
         </Alert>
         <Alert
           v-if="newTradeCount > 0"
@@ -195,6 +299,18 @@ onMounted(() => {
       </TabPane>
       <TabPane key="decisions" :tab="$t('page.trades.tabs.decisions')">
         <DecisionGrid />
+      </TabPane>
+      <TabPane key="reconciliation">
+        <template #tab>
+          <Badge
+            :count="reconcileBadgeCount"
+            :offset="[6, 0]"
+            :show-zero="false"
+          >
+            <span>{{ $t('page.trades.tabs.reconciliation') }}</span>
+          </Badge>
+        </template>
+        <ReconGrid />
       </TabPane>
     </Tabs>
     <DetailDrawer />

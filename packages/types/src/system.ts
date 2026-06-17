@@ -44,6 +44,27 @@ export interface MarketDataConnectivity {
   ws_shards: WsShardConnectivity;
 }
 
+/** Execution kill-switch class on operator dashboards. */
+export type ExecutionEmergencyClassView =
+  | 'persistence_fault'
+  | 'reservation_fault'
+  | 'venue_fault';
+
+/** Global execution kill-switch snapshot (distinct from risk circuit breaker). */
+export interface ExecutionEmergencyView {
+  active: boolean;
+  class: ExecutionEmergencyClassView;
+  requires_operator_ack: boolean;
+  last_reason: null | string;
+}
+
+export const IDLE_EXECUTION_EMERGENCY: ExecutionEmergencyView = {
+  active: false,
+  class: 'venue_fault',
+  last_reason: null,
+  requires_operator_ack: false,
+};
+
 export interface SystemStatus {
   execution_mode: ExecutionMode;
   breaker_state: BreakerStateName;
@@ -59,6 +80,7 @@ export interface SystemStatus {
   control_factor_publication_id: null | string;
   control_factor_snapshot_expired: boolean;
   control_factor_live_warn: boolean;
+  execution_emergency: ExecutionEmergencyView;
   checked_at: IsoDateTime;
 }
 

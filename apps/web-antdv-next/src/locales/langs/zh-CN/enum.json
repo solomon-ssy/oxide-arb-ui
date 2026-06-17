@@ -23,6 +23,11 @@
     "daily": "日级",
     "system": "系统级"
   },
+  "executionEmergencyClass": {
+    "venue_fault": "交易所故障",
+    "reservation_fault": "预留故障",
+    "persistence_fault": "持久化故障"
+  },
   "side": {
     "BUY": "买入",
     "SELL": "卖出"
