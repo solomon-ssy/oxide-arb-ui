@@ -234,7 +234,7 @@ function cardLoading(card: KpiCardConfig) {
         <template v-else-if="card.titleKey === 'page.dashboard.kpi.exposure'">
           {{
             $t('page.dashboard.kpi.availableFunds', {
-              value: formatUsd(metrics.availableBeforePotentialLoss.value),
+              value: formatUsd(metrics.availableForSizing.value),
             })
           }}
           <span class="mx-1">·</span>

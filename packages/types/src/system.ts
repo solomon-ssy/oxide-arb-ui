@@ -23,6 +23,9 @@ export interface SystemStatus {
   total_exposure: UsdString;
   daily_pnl: UsdString;
   catalog: CatalogState;
+  control_factor_publication_id: null | string;
+  control_factor_snapshot_expired: boolean;
+  control_factor_live_warn: boolean;
   checked_at: IsoDateTime;
 }
 
@@ -31,6 +34,13 @@ export type SystemBalanceSource =
   | 'non_authoritative'
   | 'simulated_dry_run'
   | 'simulated_paper';
+
+export type ExposureBindingLimit =
+  | 'absolute_market'
+  | 'absolute_total'
+  | 'bankroll_cap'
+  | 'percent_of_cash'
+  | 'reservation_backend';
 
 export interface SystemBalanceView {
   execution_mode: ExecutionMode;
@@ -42,7 +52,14 @@ export interface SystemBalanceView {
   reserve_balance_usd: UsdString;
   reserved_usd: UsdString;
   total_exposure_usd: UsdString;
-  available_before_potential_loss_usd: UsdString;
+  available_for_sizing_usd: UsdString;
+  potential_loss_usd: UsdString;
+  blocking_trade_count: number;
+  needs_reconcile_count: number;
+  max_total_exposure_usd: UsdString;
+  max_single_market_exposure_usd: UsdString;
+  max_total_exposure_pct: string;
+  binding_exposure_limit: ExposureBindingLimit;
   open_position_count: number;
   active_reservation_count: number;
   metrics_age_secs: number;

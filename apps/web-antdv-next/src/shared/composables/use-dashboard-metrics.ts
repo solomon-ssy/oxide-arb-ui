@@ -27,8 +27,8 @@ export function useDashboardMetrics() {
       systemBalance.value?.active_reservation_count ??
       systemStore.status?.pending_reservations,
   );
-  const availableBeforePotentialLoss = computed(
-    () => systemBalance.value?.available_before_potential_loss_usd,
+  const availableForSizing = computed(
+    () => systemBalance.value?.available_for_sizing_usd,
   );
   const cashBalance = computed(() => systemBalance.value?.cash_balance_usd);
   const balanceSource = computed(() => systemBalance.value?.source);
@@ -76,7 +76,7 @@ export function useDashboardMetrics() {
 
   return {
     applyMaxDailyLoss,
-    availableBeforePotentialLoss,
+    availableForSizing,
     balanceSource,
     cashBalance,
     dailyHitRate,
