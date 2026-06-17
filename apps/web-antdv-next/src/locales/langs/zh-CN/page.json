@@ -58,7 +58,8 @@
       "running": "运行中",
       "degraded": "降级",
       "critical": "已停机",
-      "unknown": "未知"
+      "unknown": "未知",
+      "starting": "预热中"
     },
     "field": {
       "mode": "执行模式",
@@ -69,7 +70,10 @@
       "exposure": "总敞口",
       "dailyPnl": "今日盈亏",
       "catalog": "市场目录",
-      "checkedAt": "更新于"
+      "checkedAt": "更新于",
+      "phase": "运营阶段",
+      "marketData": "行情连接",
+      "degradeReasons": "降级原因"
     },
     "catalog": {
       "ready": "已就绪（{markets} 市场）",
@@ -95,7 +99,29 @@
     "mode": {
       "title": "切换执行模式",
       "summary": "目标模式：{target}。切换将经过治理流程并记录审计。",
-      "switched": "执行模式已切换：{from} → {to}"
+      "switched": "执行模式已切换：{from} → {to}",
+      "liveRequiresOperational": "Live 模式要求运营阶段为「运行中」（当前：{phase}）"
+    },
+    "phase": {
+      "catalog_warming": "目录预热",
+      "market_data_connecting": "连接行情",
+      "operational": "运行中",
+      "degraded": "降级",
+      "halted": "已停机"
+    },
+    "marketData": {
+      "connecting": "连接行情… ({connected}/{total} shard)",
+      "ready": "行情就绪",
+      "stale": "行情未就绪",
+      "lastMessageAge": "最近消息 {ms} ms 前"
+    },
+    "degradeReason": {
+      "breaker_open": "熔断器已打开",
+      "breaker_half_open": "熔断器半开",
+      "market_data_stale": "行情数据过期",
+      "subsystem_unhealthy": "子系统不健康：{name}",
+      "control_factor_live_warn": "Live 模式下无已发布控制因子快照",
+      "control_factor_snapshot_expired": "控制因子快照已过期"
     }
   },
   "dashboard": {

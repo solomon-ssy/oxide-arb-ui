@@ -1,21 +1,11 @@
-import type {
-  AlertLevel,
-  IsoDateTime,
-  SystemAlertEvent,
-  SystemStatus,
-} from '@vben/types';
+import type { AlertLevel, IsoDateTime, SystemAlertEvent } from '@vben/types';
 
 import { ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import {
-  isSystemRunning,
-  RECOVERABLE_EXECUTION_EMERGENCY_KEY,
-} from '#/shared/composables/ws/ws-indicators';
-
-/** Alert severities that push the header indicator to degraded (phase 7.2 §2.1). */
-const DEGRADED_ALERT_LEVELS: ReadonlySet<AlertLevel> = new Set([
+/** Alert severities surfaced in the notification bell. */
+const NOTIFICATION_ALERT_LEVELS: ReadonlySet<AlertLevel> = new Set([
   'critical',
   'emergency',
   'warning',
@@ -34,10 +24,8 @@ export const useWsStore = defineStore('oxide-ws', () => {
   const lastHeartbeatAt = ref<IsoDateTime | null>(null);
   /** Last `system.status` push or sync snapshot carrying system status. */
   const lastSystemStatusAt = ref<IsoDateTime | null>(null);
-  /** Most recent trading-affecting alert at warning or above (cleared on recovery). */
+  /** Most recent alert at warning or above (bell only — not the header light). */
   const recentAlertLevel = ref<AlertLevel | null>(null);
-  /** Idempotency key paired with `recentAlertLevel` for targeted recovery. */
-  const recentAlertKey = ref<null | string>(null);
 
   function setStatus(next: WsConnectionStatus) {
     status.value = next;
@@ -56,31 +44,15 @@ export const useWsStore = defineStore('oxide-ws', () => {
     lastSystemStatusAt.value = iso ?? new Date().toISOString();
   }
 
-  /** Record only trading-affecting alerts for the aggregated header indicator. */
+  /** Record alerts for the notification bell (does not drive the header light). */
   function recordAlert(alert: SystemAlertEvent) {
-    if (alert.affects_trading && DEGRADED_ALERT_LEVELS.has(alert.level)) {
+    if (NOTIFICATION_ALERT_LEVELS.has(alert.level)) {
       recentAlertLevel.value = alert.level;
-      recentAlertKey.value = alert.idempotency_key;
-    }
-  }
-
-  /**
-   * Drop a latched emergency alert once the authoritative system snapshot
-   * confirms trading readiness. Infrastructure warnings with other keys are
-   * preserved.
-   */
-  function reconcileAlertOnSystemStatus(systemStatus: SystemStatus) {
-    if (!isSystemRunning(systemStatus)) {
-      return;
-    }
-    if (recentAlertKey.value === RECOVERABLE_EXECUTION_EMERGENCY_KEY) {
-      clearRecentAlert();
     }
   }
 
   function clearRecentAlert() {
     recentAlertLevel.value = null;
-    recentAlertKey.value = null;
   }
 
   function $reset() {
@@ -89,7 +61,6 @@ export const useWsStore = defineStore('oxide-ws', () => {
     lastHeartbeatAt.value = null;
     lastSystemStatusAt.value = null;
     recentAlertLevel.value = null;
-    recentAlertKey.value = null;
   }
 
   return {
@@ -101,10 +72,8 @@ export const useWsStore = defineStore('oxide-ws', () => {
     markHeartbeat,
     markSync,
     markSystemStatus,
-    recentAlertKey,
     recentAlertLevel,
     recordAlert,
-    reconcileAlertOnSystemStatus,
     setStatus,
     status,
   };

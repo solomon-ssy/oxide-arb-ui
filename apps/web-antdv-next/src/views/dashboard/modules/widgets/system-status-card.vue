@@ -7,7 +7,6 @@ import { useRequestHandler } from '@vben/request/oxide';
 import { Button } from 'antdv-next';
 
 import { getCircuitBreaker } from '#/api/risk';
-import { getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
 import BreakerBadge from '#/shared/components/breaker-badge.vue';
 import BreakerLevelTag from '#/shared/components/breaker-level-tag.vue';
@@ -24,6 +23,7 @@ import {
 import { useLiveUptime } from '#/shared/composables/use-live-uptime';
 import { useOxideAccess } from '#/shared/composables/use-oxide-access';
 import { useSystemControl } from '#/shared/composables/use-system-control';
+import { fetchSystemStatusIfAllowed } from '#/shared/composables/use-system-status';
 import { useRiskStore, useSystemStore } from '#/store';
 
 defineOptions({ name: 'DashboardSystemStatusCard' });
@@ -43,9 +43,9 @@ onMounted(async () => {
   const tasks: Promise<void>[] = [];
   if (canReadSystem.value) {
     tasks.push(
-      handleRequest(getSystemStatus, (status) =>
+      fetchSystemStatusIfAllowed(true, handleRequest, (status) =>
         systemStore.applySystemStatus(status),
-      ).then(() => undefined),
+      ),
     );
   }
   if (canReadRisk.value) {

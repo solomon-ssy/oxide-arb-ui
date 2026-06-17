@@ -13,6 +13,37 @@ export type CatalogState =
   | { markets: number; state: 'ready'; synced_at: IsoDateTime }
   | { state: 'warming' };
 
+/** Why the runtime is in the `degraded` operational phase. */
+export type OperationalDegradeReason =
+  | 'breaker_half_open'
+  | 'breaker_open'
+  | 'control_factor_live_warn'
+  | 'control_factor_snapshot_expired'
+  | 'market_data_stale'
+  | { subsystem_unhealthy: { name: string } };
+
+/** Authoritative operator lifecycle (header UI + Live gate). */
+export type OperationalPhase =
+  | { phase: 'catalog_warming' }
+  | { phase: 'degraded'; reasons: OperationalDegradeReason[] }
+  | { phase: 'halted' }
+  | { phase: 'market_data_connecting' }
+  | { phase: 'operational' };
+
+/** Aggregated per-shard websocket connection counters (display only). */
+export interface WsShardConnectivity {
+  total: number;
+  disconnected: number;
+  oldest_disconnected_secs: null | number;
+}
+
+/** CLOB websocket market-data readiness snapshot. */
+export interface MarketDataConnectivity {
+  ready: boolean;
+  last_message_age_ms: null | number;
+  ws_shards: WsShardConnectivity;
+}
+
 export interface SystemStatus {
   execution_mode: ExecutionMode;
   breaker_state: BreakerStateName;
@@ -23,6 +54,8 @@ export interface SystemStatus {
   total_exposure: UsdString;
   daily_pnl: UsdString;
   catalog: CatalogState;
+  operational_phase: OperationalPhase;
+  market_data: MarketDataConnectivity;
   control_factor_publication_id: null | string;
   control_factor_snapshot_expired: boolean;
   control_factor_live_warn: boolean;
@@ -68,9 +101,14 @@ export interface SystemBalanceView {
   checked_at: IsoDateTime;
 }
 
+export type SubsystemCheckStatus =
+  | { reason: string; status: 'skipped' }
+  | { status: 'healthy' }
+  | { status: 'unhealthy' };
+
 export interface SubsystemHealth {
   name: string;
-  healthy: boolean;
+  status: SubsystemCheckStatus;
   latency_ms: null | number;
   detail: null | string;
 }

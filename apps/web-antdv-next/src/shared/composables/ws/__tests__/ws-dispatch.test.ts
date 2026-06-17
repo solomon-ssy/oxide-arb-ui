@@ -31,10 +31,6 @@ import { useTradeStore } from '#/store/trade';
 import { useWsStore } from '#/store/ws';
 
 import { dispatchWsEnvelope } from '../ws-dispatch';
-import {
-  deriveSystemIndicator,
-  RECOVERABLE_EXECUTION_EMERGENCY_KEY,
-} from '../ws-indicators';
 
 function hooks(): WsDispatchHooks {
   return {
@@ -82,7 +78,13 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
     checked_at: '2026-06-11T12:00:00Z',
     daily_pnl: '15.5',
     execution_mode: EXECUTION_MODES.paper,
+    market_data: {
+      last_message_age_ms: 100,
+      ready: true,
+      ws_shards: { disconnected: 0, oldest_disconnected_secs: null, total: 2 },
+    },
     open_positions: 3,
+    operational_phase: { phase: 'operational' },
     pending_reservations: 1,
     total_exposure: '120.00',
     uptime_secs: 3600,
@@ -210,31 +212,16 @@ describe('dispatchWsEnvelope', () => {
     expect(useWsStore().lastSystemStatusAt).toBe('2026-06-11T12:00:00.000Z');
   });
 
-  it('system.status clears a latched execution emergency alert after recovery', () => {
+  it('system.status does not clear latched bell alerts', () => {
     const ws = useWsStore();
     ws.recordAlert(
       systemAlert({
-        affects_trading: true,
-        idempotency_key: RECOVERABLE_EXECUTION_EMERGENCY_KEY,
+        idempotency_key: 'execution.emergency_halt',
         level: 'critical',
       }),
     );
     dispatchWsEnvelope(envelope('system.status', systemStatus()), hooks());
-    expect(ws.recentAlertLevel).toBeNull();
-  });
-
-  it('system.status preserves unrelated infrastructure warnings after recovery', () => {
-    const ws = useWsStore();
-    ws.recordAlert(
-      systemAlert({
-        affects_trading: true,
-        category: 'infrastructure',
-        idempotency_key: 'settlement.channel_dropped.0xabc',
-        level: 'warning',
-      }),
-    );
-    dispatchWsEnvelope(envelope('system.status', systemStatus()), hooks());
-    expect(ws.recentAlertLevel).toBe('warning');
+    expect(ws.recentAlertLevel).toBe('critical');
   });
 
   it('sync snapshot hydrates every authorized section and marks sync', () => {
@@ -374,24 +361,5 @@ describe('dispatchWsEnvelope', () => {
     );
     expect(warn).toHaveBeenCalledTimes(2);
     warn.mockRestore();
-  });
-});
-
-describe('deriveSystemIndicator', () => {
-  it('aggregates green / yellow / red per the header light rules', () => {
-    expect(deriveSystemIndicator(null)).toBe('unknown');
-    expect(deriveSystemIndicator(systemStatus())).toBe('running');
-    expect(deriveSystemIndicator(systemStatus({ breaker_state: 'open' }))).toBe(
-      'degraded',
-    );
-    expect(
-      deriveSystemIndicator(systemStatus({ catalog: { state: 'warming' } })),
-    ).toBe('degraded');
-    expect(
-      deriveSystemIndicator(systemStatus({ breaker_state: 'halted' })),
-    ).toBe('critical');
-    expect(deriveSystemIndicator(systemStatus(), 'warning')).toBe('degraded');
-    expect(deriveSystemIndicator(systemStatus(), 'critical')).toBe('degraded');
-    expect(deriveSystemIndicator(systemStatus(), 'info')).toBe('running');
   });
 });

@@ -124,7 +124,6 @@ export function dispatchWsEnvelope(
       useWsStore().markSync();
       if (snapshot.system_status) {
         useWsStore().markSystemStatus(envelope.timestamp);
-        useWsStore().reconcileAlertOnSystemStatus(snapshot.system_status);
       }
       break;
     }
@@ -136,7 +135,6 @@ export function dispatchWsEnvelope(
       const status = envelope.data as SystemStatus;
       useSystemStore().applySystemStatus(status);
       useWsStore().markSystemStatus(envelope.timestamp);
-      useWsStore().reconcileAlertOnSystemStatus(status);
       break;
     }
     case 'trade.filled': {

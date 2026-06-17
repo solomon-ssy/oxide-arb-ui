@@ -24,6 +24,7 @@ import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useOxideWs } from '#/shared/composables/use-oxide-ws';
 import { useSystemControl } from '#/shared/composables/use-system-control';
+import { useSystemStatusBootstrap } from '#/shared/composables/use-system-status';
 import { useAuthStore, useSystemStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
@@ -36,6 +37,7 @@ provide(RuntimeConfigRequestClientKey, requestClient);
 provide(RuntimeConfigRevisionKey, () => systemStore.activeConfigVersion);
 
 const oxideWs = useOxideWs();
+useSystemStatusBootstrap();
 // System alerts + breaker trips pushed over WS feed the bell list.
 const notifications = oxideWs.notifications;
 

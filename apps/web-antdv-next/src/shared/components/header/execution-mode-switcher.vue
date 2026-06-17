@@ -28,6 +28,11 @@ const targets = computed(() =>
   EXECUTION_MODE_OPTIONS.filter((mode) => mode !== currentMode.value),
 );
 
+const liveBlocked = computed(() => {
+  const phase = systemStore.status?.operational_phase.phase;
+  return phase !== undefined && phase !== 'operational';
+});
+
 async function onSelect(mode: ExecutionMode) {
   await switchMode(mode);
 }
@@ -39,7 +44,12 @@ async function onSelect(mode: ExecutionMode) {
     <Dropdown v-if="canSwitch" :trigger="['click']">
       <template #popupRender>
         <Menu>
-          <MenuItem v-for="mode in targets" :key="mode" @click="onSelect(mode)">
+          <MenuItem
+            v-for="mode in targets"
+            :key="mode"
+            :disabled="mode === EXECUTION_MODES.live && liveBlocked"
+            @click="onSelect(mode)"
+          >
             <span :class="{ 'text-red-500': mode === EXECUTION_MODES.live }">
               {{ $t(`enum.executionMode.${mode}`) }}
             </span>

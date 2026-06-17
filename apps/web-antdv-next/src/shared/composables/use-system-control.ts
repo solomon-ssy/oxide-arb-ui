@@ -13,6 +13,7 @@ import { $t } from '#/locales';
 import HaltReasonModal from '#/shared/components/halt-reason-modal.vue';
 import ResumeAckModal from '#/shared/components/resume-ack-modal.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useSystemStore } from '#/store';
 
 type SystemControlApi = {
   /** Open the halt-reason modal; on confirm `POST /system/halt`. */
@@ -77,6 +78,17 @@ function createSystemControlApi(): SystemControlApi {
 
   async function switchMode(target: ExecutionMode) {
     const isLive = target === EXECUTION_MODES.live;
+    if (isLive) {
+      const phase = useSystemStore().status?.operational_phase.phase;
+      if (phase && phase !== 'operational') {
+        message.warning(
+          $t('page.system.mode.liveRequiresOperational', {
+            phase: $t(`page.system.phase.${phase}`),
+          }),
+        );
+        return;
+      }
+    }
     const report = await governed(
       (ctx) => switchExecutionMode({ mode: target, reason: ctx.reason }, ctx),
       {

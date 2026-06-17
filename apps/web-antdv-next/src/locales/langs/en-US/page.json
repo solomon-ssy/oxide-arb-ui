@@ -58,7 +58,8 @@
       "running": "Running",
       "degraded": "Degraded",
       "critical": "Halted",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "starting": "Starting"
     },
     "field": {
       "mode": "Execution Mode",
@@ -69,7 +70,10 @@
       "exposure": "Total Exposure",
       "dailyPnl": "Daily PnL",
       "catalog": "Market Catalog",
-      "checkedAt": "Updated at"
+      "checkedAt": "Updated at",
+      "phase": "Operational phase",
+      "marketData": "Market data",
+      "degradeReasons": "Degrade reasons"
     },
     "catalog": {
       "ready": "Ready ({markets} markets)",
@@ -95,7 +99,29 @@
     "mode": {
       "title": "Switch Execution Mode",
       "summary": "Target mode: {target}. The switch goes through governance and is audited.",
-      "switched": "Execution mode switched: {from} → {to}"
+      "switched": "Execution mode switched: {from} → {to}",
+      "liveRequiresOperational": "Live mode requires operational phase (current: {phase})"
+    },
+    "phase": {
+      "catalog_warming": "Catalog warming",
+      "market_data_connecting": "Connecting market data",
+      "operational": "Operational",
+      "degraded": "Degraded",
+      "halted": "Halted"
+    },
+    "marketData": {
+      "connecting": "Connecting market data… ({connected}/{total} shards)",
+      "ready": "Market data ready",
+      "stale": "Market data not ready",
+      "lastMessageAge": "Last message {ms} ms ago"
+    },
+    "degradeReason": {
+      "breaker_open": "Circuit breaker open",
+      "breaker_half_open": "Circuit breaker half-open",
+      "market_data_stale": "Market data stale",
+      "subsystem_unhealthy": "Unhealthy subsystem: {name}",
+      "control_factor_live_warn": "No published control-factor snapshot in Live",
+      "control_factor_snapshot_expired": "Control-factor snapshot expired"
     }
   },
   "dashboard": {
