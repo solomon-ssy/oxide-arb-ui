@@ -19,6 +19,7 @@ export type OperationalDegradeReason =
   | 'breaker_open'
   | 'control_factor_live_warn'
   | 'control_factor_snapshot_expired'
+  | 'market_data_coverage_degraded'
   | 'market_data_stale'
   | { subsystem_unhealthy: { name: string } };
 

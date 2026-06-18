@@ -136,6 +136,7 @@
       "breaker_open": "Circuit breaker open",
       "breaker_half_open": "Circuit breaker half-open",
       "market_data_stale": "Market data stale",
+      "market_data_coverage_degraded": "Market-data WebSocket shard coverage degraded (disconnected shards)",
       "subsystem_unhealthy": "Unhealthy subsystem: {name}",
       "control_factor_live_warn": "No published control-factor snapshot in Live",
       "control_factor_snapshot_expired": "Control-factor snapshot expired"
