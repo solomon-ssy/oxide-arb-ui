@@ -61,7 +61,7 @@ const customConfig: Linter.Config[] = [
     },
   },
   {
-    // oxide-arb-ui: 页面禁止绕过 adapter 层直接使用 vxe-table 插件
+    // quant-pivot ui: 页面禁止绕过 adapter 层直接使用 vxe-table 插件
     files: ['apps/web-antdv-next/**/**'],
     ignores: [...restrictedImportIgnores, 'apps/web-antdv-next/src/adapter/**'],
     rules: {
@@ -73,7 +73,7 @@ const customConfig: Linter.Config[] = [
             {
               group: ['@vben/plugins/vxe-table'],
               message:
-                'Tables must go through #/adapter/vxe-table, never the raw plugin (oxide-arb-ui rule)',
+                'Tables must go through #/adapter/vxe-table, never the raw plugin (quant-pivot ui rule)',
             },
           ],
         },
