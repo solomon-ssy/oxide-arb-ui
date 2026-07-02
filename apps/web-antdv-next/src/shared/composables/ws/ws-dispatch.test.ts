@@ -134,8 +134,13 @@ describe('dispatchWsEnvelope', () => {
   it('quant.report bumps the report revision and records the last event', () => {
     dispatchWsEnvelope(
       envelope('quant.report', {
+        as_of: '2026-06-11T12:00:00Z',
         event: 'published',
         recommendation_report_id: 'r1',
+        report_kind: 'top_n',
+        runtime_mode: 'report_only',
+        status: 'published',
+        trigger_key: 'schedule:2026-06-11T12:00:00Z',
       }),
       hooks(),
     );
@@ -146,7 +151,15 @@ describe('dispatchWsEnvelope', () => {
 
   it('quant.intent bumps the intent revision', () => {
     dispatchWsEnvelope(
-      envelope('quant.intent', { event: 'created', order_intent_id: 'i1' }),
+      envelope('quant.intent', {
+        event: 'created',
+        occurred_at: '2026-06-11T12:00:00Z',
+        order_intent_id: 'i1',
+        reason: null,
+        recommendation_id: 'rec-1',
+        runtime_mode: 'semi_auto',
+        status: 'pending_approval',
+      }),
       hooks(),
     );
     expect(useOrderIntentStore().revision).toBe(1);

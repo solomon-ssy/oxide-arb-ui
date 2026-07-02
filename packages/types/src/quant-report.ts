@@ -123,9 +123,9 @@ export interface ReportDiffView {
 
 /** Filter + pagination for `GET /quant/reports`. */
 export interface QuantReportListQuery extends PageQuery, TimeRangeQuery {
+  kind?: ReportKind;
   status?: RecommendationReportStatus;
-  runtime_mode?: QuantRuntimeMode;
-  report_kind?: ReportKind;
+  trigger_kind?: ReportTriggerKind;
 }
 
 /** `POST /quant/reports/run` governed request body. */

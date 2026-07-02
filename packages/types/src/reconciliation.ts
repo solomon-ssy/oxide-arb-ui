@@ -3,10 +3,13 @@ import type {
   PageQuery,
   PriceString,
   SharesString,
+  TimeRangeQuery,
   UsdString,
   UuidString,
 } from './common';
 import type { ReconciliationEvidenceKind, ReconciliationResult } from './enums';
+import type { ExecutionOrderView } from './execution-order';
+import type { ExecutionRecoverySummary } from './system';
 
 /** One entry of a reconciliation's evidence chain. */
 export interface ReconciliationEvidence {
@@ -35,17 +38,24 @@ export interface ReconciliationView {
 }
 
 /** Filter + pagination for `GET /quant/reconciliations`. */
-export interface ReconciliationListQuery extends PageQuery {
+export interface ReconciliationListQuery extends PageQuery, TimeRangeQuery {
   result?: ReconciliationResult;
+  /** `true` → only rows with `resolved_at`; `false` → only unresolved. */
+  resolved?: boolean;
+  execution_order_id?: UuidString;
+  order_intent_id?: UuidString;
 }
 
 /** `POST /quant/reconciliations/{id}/resolve` governed request body. */
 export interface ResolveReconciliationRequest {
+  result: ReconciliationResult;
+  filled_shares?: SharesString;
+  avg_price?: PriceString;
   reason: string;
-  resolution: ReconciliationResult;
 }
 
 /** `POST /quant/reconciliations/{id}/resolve` response. */
 export interface ResolveReconciliationResponse {
-  reconciliation: ReconciliationView;
+  execution_order: ExecutionOrderView;
+  recovery: ExecutionRecoverySummary;
 }

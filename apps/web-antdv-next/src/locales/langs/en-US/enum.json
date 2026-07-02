@@ -36,29 +36,51 @@
     "filtered": "Filtered",
     "active": "Active",
     "paused": "Paused",
+    "manually_blocked": "Blocked",
     "settled": "Settled",
     "delisted": "Delisted"
   },
+  "reportKind": {
+    "top_n": "TopN",
+    "shadow_top_n": "Shadow TopN",
+    "post_run_audit": "Post-run Audit"
+  },
+  "reportTriggerKind": {
+    "scheduled": "Scheduled",
+    "ad_hoc": "Ad-hoc"
+  },
+  "accountSource": {
+    "polymarket": "Polymarket"
+  },
   "recommendationReportStatus": {
-    "generating": "Generating",
+    "building": "Building",
     "published": "Published",
-    "empty": "Empty",
+    "published_empty": "Published (Empty)",
     "revoked": "Revoked",
     "expired": "Expired",
     "failed": "Failed"
   },
   "recommendationStatus": {
-    "active": "Active",
-    "superseded": "Superseded",
+    "published": "Published",
+    "intent_created": "Intent Created",
+    "executed": "Executed",
+    "attributed": "Attributed",
     "revoked": "Revoked",
     "expired": "Expired"
   },
   "orderIntentStatus": {
+    "draft": "Draft",
     "pending_approval": "Pending Approval",
-    "admitted": "Admitted",
+    "approved": "Approved",
+    "approved_by_policy": "Approved by Policy",
+    "admission_pending": "Admission Pending",
+    "admission_rejected": "Admission Rejected",
     "submitted": "Submitted",
+    "partially_filled": "Partially Filled",
+    "filled": "Filled",
     "rejected": "Rejected",
     "cancelled": "Cancelled",
+    "failed": "Failed",
     "expired": "Expired",
     "invalidated": "Invalidated"
   },
@@ -66,40 +88,47 @@
     "not_required": "Not Required",
     "pending": "Pending",
     "approved": "Approved",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "expired": "Expired"
   },
   "executionOrderState": {
-    "pending": "Pending",
+    "planned": "Planned",
+    "accepted": "Accepted",
     "submitted": "Submitted",
+    "partially_filled": "Partially Filled",
     "filled": "Filled",
+    "cancel_requested": "Cancel Requested",
     "cancelled": "Cancelled",
-    "failed": "Failed"
+    "failed": "Failed",
+    "ambiguous": "Ambiguous"
   },
   "executionOrderPhase": {
     "entry": "Entry",
     "exit": "Exit"
   },
   "orderIntentKind": {
-    "entry": "Entry",
-    "exit": "Exit"
+    "buy": "Buy"
   },
   "positionLedgerState": {
     "open": "Open",
+    "closing": "Closing",
     "closed": "Closed",
-    "settled": "Settled",
-    "redeemed": "Redeemed"
+    "settled": "Settled"
   },
   "reconciliationResult": {
     "pending": "Pending",
-    "matched": "Matched",
-    "resolved": "Resolved",
+    "filled": "Filled",
+    "not_filled": "Not Filled",
+    "partially_filled": "Partially Filled",
+    "cancelled": "Cancelled",
     "unresolvable": "Unresolvable"
   },
   "settlementRedeemState": {
     "pending": "Pending",
     "submitted": "Submitted",
     "confirmed": "Confirmed",
-    "failed": "Failed"
+    "failed": "Failed",
+    "manual_required": "Manual Required"
   },
   "publicationStatus": {
     "draft": "Draft",

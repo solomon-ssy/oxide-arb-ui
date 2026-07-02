@@ -52,6 +52,8 @@ export interface MarketPageQuery extends PageQuery {
   status?: MarketStatus;
   category?: MarketCategory;
   event_id?: string;
+  /** When set, filter markets whose YES/NO tokens are both live on the CLOB WS. */
+  subscribed?: boolean;
 }
 
 /** One price level of a published order book. */

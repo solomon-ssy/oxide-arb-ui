@@ -3,6 +3,7 @@ import {
   EXECUTION_ORDER_PHASES,
   EXECUTION_ORDER_STATES,
   KILL_SWITCH_STATES,
+  MARKET_CATEGORIES,
   MARKET_STATUSES,
   MATERIALIZATION_RUN_STATUSES,
   OPERATION_CATEGORIES,
@@ -198,11 +199,11 @@ export function useRecommendationReportStatusTagOptions() {
     Object.values(RECOMMENDATION_REPORT_STATUSES),
     (value) => $t(`enum.recommendationReportStatus.${value}`),
     {
-      [RECOMMENDATION_REPORT_STATUSES.empty]: 'default',
+      [RECOMMENDATION_REPORT_STATUSES.building]: 'processing',
       [RECOMMENDATION_REPORT_STATUSES.expired]: 'default',
       [RECOMMENDATION_REPORT_STATUSES.failed]: 'error',
-      [RECOMMENDATION_REPORT_STATUSES.generating]: 'processing',
       [RECOMMENDATION_REPORT_STATUSES.published]: 'success',
+      [RECOMMENDATION_REPORT_STATUSES.publishedEmpty]: 'default',
       [RECOMMENDATION_REPORT_STATUSES.revoked]: 'warning',
     },
   );
@@ -214,10 +215,12 @@ export function useRecommendationStatusTagOptions() {
     Object.values(RECOMMENDATION_STATUSES),
     (value) => $t(`enum.recommendationStatus.${value}`),
     {
-      [RECOMMENDATION_STATUSES.active]: 'success',
+      [RECOMMENDATION_STATUSES.attributed]: 'cyan',
+      [RECOMMENDATION_STATUSES.executed]: 'success',
       [RECOMMENDATION_STATUSES.expired]: 'default',
+      [RECOMMENDATION_STATUSES.intentCreated]: 'processing',
+      [RECOMMENDATION_STATUSES.published]: 'blue',
       [RECOMMENDATION_STATUSES.revoked]: 'warning',
-      [RECOMMENDATION_STATUSES.superseded]: 'default',
     },
   );
 }
@@ -228,13 +231,20 @@ export function useOrderIntentStatusTagOptions() {
     Object.values(ORDER_INTENT_STATUSES),
     (value) => $t(`enum.orderIntentStatus.${value}`),
     {
-      [ORDER_INTENT_STATUSES.admitted]: 'processing',
+      [ORDER_INTENT_STATUSES.admissionPending]: 'processing',
+      [ORDER_INTENT_STATUSES.admissionRejected]: 'error',
+      [ORDER_INTENT_STATUSES.approved]: 'success',
+      [ORDER_INTENT_STATUSES.approvedByPolicy]: 'success',
       [ORDER_INTENT_STATUSES.cancelled]: 'default',
+      [ORDER_INTENT_STATUSES.draft]: 'default',
       [ORDER_INTENT_STATUSES.expired]: 'default',
+      [ORDER_INTENT_STATUSES.failed]: 'error',
+      [ORDER_INTENT_STATUSES.filled]: 'success',
       [ORDER_INTENT_STATUSES.invalidated]: 'error',
+      [ORDER_INTENT_STATUSES.partiallyFilled]: 'cyan',
       [ORDER_INTENT_STATUSES.pendingApproval]: 'warning',
       [ORDER_INTENT_STATUSES.rejected]: 'error',
-      [ORDER_INTENT_STATUSES.submitted]: 'success',
+      [ORDER_INTENT_STATUSES.submitted]: 'processing',
     },
   );
 }
@@ -246,6 +256,7 @@ export function useApprovalStatusTagOptions() {
     (value) => $t(`enum.approvalStatus.${value}`),
     {
       [APPROVAL_STATUSES.approved]: 'success',
+      [APPROVAL_STATUSES.expired]: 'default',
       [APPROVAL_STATUSES.notRequired]: 'default',
       [APPROVAL_STATUSES.pending]: 'warning',
       [APPROVAL_STATUSES.rejected]: 'error',
@@ -259,10 +270,14 @@ export function useExecutionOrderStateTagOptions() {
     Object.values(EXECUTION_ORDER_STATES),
     (value) => $t(`enum.executionOrderState.${value}`),
     {
+      [EXECUTION_ORDER_STATES.accepted]: 'processing',
+      [EXECUTION_ORDER_STATES.ambiguous]: 'warning',
       [EXECUTION_ORDER_STATES.cancelled]: 'default',
+      [EXECUTION_ORDER_STATES.cancelRequested]: 'warning',
       [EXECUTION_ORDER_STATES.failed]: 'error',
       [EXECUTION_ORDER_STATES.filled]: 'success',
-      [EXECUTION_ORDER_STATES.pending]: 'processing',
+      [EXECUTION_ORDER_STATES.partiallyFilled]: 'cyan',
+      [EXECUTION_ORDER_STATES.planned]: 'default',
       [EXECUTION_ORDER_STATES.submitted]: 'processing',
     },
   );
@@ -287,8 +302,8 @@ export function usePositionLedgerStateTagOptions() {
     (value) => $t(`enum.positionLedgerState.${value}`),
     {
       [POSITION_LEDGER_STATES.closed]: 'default',
+      [POSITION_LEDGER_STATES.closing]: 'warning',
       [POSITION_LEDGER_STATES.open]: 'processing',
-      [POSITION_LEDGER_STATES.redeemed]: 'cyan',
       [POSITION_LEDGER_STATES.settled]: 'success',
     },
   );
@@ -300,9 +315,11 @@ export function useReconciliationResultTagOptions() {
     Object.values(RECONCILIATION_RESULTS),
     (value) => $t(`enum.reconciliationResult.${value}`),
     {
-      [RECONCILIATION_RESULTS.matched]: 'success',
+      [RECONCILIATION_RESULTS.cancelled]: 'default',
+      [RECONCILIATION_RESULTS.filled]: 'success',
+      [RECONCILIATION_RESULTS.notFilled]: 'default',
+      [RECONCILIATION_RESULTS.partiallyFilled]: 'cyan',
       [RECONCILIATION_RESULTS.pending]: 'warning',
-      [RECONCILIATION_RESULTS.resolved]: 'processing',
       [RECONCILIATION_RESULTS.unresolvable]: 'error',
     },
   );
@@ -316,6 +333,7 @@ export function useSettlementRedeemStateTagOptions() {
     {
       [SETTLEMENT_REDEEM_STATES.confirmed]: 'success',
       [SETTLEMENT_REDEEM_STATES.failed]: 'error',
+      [SETTLEMENT_REDEEM_STATES.manualRequired]: 'magenta',
       [SETTLEMENT_REDEEM_STATES.pending]: 'warning',
       [SETTLEMENT_REDEEM_STATES.submitted]: 'processing',
     },
@@ -332,8 +350,29 @@ export function useMarketStatusTagOptions() {
       [MARKET_STATUSES.delisted]: 'error',
       [MARKET_STATUSES.discovered]: 'default',
       [MARKET_STATUSES.filtered]: 'default',
+      [MARKET_STATUSES.manuallyBlocked]: 'magenta',
       [MARKET_STATUSES.paused]: 'warning',
       [MARKET_STATUSES.settled]: 'processing',
+    },
+  );
+}
+
+/** Market category tags for catalog tables. */
+export function useMarketCategoryTagOptions() {
+  return buildTagOptions(
+    Object.values(MARKET_CATEGORIES),
+    (value) => $t(`enum.marketCategory.${value}`),
+    {
+      [MARKET_CATEGORIES.crypto]: 'gold',
+      [MARKET_CATEGORIES.culture]: 'purple',
+      [MARKET_CATEGORIES.economics]: 'orange',
+      [MARKET_CATEGORIES.finance]: 'geekblue',
+      [MARKET_CATEGORIES.geopolitics]: 'magenta',
+      [MARKET_CATEGORIES.other]: 'default',
+      [MARKET_CATEGORIES.politics]: 'processing',
+      [MARKET_CATEGORIES.sports]: 'success',
+      [MARKET_CATEGORIES.tech]: 'cyan',
+      [MARKET_CATEGORIES.weather]: 'blue',
     },
   );
 }
@@ -369,14 +408,13 @@ export function useMaterializationRunStatusTagOptions() {
   );
 }
 
-/** Order-intent kind tags (entry vs exit intent). */
+/** Order-intent kind tags (entry buy is the single production kind). */
 export function useOrderIntentKindTagOptions() {
   return buildTagOptions(
     Object.values(ORDER_INTENT_KINDS),
     (value) => $t(`enum.orderIntentKind.${value}`),
     {
-      [ORDER_INTENT_KINDS.entry]: 'blue',
-      [ORDER_INTENT_KINDS.exit]: 'purple',
+      [ORDER_INTENT_KINDS.buy]: 'blue',
     },
   );
 }

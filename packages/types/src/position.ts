@@ -3,6 +3,7 @@ import type {
   PageQuery,
   PriceString,
   SharesString,
+  TimeRangeQuery,
   UsdString,
   UuidString,
 } from './common';
@@ -26,7 +27,9 @@ export interface PositionView {
 }
 
 /** Filter + pagination for `GET /quant/positions`. */
-export interface PositionListQuery extends PageQuery {
+export interface PositionListQuery extends PageQuery, TimeRangeQuery {
   state?: PositionLedgerState;
+  order_intent_id?: UuidString;
   market_id?: string;
+  token_id?: string;
 }

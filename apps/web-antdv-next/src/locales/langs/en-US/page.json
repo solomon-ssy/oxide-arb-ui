@@ -4,7 +4,9 @@
     "profile": "Profile"
   },
   "common": {
-    "underConstruction": "This page is under construction and will land in a later phase"
+    "underConstruction": "This page is under construction and will land in a later phase",
+    "comingInPhase": "Coming in Phase {phase}",
+    "reportOnlyNote": "report_only is not dry-run: report sizing runs against the real venue account (CLOB collateral + venue positions). Credentials are required; missing credentials fail closed."
   },
   "menu": {
     "group": {
@@ -27,7 +29,6 @@
     "account": "Account",
     "researchWorkbench": "Workbench",
     "runtimeConfig": "Runtime Config",
-    "system": "System",
     "users": "Users",
     "roles": "Roles",
     "menus": "Menus",
@@ -93,18 +94,302 @@
       "market_data_stale": "Market data stale",
       "market_data_coverage_degraded": "Market-data WebSocket shard coverage degraded (disconnected shards)",
       "subsystem_unhealthy": "Unhealthy subsystem: {name}"
+    },
+    "readonlyHint": "Use the header state lights to change runtime mode or kill switch."
+  },
+  "header": {
+    "modePicker": {
+      "title": "Switch Runtime Mode",
+      "unknown": "Mode",
+      "preflightTitle": "Mode Transition Preflight"
+    },
+    "killSwitchPicker": {
+      "title": "Set Kill Switch",
+      "unknown": "Kill Switch"
+    }
+  },
+  "dashboard": {
+    "viewAll": "View",
+    "actions": {
+      "runReport": "Run Report"
+    },
+    "cards": {
+      "ws": "Realtime"
+    },
+    "kpi": {
+      "netLiq": "Net Liquidation",
+      "netLiqTip": "Venue net liquidation from the latest live account read.",
+      "available": "Available",
+      "availableTip": "Collateral available for sizing after reservations.",
+      "drawdown": "Drawdown",
+      "drawdownTip": "Drawdown from the latest persisted equity snapshot high-water mark.",
+      "activeMarkets": "Active Markets",
+      "activeMarketsTip": "Markets currently tracked by the runtime catalog.",
+      "budgetCap": "Budget cap",
+      "reserved": "Reserved",
+      "capitalBase": "Capital base",
+      "positions": "{count} positions",
+      "highWaterMark": "HWM",
+      "unrealizedPnl": "Unrealized PnL",
+      "noEquitySnapshot": "No equity snapshot persisted yet",
+      "catalogMarkets": "{count} catalog markets",
+      "dataFreshness": "{fresh}/{total} fresh tokens"
+    },
+    "latestReport": {
+      "title": "Latest Report",
+      "none": "No report generated yet",
+      "published": "Recommendations",
+      "suggested": "Total Suggested"
+    },
+    "account": {
+      "title": "Live Account",
+      "netLiq": "Net Liquidation",
+      "available": "Available",
+      "reserved": "Reserved",
+      "budgetCap": "Budget Cap",
+      "drawdown": "Drawdown",
+      "checkedAt": "Checked At",
+      "unavailable": "Account unavailable"
+    },
+    "pendingIntents": {
+      "title": "Pending Intents",
+      "awaiting": "awaiting approval"
+    },
+    "dataQuality": {
+      "title": "Data Quality",
+      "totalTokens": "Tracked Tokens",
+      "fresh": "Fresh",
+      "acceptable": "Acceptable",
+      "degraded": "Degraded",
+      "stale": "Stale",
+      "insufficient": "Insufficient",
+      "maxBookAge": "Max Book Age",
+      "worstFactLag": "Worst Fact Lag"
+    },
+    "alerts": {
+      "title": "System Alerts",
+      "none": "No recent alerts"
+    },
+    "reportLifecycle": {
+      "title": "Report Activity",
+      "none": "No report lifecycle events yet",
+      "event": {
+        "started": "Building",
+        "published": "Published",
+        "empty": "Empty run",
+        "failed": "Failed",
+        "revoked": "Revoked",
+        "expired": "Expired"
+      }
+    },
+    "pipeline": {
+      "title": "Execution Pipeline",
+      "pendingIntents": "Pending intents",
+      "inFlightOrders": "In-flight orders",
+      "unresolvedReconciliations": "Unresolved reconciliations",
+      "loading": "Refreshing counts…"
+    },
+    "exposureTopN": {
+      "title": "Top Exposures",
+      "none": "No exposure data",
+      "byCategory": "By category",
+      "byMarket": "By market"
+    },
+    "health": {
+      "title": "Subsystem Health"
+    },
+    "recovery": {
+      "title": "Execution Recovery"
+    }
+  },
+  "systemAdmin": {
+    "refresh": "Refresh",
+    "mode": {
+      "title": "Runtime Mode",
+      "current": "Current",
+      "switchTitle": "Switch Runtime Mode",
+      "switchTo": "Switch to {mode}",
+      "summary": "Switch runtime mode from {from} to {to}.",
+      "switched": "Runtime mode switched from {from} to {to}",
+      "preflightPassed": "Preflight passed",
+      "preflightFailed": "Preflight failed — transition blocked",
+      "hardCheck": "Blocking",
+      "checkPassed": "Passed",
+      "checkFailed": "Failed"
+    },
+    "killSwitch": {
+      "title": "Kill Switch",
+      "current": "Current",
+      "reason": "Last Reason",
+      "changedBy": "Changed By",
+      "changedAt": "Changed At",
+      "requiresAck": "Kill switch is latched and requires operator acknowledgement.",
+      "setTitle": "Set Kill Switch",
+      "setTo": "Set {state}",
+      "summary": "Transition kill switch from {from} to {to}.",
+      "ackSummary": "This clears a latched state and requires acknowledgement.",
+      "updated": "Kill switch set to {state}"
+    },
+    "health": {
+      "title": "Subsystem Health",
+      "overallHealthy": "All subsystems healthy",
+      "overallUnhealthy": "One or more subsystems unhealthy",
+      "healthy": "Healthy",
+      "unhealthy": "Unhealthy",
+      "skipped": "Skipped",
+      "checkedAt": "Checked at"
+    },
+    "recovery": {
+      "title": "Execution Recovery",
+      "clear": "No recovery blockers",
+      "autoExecutionBlocked": "Auto-execution is blocked pending recovery",
+      "unresolvable": "Unresolvable reconciliations",
+      "nextSteps": "Next Steps",
+      "blocking": "Blocking Reconciliations",
+      "none": "None"
+    },
+    "deployConfig": {
+      "title": "Deploy Config",
+      "masked": "Credential-masked deploy configuration snapshot.",
+      "view": "View Config"
     }
   },
   "markets": {
     "title": "Markets",
+    "subscribed": "Subscribed",
+    "unsubscribed": "Unsubscribed",
+    "unknownCategory": "Unknown",
     "search": {
       "keyword": "Keyword",
       "keywordPlaceholder": "Search question / slug",
       "status": "Status",
-      "category": "Category"
+      "category": "Category",
+      "eventId": "Event ID",
+      "subscribed": "Subscription",
+      "subscribedOnly": "Subscribed only",
+      "unsubscribedOnly": "Unsubscribed only"
+    },
+    "columns": {
+      "question": "Question",
+      "status": "Status",
+      "category": "Category",
+      "yesToken": "YES Token",
+      "noToken": "NO Token",
+      "yesBidAsk": "YES Bid / Ask",
+      "depth": "Depth",
+      "subscribed": "Subscribed",
+      "updatedAt": "Updated At",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "subscribe": "Subscribe",
+      "unsubscribe": "Unsubscribe",
+      "block": "Block",
+      "unblock": "Unblock"
+    },
+    "block": {
+      "summary": "Block market \"{question}\" from selection and execution."
+    },
+    "unblock": {
+      "summary": "Unblock market \"{question}\" and restore to {status}.",
+      "restoreStatus": "Restore Status"
+    },
+    "feedback": {
+      "subscribed": "Market subscribed",
+      "unsubscribed": "Market unsubscribed",
+      "blocked": "Market blocked",
+      "unblocked": "Market unblocked"
     },
     "detail": {
-      "title": "Market Detail"
+      "title": "Market Detail",
+      "marketId": "Market ID",
+      "eventId": "Event ID",
+      "slug": "Slug",
+      "tickSize": "Tick Size",
+      "negRisk": "Neg Risk",
+      "outcome": "Outcome",
+      "endDate": "End Date",
+      "resolvedAt": "Resolved At",
+      "yes": "Yes",
+      "no": "No",
+      "book": "Order Book",
+      "yesBook": "YES Book",
+      "noBook": "NO Book",
+      "bidPrice": "Bid",
+      "askPrice": "Ask",
+      "size": "Size",
+      "version": "Version",
+      "liveWs": "Live",
+      "emptySide": "No levels",
+      "bookUnavailable": "No book published yet"
+    }
+  },
+  "quantAccount": {
+    "refresh": "Refresh",
+    "fields": {
+      "asOf": "As Of",
+      "source": "Source",
+      "netLiq": "Net Liquidation",
+      "capitalBase": "Capital Base",
+      "available": "Available",
+      "reserved": "Reserved",
+      "realizedPnl": "Realized PnL",
+      "unrealizedPnl": "Unrealized PnL",
+      "highWaterMark": "High Water Mark",
+      "drawdown": "Drawdown",
+      "budgetCap": "Budget Cap",
+      "checkedAt": "Checked At",
+      "createdAt": "Created At"
+    },
+    "live": {
+      "title": "Live Account",
+      "unavailable": "Live account unavailable"
+    },
+    "positions": {
+      "title": "Venue Positions",
+      "outcome": "Outcome",
+      "token": "Token",
+      "market": "Market",
+      "size": "Shares",
+      "avgPrice": "Avg Price",
+      "curPrice": "Mark Price",
+      "value": "Mark Value",
+      "redeemable": "Redeemable",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "exposure": {
+      "title": "Exposure Breakdown",
+      "byCategory": "By Category",
+      "byMarket": "By Market",
+      "byEvent": "By Event",
+      "none": "No exposure"
+    },
+    "chart": {
+      "title": "Equity Curve",
+      "equity": "Equity",
+      "drawdown": "Drawdown"
+    },
+    "equity": {
+      "title": "Equity Snapshots",
+      "range": "Time Range"
+    },
+    "snapshotDetail": {
+      "title": "Equity Snapshot",
+      "id": "Snapshot ID",
+      "accountRef": "Account Snapshot Ref"
+    }
+  },
+  "quantReports": {
+    "run": {
+      "title": "Run Ad-hoc Report",
+      "summary": "Enqueue an ad-hoc TopN report run. Leave overrides blank to use server defaults.",
+      "governedSummary": "Enqueue an ad-hoc TopN recommendation report run.",
+      "topN": "Top N",
+      "sourceDelaySecs": "Source Delay (secs)",
+      "serverDefault": "Server default",
+      "accepted": "Report run accepted (trigger {key})"
     }
   },
   "runtimeConfig": {

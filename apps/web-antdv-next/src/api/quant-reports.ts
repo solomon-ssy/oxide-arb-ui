@@ -12,6 +12,8 @@ import type {
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
+import { normalizeApiError } from '@vben/request/qp';
+
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
@@ -37,6 +39,24 @@ export async function listQuantReports(query: QuantReportListQuery = {}) {
 /** `GET /quant/reports/latest` — the newest published report detail. */
 export async function getLatestQuantReport() {
   return requestClient.get<QuantReportDetailView>(QuantReportApi.latest);
+}
+
+/**
+ * Same as {@link getLatestQuantReport} but treats an empty published history
+ * as `null` instead of surfacing HTTP 404.
+ */
+export async function getLatestQuantReportOptional(): Promise<null | QuantReportDetailView> {
+  try {
+    return await requestClient.get<QuantReportDetailView>(
+      QuantReportApi.latest,
+    );
+  } catch (error) {
+    const apiError = normalizeApiError(error);
+    if (apiError.httpStatus === 404 || apiError.code === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /** `GET /quant/reports/{id}` — full report detail with summary. */

@@ -91,10 +91,33 @@ export interface QuantModeView {
   mode: QuantRuntimeMode;
 }
 
-/** `POST /system/quant-mode` result (governed mode hot-swap). */
+/** One preflight check outcome (mirrors Rust `PreflightCheck`). */
+export interface PreflightCheck {
+  /** Stable check identifier (e.g. `"credentials_loaded"`). */
+  name: string;
+  /** Whether failing this check blocks the transition. */
+  hard: boolean;
+  passed: boolean;
+  /** Human-readable evidence for operators and the audit trail. */
+  detail: string;
+}
+
+/** Preflight evidence for an upgrade mode transition. */
+export interface PreflightReport {
+  target: QuantRuntimeMode;
+  checks: PreflightCheck[];
+  /** `true` when every hard check passed (the transition may proceed). */
+  passed: boolean;
+}
+
+/**
+ * `POST /system/quant-mode` result (governed mode hot-swap). `preflight` is
+ * `null` for no-ops and downgrades, which skip business preflight.
+ */
 export interface QuantModeTransitionReport {
   from: QuantRuntimeMode;
   to: QuantRuntimeMode;
+  preflight: null | PreflightReport;
 }
 
 /** `POST /system/quant-mode` request body. */

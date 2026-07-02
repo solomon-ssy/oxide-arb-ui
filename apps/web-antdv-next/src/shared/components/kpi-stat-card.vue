@@ -25,6 +25,7 @@ const props = withDefaults(
     prefix?: string;
     /** Sign drives PnL value coloring: positive emerald, negative rose. */
     sign?: DecimalSign | null;
+    suffix?: string;
     title: string;
     tooltip?: string;
   }>(),
@@ -35,6 +36,7 @@ const props = withDefaults(
     loading: false,
     prefix: '',
     sign: null,
+    suffix: '',
     tooltip: undefined,
   },
 );
@@ -105,6 +107,7 @@ const hasValue = computed(
             :end-val="endVal!"
             :prefix="prefix"
             :start-val="0"
+            :suffix="suffix"
           />
           <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
         </slot>

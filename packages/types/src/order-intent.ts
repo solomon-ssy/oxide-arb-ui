@@ -6,6 +6,7 @@ import type {
   PriceString,
   ProbabilityString,
   SharesString,
+  TimeRangeQuery,
   UuidString,
 } from './common';
 import type {
@@ -86,9 +87,9 @@ export interface OrderIntentView {
 }
 
 /** Filter + pagination for `GET /quant/intents`. */
-export interface OrderIntentListQuery extends PageQuery {
+export interface OrderIntentListQuery extends PageQuery, TimeRangeQuery {
   status?: OrderIntentStatus;
-  approval_status?: ApprovalStatus;
+  runtime_mode?: QuantRuntimeMode;
   recommendation_id?: UuidString;
 }
 

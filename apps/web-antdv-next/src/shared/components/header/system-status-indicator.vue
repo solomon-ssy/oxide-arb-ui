@@ -122,6 +122,9 @@ function degradeReasonLabel(reason: OperationalDegradeReason): string {
                 {{ runtimeModeTag?.label ?? '—' }}
               </Tag>
             </div>
+            <span class="text-muted-foreground text-xs col-span-2">
+              {{ $t('page.system.readonlyHint') }}
+            </span>
             <span class="text-muted-foreground">
               {{ $t('page.system.field.killSwitch') }}
             </span>

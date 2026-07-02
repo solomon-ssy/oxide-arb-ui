@@ -18,8 +18,11 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
+import KillSwitchIndicator from '#/shared/components/header/kill-switch-indicator.vue';
+import RuntimeModeIndicator from '#/shared/components/header/runtime-mode-indicator.vue';
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
 import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
+import PreflightResultDrawer from '#/shared/components/preflight-result-drawer.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useSystemStatusBootstrap } from '#/shared/composables/use-system-status';
@@ -145,10 +148,16 @@ watch(
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
     <template #header-right-10>
+      <WsStatusBadge />
+    </template>
+    <template #header-right-20>
       <SystemStatusIndicator />
     </template>
-    <template #header-right-30>
-      <WsStatusBadge />
+    <template #header-right-25>
+      <RuntimeModeIndicator />
+    </template>
+    <template #header-right-28>
+      <KillSwitchIndicator />
     </template>
     <template #user-dropdown>
       <UserDropdown
@@ -172,6 +181,7 @@ watch(
     </template>
     <template #extra>
       <GovernedActionHost />
+      <PreflightResultDrawer />
       <AuthenticationLoginExpiredModal
         v-model:open="accessStore.loginExpired"
         :avatar

@@ -6,6 +6,8 @@ import type {
   Paginated,
 } from '@vben/types';
 
+import { normalizeApiError } from '@vben/request/qp';
+
 import { requestClient } from '#/api/request';
 
 export namespace AccountApi {
@@ -39,6 +41,24 @@ export async function listEquitySnapshots(query: EquitySnapshotQuery = {}) {
 /** `GET /quant/account/equity-snapshots/latest` — newest equity snapshot. */
 export async function getLatestEquitySnapshot() {
   return requestClient.get<EquitySnapshotView>(AccountApi.latestEquitySnapshot);
+}
+
+/**
+ * Same as {@link getLatestEquitySnapshot} but treats an empty history as `null`
+ * instead of surfacing HTTP 404 (expected before the first persisted snapshot).
+ */
+export async function getLatestEquitySnapshotOptional(): Promise<EquitySnapshotView | null> {
+  try {
+    return await requestClient.get<EquitySnapshotView>(
+      AccountApi.latestEquitySnapshot,
+    );
+  } catch (error) {
+    const apiError = normalizeApiError(error);
+    if (apiError.httpStatus === 404 || apiError.code === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /** `GET /quant/account/equity-snapshots/{id}` — a single equity snapshot. */

@@ -3,6 +3,7 @@ import type {
   IsoDateTime,
   PageQuery,
   SharesString,
+  TimeRangeQuery,
   UsdString,
   UuidString,
 } from './common';
@@ -49,7 +50,7 @@ export interface SettlementRedeemDetailView extends SettlementRedeemView {
 }
 
 /** Filter + pagination for `GET /quant/settlement-redeems`. */
-export interface SettlementRedeemListQuery extends PageQuery {
+export interface SettlementRedeemListQuery extends PageQuery, TimeRangeQuery {
   state?: SettlementRedeemState;
   market_id?: string;
 }

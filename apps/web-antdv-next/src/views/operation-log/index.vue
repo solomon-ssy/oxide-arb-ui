@@ -45,31 +45,28 @@ const [Grid, gridApi] = useVbenVxeGrid<OperationLogView>({
     columns: useOperationLogColumns(onActionClick),
     proxyConfig: {
       ajax: {
-        query: async ({
-          form,
-          page,
-        }: {
-          form?: Record<string, unknown>;
-          page: { currentPage: number; pageSize: number };
-        }) => {
+        query: async (
+          { page }: { page: { currentPage: number; pageSize: number } },
+          formValues: Record<string, unknown> = {},
+        ) => {
           const result = await handleRequest(() =>
             fetchOperationLogPage({
-              actor_user_id: form?.actor_user_id as string | undefined,
-              category: form?.category as any,
-              from: Array.isArray(form?.occurred_at)
-                ? (form?.occurred_at[0] as string | undefined)
+              actor_user_id: formValues.actor_user_id as string | undefined,
+              category: formValues.category as any,
+              from: Array.isArray(formValues.occurred_at)
+                ? (formValues.occurred_at[0] as string | undefined)
                 : undefined,
               governance_audit_event_id: route.query
                 .governance_audit_event_id as string | undefined,
-              outcome: form?.outcome as any,
+              outcome: formValues.outcome as any,
               page: page.currentPage,
               request_id:
-                (form?.request_id as string | undefined) ??
+                (formValues.request_id as string | undefined) ??
                 (route.query.request_id as string | undefined),
-              resource_type: form?.resource_type as any,
+              resource_type: formValues.resource_type as any,
               size: page.pageSize,
-              to: Array.isArray(form?.occurred_at)
-                ? (form?.occurred_at[1] as string | undefined)
+              to: Array.isArray(formValues.occurred_at)
+                ? (formValues.occurred_at[1] as string | undefined)
                 : undefined,
             }),
           );

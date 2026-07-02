@@ -202,6 +202,7 @@ export const MARKET_STATUSES = {
   delisted: 'delisted',
   discovered: 'discovered',
   filtered: 'filtered',
+  manuallyBlocked: 'manually_blocked',
   paused: 'paused',
   settled: 'settled',
 } as const;
@@ -221,25 +222,26 @@ export type TickSize = WireEnum<typeof TICK_SIZES>;
 // ── Report plane ────────────────────────────────────────────────────────────
 
 export const REPORT_KINDS = {
-  adhoc: 'adhoc',
-  scheduled: 'scheduled',
+  postRunAudit: 'post_run_audit',
+  shadowTopN: 'shadow_top_n',
+  topN: 'top_n',
 } as const;
 
 export type ReportKind = WireEnum<typeof REPORT_KINDS>;
 
 export const REPORT_TRIGGER_KINDS = {
-  manual: 'manual',
-  schedule: 'schedule',
+  adHoc: 'ad_hoc',
+  scheduled: 'scheduled',
 } as const;
 
 export type ReportTriggerKind = WireEnum<typeof REPORT_TRIGGER_KINDS>;
 
 export const RECOMMENDATION_REPORT_STATUSES = {
-  empty: 'empty',
+  building: 'building',
   expired: 'expired',
   failed: 'failed',
-  generating: 'generating',
   published: 'published',
+  publishedEmpty: 'published_empty',
   revoked: 'revoked',
 } as const;
 
@@ -248,17 +250,18 @@ export type RecommendationReportStatus = WireEnum<
 >;
 
 export const RECOMMENDATION_STATUSES = {
-  active: 'active',
+  attributed: 'attributed',
+  executed: 'executed',
   expired: 'expired',
+  intentCreated: 'intent_created',
+  published: 'published',
   revoked: 'revoked',
-  superseded: 'superseded',
 } as const;
 
 export type RecommendationStatus = WireEnum<typeof RECOMMENDATION_STATUSES>;
 
 export const ACCOUNT_SOURCES = {
-  venueClob: 'venue_clob',
-  venueDataApi: 'venue_data_api',
+  polymarket: 'polymarket',
 } as const;
 
 export type AccountSource = WireEnum<typeof ACCOUNT_SOURCES>;
@@ -384,10 +387,17 @@ export type RecommendationOutcome = WireEnum<typeof RECOMMENDATION_OUTCOMES>;
 // ── Execution plane ─────────────────────────────────────────────────────────
 
 export const ORDER_INTENT_STATUSES = {
-  admitted: 'admitted',
+  admissionPending: 'admission_pending',
+  admissionRejected: 'admission_rejected',
+  approved: 'approved',
+  approvedByPolicy: 'approved_by_policy',
   cancelled: 'cancelled',
+  draft: 'draft',
   expired: 'expired',
+  failed: 'failed',
+  filled: 'filled',
   invalidated: 'invalidated',
+  partiallyFilled: 'partially_filled',
   pendingApproval: 'pending_approval',
   rejected: 'rejected',
   submitted: 'submitted',
@@ -397,6 +407,7 @@ export type OrderIntentStatus = WireEnum<typeof ORDER_INTENT_STATUSES>;
 
 export const APPROVAL_STATUSES = {
   approved: 'approved',
+  expired: 'expired',
   notRequired: 'not_required',
   pending: 'pending',
   rejected: 'rejected',
@@ -405,17 +416,20 @@ export const APPROVAL_STATUSES = {
 export type ApprovalStatus = WireEnum<typeof APPROVAL_STATUSES>;
 
 export const ORDER_INTENT_KINDS = {
-  entry: 'entry',
-  exit: 'exit',
+  buy: 'buy',
 } as const;
 
 export type OrderIntentKind = WireEnum<typeof ORDER_INTENT_KINDS>;
 
 export const EXECUTION_ORDER_STATES = {
+  accepted: 'accepted',
+  ambiguous: 'ambiguous',
   cancelled: 'cancelled',
+  cancelRequested: 'cancel_requested',
   failed: 'failed',
   filled: 'filled',
-  pending: 'pending',
+  partiallyFilled: 'partially_filled',
+  planned: 'planned',
   submitted: 'submitted',
 } as const;
 
@@ -466,17 +480,19 @@ export type ExitTriggerKind = WireEnum<typeof EXIT_TRIGGER_KINDS>;
 
 export const POSITION_LEDGER_STATES = {
   closed: 'closed',
+  closing: 'closing',
   open: 'open',
-  redeemed: 'redeemed',
   settled: 'settled',
 } as const;
 
 export type PositionLedgerState = WireEnum<typeof POSITION_LEDGER_STATES>;
 
 export const RECONCILIATION_RESULTS = {
-  matched: 'matched',
+  cancelled: 'cancelled',
+  filled: 'filled',
+  notFilled: 'not_filled',
+  partiallyFilled: 'partially_filled',
   pending: 'pending',
-  resolved: 'resolved',
   unresolvable: 'unresolvable',
 } as const;
 
@@ -499,6 +515,7 @@ export type ReconciliationEvidenceKind = WireEnum<
 export const SETTLEMENT_REDEEM_STATES = {
   confirmed: 'confirmed',
   failed: 'failed',
+  manualRequired: 'manual_required',
   pending: 'pending',
   submitted: 'submitted',
 } as const;

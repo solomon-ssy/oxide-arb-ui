@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import PagePlaceholder from '#/shared/components/page-placeholder.vue';
+import RoadmapPlaceholder from '#/shared/components/roadmap-placeholder.vue';
 
 defineOptions({ name: 'UsersPage' });
 </script>
 
 <template>
-  <PagePlaceholder />
+  <RoadmapPlaceholder phase="10.5" />
 </template>

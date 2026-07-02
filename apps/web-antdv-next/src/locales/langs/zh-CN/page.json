@@ -4,7 +4,9 @@
     "profile": "个人中心"
   },
   "common": {
-    "underConstruction": "该页面建设中，将在后续 phase 交付"
+    "underConstruction": "该页面建设中，将在后续 phase 交付",
+    "comingInPhase": "将在 Phase {phase} 交付",
+    "reportOnlyNote": "report_only 不是 dry-run：报告 sizing 基于真实 venue account（CLOB 抵押 + venue 持仓）计算，需要凭证；缺凭证将 fail-closed。"
   },
   "menu": {
     "group": {
@@ -27,7 +29,6 @@
     "account": "账户",
     "researchWorkbench": "工作台",
     "runtimeConfig": "运行配置",
-    "system": "系统",
     "users": "用户",
     "roles": "角色",
     "menus": "菜单",
@@ -93,18 +94,302 @@
       "market_data_stale": "行情数据陈旧",
       "market_data_coverage_degraded": "行情 WebSocket 分片覆盖降级（存在断开分片）",
       "subsystem_unhealthy": "子系统不健康：{name}"
+    },
+    "readonlyHint": "请使用顶栏状态灯切换运行模式或熔断开关。"
+  },
+  "header": {
+    "modePicker": {
+      "title": "切换运行模式",
+      "unknown": "模式",
+      "preflightTitle": "模式切换预检"
+    },
+    "killSwitchPicker": {
+      "title": "设置熔断开关",
+      "unknown": "熔断"
+    }
+  },
+  "dashboard": {
+    "viewAll": "查看",
+    "actions": {
+      "runReport": "运行报告"
+    },
+    "cards": {
+      "ws": "实时"
+    },
+    "kpi": {
+      "netLiq": "净清算价值",
+      "netLiqTip": "来自最新实时账户读取的 venue 净清算价值。",
+      "available": "可用资金",
+      "availableTip": "扣除预留后可用于 sizing 的 collateral。",
+      "drawdown": "回撤",
+      "drawdownTip": "相对最新持久化 equity snapshot 高水位的回撤。",
+      "activeMarkets": "活跃市场",
+      "activeMarketsTip": "运行 catalog 当前跟踪的市场数量。",
+      "budgetCap": "预算上限",
+      "reserved": "已预留",
+      "capitalBase": "资本基准",
+      "positions": "{count} 个持仓",
+      "highWaterMark": "高水位",
+      "unrealizedPnl": "未实现盈亏",
+      "noEquitySnapshot": "尚无持久化 equity snapshot",
+      "catalogMarkets": "catalog {count} 个市场",
+      "dataFreshness": "{fresh}/{total} 新鲜 token"
+    },
+    "latestReport": {
+      "title": "最新报告",
+      "none": "尚未生成报告",
+      "published": "推荐数",
+      "suggested": "建议总额"
+    },
+    "account": {
+      "title": "实时账户",
+      "netLiq": "净清算价值",
+      "available": "可用",
+      "reserved": "已预留",
+      "budgetCap": "预算上限",
+      "drawdown": "回撤",
+      "checkedAt": "更新于",
+      "unavailable": "账户不可用"
+    },
+    "pendingIntents": {
+      "title": "待审意图",
+      "awaiting": "等待审批"
+    },
+    "dataQuality": {
+      "title": "数据质量",
+      "totalTokens": "跟踪 Token",
+      "fresh": "新鲜",
+      "acceptable": "可接受",
+      "degraded": "降级",
+      "stale": "陈旧",
+      "insufficient": "不足",
+      "maxBookAge": "最大盘口时延",
+      "worstFactLag": "最差事实滞后"
+    },
+    "alerts": {
+      "title": "系统告警",
+      "none": "暂无近期告警"
+    },
+    "reportLifecycle": {
+      "title": "报告活动",
+      "none": "暂无报告生命周期事件",
+      "event": {
+        "started": "构建中",
+        "published": "已发布",
+        "empty": "空运行",
+        "failed": "失败",
+        "revoked": "已撤销",
+        "expired": "已过期"
+      }
+    },
+    "pipeline": {
+      "title": "执行管道",
+      "pendingIntents": "待审意图",
+      "inFlightOrders": "在途订单",
+      "unresolvedReconciliations": "未解决对账",
+      "loading": "刷新计数中…"
+    },
+    "exposureTopN": {
+      "title": "主要敞口",
+      "none": "暂无敞口数据",
+      "byCategory": "按类别",
+      "byMarket": "按市场"
+    },
+    "health": {
+      "title": "子系统健康"
+    },
+    "recovery": {
+      "title": "执行恢复"
+    }
+  },
+  "systemAdmin": {
+    "refresh": "刷新",
+    "mode": {
+      "title": "运行模式",
+      "current": "当前",
+      "switchTitle": "切换运行模式",
+      "switchTo": "切换到 {mode}",
+      "summary": "将运行模式从 {from} 切换到 {to}。",
+      "switched": "运行模式已从 {from} 切换到 {to}",
+      "preflightPassed": "预检通过",
+      "preflightFailed": "预检失败——转换被阻止",
+      "hardCheck": "阻断项",
+      "checkPassed": "通过",
+      "checkFailed": "失败"
+    },
+    "killSwitch": {
+      "title": "熔断开关",
+      "current": "当前",
+      "reason": "最近原因",
+      "changedBy": "变更人",
+      "changedAt": "变更时间",
+      "requiresAck": "熔断开关已锁存，需要操作员确认。",
+      "setTitle": "设置熔断开关",
+      "setTo": "设为 {state}",
+      "summary": "将熔断开关从 {from} 切换到 {to}。",
+      "ackSummary": "此操作将清除锁存状态，需要确认。",
+      "updated": "熔断开关已设为 {state}"
+    },
+    "health": {
+      "title": "子系统健康",
+      "overallHealthy": "所有子系统健康",
+      "overallUnhealthy": "存在不健康的子系统",
+      "healthy": "健康",
+      "unhealthy": "不健康",
+      "skipped": "已跳过",
+      "checkedAt": "检查于"
+    },
+    "recovery": {
+      "title": "执行恢复",
+      "clear": "无恢复阻塞项",
+      "autoExecutionBlocked": "自动执行被阻塞，等待恢复",
+      "unresolvable": "无法解决的对账",
+      "nextSteps": "后续步骤",
+      "blocking": "阻塞的对账",
+      "none": "无"
+    },
+    "deployConfig": {
+      "title": "部署配置",
+      "masked": "凭证已脱敏的部署配置快照。",
+      "view": "查看配置"
     }
   },
   "markets": {
     "title": "市场",
+    "subscribed": "已订阅",
+    "unsubscribed": "未订阅",
+    "unknownCategory": "未知",
     "search": {
       "keyword": "关键字",
       "keywordPlaceholder": "搜索问题 / slug",
       "status": "状态",
-      "category": "分类"
+      "category": "分类",
+      "eventId": "事件 ID",
+      "subscribed": "订阅状态",
+      "subscribedOnly": "仅已订阅",
+      "unsubscribedOnly": "仅未订阅"
+    },
+    "columns": {
+      "question": "问题",
+      "status": "状态",
+      "category": "分类",
+      "yesToken": "YES Token",
+      "noToken": "NO Token",
+      "yesBidAsk": "YES 买/卖",
+      "depth": "深度",
+      "subscribed": "订阅",
+      "updatedAt": "更新时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情",
+      "subscribe": "订阅",
+      "unsubscribe": "退订",
+      "block": "屏蔽",
+      "unblock": "解除屏蔽"
+    },
+    "block": {
+      "summary": "屏蔽市场“{question}”，将其排除出选择与执行。"
+    },
+    "unblock": {
+      "summary": "解除屏蔽市场“{question}”，恢复为 {status}。",
+      "restoreStatus": "恢复状态"
+    },
+    "feedback": {
+      "subscribed": "已订阅市场",
+      "unsubscribed": "已退订市场",
+      "blocked": "已屏蔽市场",
+      "unblocked": "已解除屏蔽"
     },
     "detail": {
-      "title": "市场详情"
+      "title": "市场详情",
+      "marketId": "市场 ID",
+      "eventId": "事件 ID",
+      "slug": "Slug",
+      "tickSize": "最小价格步长",
+      "negRisk": "负风险",
+      "outcome": "结果",
+      "endDate": "截止日期",
+      "resolvedAt": "结算时间",
+      "yes": "是",
+      "no": "否",
+      "book": "订单簿",
+      "yesBook": "YES 盘口",
+      "noBook": "NO 盘口",
+      "bidPrice": "买价",
+      "askPrice": "卖价",
+      "size": "数量",
+      "version": "版本",
+      "liveWs": "实时",
+      "emptySide": "无档位",
+      "bookUnavailable": "尚未发布盘口"
+    }
+  },
+  "quantAccount": {
+    "refresh": "刷新",
+    "fields": {
+      "asOf": "截至",
+      "source": "来源",
+      "netLiq": "净清算价值",
+      "capitalBase": "资本基数",
+      "available": "可用",
+      "reserved": "已预留",
+      "realizedPnl": "已实现盈亏",
+      "unrealizedPnl": "未实现盈亏",
+      "highWaterMark": "历史高点",
+      "drawdown": "回撤",
+      "budgetCap": "预算上限",
+      "checkedAt": "更新于",
+      "createdAt": "创建于"
+    },
+    "live": {
+      "title": "实时账户",
+      "unavailable": "实时账户不可用"
+    },
+    "positions": {
+      "title": "Venue 持仓",
+      "outcome": "结果",
+      "token": "Token",
+      "market": "市场",
+      "size": "份额",
+      "avgPrice": "均价",
+      "curPrice": "标记价",
+      "value": "标记市值",
+      "redeemable": "可赎回",
+      "yes": "是",
+      "no": "否"
+    },
+    "exposure": {
+      "title": "敞口分解",
+      "byCategory": "按分类",
+      "byMarket": "按市场",
+      "byEvent": "按事件",
+      "none": "无敞口"
+    },
+    "chart": {
+      "title": "权益曲线",
+      "equity": "权益",
+      "drawdown": "回撤"
+    },
+    "equity": {
+      "title": "权益快照",
+      "range": "时间范围"
+    },
+    "snapshotDetail": {
+      "title": "权益快照",
+      "id": "快照 ID",
+      "accountRef": "账户快照引用"
+    }
+  },
+  "quantReports": {
+    "run": {
+      "title": "运行临时报告",
+      "summary": "入队一次临时 TopN 报告运行。留空覆盖项则使用服务端默认值。",
+      "governedSummary": "入队一次临时 TopN 推荐报告运行。",
+      "topN": "Top N",
+      "sourceDelaySecs": "数据延迟（秒）",
+      "serverDefault": "服务端默认",
+      "accepted": "报告运行已受理（触发 {key}）"
     }
   },
   "runtimeConfig": {

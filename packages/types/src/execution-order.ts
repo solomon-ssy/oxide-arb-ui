@@ -3,6 +3,7 @@ import type {
   PageQuery,
   PriceString,
   SharesString,
+  TimeRangeQuery,
   UsdString,
   UuidString,
 } from './common';
@@ -38,7 +39,10 @@ export interface ExecutionOrderView {
 }
 
 /** Filter + pagination for `GET /quant/execution-orders`. */
-export interface ExecutionOrderListQuery extends PageQuery {
+export interface ExecutionOrderListQuery extends PageQuery, TimeRangeQuery {
   state?: ExecutionOrderState;
+  order_phase?: ExecutionOrderPhase;
   order_intent_id?: UuidString;
+  market_id?: string;
+  token_id?: string;
 }

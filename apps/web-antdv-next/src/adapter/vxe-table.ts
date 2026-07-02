@@ -109,6 +109,45 @@ setupVbenVxeTable({
       },
     });
 
+    // 单元格渲染： Tag 列表（数组字段）
+    vxeUI.renderer.add('CellTags', {
+      renderTableDefault({ attrs, options, props }, { column, row }) {
+        const values = get(row, column.field);
+        const tagOptions = options ?? [];
+        const items = Array.isArray(values) ? values : [];
+        const emptyLabel = attrs?.emptyLabel ?? EMPTY_PLACEHOLDER;
+        const emptyColor = attrs?.emptyColor ?? 'default';
+
+        if (items.length === 0) {
+          return h(
+            Tag,
+            { color: emptyColor, ...props },
+            { default: () => emptyLabel },
+          );
+        }
+
+        return h(
+          'div',
+          { style: { display: 'flex', flexWrap: 'wrap', gap: '4px' } },
+          items.map((value) => {
+            const tagItem = tagOptions.find((item) => item.value === value) ?? {
+              color: attrs?.defaultColor ?? 'default',
+              label: value,
+              value,
+            };
+            return h(
+              Tag,
+              {
+                ...props,
+                ...objectOmit(tagItem, ['label', 'value']),
+              },
+              { default: () => tagItem.label ?? value },
+            );
+          }),
+        );
+      },
+    });
+
     // 单元格渲染： Tag
     vxeUI.renderer.add('CellTag', {
       renderTableDefault({ attrs, options, props }, { column, row }) {

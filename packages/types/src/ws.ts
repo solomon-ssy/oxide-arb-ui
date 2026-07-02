@@ -4,6 +4,10 @@ import type {
   AlertLevel,
   AlertSource,
   MaterializationRunStatus,
+  OrderIntentStatus,
+  QuantRuntimeMode,
+  RecommendationReportStatus,
+  ReportKind,
 } from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { SystemStatus } from './system';
@@ -63,10 +67,19 @@ export type ReportLifecycleEventKind =
   | 'revoked'
   | 'started';
 
-/** WS `quant.report` payload — report lifecycle transition. */
+/**
+ * WS `quant.report` payload — report lifecycle transition (mirrors Rust
+ * `ReportLifecycleEvent`). `recommendation_report_id` is `null` for the
+ * ephemeral `started` / `failed` signals, which correlate by `trigger_key`.
+ */
 export interface ReportLifecycleEvent {
   event: ReportLifecycleEventKind;
-  recommendation_report_id: UuidString;
+  trigger_key: string;
+  recommendation_report_id: null | UuidString;
+  report_kind: ReportKind;
+  runtime_mode: QuantRuntimeMode;
+  status: RecommendationReportStatus;
+  as_of: IsoDateTime;
 }
 
 /** `quant.intent` lifecycle event kinds (discriminated by `event`). */
@@ -78,10 +91,18 @@ export type IntentLifecycleEventKind =
   | 'invalidated'
   | 'rejected';
 
-/** WS `quant.intent` payload — order-intent lifecycle transition. */
+/**
+ * WS `quant.intent` payload — order-intent lifecycle transition (mirrors Rust
+ * `IntentLifecycleEvent`; `reason` carries the status or approval reason).
+ */
 export interface IntentLifecycleEvent {
   event: IntentLifecycleEventKind;
   order_intent_id: UuidString;
+  recommendation_id: UuidString;
+  runtime_mode: QuantRuntimeMode;
+  status: OrderIntentStatus;
+  reason: null | string;
+  occurred_at: IsoDateTime;
 }
 
 /**

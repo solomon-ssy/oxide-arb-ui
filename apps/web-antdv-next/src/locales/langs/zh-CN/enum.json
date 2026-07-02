@@ -36,29 +36,51 @@
     "filtered": "已过滤",
     "active": "活跃",
     "paused": "暂停",
+    "manually_blocked": "已屏蔽",
     "settled": "已结算",
     "delisted": "已下架"
   },
+  "reportKind": {
+    "top_n": "TopN",
+    "shadow_top_n": "影子 TopN",
+    "post_run_audit": "运行后审计"
+  },
+  "reportTriggerKind": {
+    "scheduled": "定时",
+    "ad_hoc": "手动"
+  },
+  "accountSource": {
+    "polymarket": "Polymarket"
+  },
   "recommendationReportStatus": {
-    "generating": "生成中",
+    "building": "构建中",
     "published": "已发布",
-    "empty": "空",
+    "published_empty": "已发布（空）",
     "revoked": "已撤销",
     "expired": "已过期",
     "failed": "失败"
   },
   "recommendationStatus": {
-    "active": "有效",
-    "superseded": "已替代",
+    "published": "已发布",
+    "intent_created": "已建意图",
+    "executed": "已执行",
+    "attributed": "已归因",
     "revoked": "已撤销",
     "expired": "已过期"
   },
   "orderIntentStatus": {
+    "draft": "草稿",
     "pending_approval": "待审批",
-    "admitted": "已准入",
+    "approved": "已批准",
+    "approved_by_policy": "策略批准",
+    "admission_pending": "准入检查中",
+    "admission_rejected": "准入拒绝",
     "submitted": "已提交",
+    "partially_filled": "部分成交",
+    "filled": "已成交",
     "rejected": "已拒绝",
     "cancelled": "已取消",
+    "failed": "失败",
     "expired": "已过期",
     "invalidated": "已失效"
   },
@@ -66,40 +88,47 @@
     "not_required": "无需审批",
     "pending": "待审批",
     "approved": "已批准",
-    "rejected": "已拒绝"
+    "rejected": "已拒绝",
+    "expired": "已过期"
   },
   "executionOrderState": {
-    "pending": "待处理",
+    "planned": "已规划",
+    "accepted": "已受理",
     "submitted": "已提交",
+    "partially_filled": "部分成交",
     "filled": "已成交",
+    "cancel_requested": "撤单请求中",
     "cancelled": "已取消",
-    "failed": "失败"
+    "failed": "失败",
+    "ambiguous": "状态不明"
   },
   "executionOrderPhase": {
     "entry": "入场",
     "exit": "离场"
   },
   "orderIntentKind": {
-    "entry": "入场",
-    "exit": "离场"
+    "buy": "买入"
   },
   "positionLedgerState": {
     "open": "持仓中",
+    "closing": "平仓中",
     "closed": "已平仓",
-    "settled": "已结算",
-    "redeemed": "已赎回"
+    "settled": "已结算"
   },
   "reconciliationResult": {
     "pending": "待对账",
-    "matched": "已匹配",
-    "resolved": "已解决",
+    "filled": "已成交",
+    "not_filled": "未成交",
+    "partially_filled": "部分成交",
+    "cancelled": "已取消",
     "unresolvable": "无法解决"
   },
   "settlementRedeemState": {
     "pending": "待处理",
     "submitted": "已提交",
     "confirmed": "已确认",
-    "failed": "失败"
+    "failed": "失败",
+    "manual_required": "需人工处理"
   },
   "publicationStatus": {
     "draft": "草稿",
