@@ -30,7 +30,7 @@ export interface WsDispatchHooks {
   onAlert: (alert: SystemAlertEvent) => void;
   /** `config.activated` frame — lightweight info toast. */
   onConfigActivated: (event: ConfigActivatedEvent) => void;
-  /** `market.resolved` frame — lightweight info toast. */
+  /** `market.resolved` frame — optional UI side-effect (store update is in the dispatcher). */
   onMarketResolved: (event: MarketResolvedEvent) => void;
 }
 

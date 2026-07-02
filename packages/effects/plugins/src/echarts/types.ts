@@ -4,6 +4,7 @@ import type {
   LineSeriesOption,
   PieSeriesOption,
   RadarSeriesOption,
+  ScatterSeriesOption,
 } from 'echarts/charts';
 import type {
   DatasetComponentOption,
@@ -24,7 +25,10 @@ export type ECOption = ComposeOption<
   | LineSeriesOption
   | PieSeriesOption
   | RadarSeriesOption
+  | ScatterSeriesOption
   | TitleComponentOption
   | ToolboxComponentOption
   | TooltipComponentOption
 >;
+
+export type { TooltipComponentOption };

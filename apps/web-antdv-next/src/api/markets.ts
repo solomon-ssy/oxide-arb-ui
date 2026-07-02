@@ -2,6 +2,8 @@ import type {
   BlockMarketRequest,
   MarketBookView,
   MarketId,
+  MarketMicrostructureQuery,
+  MarketMicrostructureView,
   MarketPageQuery,
   MarketView,
   Paginated,
@@ -17,6 +19,8 @@ export namespace MarketApi {
   export const base = '/markets';
   export const detail = (marketId: MarketId) => `${base}/${marketId}`;
   export const book = (marketId: MarketId) => `${base}/${marketId}/book`;
+  export const microstructure = (marketId: MarketId) =>
+    `${base}/${marketId}/microstructure`;
   export const subscribe = (marketId: MarketId) =>
     `${base}/${marketId}/subscribe`;
   export const unsubscribe = (marketId: MarketId) =>
@@ -40,6 +44,17 @@ export async function getMarketById(marketId: MarketId) {
 /** `GET /markets/{market_id}/book` — published YES / NO order books. */
 export async function getMarketBook(marketId: MarketId) {
   return requestClient.get<MarketBookView>(MarketApi.book(marketId));
+}
+
+/** `GET /markets/{market_id}/microstructure` — historical mid/spread/depth series. */
+export async function getMarketMicrostructure(
+  marketId: MarketId,
+  query: MarketMicrostructureQuery = {},
+) {
+  return requestClient.get<MarketMicrostructureView>(
+    MarketApi.microstructure(marketId),
+    { params: query },
+  );
 }
 
 /** `POST /markets/{market_id}/subscribe` — add both tokens to the CLOB WS. */

@@ -6,8 +6,9 @@ import type { MarketRow } from './modules/schemas/table-columns';
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
 import { computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 import { MARKET_CATEGORY_UNKNOWN_FILTER } from '@vben/types';
 
@@ -19,17 +20,12 @@ import { useMarketStore } from '#/store';
 import { useMarketSearchSchema } from './modules/schemas/search-form';
 import { useMarketColumns } from './modules/schemas/table-columns';
 import { useMarketActions } from './modules/use-market-actions';
-import MarketDetailDrawer from './modules/widgets/market-detail-drawer.vue';
 
 defineOptions({ name: 'MarketsPage' });
 
+const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const marketStore = useMarketStore();
-
-const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
-  connectedComponent: MarketDetailDrawer,
-  destroyOnClose: true,
-});
 
 const { block, canUpdate, setSubscription, unblock, UnblockModalHost } =
   useMarketActions(() => {
@@ -111,7 +107,7 @@ watch(
 );
 
 function openDetail(row: MarketView) {
-  detailDrawerApi.setData({ market: row }).open();
+  void router.push(`/markets/${row.market_id}`);
 }
 
 function onActionClick({ code, row }: OnActionClickParams<MarketRow>) {
@@ -136,7 +132,6 @@ function onActionClick({ code, row }: OnActionClickParams<MarketRow>) {
 <template>
   <Page auto-content-height>
     <Grid :table-title="$t('page.markets.title')" />
-    <DetailDrawer />
     <UnblockModalHost />
   </Page>
 </template>

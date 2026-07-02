@@ -1,9 +1,12 @@
 import type {
+  BpsString,
+  DecimalString,
   IsoDateTime,
   MarketId,
   PageQuery,
   PriceString,
   SharesString,
+  TimeRangeQuery,
   TokenId,
   UsdString,
 } from './common';
@@ -98,4 +101,59 @@ export interface BlockMarketRequest {
 export interface UnblockMarketRequest {
   reason: string;
   restore_status?: MarketStatus;
+}
+
+/** Bucket resolution of a microstructure series (server-chosen by span). */
+export type MicrostructureResolution = 'minute' | 'second';
+
+/** Query for `GET /markets/{market_id}/microstructure` (ISO time window). */
+export type MarketMicrostructureQuery = TimeRangeQuery;
+
+/**
+ * One microstructure observation bucket (`book_microstructure_1s`/`_1m`).
+ * Money / price / bps fields are decimal strings; `imbalance` is a raw ratio
+ * in `[-1, 1]`. Any field may be `null` when the bucket lacked that signal.
+ */
+export interface MicrostructureBucket {
+  /** Bucket start time (epoch millis). */
+  bucket_ms: number;
+  mid_open: null | PriceString;
+  mid_close: null | PriceString;
+  best_bid_close: null | PriceString;
+  best_ask_close: null | PriceString;
+  spread_bps_min: BpsString | null;
+  spread_bps_avg: BpsString | null;
+  spread_bps_max: BpsString | null;
+  depth_top1_usd: null | UsdString;
+  depth_top5_usd: null | UsdString;
+  depth_top20_usd: null | UsdString;
+  /** Resting-depth imbalance `(bid - ask) / (bid + ask)`, bid-heavy positive. */
+  imbalance: DecimalString | null;
+  last_trade_count: number;
+  update_count: number;
+  gap_count: number;
+  crossed_count: number;
+}
+
+/** A single last-trade print for the price-chart overlay. */
+export interface MarketTradeTick {
+  token_id: TokenId;
+  /** Trade event time (epoch millis). */
+  ts_ms: number;
+  price: PriceString;
+}
+
+/** `GET /markets/{market_id}/microstructure` — YES/NO history + trade prints. */
+export interface MarketMicrostructureView {
+  market_id: MarketId;
+  yes_token_id: TokenId;
+  no_token_id: TokenId;
+  resolution: MicrostructureResolution;
+  /** Window start (epoch millis). */
+  from_ms: number;
+  /** Window end (epoch millis). */
+  to_ms: number;
+  yes: MicrostructureBucket[];
+  no: MicrostructureBucket[];
+  trades: MarketTradeTick[];
 }

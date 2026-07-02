@@ -20,6 +20,7 @@
     },
     "dashboard": "总览",
     "markets": "市场",
+    "marketDetail": "市场详情",
     "quantReports": "推荐报告",
     "orderIntents": "订单意图",
     "executionOrders": "执行订单",
@@ -237,7 +238,8 @@
       "healthy": "健康",
       "unhealthy": "不健康",
       "skipped": "已跳过",
-      "checkedAt": "检查于"
+      "checkedAt": "检查于",
+      "messageAgeMs": "末消息 {ms}ms"
     },
     "recovery": {
       "title": "执行恢复",
@@ -322,7 +324,57 @@
       "version": "版本",
       "liveWs": "实时",
       "emptySide": "无档位",
-      "bookUnavailable": "尚未发布盘口"
+      "bookUnavailable": "尚未发布盘口",
+      "copied": "已复制到剪贴板",
+      "bookAge": "盘口时延",
+      "range": {
+        "m5": "5分钟",
+        "h1": "1小时",
+        "h6": "6小时",
+        "h24": "24小时",
+        "d3": "3天"
+      },
+      "resolution": {
+        "second": "秒级",
+        "minute": "分钟级"
+      },
+      "sides": {
+        "yes": "YES",
+        "no": "NO"
+      },
+      "kpi": {
+        "yesMid": "YES 中间价",
+        "noMid": "NO 中间价",
+        "sum": "YES + NO",
+        "sumHint": "YES 与 NO 中间价之和;明显偏离 1.00 提示套利/一致性异常。",
+        "deviation": "偏离",
+        "spread": "YES 价差",
+        "depth": "总深度",
+        "imbalance": "盘口失衡",
+        "imbalanceHint": "YES 盘口挂单深度失衡;正值为买盘偏重(买压)。"
+      },
+      "charts": {
+        "price": "价格走势",
+        "spread": "价差走势",
+        "liquidity": "流动性深度",
+        "imbalance": "盘口失衡",
+        "liveDepth": "实时深度"
+      },
+      "series": {
+        "yesMid": "YES 中间价",
+        "noMid": "NO 中间价",
+        "trades": "成交",
+        "yesSpread": "YES 价差",
+        "noSpread": "NO 价差",
+        "spreadBand": "YES 最小-最大",
+        "top1": "前 1 档",
+        "top5": "前 5 档",
+        "top20": "前 20 档",
+        "yesImbalance": "YES 失衡",
+        "noImbalance": "NO 失衡",
+        "bids": "买盘",
+        "asks": "卖盘"
+      }
     }
   },
   "quantAccount": {

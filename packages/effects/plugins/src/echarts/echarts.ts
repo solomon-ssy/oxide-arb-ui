@@ -4,6 +4,7 @@ import {
   LineChart,
   PieChart,
   RadarChart,
+  ScatterChart,
 } from 'echarts/charts';
 import {
   DatasetComponent,
@@ -35,6 +36,7 @@ echarts.use([
   BarChart,
   GaugeChart,
   LineChart,
+  ScatterChart,
   LabelLayout,
   LegacyGridContainLabel,
   UniversalTransition,

@@ -183,7 +183,7 @@ describe('dispatchWsEnvelope', () => {
     expect(h.onConfigActivated).toHaveBeenCalledWith({ version_id: 'v-9' });
   });
 
-  it('market.book_update caches the book; market.resolved marks + delegates', () => {
+  it('market.book_update caches the book; market.resolved marks silently', () => {
     const h = hooks();
     dispatchWsEnvelope(envelope('market.book_update', marketBook()), h);
     expect(useMarketStore().books['0xabc']).toBeDefined();
@@ -193,7 +193,10 @@ describe('dispatchWsEnvelope', () => {
       h,
     );
     expect(useMarketStore().resolved.has('0xabc')).toBe(true);
-    expect(h.onMarketResolved).toHaveBeenCalled();
+    expect(h.onMarketResolved).toHaveBeenCalledWith({
+      market_id: '0xabc',
+      outcome: true,
+    });
   });
 
   it('system.alert is delegated without store writes', () => {

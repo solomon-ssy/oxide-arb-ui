@@ -191,10 +191,8 @@ function createQpWs(): QpWsApi {
               $t('page.ws.configActivated', { version: event.version_id }),
             );
           },
-          onMarketResolved(event) {
-            message.info(
-              $t('page.ws.marketResolved', { market: event.market_id }),
-            );
+          onMarketResolved() {
+            // Silent: `dispatchWsEnvelope` marks the market resolved in the store.
           },
         });
       },

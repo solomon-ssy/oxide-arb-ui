@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 const SEED_COMPONENTS = [
   'dashboard/index',
   'markets/index',
+  'markets/detail/index',
   'quant/reports/index',
   'quant/intents/index',
   'quant/execution-orders/index',

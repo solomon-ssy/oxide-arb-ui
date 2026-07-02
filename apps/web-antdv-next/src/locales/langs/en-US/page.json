@@ -20,6 +20,7 @@
     },
     "dashboard": "Dashboard",
     "markets": "Markets",
+    "marketDetail": "Market Detail",
     "quantReports": "Reports",
     "orderIntents": "Order Intents",
     "executionOrders": "Execution Orders",
@@ -237,7 +238,8 @@
       "healthy": "Healthy",
       "unhealthy": "Unhealthy",
       "skipped": "Skipped",
-      "checkedAt": "Checked at"
+      "checkedAt": "Checked at",
+      "messageAgeMs": "Last msg {ms}ms"
     },
     "recovery": {
       "title": "Execution Recovery",
@@ -322,7 +324,57 @@
       "version": "Version",
       "liveWs": "Live",
       "emptySide": "No levels",
-      "bookUnavailable": "No book published yet"
+      "bookUnavailable": "No book published yet",
+      "copied": "Copied to clipboard",
+      "bookAge": "Book Age",
+      "range": {
+        "m5": "5m",
+        "h1": "1h",
+        "h6": "6h",
+        "h24": "24h",
+        "d3": "3d"
+      },
+      "resolution": {
+        "second": "1s buckets",
+        "minute": "1m buckets"
+      },
+      "sides": {
+        "yes": "YES",
+        "no": "NO"
+      },
+      "kpi": {
+        "yesMid": "YES Mid",
+        "noMid": "NO Mid",
+        "sum": "YES + NO",
+        "sumHint": "Sum of YES and NO mid prices; a large deviation from 1.00 signals an arbitrage / consistency issue.",
+        "deviation": "Deviation",
+        "spread": "YES Spread",
+        "depth": "Total Depth",
+        "imbalance": "Imbalance",
+        "imbalanceHint": "Resting-depth imbalance of the YES book; positive is bid-heavy (buy pressure)."
+      },
+      "charts": {
+        "price": "Price History",
+        "spread": "Spread",
+        "liquidity": "Liquidity Depth",
+        "imbalance": "Order-Book Imbalance",
+        "liveDepth": "Live Depth"
+      },
+      "series": {
+        "yesMid": "YES Mid",
+        "noMid": "NO Mid",
+        "trades": "Trades",
+        "yesSpread": "YES Spread",
+        "noSpread": "NO Spread",
+        "spreadBand": "YES Min-Max",
+        "top1": "Top 1",
+        "top5": "Top 5",
+        "top20": "Top 20",
+        "yesImbalance": "YES Imbalance",
+        "noImbalance": "NO Imbalance",
+        "bids": "Bids",
+        "asks": "Asks"
+      }
     }
   },
   "quantAccount": {

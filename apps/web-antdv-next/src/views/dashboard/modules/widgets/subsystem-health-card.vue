@@ -49,6 +49,18 @@ function subsystemStatusLabel(check: HealthReport['checks'][number]): string {
   return state.status === 'skipped' ? `${label} (${state.reason})` : label;
 }
 
+function latencyLabel(check: HealthReport['checks'][number]): string {
+  if (check.latency_ms === null) {
+    return '';
+  }
+  if (check.name === 'websocket') {
+    return $t('page.systemAdmin.health.messageAgeMs', {
+      ms: check.latency_ms,
+    });
+  }
+  return `${check.latency_ms}ms`;
+}
+
 watch(
   () => systemStore.status?.operational_phase.phase,
   () => {
@@ -102,7 +114,7 @@ onMounted(() => {
             v-if="check.latency_ms !== null"
             class="text-muted-foreground text-xs tabular-nums"
           >
-            {{ check.latency_ms }}ms
+            {{ latencyLabel(check) }}
           </span>
           <Tag :color="subsystemStatusColor(check)">
             {{ subsystemStatusLabel(check) }}
