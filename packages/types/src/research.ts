@@ -5,8 +5,46 @@ import type {
   UsdString,
   UuidString,
 } from './common';
+import type {
+  FactorDefinitionScope,
+  FactorFamily,
+  MarketCategory,
+  PublicationStatus,
+  TrainingDatasetStatus,
+} from './enums';
 
 // ── Training datasets ───────────────────────────────────────────────────────
+
+/** Optional training-matrix probe (build-time diagnostic; does not gate build). */
+export interface MatrixCoverageProbe {
+  accepted_rows: number;
+  rejected_rows: number;
+  label_name: string;
+  label_horizon_secs: number;
+  feature_columns: number;
+}
+
+/**
+ * `TrainingDatasetView.coverage_json` content — per-sample build accounting.
+ * Backend types the column as opaque JSON but always writes `DatasetCoverage`.
+ */
+export interface DatasetCoverage {
+  planned_samples: number;
+  built_examples: number;
+  markets: number;
+  labels_available: number;
+  labels_not_mature: number;
+  labels_unavailable: number;
+  samples_dropped_insufficient: number;
+  live_attribution_candidates: number;
+  live_attribution_dropped_missing_evidence: number;
+  book_decode_failures: number;
+  exit_decision_candidates: number;
+  exit_decision_built: number;
+  exit_fill_l2_rows: number;
+  exit_fill_fallback_rows: number;
+  matrix_probe?: MatrixCoverageProbe | null;
+}
 
 /** `POST /research/training-datasets/plan` result. */
 export interface TrainingDatasetPlanView {
@@ -24,14 +62,14 @@ export interface TrainingDatasetView {
   model_spec_id: string;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
-  status: string;
+  status: TrainingDatasetStatus;
   feature_schema_hash: string;
   factor_schema_hash: string;
   label_schema_hash: string;
   dataset_hash: string;
   parquet_uri: string;
   sample_count: number;
-  coverage_json: unknown;
+  coverage_json: DatasetCoverage;
   runtime_config_version_id: UuidString;
   created_at: IsoDateTime;
 }
@@ -48,6 +86,42 @@ export interface BuildTrainingDatasetRequest {
 
 // ── Models ──────────────────────────────────────────────────────────────────
 
+/** Out-of-sample rolling-validation objective shared by trainer families. */
+export interface ModelValidationMetrics {
+  mean_objective: DecimalString;
+  fold_objectives: DecimalString[];
+  sample_count: number;
+}
+
+/** Weighted-factor / sell-scorer trainer metrics. */
+export interface WeightedFactorModelMetrics {
+  in_sample: { objective_value: DecimalString; summary: string };
+  validation: ModelValidationMetrics;
+}
+
+/** Classical (feature-matrix) trainer metrics (`ml-classical` feature). */
+export interface ClassicalModelMetrics {
+  kind: string;
+  in_sample: {
+    feature_count: number;
+    train_samples: number;
+    validation_objective: DecimalString;
+  };
+  validation: ModelValidationMetrics;
+  feature_importances: { feature: string; importance: DecimalString }[];
+}
+
+/**
+ * `TrainedModelView.metrics` — the backend emits a family-shaped JSON object
+ * with no shared discriminant tag (weighted-factor omits `kind`, classical
+ * carries it), and exit-scorer paths emit `{}`. Consumers feature-detect; the
+ * `Record` arm keeps forward-compat with future trainer families.
+ */
+export type ModelMetrics =
+  | ClassicalModelMetrics
+  | Record<string, unknown>
+  | WeightedFactorModelMetrics;
+
 /** `GET /research/models/{id}` / train result. */
 export interface TrainedModelView {
   model_version_id: UuidString;
@@ -55,8 +129,8 @@ export interface TrainedModelView {
   version: number;
   artifact_hash: string;
   training_dataset_id: null | UuidString;
-  publication_status: string;
-  metrics: unknown;
+  publication_status: PublicationStatus;
+  metrics: ModelMetrics;
   created_at: IsoDateTime;
 }
 
@@ -84,6 +158,45 @@ export interface RetireModelRequest {
 
 // ── Backtests / comparison ──────────────────────────────────────────────────
 
+/** Expected-vs-realized agreement summary (`BacktestReportView`). */
+export interface ExpectedVsRealized {
+  mean_expected_bps: DecimalString;
+  mean_realized_bps: DecimalString;
+  correlation: DecimalString;
+  bias_bps: DecimalString;
+}
+
+/** Per-category performance breakdown (domain slice diagnostics). */
+export interface CategoryMetric {
+  category: MarketCategory;
+  sample_count: number;
+  rank_ic: DecimalString;
+  hit_rate: ProbabilityString;
+  mean_realized_bps: DecimalString;
+}
+
+/** One point of the cumulative realized-PnL curve. */
+export interface PnlCurvePoint {
+  as_of: IsoDateTime;
+  cumulative_realized_pnl_usd: UsdString;
+}
+
+/** Portfolio-level PnL simulation summary. */
+export interface PnlSimulation {
+  total_allocated_usd: UsdString;
+  realized_pnl_usd: UsdString;
+  gross_return: DecimalString;
+  pnl_curve: PnlCurvePoint[];
+}
+
+/** Per-category rank-IC divergence between candidate and baseline. */
+export interface CategoryRankIcDelta {
+  category: MarketCategory;
+  baseline_rank_ic: DecimalString;
+  candidate_rank_ic: DecimalString;
+  rank_ic_delta: DecimalString;
+}
+
 /** `GET /research/backtest-reports/{id}` / backtest result. */
 export interface BacktestReportView {
   backtest_report_id: UuidString;
@@ -97,13 +210,13 @@ export interface BacktestReportView {
   missing_feature_count: number;
   rank_ic: DecimalString;
   hit_rate: ProbabilityString;
-  expected_vs_realized: unknown;
+  expected_vs_realized: ExpectedVsRealized;
   max_drawdown: DecimalString;
   turnover: DecimalString;
   tail_loss: DecimalString;
   liquidity_feasibility: ProbabilityString;
-  category_breakdown: unknown;
-  report_pnl_simulation: unknown;
+  category_breakdown: CategoryMetric[];
+  report_pnl_simulation: PnlSimulation;
   report_hash: string;
   parquet_uri: null | string;
   created_at: IsoDateTime;
@@ -129,7 +242,7 @@ export interface ModelComparisonReportView {
   score_correlation: DecimalString;
   side_disagreement_rate: DecimalString;
   common_samples: number;
-  category_breakdown_diff: unknown;
+  category_breakdown_diff: CategoryRankIcDelta[];
   comparison_hash: string;
   created_at: IsoDateTime;
 }
@@ -140,11 +253,11 @@ export interface ModelComparisonReportView {
 export interface FactorDefinitionView {
   factor_definition_id: UuidString;
   name: string;
-  factor_family: string;
-  scope: string;
+  factor_family: FactorFamily;
+  scope: FactorDefinitionScope;
   input_schema_version: string;
   output_schema_version: string;
-  status: string;
+  status: PublicationStatus;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
 }

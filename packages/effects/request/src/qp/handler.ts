@@ -18,7 +18,7 @@ export interface HandleRequestOptions<T> {
 }
 
 /**
- * Page-level async wrapper for oxide API calls.
+ * Page-level async wrapper for quant-pivot API calls.
  *
  * - Success: runs success hook, returns data
  * - Failure: normalized {@link ApiError}; toast once unless transport/handler silenced

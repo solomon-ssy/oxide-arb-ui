@@ -1,6 +1,6 @@
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
-import { withSilentError } from '@vben/request/oxide';
+import { withSilentError } from '@vben/request/qp';
 
 import { buildApiHeaders } from '#/api/headers';
 import { requestClient } from '#/api/request';

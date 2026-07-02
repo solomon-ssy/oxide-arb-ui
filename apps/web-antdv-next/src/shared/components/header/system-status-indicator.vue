@@ -13,6 +13,11 @@ import {
   formatDateTimeLocal,
   formatDurationSecs,
 } from '#/shared/components/format';
+import {
+  findTagOption,
+  useKillSwitchStateTagOptions,
+  useQuantRuntimeModeTagOptions,
+} from '#/shared/components/format/tag-options';
 import { useLiveUptime } from '#/shared/composables/use-live-uptime';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import {
@@ -46,14 +51,6 @@ const INDICATOR_COLOR: Record<SystemIndicator, string> = {
   unknown: 'default',
 };
 
-const KILL_SWITCH_COLOR: Record<string, string> = {
-  closed: 'success',
-  emergency_halted: 'magenta',
-  execution_halted: 'error',
-  exit_only: 'warning',
-  report_only_forced: 'gold',
-};
-
 const phase = computed(() => status.value?.operational_phase.phase ?? null);
 
 const startingDetail = computed(() => {
@@ -79,6 +76,13 @@ const tagColor = computed(() => INDICATOR_COLOR[indicator.value]);
 
 const runtimeMode = computed(() => status.value?.quant_runtime_mode ?? null);
 const killSwitch = computed(() => status.value?.kill_switch ?? null);
+
+const runtimeModeTag = computed(() =>
+  findTagOption(useQuantRuntimeModeTagOptions(), runtimeMode.value),
+);
+const killSwitchTag = computed(() =>
+  findTagOption(useKillSwitchStateTagOptions(), killSwitch.value?.state),
+);
 
 const marketDataReady = computed(
   () => status.value?.market_data.ready ?? false,
@@ -114,24 +118,16 @@ function degradeReasonLabel(reason: OperationalDegradeReason): string {
               {{ $t('page.system.field.mode') }}
             </span>
             <div class="flex justify-end">
-              <Tag color="processing">
-                {{
-                  runtimeMode ? $t(`enum.quantRuntimeMode.${runtimeMode}`) : '—'
-                }}
+              <Tag :color="runtimeModeTag?.color ?? 'default'">
+                {{ runtimeModeTag?.label ?? '—' }}
               </Tag>
             </div>
             <span class="text-muted-foreground">
               {{ $t('page.system.field.killSwitch') }}
             </span>
             <div class="flex justify-end">
-              <Tag
-                :color="KILL_SWITCH_COLOR[killSwitch?.state ?? ''] ?? 'default'"
-              >
-                {{
-                  killSwitch
-                    ? $t(`enum.killSwitchState.${killSwitch.state}`)
-                    : '—'
-                }}
+              <Tag :color="killSwitchTag?.color ?? 'default'">
+                {{ killSwitchTag?.label ?? '—' }}
               </Tag>
             </div>
             <span class="text-muted-foreground">

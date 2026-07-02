@@ -2,7 +2,7 @@ import type { AxiosRequestConfig } from 'axios';
 
 import { ApiError } from './normalize';
 
-/** oxide-arb-web JSON envelope (`WebResponse` / `WebError`). */
+/** quant-pivot-web JSON envelope (`WebResponse` / `WebError`). */
 export interface ApiEnvelope<T = unknown> {
   code: number;
   message: string;
@@ -16,12 +16,12 @@ export type ApiRawResponse<T> = { data: ApiEnvelope<T> };
  * Per-request UX flags carried on axios config.
  * Use {@link withSilentError} for background / caller-owned feedback paths.
  */
-export interface OxideRequestMeta {
+export interface QpRequestMeta {
   /** Suppress the global operator toast; caller owns error presentation. */
   silentError?: boolean;
 }
 
-export type OxideRequestConfig = AxiosRequestConfig & OxideRequestMeta;
+export type QpRequestConfig = AxiosRequestConfig & QpRequestMeta;
 
 /** Merge `silentError: true` into an axios config. */
 export function withSilentError<
@@ -31,27 +31,25 @@ export function withSilentError<
 }
 
 /** Resolve axios config from a rejection or interceptor throw shape. */
-export function readRequestConfig(
-  error: unknown,
-): OxideRequestConfig | undefined {
+export function readRequestConfig(error: unknown): QpRequestConfig | undefined {
   if (!error || typeof error !== 'object') {
     return undefined;
   }
   const candidate = error as Record<string, unknown>;
   const direct = candidate.config;
   if (direct && typeof direct === 'object') {
-    return direct as OxideRequestConfig;
+    return direct as QpRequestConfig;
   }
   const response = candidate.response as Record<string, unknown> | undefined;
   const nested = response?.config;
   if (nested && typeof nested === 'object') {
-    return nested as OxideRequestConfig;
+    return nested as QpRequestConfig;
   }
   return undefined;
 }
 
 /**
- * Unwrap `{ code, message, data }` from oxide-arb-web.
+ * Unwrap `{ code, message, data }` from quant-pivot-web.
  * Use for `baseRequestClient` calls that bypass the business interceptor chain.
  */
 export function unwrapApiEnvelope<T>(envelope: ApiEnvelope<T>): T {

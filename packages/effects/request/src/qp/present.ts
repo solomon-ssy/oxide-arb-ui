@@ -12,7 +12,7 @@ export interface ShowApiErrorOptions {
 type ErrorNotifier = (message: string) => void;
 
 let notifyError: ErrorNotifier = (message) => {
-  console.error(`[oxide-api] ${message}`);
+  console.error(`[qp-api] ${message}`);
 };
 
 /**

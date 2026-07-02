@@ -2,7 +2,7 @@ import type { SystemStatus } from '@vben/types';
 
 import { onMounted } from 'vue';
 
-import { useRequestHandler } from '@vben/request/oxide';
+import { useRequestHandler } from '@vben/request/qp';
 
 import { getSystemStatus } from '#/api/system';
 import { useQpAccess } from '#/shared/composables/use-qp-access';

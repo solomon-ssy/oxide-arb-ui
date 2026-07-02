@@ -8,9 +8,12 @@ import type {
 } from './common';
 import type {
   AccountSource,
+  EmptyReportReason,
   MarketCategory,
+  OutcomeSide,
   QuantRuntimeMode,
   RecommendationReportStatus,
+  RejectionReason,
   ReportKind,
   ReportTriggerKind,
 } from './enums';
@@ -28,7 +31,7 @@ export interface QuantReportView {
   capital_base_usd: UsdString;
   published_recommendation_count: number;
   total_suggested_usd: UsdString;
-  empty_reason: null | string;
+  empty_reason: EmptyReportReason | null;
   published_at: IsoDateTime | null;
   revoked_at: IsoDateTime | null;
   expired_at: IsoDateTime | null;
@@ -51,7 +54,7 @@ export interface DataQualitySummary {
 }
 
 export interface RejectionReasonCount {
-  reason: string;
+  reason: RejectionReason;
   count: number;
 }
 
@@ -77,7 +80,7 @@ export interface ReportSummary {
   data_quality_summary: DataQualitySummary;
   top_rejection_reasons: RejectionReasonCount[];
   execution_eligibility_summary: EligibilitySummary;
-  empty_reason: null | string;
+  empty_reason: EmptyReportReason | null;
   warnings: string[];
 }
 
@@ -97,10 +100,12 @@ export interface QuantReportDetailView extends QuantReportView {
 /** One recommendation delta between two reports. */
 export interface RecommendationDeltaView {
   market_id: string;
-  outcome_side: string;
-  rank: null | number;
+  outcome_side: OutcomeSide;
+  base_recommendation_id: null | UuidString;
+  compare_recommendation_id: null | UuidString;
+  base_rank: null | number;
   compare_rank: null | number;
-  suggested_usd: null | UsdString;
+  base_suggested_usd: null | UsdString;
   compare_suggested_usd: null | UsdString;
   suggested_usd_delta: UsdString;
 }

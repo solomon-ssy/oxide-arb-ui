@@ -1,8 +1,8 @@
-import type { ApiError } from '@vben/request/oxide';
+import type { ApiError } from '@vben/request/qp';
 
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
-import { showApiError, useRequestHandler } from '@vben/request/oxide';
+import { showApiError, useRequestHandler } from '@vben/request/qp';
 
 import GovernedActionModal from '#/shared/components/governed-action-modal.vue';
 

@@ -6,11 +6,11 @@ import type {
   UsdString,
   UuidString,
 } from './common';
-import type { ReconciliationResult } from './enums';
+import type { ReconciliationEvidenceKind, ReconciliationResult } from './enums';
 
 /** One entry of a reconciliation's evidence chain. */
 export interface ReconciliationEvidence {
-  kind: string;
+  kind: ReconciliationEvidenceKind;
   observed_at: IsoDateTime;
   detail: string;
   venue_ref: null | string;

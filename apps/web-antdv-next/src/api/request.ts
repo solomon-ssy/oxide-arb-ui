@@ -2,7 +2,7 @@ import type { RequestClientOptions } from '@vben/request';
 /**
  * oxide-arb HTTP client wiring.
  *
- * Error pipeline lives in `@vben/request/oxide`:
+ * Error pipeline lives in `@vben/request/qp`:
  * normalize → auto-toast (unless silent) → useRequestHandler fallback
  */
 import type { TokenResponse } from '@vben/types';
@@ -16,9 +16,9 @@ import {
 } from '@vben/request';
 import {
   configureErrorNotifier,
-  oxideNormalizeErrorInterceptor,
+  qpNormalizeErrorInterceptor,
   wrapRequestClient,
-} from '@vben/request/oxide';
+} from '@vben/request/qp';
 import { useAccessStore } from '@vben/stores';
 
 import { message } from 'antdv-next';
@@ -99,7 +99,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }),
   );
 
-  client.addResponseInterceptor(oxideNormalizeErrorInterceptor());
+  client.addResponseInterceptor(qpNormalizeErrorInterceptor());
 
   wrapRequestClient(
     client as unknown as Parameters<typeof wrapRequestClient>[0],

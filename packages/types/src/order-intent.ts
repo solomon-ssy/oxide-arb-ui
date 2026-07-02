@@ -1,5 +1,6 @@
 import type {
   BpsString,
+  DecimalString,
   IsoDateTime,
   PageQuery,
   PriceString,
@@ -9,11 +10,18 @@ import type {
 } from './common';
 import type {
   ApprovalStatus,
+  ExitSettlementMode,
   OrderIntentKind,
   OrderIntentStatus,
   QuantRuntimeMode,
+  RedeemPolicy,
   Side,
 } from './enums';
+import type {
+  PartialExitNode,
+  SignalInvalidationRule,
+  TrailingStop,
+} from './exit-plan';
 
 /** CLOB order type — externally tagged (`gtd` carries an expiration epoch). */
 export type OrderTypeSpec = 'fok' | 'gtc' | { gtd: { expiration: number } };
@@ -29,13 +37,25 @@ export interface EntryOrderSpec {
   valid_until: IsoDateTime;
 }
 
-/** Exit policy specification frozen onto an order intent. */
+/**
+ * Exit policy frozen onto an order intent — a faithful, complete projection of
+ * the recommendation `ExitPlan` (shares the exit-plan primitives), plus the
+ * frozen entry-thesis baselines (`entry_reference_price` / `entry_composite_score`)
+ * used for percentage stops/targets and signal-degradation re-inference.
+ */
 export interface ExitPolicySpec {
   take_profit_price: null | PriceString;
+  take_profit_pct: DecimalString | null;
   stop_loss_price: null | PriceString;
+  stop_loss_pct: DecimalString | null;
   time_exit_at: IsoDateTime | null;
-  settlement_mode: string;
-  redeem_policy: string;
+  max_hold_secs: null | number;
+  trailing_stop: null | TrailingStop;
+  signal_invalidation_rules: SignalInvalidationRule[];
+  partial_exit_nodes: PartialExitNode[];
+  settlement_mode: ExitSettlementMode;
+  redeem_policy: RedeemPolicy;
+  manual_review_at: IsoDateTime | null;
   entry_reference_price: PriceString;
   entry_composite_score: ProbabilityString;
 }

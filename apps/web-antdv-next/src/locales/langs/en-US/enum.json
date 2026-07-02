@@ -75,6 +75,14 @@
     "cancelled": "Cancelled",
     "failed": "Failed"
   },
+  "executionOrderPhase": {
+    "entry": "Entry",
+    "exit": "Exit"
+  },
+  "orderIntentKind": {
+    "entry": "Entry",
+    "exit": "Exit"
+  },
   "positionLedgerState": {
     "open": "Open",
     "closed": "Closed",

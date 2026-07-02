@@ -1,5 +1,5 @@
 import type { ResponseInterceptorConfig } from '../request-client/types';
-import type { OxideRequestConfig } from './contract';
+import type { QpRequestConfig } from './contract';
 
 import { readRequestConfig } from './contract';
 import { normalizeApiError, shouldAutoToast } from './normalize';
@@ -9,7 +9,7 @@ import { showApiError } from './present';
  * Response interceptor: normalize every rejection to {@link ApiError}.
  * Toasts are owned by {@link wrapRequestClient} / {@link useRequestHandler}.
  */
-export function oxideNormalizeErrorInterceptor(): ResponseInterceptorConfig {
+export function qpNormalizeErrorInterceptor(): ResponseInterceptorConfig {
   return {
     rejected: (error: unknown) => Promise.reject(normalizeApiError(error)),
   };
@@ -17,12 +17,12 @@ export function oxideNormalizeErrorInterceptor(): ResponseInterceptorConfig {
 
 /** Attach auto-toast + {@link ApiError} propagation to all HTTP verbs. */
 export function wrapRequestClient(client: {
-  request: (url: string, config?: OxideRequestConfig) => Promise<unknown>;
+  request: (url: string, config?: QpRequestConfig) => Promise<unknown>;
 }): void {
   const originalRequest = client.request.bind(client);
   client.request = async (
     url: string,
-    config?: OxideRequestConfig,
+    config?: QpRequestConfig,
   ): Promise<unknown> => {
     try {
       return await originalRequest(url, config);

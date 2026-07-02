@@ -263,6 +263,124 @@ export const ACCOUNT_SOURCES = {
 
 export type AccountSource = WireEnum<typeof ACCOUNT_SOURCES>;
 
+// ── Recommendation scoring / attribution ────────────────────────────────────
+
+/** How a recommendation entry plan becomes executable. */
+export const ENTRY_TRIGGER_KINDS = {
+  breakout: 'breakout',
+  dataEvent: 'data_event',
+  immediate: 'immediate',
+  limitPrice: 'limit_price',
+  pullback: 'pullback',
+  timeWindow: 'time_window',
+} as const;
+
+export type EntryTriggerKind = WireEnum<typeof ENTRY_TRIGGER_KINDS>;
+
+/** Signed direction a factor pushed the composite score. */
+export const FACTOR_DIRECTIONS = {
+  negative: 'negative',
+  neutral: 'neutral',
+  positive: 'positive',
+} as const;
+
+export type FactorDirection = WireEnum<typeof FACTOR_DIRECTIONS>;
+
+/** Position-sizing model that produced a recommendation's size. */
+export const SIZING_MODEL_KINDS = {
+  kelly: 'kelly',
+} as const;
+
+export type SizingModelKind = WireEnum<typeof SIZING_MODEL_KINDS>;
+
+/** The cap that bound a recommendation's final size. */
+export const BINDING_CONSTRAINTS = {
+  availableCash: 'available_cash',
+  categoryCap: 'category_cap',
+  confidenceCap: 'confidence_cap',
+  correlationCap: 'correlation_cap',
+  drawdownCap: 'drawdown_cap',
+  eventCap: 'event_cap',
+  kellyCap: 'kelly_cap',
+  liquidityCap: 'liquidity_cap',
+  manualCap: 'manual_cap',
+  none: 'none',
+  portfolioBudget: 'portfolio_budget',
+  singleMarketCap: 'single_market_cap',
+  singleRecommendationCap: 'single_recommendation_cap',
+} as const;
+
+export type BindingConstraint = WireEnum<typeof BINDING_CONSTRAINTS>;
+
+/** Why a recommendation is ineligible for execution in a given mode. */
+export const INELIGIBILITY_REASONS = {
+  budgetExhausted: 'budget_exhausted',
+  dataStale: 'data_stale',
+  lowConfidence: 'low_confidence',
+  manuallyBlocked: 'manually_blocked',
+  modelNotPublished: 'model_not_published',
+  reportOnlyMode: 'report_only_mode',
+  riskEnvelopeInvalid: 'risk_envelope_invalid',
+  shadowNotPassed: 'shadow_not_passed',
+} as const;
+
+export type IneligibilityReason = WireEnum<typeof INELIGIBILITY_REASONS>;
+
+/** Why a report could not publish any recommendation (empty report). */
+export const EMPTY_REPORT_REASONS = {
+  emptySelection: 'empty_selection',
+  insufficientDataQuality: 'insufficient_data_quality',
+  modelQualityGateFailed: 'model_quality_gate_failed',
+  noPositiveSignal: 'no_positive_signal',
+  portfolioBudgetExhausted: 'portfolio_budget_exhausted',
+  runtimeModeDisabled: 'runtime_mode_disabled',
+  systemDegraded: 'system_degraded',
+} as const;
+
+export type EmptyReportReason = WireEnum<typeof EMPTY_REPORT_REASONS>;
+
+/** Why a candidate was dropped during portfolio planning (not published). */
+export const REJECTION_REASONS = {
+  availableCashExhausted: 'available_cash_exhausted',
+  belowMinSize: 'below_min_size',
+  beyondTopN: 'beyond_top_n',
+  budgetExhausted: 'budget_exhausted',
+  categoryCapExhausted: 'category_cap_exhausted',
+  correlationCapExhausted: 'correlation_cap_exhausted',
+  eventCapExhausted: 'event_cap_exhausted',
+  invalidEdgeInputs: 'invalid_edge_inputs',
+  liquidityInfeasible: 'liquidity_infeasible',
+  marketCapExhausted: 'market_cap_exhausted',
+  noPositiveSignal: 'no_positive_signal',
+} as const;
+
+export type RejectionReason = WireEnum<typeof REJECTION_REASONS>;
+
+/** Terminal attribution classification of a recommendation. */
+export const RECOMMENDATION_ATTRIBUTION_OUTCOMES = {
+  cancelledUnfilled: 'cancelled_unfilled',
+  expiredUnfilled: 'expired_unfilled',
+  failedUnfilled: 'failed_unfilled',
+  filledExited: 'filled_exited',
+  filledSettled: 'filled_settled',
+} as const;
+
+export type RecommendationAttributionOutcome = WireEnum<
+  typeof RECOMMENDATION_ATTRIBUTION_OUTCOMES
+>;
+
+/** Terminal settlement outcome of a position lot. */
+export const RECOMMENDATION_OUTCOMES = {
+  cancelled: 'cancelled',
+  expiredUnfilled: 'expired_unfilled',
+  lost: 'lost',
+  pending: 'pending',
+  unknown: 'unknown',
+  won: 'won',
+} as const;
+
+export type RecommendationOutcome = WireEnum<typeof RECOMMENDATION_OUTCOMES>;
+
 // ── Execution plane ─────────────────────────────────────────────────────────
 
 export const ORDER_INTENT_STATUSES = {
@@ -318,6 +436,34 @@ export const ORDER_TYPE_KINDS = {
 
 export type OrderTypeKind = WireEnum<typeof ORDER_TYPE_KINDS>;
 
+/** Whether an exit lot leaves the book early or holds through resolution. */
+export const EXIT_SETTLEMENT_MODES = {
+  exitBeforeResolution: 'exit_before_resolution',
+  holdToResolution: 'hold_to_resolution',
+} as const;
+
+export type ExitSettlementMode = WireEnum<typeof EXIT_SETTLEMENT_MODES>;
+
+/** Whether a resolved hold-to-resolution lot is redeemed automatically. */
+export const REDEEM_POLICIES = {
+  auto: 'auto',
+  manual: 'manual',
+} as const;
+
+export type RedeemPolicy = WireEnum<typeof REDEEM_POLICIES>;
+
+/** Which condition fired an exit-plan / partial-exit node. */
+export const EXIT_TRIGGER_KINDS = {
+  manual: 'manual',
+  signalInvalidation: 'signal_invalidation',
+  stopLoss: 'stop_loss',
+  takeProfit: 'take_profit',
+  timeExit: 'time_exit',
+  trailingStop: 'trailing_stop',
+} as const;
+
+export type ExitTriggerKind = WireEnum<typeof EXIT_TRIGGER_KINDS>;
+
 export const POSITION_LEDGER_STATES = {
   closed: 'closed',
   open: 'open',
@@ -335,6 +481,20 @@ export const RECONCILIATION_RESULTS = {
 } as const;
 
 export type ReconciliationResult = WireEnum<typeof RECONCILIATION_RESULTS>;
+
+/** Provenance of one entry in a reconciliation evidence chain. */
+export const RECONCILIATION_EVIDENCE_KINDS = {
+  accountBalanceDelta: 'account_balance_delta',
+  bookContext: 'book_context',
+  clobOrderStatus: 'clob_order_status',
+  clobTrades: 'clob_trades',
+  operatorNote: 'operator_note',
+  tokenBalanceDelta: 'token_balance_delta',
+} as const;
+
+export type ReconciliationEvidenceKind = WireEnum<
+  typeof RECONCILIATION_EVIDENCE_KINDS
+>;
 
 export const SETTLEMENT_REDEEM_STATES = {
   confirmed: 'confirmed',
@@ -370,6 +530,50 @@ export const MATERIALIZATION_RUN_STATUSES = {
 export type MaterializationRunStatus = WireEnum<
   typeof MATERIALIZATION_RUN_STATUSES
 >;
+
+/** Training-dataset build lifecycle (mirrors Rust `TrainingDatasetStatus`). */
+export const TRAINING_DATASET_STATUSES = {
+  building: 'building',
+  built: 'built',
+  expired: 'expired',
+  failed: 'failed',
+  insufficientLabels: 'insufficient_labels',
+  planned: 'planned',
+  ready: 'ready',
+} as const;
+
+export type TrainingDatasetStatus = WireEnum<typeof TRAINING_DATASET_STATUSES>;
+
+/** Factor family taxonomy (mirrors Rust `FactorFamily`). */
+export const FACTOR_FAMILIES = {
+  activity: 'activity',
+  dataQuality: 'data_quality',
+  domainCrypto: 'domain_crypto',
+  domainGeopolitics: 'domain_geopolitics',
+  domainPolitics: 'domain_politics',
+  domainSports: 'domain_sports',
+  domainWeather: 'domain_weather',
+  liquidity: 'liquidity',
+  meanReversion: 'mean_reversion',
+  microstructure: 'microstructure',
+  momentum: 'momentum',
+  resolution: 'resolution',
+  volatility: 'volatility',
+} as const;
+
+export type FactorFamily = WireEnum<typeof FACTOR_FAMILIES>;
+
+/** Factor definition scope — generic plane or vertical domain. */
+export const FACTOR_DEFINITION_SCOPES = {
+  domainCrypto: 'domain_crypto',
+  domainGeopolitics: 'domain_geopolitics',
+  domainPolitics: 'domain_politics',
+  domainSports: 'domain_sports',
+  domainWeather: 'domain_weather',
+  generic: 'generic',
+} as const;
+
+export type FactorDefinitionScope = WireEnum<typeof FACTOR_DEFINITION_SCOPES>;
 
 // ── Operation log ───────────────────────────────────────────────────────────
 

@@ -75,6 +75,14 @@
     "cancelled": "已取消",
     "failed": "失败"
   },
+  "executionOrderPhase": {
+    "entry": "入场",
+    "exit": "离场"
+  },
+  "orderIntentKind": {
+    "entry": "入场",
+    "exit": "离场"
+  },
   "positionLedgerState": {
     "open": "持仓中",
     "closed": "已平仓",

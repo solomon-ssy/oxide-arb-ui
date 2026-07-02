@@ -9,12 +9,28 @@ import type {
   UuidString,
 } from './common';
 import type {
+  BindingConstraint,
+  EntryTriggerKind,
+  ExitSettlementMode,
+  ExitTriggerKind,
+  FactorDirection,
+  FactorFamily,
+  IneligibilityReason,
   MarketCategory,
   MarketStatus,
   OutcomeSide,
   QuantRuntimeMode,
+  RecommendationAttributionOutcome,
+  RecommendationOutcome,
   RecommendationStatus,
+  RedeemPolicy,
+  SizingModelKind,
 } from './enums';
+import type {
+  PartialExitNode,
+  SignalInvalidationRule,
+  TrailingStop,
+} from './exit-plan';
 
 export interface RecommendationIdentity {
   category: MarketCategory;
@@ -37,7 +53,7 @@ export interface MarketContext {
 }
 
 export interface EntryPlan {
-  trigger_kind: string;
+  trigger_kind: EntryTriggerKind;
   trigger_price: null | PriceString;
   limit_price: null | PriceString;
   max_slippage_bps: BpsString;
@@ -59,30 +75,24 @@ export interface SizingPlan {
   suggested_shares: SharesString;
   portfolio_weight_pct: DecimalString;
   kelly_fraction_applied: DecimalString | null;
-  binding_constraint: string;
+  binding_constraint: BindingConstraint;
   sizing_reason: string;
-  sizing_model: string;
+  sizing_model: SizingModelKind;
   edge_bps: BpsString | null;
-}
-
-export interface PartialExitNode {
-  node_id: string;
-  trigger_kind: string;
-  trigger_value: DecimalString;
-  sell_pct: DecimalString;
-  min_price: null | PriceString;
-  valid_after: IsoDateTime | null;
-  valid_until: IsoDateTime | null;
-  reason: string;
 }
 
 export interface ExitPlan {
   take_profit_price: null | PriceString;
+  take_profit_pct: DecimalString | null;
   stop_loss_price: null | PriceString;
+  stop_loss_pct: DecimalString | null;
   time_exit_at: IsoDateTime | null;
+  max_hold_secs: null | number;
   partial_exit_nodes: PartialExitNode[];
-  settlement_mode: string;
-  redeem_policy: string;
+  trailing_stop: null | TrailingStop;
+  signal_invalidation_rules: SignalInvalidationRule[];
+  settlement_mode: ExitSettlementMode;
+  redeem_policy: RedeemPolicy;
   manual_review_at: IsoDateTime | null;
   exit_reason: string;
 }
@@ -102,20 +112,20 @@ export interface RiskEnvelope {
 
 export interface FactorBreakdownEntry {
   factor_name: string;
-  family: string;
+  family: FactorFamily;
   raw_value: DecimalString | null;
   normalized_score: ProbabilityString;
   confidence: ProbabilityString;
   weight: DecimalString;
   contribution: DecimalString;
-  direction: string;
+  direction: FactorDirection;
   explanation: string;
   source_refs: string[];
 }
 
 export interface ExecutionEligibility {
   eligible_modes: QuantRuntimeMode[];
-  ineligibility_reasons: string[];
+  ineligibility_reasons: IneligibilityReason[];
   approval_required: boolean;
   auto_policy_id: null | string;
 }
@@ -160,13 +170,43 @@ export interface QuantEvidenceView {
   factor_definition_versions: string[];
 }
 
+/** Realized entry execution against the venue (`attribution.entry_outcome`). */
+export interface EntryOutcome {
+  entry_filled: boolean;
+  fill_price: null | PriceString;
+  fill_shares: null | SharesString;
+  entry_slippage_bps: BpsString | null;
+  filled_at: IsoDateTime | null;
+}
+
+/** Realized exit / settlement resolution (`attribution.exit_outcome`). */
+export interface ExitOutcome {
+  exit_price: null | PriceString;
+  exit_shares: null | SharesString;
+  exit_trigger: ExitTriggerKind | null;
+  exit_compliance: boolean;
+  settlement_outcome: null | RecommendationOutcome;
+  exited_at: IsoDateTime | null;
+}
+
+/** Post-hoc attribution comparing realized behaviour to the thesis. */
+export interface AttributionDetail {
+  hit_stop_loss: boolean;
+  hit_take_profit: boolean;
+  liquidity_exit_possible: boolean;
+  notes: string[];
+}
+
 /** `GET /quant/recommendations/{id}/attribution` — realized outcome. */
 export interface RecommendationAttributionView {
   recommendation_id: UuidString;
-  outcome: string;
+  outcome: RecommendationAttributionOutcome;
   realized_pnl_usd: null | UsdString;
   max_adverse_excursion_bps: DecimalString | null;
   max_favorable_excursion_bps: DecimalString | null;
   label_available_at: IsoDateTime | null;
+  entry_outcome: EntryOutcome;
+  exit_outcome: ExitOutcome;
+  attribution: AttributionDetail;
   created_at: IsoDateTime;
 }

@@ -4,6 +4,7 @@ export type * from './data-quality';
 // Runtime enum const objects (`QUANT_RUNTIME_MODES`, …) live here alongside types.
 export * from './enums';
 export type * from './execution-order';
+export type * from './exit-plan';
 export type * from './market';
 export type * from './operation-log';
 export type * from './order-intent';

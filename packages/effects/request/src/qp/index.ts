@@ -1,8 +1,8 @@
 export type {
   ApiEnvelope,
   ApiRawResponse,
-  OxideRequestConfig,
-  OxideRequestMeta,
+  QpRequestConfig,
+  QpRequestMeta,
 } from './contract';
 export {
   readRequestConfig,
@@ -25,4 +25,4 @@ export {
 export type { ShowApiErrorOptions } from './present';
 
 export { configureErrorNotifier, showApiError } from './present';
-export { oxideNormalizeErrorInterceptor, wrapRequestClient } from './transport';
+export { qpNormalizeErrorInterceptor, wrapRequestClient } from './transport';

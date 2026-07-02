@@ -452,8 +452,8 @@ setupVbenVxeTable({
   useVbenForm,
 });
 
-/** Standard oxide grid toolbar: refresh, fullscreen (zoom), column settings. */
-export const OXIDE_GRID_TOOLBAR_CONFIG = {
+/** Standard quant-pivot grid toolbar: refresh, fullscreen (zoom), column settings. */
+export const QP_GRID_TOOLBAR_CONFIG = {
   custom: true,
   refresh: { code: 'query' },
   zoom: true,
@@ -474,11 +474,11 @@ export const useVbenVxeGrid = <T extends Record<string, any>>(
             toolbarConfig?.enabled === false
               ? toolbarConfig
               : {
-                  ...OXIDE_GRID_TOOLBAR_CONFIG,
+                  ...QP_GRID_TOOLBAR_CONFIG,
                   ...toolbarConfig,
                 },
         }
-      : { toolbarConfig: OXIDE_GRID_TOOLBAR_CONFIG },
+      : { toolbarConfig: QP_GRID_TOOLBAR_CONFIG },
   });
 };
 

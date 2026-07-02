@@ -34,7 +34,7 @@ describe('normalizeApiError', () => {
     expect(error.message).toBe('precondition failed: jwt secret weak');
   });
 
-  it('reads axios HTTP rejections with oxide envelope bodies', () => {
+  it('reads axios HTTP rejections with quant-pivot envelope bodies', () => {
     const error = normalizeApiError({
       message: 'Request failed with status code 409',
       response: {

@@ -7,7 +7,7 @@ import { watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
-import { useRequestHandler } from '@vben/request/oxide';
+import { useRequestHandler } from '@vben/request/qp';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { fetchOperationLogPage } from '#/api/operation-logs';

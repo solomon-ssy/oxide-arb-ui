@@ -18,9 +18,9 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./oxide": {
-      "types": "./src/oxide/index.ts",
-      "default": "./src/oxide/index.ts"
+    "./qp": {
+      "types": "./src/qp/index.ts",
+      "default": "./src/qp/index.ts"
     }
   },
   "dependencies": {

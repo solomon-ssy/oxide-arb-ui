@@ -11,7 +11,7 @@ export type ApiErrorKind =
   | 'timeout';
 
 /**
- * Normalized failure for every oxide HTTP path (`requestClient`, `baseRequestClient`,
+ * Normalized failure for every quant-pivot HTTP path (`requestClient`, `baseRequestClient`,
  * `useRequestHandler`, governed mutations).
  */
 export class ApiError extends Error {
