@@ -200,10 +200,10 @@ onUnmounted(() => {
       >
         <LatestReportCard
           v-if="canReadReports"
+          fill
           :loading="reportLoading"
           :report="latestReport"
           @navigate-detail="(id: string) => go(`/quant/reports/${id}`)"
-          @navigate-list="go('/quant/reports')"
         />
 
         <LiveAccountCard

@@ -15,14 +15,18 @@ import {
 
 defineOptions({ name: 'LatestReportCard' });
 
-const props = defineProps<{
-  loading: boolean;
-  report: null | QuantReportDetailView;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** Stretch to fill a dashboard grid cell; keep false on standalone pages. */
+    fill?: boolean;
+    loading: boolean;
+    report: null | QuantReportDetailView;
+  }>(),
+  { fill: false },
+);
 
 const emit = defineEmits<{
   navigateDetail: [reportId: string];
-  navigateList: [];
 }>();
 
 const statusTagOptions = useRecommendationReportStatusTagOptions();
@@ -30,6 +34,19 @@ const statusTag = computed(() =>
   props.report
     ? findTagOption(statusTagOptions, props.report.status)
     : undefined,
+);
+
+/** Detail API nests roll-ups under `summary`; list rows flatten them at top level. */
+const publishedCount = computed(
+  () =>
+    props.report?.summary?.published_recommendation_count ??
+    props.report?.published_recommendation_count ??
+    0,
+);
+const totalSuggestedUsd = computed(
+  () =>
+    props.report?.summary?.total_suggested_usd ??
+    props.report?.total_suggested_usd,
 );
 
 function openDetail() {
@@ -41,13 +58,14 @@ function openDetail() {
 
 <template>
   <DashboardPanel
+    :fill="fill"
+    :gap="fill ? 'md' : 'sm'"
     :title="$t('page.dashboard.latestReport.title')"
     icon="lucide:file-text"
     tone="indigo"
-    fill
   >
-    <template #extra>
-      <Button size="small" type="link" @click="emit('navigateList')">
+    <template v-if="report" #extra>
+      <Button size="small" type="link" @click.stop="openDetail">
         {{ $t('page.dashboard.viewAll') }}
       </Button>
     </template>
@@ -69,13 +87,13 @@ function openDetail() {
           {{ $t('page.dashboard.latestReport.published') }}
         </span>
         <span class="text-right font-medium tabular-nums">
-          {{ report.published_recommendation_count }}
+          {{ publishedCount }}
         </span>
         <span class="text-muted-foreground">
           {{ $t('page.dashboard.latestReport.suggested') }}
         </span>
         <span class="text-right font-medium tabular-nums">
-          {{ formatUsd(report.total_suggested_usd) }}
+          {{ formatUsd(totalSuggestedUsd) }}
         </span>
       </div>
       <Alert

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { QuantReportDetailView, QuantReportView } from '@vben/types';
+import type { QuantReportView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { onMounted, ref, watch } from 'vue';
+import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -12,14 +12,10 @@ import { useRequestHandler } from '@vben/request/qp';
 import { Button, message } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import {
-  getLatestQuantReportOptional,
-  listQuantReports,
-} from '#/api/quant-reports';
+import { listQuantReports } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
 import { useQuantReportStore } from '#/store';
-import LatestReportCard from '#/views/dashboard/modules/widgets/latest-report-card.vue';
 
 import { useReportColumns, useReportSearchSchema } from './modules/schemas';
 import { useReportActions } from './modules/use-report-actions';
@@ -33,11 +29,7 @@ const quantReportStore = useQuantReportStore();
 const { canRun, openRunReport, RunReportModalHost } = useRunReportAction();
 const { canRevoke, revoke } = useReportActions(() => {
   void gridApi.query();
-  void loadLatest();
 });
-
-const latestReport = ref<null | QuantReportDetailView>(null);
-const latestLoading = ref(false);
 
 const emptyPage = {
   has_next: false,
@@ -81,26 +73,8 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantReportView>({
   },
 });
 
-async function loadLatest() {
-  latestLoading.value = true;
-  try {
-    latestReport.value = await handleRequest(
-      () => getLatestQuantReportOptional(),
-      { silent: true },
-    );
-  } finally {
-    latestLoading.value = false;
-  }
-}
-
 function openDetail(id: string) {
   void router.push(`/quant/reports/${id}`);
-}
-
-function onLatestNavigate() {
-  if (latestReport.value) {
-    openDetail(latestReport.value.recommendation_report_id);
-  }
 }
 
 function onActionClick({ code, row }: OnActionClickParams<QuantReportView>) {
@@ -131,24 +105,12 @@ watch(
       );
     }
     void gridApi.query();
-    void loadLatest();
   },
 );
-
-onMounted(() => {
-  void loadLatest();
-});
 </script>
 
 <template>
   <Page auto-content-height>
-    <LatestReportCard
-      class="mb-4"
-      :loading="latestLoading"
-      :report="latestReport"
-      @navigate-detail="openDetail"
-      @navigate-list="onLatestNavigate"
-    />
     <Grid :table-title="$t('page.quantReports.listTitle')">
       <template #toolbar-tools>
         <Button v-if="canRun" type="primary" @click="openRunReport">

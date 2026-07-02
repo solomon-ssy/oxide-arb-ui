@@ -41,7 +41,7 @@ const summary = computed(() => props.report.summary);
 const isEmpty = computed(
   () =>
     props.report.status === 'published_empty' ||
-    props.report.published_recommendation_count === 0,
+    summary.value.published_recommendation_count === 0,
 );
 
 const categoryAllocations = computed(() =>
