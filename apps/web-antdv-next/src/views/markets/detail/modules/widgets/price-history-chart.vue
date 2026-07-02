@@ -152,6 +152,9 @@ function tailWasTrimmed(): boolean {
 }
 
 async function renderHistorical() {
+  if (props.loading) {
+    return;
+  }
   resetChart();
   syncTailCursor();
   await renderInitial(buildOptions());
@@ -204,11 +207,21 @@ const debouncedAppendLiveTail = useDebounceFn(() => {
 }, 50);
 
 watch(
-  () => [props.yes, props.no, props.trades, props.resolution],
-  () => {
+  () =>
+    [
+      props.loading,
+      props.yes,
+      props.no,
+      props.trades,
+      props.resolution,
+    ] as const,
+  ([loading]) => {
+    if (loading) {
+      return;
+    }
     void renderHistorical();
   },
-  { immediate: true },
+  { flush: 'post', immediate: true },
 );
 
 watch(

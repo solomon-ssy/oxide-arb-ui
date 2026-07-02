@@ -110,16 +110,18 @@ watch(
           <span class="text-right font-medium tabular-nums">
             {{ snapshot.total_tokens }}
           </span>
-          <span>{{ $t('page.dashboard.dataQuality.maxBookAge') }}</span>
+          <span>{{ $t('page.dashboard.dataQuality.worstBookAge') }}</span>
           <span class="text-right tabular-nums">
+            {{ snapshot.worst_book_age_ms }}ms /
             {{ snapshot.max_book_age_ms }}ms
           </span>
-          <span>{{ $t('page.dashboard.dataQuality.worstFactLag') }}</span>
+          <span>{{ $t('page.dashboard.dataQuality.worstIngestLag') }}</span>
           <span
-            :class="{ 'text-destructive': snapshot.fact_lag_exceeded }"
+            :class="{ 'text-destructive': snapshot.ingest_lag_exceeded }"
             class="text-right tabular-nums"
           >
-            {{ snapshot.worst_fact_lag_ms }}ms
+            {{ snapshot.worst_ingest_lag_ms }}ms /
+            {{ snapshot.max_ingest_lag_ms }}ms
           </span>
         </div>
         <div class="flex flex-wrap gap-1.5">

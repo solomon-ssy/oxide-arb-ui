@@ -204,16 +204,16 @@ function cardLoading(card: KpiCardConfig) {
         <template v-if="metrics.totalTokens.value !== null">
           <span class="mx-1">·</span>
           {{
-            $t('page.dashboard.kpi.dataFreshness', {
-              fresh: metrics.freshTokens.value ?? '—',
+            $t('page.dashboard.kpi.dataUsable', {
+              usable: metrics.usableTokens.value ?? '—',
               total: metrics.totalTokens.value,
             })
           }}
         </template>
-        <template v-if="metrics.freshRatio.value !== null">
+        <template v-if="metrics.usableRatio.value !== null">
           <span class="mx-1">·</span>
           <span class="font-medium">
-            {{ formatPercent(String(metrics.freshRatio.value)) }}
+            {{ formatPercent(String(metrics.usableRatio.value)) }}
           </span>
         </template>
       </template>

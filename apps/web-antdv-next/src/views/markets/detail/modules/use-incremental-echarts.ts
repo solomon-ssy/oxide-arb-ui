@@ -6,7 +6,7 @@ import type {
   TooltipComponentOption,
 } from '@vben/plugins/echarts';
 
-import { ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 
 import { useEcharts } from '@vben/plugins/echarts';
 
@@ -32,10 +32,19 @@ export function useIncrementalEcharts(
   const { getChartInstance, renderEcharts, resize, updateData } =
     useEcharts(chartRef);
   const ready = ref(false);
+  let pendingOptions: ECOption | null = null;
 
   async function renderInitial(options: ECOption) {
-    await renderEcharts({ ...MARKET_CHART_BASE, ...options }, true);
-    ready.value = true;
+    pendingOptions = options;
+    const instance = await renderEcharts(
+      { ...MARKET_CHART_BASE, ...options },
+      true,
+    );
+    ready.value = instance !== null && instance !== undefined;
+    if (ready.value) {
+      pendingOptions = null;
+    }
+    return instance;
   }
 
   /** Merge-update without clearing the canvas. */
@@ -50,6 +59,14 @@ export function useIncrementalEcharts(
   function resetChart() {
     ready.value = false;
   }
+
+  onMounted(() => {
+    void nextTick(() => {
+      if (pendingOptions && !ready.value) {
+        void renderInitial(pendingOptions);
+      }
+    });
+  });
 
   return {
     getChartInstance,

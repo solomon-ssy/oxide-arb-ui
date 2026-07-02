@@ -134,7 +134,7 @@
       "unrealizedPnl": "Unrealized PnL",
       "noEquitySnapshot": "No equity snapshot persisted yet",
       "catalogMarkets": "{count} catalog markets",
-      "dataFreshness": "{fresh}/{total} fresh tokens"
+      "dataUsable": "{usable}/{total} usable books"
     },
     "latestReport": {
       "title": "Latest Report",
@@ -164,8 +164,8 @@
       "degraded": "Degraded",
       "stale": "Stale",
       "insufficient": "Insufficient",
-      "maxBookAge": "Max Book Age",
-      "worstFactLag": "Worst Fact Lag"
+      "worstBookAge": "Worst Book Age / Threshold",
+      "worstIngestLag": "Worst Ingest Lag / Threshold"
     },
     "alerts": {
       "title": "System Alerts",
@@ -351,7 +351,7 @@
         "spread": "YES Spread",
         "depth": "Total Depth",
         "imbalance": "Imbalance",
-        "imbalanceHint": "Resting-depth imbalance of the YES book; positive is bid-heavy (buy pressure)."
+        "imbalanceHint": "Top-5 share-weighted queue imbalance of the YES book; positive is bid-heavy (buy pressure)."
       },
       "charts": {
         "price": "Price History",

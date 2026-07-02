@@ -134,7 +134,7 @@
       "unrealizedPnl": "未实现盈亏",
       "noEquitySnapshot": "尚无持久化 equity snapshot",
       "catalogMarkets": "catalog {count} 个市场",
-      "dataFreshness": "{fresh}/{total} 新鲜 token"
+      "dataUsable": "{usable}/{total} 可用盘口"
     },
     "latestReport": {
       "title": "最新报告",
@@ -164,8 +164,8 @@
       "degraded": "降级",
       "stale": "陈旧",
       "insufficient": "不足",
-      "maxBookAge": "最大盘口时延",
-      "worstFactLag": "最差事实滞后"
+      "worstBookAge": "最差盘口年龄/阈值",
+      "worstIngestLag": "最差入库滞后/阈值"
     },
     "alerts": {
       "title": "系统告警",
@@ -351,7 +351,7 @@
         "spread": "YES 价差",
         "depth": "总深度",
         "imbalance": "盘口失衡",
-        "imbalanceHint": "YES 盘口挂单深度失衡;正值为买盘偏重(买压)。"
+        "imbalanceHint": "YES 盘口前 5 档挂单量失衡(按股数);正值为买盘偏重(买压)。"
       },
       "charts": {
         "price": "价格走势",

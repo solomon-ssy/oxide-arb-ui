@@ -65,10 +65,33 @@ export function sideDepthUsd(side: BookSide): number {
   return ladderNotional(side?.bids) + ladderNotional(side?.asks);
 }
 
-/** Resting-depth imbalance `(bid - ask) / (bid + ask)` in `[-1, 1]`. */
+/**
+ * Near-touch depth (levels per side) for the queue-imbalance signal. MUST match
+ * the backend `IMBALANCE_DEPTH_LEVELS` constant so this instantaneous KPI stays
+ * comparable to the persisted `imbalance_avg` series.
+ */
+const IMBALANCE_DEPTH_LEVELS = 5;
+
+/** Sum share depth (Σ size) over the best `n` levels of one ladder side. */
+function topNShareDepth(
+  levels: BookLevelView[] | undefined,
+  n: number,
+): number {
+  let total = 0;
+  for (const level of (levels ?? []).slice(0, n)) {
+    total += toNumber(level.size) ?? 0;
+  }
+  return total;
+}
+
+/**
+ * Top-N share-weighted queue imbalance `(bid - ask) / (bid + ask)` in `[-1, 1]`,
+ * bid-heavy positive. Uses near-touch share depth (not full-book USD notional),
+ * matching the backend `imbalance()` so live and historical values agree.
+ */
 export function imbalance(side: BookSide): null | number {
-  const bid = ladderNotional(side?.bids);
-  const ask = ladderNotional(side?.asks);
+  const bid = topNShareDepth(side?.bids, IMBALANCE_DEPTH_LEVELS);
+  const ask = topNShareDepth(side?.asks, IMBALANCE_DEPTH_LEVELS);
   const total = bid + ask;
   return total > 0 ? (bid - ask) / total : null;
 }

@@ -93,12 +93,15 @@ function buildOptions(): ECOption {
 }
 
 watch(
-  () => [props.yes, props.no],
-  () => {
+  () => [props.loading, props.yes, props.no] as const,
+  ([loading]) => {
+    if (loading) {
+      return;
+    }
     resetChart();
     void renderInitial(buildOptions());
   },
-  { immediate: true },
+  { flush: 'post', immediate: true },
 );
 </script>
 

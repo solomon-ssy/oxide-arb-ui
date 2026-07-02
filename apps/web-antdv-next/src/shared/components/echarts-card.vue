@@ -53,17 +53,21 @@ useResizeObserver(
       <slot name="extra"></slot>
     </template>
     <div ref="chartAreaRef" :style="{ height }" class="relative">
-      <Skeleton v-if="loading" :paragraph="{ rows: 5 }" active />
-      <div
-        v-else-if="error"
-        class="flex h-full items-center justify-center px-4"
-      >
+      <div v-if="error" class="flex h-full items-center justify-center px-4">
         <Alert show-icon type="error" :message="error" />
       </div>
       <div v-else-if="empty" class="flex h-full items-center justify-center">
         <Empty :image="Empty.PRESENTED_IMAGE_SIMPLE" />
       </div>
-      <slot v-else></slot>
+      <template v-else>
+        <slot></slot>
+        <Skeleton
+          v-if="loading"
+          :paragraph="{ rows: 5 }"
+          active
+          class="bg-background pointer-events-none absolute inset-0 z-10"
+        />
+      </template>
     </div>
   </DashboardPanel>
 </template>

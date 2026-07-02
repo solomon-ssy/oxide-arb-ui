@@ -75,12 +75,15 @@ function buildOptions(): ECOption {
 }
 
 watch(
-  () => props.yes,
-  () => {
+  () => [props.loading, props.yes] as const,
+  ([loading]) => {
+    if (loading) {
+      return;
+    }
     resetChart();
     void renderInitial(buildOptions());
   },
-  { immediate: true },
+  { flush: 'post', immediate: true },
 );
 </script>
 

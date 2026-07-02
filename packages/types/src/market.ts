@@ -127,7 +127,10 @@ export interface MicrostructureBucket {
   depth_top1_usd: null | UsdString;
   depth_top5_usd: null | UsdString;
   depth_top20_usd: null | UsdString;
-  /** Resting-depth imbalance `(bid - ask) / (bid + ask)`, bid-heavy positive. */
+  /**
+   * Top-N share-weighted queue imbalance `(bid - ask) / (bid + ask)` over the
+   * best few levels per side, bid-heavy positive.
+   */
   imbalance: DecimalString | null;
   last_trade_count: number;
   update_count: number;

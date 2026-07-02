@@ -53,17 +53,24 @@ export function useDashboardMetrics(
     return catalog?.state === 'ready' ? catalog.markets : null;
   });
 
-  const freshTokens = computed(() => dataQuality.value?.fresh ?? null);
-  const staleTokens = computed(() => dataQuality.value?.stale ?? null);
   const totalTokens = computed(() => dataQuality.value?.total_tokens ?? null);
 
-  const freshRatio = computed(() => {
+  // "Usable" = tokens whose live book is currently actionable (fresh actively
+  // quoting + quiet-but-valid acceptable). This is the meaningful headline for
+  // the subscribed book plane; a strict fresh-only ratio understates health
+  // because most illiquid Polymarket books are quiet, not broken.
+  const usableTokens = computed(() => {
+    const dq = dataQuality.value;
+    return dq ? dq.fresh + dq.acceptable : null;
+  });
+
+  const usableRatio = computed(() => {
     const total = totalTokens.value;
-    const fresh = freshTokens.value;
-    if (total === null || fresh === null || total === 0) {
+    const usable = usableTokens.value;
+    if (total === null || usable === null || total === 0) {
       return null;
     }
-    return new Decimal(fresh).div(total).toNumber();
+    return new Decimal(usable).div(total).toNumber();
   });
 
   return {
@@ -74,16 +81,15 @@ export function useDashboardMetrics(
     catalogMarkets,
     drawdownAnimatorPct,
     drawdownPct,
-    freshRatio,
-    freshTokens,
     highWaterMark,
     netLiquidation,
     operationalPhase,
     positionCount,
     realizedPnl,
     reserved,
-    staleTokens,
     totalTokens,
     unrealizedPnl,
+    usableRatio,
+    usableTokens,
   };
 }
