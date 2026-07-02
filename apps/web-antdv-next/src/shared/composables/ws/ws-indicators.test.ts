@@ -12,29 +12,36 @@ function baseStatus(
 ): SystemStatus {
   return {
     active_markets: 0,
-    breaker_state: 'closed',
     catalog: { state: 'warming' },
     checked_at: '2026-06-17T00:00:00Z',
-    control_factor_live_warn: false,
-    control_factor_publication_id: null,
-    control_factor_snapshot_expired: false,
-    daily_pnl: '0',
-    execution_emergency: {
-      active: false,
-      class: 'venue_fault',
-      last_reason: null,
-      requires_operator_ack: false,
+    execution_recovery: {
+      auto_execution_blocked: false,
+      has_unresolvable_reconciliation: false,
+      kill_switch_requires_ack: false,
+      kill_switch_state: 'closed',
+      next_steps: [],
+      quant_runtime_mode: 'report_only',
+      unresolvable_count: 0,
     },
-    execution_mode: 'dry_run',
+    kill_switch: {
+      changed_at: '2026-06-17T00:00:00Z',
+      changed_by: 'system',
+      last_reason: 'bootstrap',
+      requires_operator_ack: false,
+      state: 'closed',
+    },
     market_data: {
       last_message_age_ms: null,
       ready: false,
-      ws_shards: { disconnected: 1, oldest_disconnected_secs: null, total: 2 },
+      ws_shards: {
+        connected_ratio_bps: 5000,
+        disconnected: 1,
+        oldest_disconnected_secs: null,
+        total: 2,
+      },
     },
-    open_positions: 0,
     operational_phase,
-    pending_reservations: 0,
-    total_exposure: '0',
+    quant_runtime_mode: 'report_only',
     uptime_secs: 0,
   };
 }
@@ -56,7 +63,7 @@ describe('deriveSystemIndicator', () => {
     );
     expect(
       deriveSystemIndicator(
-        baseStatus({ phase: 'degraded', reasons: ['breaker_open'] }),
+        baseStatus({ phase: 'degraded', reasons: ['market_data_stale'] }),
       ),
     ).toBe('degraded');
     expect(deriveSystemIndicator(baseStatus({ phase: 'halted' }))).toBe(
@@ -71,7 +78,12 @@ describe('marketDataShardConnected', () => {
       marketDataShardConnected({
         last_message_age_ms: 100,
         ready: true,
-        ws_shards: { disconnected: 1, oldest_disconnected_secs: 5, total: 4 },
+        ws_shards: {
+          connected_ratio_bps: 7500,
+          disconnected: 1,
+          oldest_disconnected_secs: 5,
+          total: 4,
+        },
       }),
     ).toBe(3);
   });

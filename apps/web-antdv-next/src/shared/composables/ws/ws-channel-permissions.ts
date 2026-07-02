@@ -10,18 +10,13 @@ import { WS_CHANNELS } from '@vben/types';
  */
 export const WS_CHANNEL_PERMISSIONS: Record<WsChannel, string> = {
   [WS_CHANNELS.configActivated]: 'runtime_config:read',
-  [WS_CHANNELS.controlPublished]: 'control_factor:read',
   [WS_CHANNELS.marketBookUpdate]: 'market:read',
   [WS_CHANNELS.marketResolved]: 'market:read',
-  [WS_CHANNELS.materializationRunUpdate]: 'control_factor:read',
-  [WS_CHANNELS.opportunityDetected]: 'opportunity:read',
-  [WS_CHANNELS.pnlUpdate]: 'pnl:read',
-  [WS_CHANNELS.riskCircuitBreaker]: 'risk:read',
-  [WS_CHANNELS.riskPositionUpdate]: 'risk:read',
+  [WS_CHANNELS.materializationRunUpdate]: 'materialization:read',
+  [WS_CHANNELS.quantIntent]: 'order_intent:read',
+  [WS_CHANNELS.quantReport]: 'quant_report:read',
   [WS_CHANNELS.systemAlert]: 'system:read',
   [WS_CHANNELS.systemStatus]: 'system:read',
-  [WS_CHANNELS.tradeFilled]: 'trade:read',
-  [WS_CHANNELS.tradeSettled]: 'trade:read',
 };
 
 /**

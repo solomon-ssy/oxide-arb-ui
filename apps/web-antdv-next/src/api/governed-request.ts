@@ -14,7 +14,14 @@ export function buildGovernedHeaders(
   });
 }
 
-type GovernedBody = Record<string, unknown> & { reason: string };
+/**
+ * Every governed mutation body must carry an operator `reason`. Concrete
+ * request types (e.g. `RunReportRequest`) are structurally assignable as long
+ * as they declare `reason: string`; extra typed fields are preserved on the
+ * wire. (The previous `Record<string, unknown>` intersection rejected named
+ * interfaces because they lack an index signature.)
+ */
+type GovernedBody = { reason: string };
 
 /** Governed writes suppress global toasts; modal handlers own operator feedback. */
 const GOVERNED_CONFIG = withSilentError({});

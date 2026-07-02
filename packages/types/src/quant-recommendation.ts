@@ -1,0 +1,172 @@
+import type {
+  BpsString,
+  DecimalString,
+  IsoDateTime,
+  PriceString,
+  ProbabilityString,
+  SharesString,
+  UsdString,
+  UuidString,
+} from './common';
+import type {
+  MarketCategory,
+  MarketStatus,
+  OutcomeSide,
+  QuantRuntimeMode,
+  RecommendationStatus,
+} from './enums';
+
+export interface RecommendationIdentity {
+  category: MarketCategory;
+  question: string;
+  outcome_name: string;
+}
+
+export interface MarketContext {
+  best_bid: null | PriceString;
+  best_ask: null | PriceString;
+  mid_price: null | PriceString;
+  spread_bps: BpsString | null;
+  depth_usd: UsdString;
+  volume_24h_usd: null | UsdString;
+  book_age_ms: number;
+  time_to_resolution_secs: null | number;
+  market_status: MarketStatus;
+  neg_risk: boolean;
+  fee_rate: DecimalString | null;
+}
+
+export interface EntryPlan {
+  trigger_kind: string;
+  trigger_price: null | PriceString;
+  limit_price: null | PriceString;
+  max_slippage_bps: BpsString;
+  valid_from: IsoDateTime;
+  valid_until: IsoDateTime;
+  min_depth_usd: UsdString;
+  max_book_age_ms: number;
+  cancel_if_not_triggered: boolean;
+  entry_reason: string;
+}
+
+export interface SizingPlan {
+  suggested_usd: UsdString;
+  max_usd: UsdString;
+  min_usd: UsdString;
+  market_exposure_after_usd: UsdString;
+  event_exposure_after_usd: UsdString;
+  category_exposure_after_usd: UsdString;
+  suggested_shares: SharesString;
+  portfolio_weight_pct: DecimalString;
+  kelly_fraction_applied: DecimalString | null;
+  binding_constraint: string;
+  sizing_reason: string;
+  sizing_model: string;
+  edge_bps: BpsString | null;
+}
+
+export interface PartialExitNode {
+  node_id: string;
+  trigger_kind: string;
+  trigger_value: DecimalString;
+  sell_pct: DecimalString;
+  min_price: null | PriceString;
+  valid_after: IsoDateTime | null;
+  valid_until: IsoDateTime | null;
+  reason: string;
+}
+
+export interface ExitPlan {
+  take_profit_price: null | PriceString;
+  stop_loss_price: null | PriceString;
+  time_exit_at: IsoDateTime | null;
+  partial_exit_nodes: PartialExitNode[];
+  settlement_mode: string;
+  redeem_policy: string;
+  manual_review_at: IsoDateTime | null;
+  exit_reason: string;
+}
+
+export interface RiskEnvelope {
+  max_loss_usd: UsdString;
+  max_position_usd: UsdString;
+  max_market_exposure_usd: UsdString;
+  max_event_exposure_usd: UsdString;
+  max_category_exposure_usd: UsdString;
+  max_slippage_bps: BpsString;
+  requires_approval: boolean;
+  auto_execution_allowed: boolean;
+  risk_notes: string[];
+  envelope_hash: string;
+}
+
+export interface FactorBreakdownEntry {
+  factor_name: string;
+  family: string;
+  raw_value: DecimalString | null;
+  normalized_score: ProbabilityString;
+  confidence: ProbabilityString;
+  weight: DecimalString;
+  contribution: DecimalString;
+  direction: string;
+  explanation: string;
+  source_refs: string[];
+}
+
+export interface ExecutionEligibility {
+  eligible_modes: QuantRuntimeMode[];
+  ineligibility_reasons: string[];
+  approval_required: boolean;
+  auto_policy_id: null | string;
+}
+
+/** `GET /quant/recommendations/{id}` — a single scored recommendation. */
+export interface QuantRecommendationView {
+  recommendation_id: UuidString;
+  recommendation_report_id: UuidString;
+  rank: number;
+  market_id: string;
+  event_id: string;
+  token_id: string;
+  outcome_side: OutcomeSide;
+  composite_score: ProbabilityString;
+  risk_adjusted_score: ProbabilityString;
+  confidence: ProbabilityString;
+  expected_return_bps: BpsString;
+  downside_bps: BpsString;
+  identity: RecommendationIdentity;
+  market_context: MarketContext;
+  rank_before_portfolio: number;
+  liquidity_score: ProbabilityString;
+  data_quality_score: ProbabilityString;
+  model_score_percentile: ProbabilityString;
+  entry_plan: EntryPlan;
+  sizing_plan: SizingPlan;
+  exit_plan: ExitPlan;
+  risk_envelope: RiskEnvelope;
+  factor_breakdown: FactorBreakdownEntry[];
+  execution_eligibility: ExecutionEligibility;
+  valid_from: IsoDateTime;
+  valid_until: IsoDateTime;
+  status: RecommendationStatus;
+  created_at: IsoDateTime;
+}
+
+/** `GET /quant/recommendations/{id}/evidence` — replay-handle references. */
+export interface QuantEvidenceView {
+  recommendation_id: UuidString;
+  signal_candidate_id: string;
+  book_snapshot_ref: string;
+  factor_definition_versions: string[];
+}
+
+/** `GET /quant/recommendations/{id}/attribution` — realized outcome. */
+export interface RecommendationAttributionView {
+  recommendation_id: UuidString;
+  outcome: string;
+  realized_pnl_usd: null | UsdString;
+  max_adverse_excursion_bps: DecimalString | null;
+  max_favorable_excursion_bps: DecimalString | null;
+  label_available_at: IsoDateTime | null;
+  created_at: IsoDateTime;
+}

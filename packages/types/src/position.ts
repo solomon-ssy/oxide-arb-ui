@@ -1,0 +1,32 @@
+import type {
+  IsoDateTime,
+  PageQuery,
+  PriceString,
+  SharesString,
+  UsdString,
+  UuidString,
+} from './common';
+import type { PositionLedgerState } from './enums';
+
+/** `GET /quant/positions/{id}` — a system-lot position ledger row. */
+export interface PositionView {
+  position_plane: 'system_lot';
+  position_id: UuidString;
+  order_intent_id: UuidString;
+  token_id: string;
+  market_id: string;
+  state: PositionLedgerState;
+  shares: SharesString;
+  avg_price: PriceString;
+  cost_usd: UsdString;
+  realized_pnl_usd: UsdString;
+  opened_at: IsoDateTime;
+  updated_at: IsoDateTime;
+  closed_at: IsoDateTime | null;
+}
+
+/** Filter + pagination for `GET /quant/positions`. */
+export interface PositionListQuery extends PageQuery {
+  state?: PositionLedgerState;
+  market_id?: string;
+}

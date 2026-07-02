@@ -7,7 +7,7 @@ import { Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import { useOxideWs } from '#/shared/composables/use-oxide-ws';
+import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useWsStore } from '#/store';
 
 defineOptions({ name: 'WsStatusBadge' });
@@ -15,7 +15,7 @@ defineOptions({ name: 'WsStatusBadge' });
 const STALE_MS = 10_000;
 
 const wsStore = useWsStore();
-const { connect } = useOxideWs();
+const { connect } = useQpWs();
 const nowMs = ref(Date.now());
 const timer = setInterval(() => {
   nowMs.value = Date.now();

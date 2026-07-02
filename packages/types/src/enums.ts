@@ -1,5 +1,5 @@
 /**
- * Wire values mirror Rust `active_string_enum!` serde output.
+ * Wire values mirror Rust `pg_enum!` / `wire_enum!` serde output.
  *
  * Each enum is an `as const` object (runtime values) plus a derived union type.
  * Object keys are camelCase; wire values stay snake_case (or CLOB UPPERCASE for
@@ -40,67 +40,88 @@ export const MENU_KINDS = {
 
 export type MenuKind = WireEnum<typeof MENU_KINDS>;
 
-// ── System / risk ───────────────────────────────────────────────────────────
-
-export const EXECUTION_MODES = {
-  dryRun: 'dry_run',
-  live: 'live',
-  paper: 'paper',
+/** Authoritative RBAC resource catalog (mirrors Rust `ResourceType`). */
+export const RESOURCE_TYPES = {
+  accountSnapshot: 'account_snapshot',
+  equitySnapshot: 'equity_snapshot',
+  executionOrder: 'execution_order',
+  factorDefinition: 'factor_definition',
+  market: 'market',
+  materialization: 'materialization',
+  menu: 'menu',
+  operationLog: 'operation_log',
+  orderIntent: 'order_intent',
+  permission: 'permission',
+  position: 'position',
+  publication: 'publication',
+  quantReport: 'quant_report',
+  recommendationAttribution: 'recommendation_attribution',
+  reconciliation: 'reconciliation',
+  replay: 'replay',
+  role: 'role',
+  runtimeConfig: 'runtime_config',
+  settlementRedeem: 'settlement_redeem',
+  system: 'system',
+  user: 'user',
 } as const;
 
-export type ExecutionMode = WireEnum<typeof EXECUTION_MODES>;
+export type ResourceType = WireEnum<typeof RESOURCE_TYPES>;
 
-/** UI display order for mode switchers (dry → paper → live). */
-export const EXECUTION_MODE_OPTIONS: readonly ExecutionMode[] = [
-  EXECUTION_MODES.dryRun,
-  EXECUTION_MODES.paper,
-  EXECUTION_MODES.live,
+/** Authoritative RBAC operation verbs (mirrors Rust `Operation`). */
+export const OPERATIONS = {
+  activate: 'activate',
+  approve: 'approve',
+  assign: 'assign',
+  cancel: 'cancel',
+  create: 'create',
+  delete: 'delete',
+  emergency: 'emergency',
+  enqueue: 'enqueue',
+  halt: 'halt',
+  publish: 'publish',
+  read: 'read',
+  reject: 'reject',
+  resolve: 'resolve',
+  resume: 'resume',
+  retire: 'retire',
+  revoke: 'revoke',
+  rollback: 'rollback',
+  submit: 'submit',
+  switchMode: 'switch_mode',
+  update: 'update',
+} as const;
+
+export type Operation = WireEnum<typeof OPERATIONS>;
+
+// ── Runtime governance ──────────────────────────────────────────────────────
+
+/** Quant runtime mode — the only runtime-mode axis (no dry-run/paper/live). */
+export const QUANT_RUNTIME_MODES = {
+  autoExecution: 'auto_execution',
+  reportOnly: 'report_only',
+  semiAuto: 'semi_auto',
+} as const;
+
+export type QuantRuntimeMode = WireEnum<typeof QUANT_RUNTIME_MODES>;
+
+export const QUANT_RUNTIME_MODE_OPTIONS: readonly QuantRuntimeMode[] = [
+  QUANT_RUNTIME_MODES.reportOnly,
+  QUANT_RUNTIME_MODES.semiAuto,
+  QUANT_RUNTIME_MODES.autoExecution,
 ];
 
-export const BREAKER_STATES = {
+/** Operational kill-switch state (mirrors Rust `KillSwitchState`). */
+export const KILL_SWITCH_STATES = {
   closed: 'closed',
-  halfOpen: 'half_open',
-  halted: 'halted',
-  open: 'open',
-  recovered: 'recovered',
+  emergencyHalted: 'emergency_halted',
+  executionHalted: 'execution_halted',
+  exitOnly: 'exit_only',
+  reportOnlyForced: 'report_only_forced',
 } as const;
 
-export type BreakerStateName = WireEnum<typeof BREAKER_STATES>;
+export type KillSwitchState = WireEnum<typeof KILL_SWITCH_STATES>;
 
-/** Breaker FSM states considered nominal (non-alert) operation. */
-export const BREAKER_NOMINAL_STATES: ReadonlySet<BreakerStateName> = new Set([
-  BREAKER_STATES.closed,
-  BREAKER_STATES.recovered,
-]);
-
-/** Circuit-breaker escalation tier (`risk.circuit_breaker` payload `level` is its numeric form). */
-export const CIRCUIT_BREAKER_LEVELS = {
-  daily: 'daily',
-  session: 'session',
-  system: 'system',
-  trade: 'trade',
-} as const;
-
-export type CircuitBreakerLevel = WireEnum<typeof CIRCUIT_BREAKER_LEVELS>;
-
-export const BLACKLIST_SCOPES = {
-  dataPath: 'data_path',
-  full: 'full',
-  tradingPath: 'trading_path',
-} as const;
-
-export type BlacklistScope = WireEnum<typeof BLACKLIST_SCOPES>;
-
-export const BLACKLIST_REASONS = {
-  consecutiveFokFailures: 'consecutive_fok_failures',
-  dataNotFound: 'data_not_found',
-  depthDrop: 'depth_drop',
-  manual: 'manual',
-  tickChange: 'tick_change',
-  tradeFailedAfterMatched: 'trade_failed_after_matched',
-} as const;
-
-export type BlacklistReason = WireEnum<typeof BLACKLIST_REASONS>;
+// ── Alerts ──────────────────────────────────────────────────────────────────
 
 /** Operational alert severity, lowest → highest. */
 export const ALERT_LEVELS = {
@@ -141,7 +162,7 @@ export const DEGRADED_ALERT_LEVELS: ReadonlySet<AlertLevel> = new Set([
   ALERT_LEVELS.warning,
 ]);
 
-// ── Trading ─────────────────────────────────────────────────────────────────
+// ── Market domain ───────────────────────────────────────────────────────────
 
 /** Order side — the one UPPERCASE wire enum (Polymarket CLOB convention). */
 export const SIDES = {
@@ -151,51 +172,13 @@ export const SIDES = {
 
 export type Side = WireEnum<typeof SIDES>;
 
-/** Durable trade lifecycle FSM (single source of truth on the trade row). */
-export const TRADE_STATES = {
-  failObserved: 'fail_observed',
-  failProcessing: 'fail_processing',
-  failed: 'failed',
-  fillObserved: 'fill_observed',
-  fillProcessing: 'fill_processing',
-  intent: 'intent',
-  missObserved: 'miss_observed',
-  missProcessing: 'miss_processing',
-  missed: 'missed',
-  orphaned: 'orphaned',
-  settled: 'settled',
-  submitted: 'submitted',
+/** Recommendation / position outcome side (YES / NO token). */
+export const OUTCOME_SIDES = {
+  no: 'no',
+  yes: 'yes',
 } as const;
 
-export type TradeState = WireEnum<typeof TRADE_STATES>;
-
-/** Business-outcome bucket derived from the trade FSM. */
-export const TRADE_BUSINESS_OUTCOMES = {
-  failed: 'failed',
-  miss: 'miss',
-  success: 'success',
-} as const;
-
-export type TradeBusinessOutcome = WireEnum<typeof TRADE_BUSINESS_OUTCOMES>;
-
-/** Operator/worker conclusion for a trade in reconciliation. */
-export const TRADE_RECONCILE_RESOLUTIONS = {
-  filled: 'filled',
-  miss: 'miss',
-  unresolvable: 'unresolvable',
-} as const;
-
-export type TradeReconcileResolution = WireEnum<
-  typeof TRADE_RECONCILE_RESOLUTIONS
->;
-
-/** Semantic kind of `net_profit_usd` on the trade wire — fill-time EV, not realized PnL. */
-export const NET_PROFIT_KINDS = {
-  fillEv: 'fill_ev',
-  none: 'none',
-} as const;
-
-export type NetProfitKind = WireEnum<typeof NET_PROFIT_KINDS>;
+export type OutcomeSide = WireEnum<typeof OUTCOME_SIDES>;
 
 /** Polymarket event category for fee lookup and scoring. */
 export const MARKET_CATEGORIES = {
@@ -212,14 +195,6 @@ export const MARKET_CATEGORIES = {
 } as const;
 
 export type MarketCategory = WireEnum<typeof MARKET_CATEGORIES>;
-
-export const POSITION_STATUSES = {
-  closed: 'closed',
-  open: 'open',
-  settled: 'settled',
-} as const;
-
-export type PositionStatus = WireEnum<typeof POSITION_STATUSES>;
 
 /** Market lifecycle state in the local registry. */
 export const MARKET_STATUSES = {
@@ -243,216 +218,182 @@ export const TICK_SIZES = {
 
 export type TickSize = WireEnum<typeof TICK_SIZES>;
 
-/** Staleness classification of the market-data snapshot behind a decision. */
-export const STALENESS_LEVELS = {
-  acceptable: 'acceptable',
-  expired: 'expired',
-  fresh: 'fresh',
-  stale: 'stale',
+// ── Report plane ────────────────────────────────────────────────────────────
+
+export const REPORT_KINDS = {
+  adhoc: 'adhoc',
+  scheduled: 'scheduled',
 } as const;
 
-export type StalenessLevel = WireEnum<typeof STALENESS_LEVELS>;
+export type ReportKind = WireEnum<typeof REPORT_KINDS>;
 
-/** Endgame calibration price zone (winning-side token price bucket). */
-export const PRICE_ZONES = {
-  z95: 'z95',
-  z96: 'z96',
-  z97: 'z97',
-  z98: 'z98',
-  z99: 'z99',
-} as const;
-
-export type PriceZone = WireEnum<typeof PRICE_ZONES>;
-
-/** Convergence-duration calibration bucket. */
-export const DURATION_BUCKETS = {
-  long: 'long',
-  medium: 'medium',
-  short: 'short',
-  veryLong: 'very_long',
-} as const;
-
-export type DurationBucket = WireEnum<typeof DURATION_BUCKETS>;
-
-// ── Opportunity audit lifecycle ─────────────────────────────────────────────
-
-/** Audit-trail lifecycle stage of an opportunity (one row per stage). */
-export const OPPORTUNITY_AUDIT_STAGES = {
-  detected: 'detected',
-  factorValidationRejected: 'factor_validation_rejected',
-  failed: 'failed',
-  filled: 'filled',
-  missed: 'missed',
-  riskRejected: 'risk_rejected',
-  settled: 'settled',
-  sizingRejected: 'sizing_rejected',
-  validationRejected: 'validation_rejected',
-} as const;
-
-export type OpportunityAuditStage = WireEnum<typeof OPPORTUNITY_AUDIT_STAGES>;
-
-/** Lifecycle display order for the funnel / timeline (mirrors backend `order()`). */
-export const OPPORTUNITY_AUDIT_STAGE_ORDER: readonly OpportunityAuditStage[] = [
-  OPPORTUNITY_AUDIT_STAGES.detected,
-  OPPORTUNITY_AUDIT_STAGES.validationRejected,
-  OPPORTUNITY_AUDIT_STAGES.factorValidationRejected,
-  OPPORTUNITY_AUDIT_STAGES.riskRejected,
-  OPPORTUNITY_AUDIT_STAGES.sizingRejected,
-  OPPORTUNITY_AUDIT_STAGES.filled,
-  OPPORTUNITY_AUDIT_STAGES.missed,
-  OPPORTUNITY_AUDIT_STAGES.failed,
-  OPPORTUNITY_AUDIT_STAGES.settled,
-];
-
-/** Terminal business conclusion recorded on an audit row. */
-export const AUDIT_OUTCOMES = {
-  failed: 'failed',
-  miss: 'miss',
-  rejected: 'rejected',
-  settled: 'settled',
-  success: 'success',
-} as const;
-
-export type AuditOutcome = WireEnum<typeof AUDIT_OUTCOMES>;
-
-/** Pipeline stage at which an opportunity was rejected. */
-export const REJECTION_STAGES = {
-  factorValidation: 'factor_validation',
-  other: 'other',
-  risk: 'risk',
-  sizing: 'sizing',
-  submitPersist: 'submit_persist',
-  validation: 'validation',
-} as const;
-
-export type RejectionStage = WireEnum<typeof REJECTION_STAGES>;
-
-/** Win/loss conclusion of a settled position. */
-export const SETTLEMENT_OUTCOMES = {
-  lost: 'lost',
-  won: 'won',
-} as const;
-
-export type SettlementOutcome = WireEnum<typeof SETTLEMENT_OUTCOMES>;
-
-/** Source that triggered market settlement processing. */
-export const SETTLEMENT_TRIGGERS = {
+export const REPORT_TRIGGER_KINDS = {
   manual: 'manual',
-  periodicRetry: 'periodic_retry',
-  ws: 'ws',
+  schedule: 'schedule',
 } as const;
 
-export type SettlementTrigger = WireEnum<typeof SETTLEMENT_TRIGGERS>;
+export type ReportTriggerKind = WireEnum<typeof REPORT_TRIGGER_KINDS>;
 
-/** Post-redeem accounting lifecycle status. */
-export const SETTLEMENT_ACCOUNTING_STATUSES = {
-  accounted: 'accounted',
+export const RECOMMENDATION_REPORT_STATUSES = {
+  empty: 'empty',
+  expired: 'expired',
   failed: 'failed',
-  pending: 'pending',
-  redeemed: 'redeemed',
+  generating: 'generating',
+  published: 'published',
+  revoked: 'revoked',
 } as const;
 
-export type SettlementAccountingStatus = WireEnum<
-  typeof SETTLEMENT_ACCOUNTING_STATUSES
+export type RecommendationReportStatus = WireEnum<
+  typeof RECOMMENDATION_REPORT_STATUSES
 >;
 
-/** Risk audit event type (`GET /trades/decisions` rows). */
-export const RISK_AUDIT_EVENT_TYPES = {
-  accountingRollover: 'accounting_rollover',
-  blacklistAdded: 'blacklist_added',
-  blacklistRemoved: 'blacklist_removed',
-  breakerRecovered: 'breaker_recovered',
-  breakerReset: 'breaker_reset',
-  breakerTripped: 'breaker_tripped',
-  engineHalted: 'engine_halted',
-  engineResumed: 'engine_resumed',
-  postTradeUpdate: 'post_trade_update',
-  reconciliationCompleted: 'reconciliation_completed',
-  tradeAllowed: 'trade_allowed',
-  tradeDenied: 'trade_denied',
-} as const;
-
-export type RiskAuditEventType = WireEnum<typeof RISK_AUDIT_EVENT_TYPES>;
-
-export const REDEEM_STATUSES = {
-  completed: 'completed',
-  failed: 'failed',
-  notRequired: 'not_required',
-  pending: 'pending',
-} as const;
-
-export type RedeemStatus = WireEnum<typeof REDEEM_STATUSES>;
-
-// ── Control / governance ────────────────────────────────────────────────────
-
-/** Control-factor publication mode (`control.published` payload). */
-export const PUBLICATION_MODES = {
-  published: 'published',
-  shadow: 'shadow',
-} as const;
-
-export type PublicationMode = WireEnum<typeof PUBLICATION_MODES>;
-
-export const FACTOR_STATUSES = {
-  candidate: 'candidate',
-  draft: 'draft',
-  expired: 'expired',
-  published: 'published',
-  rejected: 'rejected',
-  reportOnly: 'report_only',
-  rolledBack: 'rolled_back',
-  shadow: 'shadow',
-  superseded: 'superseded',
-} as const;
-
-export type FactorStatus = WireEnum<typeof FACTOR_STATUSES>;
-
-export const PUBLICATION_STATUSES = {
+export const RECOMMENDATION_STATUSES = {
   active: 'active',
   expired: 'expired',
+  revoked: 'revoked',
+  superseded: 'superseded',
+} as const;
+
+export type RecommendationStatus = WireEnum<typeof RECOMMENDATION_STATUSES>;
+
+export const ACCOUNT_SOURCES = {
+  venueClob: 'venue_clob',
+  venueDataApi: 'venue_data_api',
+} as const;
+
+export type AccountSource = WireEnum<typeof ACCOUNT_SOURCES>;
+
+// ── Execution plane ─────────────────────────────────────────────────────────
+
+export const ORDER_INTENT_STATUSES = {
+  admitted: 'admitted',
+  cancelled: 'cancelled',
+  expired: 'expired',
+  invalidated: 'invalidated',
+  pendingApproval: 'pending_approval',
+  rejected: 'rejected',
+  submitted: 'submitted',
+} as const;
+
+export type OrderIntentStatus = WireEnum<typeof ORDER_INTENT_STATUSES>;
+
+export const APPROVAL_STATUSES = {
+  approved: 'approved',
+  notRequired: 'not_required',
   pending: 'pending',
   rejected: 'rejected',
-  rolledBack: 'rolled_back',
-  superseded: 'superseded',
+} as const;
+
+export type ApprovalStatus = WireEnum<typeof APPROVAL_STATUSES>;
+
+export const ORDER_INTENT_KINDS = {
+  entry: 'entry',
+  exit: 'exit',
+} as const;
+
+export type OrderIntentKind = WireEnum<typeof ORDER_INTENT_KINDS>;
+
+export const EXECUTION_ORDER_STATES = {
+  cancelled: 'cancelled',
+  failed: 'failed',
+  filled: 'filled',
+  pending: 'pending',
+  submitted: 'submitted',
+} as const;
+
+export type ExecutionOrderState = WireEnum<typeof EXECUTION_ORDER_STATES>;
+
+export const EXECUTION_ORDER_PHASES = {
+  entry: 'entry',
+  exit: 'exit',
+} as const;
+
+export type ExecutionOrderPhase = WireEnum<typeof EXECUTION_ORDER_PHASES>;
+
+export const ORDER_TYPE_KINDS = {
+  fok: 'fok',
+  gtc: 'gtc',
+  gtd: 'gtd',
+} as const;
+
+export type OrderTypeKind = WireEnum<typeof ORDER_TYPE_KINDS>;
+
+export const POSITION_LEDGER_STATES = {
+  closed: 'closed',
+  open: 'open',
+  redeemed: 'redeemed',
+  settled: 'settled',
+} as const;
+
+export type PositionLedgerState = WireEnum<typeof POSITION_LEDGER_STATES>;
+
+export const RECONCILIATION_RESULTS = {
+  matched: 'matched',
+  pending: 'pending',
+  resolved: 'resolved',
+  unresolvable: 'unresolvable',
+} as const;
+
+export type ReconciliationResult = WireEnum<typeof RECONCILIATION_RESULTS>;
+
+export const SETTLEMENT_REDEEM_STATES = {
+  confirmed: 'confirmed',
+  failed: 'failed',
+  pending: 'pending',
+  submitted: 'submitted',
+} as const;
+
+export type SettlementRedeemState = WireEnum<typeof SETTLEMENT_REDEEM_STATES>;
+
+// ── Research / governance ───────────────────────────────────────────────────
+
+/** Model / factor publication lifecycle (mirrors Rust `PublicationStatus`). */
+export const PUBLICATION_STATUSES = {
+  candidate: 'candidate',
+  draft: 'draft',
+  published: 'published',
+  rejected: 'rejected',
+  retired: 'retired',
+  shadow: 'shadow',
 } as const;
 
 export type PublicationStatus = WireEnum<typeof PUBLICATION_STATUSES>;
 
-export const SHADOW_DECISION_TYPES = {
-  noEffect: 'no_effect',
-  wouldReject: 'would_reject',
-  wouldScore: 'would_score',
-  wouldSize: 'would_size',
+export const MATERIALIZATION_RUN_STATUSES = {
+  cancelled: 'cancelled',
+  completed: 'completed',
+  failed: 'failed',
+  queued: 'queued',
+  running: 'running',
 } as const;
 
-export type ShadowDecisionType = WireEnum<typeof SHADOW_DECISION_TYPES>;
+export type MaterializationRunStatus = WireEnum<
+  typeof MATERIALIZATION_RUN_STATUSES
+>;
 
-export const CONTROL_AUDIT_EVENT_TYPES = {
-  factorCreated: 'factor_created',
-  factorExpired: 'factor_expired',
-  factorRejected: 'factor_rejected',
-  factorTransitioned: 'factor_transitioned',
-  publicationActivated: 'publication_activated',
-  publicationCreated: 'publication_created',
-  publicationExpired: 'publication_expired',
-  publicationRolledBack: 'publication_rolled_back',
-  runtimeConfigActivated: 'runtime_config_activated',
-  runtimeConfigRolledBack: 'runtime_config_rolled_back',
-  runtimeConfigVersionCreated: 'runtime_config_version_created',
-  snapshotLoadFailed: 'snapshot_load_failed',
+// ── Operation log ───────────────────────────────────────────────────────────
+
+export const OPERATION_CATEGORIES = {
+  auth: 'auth',
+  governance: 'governance',
+  market: 'market',
+  other: 'other',
+  rbac: 'rbac',
+  runtimeConfig: 'runtime_config',
+  system: 'system',
 } as const;
 
-export type ControlAuditEventType = WireEnum<typeof CONTROL_AUDIT_EVENT_TYPES>;
+export type OperationCategory = WireEnum<typeof OPERATION_CATEGORIES>;
 
-export const AUDIT_RESOURCE_TYPES = {
-  factor: 'factor',
-  materializationRun: 'materialization_run',
-  publication: 'publication',
-  runtimeConfigVersion: 'runtime_config_version',
-  snapshot: 'snapshot',
+export const OPERATION_OUTCOMES = {
+  denied: 'denied',
+  failure: 'failure',
+  success: 'success',
 } as const;
 
-export type AuditResourceType = WireEnum<typeof AUDIT_RESOURCE_TYPES>;
+export type OperationOutcome = WireEnum<typeof OPERATION_OUTCOMES>;
+
+// ── Runtime config ──────────────────────────────────────────────────────────
 
 export const RUNTIME_CONFIG_VERSION_SOURCES = {
   bootstrap: 'bootstrap',
@@ -473,155 +414,3 @@ export const RUNTIME_CONFIG_ACTIVATION_KINDS = {
 export type RuntimeConfigActivationKind = WireEnum<
   typeof RUNTIME_CONFIG_ACTIVATION_KINDS
 >;
-
-export const OPERATION_CATEGORIES = {
-  auth: 'auth',
-  governance: 'governance',
-  market: 'market',
-  other: 'other',
-  rbac: 'rbac',
-  replay: 'replay',
-  risk: 'risk',
-  runtimeConfig: 'runtime_config',
-  system: 'system',
-} as const;
-
-export type OperationCategory = WireEnum<typeof OPERATION_CATEGORIES>;
-
-export const OPERATION_OUTCOMES = {
-  denied: 'denied',
-  failure: 'failure',
-  success: 'success',
-} as const;
-
-export type OperationOutcome = WireEnum<typeof OPERATION_OUTCOMES>;
-
-export const MATERIALIZATION_RUN_STATUSES = {
-  cancelled: 'cancelled',
-  completed: 'completed',
-  completedWithRejectedFactors: 'completed_with_rejected_factors',
-  failed: 'failed',
-  queued: 'queued',
-  reportOnly: 'report_only',
-  running: 'running',
-} as const;
-
-export type MaterializationRunStatus = WireEnum<
-  typeof MATERIALIZATION_RUN_STATUSES
->;
-
-export const MATERIALIZATION_RUN_KINDS = {
-  backfill: 'backfill',
-  configComparison: 'config_comparison',
-  forensicReport: 'forensic_report',
-  incident: 'incident',
-  scheduled: 'scheduled',
-} as const;
-
-export type MaterializationRunKind = WireEnum<typeof MATERIALIZATION_RUN_KINDS>;
-
-export const RUN_TRIGGER_TYPES = {
-  backfill: 'backfill',
-  configComparison: 'config_comparison',
-  forensicReport: 'forensic_report',
-  incident: 'incident',
-  scheduled: 'scheduled',
-} as const;
-
-export type RunTriggerType = WireEnum<typeof RUN_TRIGGER_TYPES>;
-
-export const MATERIALIZATION_OUTPUT_POLICIES = {
-  emitDraftCandidates: 'emit_draft_candidates',
-  emitDraftOnly: 'emit_draft_only',
-  noFactorOutput: 'no_factor_output',
-  reportOnly: 'report_only',
-} as const;
-
-export type MaterializationOutputPolicy = WireEnum<
-  typeof MATERIALIZATION_OUTPUT_POLICIES
->;
-
-export const EVIDENCE_STAGE_STATUSES = {
-  completed: 'completed',
-  completedWithWarnings: 'completed_with_warnings',
-  failed: 'failed',
-  insufficientCoverage: 'insufficient_coverage',
-  pending: 'pending',
-  productionIneligible: 'production_ineligible',
-  running: 'running',
-  skippedNotRequired: 'skipped_not_required',
-} as const;
-
-export type EvidenceStageStatus = WireEnum<typeof EVIDENCE_STAGE_STATUSES>;
-
-export const MATERIALIZATION_STAGE_NAMES = {
-  bookReconstruction: 'book_reconstruction',
-  detectorEvidence: 'detector_evidence',
-  draftWrite: 'draft_write',
-  executionEvidence: 'execution_evidence',
-  factorBuild: 'factor_build',
-  portfolioRiskEvidence: 'portfolio_risk_evidence',
-  qualityGateEvaluation: 'quality_gate_evaluation',
-  resolveInputs: 'resolve_inputs',
-  settlementReconciliationEvidence: 'settlement_reconciliation_evidence',
-  trainingExampleBuild: 'training_example_build',
-} as const;
-
-export type MaterializationStageName = WireEnum<
-  typeof MATERIALIZATION_STAGE_NAMES
->;
-
-export const CONTROL_FACTOR_TYPES = {
-  bucketRisk: 'bucket_risk',
-  executionQuality: 'execution_quality',
-  marketAnomaly: 'market_anomaly',
-  portfolioRisk: 'portfolio_risk',
-  reconciliationHealth: 'reconciliation_health',
-} as const;
-
-export type ControlFactorType = WireEnum<typeof CONTROL_FACTOR_TYPES>;
-
-export const RESOURCE_TYPES = {
-  analytics: 'analytics',
-  audit: 'audit',
-  blacklist: 'blacklist',
-  controlFactor: 'control_factor',
-  market: 'market',
-  materialization: 'materialization',
-  menu: 'menu',
-  operationLog: 'operation_log',
-  opportunity: 'opportunity',
-  permission: 'permission',
-  pnl: 'pnl',
-  publication: 'publication',
-  replay: 'replay',
-  risk: 'risk',
-  role: 'role',
-  runtimeConfig: 'runtime_config',
-  system: 'system',
-  trade: 'trade',
-  user: 'user',
-} as const;
-
-export type ResourceType = WireEnum<typeof RESOURCE_TYPES>;
-
-export const OPERATIONS = {
-  activate: 'activate',
-  assign: 'assign',
-  create: 'create',
-  delete: 'delete',
-  emergency: 'emergency',
-  enqueue: 'enqueue',
-  halt: 'halt',
-  publish: 'publish',
-  read: 'read',
-  reject: 'reject',
-  reset: 'reset',
-  resume: 'resume',
-  rollback: 'rollback',
-  shadow: 'shadow',
-  switchMode: 'switch_mode',
-  update: 'update',
-} as const;
-
-export type Operation = WireEnum<typeof OPERATIONS>;

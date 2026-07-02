@@ -1,11 +1,12 @@
 import type {
-  HaltRequest,
+  DeployConfigView,
+  ExecutionRecoveryView,
   HealthReport,
-  MaterializationScheduleStatusView,
-  ModeTransitionReport,
-  ResumeRequest,
-  SwitchModeRequest,
-  SystemBalanceView,
+  KillSwitchView,
+  QuantModeTransitionReport,
+  QuantModeView,
+  SetKillSwitchRequest,
+  SwitchQuantModeRequest,
   SystemStatus,
 } from '@vben/types';
 
@@ -18,22 +19,15 @@ export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
   export const health = `${base}/health`;
-  export const balance = `${base}/balance`;
-  export const materializationSchedules = `${base}/materialization-schedules`;
-  export const halt = `${base}/halt`;
-  export const resume = `${base}/resume`;
-  export const emergencyAck = `${base}/emergency/ack`;
-  export const mode = `${base}/mode`;
+  export const quantMode = `${base}/quant-mode`;
+  export const killSwitch = `${base}/kill-switch`;
+  export const executionRecovery = `${base}/execution-recovery`;
+  export const deployConfig = `${base}/deploy-config`;
 }
 
-/** `GET /system/status` — execution mode / breaker / exposure snapshot. */
+/** `GET /system/status` — the operator system snapshot. */
 export async function getSystemStatus() {
   return requestClient.get<SystemStatus>(SystemApi.status);
-}
-
-/** `GET /system/balance` — single operator money-state view. */
-export async function getSystemBalance() {
-  return requestClient.get<SystemBalanceView>(SystemApi.balance);
 }
 
 /** `GET /system/health` — per-subsystem health report. */
@@ -41,49 +35,49 @@ export async function getSystemHealth() {
   return requestClient.get<HealthReport>(SystemApi.health);
 }
 
-/** `GET /system/materialization-schedules` — mode-aware schedule cadence status. */
-export async function getMaterializationSchedules() {
-  return requestClient.get<MaterializationScheduleStatusView[]>(
-    SystemApi.materializationSchedules,
-  );
+/** `GET /system/quant-mode` — the current runtime mode. */
+export async function getQuantMode() {
+  return requestClient.get<QuantModeView>(SystemApi.quantMode);
+}
+
+/** `GET /system/kill-switch` — the current kill-switch state. */
+export async function getKillSwitch() {
+  return requestClient.get<KillSwitchView>(SystemApi.killSwitch);
+}
+
+/** `GET /system/execution-recovery` — recovery detail with blocking rows. */
+export async function getExecutionRecovery() {
+  return requestClient.get<ExecutionRecoveryView>(SystemApi.executionRecovery);
+}
+
+/** `GET /system/deploy-config` — credential-masked deploy config. */
+export async function getDeployConfig() {
+  return requestClient.get<DeployConfigView>(SystemApi.deployConfig);
 }
 
 /**
- * `POST /system/halt` — risk halt + execution kill switch. Requires a reason
- * (recorded on the operation log) but no acting role (not governed).
+ * `POST /system/quant-mode` — governed runtime mode hot-swap. Callers should
+ * wait for the WS `system.status` echo instead of optimistic local updates.
  */
-export async function haltSystem(body: HaltRequest) {
-  return requestClient.post<null>(SystemApi.halt, body);
-}
-
-/**
- * `POST /system/resume` — resume trading after an operator acknowledgement
- * string (recorded on the risk audit). Not governed.
- */
-export async function resumeSystem(body: ResumeRequest) {
-  return requestClient.post<null>(SystemApi.resume, body);
-}
-
-/**
- * `POST /system/emergency/ack` — clear reservation/persistence execution
- * emergency after operator acknowledgement (distinct from risk resume).
- */
-export async function ackExecutionEmergency(body: ResumeRequest) {
-  return requestClient.post<null>(SystemApi.emergencyAck, body);
-}
-
-/**
- * `POST /system/mode` — governed runtime execution-mode hot-swap
- * (`X-Acting-Role` + reason). Callers must wait for the WS `system.status`
- * echo instead of optimistically updating local state.
- */
-export async function switchExecutionMode(
-  body: SwitchModeRequest,
+export async function switchQuantMode(
+  body: SwitchQuantModeRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<ModeTransitionReport>(
-    SystemApi.mode,
-    { mode: body.mode, reason: body.reason },
+  return governedPost<QuantModeTransitionReport>(
+    SystemApi.quantMode,
+    body,
     ctx,
   );
+}
+
+/**
+ * `POST /system/kill-switch` — governed kill-switch transition. The required
+ * permission (`halt` / `resume` / `emergency`) is derived server-side from the
+ * requested `state`; `ack: true` is required to clear `emergency_halted`.
+ */
+export async function setKillSwitch(
+  body: SetKillSwitchRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<KillSwitchView>(SystemApi.killSwitch, body, ctx);
 }

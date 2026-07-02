@@ -8,7 +8,7 @@ import { defineStore } from 'pinia';
  * Per-market live order books (WS `market.book_update`, market-scoped
  * subscriptions) and the set of markets resolved during this session.
  */
-export const useMarketStore = defineStore('oxide-market', () => {
+export const useMarketStore = defineStore('qp-market', () => {
   const books = ref<Record<MarketId, MarketBookView>>({});
   const resolved = ref<Set<MarketId>>(new Set());
 

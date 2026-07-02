@@ -5,7 +5,7 @@ import { onMounted } from 'vue';
 import { useRequestHandler } from '@vben/request/oxide';
 
 import { getSystemStatus } from '#/api/system';
-import { useOxideAccess } from '#/shared/composables/use-oxide-access';
+import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useSystemStore } from '#/store/system';
 
 type HandleRequest = ReturnType<typeof useRequestHandler>['handleRequest'];
@@ -31,7 +31,7 @@ export async function fetchSystemStatusIfAllowed(
 export function useSystemStatusBootstrap() {
   const systemStore = useSystemStore();
   const { handleRequest } = useRequestHandler();
-  const { hasAccessByCodes } = useOxideAccess();
+  const { hasAccessByCodes } = useQpAccess();
 
   onMounted(() => {
     void fetchSystemStatusIfAllowed(

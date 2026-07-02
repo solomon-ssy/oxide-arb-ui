@@ -18,13 +18,10 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
-import ExecutionModeSwitcher from '#/shared/components/header/execution-mode-switcher.vue';
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
 import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
-import IntegrityBanner from '#/shared/components/integrity-banner.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
-import { useOxideWs } from '#/shared/composables/use-oxide-ws';
-import { useSystemControl } from '#/shared/composables/use-system-control';
+import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useSystemStatusBootstrap } from '#/shared/composables/use-system-status';
 import { useAuthStore, useSystemStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
@@ -32,16 +29,14 @@ import LoginForm from '#/views/_core/authentication/login.vue';
 const systemStore = useSystemStore();
 
 const { GovernedActionHost, governed } = useGovernedAction();
-const { EmergencyAckModalHost, HaltModalHost, ResumeModalHost } =
-  useSystemControl();
 provide(RuntimeConfigGovernedKey, governed);
 provide(RuntimeConfigRequestClientKey, requestClient);
 provide(RuntimeConfigRevisionKey, () => systemStore.activeConfigVersion);
 
-const oxideWs = useOxideWs();
+const qpWs = useQpWs();
 useSystemStatusBootstrap();
-// System alerts + breaker trips pushed over WS feed the bell list.
-const notifications = oxideWs.notifications;
+// System alerts pushed over WS feed the bell list.
+const notifications = qpWs.notifications;
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -60,15 +55,15 @@ watch(
   () => Boolean(accessStore.accessToken && accessStore.isAccessChecked),
   (ready) => {
     if (ready) {
-      oxideWs.connect();
+      qpWs.connect();
     } else {
-      oxideWs.disconnect();
+      qpWs.disconnect();
     }
   },
   { immediate: true },
 );
 
-onUnmounted(() => oxideWs.disconnect());
+onUnmounted(() => qpWs.disconnect());
 
 const menus = computed(() => [
   {
@@ -149,14 +144,8 @@ watch(
 
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
-    <template #content-before>
-      <IntegrityBanner />
-    </template>
     <template #header-right-10>
       <SystemStatusIndicator />
-    </template>
-    <template #header-right-20>
-      <ExecutionModeSwitcher />
     </template>
     <template #header-right-30>
       <WsStatusBadge />
@@ -183,9 +172,6 @@ watch(
     </template>
     <template #extra>
       <GovernedActionHost />
-      <EmergencyAckModalHost />
-      <HaltModalHost />
-      <ResumeModalHost />
       <AuthenticationLoginExpiredModal
         v-model:open="accessStore.loginExpired"
         :avatar

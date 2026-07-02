@@ -1,64 +1,23 @@
 {
-  "executionMode": {
-    "dry_run": "Dry Run",
-    "paper": "Paper",
-    "live": "Live"
+  "quantRuntimeMode": {
+    "report_only": "Report Only",
+    "semi_auto": "Semi Auto",
+    "auto_execution": "Auto Execution"
   },
-  "systemBalanceSource": {
-    "authoritative_clob": "CLOB authoritative",
-    "non_authoritative": "Non-authoritative",
-    "simulated_dry_run": "DryRun simulated ledger",
-    "simulated_paper": "Paper simulated ledger"
-  },
-  "breakerState": {
+  "killSwitchState": {
     "closed": "Closed",
-    "open": "Open",
-    "half_open": "Half-Open",
-    "recovered": "Recovered",
-    "halted": "Halted"
-  },
-  "circuitBreakerLevel": {
-    "trade": "Trade",
-    "session": "Session",
-    "daily": "Daily",
-    "system": "System"
-  },
-  "executionEmergencyClass": {
-    "venue_fault": "Venue fault",
-    "reservation_fault": "Reservation fault",
-    "persistence_fault": "Persistence fault"
+    "report_only_forced": "Report Only Forced",
+    "execution_halted": "Execution Halted",
+    "exit_only": "Exit Only",
+    "emergency_halted": "Emergency Halted"
   },
   "side": {
     "BUY": "Buy",
     "SELL": "Sell"
   },
-  "tradeOutcome": {
-    "success": "Success",
-    "miss": "Miss",
-    "failed": "Failed"
-  },
-  "tradeReconcileResolution": {
-    "filled": "Filled",
-    "miss": "Miss",
-    "unresolvable": "Unresolvable"
-  },
-  "netProfitKind": {
-    "fill_ev": "Fill EV",
-    "none": "None"
-  },
-  "tradeState": {
-    "intent": "Intent",
-    "submitted": "Submitted",
-    "fill_observed": "Filled",
-    "fill_processing": "Fill Processing",
-    "miss_observed": "Miss Observed",
-    "miss_processing": "Miss Processing",
-    "missed": "Missed",
-    "fail_observed": "Fail Observed",
-    "fail_processing": "Fail Processing",
-    "failed": "Failed",
-    "orphaned": "Orphaned",
-    "settled": "Settled"
+  "outcomeSide": {
+    "yes": "Yes",
+    "no": "No"
   },
   "marketCategory": {
     "crypto": "Crypto",
@@ -72,13 +31,6 @@
     "tech": "Tech",
     "weather": "Weather"
   },
-  "priceZone": {
-    "z95": "Z95 (≥0.95)",
-    "z96": "Z96 (≥0.96)",
-    "z97": "Z97 (≥0.97)",
-    "z98": "Z98 (≥0.98)",
-    "z99": "Z99 (≥0.99)"
-  },
   "marketStatus": {
     "discovered": "Discovered",
     "filtered": "Filtered",
@@ -87,142 +39,88 @@
     "settled": "Settled",
     "delisted": "Delisted"
   },
-  "opportunityAuditStage": {
-    "detected": "Detected",
-    "validation_rejected": "Validation Rejected",
-    "factor_validation_rejected": "Factor Validation Rejected",
-    "risk_rejected": "Risk Rejected",
-    "sizing_rejected": "Sizing Rejected",
-    "filled": "Filled",
-    "missed": "Missed",
-    "failed": "Failed",
-    "settled": "Settled"
+  "recommendationReportStatus": {
+    "generating": "Generating",
+    "published": "Published",
+    "empty": "Empty",
+    "revoked": "Revoked",
+    "expired": "Expired",
+    "failed": "Failed"
   },
-  "auditOutcome": {
-    "success": "Success",
-    "miss": "Miss",
+  "recommendationStatus": {
+    "active": "Active",
+    "superseded": "Superseded",
+    "revoked": "Revoked",
+    "expired": "Expired"
+  },
+  "orderIntentStatus": {
+    "pending_approval": "Pending Approval",
+    "admitted": "Admitted",
+    "submitted": "Submitted",
     "rejected": "Rejected",
-    "failed": "Failed",
-    "settled": "Settled"
+    "cancelled": "Cancelled",
+    "expired": "Expired",
+    "invalidated": "Invalidated"
   },
-  "rejectionStage": {
-    "validation": "Validation",
-    "factor_validation": "Factor Validation",
-    "risk": "Risk",
-    "sizing": "Sizing",
-    "submit_persist": "Submit / Persist",
-    "other": "Other"
+  "approvalStatus": {
+    "not_required": "Not Required",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
   },
-  "riskAuditEventType": {
-    "trade_allowed": "Trade Allowed",
-    "trade_denied": "Trade Denied",
-    "breaker_tripped": "Breaker Tripped",
-    "breaker_reset": "Breaker Reset",
-    "breaker_recovered": "Breaker Recovered",
-    "engine_halted": "Engine Halted",
-    "engine_resumed": "Engine Resumed",
-    "blacklist_added": "Blacklist Added",
-    "blacklist_removed": "Blacklist Removed",
-    "post_trade_update": "Post-trade Update",
-    "reconciliation_completed": "Reconciliation Completed",
-    "accounting_rollover": "Accounting Rollover"
+  "executionOrderState": {
+    "pending": "Pending",
+    "submitted": "Submitted",
+    "filled": "Filled",
+    "cancelled": "Cancelled",
+    "failed": "Failed"
   },
-  "positionStatus": {
+  "positionLedgerState": {
     "open": "Open",
     "closed": "Closed",
-    "settled": "Settled"
+    "settled": "Settled",
+    "redeemed": "Redeemed"
   },
-  "blacklistScope": {
-    "data_path": "Data Path",
-    "trading_path": "Trading Path",
-    "full": "Full"
+  "reconciliationResult": {
+    "pending": "Pending",
+    "matched": "Matched",
+    "resolved": "Resolved",
+    "unresolvable": "Unresolvable"
   },
-  "blacklistReason": {
-    "consecutive_fok_failures": "Consecutive FOK Failures",
-    "trade_failed_after_matched": "Trade Failed After Matched",
-    "depth_drop": "Depth Drop",
-    "tick_change": "Tick Change",
-    "manual": "Manual",
-    "data_not_found": "Data Not Found"
+  "settlementRedeemState": {
+    "pending": "Pending",
+    "submitted": "Submitted",
+    "confirmed": "Confirmed",
+    "failed": "Failed"
+  },
+  "publicationStatus": {
+    "draft": "Draft",
+    "candidate": "Candidate",
+    "shadow": "Shadow",
+    "published": "Published",
+    "retired": "Retired",
+    "rejected": "Rejected"
   },
   "materializationRunStatus": {
     "queued": "Queued",
     "running": "Running",
     "completed": "Completed",
-    "completed_with_rejected_factors": "Completed (rejected factors)",
-    "report_only": "Report only",
     "failed": "Failed",
     "cancelled": "Cancelled"
   },
-  "materializationRunKind": {
-    "scheduled": "Scheduled",
-    "backfill": "Backfill",
-    "incident": "Incident",
-    "config_comparison": "Config comparison",
-    "forensic_report": "Forensic report"
+  "operationCategory": {
+    "auth": "Auth",
+    "rbac": "RBAC",
+    "governance": "Governance",
+    "runtime_config": "Runtime Config",
+    "system": "System",
+    "market": "Market",
+    "other": "Other"
   },
-  "materializationScheduleModeContract": {
-    "all_modes": "All modes",
-    "live_only": "Live only",
-    "live_after_evidence_warmup": "Live after evidence warmup"
-  },
-  "materializationStageName": {
-    "resolve_inputs": "Resolve inputs",
-    "book_reconstruction": "Book reconstruction",
-    "detector_evidence": "Detector evidence",
-    "execution_evidence": "Execution evidence",
-    "portfolio_risk_evidence": "Portfolio risk evidence",
-    "settlement_reconciliation_evidence": "Settlement reconciliation",
-    "training_example_build": "Training example build",
-    "factor_build": "Factor build",
-    "quality_gate_evaluation": "Quality gate evaluation",
-    "draft_write": "Draft write"
-  },
-  "evidenceStageStatus": {
-    "pending": "Pending",
-    "running": "Running",
-    "completed": "Completed",
-    "completed_with_warnings": "Completed (warnings)",
-    "skipped_not_required": "Skipped",
-    "insufficient_coverage": "Insufficient coverage",
-    "production_ineligible": "Production ineligible",
-    "failed": "Failed"
-  },
-  "factorStatus": {
-    "draft": "Draft",
-    "report_only": "Report Only",
-    "candidate": "Candidate",
-    "rejected": "Rejected",
-    "shadow": "Shadow",
-    "published": "Published",
-    "superseded": "Superseded",
-    "expired": "Expired",
-    "rolled_back": "Rolled Back"
-  },
-  "controlFactorType": {
-    "bucket_risk": "Bucket Risk",
-    "execution_quality": "Execution Quality",
-    "portfolio_risk": "Portfolio Risk",
-    "reconciliation_health": "Reconciliation Health",
-    "market_anomaly": "Market Anomaly"
-  },
-  "publicationMode": {
-    "shadow": "Shadow",
-    "published": "Published"
-  },
-  "publicationStatus": {
-    "pending": "Pending",
-    "active": "Active",
-    "superseded": "Superseded",
-    "expired": "Expired",
-    "rolled_back": "Rolled Back",
-    "rejected": "Rejected"
-  },
-  "shadowDecisionType": {
-    "would_reject": "Would Reject",
-    "would_size": "Would Size",
-    "would_score": "Would Score",
-    "no_effect": "No Effect"
+  "operationOutcome": {
+    "success": "Success",
+    "failure": "Failure",
+    "denied": "Denied"
   },
   "runtimeConfigVersionSource": {
     "bootstrap": "Bootstrap",
@@ -234,58 +132,23 @@
     "promote": "Promote",
     "rollback": "Rollback"
   },
-  "controlAuditEventType": {
-    "factor_created": "Factor Created",
-    "factor_transitioned": "Factor Transitioned",
-    "factor_rejected": "Factor Rejected",
-    "factor_expired": "Factor Expired",
-    "publication_created": "Publication Created",
-    "publication_activated": "Publication Activated",
-    "publication_rolled_back": "Publication Rolled Back",
-    "publication_expired": "Publication Expired",
-    "runtime_config_version_created": "Config Version Created",
-    "runtime_config_activated": "Config Activated",
-    "runtime_config_rolled_back": "Config Rolled Back",
-    "snapshot_load_failed": "Snapshot Load Failed"
-  },
-  "auditResourceType": {
-    "factor": "Factor",
-    "publication": "Publication",
-    "runtime_config_version": "Runtime Config Version",
-    "materialization_run": "Materialization Run",
-    "snapshot": "Snapshot"
-  },
-  "operationCategory": {
-    "auth": "Auth",
-    "rbac": "RBAC",
-    "governance": "Governance",
-    "runtime_config": "Runtime Config",
-    "system": "System",
-    "risk": "Risk",
-    "market": "Market",
-    "replay": "Replay",
-    "other": "Other"
-  },
-  "operationOutcome": {
-    "success": "Success",
-    "failure": "Failure",
-    "denied": "Denied"
-  },
   "resourceType": {
     "system": "System",
     "market": "Market",
-    "opportunity": "Opportunity",
-    "trade": "Trade",
-    "pnl": "PnL",
-    "risk": "Risk",
-    "blacklist": "Blacklist",
     "runtime_config": "Runtime Config",
-    "control_factor": "Control Factor",
     "publication": "Publication",
     "materialization": "Materialization",
     "replay": "Replay",
-    "analytics": "Analytics",
-    "audit": "Audit",
+    "quant_report": "Quant Report",
+    "account_snapshot": "Account Snapshot",
+    "equity_snapshot": "Equity Snapshot",
+    "order_intent": "Order Intent",
+    "execution_order": "Execution Order",
+    "position": "Position",
+    "recommendation_attribution": "Recommendation Attribution",
+    "reconciliation": "Reconciliation",
+    "settlement_redeem": "Settlement Redeem",
+    "factor_definition": "Factor Definition",
     "operation_log": "Operation Log",
     "user": "User",
     "role": "Role",

@@ -9,7 +9,7 @@ import '@vben/styles/antdv-next';
 import { useTitle } from '@vueuse/core';
 
 import { $t, setupI18n } from '#/locales';
-import { registerOxideAccessDirective } from '#/shared/access/register-oxide-access-directive';
+import { registerQpAccessDirective } from '#/shared/access/register-qp-access-directive';
 
 import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
@@ -40,8 +40,8 @@ async function bootstrap(namespace: string) {
   // 配置 pinia-tore
   await initStores(app, { namespace });
 
-  // 安装权限指令（oxide super_admin bypass）
-  registerOxideAccessDirective(app);
+  // 安装权限指令（quant-pivot super_admin bypass）
+  registerQpAccessDirective(app);
 
   // 初始化 tippy
   const { initTippy } = await import('@vben/common-ui/es/tippy');

@@ -1,56 +1,44 @@
 import type {
   ConfigActivatedEvent,
-  ControlFactorMaterializationRunView,
-  ControlPublishedEvent,
+  IntentLifecycleEvent,
   MarketBookView,
   MarketResolvedEvent,
-  OpportunityView,
-  PnlUpdateEvent,
-  PositionView,
-  RiskEngineStateView,
+  MaterializationRunEvent,
+  ReportLifecycleEvent,
   SyncSnapshot,
   SystemAlertEvent,
   SystemStatus,
-  TradeSettledEvent,
-  TradeView,
   WsEnvelope,
 } from '@vben/types';
 
 // Direct module imports (not the `#/store` barrel) keep this reducer free of
 // the auth/api dependency chain, so unit tests can drive it with bare Pinia.
-import { useControlStore } from '#/store/control';
 import { useMarketStore } from '#/store/market';
-import { useOpportunityStore } from '#/store/opportunity';
-import { usePnlStore } from '#/store/pnl';
-import { useReplayStore } from '#/store/replay';
-import { useRiskStore } from '#/store/risk';
+import { useOrderIntentStore } from '#/store/order-intent';
+import { useQuantReportStore } from '#/store/quant-report';
+import { useResearchStore } from '#/store/research';
 import { useSystemStore } from '#/store/system';
-import { useTradeStore } from '#/store/trade';
 import { useWsStore } from '#/store/ws';
 
 /**
  * UI side-effects delegated by the dispatcher. Store writes happen inside
- * `dispatchWsEnvelope`; anything user-facing (notifications, toasts) or
- * I/O-bearing work is owned by the caller, which keeps the dispatcher a pure
- * store reducer that unit tests can drive directly.
+ * `dispatchWsEnvelope`; anything user-facing (notifications, toasts) is owned by
+ * the caller, keeping the dispatcher a pure store reducer unit tests can drive.
  */
 export interface WsDispatchHooks {
   /** `system.alert` frame — notification center + bell. */
   onAlert: (alert: SystemAlertEvent) => void;
-  /** `risk.circuit_breaker` full-state frame. */
-  onBreakerChanged: (state: RiskEngineStateView) => void;
   /** `config.activated` frame — lightweight info toast. */
   onConfigActivated: (event: ConfigActivatedEvent) => void;
-  /** `control.published` frame — lightweight info toast. */
-  onControlPublished: (event: ControlPublishedEvent) => void;
   /** `market.resolved` frame — lightweight info toast. */
   onMarketResolved: (event: MarketResolvedEvent) => void;
 }
 
 /**
- * Route one server envelope into the domain stores (channel → store
- * dispatch table of phase 7.2 §1.2). Unknown types are logged and dropped;
- * `error` frames are logged without toasting (no error storms).
+ * Route one server envelope into the domain stores (the 10.0 §3.3 channel →
+ * store dispatch table). Lists always re-fetch over REST; WS only bumps
+ * revisions or updates the market book cache. Unknown types are logged and
+ * dropped; `error` frames are logged without toasting (no error storms).
  */
 export function dispatchWsEnvelope(
   envelope: WsEnvelope,
@@ -63,14 +51,8 @@ export function dispatchWsEnvelope(
       hooks.onConfigActivated(event);
       break;
     }
-    case 'control.published': {
-      const event = envelope.data as ControlPublishedEvent;
-      useControlStore().recordPublished(event, envelope.timestamp);
-      hooks.onControlPublished(event);
-      break;
-    }
     case 'error': {
-      console.warn('[oxide-ws] server error frame:', envelope.data);
+      console.warn('[qp-ws] server error frame:', envelope.data);
       break;
     }
     case 'market.book_update': {
@@ -84,43 +66,24 @@ export function dispatchWsEnvelope(
       break;
     }
     case 'materialization.run_update': {
-      useReplayStore().upsertRun(
-        envelope.data as ControlFactorMaterializationRunView,
-      );
-      break;
-    }
-    case 'opportunity.detected': {
-      useOpportunityStore().prependFeed(envelope.data as OpportunityView);
-      break;
-    }
-    case 'pnl.update': {
-      usePnlStore().applyUpdate(
-        envelope.data as PnlUpdateEvent,
-        envelope.timestamp,
-      );
+      useResearchStore().bumpRevision(envelope.data as MaterializationRunEvent);
       break;
     }
     case 'pong': {
       useWsStore().markHeartbeat();
       break;
     }
-    case 'risk.circuit_breaker': {
-      const state = envelope.data as RiskEngineStateView;
-      useRiskStore().applyBreaker(state);
-      hooks.onBreakerChanged(state);
+    case 'quant.intent': {
+      useOrderIntentStore().bumpRevision(envelope.data as IntentLifecycleEvent);
       break;
     }
-    case 'risk.position_update': {
-      useRiskStore().upsertPosition(envelope.data as PositionView);
+    case 'quant.report': {
+      useQuantReportStore().bumpRevision(envelope.data as ReportLifecycleEvent);
       break;
     }
     case 'sync': {
       const snapshot = envelope.data as SyncSnapshot;
       useSystemStore().applySyncSnapshot(snapshot);
-      useRiskStore().applySyncSnapshot(snapshot);
-      usePnlStore().applySyncSnapshot(snapshot);
-      useOpportunityStore().applySyncSnapshot(snapshot);
-      useReplayStore().applySyncSnapshot(snapshot);
       useWsStore().markSync();
       if (snapshot.system_status) {
         useWsStore().markSystemStatus(envelope.timestamp);
@@ -137,16 +100,8 @@ export function dispatchWsEnvelope(
       useWsStore().markSystemStatus(envelope.timestamp);
       break;
     }
-    case 'trade.filled': {
-      useTradeStore().prependTrade(envelope.data as TradeView);
-      break;
-    }
-    case 'trade.settled': {
-      useTradeStore().applySettlement(envelope.data as TradeSettledEvent);
-      break;
-    }
     default: {
-      console.warn('[oxide-ws] unknown message type:', envelope.type);
+      console.warn('[qp-ws] unknown message type:', envelope.type);
     }
   }
 }

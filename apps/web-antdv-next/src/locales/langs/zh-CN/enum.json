@@ -1,67 +1,26 @@
 {
-  "executionMode": {
-    "dry_run": "试运行",
-    "paper": "模拟盘",
-    "live": "实盘"
+  "quantRuntimeMode": {
+    "report_only": "仅报告",
+    "semi_auto": "半自动",
+    "auto_execution": "全自动执行"
   },
-  "systemBalanceSource": {
-    "authoritative_clob": "CLOB 权威余额",
-    "non_authoritative": "非权威",
-    "simulated_dry_run": "DryRun 模拟账本",
-    "simulated_paper": "Paper 模拟账本"
-  },
-  "breakerState": {
-    "closed": "正常",
-    "open": "熔断",
-    "half_open": "半开",
-    "recovered": "已恢复",
-    "halted": "已停机"
-  },
-  "circuitBreakerLevel": {
-    "trade": "交易级",
-    "session": "会话级",
-    "daily": "日级",
-    "system": "系统级"
-  },
-  "executionEmergencyClass": {
-    "venue_fault": "交易所故障",
-    "reservation_fault": "预留故障",
-    "persistence_fault": "持久化故障"
+  "killSwitchState": {
+    "closed": "关闭",
+    "report_only_forced": "强制仅报告",
+    "execution_halted": "执行停机",
+    "exit_only": "仅退出",
+    "emergency_halted": "紧急停机"
   },
   "side": {
     "BUY": "买入",
     "SELL": "卖出"
   },
-  "tradeOutcome": {
-    "success": "成功",
-    "miss": "未成交",
-    "failed": "失败"
-  },
-  "tradeReconcileResolution": {
-    "filled": "已成交",
-    "miss": "未成交",
-    "unresolvable": "无法解析"
-  },
-  "netProfitKind": {
-    "fill_ev": "成交 EV",
-    "none": "无"
-  },
-  "tradeState": {
-    "intent": "意向",
-    "submitted": "已提交",
-    "fill_observed": "已成交",
-    "fill_processing": "成交处理中",
-    "miss_observed": "未成交观测",
-    "miss_processing": "未成交处理中",
-    "missed": "未成交",
-    "fail_observed": "失败待处理",
-    "fail_processing": "失败处理中",
-    "failed": "失败",
-    "orphaned": "孤立",
-    "settled": "已结算"
+  "outcomeSide": {
+    "yes": "Yes",
+    "no": "No"
   },
   "marketCategory": {
-    "crypto": "加密货币",
+    "crypto": "加密",
     "culture": "文化",
     "economics": "经济",
     "finance": "金融",
@@ -72,198 +31,90 @@
     "tech": "科技",
     "weather": "天气"
   },
-  "priceZone": {
-    "z95": "Z95 (≥0.95)",
-    "z96": "Z96 (≥0.96)",
-    "z97": "Z97 (≥0.97)",
-    "z98": "Z98 (≥0.98)",
-    "z99": "Z99 (≥0.99)"
-  },
   "marketStatus": {
     "discovered": "已发现",
     "filtered": "已过滤",
     "active": "活跃",
-    "paused": "已暂停",
+    "paused": "暂停",
     "settled": "已结算",
     "delisted": "已下架"
   },
-  "opportunityAuditStage": {
-    "detected": "已检测",
-    "validation_rejected": "校验拒绝",
-    "factor_validation_rejected": "因子校验拒绝",
-    "risk_rejected": "风控拒绝",
-    "sizing_rejected": "头寸拒绝",
-    "filled": "已成交",
-    "missed": "未成交",
-    "failed": "执行失败",
-    "settled": "已结算"
+  "recommendationReportStatus": {
+    "generating": "生成中",
+    "published": "已发布",
+    "empty": "空",
+    "revoked": "已撤销",
+    "expired": "已过期",
+    "failed": "失败"
   },
-  "auditOutcome": {
-    "success": "成功",
-    "miss": "未成交",
+  "recommendationStatus": {
+    "active": "有效",
+    "superseded": "已替代",
+    "revoked": "已撤销",
+    "expired": "已过期"
+  },
+  "orderIntentStatus": {
+    "pending_approval": "待审批",
+    "admitted": "已准入",
+    "submitted": "已提交",
     "rejected": "已拒绝",
-    "failed": "失败",
-    "settled": "已结算"
+    "cancelled": "已取消",
+    "expired": "已过期",
+    "invalidated": "已失效"
   },
-  "rejectionStage": {
-    "validation": "校验",
-    "factor_validation": "因子校验",
-    "risk": "风控",
-    "sizing": "头寸",
-    "submit_persist": "提交持久化",
-    "other": "其他"
+  "approvalStatus": {
+    "not_required": "无需审批",
+    "pending": "待审批",
+    "approved": "已批准",
+    "rejected": "已拒绝"
   },
-  "riskAuditEventType": {
-    "trade_allowed": "交易放行",
-    "trade_denied": "交易拒绝",
-    "breaker_tripped": "熔断触发",
-    "breaker_reset": "熔断重置",
-    "breaker_recovered": "熔断恢复",
-    "engine_halted": "引擎停机",
-    "engine_resumed": "引擎恢复",
-    "blacklist_added": "加入黑名单",
-    "blacklist_removed": "移出黑名单",
-    "post_trade_update": "成交后更新",
-    "reconciliation_completed": "对账完成",
-    "accounting_rollover": "账务滚动"
+  "executionOrderState": {
+    "pending": "待处理",
+    "submitted": "已提交",
+    "filled": "已成交",
+    "cancelled": "已取消",
+    "failed": "失败"
   },
-  "positionStatus": {
+  "positionLedgerState": {
     "open": "持仓中",
-    "closed": "已关闭",
-    "settled": "已结算"
+    "closed": "已平仓",
+    "settled": "已结算",
+    "redeemed": "已赎回"
   },
-  "blacklistScope": {
-    "data_path": "数据路径",
-    "trading_path": "交易路径",
-    "full": "全链路"
+  "reconciliationResult": {
+    "pending": "待对账",
+    "matched": "已匹配",
+    "resolved": "已解决",
+    "unresolvable": "无法解决"
   },
-  "blacklistReason": {
-    "consecutive_fok_failures": "连续 FOK 失败",
-    "trade_failed_after_matched": "撮合后失败",
-    "depth_drop": "深度骤降",
-    "tick_change": "报价单位变化",
-    "manual": "人工加入",
-    "data_not_found": "数据缺失"
+  "settlementRedeemState": {
+    "pending": "待处理",
+    "submitted": "已提交",
+    "confirmed": "已确认",
+    "failed": "失败"
+  },
+  "publicationStatus": {
+    "draft": "草稿",
+    "candidate": "候选",
+    "shadow": "影子",
+    "published": "已发布",
+    "retired": "已退役",
+    "rejected": "已拒绝"
   },
   "materializationRunStatus": {
     "queued": "排队中",
     "running": "运行中",
     "completed": "已完成",
-    "completed_with_rejected_factors": "已完成（含拒绝因子）",
-    "report_only": "仅报告",
     "failed": "失败",
     "cancelled": "已取消"
   },
-  "materializationRunKind": {
-    "scheduled": "定时",
-    "backfill": "回放",
-    "incident": "事故",
-    "config_comparison": "配置对比",
-    "forensic_report": "取证报告"
-  },
-  "materializationScheduleModeContract": {
-    "all_modes": "全模式",
-    "live_only": "仅 Live",
-    "live_after_evidence_warmup": "Live 证据预热后"
-  },
-  "materializationStageName": {
-    "resolve_inputs": "解析输入",
-    "book_reconstruction": "订单簿重建",
-    "detector_evidence": "检测证据",
-    "execution_evidence": "执行证据",
-    "portfolio_risk_evidence": "组合风险证据",
-    "settlement_reconciliation_evidence": "结算对账证据",
-    "training_example_build": "训练样本构建",
-    "factor_build": "因子构建",
-    "quality_gate_evaluation": "质量门评估",
-    "draft_write": "草稿写入"
-  },
-  "evidenceStageStatus": {
-    "pending": "待处理",
-    "running": "运行中",
-    "completed": "已完成",
-    "completed_with_warnings": "完成（有警告）",
-    "skipped_not_required": "跳过",
-    "insufficient_coverage": "覆盖不足",
-    "production_ineligible": "不可投产",
-    "failed": "失败"
-  },
-  "factorStatus": {
-    "draft": "草稿",
-    "report_only": "仅报告",
-    "candidate": "候选",
-    "rejected": "已拒绝",
-    "shadow": "Shadow",
-    "published": "已发布",
-    "superseded": "已替代",
-    "expired": "已过期",
-    "rolled_back": "已回滚"
-  },
-  "controlFactorType": {
-    "bucket_risk": "桶风险",
-    "execution_quality": "执行质量",
-    "portfolio_risk": "组合风险",
-    "reconciliation_health": "对账健康",
-    "market_anomaly": "市场异常"
-  },
-  "publicationMode": {
-    "shadow": "Shadow",
-    "published": "Published"
-  },
-  "publicationStatus": {
-    "pending": "待处理",
-    "active": "生效中",
-    "superseded": "已替代",
-    "expired": "已过期",
-    "rolled_back": "已回滚",
-    "rejected": "已拒绝"
-  },
-  "shadowDecisionType": {
-    "would_reject": "会拒绝",
-    "would_size": "会调仓",
-    "would_score": "会调分",
-    "no_effect": "无影响"
-  },
-  "runtimeConfigVersionSource": {
-    "bootstrap": "Bootstrap",
-    "operator": "Operator",
-    "import": "Import"
-  },
-  "runtimeConfigActivationKind": {
-    "initial": "初始激活",
-    "promote": "版本激活",
-    "rollback": "回滚激活"
-  },
-  "controlAuditEventType": {
-    "factor_created": "因子创建",
-    "factor_transitioned": "因子流转",
-    "factor_rejected": "因子拒绝",
-    "factor_expired": "因子过期",
-    "publication_created": "发布创建",
-    "publication_activated": "发布激活",
-    "publication_rolled_back": "发布回滚",
-    "publication_expired": "发布过期",
-    "runtime_config_version_created": "配置版本创建",
-    "runtime_config_activated": "配置激活",
-    "runtime_config_rolled_back": "配置回滚",
-    "snapshot_load_failed": "快照加载失败"
-  },
-  "auditResourceType": {
-    "factor": "控制因子",
-    "publication": "发布",
-    "runtime_config_version": "运行时配置版本",
-    "materialization_run": "物化运行",
-    "snapshot": "快照"
-  },
   "operationCategory": {
     "auth": "认证",
-    "rbac": "RBAC",
+    "rbac": "权限",
     "governance": "治理",
-    "runtime_config": "运行时配置",
+    "runtime_config": "运行配置",
     "system": "系统",
-    "risk": "风险",
     "market": "市场",
-    "replay": "Replay",
     "other": "其他"
   },
   "operationOutcome": {
@@ -271,21 +122,33 @@
     "failure": "失败",
     "denied": "拒绝"
   },
+  "runtimeConfigVersionSource": {
+    "bootstrap": "初始化",
+    "operator": "操作员",
+    "import": "导入"
+  },
+  "runtimeConfigActivationKind": {
+    "initial": "初始",
+    "promote": "提升",
+    "rollback": "回滚"
+  },
   "resourceType": {
     "system": "系统",
     "market": "市场",
-    "opportunity": "机会",
-    "trade": "交易",
-    "pnl": "PnL",
-    "risk": "风险",
-    "blacklist": "黑名单",
-    "runtime_config": "运行时配置",
-    "control_factor": "控制因子",
+    "runtime_config": "运行配置",
     "publication": "发布",
     "materialization": "物化",
-    "replay": "Replay",
-    "analytics": "分析",
-    "audit": "审计",
+    "replay": "回放",
+    "quant_report": "推荐报告",
+    "account_snapshot": "账户快照",
+    "equity_snapshot": "权益快照",
+    "order_intent": "订单意图",
+    "execution_order": "执行订单",
+    "position": "持仓",
+    "recommendation_attribution": "推荐归因",
+    "reconciliation": "对账",
+    "settlement_redeem": "结算赎回",
+    "factor_definition": "因子定义",
     "operation_log": "操作日志",
     "user": "用户",
     "role": "角色",

@@ -1,11 +1,16 @@
 import type {
+  BlockMarketRequest,
   MarketBookView,
   MarketId,
   MarketPageQuery,
   MarketView,
   Paginated,
+  UnblockMarketRequest,
 } from '@vben/types';
 
+import type { GovernedContext } from '#/shared/composables/use-governed-action';
+
+import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
 export namespace MarketApi {
@@ -16,6 +21,8 @@ export namespace MarketApi {
     `${base}/${marketId}/subscribe`;
   export const unsubscribe = (marketId: MarketId) =>
     `${base}/${marketId}/unsubscribe`;
+  export const block = (marketId: MarketId) => `${base}/${marketId}/block`;
+  export const unblock = (marketId: MarketId) => `${base}/${marketId}/unblock`;
 }
 
 /** `GET /markets` — filtered, paginated market catalog with runtime overlay. */
@@ -43,4 +50,22 @@ export async function subscribeMarket(marketId: MarketId) {
 /** `POST /markets/{market_id}/unsubscribe` — drop the operator overlay. */
 export async function unsubscribeMarket(marketId: MarketId) {
   return requestClient.post<null>(MarketApi.unsubscribe(marketId));
+}
+
+/** `POST /markets/{market_id}/block` — governed market block. */
+export async function blockMarket(
+  marketId: MarketId,
+  body: BlockMarketRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<MarketView>(MarketApi.block(marketId), body, ctx);
+}
+
+/** `POST /markets/{market_id}/unblock` — governed market unblock/restore. */
+export async function unblockMarket(
+  marketId: MarketId,
+  body: UnblockMarketRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<MarketView>(MarketApi.unblock(marketId), body, ctx);
 }

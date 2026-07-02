@@ -11,14 +11,14 @@ const NOTIFICATION_ALERT_LEVELS: ReadonlySet<AlertLevel> = new Set([
   'warning',
 ]);
 
-/** UI-facing connection state of the oxide WebSocket. */
+/** UI-facing connection state of the quant-pivot WebSocket. */
 export type WsConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
 
 /**
  * WebSocket connection telemetry: status badge tri-state, last successful
  * `sync` instant, and application-heartbeat liveness.
  */
-export const useWsStore = defineStore('oxide-ws', () => {
+export const useWsStore = defineStore('qp-ws', () => {
   const status = ref<WsConnectionStatus>('disconnected');
   const lastSyncAt = ref<IsoDateTime | null>(null);
   const lastHeartbeatAt = ref<IsoDateTime | null>(null);

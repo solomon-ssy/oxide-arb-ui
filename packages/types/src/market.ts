@@ -81,3 +81,14 @@ export interface MarketResolvedEvent {
   market_id: MarketId;
   outcome: boolean;
 }
+
+/** `POST /markets/{market_id}/block` governed request body. */
+export interface BlockMarketRequest {
+  reason: string;
+}
+
+/** `POST /markets/{market_id}/unblock` governed request body. */
+export interface UnblockMarketRequest {
+  reason: string;
+  restore_status?: MarketStatus;
+}

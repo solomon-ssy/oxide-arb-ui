@@ -1,13 +1,10 @@
-import type { IsoDateTime, UsdString } from './common';
-import type {
-  BreakerStateName,
-  ExecutionMode,
-  MaterializationRunStatus,
-} from './enums';
+import type { IsoDateTime } from './common';
+import type { KillSwitchState, QuantRuntimeMode } from './enums';
+import type { ReconciliationView } from './reconciliation';
 
 /**
- * Market-catalog warmup state (internally tagged on `state`). Detection is
- * gated off while `warming`; the control plane stays available.
+ * Market-catalog warmup state (internally tagged on `state`). Ingest is gated
+ * off while `warming`; the control plane stays available.
  */
 export type CatalogState =
   | { markets: number; state: 'ready'; synced_at: IsoDateTime }
@@ -15,15 +12,11 @@ export type CatalogState =
 
 /** Why the runtime is in the `degraded` operational phase. */
 export type OperationalDegradeReason =
-  | 'breaker_half_open'
-  | 'breaker_open'
-  | 'control_factor_live_warn'
-  | 'control_factor_snapshot_expired'
   | 'market_data_coverage_degraded'
   | 'market_data_stale'
   | { subsystem_unhealthy: { name: string } };
 
-/** Authoritative operator lifecycle (header UI + Live gate). */
+/** Authoritative operator lifecycle (header UI + execution gate). */
 export type OperationalPhase =
   | { phase: 'catalog_warming' }
   | { phase: 'degraded'; reasons: OperationalDegradeReason[] }
@@ -36,6 +29,7 @@ export interface WsShardConnectivity {
   total: number;
   disconnected: number;
   oldest_disconnected_secs: null | number;
+  connected_ratio_bps: number;
 }
 
 /** CLOB websocket market-data readiness snapshot. */
@@ -45,83 +39,71 @@ export interface MarketDataConnectivity {
   ws_shards: WsShardConnectivity;
 }
 
-/** Execution kill-switch class on operator dashboards. */
-export type ExecutionEmergencyClassView =
-  | 'persistence_fault'
-  | 'reservation_fault'
-  | 'venue_fault';
-
-/** Global execution kill-switch snapshot (distinct from risk circuit breaker). */
-export interface ExecutionEmergencyView {
-  active: boolean;
-  class: ExecutionEmergencyClassView;
+/** Operational kill-switch snapshot (mirrors Rust `KillSwitchView`). */
+export interface KillSwitchView {
+  state: KillSwitchState;
   requires_operator_ack: boolean;
-  last_reason: null | string;
+  last_reason: string;
+  changed_by: string;
+  changed_at: IsoDateTime;
 }
 
-export const IDLE_EXECUTION_EMERGENCY: ExecutionEmergencyView = {
-  active: false,
-  class: 'venue_fault',
-  last_reason: null,
-  requires_operator_ack: false,
-};
+/** Next-step hint the recovery coordinator surfaces to operators. */
+export type ExecutionRecoveryStep = string;
 
+/** Execution-recovery rollup embedded in {@link SystemStatus}. */
+export interface ExecutionRecoverySummary {
+  has_unresolvable_reconciliation: boolean;
+  unresolvable_count: number;
+  kill_switch_requires_ack: boolean;
+  kill_switch_state: KillSwitchState;
+  quant_runtime_mode: QuantRuntimeMode;
+  auto_execution_blocked: boolean;
+  next_steps: ExecutionRecoveryStep[];
+}
+
+/** `GET /system/execution-recovery` — recovery detail with blocking rows. */
+export interface ExecutionRecoveryView {
+  summary: ExecutionRecoverySummary;
+  blocking_reconciliations: ReconciliationView[];
+  kill_switch: KillSwitchView;
+}
+
+/** `GET /system/status` — the operator system snapshot. */
 export interface SystemStatus {
-  execution_mode: ExecutionMode;
-  breaker_state: BreakerStateName;
+  quant_runtime_mode: QuantRuntimeMode;
   uptime_secs: number;
   active_markets: number;
-  open_positions: number;
-  pending_reservations: number;
-  total_exposure: UsdString;
-  daily_pnl: UsdString;
   catalog: CatalogState;
   operational_phase: OperationalPhase;
   market_data: MarketDataConnectivity;
-  control_factor_publication_id: null | string;
-  control_factor_snapshot_expired: boolean;
-  control_factor_live_warn: boolean;
-  execution_emergency: ExecutionEmergencyView;
+  kill_switch: KillSwitchView;
+  execution_recovery: ExecutionRecoverySummary;
   checked_at: IsoDateTime;
 }
 
-export type SystemBalanceSource =
-  | 'authoritative_clob'
-  | 'non_authoritative'
-  | 'simulated_dry_run'
-  | 'simulated_paper';
+/** `GET /system/quant-mode` — the current runtime mode. */
+export interface QuantModeView {
+  mode: QuantRuntimeMode;
+}
 
-export type ExposureBindingLimit =
-  | 'absolute_market'
-  | 'absolute_total'
-  | 'bankroll_cap'
-  | 'percent_of_cash'
-  | 'reservation_backend';
+/** `POST /system/quant-mode` result (governed mode hot-swap). */
+export interface QuantModeTransitionReport {
+  from: QuantRuntimeMode;
+  to: QuantRuntimeMode;
+}
 
-export interface SystemBalanceView {
-  execution_mode: ExecutionMode;
-  source: SystemBalanceSource;
-  cash_balance_usd: UsdString;
-  position_mark_value_usd: UsdString;
-  equity_usd: UsdString;
-  bankroll_cap_usd: UsdString;
-  reserve_balance_usd: UsdString;
-  reserved_usd: UsdString;
-  total_exposure_usd: UsdString;
-  available_for_sizing_usd: UsdString;
-  potential_loss_usd: UsdString;
-  blocking_trade_count: number;
-  needs_reconcile_count: number;
-  max_total_exposure_usd: UsdString;
-  max_single_market_exposure_usd: UsdString;
-  max_total_exposure_pct: string;
-  binding_exposure_limit: ExposureBindingLimit;
-  open_position_count: number;
-  active_reservation_count: number;
-  metrics_age_secs: number;
-  is_authoritative: boolean;
-  is_stale: boolean;
-  checked_at: IsoDateTime;
+/** `POST /system/quant-mode` request body. */
+export interface SwitchQuantModeRequest {
+  mode: QuantRuntimeMode;
+  reason: string;
+}
+
+/** `POST /system/kill-switch` request body (`ack` clears `emergency_halted`). */
+export interface SetKillSwitchRequest {
+  state: KillSwitchState;
+  reason: string;
+  ack?: boolean;
 }
 
 export type SubsystemCheckStatus =
@@ -136,55 +118,12 @@ export interface SubsystemHealth {
   detail: null | string;
 }
 
+/** `GET /system/health` — per-subsystem health report. */
 export interface HealthReport {
   overall_healthy: boolean;
   checks: SubsystemHealth[];
   checked_at: IsoDateTime;
 }
 
-export type MaterializationScheduleActivationView =
-  | {
-      reason:
-        | 'evidence_warmup'
-        | 'live_only_evidence'
-        | 'unsupported_execution_mode';
-      state: 'inactive';
-    }
-  | { state: 'runnable' };
-
-export type MaterializationScheduleModeContractView =
-  | 'all_modes'
-  | 'live_after_evidence_warmup'
-  | 'live_only';
-
-export interface MaterializationScheduleStatusView {
-  schedule_id: string;
-  activation: MaterializationScheduleActivationView;
-  mode_contract: MaterializationScheduleModeContractView;
-  last_run_at: IsoDateTime | null;
-  last_success_at: IsoDateTime | null;
-  last_terminal_status: MaterializationRunStatus | null;
-  next_due_at: IsoDateTime | null;
-}
-
-export interface ModeTransitionReport {
-  from: ExecutionMode;
-  to: ExecutionMode;
-}
-
-export interface SwitchModeRequest {
-  mode: ExecutionMode;
-  reason: string;
-}
-
-export interface HaltRequest {
-  reason: string;
-}
-
-export interface ResumeRequest {
-  operator_ack: string;
-}
-
-export interface CircuitBreakerResetRequest {
-  reason: string;
-}
+/** `GET /system/deploy-config` — credential-masked deploy config snapshot. */
+export type DeployConfigView = Record<string, unknown>;

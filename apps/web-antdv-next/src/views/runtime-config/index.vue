@@ -40,7 +40,7 @@ import {
 } from '#/shared/components/format/tag-options';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
-import { useOxideAccess } from '#/shared/composables/use-oxide-access';
+import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useSystemStore } from '#/store';
 
 import { useRuntimeConfigVersionColumns } from './modules/schemas';
@@ -51,7 +51,7 @@ defineOptions({ name: 'RuntimeConfigPage' });
 const route = useRoute();
 const { governed } = useGovernedAction();
 const { handleRequest } = useRequestHandler();
-const { hasAccessByCodes } = useOxideAccess();
+const { hasAccessByCodes } = useQpAccess();
 const systemStore = useSystemStore();
 
 const canActivate = hasAccessByCodes(['runtime_config:activate']);

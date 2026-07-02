@@ -43,31 +43,6 @@ import {
 
 import { useVbenForm } from './form';
 
-/** Tag color per execution mode: dry_run grey, paper blue, live red. */
-const EXECUTION_MODE_COLOR: Record<string, string> = {
-  dry_run: 'default',
-  live: 'error',
-  paper: 'processing',
-};
-
-/** Tag color per circuit-breaker FSM state. */
-const BREAKER_STATE_COLOR: Record<string, string> = {
-  closed: 'success',
-  half_open: 'warning',
-  halted: 'magenta',
-  open: 'error',
-  recovered: 'processing',
-};
-
-/** Dot color (CSS class) matching the breaker state Tag color. */
-const BREAKER_STATE_DOT_CLASS: Record<string, string> = {
-  closed: 'bg-green-500',
-  half_open: 'bg-yellow-500',
-  halted: 'bg-fuchsia-500',
-  open: 'bg-red-500',
-  recovered: 'bg-blue-500',
-};
-
 setupVbenVxeTable({
   configVxeTable: (vxeUI) => {
     vxeUI.setConfig({
@@ -389,51 +364,6 @@ setupVbenVxeTable({
       renderTableDefault(_renderOpts, { column, row }) {
         const value = get(row, column.field) as DecimalInput;
         return h('span', { class: 'font-mono' }, formatScore(value));
-      },
-    });
-
-    // 单元格渲染：执行模式(dry_run/paper/live → Tag + enum.executionMode.*)
-    vxeUI.renderer.add('CellExecutionMode', {
-      renderTableDefault(_renderOpts, { column, row }) {
-        const value = get(row, column.field) as null | string | undefined;
-        if (!value) {
-          return h('span', {}, EMPTY_PLACEHOLDER);
-        }
-        const key = `enum.executionMode.${value}`;
-        return h(
-          Tag,
-          { color: EXECUTION_MODE_COLOR[value] ?? 'default' },
-          { default: () => ($te(key) ? $t(key) : value) },
-        );
-      },
-    });
-
-    // 单元格渲染：熔断器状态(状态点 + Tag + enum.breakerState.*)
-    vxeUI.renderer.add('CellBreakerState', {
-      renderTableDefault(_renderOpts, { column, row }) {
-        const value = get(row, column.field) as null | string | undefined;
-        if (!value) {
-          return h('span', {}, EMPTY_PLACEHOLDER);
-        }
-        const key = `enum.breakerState.${value}`;
-        const dot = h('span', {
-          class: [
-            'inline-block size-2 rounded-full',
-            BREAKER_STATE_DOT_CLASS[value] ?? 'bg-gray-400',
-          ],
-        });
-        return h(
-          Tag,
-          { color: BREAKER_STATE_COLOR[value] ?? 'default' },
-          {
-            default: () => [
-              h('span', { class: 'inline-flex items-center gap-1' }, [
-                dot,
-                h('span', {}, $te(key) ? $t(key) : value),
-              ]),
-            ],
-          },
-        );
       },
     });
 
