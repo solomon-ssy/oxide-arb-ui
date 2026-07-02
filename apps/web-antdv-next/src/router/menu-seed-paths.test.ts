@@ -16,6 +16,8 @@ const SEED_COMPONENTS = [
   'markets/index',
   'markets/detail/index',
   'quant/reports/index',
+  'quant/reports/detail/index',
+  'quant/recommendations/detail',
   'quant/intents/index',
   'quant/execution-orders/index',
   'quant/positions/index',

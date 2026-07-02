@@ -68,6 +68,115 @@
     "revoked": "已撤销",
     "expired": "已过期"
   },
+  "emptyReportReason": {
+    "empty_selection": "选池为空",
+    "insufficient_data_quality": "数据质量不足",
+    "model_quality_gate_failed": "模型质量门未通过",
+    "no_positive_signal": "无正向信号",
+    "portfolio_budget_exhausted": "组合预算耗尽",
+    "runtime_mode_disabled": "运行模式禁用",
+    "system_degraded": "系统降级"
+  },
+  "ineligibilityReason": {
+    "budget_exhausted": "预算耗尽",
+    "data_stale": "数据陈旧",
+    "low_confidence": "置信度过低",
+    "manually_blocked": "人工封禁",
+    "model_not_published": "模型未发布",
+    "report_only_mode": "仅报告模式",
+    "risk_envelope_invalid": "风险边界无效",
+    "shadow_not_passed": "影子门未通过"
+  },
+  "rejectionReason": {
+    "available_cash_exhausted": "可用现金耗尽",
+    "below_min_size": "低于最小规模",
+    "beyond_top_n": "超出 TopN 截断",
+    "budget_exhausted": "预算耗尽",
+    "category_cap_exhausted": "类别上限耗尽",
+    "correlation_cap_exhausted": "相关性上限耗尽",
+    "event_cap_exhausted": "事件上限耗尽",
+    "invalid_edge_inputs": "边际输入无效",
+    "liquidity_infeasible": "流动性不可行",
+    "market_cap_exhausted": "单市场上限耗尽",
+    "no_positive_signal": "无正向信号"
+  },
+  "recommendationAttributionOutcome": {
+    "filled_exited": "成交并退出",
+    "filled_settled": "成交并结算",
+    "expired_unfilled": "过期未成交",
+    "cancelled_unfilled": "取消未成交",
+    "failed_unfilled": "失败未成交"
+  },
+  "recommendationOutcome": {
+    "won": "获胜",
+    "lost": "落败",
+    "pending": "进行中",
+    "cancelled": "已取消",
+    "expired_unfilled": "过期未成交",
+    "unknown": "未知"
+  },
+  "entryTriggerKind": {
+    "breakout": "突破",
+    "data_event": "数据事件",
+    "immediate": "立即",
+    "limit_price": "限价",
+    "pullback": "回调",
+    "time_window": "时间窗口"
+  },
+  "factorDirection": {
+    "positive": "正向",
+    "neutral": "中性",
+    "negative": "负向"
+  },
+  "factorFamily": {
+    "activity": "活跃度",
+    "data_quality": "数据质量",
+    "domain_crypto": "领域：加密",
+    "domain_geopolitics": "领域：地缘",
+    "domain_politics": "领域：政治",
+    "domain_sports": "领域：体育",
+    "domain_weather": "领域：天气",
+    "liquidity": "流动性",
+    "mean_reversion": "均值回归",
+    "microstructure": "微观结构",
+    "momentum": "动量",
+    "resolution": "结算",
+    "volatility": "波动率"
+  },
+  "sizingModelKind": {
+    "kelly": "凯利"
+  },
+  "bindingConstraint": {
+    "available_cash": "可用现金",
+    "category_cap": "类别上限",
+    "confidence_cap": "置信度上限",
+    "correlation_cap": "相关性上限",
+    "drawdown_cap": "回撤上限",
+    "event_cap": "事件上限",
+    "kelly_cap": "凯利上限",
+    "liquidity_cap": "流动性上限",
+    "manual_cap": "人工上限",
+    "none": "无",
+    "portfolio_budget": "组合预算",
+    "single_market_cap": "单市场上限",
+    "single_recommendation_cap": "单条推荐上限"
+  },
+  "exitSettlementMode": {
+    "exit_before_resolution": "结算前退出",
+    "hold_to_resolution": "持有至结算"
+  },
+  "redeemPolicy": {
+    "auto": "自动",
+    "manual": "手动"
+  },
+  "exitTriggerKind": {
+    "manual": "手动",
+    "signal_invalidation": "信号失效",
+    "stop_loss": "止损",
+    "take_profit": "止盈",
+    "time_exit": "时间退出",
+    "trailing_stop": "移动止损"
+  },
   "orderIntentStatus": {
     "draft": "草稿",
     "pending_approval": "待审批",

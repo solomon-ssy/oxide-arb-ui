@@ -68,6 +68,115 @@
     "revoked": "Revoked",
     "expired": "Expired"
   },
+  "emptyReportReason": {
+    "empty_selection": "Empty market selection",
+    "insufficient_data_quality": "Insufficient data quality",
+    "model_quality_gate_failed": "Model quality gate failed",
+    "no_positive_signal": "No positive signal",
+    "portfolio_budget_exhausted": "Portfolio budget exhausted",
+    "runtime_mode_disabled": "Runtime mode disabled",
+    "system_degraded": "System degraded"
+  },
+  "ineligibilityReason": {
+    "budget_exhausted": "Budget exhausted",
+    "data_stale": "Data stale",
+    "low_confidence": "Low confidence",
+    "manually_blocked": "Manually blocked",
+    "model_not_published": "Model not published",
+    "report_only_mode": "Report-only mode",
+    "risk_envelope_invalid": "Risk envelope invalid",
+    "shadow_not_passed": "Shadow gate not passed"
+  },
+  "rejectionReason": {
+    "available_cash_exhausted": "Available cash exhausted",
+    "below_min_size": "Below minimum size",
+    "beyond_top_n": "Beyond TopN cutoff",
+    "budget_exhausted": "Budget exhausted",
+    "category_cap_exhausted": "Category cap exhausted",
+    "correlation_cap_exhausted": "Correlation cap exhausted",
+    "event_cap_exhausted": "Event cap exhausted",
+    "invalid_edge_inputs": "Invalid edge inputs",
+    "liquidity_infeasible": "Liquidity infeasible",
+    "market_cap_exhausted": "Market cap exhausted",
+    "no_positive_signal": "No positive signal"
+  },
+  "recommendationAttributionOutcome": {
+    "filled_exited": "Filled & Exited",
+    "filled_settled": "Filled & Settled",
+    "expired_unfilled": "Expired (Unfilled)",
+    "cancelled_unfilled": "Cancelled (Unfilled)",
+    "failed_unfilled": "Failed (Unfilled)"
+  },
+  "recommendationOutcome": {
+    "won": "Won",
+    "lost": "Lost",
+    "pending": "Pending",
+    "cancelled": "Cancelled",
+    "expired_unfilled": "Expired (Unfilled)",
+    "unknown": "Unknown"
+  },
+  "entryTriggerKind": {
+    "breakout": "Breakout",
+    "data_event": "Data Event",
+    "immediate": "Immediate",
+    "limit_price": "Limit Price",
+    "pullback": "Pullback",
+    "time_window": "Time Window"
+  },
+  "factorDirection": {
+    "positive": "Positive",
+    "neutral": "Neutral",
+    "negative": "Negative"
+  },
+  "factorFamily": {
+    "activity": "Activity",
+    "data_quality": "Data Quality",
+    "domain_crypto": "Domain: Crypto",
+    "domain_geopolitics": "Domain: Geopolitics",
+    "domain_politics": "Domain: Politics",
+    "domain_sports": "Domain: Sports",
+    "domain_weather": "Domain: Weather",
+    "liquidity": "Liquidity",
+    "mean_reversion": "Mean Reversion",
+    "microstructure": "Microstructure",
+    "momentum": "Momentum",
+    "resolution": "Resolution",
+    "volatility": "Volatility"
+  },
+  "sizingModelKind": {
+    "kelly": "Kelly"
+  },
+  "bindingConstraint": {
+    "available_cash": "Available cash",
+    "category_cap": "Category cap",
+    "confidence_cap": "Confidence cap",
+    "correlation_cap": "Correlation cap",
+    "drawdown_cap": "Drawdown cap",
+    "event_cap": "Event cap",
+    "kelly_cap": "Kelly cap",
+    "liquidity_cap": "Liquidity cap",
+    "manual_cap": "Manual cap",
+    "none": "None",
+    "portfolio_budget": "Portfolio budget",
+    "single_market_cap": "Single-market cap",
+    "single_recommendation_cap": "Single-recommendation cap"
+  },
+  "exitSettlementMode": {
+    "exit_before_resolution": "Exit before resolution",
+    "hold_to_resolution": "Hold to resolution"
+  },
+  "redeemPolicy": {
+    "auto": "Auto",
+    "manual": "Manual"
+  },
+  "exitTriggerKind": {
+    "manual": "Manual",
+    "signal_invalidation": "Signal invalidation",
+    "stop_loss": "Stop loss",
+    "take_profit": "Take profit",
+    "time_exit": "Time exit",
+    "trailing_stop": "Trailing stop"
+  },
   "orderIntentStatus": {
     "draft": "Draft",
     "pending_approval": "Pending Approval",

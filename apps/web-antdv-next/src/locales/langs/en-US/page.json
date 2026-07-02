@@ -6,7 +6,9 @@
   "common": {
     "underConstruction": "This page is under construction and will land in a later phase",
     "comingInPhase": "Coming in Phase {phase}",
-    "reportOnlyNote": "report_only is not dry-run: report sizing runs against the real venue account (CLOB collateral + venue positions). Credentials are required; missing credentials fail closed."
+    "reportOnlyNote": "report_only is not dry-run: report sizing runs against the real venue account (CLOB collateral + venue positions). Credentials are required; missing credentials fail closed.",
+    "yes": "Yes",
+    "no": "No"
   },
   "menu": {
     "group": {
@@ -22,6 +24,8 @@
     "markets": "Markets",
     "marketDetail": "Market Detail",
     "quantReports": "Reports",
+    "reportDetail": "Report Detail",
+    "recommendationDetail": "Recommendation Detail",
     "orderIntents": "Order Intents",
     "executionOrders": "Execution Orders",
     "positions": "Positions",
@@ -434,6 +438,8 @@
     }
   },
   "quantReports": {
+    "title": "Recommendation Reports",
+    "listTitle": "Reports",
     "run": {
       "title": "Run Ad-hoc Report",
       "summary": "Enqueue an ad-hoc TopN report run. Leave overrides blank to use server defaults.",
@@ -442,6 +448,381 @@
       "sourceDelaySecs": "Source Delay (secs)",
       "serverDefault": "Server default",
       "accepted": "Report run accepted (trigger {key})"
+    },
+    "filters": {
+      "status": "Status",
+      "kind": "Kind",
+      "triggerKind": "Trigger",
+      "runtimeMode": "Runtime Mode",
+      "all": "All"
+    },
+    "columns": {
+      "reportId": "Report",
+      "asOf": "As Of",
+      "runtimeMode": "Mode",
+      "status": "Status",
+      "kind": "Kind",
+      "triggerKind": "Trigger",
+      "topN": "Top N",
+      "published": "Published",
+      "capitalBase": "Capital Base",
+      "suggested": "Suggested USD",
+      "emptyReason": "Empty Reason",
+      "publishedAt": "Published",
+      "revokedAt": "Revoked",
+      "expiredAt": "Expired",
+      "createdAt": "Created",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke Report",
+      "revokeSummary": "Revoke published report {id}. This is irreversible and marks the report and its recommendations revoked."
+    },
+    "feedback": {
+      "revoked": "Report revoked"
+    },
+    "wsToast": {
+      "started": "Report build started ({key})",
+      "published": "Report published ({key})",
+      "empty": "Report published empty ({key})",
+      "failed": "Report build failed ({key})",
+      "revoked": "Report revoked ({key})",
+      "expired": "Report expired ({key})"
+    },
+    "detail": {
+      "title": "Report Detail",
+      "back": "Back to reports",
+      "notFound": "Report not found",
+      "tabs": {
+        "overview": "Overview",
+        "recommendations": "Recommendations",
+        "diff": "Diff"
+      },
+      "empty": {
+        "title": "Empty report",
+        "description": "This report published no recommendations."
+      },
+      "overview": {
+        "identity": "Identity",
+        "reportId": "Report ID",
+        "kind": "Kind",
+        "triggerKind": "Trigger",
+        "triggerKey": "Trigger Key",
+        "triggerTime": "Trigger Time",
+        "status": "Status",
+        "runtimeMode": "Runtime Mode",
+        "asOf": "As Of",
+        "sourceDelay": "Source Delay",
+        "horizon": "Horizon",
+        "topN": "Top N",
+        "capitalBase": "Capital Base",
+        "accountSource": "Account Source",
+        "accountSnapshotRef": "Account Snapshot Ref",
+        "runtimeConfigVersion": "Runtime Config Version",
+        "modelVersion": "Model Version",
+        "marketSelection": "Market Selection",
+        "statusReason": "Status Reason",
+        "publishedAt": "Published At",
+        "revokedAt": "Revoked At",
+        "expiredAt": "Expired At",
+        "createdAt": "Created At"
+      },
+      "summary": {
+        "title": "Summary",
+        "marketSelectionCount": "Markets Selected",
+        "candidateCount": "Candidates",
+        "rejectedCount": "Rejected",
+        "publishedCount": "Published",
+        "totalSuggested": "Total Suggested",
+        "maxSingle": "Max Single Rec",
+        "averageScore": "Average Score",
+        "minScore": "Min Score",
+        "confidence": "Model Confidence",
+        "confidenceMean": "Mean",
+        "confidenceMin": "Min",
+        "confidenceMax": "Max",
+        "dataQuality": "Data Quality",
+        "dqFresh": "Fresh",
+        "dqAcceptable": "Acceptable",
+        "dqDegraded": "Degraded",
+        "dqStale": "Stale",
+        "dqInsufficient": "Insufficient",
+        "eligibility": "Execution Eligibility",
+        "eligibleReportOnly": "Report Only",
+        "eligibleSemiAuto": "Semi Auto",
+        "eligibleAutoExecution": "Auto Execution",
+        "topRejections": "Top Rejection Reasons",
+        "categoryAllocation": "Category Allocation",
+        "eventAllocation": "Event Allocation",
+        "warnings": "Warnings",
+        "count": "Count"
+      },
+      "recommendations": {
+        "empty": "No recommendations in this report.",
+        "columns": {
+          "rank": "Rank",
+          "market": "Market",
+          "side": "Side",
+          "composite": "Composite",
+          "riskAdjusted": "Risk-Adj",
+          "confidence": "Confidence",
+          "expectedReturn": "Exp. Return",
+          "suggested": "Suggested",
+          "eligibility": "Eligible Modes",
+          "status": "Status",
+          "open": "Full Page"
+        }
+      },
+      "diff": {
+        "compareLabel": "Baseline report",
+        "comparePlaceholder": "Select a baseline report to compare against",
+        "run": "Run Diff",
+        "empty": "No other published report of this kind to compare against.",
+        "failed": "Diff could not be computed for the selected baseline.",
+        "baselineReport": "Baseline",
+        "thisReport": "This report",
+        "added": "Added in this report",
+        "removed": "Removed from baseline",
+        "retained": "Retained",
+        "totals": "Totals",
+        "baseTotal": "Baseline Total",
+        "compareTotal": "This Report Total",
+        "delta": "Delta",
+        "eligibilityCompare": "Eligibility (baseline → this report)",
+        "columns": {
+          "market": "Market",
+          "side": "Side",
+          "baseRank": "Baseline Rank",
+          "compareRank": "This Report Rank",
+          "baseSuggested": "Baseline USD",
+          "compareSuggested": "This Report USD",
+          "delta": "Delta USD"
+        }
+      }
+    }
+  },
+  "quantRecommendations": {
+    "title": "Recommendation",
+    "back": "Back",
+    "notFound": "Recommendation not found",
+    "sections": {
+      "identity": "Identity",
+      "score": "Score",
+      "context": "Market Context",
+      "eligibility": "Execution Eligibility",
+      "plans": "Plans",
+      "factors": "Factor Breakdown",
+      "evidence": "Evidence",
+      "attribution": "Attribution"
+    },
+    "identity": {
+      "recommendationId": "Recommendation ID",
+      "reportId": "Report ID",
+      "rank": "Rank",
+      "market": "Market",
+      "event": "Event",
+      "token": "Token",
+      "side": "Outcome Side",
+      "category": "Category",
+      "question": "Question",
+      "outcome": "Outcome",
+      "status": "Status",
+      "validFrom": "Valid From",
+      "validUntil": "Valid Until",
+      "activeIntent": "Active Intent"
+    },
+    "score": {
+      "composite": "Composite Score",
+      "riskAdjusted": "Risk-Adjusted Score",
+      "confidence": "Confidence",
+      "expectedReturn": "Expected Return",
+      "downside": "Downside",
+      "liquidity": "Liquidity Score",
+      "dataQuality": "Data Quality Score",
+      "percentile": "Model Score Percentile",
+      "rankBeforePortfolio": "Rank (pre-portfolio)"
+    },
+    "context": {
+      "bestBid": "Best Bid",
+      "bestAsk": "Best Ask",
+      "mid": "Mid Price",
+      "spread": "Spread",
+      "depth": "Depth",
+      "volume24h": "24h Volume",
+      "bookAge": "Book Age",
+      "timeToResolution": "Time to Resolution",
+      "marketStatus": "Market Status",
+      "negRisk": "Neg-Risk",
+      "feeRate": "Fee Rate"
+    },
+    "entryPlan": {
+      "title": "Entry Plan",
+      "trigger": "Trigger",
+      "triggerPrice": "Trigger Price",
+      "limitPrice": "Limit Price",
+      "maxSlippage": "Max Slippage",
+      "validFrom": "Valid From",
+      "validUntil": "Valid Until",
+      "minDepth": "Min Depth",
+      "maxBookAge": "Max Book Age",
+      "cancelIfNotTriggered": "Cancel If Not Triggered",
+      "reason": "Entry Reason"
+    },
+    "sizingPlan": {
+      "title": "Sizing Plan",
+      "suggested": "Suggested USD",
+      "suggestedShares": "Suggested Shares",
+      "max": "Max USD",
+      "min": "Min USD",
+      "portfolioWeight": "Portfolio Weight",
+      "marketExposureAfter": "Market Exposure After",
+      "eventExposureAfter": "Event Exposure After",
+      "categoryExposureAfter": "Category Exposure After",
+      "bindingConstraint": "Binding Constraint",
+      "sizingModel": "Sizing Model",
+      "edge": "Edge",
+      "kelly": "Kelly Fraction",
+      "reason": "Sizing Reason"
+    },
+    "exitPlan": {
+      "title": "Exit Plan",
+      "takeProfitPrice": "Take-Profit Price",
+      "takeProfitPct": "Take-Profit %",
+      "stopLossPrice": "Stop-Loss Price",
+      "stopLossPct": "Stop-Loss %",
+      "timeExitAt": "Time Exit At",
+      "maxHold": "Max Hold",
+      "settlementMode": "Settlement Mode",
+      "redeemPolicy": "Redeem Policy",
+      "manualReviewAt": "Manual Review At",
+      "trailingStop": "Trailing Stop",
+      "partialExits": "Partial Exit Nodes",
+      "invalidationRules": "Signal Invalidation Rules",
+      "reason": "Exit Reason",
+      "partialExit": {
+        "node": "Node",
+        "trigger": "Trigger",
+        "triggerValue": "Value",
+        "sellPct": "Sell %",
+        "minPrice": "Min Price",
+        "reason": "Reason"
+      },
+      "invalidation": {
+        "rule": "Rule",
+        "description": "Description",
+        "threshold": "Threshold"
+      }
+    },
+    "riskEnvelope": {
+      "title": "Risk Envelope",
+      "maxLoss": "Max Loss",
+      "maxPosition": "Max Position",
+      "maxMarketExposure": "Max Market Exposure",
+      "maxEventExposure": "Max Event Exposure",
+      "maxCategoryExposure": "Max Category Exposure",
+      "maxSlippage": "Max Slippage",
+      "requiresApproval": "Requires Approval",
+      "autoExecutionAllowed": "Auto Execution Allowed",
+      "envelopeHash": "Envelope Hash",
+      "notes": "Risk Notes"
+    },
+    "eligibility": {
+      "eligibleModes": "Eligible Modes",
+      "ineligibilityReasons": "Ineligibility Reasons",
+      "approvalRequired": "Approval Required",
+      "autoPolicy": "Auto Policy",
+      "none": "None"
+    },
+    "factors": {
+      "empty": "No factor breakdown available.",
+      "columns": {
+        "name": "Factor",
+        "family": "Family",
+        "direction": "Direction",
+        "raw": "Raw",
+        "normalized": "Normalized",
+        "weight": "Weight",
+        "contribution": "Contribution",
+        "confidence": "Confidence",
+        "explanation": "Explanation"
+      }
+    },
+    "evidence": {
+      "title": "Replay Handles",
+      "signalCandidate": "Signal Candidate",
+      "featureVector": "Feature Vector",
+      "modelRun": "Model Run",
+      "marketSelection": "Market Selection",
+      "bookSnapshot": "Book Snapshot",
+      "runtimeConfig": "Runtime Config Version",
+      "modelVersion": "Model Version",
+      "factorDefinitions": "Factor Definition Versions",
+      "dataQualitySnapshot": "Data Quality Snapshot",
+      "empty": "Evidence is unavailable for this recommendation.",
+      "copied": "Copied to clipboard"
+    },
+    "attribution": {
+      "title": "Attribution",
+      "outcome": "Outcome",
+      "realizedPnl": "Realized PnL",
+      "mae": "Max Adverse Excursion",
+      "mfe": "Max Favorable Excursion",
+      "labelAvailableAt": "Label Available At",
+      "entry": {
+        "title": "Entry Outcome",
+        "filled": "Entry Filled",
+        "fillPrice": "Fill Price",
+        "fillShares": "Fill Shares",
+        "slippage": "Entry Slippage",
+        "filledAt": "Filled At"
+      },
+      "exit": {
+        "title": "Exit Outcome",
+        "price": "Exit Price",
+        "shares": "Exit Shares",
+        "trigger": "Exit Trigger",
+        "compliance": "Exit Compliance",
+        "settlementOutcome": "Settlement Outcome",
+        "exitedAt": "Exited At"
+      },
+      "detail": {
+        "title": "Detail",
+        "hitStopLoss": "Hit Stop Loss",
+        "hitTakeProfit": "Hit Take Profit",
+        "liquidityExitPossible": "Liquidity Exit Possible",
+        "notes": "Notes"
+      },
+      "empty": "No attribution yet",
+      "pending": "Attribution is written after the position is settled (post-trade labeling). It is read-only and appears here once available."
+    },
+    "createIntent": {
+      "button": "Create Intent",
+      "title": "Create Order Intent",
+      "summary": "Create an order intent from recommendation {id}. Entry order, sizing and risk envelope are frozen from this recommendation.",
+      "success": "Order intent created",
+      "details": {
+        "entryTrigger": "Entry Trigger",
+        "limitPrice": "Limit Price",
+        "suggestedUsd": "Suggested USD",
+        "suggestedShares": "Suggested Shares",
+        "envelopeHash": "Envelope Hash",
+        "validUntil": "Valid Until",
+        "maxLoss": "Max Loss",
+        "maxPosition": "Max Position"
+      },
+      "disabled": {
+        "permission": "You lack the order_intent:create permission.",
+        "mode": "Current runtime mode is report_only. This is not dry-run — intent creation is disabled until the operator switches to semi_auto or auto_execution.",
+        "killSwitch": "The kill-switch is not closed; new entries are blocked.",
+        "eligibility": "This recommendation is not eligible for execution in the current runtime mode.",
+        "riskEnvelope": "The risk envelope is invalid (max position or max loss is not positive).",
+        "validity": "Outside the recommendation validity window.",
+        "reportStatus": "The parent report is no longer published.",
+        "recommendationStatus": "This recommendation can no longer create an intent (revoked / expired / executed).",
+        "activeIntent": "An order intent already exists for this recommendation."
+      }
     }
   },
   "runtimeConfig": {

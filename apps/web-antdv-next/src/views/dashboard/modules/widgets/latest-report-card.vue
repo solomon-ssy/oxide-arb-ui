@@ -20,7 +20,10 @@ const props = defineProps<{
   report: null | QuantReportDetailView;
 }>();
 
-const emit = defineEmits<{ navigate: [] }>();
+const emit = defineEmits<{
+  navigateDetail: [reportId: string];
+  navigateList: [];
+}>();
 
 const statusTagOptions = useRecommendationReportStatusTagOptions();
 const statusTag = computed(() =>
@@ -28,6 +31,12 @@ const statusTag = computed(() =>
     ? findTagOption(statusTagOptions, props.report.status)
     : undefined,
 );
+
+function openDetail() {
+  if (props.report) {
+    emit('navigateDetail', props.report.recommendation_report_id);
+  }
+}
 </script>
 
 <template>
@@ -35,13 +44,18 @@ const statusTag = computed(() =>
     :title="$t('page.dashboard.latestReport.title')"
     icon="lucide:file-text"
     tone="indigo"
+    fill
   >
     <template #extra>
-      <Button size="small" type="link" @click="emit('navigate')">
+      <Button size="small" type="link" @click="emit('navigateList')">
         {{ $t('page.dashboard.viewAll') }}
       </Button>
     </template>
-    <div v-if="report" class="flex flex-col gap-2">
+    <div
+      v-if="report"
+      class="flex cursor-pointer flex-col gap-2"
+      @click="openDetail"
+    >
       <div class="flex items-center justify-between gap-2">
         <Tag :color="statusTag?.color ?? 'default'">
           {{ statusTag?.label ?? report.status }}

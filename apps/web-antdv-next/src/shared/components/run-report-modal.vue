@@ -75,3 +75,9 @@ const [Modal, modalApi] = useVbenModal({
     </div>
   </Modal>
 </template>
+
+<style scoped>
+:deep(.ant-input-number) {
+  width: 100%;
+}
+</style>

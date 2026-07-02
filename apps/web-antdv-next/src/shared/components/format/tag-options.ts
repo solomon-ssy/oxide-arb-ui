@@ -2,6 +2,7 @@ import {
   APPROVAL_STATUSES,
   EXECUTION_ORDER_PHASES,
   EXECUTION_ORDER_STATES,
+  FACTOR_DIRECTIONS,
   KILL_SWITCH_STATES,
   MARKET_CATEGORIES,
   MARKET_STATUSES,
@@ -10,9 +11,11 @@ import {
   OPERATION_OUTCOMES,
   ORDER_INTENT_KINDS,
   ORDER_INTENT_STATUSES,
+  OUTCOME_SIDES,
   POSITION_LEDGER_STATES,
   PUBLICATION_STATUSES,
   QUANT_RUNTIME_MODES,
+  RECOMMENDATION_ATTRIBUTION_OUTCOMES,
   RECOMMENDATION_REPORT_STATUSES,
   RECOMMENDATION_STATUSES,
   RECONCILIATION_RESULTS,
@@ -415,6 +418,46 @@ export function useOrderIntentKindTagOptions() {
     (value) => $t(`enum.orderIntentKind.${value}`),
     {
       [ORDER_INTENT_KINDS.buy]: 'blue',
+    },
+  );
+}
+
+/** Recommendation outcome-side tags (YES / NO token). */
+export function useOutcomeSideTagOptions() {
+  return buildTagOptions(
+    Object.values(OUTCOME_SIDES),
+    (value) => $t(`enum.outcomeSide.${value}`),
+    {
+      [OUTCOME_SIDES.no]: 'error',
+      [OUTCOME_SIDES.yes]: 'success',
+    },
+  );
+}
+
+/** Factor contribution direction tags. */
+export function useFactorDirectionTagOptions() {
+  return buildTagOptions(
+    Object.values(FACTOR_DIRECTIONS),
+    (value) => $t(`enum.factorDirection.${value}`),
+    {
+      [FACTOR_DIRECTIONS.negative]: 'error',
+      [FACTOR_DIRECTIONS.neutral]: 'default',
+      [FACTOR_DIRECTIONS.positive]: 'success',
+    },
+  );
+}
+
+/** Recommendation attribution terminal-outcome tags. */
+export function useRecommendationAttributionOutcomeTagOptions() {
+  return buildTagOptions(
+    Object.values(RECOMMENDATION_ATTRIBUTION_OUTCOMES),
+    (value) => $t(`enum.recommendationAttributionOutcome.${value}`),
+    {
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.cancelledUnfilled]: 'default',
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.expiredUnfilled]: 'default',
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.failedUnfilled]: 'error',
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.filledExited]: 'success',
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.filledSettled]: 'cyan',
     },
   );
 }

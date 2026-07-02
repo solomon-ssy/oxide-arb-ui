@@ -11,9 +11,19 @@ export interface GovernedContext {
   reason: string;
 }
 
+/** Read-only key/value row rendered in the governed modal body. */
+export interface GovernedDetailRow {
+  label: string;
+  value: string;
+  /** Render the value in a monospace, break-all style (ids / hashes). */
+  mono?: boolean;
+}
+
 export interface GovernedOptions {
   confirmWord?: string;
   danger?: boolean;
+  /** Structured resource preview shown above the reason field. */
+  details?: GovernedDetailRow[];
   summary?: string;
   title: string;
 }
@@ -66,6 +76,7 @@ function createGovernedActionApi(): GovernedActionApi {
       modalApi.setData({
         confirmWord: options.confirmWord,
         danger: options.danger,
+        details: options.details,
         summary: options.summary,
         title: options.title,
         onCancel: () => resolve(null),

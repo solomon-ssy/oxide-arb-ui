@@ -196,13 +196,14 @@ onUnmounted(() => {
       />
 
       <div
-        class="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 xl:grid-cols-3"
+        class="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 xl:grid-cols-3"
       >
         <LatestReportCard
           v-if="canReadReports"
           :loading="reportLoading"
           :report="latestReport"
-          @navigate="go('/quant/reports')"
+          @navigate-detail="(id: string) => go(`/quant/reports/${id}`)"
+          @navigate-list="go('/quant/reports')"
         />
 
         <LiveAccountCard

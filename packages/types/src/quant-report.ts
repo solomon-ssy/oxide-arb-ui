@@ -116,9 +116,12 @@ export interface ReportDiffView {
   compare_report_id: UuidString;
   added: RecommendationDeltaView[];
   removed: RecommendationDeltaView[];
-  changed: RecommendationDeltaView[];
+  retained: RecommendationDeltaView[];
+  base_total_suggested_usd: UsdString;
+  compare_total_suggested_usd: UsdString;
   total_suggested_usd_delta: UsdString;
-  eligibility_summary: EligibilitySummary;
+  base_eligibility: EligibilitySummary;
+  compare_eligibility: EligibilitySummary;
 }
 
 /** Filter + pagination for `GET /quant/reports`. */
@@ -126,6 +129,7 @@ export interface QuantReportListQuery extends PageQuery, TimeRangeQuery {
   kind?: ReportKind;
   status?: RecommendationReportStatus;
   trigger_kind?: ReportTriggerKind;
+  runtime_mode?: QuantRuntimeMode;
 }
 
 /** `POST /quant/reports/run` governed request body. */

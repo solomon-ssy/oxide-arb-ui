@@ -34,6 +34,7 @@ const drawdownSign = computed(() =>
     :title="$t('page.dashboard.account.title')"
     icon="lucide:wallet"
     tone="teal"
+    fill
   >
     <template #extra>
       <Button size="small" type="link" @click="emit('navigate')">

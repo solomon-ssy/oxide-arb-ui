@@ -22,6 +22,7 @@ import type {
   QuantRuntimeMode,
   RecommendationAttributionOutcome,
   RecommendationOutcome,
+  RecommendationReportStatus,
   RecommendationStatus,
   RedeemPolicy,
   SizingModelKind,
@@ -160,14 +161,24 @@ export interface QuantRecommendationView {
   valid_until: IsoDateTime;
   status: RecommendationStatus;
   created_at: IsoDateTime;
+  /** Current lifecycle state of the parent report (authoritative). */
+  report_status: RecommendationReportStatus;
+  /** Id of the blocking pre-submission order intent, when one already exists. */
+  active_order_intent_id: null | UuidString;
 }
 
 /** `GET /quant/recommendations/{id}/evidence` — replay-handle references. */
 export interface QuantEvidenceView {
   recommendation_id: UuidString;
   signal_candidate_id: string;
+  feature_vector_id: string;
+  model_run_id: string;
+  market_selection_id: string;
   book_snapshot_ref: string;
+  runtime_config_version_id: string;
+  model_version_id: string;
   factor_definition_versions: string[];
+  data_quality_snapshot_ref: string;
 }
 
 /** Realized entry execution against the venue (`attribution.entry_outcome`). */

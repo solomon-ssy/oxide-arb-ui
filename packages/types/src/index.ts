@@ -3,6 +3,8 @@ export type * from './common';
 export type * from './data-quality';
 // Runtime enum const objects (`QUANT_RUNTIME_MODES`, …) live here alongside types.
 export * from './enums';
+// Pure execution-gate predicates (runtime functions) mirroring backend guards.
+export * from './execution-gate';
 export type * from './execution-order';
 export type * from './exit-plan';
 // `market` carries the search sentinel `MARKET_CATEGORY_UNKNOWN_FILTER`.

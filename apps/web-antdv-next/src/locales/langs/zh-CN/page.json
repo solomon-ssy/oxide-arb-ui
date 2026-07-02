@@ -6,7 +6,9 @@
   "common": {
     "underConstruction": "该页面建设中，将在后续 phase 交付",
     "comingInPhase": "将在 Phase {phase} 交付",
-    "reportOnlyNote": "report_only 不是 dry-run：报告 sizing 基于真实 venue account（CLOB 抵押 + venue 持仓）计算，需要凭证；缺凭证将 fail-closed。"
+    "reportOnlyNote": "report_only 不是 dry-run：报告 sizing 基于真实 venue account（CLOB 抵押 + venue 持仓）计算，需要凭证；缺凭证将 fail-closed。",
+    "yes": "是",
+    "no": "否"
   },
   "menu": {
     "group": {
@@ -22,6 +24,8 @@
     "markets": "市场",
     "marketDetail": "市场详情",
     "quantReports": "推荐报告",
+    "reportDetail": "报告详情",
+    "recommendationDetail": "推荐详情",
     "orderIntents": "订单意图",
     "executionOrders": "执行订单",
     "positions": "持仓",
@@ -434,6 +438,8 @@
     }
   },
   "quantReports": {
+    "title": "推荐报告",
+    "listTitle": "报告",
     "run": {
       "title": "运行临时报告",
       "summary": "入队一次临时 TopN 报告运行。留空覆盖项则使用服务端默认值。",
@@ -442,6 +448,381 @@
       "sourceDelaySecs": "数据延迟（秒）",
       "serverDefault": "服务端默认",
       "accepted": "报告运行已受理（触发 {key}）"
+    },
+    "filters": {
+      "status": "状态",
+      "kind": "类型",
+      "triggerKind": "触发",
+      "runtimeMode": "运行模式",
+      "all": "全部"
+    },
+    "columns": {
+      "reportId": "报告",
+      "asOf": "截止时间",
+      "runtimeMode": "模式",
+      "status": "状态",
+      "kind": "类型",
+      "triggerKind": "触发",
+      "topN": "Top N",
+      "published": "已发布数",
+      "capitalBase": "资本基数",
+      "suggested": "建议 USD",
+      "emptyReason": "空原因",
+      "publishedAt": "发布时间",
+      "revokedAt": "撤销时间",
+      "expiredAt": "过期时间",
+      "createdAt": "创建时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情",
+      "revoke": "撤销",
+      "revokeTitle": "撤销报告",
+      "revokeSummary": "撤销已发布报告 {id}。此操作不可逆，会将报告及其推荐标记为已撤销。"
+    },
+    "feedback": {
+      "revoked": "报告已撤销"
+    },
+    "wsToast": {
+      "started": "报告构建开始（{key}）",
+      "published": "报告已发布（{key}）",
+      "empty": "报告发布为空（{key}）",
+      "failed": "报告构建失败（{key}）",
+      "revoked": "报告已撤销（{key}）",
+      "expired": "报告已过期（{key}）"
+    },
+    "detail": {
+      "title": "报告详情",
+      "back": "返回报告列表",
+      "notFound": "报告不存在",
+      "tabs": {
+        "overview": "概览",
+        "recommendations": "推荐",
+        "diff": "对比"
+      },
+      "empty": {
+        "title": "空报告",
+        "description": "该报告未发布任何推荐。"
+      },
+      "overview": {
+        "identity": "标识",
+        "reportId": "报告 ID",
+        "kind": "类型",
+        "triggerKind": "触发",
+        "triggerKey": "触发键",
+        "triggerTime": "触发时间",
+        "status": "状态",
+        "runtimeMode": "运行模式",
+        "asOf": "截止时间",
+        "sourceDelay": "数据延迟",
+        "horizon": "持有窗口",
+        "topN": "Top N",
+        "capitalBase": "资本基数",
+        "accountSource": "账户来源",
+        "accountSnapshotRef": "账户快照引用",
+        "runtimeConfigVersion": "运行配置版本",
+        "modelVersion": "模型版本",
+        "marketSelection": "市场选池",
+        "statusReason": "状态原因",
+        "publishedAt": "发布时间",
+        "revokedAt": "撤销时间",
+        "expiredAt": "过期时间",
+        "createdAt": "创建时间"
+      },
+      "summary": {
+        "title": "汇总",
+        "marketSelectionCount": "选中市场",
+        "candidateCount": "候选数",
+        "rejectedCount": "被拒数",
+        "publishedCount": "已发布",
+        "totalSuggested": "建议总额",
+        "maxSingle": "单条最大",
+        "averageScore": "平均分",
+        "minScore": "最低分",
+        "confidence": "模型置信度",
+        "confidenceMean": "均值",
+        "confidenceMin": "最小",
+        "confidenceMax": "最大",
+        "dataQuality": "数据质量",
+        "dqFresh": "新鲜",
+        "dqAcceptable": "可接受",
+        "dqDegraded": "降级",
+        "dqStale": "陈旧",
+        "dqInsufficient": "不足",
+        "eligibility": "执行资格",
+        "eligibleReportOnly": "仅报告",
+        "eligibleSemiAuto": "半自动",
+        "eligibleAutoExecution": "全自动",
+        "topRejections": "主要被拒原因",
+        "categoryAllocation": "类别分配",
+        "eventAllocation": "事件分配",
+        "warnings": "告警",
+        "count": "数量"
+      },
+      "recommendations": {
+        "empty": "该报告没有推荐。",
+        "columns": {
+          "rank": "排名",
+          "market": "市场",
+          "side": "方向",
+          "composite": "综合",
+          "riskAdjusted": "风险调整",
+          "confidence": "置信度",
+          "expectedReturn": "预期收益",
+          "suggested": "建议额",
+          "eligibility": "可执行模式",
+          "status": "状态",
+          "open": "详情页"
+        }
+      },
+      "diff": {
+        "compareLabel": "基准报告",
+        "comparePlaceholder": "选择用于对比的基准报告",
+        "run": "运行对比",
+        "empty": "没有同类型的其他已发布报告可供对比。",
+        "failed": "无法为所选基准报告计算对比。",
+        "baselineReport": "基准",
+        "thisReport": "本报告",
+        "added": "本报告新增",
+        "removed": "相对基准移除",
+        "retained": "保留",
+        "totals": "合计",
+        "baseTotal": "基准合计",
+        "compareTotal": "本报告合计",
+        "delta": "差额",
+        "eligibilityCompare": "资格（基准 → 本报告）",
+        "columns": {
+          "market": "市场",
+          "side": "方向",
+          "baseRank": "基准排名",
+          "compareRank": "本报告排名",
+          "baseSuggested": "基准 USD",
+          "compareSuggested": "本报告 USD",
+          "delta": "差额 USD"
+        }
+      }
+    }
+  },
+  "quantRecommendations": {
+    "title": "推荐",
+    "back": "返回",
+    "notFound": "推荐不存在",
+    "sections": {
+      "identity": "标识",
+      "score": "评分",
+      "context": "市场上下文",
+      "eligibility": "执行资格",
+      "plans": "计划",
+      "factors": "因子拆解",
+      "evidence": "证据",
+      "attribution": "归因"
+    },
+    "identity": {
+      "recommendationId": "推荐 ID",
+      "reportId": "报告 ID",
+      "rank": "排名",
+      "market": "市场",
+      "event": "事件",
+      "token": "Token",
+      "side": "结果方向",
+      "category": "类别",
+      "question": "问题",
+      "outcome": "结果",
+      "status": "状态",
+      "validFrom": "生效自",
+      "validUntil": "生效至",
+      "activeIntent": "进行中意图"
+    },
+    "score": {
+      "composite": "综合评分",
+      "riskAdjusted": "风险调整评分",
+      "confidence": "置信度",
+      "expectedReturn": "预期收益",
+      "downside": "下行",
+      "liquidity": "流动性评分",
+      "dataQuality": "数据质量评分",
+      "percentile": "模型分位",
+      "rankBeforePortfolio": "排名（组合前）"
+    },
+    "context": {
+      "bestBid": "最优买价",
+      "bestAsk": "最优卖价",
+      "mid": "中间价",
+      "spread": "价差",
+      "depth": "深度",
+      "volume24h": "24h 成交额",
+      "bookAge": "盘口时延",
+      "timeToResolution": "距结算",
+      "marketStatus": "市场状态",
+      "negRisk": "负风险",
+      "feeRate": "费率"
+    },
+    "entryPlan": {
+      "title": "入场计划",
+      "trigger": "触发",
+      "triggerPrice": "触发价",
+      "limitPrice": "限价",
+      "maxSlippage": "最大滑点",
+      "validFrom": "生效自",
+      "validUntil": "生效至",
+      "minDepth": "最小深度",
+      "maxBookAge": "最大盘口时延",
+      "cancelIfNotTriggered": "未触发则取消",
+      "reason": "入场原因"
+    },
+    "sizingPlan": {
+      "title": "仓位计划",
+      "suggested": "建议 USD",
+      "suggestedShares": "建议份额",
+      "max": "最大 USD",
+      "min": "最小 USD",
+      "portfolioWeight": "组合权重",
+      "marketExposureAfter": "市场敞口(后)",
+      "eventExposureAfter": "事件敞口(后)",
+      "categoryExposureAfter": "类别敞口(后)",
+      "bindingConstraint": "约束因子",
+      "sizingModel": "仓位模型",
+      "edge": "边际",
+      "kelly": "凯利系数",
+      "reason": "仓位原因"
+    },
+    "exitPlan": {
+      "title": "退出计划",
+      "takeProfitPrice": "止盈价",
+      "takeProfitPct": "止盈 %",
+      "stopLossPrice": "止损价",
+      "stopLossPct": "止损 %",
+      "timeExitAt": "时间退出",
+      "maxHold": "最大持有",
+      "settlementMode": "结算模式",
+      "redeemPolicy": "赎回策略",
+      "manualReviewAt": "人工复核",
+      "trailingStop": "移动止损",
+      "partialExits": "分批退出节点",
+      "invalidationRules": "信号失效规则",
+      "reason": "退出原因",
+      "partialExit": {
+        "node": "节点",
+        "trigger": "触发",
+        "triggerValue": "值",
+        "sellPct": "卖出 %",
+        "minPrice": "最低价",
+        "reason": "原因"
+      },
+      "invalidation": {
+        "rule": "规则",
+        "description": "说明",
+        "threshold": "阈值"
+      }
+    },
+    "riskEnvelope": {
+      "title": "风险边界",
+      "maxLoss": "最大亏损",
+      "maxPosition": "最大仓位",
+      "maxMarketExposure": "最大市场敞口",
+      "maxEventExposure": "最大事件敞口",
+      "maxCategoryExposure": "最大类别敞口",
+      "maxSlippage": "最大滑点",
+      "requiresApproval": "需要审批",
+      "autoExecutionAllowed": "允许全自动",
+      "envelopeHash": "边界哈希",
+      "notes": "风险备注"
+    },
+    "eligibility": {
+      "eligibleModes": "可执行模式",
+      "ineligibilityReasons": "不可执行原因",
+      "approvalRequired": "需要审批",
+      "autoPolicy": "自动策略",
+      "none": "无"
+    },
+    "factors": {
+      "empty": "无因子拆解。",
+      "columns": {
+        "name": "因子",
+        "family": "族",
+        "direction": "方向",
+        "raw": "原始值",
+        "normalized": "归一化",
+        "weight": "权重",
+        "contribution": "贡献",
+        "confidence": "置信度",
+        "explanation": "说明"
+      }
+    },
+    "evidence": {
+      "title": "回放句柄",
+      "signalCandidate": "信号候选",
+      "featureVector": "特征向量",
+      "modelRun": "模型运行",
+      "marketSelection": "市场选池",
+      "bookSnapshot": "盘口快照",
+      "runtimeConfig": "运行配置版本",
+      "modelVersion": "模型版本",
+      "factorDefinitions": "因子定义版本",
+      "dataQualitySnapshot": "数据质量快照",
+      "empty": "该推荐暂无证据。",
+      "copied": "已复制到剪贴板"
+    },
+    "attribution": {
+      "title": "归因",
+      "outcome": "结果",
+      "realizedPnl": "已实现盈亏",
+      "mae": "最大不利偏移",
+      "mfe": "最大有利偏移",
+      "labelAvailableAt": "标签可用时间",
+      "entry": {
+        "title": "入场结果",
+        "filled": "入场成交",
+        "fillPrice": "成交价",
+        "fillShares": "成交份额",
+        "slippage": "入场滑点",
+        "filledAt": "成交时间"
+      },
+      "exit": {
+        "title": "退出结果",
+        "price": "退出价",
+        "shares": "退出份额",
+        "trigger": "退出触发",
+        "compliance": "退出合规",
+        "settlementOutcome": "结算结果",
+        "exitedAt": "退出时间"
+      },
+      "detail": {
+        "title": "明细",
+        "hitStopLoss": "触发止损",
+        "hitTakeProfit": "触发止盈",
+        "liquidityExitPossible": "流动性可退出",
+        "notes": "备注"
+      },
+      "empty": "尚无归因",
+      "pending": "归因在仓位结算后（盘后标注）写入。它是只读的，可用后会显示在此。"
+    },
+    "createIntent": {
+      "button": "创建意图",
+      "title": "创建订单意图",
+      "summary": "从推荐 {id} 创建订单意图。入场单、仓位与风险边界将从该推荐冻结。",
+      "success": "订单意图已创建",
+      "details": {
+        "entryTrigger": "入场触发",
+        "limitPrice": "限价",
+        "suggestedUsd": "建议金额 (USD)",
+        "suggestedShares": "建议份额",
+        "envelopeHash": "风险边界哈希",
+        "validUntil": "有效至",
+        "maxLoss": "最大亏损",
+        "maxPosition": "最大仓位"
+      },
+      "disabled": {
+        "permission": "你没有 order_intent:create 权限。",
+        "mode": "当前运行模式为 report_only。这不是 dry-run —— 在操作者切换到 semi_auto 或 auto_execution 之前，禁止创建意图。",
+        "killSwitch": "熔断开关未处于 closed 状态，当前禁止开新仓。",
+        "eligibility": "该推荐在当前运行模式下不可执行。",
+        "riskEnvelope": "风险边界无效（最大仓位或最大亏损不为正）。",
+        "validity": "已超出推荐的有效时间窗口。",
+        "reportStatus": "父报告已不再是已发布状态。",
+        "recommendationStatus": "该推荐已不可创建意图（已撤销 / 已过期 / 已执行）。",
+        "activeIntent": "该推荐已存在进行中的订单意图。"
+      }
     }
   },
   "runtimeConfig": {

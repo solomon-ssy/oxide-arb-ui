@@ -6,13 +6,26 @@ import { computed, ref, watch } from 'vue';
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
-import { Input, Select, TextArea } from 'antdv-next';
+import {
+  Descriptions,
+  DescriptionsItem,
+  Input,
+  Select,
+  TextArea,
+} from 'antdv-next';
 
 import { useAuthStore } from '#/store';
+
+interface GovernedDetailRow {
+  label: string;
+  mono?: boolean;
+  value: string;
+}
 
 export interface GovernedActionPayload {
   confirmWord?: string;
   danger?: boolean;
+  details?: GovernedDetailRow[];
   onCancel?: () => void;
   /** Return `true` when the governed mutation succeeded. */
   onSubmit: (ctx: { actingRole: string; reason: string }) => Promise<boolean>;
@@ -98,6 +111,23 @@ watch(roleOptions, (options) => {
       >
         {{ payload.summary }}
       </p>
+
+      <Descriptions
+        v-if="payload?.details?.length"
+        bordered
+        :column="1"
+        size="small"
+      >
+        <DescriptionsItem
+          v-for="row in payload.details"
+          :key="row.label"
+          :label="row.label"
+        >
+          <span :class="row.mono ? 'font-mono text-xs break-all' : ''">
+            {{ row.value }}
+          </span>
+        </DescriptionsItem>
+      </Descriptions>
 
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">{{
