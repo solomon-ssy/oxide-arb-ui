@@ -45,12 +45,17 @@ export interface MarketView {
   updated_at: IsoDateTime;
 }
 
+/** Sentinel value for the markets search form — filter rows with empty categories. */
+export const MARKET_CATEGORY_UNKNOWN_FILTER = '__unknown__' as const;
+
 /** Filter + pagination query for `GET /markets` (AND-combined). */
 export interface MarketPageQuery extends PageQuery {
   /** Case-insensitive substring over question / slug. */
   keyword?: string;
   status?: MarketStatus;
   category?: MarketCategory;
+  /** When `true`, match markets with an empty `categories` array. */
+  category_unknown?: boolean;
   event_id?: string;
   /** When set, filter markets whose YES/NO tokens are both live on the CLOB WS. */
   subscribed?: boolean;

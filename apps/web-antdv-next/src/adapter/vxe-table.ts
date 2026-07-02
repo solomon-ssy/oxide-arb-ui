@@ -118,32 +118,39 @@ setupVbenVxeTable({
         const emptyLabel = attrs?.emptyLabel ?? EMPTY_PLACEHOLDER;
         const emptyColor = attrs?.emptyColor ?? 'default';
 
-        if (items.length === 0) {
-          return h(
-            Tag,
-            { color: emptyColor, ...props },
-            { default: () => emptyLabel },
-          );
-        }
+        const tagNodes =
+          items.length === 0
+            ? [
+                h(
+                  Tag,
+                  { color: emptyColor, ...props },
+                  { default: () => emptyLabel },
+                ),
+              ]
+            : items.map((value) => {
+                const tagItem = tagOptions.find(
+                  (item) => item.value === value,
+                ) ?? {
+                  color: attrs?.defaultColor ?? 'default',
+                  label: value,
+                  value,
+                };
+                return h(
+                  Tag,
+                  {
+                    ...props,
+                    ...objectOmit(tagItem, ['label', 'value']),
+                  },
+                  { default: () => tagItem.label ?? value },
+                );
+              });
 
         return h(
           'div',
-          { style: { display: 'flex', flexWrap: 'wrap', gap: '4px' } },
-          items.map((value) => {
-            const tagItem = tagOptions.find((item) => item.value === value) ?? {
-              color: attrs?.defaultColor ?? 'default',
-              label: value,
-              value,
-            };
-            return h(
-              Tag,
-              {
-                ...props,
-                ...objectOmit(tagItem, ['label', 'value']),
-              },
-              { default: () => tagItem.label ?? value },
-            );
-          }),
+          {
+            class: 'inline-flex flex-wrap items-center justify-center gap-1',
+          },
+          tagNodes,
         );
       },
     });

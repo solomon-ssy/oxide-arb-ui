@@ -1,6 +1,10 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { MARKET_CATEGORIES, MARKET_STATUSES } from '@vben/types';
+import {
+  MARKET_CATEGORIES,
+  MARKET_CATEGORY_UNKNOWN_FILTER,
+  MARKET_STATUSES,
+} from '@vben/types';
 
 import { $t } from '#/locales';
 
@@ -32,10 +36,16 @@ export function useMarketSearchSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
-        options: Object.values(MARKET_CATEGORIES).map((value) => ({
-          label: $t(`enum.marketCategory.${value}`),
-          value,
-        })),
+        options: [
+          {
+            label: $t('page.markets.unknownCategory'),
+            value: MARKET_CATEGORY_UNKNOWN_FILTER,
+          },
+          ...Object.values(MARKET_CATEGORIES).map((value) => ({
+            label: $t(`enum.marketCategory.${value}`),
+            value,
+          })),
+        ],
       },
       fieldName: 'category',
       label: $t('page.markets.search.category'),

@@ -5,7 +5,8 @@ export type * from './data-quality';
 export * from './enums';
 export type * from './execution-order';
 export type * from './exit-plan';
-export type * from './market';
+// `market` carries the search sentinel `MARKET_CATEGORY_UNKNOWN_FILTER`.
+export * from './market';
 export type * from './operation-log';
 export type * from './order-intent';
 export type * from './position';

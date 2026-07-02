@@ -9,6 +9,7 @@ import { computed, watch } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { MARKET_CATEGORY_UNKNOWN_FILTER } from '@vben/types';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { fetchMarketPage } from '#/api/markets';
@@ -63,9 +64,16 @@ const [Grid, gridApi] = useVbenVxeGrid<MarketRow>({
             formValues.subscribed === undefined || formValues.subscribed === ''
               ? undefined
               : formValues.subscribed === 'true';
+          const categoryValue = formValues.category as string | undefined;
+          const categoryUnknown =
+            categoryValue === MARKET_CATEGORY_UNKNOWN_FILTER ? true : undefined;
           const result = await handleRequest(() =>
             fetchMarketPage({
-              category: formValues.category as any,
+              category:
+                categoryUnknown || !categoryValue
+                  ? undefined
+                  : (categoryValue as any),
+              category_unknown: categoryUnknown,
               event_id:
                 (formValues.event_id as string | undefined) || undefined,
               keyword: (formValues.keyword as string | undefined) || undefined,
