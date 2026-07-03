@@ -12,6 +12,7 @@ import {
   useQuantRuntimeModeTagOptions,
   useSideTagOptions,
 } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Which governed actions the current operator is permitted to invoke. */
 export interface IntentActionPermits {
@@ -118,38 +119,49 @@ export function useIntentColumns(
         },
         name: 'CellOperation',
         options: [
-          { code: 'detail', text: $t('page.quantIntents.actions.detail') },
-          {
-            code: 'approve',
-            show: (row: OrderIntentView) =>
-              permits.canApprove && intentActions(row.status).canApprove,
-            text: $t('page.quantIntents.actions.approve'),
-          },
-          {
-            code: 'submit',
-            show: (row: OrderIntentView) => permits.submitEnabled(row),
-            text: $t('page.quantIntents.actions.submit'),
-          },
-          {
-            code: 'reject',
-            danger: true,
-            show: (row: OrderIntentView) =>
-              permits.canReject && intentActions(row.status).canReject,
-            text: $t('page.quantIntents.actions.reject'),
-          },
-          {
-            code: 'cancel',
-            danger: true,
-            show: (row: OrderIntentView) =>
-              permits.canCancel && intentActions(row.status).canCancel,
-            text: $t('page.quantIntents.actions.cancel'),
-          },
+          iconOp<OrderIntentView>(
+            'detail',
+            $t('page.quantIntents.actions.detail'),
+          ),
+          iconOp<OrderIntentView>(
+            'approve',
+            $t('page.quantIntents.actions.approve'),
+            {
+              show: (row) =>
+                permits.canApprove && intentActions(row.status).canApprove,
+            },
+          ),
+          iconOp<OrderIntentView>(
+            'submit',
+            $t('page.quantIntents.actions.submit'),
+            {
+              show: (row) => permits.submitEnabled(row),
+            },
+          ),
+          iconOp<OrderIntentView>(
+            'reject',
+            $t('page.quantIntents.actions.reject'),
+            {
+              danger: true,
+              show: (row) =>
+                permits.canReject && intentActions(row.status).canReject,
+            },
+          ),
+          iconOp<OrderIntentView>(
+            'cancel',
+            $t('page.quantIntents.actions.cancel'),
+            {
+              danger: true,
+              show: (row) =>
+                permits.canCancel && intentActions(row.status).canCancel,
+            },
+          ),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.quantIntents.columns.operation'),
-      width: 220,
+      width: 140,
     },
   ];
 }

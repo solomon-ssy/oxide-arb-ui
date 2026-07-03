@@ -4,6 +4,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
 import { useRuntimeConfigVersionSourceTagOptions } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 const ACTIVE_STATUS_OPTIONS = [
   {
@@ -88,25 +89,34 @@ export function useRuntimeConfigVersionColumns(
         },
         name: 'CellOperation',
         options: [
-          { code: 'detail', text: $t('page.runtimeConfig.actions.detail') },
-          {
-            code: 'activate',
-            show: (row: RuntimeConfigVersionView) =>
-              canActivate && row.runtime_config_version_id !== activeVersionId,
-            text: $t('page.runtimeConfig.actions.activate'),
-          },
-          {
-            code: 'rollback',
-            show: (row: RuntimeConfigVersionView) =>
-              canRollback && row.runtime_config_version_id !== activeVersionId,
-            text: $t('page.runtimeConfig.actions.rollback'),
-          },
+          iconOp<RuntimeConfigVersionView>(
+            'detail',
+            $t('page.runtimeConfig.actions.detail'),
+          ),
+          iconOp<RuntimeConfigVersionView>(
+            'activate',
+            $t('page.runtimeConfig.actions.activate'),
+            {
+              show: (row) =>
+                canActivate &&
+                row.runtime_config_version_id !== activeVersionId,
+            },
+          ),
+          iconOp<RuntimeConfigVersionView>(
+            'rollback',
+            $t('page.runtimeConfig.actions.rollback'),
+            {
+              show: (row) =>
+                canRollback &&
+                row.runtime_config_version_id !== activeVersionId,
+            },
+          ),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.runtimeConfig.columns.operation'),
-      width: 220,
+      width: 120,
     },
   ];
 }

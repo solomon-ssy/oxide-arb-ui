@@ -6,6 +6,7 @@ import { isReconciliationOperatorResolvable } from '@vben/types';
 
 import { $t } from '#/locales';
 import { useReconciliationResultTagOptions } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useReconciliationColumns(
   onActionClick: OnActionClickFn<ReconciliationView>,
@@ -89,22 +90,24 @@ export function useReconciliationColumns(
         },
         name: 'CellOperation',
         options: [
-          {
-            code: 'detail',
-            text: $t('page.quantReconciliations.actions.detail'),
-          },
-          {
-            code: 'resolve',
-            show: (row: ReconciliationView) =>
-              canResolve && isReconciliationOperatorResolvable(row),
-            text: $t('page.quantReconciliations.actions.resolve'),
-          },
+          iconOp<ReconciliationView>(
+            'detail',
+            $t('page.quantReconciliations.actions.detail'),
+          ),
+          iconOp<ReconciliationView>(
+            'resolve',
+            $t('page.quantReconciliations.actions.resolve'),
+            {
+              show: (row) =>
+                canResolve && isReconciliationOperatorResolvable(row),
+            },
+          ),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.quantReconciliations.columns.operation'),
-      width: 140,
+      width: 88,
     },
   ];
 }

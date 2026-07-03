@@ -2,6 +2,8 @@ import type { ApiError } from '@vben/request/qp';
 
 import type { GovernedField } from './governed-field';
 
+import { nextTick } from 'vue';
+
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 import { showApiError, useRequestHandler } from '@vben/request/qp';
@@ -64,7 +66,7 @@ function createGovernedActionApi(): GovernedActionApi {
 
   const [GovernedActionHost, modalApi] = useVbenModal({
     connectedComponent: GovernedActionModal,
-    destroyOnClose: true,
+    zIndex: 2001,
   });
 
   /**
@@ -83,25 +85,28 @@ function createGovernedActionApi(): GovernedActionApi {
     options: GovernedOptions,
   ): Promise<null | T> {
     return new Promise((resolve) => {
-      modalApi.setData({
-        confirmWord: options.confirmWord,
-        danger: options.danger,
-        details: options.details,
-        fields: options.fields,
-        summary: options.summary,
-        title: options.title,
-        onCancel: () => resolve(null),
-        onSubmit: async (ctx: GovernedContext): Promise<boolean> => {
-          const result = await handleRequest(() => execute(ctx), {
-            onError: showGovernedApiError,
-            silent: true,
-          });
-          resolve(result);
-          return result !== null;
-        },
-      });
-      modalApi.setState({ title: options.title });
-      modalApi.open();
+      void (async () => {
+        modalApi.setData({
+          confirmWord: options.confirmWord,
+          danger: options.danger,
+          details: options.details,
+          fields: options.fields,
+          summary: options.summary,
+          title: options.title,
+          onCancel: () => resolve(null),
+          onSubmit: async (ctx: GovernedContext): Promise<boolean> => {
+            const result = await handleRequest(() => execute(ctx), {
+              onError: showGovernedApiError,
+              silent: true,
+            });
+            resolve(result);
+            return result !== null;
+          },
+        });
+        modalApi.setState({ title: options.title });
+        await nextTick();
+        modalApi.open();
+      })();
     });
   }
 

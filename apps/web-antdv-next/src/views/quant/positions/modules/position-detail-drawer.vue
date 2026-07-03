@@ -10,6 +10,7 @@ import { Card, Descriptions, DescriptionsItem, Spin, Tag } from 'antdv-next';
 
 import { getPosition } from '#/api/positions';
 import { $t } from '#/locales';
+import EntityRouteButton from '#/shared/components/entity-route-button.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import {
   EMPTY_PLACEHOLDER,
@@ -72,11 +73,32 @@ const [Drawer, drawerApi] = useVbenDrawer({
   >
     <Spin :spinning="loading">
       <div v-if="position" class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="findTagOption(stateTagOptions, position.state)?.color">
-            {{ findTagOption(stateTagOptions, position.state)?.label }}
-          </Tag>
-          <Tag color="default">{{ position.position_plane }}</Tag>
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex flex-col gap-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <Tag
+                :color="findTagOption(stateTagOptions, position.state)?.color"
+              >
+                {{ findTagOption(stateTagOptions, position.state)?.label }}
+              </Tag>
+              <Tag color="default">{{ position.position_plane }}</Tag>
+            </div>
+            <span class="font-mono text-xs break-all">
+              {{ position.position_id }}
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <EntityRouteButton
+              icon="lucide:list-ordered"
+              :label="$t('page.quantPositions.detail.viewOrders')"
+              :to="`/quant/execution-orders?order_intent_id=${position.order_intent_id}`"
+            />
+            <EntityRouteButton
+              icon="lucide:git-branch"
+              :label="$t('page.quantPositions.detail.viewAttribution')"
+              :to="`/quant/recommendations/${position.recommendation_id}?tab=attribution`"
+            />
+          </div>
         </div>
 
         <Card
@@ -149,17 +171,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
             </DescriptionsItem>
           </Descriptions>
         </Card>
-
-        <div class="flex flex-col gap-1">
-          <EntityRouteLink
-            :label="$t('page.quantPositions.detail.viewOrders')"
-            :to="`/quant/execution-orders?order_intent_id=${position.order_intent_id}`"
-          />
-          <EntityRouteLink
-            :label="$t('page.quantPositions.detail.viewAttribution')"
-            :to="`/quant/recommendations/${position.recommendation_id}?tab=attribution`"
-          />
-        </div>
       </div>
       <span v-else class="text-gray-500">{{ EMPTY_PLACEHOLDER }}</span>
     </Spin>

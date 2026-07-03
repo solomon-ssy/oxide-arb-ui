@@ -10,6 +10,7 @@ import {
   useQuantRuntimeModeTagOptions,
   useRecommendationReportStatusTagOptions,
 } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Report statuses that support governed revocation. */
 const REVOCABLE_STATUSES = new Set<string>([
@@ -124,20 +125,24 @@ export function useReportColumns(
         },
         name: 'CellOperation',
         options: [
-          { code: 'detail', text: $t('page.quantReports.actions.detail') },
-          {
-            code: 'revoke',
-            danger: true,
-            show: (row: QuantReportView) =>
-              canRevoke && REVOCABLE_STATUSES.has(row.status),
-            text: $t('page.quantReports.actions.revoke'),
-          },
+          iconOp<QuantReportView>(
+            'detail',
+            $t('page.quantReports.actions.detail'),
+          ),
+          iconOp<QuantReportView>(
+            'revoke',
+            $t('page.quantReports.actions.revoke'),
+            {
+              danger: true,
+              show: (row) => canRevoke && REVOCABLE_STATUSES.has(row.status),
+            },
+          ),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.quantReports.columns.operation'),
-      width: 160,
+      width: 88,
     },
   ];
 }

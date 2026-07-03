@@ -9,6 +9,7 @@ import {
   useOperationOutcomeTagOptions,
   useResourceTypeTagOptions,
 } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useOperationLogColumns(
   onActionClick: OnActionClickFn<OperationLogView>,
@@ -73,14 +74,12 @@ export function useOperationLogColumns(
       cellRender: {
         attrs: { nameField: 'id', onClick: onActionClick },
         name: 'CellOperation',
-        options: [
-          { code: 'detail', text: $t('page.operationLog.actions.detail') },
-        ],
+        options: [iconOp('detail', $t('page.operationLog.actions.detail'))],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.operationLog.columns.operation'),
-      width: 100,
+      width: 72,
     },
   ];
 }

@@ -12,6 +12,7 @@ import {
   useMarketCategoryTagOptions,
   useMarketStatusTagOptions,
 } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Row type: the market view plus a UI-only `resolved` flag (WS `market.resolved`). */
 export type MarketRow = MarketView & { _resolved?: boolean };
@@ -109,25 +110,19 @@ export function useMarketColumns(
         attrs: { nameField: 'market_id', onClick: onActionClick },
         name: 'CellOperation',
         options: [
-          { code: 'detail', text: $t('page.markets.actions.detail') },
-          {
-            code: 'block',
-            show: (row: MarketRow) =>
-              canUpdate && row.status !== 'manually_blocked',
-            text: $t('page.markets.actions.block'),
-          },
-          {
-            code: 'unblock',
-            show: (row: MarketRow) =>
-              canUpdate && row.status === 'manually_blocked',
-            text: $t('page.markets.actions.unblock'),
-          },
+          iconOp<MarketRow>('detail', $t('page.markets.actions.detail')),
+          iconOp<MarketRow>('block', $t('page.markets.actions.block'), {
+            show: (row) => canUpdate && row.status !== 'manually_blocked',
+          }),
+          iconOp<MarketRow>('unblock', $t('page.markets.actions.unblock'), {
+            show: (row) => canUpdate && row.status === 'manually_blocked',
+          }),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.markets.columns.operation'),
-      width: 180,
+      width: 104,
     },
   ];
 }

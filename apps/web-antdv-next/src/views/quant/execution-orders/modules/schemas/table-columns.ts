@@ -10,6 +10,7 @@ import {
   useOrderTypeKindTagOptions,
   useSideTagOptions,
 } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useExecutionOrderColumns(
   onActionClick: OnActionClickFn<ExecutionOrderView>,
@@ -117,16 +118,13 @@ export function useExecutionOrderColumns(
         },
         name: 'CellOperation',
         options: [
-          {
-            code: 'detail',
-            text: $t('page.quantExecutionOrders.actions.detail'),
-          },
+          iconOp('detail', $t('page.quantExecutionOrders.actions.detail')),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.quantExecutionOrders.columns.operation'),
-      width: 100,
+      width: 72,
     },
   ];
 }

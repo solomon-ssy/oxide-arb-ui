@@ -3,6 +3,7 @@ import type { ExecutionOrderView, OrderIntentView } from '@vben/types';
 
 import { computed, onMounted, ref, watch } from 'vue';
 
+import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 import { intentActions, isIntentSubmittableStatus } from '@vben/types';
 
@@ -185,7 +186,10 @@ onMounted(() => void loadExecutionOrders());
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <Button v-if="showApprove" type="primary" @click="approve(intent)">
-          {{ $t('page.quantIntents.actions.approve') }}
+          <span class="inline-flex items-center gap-1.5">
+            <IconifyIcon class="size-4" icon="lucide:check" />
+            {{ $t('page.quantIntents.actions.approve') }}
+          </span>
         </Button>
         <Tooltip v-if="showSubmit" :title="submitDisabledReason">
           <span>
@@ -194,15 +198,24 @@ onMounted(() => void loadExecutionOrders());
               type="primary"
               @click="submit(intent)"
             >
-              {{ $t('page.quantIntents.actions.submit') }}
+              <span class="inline-flex items-center gap-1.5">
+                <IconifyIcon class="size-4" icon="lucide:send" />
+                {{ $t('page.quantIntents.actions.submit') }}
+              </span>
             </Button>
           </span>
         </Tooltip>
         <Button v-if="showReject" danger @click="reject(intent)">
-          {{ $t('page.quantIntents.actions.reject') }}
+          <span class="inline-flex items-center gap-1.5">
+            <IconifyIcon class="size-4" icon="lucide:x" />
+            {{ $t('page.quantIntents.actions.reject') }}
+          </span>
         </Button>
         <Button v-if="showCancel" danger @click="cancel(intent)">
-          {{ $t('page.quantIntents.actions.cancel') }}
+          <span class="inline-flex items-center gap-1.5">
+            <IconifyIcon class="size-4" icon="lucide:ban" />
+            {{ $t('page.quantIntents.actions.cancel') }}
+          </span>
         </Button>
       </div>
     </div>

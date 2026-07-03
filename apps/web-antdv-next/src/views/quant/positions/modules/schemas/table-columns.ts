@@ -5,6 +5,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import { $t } from '#/locales';
 import { formatShares } from '#/shared/components/format';
 import { usePositionLedgerStateTagOptions } from '#/shared/components/format/tag-options';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function usePositionColumns(
   onActionClick: OnActionClickFn<PositionView>,
@@ -89,14 +90,12 @@ export function usePositionColumns(
           onClick: onActionClick,
         },
         name: 'CellOperation',
-        options: [
-          { code: 'detail', text: $t('page.quantPositions.actions.detail') },
-        ],
+        options: [iconOp('detail', $t('page.quantPositions.actions.detail'))],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.quantPositions.columns.operation'),
-      width: 100,
+      width: 72,
     },
   ];
 }

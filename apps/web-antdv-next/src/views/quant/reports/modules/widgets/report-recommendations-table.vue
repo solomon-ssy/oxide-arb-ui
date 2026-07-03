@@ -3,7 +3,9 @@ import type { QuantRecommendationView } from '@vben/types';
 
 import { useRouter } from 'vue-router';
 
-import { Button, Empty, Table, Tag } from 'antdv-next';
+import { IconifyIcon } from '@vben/icons';
+
+import { Button, Empty, Table, Tag, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
 import {
@@ -106,7 +108,7 @@ const columns = [
     fixed: 'right' as const,
     key: 'open',
     title: $t('page.quantReports.detail.recommendations.columns.open'),
-    width: 100,
+    width: 72,
   },
 ];
 </script>
@@ -172,13 +174,17 @@ const columns = [
         </Tag>
       </template>
       <template v-else-if="column.key === 'open'">
-        <Button
-          size="small"
-          type="link"
-          @click.stop="openFullPage(record.recommendation_id)"
+        <Tooltip
+          :title="$t('page.quantReports.detail.recommendations.columns.open')"
         >
-          {{ $t('page.quantReports.detail.recommendations.columns.open') }}
-        </Button>
+          <Button
+            size="small"
+            type="link"
+            @click.stop="openFullPage(record.recommendation_id)"
+          >
+            <IconifyIcon class="size-5" icon="lucide:external-link" />
+          </Button>
+        </Tooltip>
       </template>
     </template>
   </Table>
