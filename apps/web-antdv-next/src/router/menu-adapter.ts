@@ -7,6 +7,18 @@ export interface MenuAdaptResult {
 
 const ENABLED = 'enabled';
 
+/**
+ * Catalog pages deep-link via ephemeral query params (`?open=`, `?train=`). Use
+ * path-only tab/component keys so stripping those params after handoff does not
+ * remount the page (which would tear down connected modals mid-open).
+ */
+const PATH_KEY_ROUTE_NAMES = new Set([
+  'research-backtests',
+  'research-datasets',
+  'research-factors',
+  'research-models',
+]);
+
 function collectPermissionCode(
   code: null | string | undefined,
   bucket: Set<string>,
@@ -61,6 +73,7 @@ function adaptNodes(
         component: node.component ?? '',
         meta: {
           affixTab: node.affix_tab,
+          fullPathKey: PATH_KEY_ROUTE_NAMES.has(node.name) ? false : undefined,
           hideInMenu: node.hide_in_menu,
           icon: node.icon ?? undefined,
           keepAlive: node.keep_alive,

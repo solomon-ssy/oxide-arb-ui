@@ -158,7 +158,8 @@
         "validationFolds": "验证折数",
         "incomplete": "请填写模型规格、数据集、版本、模型族与标签。",
         "feedback": "训练已提交；候选版本已登记。",
-        "noPermission": "你没有训练模型的权限（materialization:create）。"
+        "noPermission": "你没有训练模型的权限（materialization:create）。",
+        "modalUnavailable": "训练表单尚未就绪，请稍后重试。"
       },
       "backtest": {
         "title": "运行回测",

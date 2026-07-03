@@ -6,7 +6,7 @@ import type { TrainModelBody } from './modules/model-train-modal.vue';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { watch } from 'vue';
+import { nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
@@ -118,6 +118,42 @@ function openTrain(trainingDatasetId?: string) {
       trainingDatasetId,
     })
     .open();
+}
+
+/** Connected modals extend the parent api only after the child mounts. */
+function isTrainModalApiReady(): boolean {
+  return (
+    typeof trainModalApi.setData === 'function' &&
+    typeof trainModalApi.open === 'function'
+  );
+}
+
+async function waitForTrainModalApi(): Promise<boolean> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await nextTick();
+    if (isTrainModalApiReady()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Dataset-row handoff: open the train modal, then strip `?train=` from the URL. */
+async function handleTrainQueryHandoff(trainDataset: string) {
+  if (canTrain) {
+    if (!(await waitForTrainModalApi())) {
+      message.error($t('page.research.models.train.modalUnavailable'));
+      return;
+    }
+    openTrain(trainDataset);
+  } else {
+    message.warning($t('page.research.models.train.noPermission'));
+  }
+  if (route.query.train === undefined) {
+    return;
+  }
+  const { train: _train, ...rest } = route.query;
+  await router.replace({ path: route.path, query: rest });
 }
 
 async function submitTrain(body: TrainModelBody): Promise<boolean> {
@@ -293,13 +329,7 @@ watch(
     if (!trainDataset) {
       return;
     }
-    const { train: _train, ...rest } = route.query;
-    void router.replace({ query: rest });
-    if (canTrain) {
-      openTrain(trainDataset);
-    } else {
-      message.warning($t('page.research.models.train.noPermission'));
-    }
+    void handleTrainQueryHandoff(trainDataset);
   },
   { immediate: true },
 );

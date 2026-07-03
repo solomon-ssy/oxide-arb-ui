@@ -158,7 +158,8 @@
         "validationFolds": "Validation Folds",
         "incomplete": "Fill in model spec, dataset, version, family, and label.",
         "feedback": "Training submitted; candidate registered.",
-        "noPermission": "You lack permission to train models (materialization:create)."
+        "noPermission": "You lack permission to train models (materialization:create).",
+        "modalUnavailable": "The train form is not ready yet; try again in a moment."
       },
       "backtest": {
         "title": "Run backtest",
