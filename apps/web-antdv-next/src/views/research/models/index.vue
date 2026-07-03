@@ -6,8 +6,8 @@ import type { TrainModelBody } from './modules/model-train-modal.vue';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -41,6 +41,7 @@ import {
 defineOptions({ name: 'ResearchModelsPage' });
 
 const route = useRoute();
+const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
@@ -139,6 +140,7 @@ function openBacktest(model: TrainedModelView) {
       modelVersionId: model.model_version_id,
       onSubmit: (body: BacktestBody) =>
         void submitBacktest(model.model_version_id, body),
+      trainingDatasetId: model.training_dataset_id ?? undefined,
     })
     .open();
 }
@@ -154,6 +156,9 @@ async function submitBacktest(modelVersionId: string, body: BacktestBody) {
   );
   if (result) {
     message.success($t('page.research.models.backtest.feedback'));
+    // Deep-link into the backtests catalog; its `?open=` handler opens the
+    // freshly produced report drawer.
+    await router.push(`/research/backtests?open=${result.backtest_report_id}`);
   }
 }
 
@@ -244,13 +249,26 @@ watch(
   () => void gridApi.query(),
 );
 
-// A dataset-row "Train" handoff deep-links with `?train=<datasetId>`.
-onMounted(() => {
-  const trainDataset = route.query.train;
-  if (typeof trainDataset === 'string' && trainDataset && canTrain) {
-    openTrain(trainDataset);
-  }
-});
+// A dataset-row "Train" handoff deep-links with `?train=<datasetId>`. Watch (not
+// just onMounted) so an in-app navigation onto the already-mounted page still
+// fires; clear the query so a refresh does not reopen the modal.
+watch(
+  () => route.query.train,
+  (raw) => {
+    const trainDataset = typeof raw === 'string' ? raw : '';
+    if (!trainDataset) {
+      return;
+    }
+    const { train: _train, ...rest } = route.query;
+    void router.replace({ query: rest });
+    if (canTrain) {
+      openTrain(trainDataset);
+    } else {
+      message.warning($t('page.research.models.train.noPermission'));
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

@@ -117,8 +117,8 @@ export interface IntentLifecycleEvent {
 
 /**
  * WS `materialization.run_update` payload — a lean run-status hint for the
- * research workbench (mirrors Rust `MaterializationRunEvent`). The workbench
- * re-fetches the dataset / model / report catalog by id on any bump.
+ * research catalog (mirrors Rust `MaterializationRunEvent`). The catalog pages
+ * re-fetch the dataset / model / report by id on any bump.
  */
 export interface MaterializationRunEvent {
   run_id: UuidString;

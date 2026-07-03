@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { TrainModelRequest } from '@vben/types';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -11,6 +11,8 @@ import { Input, InputNumber, message, Select } from 'antdv-next';
 import { listModelSpecs } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
+
+import { useTrainableDatasetOptions } from '../../shared/use-trainable-dataset-options';
 
 defineOptions({ name: 'ModelTrainModal' });
 
@@ -35,12 +37,25 @@ const specOptions = ref<OptionItem[]>([]);
 const versionOptions = ref<OptionItem[]>([]);
 
 const modelSpecId = ref<string | undefined>();
-const trainingDatasetId = ref<string>('');
+const trainingDatasetId = ref<string | undefined>();
 const runtimeConfigVersionId = ref<string | undefined>();
 const modelFamily = ref<string>('weighted_factor');
 const labelName = ref<string>('');
 const labelHorizonSecs = ref<number>(0);
 const validationFolds = ref<number>(3);
+
+const prefillDatasetId = ref<string | undefined>();
+const {
+  datasetOptions,
+  loading: datasetLoading,
+  reload: reloadDatasets,
+} = useTrainableDatasetOptions({
+  modelSpecId,
+  prefillId: prefillDatasetId,
+});
+
+// A spec change re-scopes the trainable dataset pool.
+watch(modelSpecId, () => void reloadDatasets());
 
 async function loadOptions() {
   const [specs, versions] = await Promise.all([
@@ -86,8 +101,10 @@ const [Modal, modalApi] = useVbenModal({
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<ModelTrainPayload>();
-      trainingDatasetId.value = payload.value?.trainingDatasetId ?? '';
+      trainingDatasetId.value = payload.value?.trainingDatasetId || undefined;
+      prefillDatasetId.value = payload.value?.trainingDatasetId || undefined;
       void loadOptions();
+      void reloadDatasets();
     }
   },
 });
@@ -114,7 +131,14 @@ const [Modal, modalApi] = useVbenModal({
         <span class="text-sm font-medium">
           {{ $t('page.research.models.train.trainingDataset') }}
         </span>
-        <Input v-model:value="trainingDatasetId" />
+        <Select
+          v-model:value="trainingDatasetId"
+          :loading="datasetLoading"
+          :options="datasetOptions"
+          :placeholder="$t('page.research.datasets.selector.placeholder')"
+          show-search
+          option-filter-prop="label"
+        />
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">

@@ -6,31 +6,33 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRequestHandler } from '@vben/request/qp';
 import { KILL_SWITCH_STATES } from '@vben/types';
 
+import { useDebounceFn } from '@vueuse/core';
 import { Alert, Button, Tag } from 'antdv-next';
 
 import { getExecutionRecovery } from '#/api/system';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
-import { formatUsd, truncateHexId } from '#/shared/components/format';
+import {
+  formatExecutionRecoveryStep,
+  formatUsd,
+  truncateHexId,
+} from '#/shared/components/format';
 import {
   findTagOption,
   useKillSwitchStateTagOptions,
   useReconciliationResultTagOptions,
 } from '#/shared/components/format/tag-options';
+import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useKillSwitchAction } from '#/shared/composables/use-system-actions';
-import {
-  useReconciliationStore,
-  useSettlementRedeemStore,
-  useSystemStore,
-} from '#/store';
+import { useReconciliationStore, useSettlementRedeemStore } from '#/store';
 
 defineOptions({ name: 'ExecutionRecoveryCard' });
 
-const systemStore = useSystemStore();
 const reconciliationStore = useReconciliationStore();
 const settlementStore = useSettlementRedeemStore();
 const { handleRequest } = useRequestHandler();
+const { recoveryRefreshKey } = useDashboardStatusRefreshKey();
 const killSwitchAction = useKillSwitchAction();
 const reconciliationResultTagOptions = useReconciliationResultTagOptions();
 const killSwitchStateTagOptions = useKillSwitchStateTagOptions();
@@ -71,13 +73,6 @@ const canAck = computed(
     ),
 );
 
-/** Localize a typed `ExecutionRecoveryStep` (falls back to the raw value). */
-function stepLabel(step: string): string {
-  const key = `enum.executionRecoveryStep.${step}`;
-  const label = $t(key);
-  return label === key ? step : label;
-}
-
 async function acknowledge() {
   if (!killSwitch.value) {
     return;
@@ -91,19 +86,16 @@ async function acknowledge() {
   }
 }
 
-watch(
-  () => systemStore.status?.kill_switch?.state,
-  (next, prev) => {
-    if (prev !== undefined && next !== prev) {
-      void loadRecovery();
-    }
-  },
-);
+// Recovery has many trigger sources (status frame + reconciliation/settlement
+// WS bumps can all fire from a single resolve); debounce to one refetch.
+const reloadRecovery = useDebounceFn(() => void loadRecovery(), 200);
 
+// `system.status` carries the recovery rollup + kill-switch + runtime mode.
+watch(recoveryRefreshKey, reloadRecovery);
 // Reconciliation resolves + settlement transitions can clear/raise blockers.
 watch(
   () => [reconciliationStore.revision, settlementStore.revision],
-  () => void loadRecovery(),
+  reloadRecovery,
 );
 
 onMounted(() => {
@@ -177,7 +169,7 @@ onMounted(() => {
             v-for="(step, index) in recovery?.summary.next_steps"
             :key="index"
           >
-            {{ stepLabel(step) }}
+            {{ formatExecutionRecoveryStep(step) }}
           </li>
         </ol>
       </div>

@@ -24,7 +24,11 @@ import { message } from 'antdv-next';
 
 import { resolveReconciliation } from '#/api/reconciliations';
 import { $t } from '#/locales';
-import { EMPTY_PLACEHOLDER, formatUsd } from '#/shared/components/format';
+import {
+  EMPTY_PLACEHOLDER,
+  formatExecutionRecoveryStep,
+  formatUsd,
+} from '#/shared/components/format';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
@@ -116,7 +120,9 @@ export function useReconciliationActions(onResolved: () => void) {
       if (steps.length > 0) {
         message.info(
           $t('page.quantReconciliations.feedback.nextSteps', {
-            steps: steps.join('; '),
+            steps: steps
+              .map((step) => formatExecutionRecoveryStep(step))
+              .join('; '),
           }),
         );
       }

@@ -15,6 +15,9 @@ import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 
+import BacktestExpectedVsRealized from './backtest-expected-vs-realized.vue';
+import BacktestPnlChart from './backtest-pnl-chart.vue';
+
 defineOptions({ name: 'BacktestDetailDrawer' });
 
 interface BacktestDrawerData {
@@ -33,7 +36,9 @@ const expectedVsRealized = computed(
 const categoryBreakdown = computed(
   () => report.value?.category_breakdown ?? [],
 );
-const pnlSimulation = computed(() => report.value?.report_pnl_simulation ?? {});
+const pnlSimulation = computed(
+  () => report.value?.report_pnl_simulation ?? null,
+);
 
 async function refresh(id: string) {
   loading.value = true;
@@ -150,11 +155,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           size="small"
           :title="$t('page.research.backtests.detail.expectedVsRealized')"
         >
-          <JsonEditorShell
-            :model-value="expectedVsRealized"
-            :mode="Mode.tree"
-            read-only
-          />
+          <BacktestExpectedVsRealized :value="expectedVsRealized" />
         </Card>
 
         <Card
@@ -172,11 +173,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           size="small"
           :title="$t('page.research.backtests.detail.pnlSimulation')"
         >
-          <JsonEditorShell
-            :model-value="pnlSimulation"
-            :mode="Mode.tree"
-            read-only
-          />
+          <BacktestPnlChart :simulation="pnlSimulation" />
         </Card>
       </div>
     </Spin>

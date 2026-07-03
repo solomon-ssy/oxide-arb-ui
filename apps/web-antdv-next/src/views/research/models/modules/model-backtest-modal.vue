@@ -6,10 +6,13 @@ import { ref } from 'vue';
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Input, message, Select, Switch } from 'antdv-next';
+import { message, Select, Switch } from 'antdv-next';
 
+import { listModels } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
+
+import { useTrainableDatasetOptions } from '../../shared/use-trainable-dataset-options';
 
 defineOptions({ name: 'ModelBacktestModal' });
 
@@ -19,6 +22,8 @@ export type BacktestBody = Omit<RunBacktestRequest, 'reason'>;
 export interface ModelBacktestPayload {
   /** Model version the backtest replays (path id). */
   modelVersionId: string;
+  /** The model's own training dataset, prefilled as the default replay set. */
+  trainingDatasetId?: string;
   onSubmit: (body: BacktestBody) => void;
 }
 
@@ -31,11 +36,22 @@ const { handleRequest } = useRequestHandler();
 
 const payload = ref<ModelBacktestPayload | null>(null);
 const versionOptions = ref<OptionItem[]>([]);
+const comparisonOptions = ref<OptionItem[]>([]);
+const comparisonLoading = ref(false);
 
-const trainingDatasetId = ref<string>('');
+const trainingDatasetId = ref<string | undefined>();
 const runtimeConfigVersionId = ref<string | undefined>();
 const calibrate = ref<boolean>(false);
-const comparisonModelVersionId = ref<string>('');
+const comparisonModelVersionId = ref<string | undefined>();
+
+const prefillDatasetId = ref<string | undefined>();
+const {
+  datasetOptions,
+  loading: datasetLoading,
+  reload: reloadDatasets,
+} = useTrainableDatasetOptions({
+  prefillId: prefillDatasetId,
+});
 
 async function loadOptions() {
   const versions = await handleRequest(
@@ -48,6 +64,24 @@ async function loadOptions() {
   }));
 }
 
+async function loadComparisonModels() {
+  const currentId = payload.value?.modelVersionId;
+  comparisonLoading.value = true;
+  try {
+    const page = await handleRequest(() => listModels({ size: 200 }), {
+      silent: true,
+    });
+    comparisonOptions.value = (page?.items ?? [])
+      .filter((model) => model.model_version_id !== currentId)
+      .map((model) => ({
+        label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
+        value: model.model_version_id,
+      }));
+  } finally {
+    comparisonLoading.value = false;
+  }
+}
+
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
   onConfirm() {
@@ -57,8 +91,7 @@ const [Modal, modalApi] = useVbenModal({
     }
     payload.value?.onSubmit({
       calibrate: calibrate.value,
-      comparison_model_version_id:
-        comparisonModelVersionId.value.trim() || undefined,
+      comparison_model_version_id: comparisonModelVersionId.value || undefined,
       runtime_config_version_id: runtimeConfigVersionId.value,
       training_dataset_id: trainingDatasetId.value,
     });
@@ -67,11 +100,14 @@ const [Modal, modalApi] = useVbenModal({
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<ModelBacktestPayload>();
-      trainingDatasetId.value = '';
+      trainingDatasetId.value = payload.value?.trainingDatasetId || undefined;
+      prefillDatasetId.value = payload.value?.trainingDatasetId || undefined;
       runtimeConfigVersionId.value = undefined;
       calibrate.value = false;
-      comparisonModelVersionId.value = '';
+      comparisonModelVersionId.value = undefined;
       void loadOptions();
+      void reloadDatasets();
+      void loadComparisonModels();
     }
   },
 });
@@ -87,7 +123,14 @@ const [Modal, modalApi] = useVbenModal({
         <span class="text-sm font-medium">
           {{ $t('page.research.models.backtest.trainingDataset') }}
         </span>
-        <Input v-model:value="trainingDatasetId" />
+        <Select
+          v-model:value="trainingDatasetId"
+          :loading="datasetLoading"
+          :options="datasetOptions"
+          :placeholder="$t('page.research.datasets.selector.placeholder')"
+          show-search
+          option-filter-prop="label"
+        />
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">
@@ -104,11 +147,16 @@ const [Modal, modalApi] = useVbenModal({
         <span class="text-sm font-medium">
           {{ $t('page.research.models.backtest.comparisonModel') }}
         </span>
-        <Input
+        <Select
           v-model:value="comparisonModelVersionId"
+          allow-clear
+          :loading="comparisonLoading"
+          :options="comparisonOptions"
           :placeholder="
             $t('page.research.models.backtest.comparisonPlaceholder')
           "
+          show-search
+          option-filter-prop="label"
         />
       </div>
       <div class="flex items-center gap-2">

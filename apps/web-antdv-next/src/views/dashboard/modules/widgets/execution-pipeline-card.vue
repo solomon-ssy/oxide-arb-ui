@@ -9,11 +9,8 @@ import { listOrderIntents } from '#/api/order-intents';
 import { listReconciliations } from '#/api/reconciliations';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
-import {
-  useOrderIntentStore,
-  useReconciliationStore,
-  useSettlementRedeemStore,
-} from '#/store';
+import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
+import { useOrderIntentStore, useReconciliationStore } from '#/store';
 
 defineOptions({ name: 'ExecutionPipelineCard' });
 
@@ -31,8 +28,8 @@ const emit = defineEmits<{
 
 const orderIntentStore = useOrderIntentStore();
 const reconciliationStore = useReconciliationStore();
-const settlementStore = useSettlementRedeemStore();
 const { handleRequest } = useRequestHandler();
+const { pipelineRefreshKey } = useDashboardStatusRefreshKey();
 
 const pendingIntents = ref<null | number>(null);
 const inFlightOrders = ref<null | number>(null);
@@ -91,13 +88,18 @@ async function loadAll() {
   loading.value = false;
 }
 
-watch(() => orderIntentStore.revision, loadPendingIntents);
-// `quant.reconciliation` / `quant.settlement` bumps re-count in-flight work.
-watch(() => reconciliationStore.revision, loadUnresolvedReconciliations);
+// Intent lifecycle drives both pending approvals and in-flight submissions.
 watch(
-  () => settlementStore.revision,
-  () => void countInFlightOrders(),
+  () => orderIntentStore.revision,
+  () => {
+    void loadPendingIntents();
+    void countInFlightOrders();
+  },
 );
+watch(() => reconciliationStore.revision, loadUnresolvedReconciliations);
+// No execution-order WS channel exists; `system.status` is the refresh signal
+// for phase / auto-execution changes that move in-flight work.
+watch(pipelineRefreshKey, () => void loadAll());
 
 onMounted(() => {
   void loadAll();

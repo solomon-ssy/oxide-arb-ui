@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { TrainingDatasetView } from '@vben/types';
+import type { TrainingDatasetPlanView, TrainingDatasetView } from '@vben/types';
 
 import type { DatasetFormBody } from './modules/dataset-form-modal.vue';
 
@@ -11,7 +11,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, message } from 'antdv-next';
+import { Button, message, Tooltip } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -97,33 +97,25 @@ const [Grid, gridApi] = useVbenVxeGrid<TrainingDatasetView>({
   },
 });
 
-function openForm(mode: 'build' | 'plan') {
-  formModalApi
-    .setData({
-      mode,
-      onSubmit: (body: DatasetFormBody) => void submitDataset(mode, body),
-    })
-    .open();
+function openForm(mode: 'build-direct' | 'plan-wizard') {
+  formModalApi.setData({ mode, onBuild: runBuild, onPlan: runPlan }).open();
 }
 
-async function submitDataset(mode: 'build' | 'plan', body: DatasetFormBody) {
-  if (mode === 'plan') {
-    const plan = await governed(
-      (ctx) => planTrainingDataset({ ...body, reason: ctx.reason }, ctx),
-      {
-        summary: $t('page.research.datasets.plan.summary'),
-        title: $t('page.research.datasets.plan.title'),
-      },
-    );
-    if (plan) {
-      message.info(
-        $t('page.research.datasets.plan.feedback', {
-          samples: plan.planned_samples,
-        }),
-      );
-    }
-    return;
-  }
+/** Governed dry-run plan; returns the plan view for the wizard review step. */
+async function runPlan(
+  body: DatasetFormBody,
+): Promise<null | TrainingDatasetPlanView> {
+  return governed(
+    (ctx) => planTrainingDataset({ ...body, reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.research.datasets.plan.summary'),
+      title: $t('page.research.datasets.plan.title'),
+    },
+  );
+}
+
+/** Governed build; on success refreshes the grid and opens the detail drawer. */
+async function runBuild(body: DatasetFormBody): Promise<boolean> {
   const dataset = await governed(
     (ctx) => buildTrainingDataset({ ...body, reason: ctx.reason }, ctx),
     {
@@ -131,11 +123,13 @@ async function submitDataset(mode: 'build' | 'plan', body: DatasetFormBody) {
       title: $t('page.research.datasets.build.title'),
     },
   );
-  if (dataset) {
-    message.success($t('page.research.datasets.build.feedback'));
-    void gridApi.query();
-    drawerApi.setData({ dataset }).open();
+  if (!dataset) {
+    return false;
   }
+  message.success($t('page.research.datasets.build.feedback'));
+  void gridApi.query();
+  drawerApi.setData({ dataset }).open();
+  return true;
 }
 
 function goToTrain(dataset: TrainingDatasetView) {
@@ -176,12 +170,16 @@ watch(
     <Grid :table-title="$t('page.research.datasets.listTitle')">
       <template #toolbar-tools>
         <div v-if="canCreate" class="flex gap-2">
-          <Button @click="openForm('plan')">
-            {{ $t('page.research.datasets.actions.plan') }}
-          </Button>
-          <Button type="primary" @click="openForm('build')">
-            {{ $t('page.research.datasets.actions.build') }}
-          </Button>
+          <Tooltip :title="$t('page.research.datasets.actions.planHelp')">
+            <Button @click="openForm('plan-wizard')">
+              {{ $t('page.research.datasets.actions.plan') }}
+            </Button>
+          </Tooltip>
+          <Tooltip :title="$t('page.research.datasets.actions.buildHelp')">
+            <Button type="primary" @click="openForm('build-direct')">
+              {{ $t('page.research.datasets.actions.build') }}
+            </Button>
+          </Tooltip>
         </div>
       </template>
     </Grid>

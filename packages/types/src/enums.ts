@@ -121,6 +121,15 @@ export const KILL_SWITCH_STATES = {
 
 export type KillSwitchState = WireEnum<typeof KILL_SWITCH_STATES>;
 
+/** Ordered operator recovery step (mirrors Rust `ExecutionRecoveryStep`). */
+export const EXECUTION_RECOVERY_STEPS = {
+  acknowledgeKillSwitch: 'acknowledge_kill_switch',
+  resolveUnresolvableReconciliations: 'resolve_unresolvable_reconciliations',
+  verifyModePreflight: 'verify_mode_preflight',
+} as const;
+
+export type ExecutionRecoveryStep = WireEnum<typeof EXECUTION_RECOVERY_STEPS>;
+
 // ── Alerts ──────────────────────────────────────────────────────────────────
 
 /** Operational alert severity, lowest → highest. */
@@ -575,6 +584,16 @@ export const TRAINING_DATASET_STATUSES = {
 } as const;
 
 export type TrainingDatasetStatus = WireEnum<typeof TRAINING_DATASET_STATUSES>;
+
+/** Whether a dataset status is trainable/backtestable (trainer accepts these). */
+export function isTrainableDatasetStatus(
+  status: TrainingDatasetStatus,
+): boolean {
+  return (
+    status === TRAINING_DATASET_STATUSES.built ||
+    status === TRAINING_DATASET_STATUSES.ready
+  );
+}
 
 /** Factor family taxonomy (mirrors Rust `FactorFamily`). */
 export const FACTOR_FAMILIES = {

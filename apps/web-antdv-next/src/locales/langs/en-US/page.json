@@ -67,17 +67,33 @@
         "detail": "Details",
         "train": "Train model",
         "plan": "Dry-run plan",
-        "build": "Build dataset"
+        "build": "Build dataset",
+        "planHelp": "Dry-run the sample grid first, review the planned dataset id, then build. Safer for new windows.",
+        "buildHelp": "Skip dry-run and materialize immediately. The backend mints a new dataset id."
       },
       "plan": {
         "title": "Plan training dataset",
         "summary": "Dry-run the sample grid; no artifact or ledger row is written.",
-        "feedback": "Plan complete: {samples} planned samples."
+        "feedback": "Plan complete: {samples} planned samples.",
+        "reviewSummary": "Review the dry-run result, then build reusing this dataset id.",
+        "plannedSamples": "Planned Samples",
+        "datasetId": "Dataset ID",
+        "backToForm": "Back",
+        "confirmBuild": "Build dataset",
+        "steps": {
+          "configure": "Configure",
+          "review": "Review plan"
+        }
       },
       "build": {
         "title": "Build training dataset",
         "summary": "Plan and materialize the PIT dataset (may take minutes).",
         "feedback": "Dataset build submitted."
+      },
+      "selector": {
+        "placeholder": "Select a trainable dataset (built / ready)",
+        "notTrainable": "(not in trainable list)",
+        "prefillOrphan": "Dataset {id} is no longer trainable; select another."
       },
       "form": {
         "summary": "Pick a frozen runtime-config version and a model spec, then bound the PIT window.",
@@ -139,15 +155,16 @@
         "labelHorizonSecs": "Label Horizon (s)",
         "validationFolds": "Validation Folds",
         "incomplete": "Fill in model spec, dataset, version, family, and label.",
-        "feedback": "Training submitted; candidate registered."
+        "feedback": "Training submitted; candidate registered.",
+        "noPermission": "You lack permission to train models (materialization:create)."
       },
       "backtest": {
         "title": "Run backtest",
         "summary": "Replay the model over a frozen dataset (PIT only).",
         "trainingDataset": "Training Dataset ID",
         "runtimeConfigVersion": "Runtime Config Version",
-        "comparisonModel": "Comparison Model Version ID",
-        "comparisonPlaceholder": "Optional — pair mode baseline",
+        "comparisonModel": "Comparison baseline model",
+        "comparisonPlaceholder": "Optional — select a baseline for pair mode",
         "calibrate": "Fit a calibrated return curve",
         "incomplete": "Fill in the dataset and version.",
         "feedback": "Backtest submitted."
@@ -204,7 +221,25 @@
         "expectedVsRealized": "Expected vs Realized",
         "categoryBreakdown": "Category Breakdown",
         "pnlSimulation": "PnL Simulation",
-        "comparison": "Comparison Report"
+        "pnlChart": {
+          "seriesLabel": "Cumulative realized PnL",
+          "allocated": "Total Allocated",
+          "realized": "Realized PnL",
+          "return": "Gross Return"
+        },
+        "comparison": "Comparison Report",
+        "expectedVsRealizedPanel": {
+          "meanExpected": "Mean Expected Return",
+          "meanRealized": "Mean Realized Return",
+          "correlation": "Pearson Correlation",
+          "bias": "Prediction Bias",
+          "decile": "Decile",
+          "expectedBps": "Expected (bps)",
+          "realizedBps": "Realized (bps)",
+          "samples": "Samples",
+          "empty": "No structured expected-vs-realized metrics in this report.",
+          "raw": "Raw JSON"
+        }
       }
     },
     "factors": {

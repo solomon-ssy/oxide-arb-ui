@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ModelComparisonReportView } from '@vben/types';
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -28,11 +28,10 @@ const categoryDiff = computed(
   () => report.value?.category_breakdown_diff ?? [],
 );
 
-onMounted(async () => {
-  const id = route.params.id;
-  if (typeof id !== 'string' || !id) {
-    return;
-  }
+async function loadReport(id: string) {
+  // Clear stale content while the next report loads (route param can change
+  // without a remount when navigating between comparison deep links).
+  report.value = null;
   loading.value = true;
   try {
     report.value = await handleRequest(() => getComparisonReport(id), {
@@ -41,7 +40,17 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
+
+watch(
+  () => route.params.id,
+  (id) => {
+    if (typeof id === 'string' && id) {
+      void loadReport(id);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

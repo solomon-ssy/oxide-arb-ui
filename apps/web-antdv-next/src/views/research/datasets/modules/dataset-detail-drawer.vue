@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { isTrainableDatasetStatus } from '@vben/types';
 
 import {
   Button,
@@ -36,7 +37,6 @@ interface DatasetDrawerData {
 
 /** Non-terminal statuses are still materializing — poll until they settle. */
 const NON_TERMINAL = new Set(['building', 'planned']);
-const TRAINABLE = new Set(['built', 'ready']);
 
 const { handleRequest } = useRequestHandler();
 const statusTagOptions = useTrainingDatasetStatusTagOptions();
@@ -50,7 +50,7 @@ const statusTag = computed(() =>
   findTagOption(statusTagOptions, dataset.value?.status),
 );
 const canTrain = computed(
-  () => !!dataset.value && TRAINABLE.has(dataset.value.status),
+  () => !!dataset.value && isTrainableDatasetStatus(dataset.value.status),
 );
 const polling = computed(
   () =>

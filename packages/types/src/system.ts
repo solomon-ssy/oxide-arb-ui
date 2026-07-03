@@ -1,5 +1,6 @@
 import type { DecimalString, IsoDateTime } from './common';
 import type {
+  ExecutionRecoveryStep,
   KillSwitchState,
   MarketCategory,
   QuantRuntimeMode,
@@ -51,9 +52,6 @@ export interface KillSwitchView {
   changed_by: string;
   changed_at: IsoDateTime;
 }
-
-/** Next-step hint the recovery coordinator surfaces to operators. */
-export type ExecutionRecoveryStep = string;
 
 /** Execution-recovery rollup embedded in {@link SystemStatus}. */
 export interface ExecutionRecoverySummary {
