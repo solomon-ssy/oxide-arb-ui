@@ -69,12 +69,11 @@
     "expired": "Expired"
   },
   "emptyReportReason": {
+    "available_cash_exhausted": "Available cash exhausted",
     "empty_selection": "Empty market selection",
     "insufficient_data_quality": "Insufficient data quality",
-    "model_quality_gate_failed": "Model quality gate failed",
     "no_positive_signal": "No positive signal",
     "portfolio_budget_exhausted": "Portfolio budget exhausted",
-    "runtime_mode_disabled": "Runtime mode disabled",
     "system_degraded": "System degraded"
   },
   "ineligibilityReason": {
@@ -177,7 +176,6 @@
     "event_cap": "Event cap",
     "kelly_cap": "Kelly cap",
     "liquidity_cap": "Liquidity cap",
-    "manual_cap": "Manual cap",
     "none": "None",
     "portfolio_budget": "Portfolio budget",
     "single_market_cap": "Single-market cap",

@@ -69,12 +69,11 @@
     "expired": "已过期"
   },
   "emptyReportReason": {
+    "available_cash_exhausted": "可用现金耗尽",
     "empty_selection": "选池为空",
     "insufficient_data_quality": "数据质量不足",
-    "model_quality_gate_failed": "模型质量门未通过",
     "no_positive_signal": "无正向信号",
     "portfolio_budget_exhausted": "组合预算耗尽",
-    "runtime_mode_disabled": "运行模式禁用",
     "system_degraded": "系统降级"
   },
   "ineligibilityReason": {
@@ -177,7 +176,6 @@
     "event_cap": "事件上限",
     "kelly_cap": "凯利上限",
     "liquidity_cap": "流动性上限",
-    "manual_cap": "人工上限",
     "none": "无",
     "portfolio_budget": "组合预算",
     "single_market_cap": "单市场上限",

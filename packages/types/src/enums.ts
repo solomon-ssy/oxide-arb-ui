@@ -315,7 +315,6 @@ export const BINDING_CONSTRAINTS = {
   eventCap: 'event_cap',
   kellyCap: 'kelly_cap',
   liquidityCap: 'liquidity_cap',
-  manualCap: 'manual_cap',
   none: 'none',
   portfolioBudget: 'portfolio_budget',
   singleMarketCap: 'single_market_cap',
@@ -340,12 +339,11 @@ export type IneligibilityReason = WireEnum<typeof INELIGIBILITY_REASONS>;
 
 /** Why a report could not publish any recommendation (empty report). */
 export const EMPTY_REPORT_REASONS = {
+  availableCashExhausted: 'available_cash_exhausted',
   emptySelection: 'empty_selection',
   insufficientDataQuality: 'insufficient_data_quality',
-  modelQualityGateFailed: 'model_quality_gate_failed',
   noPositiveSignal: 'no_positive_signal',
   portfolioBudgetExhausted: 'portfolio_budget_exhausted',
-  runtimeModeDisabled: 'runtime_mode_disabled',
   systemDegraded: 'system_degraded',
 } as const;
 
