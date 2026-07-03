@@ -33,8 +33,11 @@ export function useRunReportAction() {
   async function runWithParams(
     params: RunReportParams,
   ): Promise<null | RunReportAccepted> {
+    // Caller-supplied idempotency key — required by `RunReportRequest` on the wire.
+    const request_id = crypto.randomUUID();
     const accepted = await governed(
-      (ctx) => runQuantReport({ reason: ctx.reason, ...params }, ctx),
+      (ctx) =>
+        runQuantReport({ reason: ctx.reason, request_id, ...params }, ctx),
       {
         summary: $t('page.quantReports.run.governedSummary'),
         title: $t('page.quantReports.run.title'),
@@ -42,7 +45,10 @@ export function useRunReportAction() {
     );
     if (accepted) {
       message.success(
-        $t('page.quantReports.run.accepted', { key: accepted.trigger_key }),
+        $t('page.quantReports.run.accepted', {
+          id: accepted.request_id,
+          key: accepted.trigger_key,
+        }),
       );
     }
     return accepted;

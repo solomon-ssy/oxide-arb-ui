@@ -447,7 +447,7 @@
       "topN": "Top N",
       "sourceDelaySecs": "Source Delay (secs)",
       "serverDefault": "Server default",
-      "accepted": "Report run accepted (trigger {key})"
+      "accepted": "Report run accepted (request {id}, trigger {key})"
     },
     "filters": {
       "status": "Status",

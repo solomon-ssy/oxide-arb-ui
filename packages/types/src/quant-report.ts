@@ -135,7 +135,8 @@ export interface QuantReportListQuery extends PageQuery, TimeRangeQuery {
 /** `POST /quant/reports/run` governed request body. */
 export interface RunReportRequest {
   reason: string;
-  request_id?: string;
+  /** Caller idempotency key (`ad_hoc:{request_id}` trigger key on the server). */
+  request_id: string;
   top_n?: number;
   source_delay_secs?: number;
 }

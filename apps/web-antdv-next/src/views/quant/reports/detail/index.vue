@@ -14,7 +14,7 @@ import { Button, Empty, Spin, TabPane, Tabs } from 'antdv-next';
 
 import { getQuantReport, listReportRecommendations } from '#/api/quant-reports';
 import { $t } from '#/locales';
-import { useQuantReportStore } from '#/store';
+import { useOrderIntentStore, useQuantReportStore } from '#/store';
 import RecommendationDetailDrawer from '#/views/quant/recommendations/modules/recommendation-detail-drawer.vue';
 
 import { useReportActions } from '../modules/use-report-actions';
@@ -28,6 +28,7 @@ const route = useRoute();
 const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const quantReportStore = useQuantReportStore();
+const orderIntentStore = useOrderIntentStore();
 
 const report = ref<null | QuantReportDetailView>(null);
 const recommendations = ref<QuantRecommendationView[]>([]);
@@ -85,9 +86,14 @@ function onRevoke() {
 }
 
 watch(reportId, () => void load());
-// A revoke/expire elsewhere (WS) must converge this detail's status.
+// Report lifecycle (revoke/expire/publish) arrives on `quant.report`.
 watch(
   () => quantReportStore.revision,
+  () => void load(),
+);
+// Intent lifecycle updates recommendation status / blocking intent on this report.
+watch(
+  () => orderIntentStore.revision,
   () => void load(),
 );
 onMounted(() => void load());

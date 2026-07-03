@@ -11,6 +11,7 @@ import { Button, Empty, Spin } from 'antdv-next';
 
 import { getRecommendation } from '#/api/quant-recommendations';
 import { $t } from '#/locales';
+import { useOrderIntentStore } from '#/store';
 
 import RecommendationDetailPanel from './modules/recommendation-detail-panel.vue';
 
@@ -19,6 +20,7 @@ defineOptions({ name: 'RecommendationDetailPage' });
 const route = useRoute();
 const router = useRouter();
 const { handleRequest } = useRequestHandler();
+const orderIntentStore = useOrderIntentStore();
 
 const recommendation = ref<null | QuantRecommendationView>(null);
 const loading = ref(false);
@@ -45,6 +47,10 @@ function goBack() {
 }
 
 watch(recommendationId, () => void load());
+watch(
+  () => orderIntentStore.revision,
+  () => void load(),
+);
 onMounted(() => void load());
 </script>
 

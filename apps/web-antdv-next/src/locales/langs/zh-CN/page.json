@@ -447,7 +447,7 @@
       "topN": "Top N",
       "sourceDelaySecs": "数据延迟（秒）",
       "serverDefault": "服务端默认",
-      "accepted": "报告运行已受理（触发 {key}）"
+      "accepted": "报告运行已受理（请求 {id}，触发 {key}）"
     },
     "filters": {
       "status": "状态",
