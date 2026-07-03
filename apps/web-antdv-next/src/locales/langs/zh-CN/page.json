@@ -34,12 +34,236 @@
     "reconciliations": "对账",
     "settlementRedeems": "结算赎回",
     "account": "账户",
-    "researchWorkbench": "工作台",
+    "researchDatasets": "训练数据集",
+    "researchModels": "模型",
+    "researchBacktests": "回测",
+    "researchFactors": "因子",
+    "researchComparisonDetail": "对比报告",
     "runtimeConfig": "运行配置",
     "users": "用户",
     "roles": "角色",
     "menus": "菜单",
     "operationLog": "操作日志"
+  },
+  "research": {
+    "datasets": {
+      "listTitle": "训练数据集",
+      "columns": {
+        "datasetId": "数据集 ID",
+        "modelSpec": "模型规格",
+        "status": "状态",
+        "sampleCount": "样本数",
+        "windowStart": "窗口开始",
+        "windowEnd": "窗口结束",
+        "createdAt": "创建时间",
+        "operation": "操作"
+      },
+      "filters": {
+        "modelSpec": "模型规格",
+        "status": "状态",
+        "createdAt": "创建时间"
+      },
+      "actions": {
+        "detail": "详情",
+        "train": "训练模型",
+        "plan": "试算计划",
+        "build": "构建数据集"
+      },
+      "plan": {
+        "title": "试算训练数据集",
+        "summary": "试算样本网格；不写入产物或台账行。",
+        "feedback": "试算完成：预计 {samples} 个样本。"
+      },
+      "build": {
+        "title": "构建训练数据集",
+        "summary": "试算并物化 PIT 数据集（可能耗时数分钟）。",
+        "feedback": "数据集构建已提交。"
+      },
+      "form": {
+        "summary": "选择冻结的运行配置版本与模型规格，并界定 PIT 窗口。",
+        "modelSpec": "模型规格",
+        "modelSpecPlaceholder": "选择模型规格",
+        "runtimeConfigVersion": "运行配置版本",
+        "versionPlaceholder": "选择版本",
+        "window": "PIT 窗口",
+        "sampleIntervalSecs": "采样间隔（秒）",
+        "sourceDelaySecs": "数据源延迟（秒）",
+        "horizonsSecs": "标签地平线（秒）",
+        "horizonsPlaceholder": "例如 3600,86400",
+        "horizonsHelp": "逗号分隔的正整数（每个地平线一列标签）。",
+        "incomplete": "请填写模型规格、版本、窗口，以及至少一个地平线。"
+      },
+      "detail": {
+        "title": "训练数据集",
+        "summary": "概要",
+        "runtimeConfigVersion": "运行配置版本",
+        "datasetHash": "数据集哈希",
+        "parquetUri": "Parquet URI",
+        "coverage": "构建覆盖率"
+      }
+    },
+    "models": {
+      "listTitle": "已训练模型",
+      "columns": {
+        "modelVersionId": "模型版本 ID",
+        "modelSpec": "模型规格",
+        "version": "版本",
+        "status": "状态",
+        "artifactHash": "产物哈希",
+        "dataset": "数据集",
+        "createdAt": "创建时间",
+        "operation": "操作"
+      },
+      "filters": {
+        "modelSpec": "模型规格",
+        "status": "状态",
+        "createdAt": "创建时间"
+      },
+      "actions": {
+        "detail": "详情",
+        "backtest": "回测",
+        "publish": "发布",
+        "retire": "下线",
+        "rollback": "回滚",
+        "train": "训练模型"
+      },
+      "train": {
+        "title": "训练模型",
+        "summary": "从冻结数据集训练一个候选版本。",
+        "modelSpec": "模型规格",
+        "trainingDataset": "训练数据集 ID",
+        "runtimeConfigVersion": "运行配置版本",
+        "modelFamily": "模型族",
+        "modelFamilyPlaceholder": "weighted_factor 或 classical:<kind>",
+        "labelName": "标签名称",
+        "labelHorizonSecs": "标签地平线（秒）",
+        "validationFolds": "验证折数",
+        "incomplete": "请填写模型规格、数据集、版本、模型族与标签。",
+        "feedback": "训练已提交；候选版本已登记。"
+      },
+      "backtest": {
+        "title": "运行回测",
+        "summary": "在冻结数据集上重放模型（仅 PIT）。",
+        "trainingDataset": "训练数据集 ID",
+        "runtimeConfigVersion": "运行配置版本",
+        "comparisonModel": "对比模型版本 ID",
+        "comparisonPlaceholder": "可选 — 配对模式基线",
+        "calibrate": "拟合校准收益曲线",
+        "incomplete": "请填写数据集与版本。",
+        "feedback": "回测已提交。"
+      },
+      "publish": {
+        "title": "发布模型",
+        "summary": "将模型版本 {id} 提升为已发布。",
+        "feedback": "模型已发布。"
+      },
+      "rollback": {
+        "title": "回滚模型",
+        "summary": "将已下线的模型版本 {id} 恢复为已发布。",
+        "feedback": "模型已回滚。"
+      },
+      "retire": {
+        "title": "下线模型",
+        "summary": "下线已发布的模型版本 {id}。",
+        "feedback": "模型已下线。"
+      },
+      "detail": {
+        "title": "已训练模型",
+        "summary": "概要",
+        "metrics": "训练指标",
+        "backtests": "回测报告",
+        "noBacktests": "该版本暂无回测报告。"
+      }
+    },
+    "backtests": {
+      "listTitle": "回测报告",
+      "columns": {
+        "backtestReportId": "报告 ID",
+        "modelVersionId": "模型版本",
+        "rankIc": "Rank IC",
+        "hitRate": "命中率",
+        "coverage": "覆盖率",
+        "sampleCount": "样本数",
+        "createdAt": "创建时间",
+        "operation": "操作"
+      },
+      "filters": {
+        "modelVersionId": "模型版本 ID",
+        "createdAt": "创建时间"
+      },
+      "actions": {
+        "detail": "详情"
+      },
+      "detail": {
+        "title": "回测报告",
+        "summary": "概要",
+        "modelRunId": "模型运行 ID",
+        "maxDrawdown": "最大回撤",
+        "turnover": "换手率",
+        "tailLoss": "尾部损失",
+        "expectedVsRealized": "预期 vs 实际",
+        "categoryBreakdown": "分类拆解",
+        "pnlSimulation": "盈亏模拟",
+        "comparison": "对比报告"
+      }
+    },
+    "factors": {
+      "listTitle": "因子定义",
+      "columns": {
+        "factorId": "因子 ID",
+        "name": "名称",
+        "family": "族",
+        "scope": "范围",
+        "status": "状态",
+        "updatedAt": "更新时间",
+        "operation": "操作"
+      },
+      "filters": {
+        "family": "族",
+        "scope": "范围",
+        "status": "状态"
+      },
+      "actions": {
+        "detail": "详情",
+        "publish": "发布",
+        "retire": "下线"
+      },
+      "publish": {
+        "title": "发布因子",
+        "summary": "发布因子定义 {name}。",
+        "feedback": "因子已发布。"
+      },
+      "retire": {
+        "title": "下线因子",
+        "summary": "下线因子定义 {name}。",
+        "feedback": "因子已下线。"
+      },
+      "detail": {
+        "title": "因子定义",
+        "summary": "概要",
+        "inputSchemaVersion": "输入 Schema 版本",
+        "outputSchemaVersion": "输出 Schema 版本",
+        "createdAt": "创建时间"
+      }
+    },
+    "comparisons": {
+      "detail": {
+        "summary": "候选 vs 基线",
+        "candidate": "候选版本",
+        "baseline": "基线版本",
+        "rankIcDelta": "Rank IC Δ",
+        "hitRateDelta": "命中率 Δ",
+        "realizedPnlDelta": "已实现盈亏 Δ",
+        "scoreCorrelation": "评分相关性",
+        "sideDisagreement": "方向分歧率",
+        "commonSamples": "共同样本数",
+        "candidateReport": "候选报告",
+        "baselineReport": "基线报告",
+        "createdAt": "创建时间",
+        "categoryDiff": "分类 Rank IC Δ",
+        "notFound": "未找到对比报告。"
+      }
+    }
   },
   "ws": {
     "status": {
@@ -253,6 +477,12 @@
       "autoExecutionBlocked": "自动执行被阻塞，等待恢复",
       "unresolvable": "无法解决的对账",
       "nextSteps": "后续步骤",
+      "killSwitch": "熔断开关",
+      "requiresAck": "需要操作员确认",
+      "ack": "确认熔断开关",
+      "lastReason": "最近原因",
+      "resolve": "解决",
+      "resolveHint": "在对账队列中解决阻塞对账；解除阻塞受凭证约束，绝不在此伪造。",
       "blocking": "阻塞的对账",
       "none": "无"
     },

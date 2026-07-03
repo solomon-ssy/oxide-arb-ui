@@ -14,7 +14,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMarketStore } from '#/store/market';
 import { useOrderIntentStore } from '#/store/order-intent';
 import { useQuantReportStore } from '#/store/quant-report';
+import { useReconciliationStore } from '#/store/reconciliation';
 import { useResearchStore } from '#/store/research';
+import { useSettlementRedeemStore } from '#/store/settlement-redeem';
 import { useSystemStore } from '#/store/system';
 import { useWsStore } from '#/store/ws';
 
@@ -168,12 +170,42 @@ describe('dispatchWsEnvelope', () => {
   it('materialization.run_update bumps the research revision', () => {
     dispatchWsEnvelope(
       envelope('materialization.run_update', {
+        kind: 'training',
         run_id: 'run-1',
         status: 'running',
       }),
       hooks(),
     );
     expect(useResearchStore().revision).toBe(1);
+  });
+
+  it('quant.reconciliation bumps the reconciliation revision', () => {
+    dispatchWsEnvelope(
+      envelope('quant.reconciliation', {
+        execution_order_id: 'eo-1',
+        operator_resolved: true,
+        order_intent_id: 'oi-1',
+        result: 'filled',
+      }),
+      hooks(),
+    );
+    const store = useReconciliationStore();
+    expect(store.revision).toBe(1);
+    expect(store.lastEvent?.result).toBe('filled');
+  });
+
+  it('quant.settlement bumps the settlement-redeem revision', () => {
+    dispatchWsEnvelope(
+      envelope('quant.settlement', {
+        market_id: '0xabc',
+        settlement_redeem_id: 'sr-1',
+        state: 'confirmed',
+      }),
+      hooks(),
+    );
+    const store = useSettlementRedeemStore();
+    expect(store.revision).toBe(1);
+    expect(store.lastEvent?.state).toBe('confirmed');
   });
 
   it('config.activated records the active version and delegates the toast', () => {

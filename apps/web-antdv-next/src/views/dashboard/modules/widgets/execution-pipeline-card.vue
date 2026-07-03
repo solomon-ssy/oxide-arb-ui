@@ -9,7 +9,11 @@ import { listOrderIntents } from '#/api/order-intents';
 import { listReconciliations } from '#/api/reconciliations';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
-import { useOrderIntentStore } from '#/store';
+import {
+  useOrderIntentStore,
+  useReconciliationStore,
+  useSettlementRedeemStore,
+} from '#/store';
 
 defineOptions({ name: 'ExecutionPipelineCard' });
 
@@ -26,6 +30,8 @@ const emit = defineEmits<{
 }>();
 
 const orderIntentStore = useOrderIntentStore();
+const reconciliationStore = useReconciliationStore();
+const settlementStore = useSettlementRedeemStore();
 const { handleRequest } = useRequestHandler();
 
 const pendingIntents = ref<null | number>(null);
@@ -86,6 +92,12 @@ async function loadAll() {
 }
 
 watch(() => orderIntentStore.revision, loadPendingIntents);
+// `quant.reconciliation` / `quant.settlement` bumps re-count in-flight work.
+watch(() => reconciliationStore.revision, loadUnresolvedReconciliations);
+watch(
+  () => settlementStore.revision,
+  () => void countInFlightOrders(),
+);
 
 onMounted(() => {
   void loadAll();

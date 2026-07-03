@@ -1,15 +1,23 @@
 import type {
+  BacktestReportListQuery,
   BacktestReportView,
   BuildTrainingDatasetRequest,
+  ComparisonReportListQuery,
+  FactorDefinitionListQuery,
   FactorDefinitionView,
   ModelComparisonReportView,
+  ModelSpecListQuery,
+  ModelVersionListQuery,
+  Paginated,
   PublishFactorRequest,
   PublishModelRequest,
+  QuantModelSpecView,
   RetireFactorRequest,
   RetireModelRequest,
   RollbackModelRequest,
   RunBacktestRequest,
   TrainedModelView,
+  TrainingDatasetListQuery,
   TrainingDatasetPlanView,
   TrainingDatasetView,
   TrainModelRequest,
@@ -21,10 +29,13 @@ import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
 export namespace ResearchApi {
+  export const trainingDatasets = '/research/training-datasets';
   export const trainingDataset = (id: string) =>
     `/research/training-datasets/${id}`;
   export const planTrainingDataset = '/research/training-datasets/plan';
   export const buildTrainingDataset = '/research/training-datasets/build';
+  export const models = '/research/models';
+  export const modelSpecs = '/research/model-specs';
   export const trainModel = '/research/models/train';
   export const model = (id: string) => `/research/models/${id}`;
   export const backtestModel = (id: string) =>
@@ -33,13 +44,27 @@ export namespace ResearchApi {
   export const rollbackModel = (id: string) =>
     `/research/models/${id}/rollback`;
   export const retireModel = (id: string) => `/research/models/${id}/retire`;
+  export const backtestReports = '/research/backtest-reports';
   export const backtestReport = (id: string) =>
     `/research/backtest-reports/${id}`;
+  export const comparisonReports = '/research/comparison-reports';
   export const comparisonReport = (id: string) =>
     `/research/comparison-reports/${id}`;
+  export const factors = '/research/factors';
+  export const factor = (id: string) => `/research/factors/${id}`;
   export const publishFactor = (id: string) =>
     `/research/factors/${id}/publish`;
   export const retireFactor = (id: string) => `/research/factors/${id}/retire`;
+}
+
+/** `GET /research/training-datasets` — paginated dataset ledger catalog. */
+export async function listTrainingDatasets(
+  query: TrainingDatasetListQuery = {},
+) {
+  return requestClient.get<Paginated<TrainingDatasetView>>(
+    ResearchApi.trainingDatasets,
+    { params: query },
+  );
 }
 
 /** `GET /research/training-datasets/{id}` — dataset ledger row. */
@@ -47,6 +72,52 @@ export async function getTrainingDataset(id: string) {
   return requestClient.get<TrainingDatasetView>(
     ResearchApi.trainingDataset(id),
   );
+}
+
+/** `GET /research/model-specs` — paginated model-spec catalog (selector source). */
+export async function listModelSpecs(query: ModelSpecListQuery = {}) {
+  return requestClient.get<Paginated<QuantModelSpecView>>(
+    ResearchApi.modelSpecs,
+    { params: query },
+  );
+}
+
+/** `GET /research/models` — paginated trained-model registry catalog. */
+export async function listModels(query: ModelVersionListQuery = {}) {
+  return requestClient.get<Paginated<TrainedModelView>>(ResearchApi.models, {
+    params: query,
+  });
+}
+
+/** `GET /research/backtest-reports` — paginated backtest-report catalog. */
+export async function listBacktestReports(query: BacktestReportListQuery = {}) {
+  return requestClient.get<Paginated<BacktestReportView>>(
+    ResearchApi.backtestReports,
+    { params: query },
+  );
+}
+
+/** `GET /research/comparison-reports` — paginated comparison-report catalog. */
+export async function listComparisonReports(
+  query: ComparisonReportListQuery = {},
+) {
+  return requestClient.get<Paginated<ModelComparisonReportView>>(
+    ResearchApi.comparisonReports,
+    { params: query },
+  );
+}
+
+/** `GET /research/factors` — paginated factor-definition catalog. */
+export async function listFactors(query: FactorDefinitionListQuery = {}) {
+  return requestClient.get<Paginated<FactorDefinitionView>>(
+    ResearchApi.factors,
+    { params: query },
+  );
+}
+
+/** `GET /research/factors/{id}` — single factor definition (detail drawer). */
+export async function getFactor(id: string) {
+  return requestClient.get<FactorDefinitionView>(ResearchApi.factor(id));
 }
 
 /** `POST /research/training-datasets/plan` — governed dry-run plan. */

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { SettlementRedeemView } from '@vben/types';
+import type { BacktestReportView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
@@ -10,50 +10,44 @@ import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import {
-  getSettlementRedeem,
-  listSettlementRedeems,
-} from '#/api/settlement-redeems';
+import { getBacktestReport, listBacktestReports } from '#/api/research';
 import { $t } from '#/locales';
 import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
-import { useSettlementRedeemStore } from '#/store';
+import { useResearchStore } from '#/store';
 
+import BacktestDetailDrawer from './modules/backtest-detail-drawer.vue';
 import {
-  useSettlementRedeemColumns,
-  useSettlementRedeemSearchSchema,
+  useBacktestReportColumns,
+  useBacktestReportSearchSchema,
 } from './modules/schemas';
-import SettlementRedeemDetailDrawer from './modules/settlement-redeem-detail-drawer.vue';
 
-defineOptions({ name: 'SettlementRedeemsPage' });
+defineOptions({ name: 'ResearchBacktestsPage' });
 
 const route = useRoute();
 const { handleRequest } = useRequestHandler();
-const settlementStore = useSettlementRedeemStore();
+const researchStore = useResearchStore();
 
-const query = route.query;
 const initialFilters = {
-  market_id: (query.market_id as string) || undefined,
+  model_version_id: (route.query.model_version_id as string) || undefined,
 };
 
 const emptyPage = {
   has_next: false,
-  items: [] as SettlementRedeemView[],
+  items: [] as BacktestReportView[],
   page: 1,
   size: 0,
   total: 0,
 };
 
 const [Drawer, drawerApi] = useVbenDrawer({
-  connectedComponent: SettlementRedeemDetailDrawer,
+  connectedComponent: BacktestDetailDrawer,
   destroyOnClose: true,
 });
 
-const [Grid, gridApi] = useVbenVxeGrid<SettlementRedeemView>({
-  formOptions: {
-    schema: useSettlementRedeemSearchSchema(initialFilters),
-  },
+const [Grid, gridApi] = useVbenVxeGrid<BacktestReportView>({
+  formOptions: { schema: useBacktestReportSearchSchema(initialFilters) },
   gridOptions: {
-    columns: useSettlementRedeemColumns(onActionClick),
+    columns: useBacktestReportColumns(onActionClick),
     proxyConfig: {
       ajax: {
         query: async (
@@ -62,13 +56,13 @@ const [Grid, gridApi] = useVbenVxeGrid<SettlementRedeemView>({
         ) => {
           const range = Array.isArray(formValues.range) ? formValues.range : [];
           const result = await handleRequest(() =>
-            listSettlementRedeems({
+            listBacktestReports({
               from: (range[0] as string | undefined) || undefined,
-              market_id:
-                (formValues.market_id as string | undefined) || undefined,
+              model_version_id:
+                (formValues.model_version_id as string | undefined) ||
+                undefined,
               page: page.currentPage,
               size: page.pageSize,
-              state: (formValues.state as any) || undefined,
               to: (range[1] as string | undefined) || undefined,
             }),
           );
@@ -76,36 +70,31 @@ const [Grid, gridApi] = useVbenVxeGrid<SettlementRedeemView>({
         },
       },
     },
-    rowConfig: { keyField: 'settlement_redeem_id' },
+    rowConfig: { keyField: 'backtest_report_id' },
     toolbarConfig: { refresh: { code: 'query' } },
   },
 });
 
-function onActionClick({
-  code,
-  row,
-}: OnActionClickParams<SettlementRedeemView>) {
+function onActionClick({ code, row }: OnActionClickParams<BacktestReportView>) {
   if (code === 'detail') {
-    drawerApi.setData({ redeem: row }).open();
+    drawerApi.setData({ report: row }).open();
   }
 }
 
-// Deep-link `?open=<id>` reactively opens the detail drawer for that batch.
 useQueryOpenDrawer({
-  fetch: (id) => getSettlementRedeem(id),
-  open: (redeem) => drawerApi.setData({ redeem }).open(),
+  fetch: (id) => getBacktestReport(id),
+  open: (report) => drawerApi.setData({ report }).open(),
 });
 
-// `quant.settlement` bumps the settlement store on worker state transitions.
 watch(
-  () => settlementStore.revision,
+  () => researchStore.revision,
   () => void gridApi.query(),
 );
 </script>
 
 <template>
   <Page auto-content-height>
-    <Grid :table-title="$t('page.quantSettlementRedeems.listTitle')" />
+    <Grid :table-title="$t('page.research.backtests.listTitle')" />
     <Drawer />
   </Page>
 </template>

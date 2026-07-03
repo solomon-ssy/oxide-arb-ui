@@ -34,12 +34,236 @@
     "reconciliations": "Reconciliations",
     "settlementRedeems": "Settlement Redeems",
     "account": "Account",
-    "researchWorkbench": "Workbench",
+    "researchDatasets": "Training Datasets",
+    "researchModels": "Models",
+    "researchBacktests": "Backtests",
+    "researchFactors": "Factors",
+    "researchComparisonDetail": "Comparison Report",
     "runtimeConfig": "Runtime Config",
     "users": "Users",
     "roles": "Roles",
     "menus": "Menus",
     "operationLog": "Operation Log"
+  },
+  "research": {
+    "datasets": {
+      "listTitle": "Training Datasets",
+      "columns": {
+        "datasetId": "Dataset ID",
+        "modelSpec": "Model Spec",
+        "status": "Status",
+        "sampleCount": "Samples",
+        "windowStart": "Window Start",
+        "windowEnd": "Window End",
+        "createdAt": "Created",
+        "operation": "Actions"
+      },
+      "filters": {
+        "modelSpec": "Model Spec",
+        "status": "Status",
+        "createdAt": "Created"
+      },
+      "actions": {
+        "detail": "Details",
+        "train": "Train model",
+        "plan": "Dry-run plan",
+        "build": "Build dataset"
+      },
+      "plan": {
+        "title": "Plan training dataset",
+        "summary": "Dry-run the sample grid; no artifact or ledger row is written.",
+        "feedback": "Plan complete: {samples} planned samples."
+      },
+      "build": {
+        "title": "Build training dataset",
+        "summary": "Plan and materialize the PIT dataset (may take minutes).",
+        "feedback": "Dataset build submitted."
+      },
+      "form": {
+        "summary": "Pick a frozen runtime-config version and a model spec, then bound the PIT window.",
+        "modelSpec": "Model Spec",
+        "modelSpecPlaceholder": "Select a model spec",
+        "runtimeConfigVersion": "Runtime Config Version",
+        "versionPlaceholder": "Select a version",
+        "window": "PIT Window",
+        "sampleIntervalSecs": "Sample Interval (s)",
+        "sourceDelaySecs": "Source Delay (s)",
+        "horizonsSecs": "Label Horizons (s)",
+        "horizonsPlaceholder": "e.g. 3600,86400",
+        "horizonsHelp": "Comma-separated positive integers (one label column per horizon).",
+        "incomplete": "Fill in model spec, version, window, and at least one horizon."
+      },
+      "detail": {
+        "title": "Training Dataset",
+        "summary": "Summary",
+        "runtimeConfigVersion": "Runtime Config Version",
+        "datasetHash": "Dataset Hash",
+        "parquetUri": "Parquet URI",
+        "coverage": "Build Coverage"
+      }
+    },
+    "models": {
+      "listTitle": "Trained Models",
+      "columns": {
+        "modelVersionId": "Model Version ID",
+        "modelSpec": "Model Spec",
+        "version": "Version",
+        "status": "Status",
+        "artifactHash": "Artifact Hash",
+        "dataset": "Dataset",
+        "createdAt": "Created",
+        "operation": "Actions"
+      },
+      "filters": {
+        "modelSpec": "Model Spec",
+        "status": "Status",
+        "createdAt": "Created"
+      },
+      "actions": {
+        "detail": "Details",
+        "backtest": "Backtest",
+        "publish": "Publish",
+        "retire": "Retire",
+        "rollback": "Rollback",
+        "train": "Train model"
+      },
+      "train": {
+        "title": "Train model",
+        "summary": "Train a candidate version from a frozen dataset.",
+        "modelSpec": "Model Spec",
+        "trainingDataset": "Training Dataset ID",
+        "runtimeConfigVersion": "Runtime Config Version",
+        "modelFamily": "Model Family",
+        "modelFamilyPlaceholder": "weighted_factor or classical:<kind>",
+        "labelName": "Label Name",
+        "labelHorizonSecs": "Label Horizon (s)",
+        "validationFolds": "Validation Folds",
+        "incomplete": "Fill in model spec, dataset, version, family, and label.",
+        "feedback": "Training submitted; candidate registered."
+      },
+      "backtest": {
+        "title": "Run backtest",
+        "summary": "Replay the model over a frozen dataset (PIT only).",
+        "trainingDataset": "Training Dataset ID",
+        "runtimeConfigVersion": "Runtime Config Version",
+        "comparisonModel": "Comparison Model Version ID",
+        "comparisonPlaceholder": "Optional — pair mode baseline",
+        "calibrate": "Fit a calibrated return curve",
+        "incomplete": "Fill in the dataset and version.",
+        "feedback": "Backtest submitted."
+      },
+      "publish": {
+        "title": "Publish model",
+        "summary": "Promote model version {id} to Published.",
+        "feedback": "Model published."
+      },
+      "rollback": {
+        "title": "Rollback model",
+        "summary": "Restore retired model version {id} to Published.",
+        "feedback": "Model rolled back."
+      },
+      "retire": {
+        "title": "Retire model",
+        "summary": "Retire published model version {id}.",
+        "feedback": "Model retired."
+      },
+      "detail": {
+        "title": "Trained Model",
+        "summary": "Summary",
+        "metrics": "Trainer Metrics",
+        "backtests": "Backtest Reports",
+        "noBacktests": "No backtest reports for this version yet."
+      }
+    },
+    "backtests": {
+      "listTitle": "Backtest Reports",
+      "columns": {
+        "backtestReportId": "Report ID",
+        "modelVersionId": "Model Version",
+        "rankIc": "Rank IC",
+        "hitRate": "Hit Rate",
+        "coverage": "Coverage",
+        "sampleCount": "Samples",
+        "createdAt": "Created",
+        "operation": "Actions"
+      },
+      "filters": {
+        "modelVersionId": "Model Version ID",
+        "createdAt": "Created"
+      },
+      "actions": {
+        "detail": "Details"
+      },
+      "detail": {
+        "title": "Backtest Report",
+        "summary": "Summary",
+        "modelRunId": "Model Run ID",
+        "maxDrawdown": "Max Drawdown",
+        "turnover": "Turnover",
+        "tailLoss": "Tail Loss",
+        "expectedVsRealized": "Expected vs Realized",
+        "categoryBreakdown": "Category Breakdown",
+        "pnlSimulation": "PnL Simulation",
+        "comparison": "Comparison Report"
+      }
+    },
+    "factors": {
+      "listTitle": "Factor Definitions",
+      "columns": {
+        "factorId": "Factor ID",
+        "name": "Name",
+        "family": "Family",
+        "scope": "Scope",
+        "status": "Status",
+        "updatedAt": "Updated",
+        "operation": "Actions"
+      },
+      "filters": {
+        "family": "Family",
+        "scope": "Scope",
+        "status": "Status"
+      },
+      "actions": {
+        "detail": "Details",
+        "publish": "Publish",
+        "retire": "Retire"
+      },
+      "publish": {
+        "title": "Publish factor",
+        "summary": "Publish factor definition {name}.",
+        "feedback": "Factor published."
+      },
+      "retire": {
+        "title": "Retire factor",
+        "summary": "Retire factor definition {name}.",
+        "feedback": "Factor retired."
+      },
+      "detail": {
+        "title": "Factor Definition",
+        "summary": "Summary",
+        "inputSchemaVersion": "Input Schema Version",
+        "outputSchemaVersion": "Output Schema Version",
+        "createdAt": "Created"
+      }
+    },
+    "comparisons": {
+      "detail": {
+        "summary": "Candidate vs Baseline",
+        "candidate": "Candidate Version",
+        "baseline": "Baseline Version",
+        "rankIcDelta": "Rank IC Δ",
+        "hitRateDelta": "Hit Rate Δ",
+        "realizedPnlDelta": "Realized PnL Δ",
+        "scoreCorrelation": "Score Correlation",
+        "sideDisagreement": "Side Disagreement Rate",
+        "commonSamples": "Common Samples",
+        "candidateReport": "Candidate Report",
+        "baselineReport": "Baseline Report",
+        "createdAt": "Created",
+        "categoryDiff": "Per-category Rank IC Δ",
+        "notFound": "Comparison report not found."
+      }
+    }
   },
   "ws": {
     "status": {
@@ -254,7 +478,13 @@
       "unresolvable": "Unresolvable reconciliations",
       "nextSteps": "Next Steps",
       "blocking": "Blocking Reconciliations",
-      "none": "None"
+      "none": "None",
+      "killSwitch": "Kill Switch",
+      "requiresAck": "Requires operator acknowledgement",
+      "ack": "Acknowledge kill switch",
+      "lastReason": "Last reason",
+      "resolve": "Resolve",
+      "resolveHint": "Resolve blocking reconciliations from the reconciliation queue; unblocking is credential-gated and never fabricated here."
     },
     "deployConfig": {
       "title": "Deploy Config",

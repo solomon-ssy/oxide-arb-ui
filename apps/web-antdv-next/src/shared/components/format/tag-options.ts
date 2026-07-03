@@ -2,7 +2,9 @@ import {
   APPROVAL_STATUSES,
   EXECUTION_ORDER_PHASES,
   EXECUTION_ORDER_STATES,
+  FACTOR_DEFINITION_SCOPES,
   FACTOR_DIRECTIONS,
+  FACTOR_FAMILIES,
   KILL_SWITCH_STATES,
   MARKET_CATEGORIES,
   MARKET_STATUSES,
@@ -14,6 +16,7 @@ import {
   ORDER_TYPE_KINDS,
   OUTCOME_SIDES,
   POSITION_LEDGER_STATES,
+  POSITION_PLANES,
   PUBLICATION_STATUSES,
   QUANT_RUNTIME_MODES,
   RECOMMENDATION_ATTRIBUTION_OUTCOMES,
@@ -25,6 +28,7 @@ import {
   RUNTIME_CONFIG_VERSION_SOURCES,
   SETTLEMENT_REDEEM_STATES,
   SIDES,
+  TRAINING_DATASET_STATUSES,
 } from '@vben/types';
 
 import { $t } from '#/locales';
@@ -313,6 +317,17 @@ export function usePositionLedgerStateTagOptions() {
   );
 }
 
+/** Position ledger plane tags. */
+export function usePositionPlaneTagOptions() {
+  return buildTagOptions(
+    Object.values(POSITION_PLANES),
+    (value) => $t(`enum.positionPlane.${value}`),
+    {
+      [POSITION_PLANES.systemLot]: 'geekblue',
+    },
+  );
+}
+
 /** Reconciliation result tags. */
 export function useReconciliationResultTagOptions() {
   return buildTagOptions(
@@ -393,6 +408,62 @@ export function usePublicationStatusTagOptions() {
       [PUBLICATION_STATUSES.rejected]: 'error',
       [PUBLICATION_STATUSES.retired]: 'gold',
       [PUBLICATION_STATUSES.shadow]: 'purple',
+    },
+  );
+}
+
+/** Training-dataset build lifecycle tags. */
+export function useTrainingDatasetStatusTagOptions() {
+  return buildTagOptions(
+    Object.values(TRAINING_DATASET_STATUSES),
+    (value) => $t(`enum.trainingDatasetStatus.${value}`),
+    {
+      [TRAINING_DATASET_STATUSES.building]: 'processing',
+      [TRAINING_DATASET_STATUSES.built]: 'cyan',
+      [TRAINING_DATASET_STATUSES.expired]: 'gold',
+      [TRAINING_DATASET_STATUSES.failed]: 'error',
+      [TRAINING_DATASET_STATUSES.insufficientLabels]: 'warning',
+      [TRAINING_DATASET_STATUSES.planned]: 'geekblue',
+      [TRAINING_DATASET_STATUSES.ready]: 'success',
+    },
+  );
+}
+
+/** Factor family taxonomy tags. */
+export function useFactorFamilyTagOptions() {
+  return buildTagOptions(
+    Object.values(FACTOR_FAMILIES),
+    (value) => $t(`enum.factorFamily.${value}`),
+    {
+      [FACTOR_FAMILIES.activity]: 'lime',
+      [FACTOR_FAMILIES.dataQuality]: 'geekblue',
+      [FACTOR_FAMILIES.domainCrypto]: 'gold',
+      [FACTOR_FAMILIES.domainGeopolitics]: 'magenta',
+      [FACTOR_FAMILIES.domainPolitics]: 'processing',
+      [FACTOR_FAMILIES.domainSports]: 'success',
+      [FACTOR_FAMILIES.domainWeather]: 'blue',
+      [FACTOR_FAMILIES.liquidity]: 'cyan',
+      [FACTOR_FAMILIES.meanReversion]: 'purple',
+      [FACTOR_FAMILIES.microstructure]: 'geekblue',
+      [FACTOR_FAMILIES.momentum]: 'orange',
+      [FACTOR_FAMILIES.resolution]: 'volcano',
+      [FACTOR_FAMILIES.volatility]: 'red',
+    },
+  );
+}
+
+/** Factor definition scope tags (generic plane vs vertical domain). */
+export function useFactorScopeTagOptions() {
+  return buildTagOptions(
+    Object.values(FACTOR_DEFINITION_SCOPES),
+    (value) => $t(`enum.factorScope.${value}`),
+    {
+      [FACTOR_DEFINITION_SCOPES.domainCrypto]: 'gold',
+      [FACTOR_DEFINITION_SCOPES.domainGeopolitics]: 'magenta',
+      [FACTOR_DEFINITION_SCOPES.domainPolitics]: 'processing',
+      [FACTOR_DEFINITION_SCOPES.domainSports]: 'success',
+      [FACTOR_DEFINITION_SCOPES.domainWeather]: 'blue',
+      [FACTOR_DEFINITION_SCOPES.generic]: 'geekblue',
     },
   );
 }

@@ -3,18 +3,21 @@ import type {
   AlertCategory,
   AlertLevel,
   AlertSource,
+  MaterializationRunKind,
   MaterializationRunStatus,
   OrderIntentStatus,
   QuantRuntimeMode,
   RecommendationReportStatus,
+  ReconciliationResult,
   ReportKind,
+  SettlementRedeemState,
 } from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { SystemStatus } from './system';
 
 /**
  * Subscribable WS channels, mirroring Rust `WsChannel` wire names. This is the
- * closed 8-channel allowlist; no other channel may be subscribed or dispatched.
+ * closed 10-channel allowlist; no other channel may be subscribed or dispatched.
  */
 export const WS_CHANNELS = {
   configActivated: 'config.activated',
@@ -22,7 +25,9 @@ export const WS_CHANNELS = {
   marketResolved: 'market.resolved',
   materializationRunUpdate: 'materialization.run_update',
   quantIntent: 'quant.intent',
+  quantReconciliation: 'quant.reconciliation',
   quantReport: 'quant.report',
+  quantSettlement: 'quant.settlement',
   systemAlert: 'system.alert',
   systemStatus: 'system.status',
 } as const;
@@ -111,12 +116,37 @@ export interface IntentLifecycleEvent {
 }
 
 /**
- * WS `materialization.run_update` payload. Producer is deferred (10.5/10.6);
- * the shape is a lean run-status hint for the research workbench polling cue.
+ * WS `materialization.run_update` payload — a lean run-status hint for the
+ * research workbench (mirrors Rust `MaterializationRunEvent`). The workbench
+ * re-fetches the dataset / model / report catalog by id on any bump.
  */
 export interface MaterializationRunEvent {
   run_id: UuidString;
+  kind: MaterializationRunKind;
   status: MaterializationRunStatus;
+}
+
+/**
+ * WS `quant.reconciliation` payload — a reconciliation row detect/update hint
+ * (mirrors Rust `ReconciliationLifecycleEvent`). The queue + recovery panel
+ * re-fetch over REST on any bump.
+ */
+export interface ReconciliationLifecycleEvent {
+  execution_order_id: UuidString;
+  order_intent_id: UuidString;
+  result: ReconciliationResult;
+  operator_resolved: boolean;
+}
+
+/**
+ * WS `quant.settlement` payload — a settlement-redeem state transition hint
+ * (mirrors Rust `SettlementRedeemLifecycleEvent`). The settlement ledger
+ * re-fetches over REST on any bump.
+ */
+export interface SettlementRedeemLifecycleEvent {
+  settlement_redeem_id: UuidString;
+  market_id: MarketId;
+  state: SettlementRedeemState;
 }
 
 /** WS `error` reply payload (invalid command / forbidden channel). */
@@ -142,7 +172,9 @@ export interface WsChannelPayloads {
   'market.resolved': MarketResolvedEvent;
   'materialization.run_update': MaterializationRunEvent;
   'quant.intent': IntentLifecycleEvent;
+  'quant.reconciliation': ReconciliationLifecycleEvent;
   'quant.report': ReportLifecycleEvent;
+  'quant.settlement': SettlementRedeemLifecycleEvent;
   'system.alert': SystemAlertEvent;
   'system.status': SystemStatus;
 }

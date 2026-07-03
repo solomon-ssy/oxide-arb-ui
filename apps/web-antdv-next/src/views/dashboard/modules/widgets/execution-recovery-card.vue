@@ -4,24 +4,36 @@ import type { ExecutionRecoveryView } from '@vben/types';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import { useRequestHandler } from '@vben/request/qp';
+import { KILL_SWITCH_STATES } from '@vben/types';
 
 import { Alert, Button, Tag } from 'antdv-next';
 
 import { getExecutionRecovery } from '#/api/system';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatUsd, truncateHexId } from '#/shared/components/format';
 import {
   findTagOption,
+  useKillSwitchStateTagOptions,
   useReconciliationResultTagOptions,
 } from '#/shared/components/format/tag-options';
-import { useSystemStore } from '#/store';
+import { useKillSwitchAction } from '#/shared/composables/use-system-actions';
+import {
+  useReconciliationStore,
+  useSettlementRedeemStore,
+  useSystemStore,
+} from '#/store';
 
 defineOptions({ name: 'ExecutionRecoveryCard' });
 
 const systemStore = useSystemStore();
+const reconciliationStore = useReconciliationStore();
+const settlementStore = useSettlementRedeemStore();
 const { handleRequest } = useRequestHandler();
+const killSwitchAction = useKillSwitchAction();
 const reconciliationResultTagOptions = useReconciliationResultTagOptions();
+const killSwitchStateTagOptions = useKillSwitchStateTagOptions();
 
 const recovery = ref<ExecutionRecoveryView | null>(null);
 const loading = ref(false);
@@ -46,6 +58,39 @@ const recoveryBlocked = computed(() => {
   );
 });
 
+const killSwitch = computed(() => recovery.value?.kill_switch ?? null);
+const killSwitchTag = computed(() =>
+  findTagOption(killSwitchStateTagOptions, killSwitch.value?.state),
+);
+const canAck = computed(
+  () =>
+    !!killSwitch.value?.requires_operator_ack &&
+    killSwitchAction.canTransition(
+      killSwitch.value.state,
+      KILL_SWITCH_STATES.closed,
+    ),
+);
+
+/** Localize a typed `ExecutionRecoveryStep` (falls back to the raw value). */
+function stepLabel(step: string): string {
+  const key = `enum.executionRecoveryStep.${step}`;
+  const label = $t(key);
+  return label === key ? step : label;
+}
+
+async function acknowledge() {
+  if (!killSwitch.value) {
+    return;
+  }
+  const result = await killSwitchAction.setTo(
+    killSwitch.value,
+    KILL_SWITCH_STATES.closed,
+  );
+  if (result) {
+    void loadRecovery();
+  }
+}
+
 watch(
   () => systemStore.status?.kill_switch?.state,
   (next, prev) => {
@@ -53,6 +98,12 @@ watch(
       void loadRecovery();
     }
   },
+);
+
+// Reconciliation resolves + settlement transitions can clear/raise blockers.
+watch(
+  () => [reconciliationStore.revision, settlementStore.revision],
+  () => void loadRecovery(),
 );
 
 onMounted(() => {
@@ -83,6 +134,7 @@ onMounted(() => {
         :type="recoveryBlocked ? 'warning' : 'success'"
         show-icon
       />
+
       <div
         v-if="recovery"
         class="text-muted-foreground grid grid-cols-2 gap-x-3 gap-y-1 text-xs"
@@ -92,6 +144,27 @@ onMounted(() => {
           {{ recovery.summary.unresolvable_count }}
         </span>
       </div>
+
+      <div
+        v-if="killSwitch"
+        class="flex items-center justify-between gap-2 border-y py-1.5 text-xs"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-muted-foreground">
+            {{ $t('page.systemAdmin.recovery.killSwitch') }}
+          </span>
+          <Tag :color="killSwitchTag?.color ?? 'default'">
+            {{ killSwitchTag?.label ?? killSwitch.state }}
+          </Tag>
+          <span v-if="killSwitch.requires_operator_ack" class="text-amber-600">
+            {{ $t('page.systemAdmin.recovery.requiresAck') }}
+          </span>
+        </div>
+        <Button v-if="canAck" danger size="small" @click="acknowledge">
+          {{ $t('page.systemAdmin.recovery.ack') }}
+        </Button>
+      </div>
+
       <div
         v-if="(recovery?.summary.next_steps.length ?? 0) > 0"
         class="flex flex-col gap-1"
@@ -99,15 +172,16 @@ onMounted(() => {
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.systemAdmin.recovery.nextSteps') }}
         </span>
-        <ul class="list-inside list-disc text-xs">
+        <ol class="list-inside list-decimal text-xs">
           <li
             v-for="(step, index) in recovery?.summary.next_steps"
             :key="index"
           >
-            {{ step }}
+            {{ stepLabel(step) }}
           </li>
-        </ul>
+        </ol>
       </div>
+
       <div class="flex flex-col gap-1">
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.systemAdmin.recovery.blocking') }}
@@ -123,9 +197,11 @@ onMounted(() => {
           :key="row.reconciliation_id"
           class="flex items-center justify-between gap-2 border-b pb-1.5 text-xs last:border-b-0"
         >
-          <span class="font-mono">
-            {{ truncateHexId(row.reconciliation_id, 8, 4) }}
-          </span>
+          <EntityRouteLink
+            mono
+            :label="truncateHexId(row.reconciliation_id, 8, 4)"
+            :to="`/quant/reconciliations?open=${row.reconciliation_id}`"
+          />
           <div class="flex items-center gap-2">
             <span class="text-muted-foreground tabular-nums">
               {{ formatUsd(row.discrepancy_usd) }}
@@ -143,6 +219,12 @@ onMounted(() => {
             </Tag>
           </div>
         </div>
+        <span
+          v-if="(recovery?.blocking_reconciliations.length ?? 0) > 0"
+          class="text-muted-foreground text-xs"
+        >
+          {{ $t('page.systemAdmin.recovery.resolveHint') }}
+        </span>
       </div>
     </div>
   </DashboardPanel>

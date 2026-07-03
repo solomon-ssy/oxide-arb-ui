@@ -1,7 +1,9 @@
 import type {
   DecimalString,
   IsoDateTime,
+  PageQuery,
   ProbabilityString,
+  TimeRangeQuery,
   UsdString,
   UuidString,
 } from './common';
@@ -12,6 +14,12 @@ import type {
   PublicationStatus,
   TrainingDatasetStatus,
 } from './enums';
+
+/** Sample source for a training-dataset build (mirrors Rust `TrainingSampleSource`). */
+export type TrainingSampleSource =
+  | 'exit_decision'
+  | 'historical_pit'
+  | 'live_attribution';
 
 // ── Training datasets ───────────────────────────────────────────────────────
 
@@ -74,14 +82,34 @@ export interface TrainingDatasetView {
   created_at: IsoDateTime;
 }
 
-/** `POST /research/training-datasets/plan|build` governed request body. */
+/**
+ * `POST /research/training-datasets/plan|build` governed request body (mirrors
+ * Rust `BuildTrainingDatasetRequest`). Plan ignores `training_dataset_id`
+ * (mints a fresh id); build passes the id returned by plan for stable polling.
+ */
 export interface BuildTrainingDatasetRequest {
-  reason: string;
   model_spec_id: string;
   runtime_config_version_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
+  /** Deterministic sample grid step in seconds (`>= 1`). */
+  sample_interval_secs: number;
+  /** Forward label horizons in seconds (one column per horizon, non-empty). */
+  horizons_secs: number[];
+  /** Feature source visibility delay in seconds (PIT cutoff, `>= 1`). */
+  source_delay_secs: number;
+  /** Feature schema version to materialize (defaults to 1 server-side). */
+  feature_schema_version?: number;
+  /** Sample sources (defaults to historical PIT + live attribution server-side). */
+  sample_sources?: TrainingSampleSource[];
+  reason: string;
   training_dataset_id?: UuidString;
+}
+
+/** Filter + pagination for `GET /research/training-datasets`. */
+export interface TrainingDatasetListQuery extends PageQuery, TimeRangeQuery {
+  model_spec_id?: string;
+  status?: TrainingDatasetStatus;
 }
 
 // ── Models ──────────────────────────────────────────────────────────────────
@@ -134,11 +162,43 @@ export interface TrainedModelView {
   created_at: IsoDateTime;
 }
 
-/** `POST /research/models/train` governed request body. */
+/** `POST /research/models/train` governed request body (mirrors Rust `TrainModelRequest`). */
 export interface TrainModelRequest {
-  reason: string;
   model_spec_id: string;
+  /** Frozen training dataset to train on (must be `built` or `ready`). */
   training_dataset_id: UuidString;
+  runtime_config_version_id: UuidString;
+  /** `"weighted_factor"` or `"classical:<kind>"` (e.g. `"classical:random_forest"`). */
+  model_family: string;
+  /** Supervised target label (e.g. `"settlement_outcome"`). */
+  label_name: string;
+  /** Target label horizon in seconds (`0` for horizon-independent labels). */
+  label_horizon_secs: number;
+  /** Rolling validation folds (`2..=20`, defaults to 3 server-side). */
+  validation_folds?: number;
+  reason: string;
+}
+
+/** Model-spec catalog projection (the dataset/training selector source). */
+export interface QuantModelSpecView {
+  model_spec_id: string;
+  name: string;
+  model_family: string;
+  prediction_horizon_secs: number;
+  status: PublicationStatus;
+  created_at: IsoDateTime;
+  updated_at: IsoDateTime;
+}
+
+/** Filter + pagination for `GET /research/model-specs`. */
+export interface ModelSpecListQuery extends PageQuery {
+  status?: PublicationStatus;
+}
+
+/** Filter + pagination for `GET /research/models`. */
+export interface ModelVersionListQuery extends PageQuery, TimeRangeQuery {
+  model_spec_id?: string;
+  publication_status?: PublicationStatus;
 }
 
 /** `POST /research/models/{id}/publish` governed request body. */
@@ -223,12 +283,25 @@ export interface BacktestReportView {
   comparison_report_id: null | UuidString;
 }
 
-/** `POST /research/models/{id}/backtest` governed request body. */
+/**
+ * `POST /research/models/{id}/backtest` governed request body (mirrors Rust
+ * `RunBacktestRequest`). The replay window is defined by the frozen dataset, so
+ * the request selects the dataset + config (not a window).
+ */
 export interface RunBacktestRequest {
-  reason: string;
+  /** Frozen, PIT-materialized dataset to replay the model over. */
+  training_dataset_id: UuidString;
   runtime_config_version_id: UuidString;
-  window_start: IsoDateTime;
-  window_end: IsoDateTime;
+  /** Fit a calibrated return curve + register a calibrated child candidate. */
+  calibrate?: boolean;
+  /** When set, run pair mode: replay this baseline and persist a comparison. */
+  comparison_model_version_id?: UuidString;
+  reason: string;
+}
+
+/** Filter + pagination for `GET /research/backtest-reports`. */
+export interface BacktestReportListQuery extends PageQuery, TimeRangeQuery {
+  model_version_id?: UuidString;
 }
 
 /** `GET /research/comparison-reports/{id}`. */
@@ -236,6 +309,9 @@ export interface ModelComparisonReportView {
   comparison_report_id: UuidString;
   baseline_model_version_id: UuidString;
   candidate_model_version_id: UuidString;
+  baseline_report_id: UuidString;
+  candidate_report_id: UuidString;
+  model_run_id: UuidString;
   rank_ic_delta: DecimalString;
   hit_rate_delta: DecimalString;
   realized_pnl_delta: UsdString;
@@ -245,6 +321,11 @@ export interface ModelComparisonReportView {
   category_breakdown_diff: CategoryRankIcDelta[];
   comparison_hash: string;
   created_at: IsoDateTime;
+}
+
+/** Filter + pagination for `GET /research/comparison-reports`. */
+export interface ComparisonReportListQuery extends PageQuery, TimeRangeQuery {
+  candidate_model_version_id?: UuidString;
 }
 
 // ── Factor definitions ──────────────────────────────────────────────────────
@@ -260,6 +341,13 @@ export interface FactorDefinitionView {
   status: PublicationStatus;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
+}
+
+/** Filter + pagination for `GET /research/factors`. */
+export interface FactorDefinitionListQuery extends PageQuery {
+  factor_family?: FactorFamily;
+  scope?: FactorDefinitionScope;
+  status?: PublicationStatus;
 }
 
 /** `POST /research/factors/{id}/publish` governed request body. */

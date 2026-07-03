@@ -143,6 +143,28 @@
     "resolution": "结算",
     "volatility": "波动率"
   },
+  "factorScope": {
+    "domain_crypto": "领域：加密",
+    "domain_geopolitics": "领域：地缘政治",
+    "domain_politics": "领域：政治",
+    "domain_sports": "领域：体育",
+    "domain_weather": "领域：天气",
+    "generic": "通用"
+  },
+  "trainingDatasetStatus": {
+    "planned": "已计划",
+    "building": "构建中",
+    "built": "已构建",
+    "insufficient_labels": "标签不足",
+    "ready": "就绪",
+    "expired": "已过期",
+    "failed": "失败"
+  },
+  "executionRecoveryStep": {
+    "resolve_unresolvable_reconciliations": "解决无法自动处理的对账",
+    "acknowledge_kill_switch": "确认熔断开关",
+    "verify_mode_preflight": "重新武装前校验模式预检"
+  },
   "sizingModelKind": {
     "kelly": "凯利"
   },

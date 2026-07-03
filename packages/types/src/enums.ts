@@ -487,6 +487,12 @@ export const POSITION_LEDGER_STATES = {
 
 export type PositionLedgerState = WireEnum<typeof POSITION_LEDGER_STATES>;
 
+export const POSITION_PLANES = {
+  systemLot: 'system_lot',
+} as const;
+
+export type PositionPlane = WireEnum<typeof POSITION_PLANES>;
+
 export const RECONCILIATION_RESULTS = {
   cancelled: 'cancelled',
   filled: 'filled',
@@ -547,6 +553,15 @@ export const MATERIALIZATION_RUN_STATUSES = {
 export type MaterializationRunStatus = WireEnum<
   typeof MATERIALIZATION_RUN_STATUSES
 >;
+
+/** Which materialization job a run-update describes (mirrors Rust `MaterializationRunKind`). */
+export const MATERIALIZATION_RUN_KINDS = {
+  backtest: 'backtest',
+  dataset: 'dataset',
+  training: 'training',
+} as const;
+
+export type MaterializationRunKind = WireEnum<typeof MATERIALIZATION_RUN_KINDS>;
 
 /** Training-dataset build lifecycle (mirrors Rust `TrainingDatasetStatus`). */
 export const TRAINING_DATASET_STATUSES = {

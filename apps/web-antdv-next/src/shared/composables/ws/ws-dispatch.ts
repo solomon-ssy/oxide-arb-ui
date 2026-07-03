@@ -4,7 +4,9 @@ import type {
   MarketBookView,
   MarketResolvedEvent,
   MaterializationRunEvent,
+  ReconciliationLifecycleEvent,
   ReportLifecycleEvent,
+  SettlementRedeemLifecycleEvent,
   SyncSnapshot,
   SystemAlertEvent,
   SystemStatus,
@@ -16,7 +18,9 @@ import type {
 import { useMarketStore } from '#/store/market';
 import { useOrderIntentStore } from '#/store/order-intent';
 import { useQuantReportStore } from '#/store/quant-report';
+import { useReconciliationStore } from '#/store/reconciliation';
 import { useResearchStore } from '#/store/research';
+import { useSettlementRedeemStore } from '#/store/settlement-redeem';
 import { useSystemStore } from '#/store/system';
 import { useWsStore } from '#/store/ws';
 
@@ -77,8 +81,20 @@ export function dispatchWsEnvelope(
       useOrderIntentStore().bumpRevision(envelope.data as IntentLifecycleEvent);
       break;
     }
+    case 'quant.reconciliation': {
+      useReconciliationStore().bumpRevision(
+        envelope.data as ReconciliationLifecycleEvent,
+      );
+      break;
+    }
     case 'quant.report': {
       useQuantReportStore().bumpRevision(envelope.data as ReportLifecycleEvent);
+      break;
+    }
+    case 'quant.settlement': {
+      useSettlementRedeemStore().bumpRevision(
+        envelope.data as SettlementRedeemLifecycleEvent,
+      );
       break;
     }
     case 'sync': {

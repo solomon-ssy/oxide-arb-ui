@@ -2,14 +2,18 @@
 const ACTION_ICONS = {
   activate: 'lucide:play',
   approve: 'lucide:check',
+  backtest: 'lucide:history',
   block: 'lucide:shield-off',
   cancel: 'lucide:ban',
   detail: 'lucide:eye',
+  publish: 'lucide:badge-check',
   reject: 'lucide:x',
   resolve: 'lucide:check-check',
+  retire: 'lucide:archive',
   revoke: 'lucide:undo-2',
   rollback: 'lucide:rotate-ccw',
   submit: 'lucide:send',
+  train: 'lucide:brain-circuit',
   unblock: 'lucide:shield-check',
 } as const;
 

@@ -4,7 +4,10 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
 import { formatShares } from '#/shared/components/format';
-import { usePositionLedgerStateTagOptions } from '#/shared/components/format/tag-options';
+import {
+  usePositionLedgerStateTagOptions,
+  usePositionPlaneTagOptions,
+} from '#/shared/components/format/tag-options';
 import { positionOpenPath } from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
@@ -25,9 +28,8 @@ export function usePositionColumns(
       title: $t('page.quantPositions.columns.positionId'),
     },
     {
+      cellRender: { name: 'CellTag', options: usePositionPlaneTagOptions() },
       field: 'position_plane',
-      formatter: ({ cellValue }: { cellValue: string }) =>
-        $t(`enum.positionPlane.${cellValue}`),
       title: $t('page.quantPositions.columns.positionPlane'),
       width: 120,
     },

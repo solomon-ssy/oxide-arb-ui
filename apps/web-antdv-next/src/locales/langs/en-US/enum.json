@@ -143,6 +143,28 @@
     "resolution": "Resolution",
     "volatility": "Volatility"
   },
+  "factorScope": {
+    "domain_crypto": "Domain: Crypto",
+    "domain_geopolitics": "Domain: Geopolitics",
+    "domain_politics": "Domain: Politics",
+    "domain_sports": "Domain: Sports",
+    "domain_weather": "Domain: Weather",
+    "generic": "Generic"
+  },
+  "trainingDatasetStatus": {
+    "planned": "Planned",
+    "building": "Building",
+    "built": "Built",
+    "insufficient_labels": "Insufficient Labels",
+    "ready": "Ready",
+    "expired": "Expired",
+    "failed": "Failed"
+  },
+  "executionRecoveryStep": {
+    "resolve_unresolvable_reconciliations": "Resolve unresolvable reconciliations",
+    "acknowledge_kill_switch": "Acknowledge the kill switch",
+    "verify_mode_preflight": "Verify mode preflight before re-arming"
+  },
   "sizingModelKind": {
     "kelly": "Kelly"
   },

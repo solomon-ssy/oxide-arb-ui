@@ -7,11 +7,11 @@ import type {
   UsdString,
   UuidString,
 } from './common';
-import type { PositionLedgerState } from './enums';
+import type { PositionLedgerState, PositionPlane } from './enums';
 
 /** `GET /quant/positions/{id}` — a system-lot position ledger row. */
 export interface PositionView {
-  position_plane: 'system_lot';
+  position_plane: PositionPlane;
   position_id: UuidString;
   order_intent_id: UuidString;
   /** Originating recommendation (attribution deep-link target). */

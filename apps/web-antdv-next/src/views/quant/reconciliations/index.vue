@@ -15,7 +15,7 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getReconciliation, listReconciliations } from '#/api/reconciliations';
 import { $t } from '#/locales';
 import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
-import { useOrderIntentStore } from '#/store';
+import { useOrderIntentStore, useReconciliationStore } from '#/store';
 
 import ReconciliationDetailDrawer from './modules/reconciliation-detail-drawer.vue';
 import {
@@ -29,6 +29,7 @@ defineOptions({ name: 'ReconciliationsPage' });
 const route = useRoute();
 const { handleRequest } = useRequestHandler();
 const orderIntentStore = useOrderIntentStore();
+const reconciliationStore = useReconciliationStore();
 
 const query = route.query;
 const initialFilters = {
@@ -137,9 +138,11 @@ useQueryOpenDrawer({
   open: (reconciliation) => drawerApi.setData({ reconciliation }).open(),
 });
 
-// Resolve completions (and submission-driven inflows) refresh the queue.
+// Resolve completions (and submission-driven inflows) refresh the queue. The
+// `quant.reconciliation` channel bumps the reconciliation store on worker
+// detect/update; `quant.intent` covers submission-driven inflows.
 watch(
-  () => orderIntentStore.revision,
+  () => [orderIntentStore.revision, reconciliationStore.revision],
   () => void gridApi.query(),
 );
 </script>
