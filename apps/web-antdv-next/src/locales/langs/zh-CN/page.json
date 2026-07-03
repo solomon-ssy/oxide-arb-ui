@@ -1509,6 +1509,13 @@
         "content": "「{section}」有未保存的更改。仍要切换分区吗？草稿会保留，直到你应用或重置。",
         "continue": "切换分区"
       },
+      "reloadLiveConfig": {
+        "title": "线上配置已变更",
+        "content": "当前激活的运行时配置已在其他会话中更新。重新加载将丢弃本编辑器中的未保存更改。",
+        "continue": "重新加载并丢弃草稿",
+        "pending": "已有更新的运行时配置生效。你当前的未保存编辑基于旧快照。",
+        "reloadNow": "立即重新加载"
+      },
       "error": {
         "createdButNotActivated": "版本已创建但未激活。请在下方打开该版本以激活或回滚。",
         "confirmDiffRequired": "请先确认治理关键变更后再应用。",

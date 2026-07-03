@@ -1509,6 +1509,13 @@
         "content": "\"{section}\" has unsaved changes. Switch section anyway? Your draft will be kept until you apply or reset.",
         "continue": "Switch section"
       },
+      "reloadLiveConfig": {
+        "title": "Live config changed",
+        "content": "The active runtime config was updated elsewhere. Reloading discards unsaved edits in this editor.",
+        "continue": "Reload and discard drafts",
+        "pending": "A newer runtime config is active. Your unsaved edits are based on an older snapshot.",
+        "reloadNow": "Reload now"
+      },
       "error": {
         "createdButNotActivated": "The version was created but not activated. Open it below to activate or roll back.",
         "confirmDiffRequired": "Review and acknowledge governance-critical diffs before applying.",
