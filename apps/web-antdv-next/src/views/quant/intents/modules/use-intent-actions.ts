@@ -41,6 +41,10 @@ import {
 } from '#/shared/components/format';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
+import {
+  executionOrderOpenPath,
+  reconciliationQueuePath,
+} from '#/shared/routes/execution-plane';
 import { useOrderIntentStore, useSystemStore } from '#/store';
 
 /** Frozen entry preview so an approver confirms what they are releasing. */
@@ -133,6 +137,7 @@ export function useIntentActions(onChanged: () => void) {
       return [];
     }
     const recovery = status.execution_recovery;
+    const reconciliationPath = reconciliationQueuePath();
     return [
       {
         label: $t('page.quantIntents.submit.killSwitch'),
@@ -144,14 +149,22 @@ export function useIntentActions(onChanged: () => void) {
       },
       {
         label: $t('page.quantIntents.submit.autoBlocked'),
+        routeTo: recovery.auto_execution_blocked
+          ? reconciliationPath
+          : undefined,
         value: recovery.auto_execution_blocked
-          ? $t('common.yes')
+          ? $t('page.quantIntents.submit.viewReconciliationQueueAction')
           : $t('common.no'),
       },
       {
         label: $t('page.quantIntents.submit.unresolved'),
+        routeTo: recovery.has_unresolvable_reconciliation
+          ? reconciliationPath
+          : undefined,
         value: recovery.has_unresolvable_reconciliation
-          ? String(recovery.unresolvable_count)
+          ? $t('page.quantIntents.submit.viewReconciliationQueue', {
+              count: recovery.unresolvable_count,
+            })
           : EMPTY_PLACEHOLDER,
       },
       // Account freshness: `report_only` is not dry-run — submission sizing is
@@ -265,9 +278,7 @@ export function useIntentActions(onChanged: () => void) {
       onChanged();
       // Deep-link to the freshly created execution order so the operator lands
       // on the venue-submission ledger for the order they just placed.
-      void router.push(
-        `/quant/execution-orders?open=${result.execution_order_id}`,
-      );
+      void router.push(executionOrderOpenPath(result.execution_order_id));
     }
     return result;
   }

@@ -32,6 +32,7 @@ import {
   findTagOption,
   useSettlementRedeemStateTagOptions,
 } from '#/shared/components/format/tag-options';
+import { positionOpenPath } from '#/shared/routes/execution-plane';
 
 defineOptions({ name: 'SettlementRedeemDetailDrawer' });
 
@@ -77,6 +78,11 @@ const lotColumns = [
     dataIndex: 'realized_pnl_usd',
     key: 'realized_pnl_usd',
     title: $t('page.quantSettlementRedeems.lots.realizedPnl'),
+  },
+  {
+    dataIndex: 'position_id',
+    key: 'position_id',
+    title: $t('page.quantSettlementRedeems.lots.position'),
   },
   {
     dataIndex: 'order_intent_id',
@@ -254,6 +260,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
                 <span class="font-mono">
                   {{ formatUsd(record.realized_pnl_usd) }}
                 </span>
+              </template>
+              <template v-else-if="column.key === 'position_id'">
+                <EntityRouteLink
+                  mono
+                  :label="record.position_id"
+                  :to="positionOpenPath(record.position_id)"
+                />
               </template>
               <template v-else-if="column.key === 'order_intent_id'">
                 <EntityRouteLink

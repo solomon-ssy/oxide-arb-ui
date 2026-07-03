@@ -27,6 +27,8 @@ export interface GovernedDetailRow {
   value: string;
   /** Render the value in a monospace, break-all style (ids / hashes). */
   mono?: boolean;
+  /** When set, value renders as EntityRouteLink instead of plain text. */
+  routeTo?: string;
 }
 
 export interface GovernedOptions {

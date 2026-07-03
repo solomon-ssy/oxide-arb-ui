@@ -237,6 +237,9 @@
     "closed": "Closed",
     "settled": "Settled"
   },
+  "positionPlane": {
+    "system_lot": "System Lot"
+  },
   "reconciliationResult": {
     "pending": "Pending",
     "filled": "Filled",

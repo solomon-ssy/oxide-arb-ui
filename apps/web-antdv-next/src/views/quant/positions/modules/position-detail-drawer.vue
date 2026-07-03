@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import type { PositionView } from '@vben/types';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { POSITION_LEDGER_STATES } from '@vben/types';
 
 import { Card, Descriptions, DescriptionsItem, Spin, Tag } from 'antdv-next';
 
@@ -23,6 +24,11 @@ import {
   findTagOption,
   usePositionLedgerStateTagOptions,
 } from '#/shared/components/format/tag-options';
+import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
+import {
+  reconciliationQueuePath,
+  settlementRedeemsPath,
+} from '#/shared/routes/execution-plane';
 
 defineOptions({ name: 'PositionDetailDrawer' });
 
@@ -37,6 +43,29 @@ const loading = ref(false);
 const openPositionId = ref<null | string>(null);
 
 const stateTagOptions = usePositionLedgerStateTagOptions();
+
+const showLifecycleLinks = computed(() => {
+  const state = position.value?.state;
+  return (
+    state === POSITION_LEDGER_STATES.closing ||
+    state === POSITION_LEDGER_STATES.closed ||
+    state === POSITION_LEDGER_STATES.settled
+  );
+});
+
+const reconciliationLink = computed(() =>
+  position.value
+    ? reconciliationQueuePath({
+        order_intent_id: position.value.order_intent_id,
+      })
+    : '/quant/reconciliations',
+);
+
+const settlementLink = computed(() =>
+  position.value
+    ? settlementRedeemsPath({ market_id: position.value.market_id })
+    : '/quant/settlement-redeems',
+);
 
 async function refreshPosition(id: string) {
   loading.value = true;
@@ -64,6 +93,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
     }
   },
 });
+
+useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
 </script>
 
 <template>
@@ -97,6 +128,18 @@ const [Drawer, drawerApi] = useVbenDrawer({
               icon="lucide:git-branch"
               :label="$t('page.quantPositions.detail.viewAttribution')"
               :to="`/quant/recommendations/${position.recommendation_id}?tab=attribution`"
+            />
+            <EntityRouteButton
+              v-if="showLifecycleLinks"
+              icon="lucide:scale"
+              :label="$t('page.quantPositions.detail.viewReconciliation')"
+              :to="reconciliationLink"
+            />
+            <EntityRouteButton
+              v-if="showLifecycleLinks"
+              icon="lucide:banknote"
+              :label="$t('page.quantPositions.detail.viewSettlement')"
+              :to="settlementLink"
             />
           </div>
         </div>

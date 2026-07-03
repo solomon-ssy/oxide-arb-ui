@@ -4,6 +4,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
 import { useSettlementRedeemStateTagOptions } from '#/shared/components/format/tag-options';
+import { settlementRedeemOpenPath } from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useSettlementRedeemColumns(
@@ -11,9 +12,16 @@ export function useSettlementRedeemColumns(
 ): VxeTableGridOptions<SettlementRedeemView>['columns'] {
   return [
     {
+      cellRender: {
+        name: 'CellEntityRoute',
+        props: {
+          mono: true,
+          to: (row: SettlementRedeemView) =>
+            settlementRedeemOpenPath(row.settlement_redeem_id),
+        },
+      },
       field: 'settlement_redeem_id',
       minWidth: 150,
-      showOverflow: 'tooltip',
       title: $t('page.quantSettlementRedeems.columns.batchId'),
     },
     {

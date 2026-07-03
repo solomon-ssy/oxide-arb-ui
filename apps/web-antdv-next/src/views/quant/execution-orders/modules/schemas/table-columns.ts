@@ -3,23 +3,40 @@ import type { ExecutionOrderView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
-import { formatShares } from '#/shared/components/format';
+import { EMPTY_PLACEHOLDER, formatShares } from '#/shared/components/format';
 import {
   useExecutionOrderPhaseTagOptions,
   useExecutionOrderStateTagOptions,
   useOrderTypeKindTagOptions,
   useSideTagOptions,
 } from '#/shared/components/format/tag-options';
+import { executionOrderOpenPath } from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
+
+function formatVenueStatus(value: null | string | undefined): string {
+  if (!value) {
+    return EMPTY_PLACEHOLDER;
+  }
+  const key = `enum.venueOrderStatus.${value}`;
+  const label = $t(key);
+  return label === key ? value : label;
+}
 
 export function useExecutionOrderColumns(
   onActionClick: OnActionClickFn<ExecutionOrderView>,
 ): VxeTableGridOptions<ExecutionOrderView>['columns'] {
   return [
     {
+      cellRender: {
+        name: 'CellEntityRoute',
+        props: {
+          mono: true,
+          to: (row: ExecutionOrderView) =>
+            executionOrderOpenPath(row.execution_order_id),
+        },
+      },
       field: 'execution_order_id',
       minWidth: 150,
-      showOverflow: 'tooltip',
       title: $t('page.quantExecutionOrders.columns.executionOrderId'),
     },
     {
@@ -49,6 +66,13 @@ export function useExecutionOrderColumns(
       field: 'market_id',
       minWidth: 140,
       title: $t('page.quantExecutionOrders.columns.market'),
+    },
+    {
+      field: 'token_id',
+      formatter: ({ cellValue }: { cellValue: string }) => cellValue,
+      minWidth: 120,
+      showOverflow: 'tooltip',
+      title: $t('page.quantExecutionOrders.columns.token'),
     },
     {
       cellRender: { name: 'CellTag', options: useSideTagOptions() },
@@ -96,6 +120,14 @@ export function useExecutionOrderColumns(
       field: 'venue_order_id',
       minWidth: 120,
       title: $t('page.quantExecutionOrders.columns.venueOrderId'),
+    },
+    {
+      field: 'venue_status',
+      formatter: ({ cellValue }: { cellValue: null | string }) =>
+        formatVenueStatus(cellValue),
+      minWidth: 120,
+      showOverflow: 'tooltip',
+      title: $t('page.quantExecutionOrders.columns.venueStatus'),
     },
     {
       cellRender: { name: 'CellDateTime' },

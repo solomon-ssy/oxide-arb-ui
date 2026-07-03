@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import type { ExecutionOrderView } from '@vben/types';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { EXECUTION_ORDER_STATES } from '@vben/types';
 
 import { Card, Descriptions, DescriptionsItem, Spin, Tag } from 'antdv-next';
 
@@ -24,6 +25,8 @@ import {
   useExecutionOrderStateTagOptions,
   useSideTagOptions,
 } from '#/shared/components/format/tag-options';
+import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
+import { reconciliationQueuePath } from '#/shared/routes/execution-plane';
 
 defineOptions({ name: 'ExecutionOrderDetailDrawer' });
 
@@ -40,6 +43,29 @@ const openOrderId = ref<null | string>(null);
 const stateTagOptions = useExecutionOrderStateTagOptions();
 const phaseTagOptions = useExecutionOrderPhaseTagOptions();
 const sideTagOptions = useSideTagOptions();
+
+const showReconciliationLink = computed(() => {
+  const current = order.value;
+  if (!current) {
+    return false;
+  }
+  return (
+    !!current.error_message ||
+    current.state === EXECUTION_ORDER_STATES.failed ||
+    current.state === EXECUTION_ORDER_STATES.ambiguous
+  );
+});
+
+const reconciliationLink = computed(() => {
+  const current = order.value;
+  if (!current) {
+    return '/quant/reconciliations';
+  }
+  return reconciliationQueuePath({
+    execution_order_id: current.execution_order_id,
+    order_intent_id: current.order_intent_id,
+  });
+});
 
 async function refreshOrder(id: string) {
   loading.value = true;
@@ -69,6 +95,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
     }
   },
 });
+
+useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
 </script>
 
 <template>
@@ -201,6 +229,12 @@ const [Drawer, drawerApi] = useVbenDrawer({
               </span>
             </DescriptionsItem>
           </Descriptions>
+          <EntityRouteLink
+            v-if="showReconciliationLink"
+            class="mt-3"
+            :label="$t('page.quantExecutionOrders.detail.viewReconciliation')"
+            :to="reconciliationLink"
+          />
         </Card>
       </div>
     </Spin>

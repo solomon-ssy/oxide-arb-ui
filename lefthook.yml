@@ -42,11 +42,18 @@
 #       runner: go run
 
 pre-commit:
-  parallel: true
+  parallel: false
   commands:
+    oxfmt:
+      priority: 1
+      glob: '*.{js,ts,jsx,tsx,vue,json,jsonc,md,css,scss,less}'
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
     lint:
+      priority: 2
       run: pnpm lint
     checkType:
+      priority: 3
       run: pnpm check:type
 
 post-merge:

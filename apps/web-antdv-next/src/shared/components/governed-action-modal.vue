@@ -17,12 +17,14 @@ import {
   TextArea,
 } from 'antdv-next';
 
+import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { isGovernedFieldValid } from '#/shared/composables/governed-field';
 import { useAuthStore } from '#/store';
 
 interface GovernedDetailRow {
   label: string;
   mono?: boolean;
+  routeTo?: string;
   value: string;
 }
 
@@ -157,7 +159,13 @@ watch(roleOptions, (options) => {
           :key="row.label"
           :label="row.label"
         >
-          <span :class="row.mono ? 'font-mono text-xs break-all' : ''">
+          <EntityRouteLink
+            v-if="row.routeTo"
+            :label="row.value"
+            :mono="row.mono"
+            :to="row.routeTo"
+          />
+          <span v-else :class="row.mono ? 'font-mono text-xs break-all' : ''">
             {{ row.value }}
           </span>
         </DescriptionsItem>

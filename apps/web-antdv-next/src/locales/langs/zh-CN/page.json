@@ -8,7 +8,8 @@
     "comingInPhase": "将在 Phase {phase} 交付",
     "reportOnlyNote": "report_only 不是 dry-run：报告 sizing 基于真实 venue account（CLOB 抵押 + venue 持仓）计算，需要凭证；缺凭证将 fail-closed。",
     "yes": "是",
-    "no": "否"
+    "no": "否",
+    "deepLinkNotFound": "深链记录不存在或已不可用。"
   },
   "menu": {
     "group": {
@@ -500,6 +501,8 @@
       "autoBlocked": "自动执行受阻",
       "unresolved": "未解决对账",
       "accountFreshness": "账户快照时间",
+      "viewReconciliationQueue": "查看未解决队列（{count}）",
+      "viewReconciliationQueueAction": "查看对账队列",
       "disabled": {
         "permission": "你没有 order_intent:submit 权限。",
         "notSubmittable": "该意图当前状态不可提交。",
@@ -507,7 +510,8 @@
         "modeApprovalMismatch": "审批来源与运行模式不匹配（人工审批 vs 策略审批）。",
         "killSwitch": "熔断开关未处于 closed，新入场被阻断。",
         "recoveryBlocked": "对账恢复期间自动执行被阻断。",
-        "expired": "该意图已超过过期时间。"
+        "expired": "该意图已超过过期时间。",
+        "systemLoading": "系统状态仍在加载，请稍后再提交。"
       }
     },
     "feedback": {
@@ -619,6 +623,7 @@
       "title": "执行订单",
       "gtdExpiration": "GTD 过期",
       "error": "错误",
+      "viewReconciliation": "查看对账队列",
       "sections": {
         "order": "订单",
         "venue": "交易所"
@@ -636,8 +641,10 @@
     },
     "columns": {
       "positionId": "持仓",
+      "positionPlane": "平面",
       "orderIntentId": "意图",
       "market": "市场",
+      "token": "Token",
       "state": "状态",
       "shares": "份额",
       "avgPrice": "均价",
@@ -657,6 +664,8 @@
       "updatedAt": "更新时间",
       "viewOrders": "查看执行订单",
       "viewAttribution": "查看推荐归因",
+      "viewReconciliation": "查看对账队列",
+      "viewSettlement": "查看结算赎回",
       "sections": {
         "lot": "仓位批次"
       }
@@ -750,6 +759,7 @@
       "costBasis": "成本基础",
       "payout": "赔付",
       "realizedPnl": "已实现盈亏",
+      "position": "持仓",
       "intent": "意图"
     },
     "detail": {

@@ -48,15 +48,26 @@ describe('evaluateSubmitIntentGate', () => {
     ).toBe('notSubmittable');
   });
 
-  it('blocks in report_only mode (not dry-run) and before mode is known', () => {
+  it('blocks in report_only mode (not dry-run)', () => {
     expect(
       evaluateSubmitIntentGate(
         input({ runtimeMode: QUANT_RUNTIME_MODES.reportOnly }),
       ).reason,
     ).toBe('mode');
+  });
+
+  it('blocks before system status is painted', () => {
     expect(evaluateSubmitIntentGate(input({ runtimeMode: null })).reason).toBe(
-      'mode',
+      'systemLoading',
     );
+    expect(
+      evaluateSubmitIntentGate(
+        input({
+          killSwitchState: null,
+          runtimeMode: QUANT_RUNTIME_MODES.semiAuto,
+        }),
+      ).reason,
+    ).toBe('systemLoading');
   });
 
   it('blocks a mode/approval provenance mismatch', () => {

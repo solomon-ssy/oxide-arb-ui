@@ -5,6 +5,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import { $t } from '#/locales';
 import { formatShares } from '#/shared/components/format';
 import { usePositionLedgerStateTagOptions } from '#/shared/components/format/tag-options';
+import { positionOpenPath } from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function usePositionColumns(
@@ -12,10 +13,23 @@ export function usePositionColumns(
 ): VxeTableGridOptions<PositionView>['columns'] {
   return [
     {
+      cellRender: {
+        name: 'CellEntityRoute',
+        props: {
+          mono: true,
+          to: (row: PositionView) => positionOpenPath(row.position_id),
+        },
+      },
       field: 'position_id',
       minWidth: 150,
-      showOverflow: 'tooltip',
       title: $t('page.quantPositions.columns.positionId'),
+    },
+    {
+      field: 'position_plane',
+      formatter: ({ cellValue }: { cellValue: string }) =>
+        $t(`enum.positionPlane.${cellValue}`),
+      title: $t('page.quantPositions.columns.positionPlane'),
+      width: 120,
     },
     {
       cellRender: {
@@ -34,6 +48,13 @@ export function usePositionColumns(
       field: 'market_id',
       minWidth: 140,
       title: $t('page.quantPositions.columns.market'),
+    },
+    {
+      field: 'token_id',
+      formatter: ({ cellValue }: { cellValue: string }) => cellValue,
+      minWidth: 120,
+      showOverflow: 'tooltip',
+      title: $t('page.quantPositions.columns.token'),
     },
     {
       cellRender: {

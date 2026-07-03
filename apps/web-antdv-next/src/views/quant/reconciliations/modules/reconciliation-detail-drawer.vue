@@ -33,6 +33,7 @@ import {
   findTagOption,
   useReconciliationResultTagOptions,
 } from '#/shared/components/format/tag-options';
+import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 
 import { useReconciliationActions } from './use-reconciliation-actions';
 
@@ -102,6 +103,8 @@ function onResolve() {
     void resolve(reconciliation.value);
   }
 }
+
+useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
 </script>
 
 <template>

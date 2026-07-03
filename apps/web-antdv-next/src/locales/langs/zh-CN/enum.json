@@ -237,6 +237,9 @@
     "closed": "已平仓",
     "settled": "已结算"
   },
+  "positionPlane": {
+    "system_lot": "系统批次"
+  },
   "reconciliationResult": {
     "pending": "待对账",
     "filled": "已成交",

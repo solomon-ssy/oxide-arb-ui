@@ -31,7 +31,8 @@ export type SubmitIntentBlockReason =
   | 'modeApprovalMismatch'
   | 'notSubmittable'
   | 'permission'
-  | 'recoveryBlocked';
+  | 'recoveryBlocked'
+  | 'systemLoading';
 
 export interface SubmitIntentGateInput {
   /** Holder of `order_intent:submit`. */
@@ -78,8 +79,13 @@ export function evaluateSubmitIntentGate(
     return { enabled: false, reason: 'notSubmittable' };
   }
 
-  // The runtime mode must be known and permit order submission.
-  if (runtimeMode === null || runtimeMode === QUANT_RUNTIME_MODES.reportOnly) {
+  // System status must be painted before we gate on mode or kill-switch.
+  if (runtimeMode === null || killSwitchState === null) {
+    return { enabled: false, reason: 'systemLoading' };
+  }
+
+  // The runtime mode must permit order submission.
+  if (runtimeMode === QUANT_RUNTIME_MODES.reportOnly) {
     return { enabled: false, reason: 'mode' };
   }
 
@@ -89,10 +95,7 @@ export function evaluateSubmitIntentGate(
   }
 
   // Kill-switch must admit new entries (only `closed` does).
-  if (
-    killSwitchState === null ||
-    killSwitchState !== KILL_SWITCH_STATES.closed
-  ) {
+  if (killSwitchState !== KILL_SWITCH_STATES.closed) {
     return { enabled: false, reason: 'killSwitch' };
   }
 

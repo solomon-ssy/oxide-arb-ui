@@ -8,7 +8,8 @@
     "comingInPhase": "Coming in Phase {phase}",
     "reportOnlyNote": "report_only is not dry-run: report sizing runs against the real venue account (CLOB collateral + venue positions). Credentials are required; missing credentials fail closed.",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "deepLinkNotFound": "The linked record was not found or is no longer available."
   },
   "menu": {
     "group": {
@@ -500,6 +501,8 @@
       "autoBlocked": "Auto-execution Blocked",
       "unresolved": "Unresolved Reconciliations",
       "accountFreshness": "Account As Of",
+      "viewReconciliationQueue": "View unresolved queue ({count})",
+      "viewReconciliationQueueAction": "View reconciliation queue",
       "disabled": {
         "permission": "You lack the order_intent:submit permission.",
         "notSubmittable": "The intent is not in a submittable state.",
@@ -507,7 +510,8 @@
         "modeApprovalMismatch": "The approval provenance does not match the runtime mode (operator vs policy).",
         "killSwitch": "The kill-switch is not closed; new entries are blocked.",
         "recoveryBlocked": "Auto-execution is blocked while reconciliation recovery holds the plane.",
-        "expired": "The intent has passed its expiry deadline."
+        "expired": "The intent has passed its expiry deadline.",
+        "systemLoading": "System status is still loading; wait before submitting."
       }
     },
     "feedback": {
@@ -619,6 +623,7 @@
       "title": "Execution Order",
       "gtdExpiration": "GTD Expiration",
       "error": "Error",
+      "viewReconciliation": "View reconciliation queue",
       "sections": {
         "order": "Order",
         "venue": "Venue"
@@ -636,8 +641,10 @@
     },
     "columns": {
       "positionId": "Position",
+      "positionPlane": "Plane",
       "orderIntentId": "Intent",
       "market": "Market",
+      "token": "Token",
       "state": "State",
       "shares": "Shares",
       "avgPrice": "Avg Price",
@@ -657,6 +664,8 @@
       "updatedAt": "Updated",
       "viewOrders": "View execution orders",
       "viewAttribution": "View recommendation attribution",
+      "viewReconciliation": "View reconciliation queue",
+      "viewSettlement": "View settlement redeems",
       "sections": {
         "lot": "Lot"
       }
@@ -750,6 +759,7 @@
       "costBasis": "Cost Basis",
       "payout": "Payout",
       "realizedPnl": "Realized PnL",
+      "position": "Position",
       "intent": "Intent"
     },
     "detail": {
