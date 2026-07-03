@@ -31,6 +31,8 @@ export interface SettlementRedeemView {
   funder_address: string;
   wallet_kind: string;
   state: SettlementRedeemState;
+  /** Number of redeemed lots in this single-market batch. */
+  lot_count: number;
   tx_hash: null | string;
   payout_usd: UsdString;
   gas_fee_pol: DecimalString | null;

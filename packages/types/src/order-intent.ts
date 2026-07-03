@@ -7,6 +7,7 @@ import type {
   ProbabilityString,
   SharesString,
   TimeRangeQuery,
+  UsdString,
   UuidString,
 } from './common';
 import type {
@@ -89,6 +90,13 @@ export interface OrderIntentView {
 /** Filter + pagination for `GET /quant/intents`. */
 export interface OrderIntentListQuery extends PageQuery, TimeRangeQuery {
   status?: OrderIntentStatus;
+  /**
+   * Comma-separated multi-status queue preset (e.g. `approved,approved_by_policy`).
+   * When present the backend ignores `status`. Sent as a single CSV field
+   * because the query string cannot carry repeated keys.
+   */
+  statuses?: string;
+  approval_status?: ApprovalStatus;
   runtime_mode?: QuantRuntimeMode;
   recommendation_id?: UuidString;
 }
@@ -99,7 +107,23 @@ export interface CreateOrderIntentRequest {
   reason: string;
 }
 
-/** Shared governed request body for approve/reject/cancel/submit actions. */
+/**
+ * `POST /quant/intents/{id}/approve` governed request body.
+ *
+ * The optional overrides let an approver downscale sizing or tighten the limit
+ * before releasing the intent for submission; omitting them approves the frozen
+ * spec verbatim. `max_allowed_usd` is a defensive ceiling the backend re-checks
+ * against the resolved notional.
+ */
+export interface ApproveOrderIntentRequest {
+  reason: string;
+  override_shares?: SharesString;
+  override_limit_price?: PriceString;
+  max_allowed_usd?: UsdString;
+  override_note?: string;
+}
+
+/** Shared governed request body for reject/cancel/submit actions (reason only). */
 export interface IntentActionRequest {
   reason: string;
 }

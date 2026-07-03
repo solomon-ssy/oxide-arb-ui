@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { QuantRecommendationView } from '@vben/types';
 
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import {
   Button,
@@ -44,6 +44,8 @@ import RecommendationPlans from './widgets/recommendation-plans.vue';
 defineOptions({ name: 'RecommendationDetailPanel' });
 
 const props = defineProps<{
+  /** Preselected detail tab (e.g. `attribution` from a position deep link). */
+  initialTab?: string;
   recommendation: QuantRecommendationView;
 }>();
 
@@ -54,7 +56,22 @@ const sideTagOptions = useOutcomeSideTagOptions();
 const statusTagOptions = useRecommendationStatusTagOptions();
 const modeTagOptions = useQuantRuntimeModeTagOptions();
 
-const detailTab = ref('evidence');
+const DETAIL_TABS = new Set(['attribution', 'evidence']);
+const detailTab = ref(
+  props.initialTab && DETAIL_TABS.has(props.initialTab)
+    ? props.initialTab
+    : 'evidence',
+);
+
+// A deep link may change the requested tab without remounting the panel.
+watch(
+  () => props.initialTab,
+  (tab) => {
+    if (tab && DETAIL_TABS.has(tab)) {
+      detailTab.value = tab;
+    }
+  },
+);
 
 const context = computed(() => props.recommendation.market_context);
 const eligibility = computed(() => props.recommendation.execution_eligibility);
@@ -193,7 +210,7 @@ function onCreateIntent() {
               v-if="recommendation.active_order_intent_id"
               mono
               :label="recommendation.active_order_intent_id"
-              to="/quant/intents"
+              :to="`/quant/intents/${recommendation.active_order_intent_id}`"
             />
             <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
           </DescriptionsItem>

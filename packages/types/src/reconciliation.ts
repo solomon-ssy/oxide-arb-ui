@@ -11,6 +11,8 @@ import type { ReconciliationEvidenceKind, ReconciliationResult } from './enums';
 import type { ExecutionOrderView } from './execution-order';
 import type { ExecutionRecoverySummary } from './system';
 
+import { RECONCILIATION_RESULTS } from './enums';
+
 /** One entry of a reconciliation's evidence chain. */
 export interface ReconciliationEvidence {
   kind: ReconciliationEvidenceKind;
@@ -59,3 +61,25 @@ export interface ResolveReconciliationResponse {
   execution_order: ExecutionOrderView;
   recovery: ExecutionRecoverySummary;
 }
+
+/**
+ * Whether an operator may invoke `POST /quant/reconciliations/{id}/resolve`,
+ * byte-aligned with `CoreReconciliationPort::resolve_operator`: only machine
+ * `unresolvable` rows awaiting operator verdict (`resolved_at == null`).
+ */
+export function isReconciliationOperatorResolvable(
+  reconciliation: Pick<ReconciliationView, 'resolved_at' | 'result'>,
+): boolean {
+  return (
+    reconciliation.result === RECONCILIATION_RESULTS.unresolvable &&
+    reconciliation.resolved_at === null
+  );
+}
+
+/** Operator-selectable resolve verdicts (excludes `pending` / `unresolvable`). */
+export const OPERATOR_RECONCILIATION_RESULTS = [
+  RECONCILIATION_RESULTS.filled,
+  RECONCILIATION_RESULTS.partiallyFilled,
+  RECONCILIATION_RESULTS.notFilled,
+  RECONCILIATION_RESULTS.cancelled,
+] as const satisfies readonly ReconciliationResult[];

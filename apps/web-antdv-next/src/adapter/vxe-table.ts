@@ -6,6 +6,7 @@ import type { ComponentPropsMap, ComponentType } from './component';
 import type { DecimalInput } from '#/shared/components/format';
 
 import { h } from 'vue';
+import { RouterLink } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
 import { $te } from '@vben/locales';
@@ -488,6 +489,37 @@ setupVbenVxeTable({
           Tooltip,
           { title: formatDateTimeUtc(value) },
           { default: () => h('span', {}, formatDateTimeLocal(value)) },
+        );
+      },
+    });
+
+    // 单元格渲染：实体深链(router-link,截断/mono,点击不触发行选中)
+    // props: { to: (row) => string, mono?: boolean }
+    vxeUI.renderer.add('CellEntityRoute', {
+      renderTableDefault({ props }, { column, row }) {
+        const value = get(row, column.field) as null | string | undefined;
+        if (!value) {
+          return h('span', {}, EMPTY_PLACEHOLDER);
+        }
+        const { mono, to } = (props ?? {}) as {
+          mono?: boolean;
+          to?: (row: Recordable<any>) => string;
+        };
+        if (!to) {
+          return h('span', {}, value);
+        }
+        return h(
+          RouterLink,
+          {
+            class: [
+              'text-primary hover:underline',
+              mono ? 'font-mono text-xs break-all' : '',
+            ],
+            // Cross-page navigation must not toggle vxe row selection.
+            onClick: (event: MouseEvent) => event.stopPropagation(),
+            to: to(row),
+          },
+          { default: () => value },
         );
       },
     });

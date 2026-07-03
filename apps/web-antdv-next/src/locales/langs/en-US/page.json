@@ -27,6 +27,7 @@
     "reportDetail": "Report Detail",
     "recommendationDetail": "Recommendation Detail",
     "orderIntents": "Order Intents",
+    "orderIntentDetail": "Intent Detail",
     "executionOrders": "Execution Orders",
     "positions": "Positions",
     "reconciliations": "Reconciliations",
@@ -435,6 +436,335 @@
       "title": "Equity Snapshot",
       "id": "Snapshot ID",
       "accountRef": "Account Snapshot Ref"
+    }
+  },
+  "quantIntents": {
+    "listTitle": "Order Intents",
+    "filters": {
+      "status": "Status",
+      "approvalStatus": "Approval",
+      "runtimeMode": "Runtime Mode",
+      "recommendationId": "Recommendation ID",
+      "createdAt": "Created"
+    },
+    "queue": {
+      "all": "All",
+      "pendingApproval": "Pending Approval",
+      "awaitingSubmit": "Awaiting Submit",
+      "inFlight": "In Flight",
+      "terminal": "Terminal"
+    },
+    "columns": {
+      "intentId": "Intent",
+      "status": "Status",
+      "approvalStatus": "Approval",
+      "runtimeMode": "Mode",
+      "side": "Side",
+      "limitPrice": "Limit",
+      "shares": "Shares",
+      "recommendationId": "Recommendation",
+      "createdAt": "Created",
+      "expiresAt": "Expires",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "approve": "Approve",
+      "submit": "Submit",
+      "reject": "Reject",
+      "cancel": "Cancel"
+    },
+    "approve": {
+      "title": "Approve Intent",
+      "summary": "Approve intent {id}. Leave overrides blank to approve the frozen spec verbatim.",
+      "overrideShares": "Override Shares",
+      "overrideSharesPlaceholder": "Downscale shares (optional)",
+      "overrideLimitPrice": "Override Limit Price",
+      "maxAllowedUsd": "Max Allowed USD",
+      "maxAllowedUsdHelp": "Defensive notional ceiling re-checked by the backend.",
+      "overrideNote": "Override Note"
+    },
+    "reject": {
+      "title": "Reject Intent",
+      "summary": "Reject intent {id} and release its reserved capital."
+    },
+    "cancel": {
+      "title": "Cancel Intent",
+      "summary": "Cancel not-yet-submitted intent {id} and release its reserved capital."
+    },
+    "submit": {
+      "title": "Submit Intent",
+      "summary": "Submit intent {id} to the venue. This signs and places a real order.",
+      "killSwitch": "Kill-switch",
+      "runtimeMode": "Runtime Mode",
+      "autoBlocked": "Auto-execution Blocked",
+      "unresolved": "Unresolved Reconciliations",
+      "accountFreshness": "Account As Of",
+      "disabled": {
+        "permission": "You lack the order_intent:submit permission.",
+        "notSubmittable": "The intent is not in a submittable state.",
+        "mode": "report_only never submits (real-account sizing, not dry-run).",
+        "modeApprovalMismatch": "The approval provenance does not match the runtime mode (operator vs policy).",
+        "killSwitch": "The kill-switch is not closed; new entries are blocked.",
+        "recoveryBlocked": "Auto-execution is blocked while reconciliation recovery holds the plane.",
+        "expired": "The intent has passed its expiry deadline."
+      }
+    },
+    "feedback": {
+      "approved": "Intent approved.",
+      "rejected": "Intent rejected.",
+      "cancelled": "Intent cancelled.",
+      "submitted": "Intent submitted — opening execution order {id}."
+    },
+    "wsToast": {
+      "created": "Intent created ({id})",
+      "approved": "Intent approved ({id})",
+      "rejected": "Intent rejected ({id})",
+      "cancelled": "Intent cancelled ({id})",
+      "expired": "Intent expired ({id})",
+      "invalidated": "Intent invalidated ({id})",
+      "submitted": "Intent submitted ({id})",
+      "admission_rejected": "Intent admission rejected ({id})",
+      "partially_filled": "Intent partially filled ({id})",
+      "filled": "Intent filled ({id})",
+      "failed": "Intent failed ({id})"
+    },
+    "detail": {
+      "title": "Order Intent",
+      "back": "Back to Intents",
+      "notFound": "Order intent not found.",
+      "loadError": "Failed to load the order intent.",
+      "retry": "Retry",
+      "viewAllOrders": "View all execution orders",
+      "noExecutionOrders": "No execution orders yet.",
+      "sections": {
+        "identity": "Identity",
+        "approval": "Approval & Admission",
+        "entry": "Entry Order",
+        "exit": "Exit Policy",
+        "executionOrders": "Execution Orders"
+      },
+      "identity": {
+        "recommendationId": "Recommendation",
+        "runtimeConfig": "Runtime Config Version",
+        "modelVersion": "Model Version",
+        "policyId": "Policy ID",
+        "policyHash": "Policy Hash",
+        "riskEnvelopeHash": "Risk Envelope Hash",
+        "createdAt": "Created",
+        "expiresAt": "Expires"
+      },
+      "approval": {
+        "approvedBy": "Approved By",
+        "approvedAt": "Approved At",
+        "approvalReason": "Approval Reason",
+        "statusReason": "Status Reason",
+        "admissionTrace": "Admission Trace Ref"
+      },
+      "entry": {
+        "token": "Token",
+        "side": "Side",
+        "orderType": "Order Type",
+        "limitPrice": "Limit Price",
+        "shares": "Shares",
+        "maxSlippage": "Max Slippage",
+        "validUntil": "Valid Until"
+      },
+      "exit": {
+        "settlementMode": "Settlement Mode",
+        "redeemPolicy": "Redeem Policy",
+        "takeProfit": "Take Profit (price / pct)",
+        "stopLoss": "Stop Loss (price / pct)",
+        "timeExit": "Time Exit",
+        "maxHold": "Max Hold",
+        "entryReference": "Entry Reference Price",
+        "partialNodes": "Partial Exit Nodes",
+        "invalidationRules": "Signal Invalidation Rules"
+      }
+    }
+  },
+  "quantExecutionOrders": {
+    "listTitle": "Execution Orders",
+    "filters": {
+      "state": "State",
+      "phase": "Phase",
+      "orderIntentId": "Intent ID",
+      "marketId": "Market ID",
+      "tokenId": "Token ID",
+      "createdAt": "Created"
+    },
+    "columns": {
+      "executionOrderId": "Order",
+      "orderIntentId": "Intent",
+      "phase": "Phase",
+      "market": "Market",
+      "token": "Token",
+      "side": "Side",
+      "type": "Type",
+      "price": "Price",
+      "shares": "Shares",
+      "cost": "Cost",
+      "state": "State",
+      "venueOrderId": "Venue Order",
+      "venueStatus": "Venue Status",
+      "submittedAt": "Submitted",
+      "filledAt": "Filled",
+      "cancelledAt": "Cancelled",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail"
+    },
+    "detail": {
+      "title": "Execution Order",
+      "gtdExpiration": "GTD Expiration",
+      "error": "Error",
+      "sections": {
+        "order": "Order",
+        "venue": "Venue"
+      }
+    }
+  },
+  "quantPositions": {
+    "listTitle": "Positions",
+    "filters": {
+      "state": "State",
+      "orderIntentId": "Intent ID",
+      "marketId": "Market ID",
+      "tokenId": "Token ID",
+      "openedAt": "Opened"
+    },
+    "columns": {
+      "positionId": "Position",
+      "orderIntentId": "Intent",
+      "market": "Market",
+      "state": "State",
+      "shares": "Shares",
+      "avgPrice": "Avg Price",
+      "cost": "Cost",
+      "realizedPnl": "Realized PnL",
+      "openedAt": "Opened",
+      "closedAt": "Closed",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail"
+    },
+    "detail": {
+      "title": "Position",
+      "orderIntentId": "Intent",
+      "token": "Token",
+      "updatedAt": "Updated",
+      "viewOrders": "View execution orders",
+      "viewAttribution": "View recommendation attribution",
+      "sections": {
+        "lot": "Lot"
+      }
+    }
+  },
+  "quantReconciliations": {
+    "listTitle": "Reconciliations",
+    "filters": {
+      "result": "Result",
+      "executionOrderId": "Execution Order ID",
+      "orderIntentId": "Intent ID",
+      "detectedAt": "Detected"
+    },
+    "queue": {
+      "unresolved": "Unresolved",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "resolvedState": {
+      "resolved": "Resolved",
+      "unresolved": "Unresolved"
+    },
+    "columns": {
+      "reconciliationId": "Reconciliation",
+      "result": "Result",
+      "currentResult": "Current Result",
+      "resolvedState": "Resolved",
+      "executionOrderId": "Execution Order",
+      "orderIntentId": "Intent",
+      "discrepancy": "Discrepancy",
+      "detectedAt": "Detected",
+      "resolvedAt": "Resolved",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail",
+      "resolve": "Resolve"
+    },
+    "resolve": {
+      "title": "Resolve Reconciliation",
+      "summary": "Resolve reconciliation {id} with an operator verdict.",
+      "result": "Resolution",
+      "filledShares": "Filled Shares",
+      "filledSharesHelp": "Observed venue fill (optional, for partial/filled verdicts).",
+      "avgPrice": "Average Price"
+    },
+    "feedback": {
+      "resolved": "Reconciliation resolved.",
+      "nextSteps": "Recovery next steps: {steps}"
+    },
+    "detail": {
+      "title": "Reconciliation",
+      "venueFilledShares": "Venue Filled Shares",
+      "venueAvgPrice": "Venue Avg Price",
+      "resolvedBy": "Resolved By",
+      "evidenceShares": "Shares",
+      "evidencePrice": "Price",
+      "noEvidence": "No evidence recorded.",
+      "sections": {
+        "summary": "Summary",
+        "evidence": "Evidence Chain"
+      }
+    }
+  },
+  "quantSettlementRedeems": {
+    "listTitle": "Settlement Redeems",
+    "filters": {
+      "state": "State",
+      "marketId": "Market ID",
+      "createdAt": "Created"
+    },
+    "columns": {
+      "batchId": "Batch",
+      "market": "Market",
+      "state": "State",
+      "lotCount": "Lots",
+      "payout": "Payout",
+      "attempts": "Attempts",
+      "txHash": "Tx Hash",
+      "submittedAt": "Submitted",
+      "confirmedAt": "Confirmed",
+      "createdAt": "Created",
+      "operation": "Actions"
+    },
+    "actions": {
+      "detail": "Detail"
+    },
+    "lots": {
+      "token": "Token",
+      "shares": "Shares",
+      "costBasis": "Cost Basis",
+      "payout": "Payout",
+      "realizedPnl": "Realized PnL",
+      "intent": "Intent"
+    },
+    "detail": {
+      "title": "Settlement Redeem",
+      "funder": "Funder",
+      "walletKind": "Wallet Kind",
+      "gasFee": "Gas Fee (POL)",
+      "nextAttemptAt": "Next Attempt",
+      "failedAt": "Failed",
+      "lastError": "Last Error",
+      "noLots": "No lots in this batch.",
+      "sections": {
+        "batch": "Batch",
+        "lots": "Redeemed Lots"
+      }
     }
   },
   "quantReports": {

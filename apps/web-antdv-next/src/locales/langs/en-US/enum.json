@@ -215,6 +215,19 @@
     "entry": "Entry",
     "exit": "Exit"
   },
+  "orderTypeKind": {
+    "fok": "FOK",
+    "gtc": "GTC",
+    "gtd": "GTD"
+  },
+  "venueOrderStatus": {
+    "filled": "Filled",
+    "partially_filled": "Partially Filled",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "open": "Open",
+    "expired": "Expired"
+  },
   "orderIntentKind": {
     "buy": "Buy"
   },
@@ -231,6 +244,14 @@
     "partially_filled": "Partially Filled",
     "cancelled": "Cancelled",
     "unresolvable": "Unresolvable"
+  },
+  "reconciliationEvidenceKind": {
+    "clob_order_status": "CLOB Order Status",
+    "clob_trades": "CLOB Trades",
+    "token_balance_delta": "Token Balance Delta",
+    "account_balance_delta": "Account Balance Delta",
+    "book_context": "Book Context",
+    "operator_note": "Operator Note"
   },
   "settlementRedeemState": {
     "pending": "Pending",

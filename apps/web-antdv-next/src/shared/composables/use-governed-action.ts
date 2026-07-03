@@ -1,5 +1,7 @@
 import type { ApiError } from '@vben/request/qp';
 
+import type { GovernedField } from './governed-field';
+
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 import { showApiError, useRequestHandler } from '@vben/request/qp';
@@ -9,6 +11,12 @@ import GovernedActionModal from '#/shared/components/governed-action-modal.vue';
 export interface GovernedContext {
   actingRole: string;
   reason: string;
+  /**
+   * Collected values of the optional typed {@link GovernedField}s, keyed by
+   * `name`. Empty inputs are normalized to `undefined` so callers can spread
+   * them straight into optional request bodies.
+   */
+  fields: Record<string, string | undefined>;
 }
 
 /** Read-only key/value row rendered in the governed modal body. */
@@ -24,6 +32,8 @@ export interface GovernedOptions {
   danger?: boolean;
   /** Structured resource preview shown above the reason field. */
   details?: GovernedDetailRow[];
+  /** Optional typed operator inputs (overrides, resolution verdict, …). */
+  fields?: GovernedField[];
   summary?: string;
   title: string;
 }
@@ -77,6 +87,7 @@ function createGovernedActionApi(): GovernedActionApi {
         confirmWord: options.confirmWord,
         danger: options.danger,
         details: options.details,
+        fields: options.fields,
         summary: options.summary,
         title: options.title,
         onCancel: () => resolve(null),

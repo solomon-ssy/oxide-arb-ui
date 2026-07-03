@@ -27,6 +27,7 @@
     "reportDetail": "报告详情",
     "recommendationDetail": "推荐详情",
     "orderIntents": "订单意图",
+    "orderIntentDetail": "意图详情",
     "executionOrders": "执行订单",
     "positions": "持仓",
     "reconciliations": "对账",
@@ -435,6 +436,335 @@
       "title": "权益快照",
       "id": "快照 ID",
       "accountRef": "账户快照引用"
+    }
+  },
+  "quantIntents": {
+    "listTitle": "订单意图",
+    "filters": {
+      "status": "状态",
+      "approvalStatus": "审批",
+      "runtimeMode": "运行模式",
+      "recommendationId": "推荐 ID",
+      "createdAt": "创建时间"
+    },
+    "queue": {
+      "all": "全部",
+      "pendingApproval": "待审批",
+      "awaitingSubmit": "待提交",
+      "inFlight": "执行中",
+      "terminal": "终态"
+    },
+    "columns": {
+      "intentId": "意图",
+      "status": "状态",
+      "approvalStatus": "审批",
+      "runtimeMode": "模式",
+      "side": "方向",
+      "limitPrice": "限价",
+      "shares": "份额",
+      "recommendationId": "推荐",
+      "createdAt": "创建时间",
+      "expiresAt": "过期时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情",
+      "approve": "审批通过",
+      "submit": "提交",
+      "reject": "驳回",
+      "cancel": "取消"
+    },
+    "approve": {
+      "title": "审批意图",
+      "summary": "审批意图 {id}。留空覆盖项则按冻结规格原样通过。",
+      "overrideShares": "覆盖份额",
+      "overrideSharesPlaceholder": "下调份额（可选）",
+      "overrideLimitPrice": "覆盖限价",
+      "maxAllowedUsd": "最大允许 USD",
+      "maxAllowedUsdHelp": "后端会据此二次校验名义金额上限。",
+      "overrideNote": "覆盖备注"
+    },
+    "reject": {
+      "title": "驳回意图",
+      "summary": "驳回意图 {id} 并释放其预留资金。"
+    },
+    "cancel": {
+      "title": "取消意图",
+      "summary": "取消尚未提交的意图 {id} 并释放其预留资金。"
+    },
+    "submit": {
+      "title": "提交意图",
+      "summary": "将意图 {id} 提交至交易所。这将签名并下达真实订单。",
+      "killSwitch": "熔断开关",
+      "runtimeMode": "运行模式",
+      "autoBlocked": "自动执行受阻",
+      "unresolved": "未解决对账",
+      "accountFreshness": "账户快照时间",
+      "disabled": {
+        "permission": "你没有 order_intent:submit 权限。",
+        "notSubmittable": "该意图当前状态不可提交。",
+        "mode": "report_only 永不提交（基于真实账户的额度评估，并非 dry-run）。",
+        "modeApprovalMismatch": "审批来源与运行模式不匹配（人工审批 vs 策略审批）。",
+        "killSwitch": "熔断开关未处于 closed，新入场被阻断。",
+        "recoveryBlocked": "对账恢复期间自动执行被阻断。",
+        "expired": "该意图已超过过期时间。"
+      }
+    },
+    "feedback": {
+      "approved": "意图已审批通过。",
+      "rejected": "意图已驳回。",
+      "cancelled": "意图已取消。",
+      "submitted": "意图已提交 —— 正在打开执行订单 {id}。"
+    },
+    "wsToast": {
+      "created": "意图已创建（{id}）",
+      "approved": "意图已审批（{id}）",
+      "rejected": "意图已驳回（{id}）",
+      "cancelled": "意图已取消（{id}）",
+      "expired": "意图已过期（{id}）",
+      "invalidated": "意图已失效（{id}）",
+      "submitted": "意图已提交（{id}）",
+      "admission_rejected": "意图准入被拒（{id}）",
+      "partially_filled": "意图部分成交（{id}）",
+      "filled": "意图已成交（{id}）",
+      "failed": "意图失败（{id}）"
+    },
+    "detail": {
+      "title": "订单意图",
+      "back": "返回意图列表",
+      "notFound": "未找到订单意图。",
+      "loadError": "加载订单意图失败。",
+      "retry": "重试",
+      "viewAllOrders": "查看全部执行订单",
+      "noExecutionOrders": "暂无执行订单。",
+      "sections": {
+        "identity": "标识",
+        "approval": "审批与准入",
+        "entry": "入场订单",
+        "exit": "离场策略",
+        "executionOrders": "执行订单"
+      },
+      "identity": {
+        "recommendationId": "推荐",
+        "runtimeConfig": "运行配置版本",
+        "modelVersion": "模型版本",
+        "policyId": "策略 ID",
+        "policyHash": "策略哈希",
+        "riskEnvelopeHash": "风险敞口哈希",
+        "createdAt": "创建时间",
+        "expiresAt": "过期时间"
+      },
+      "approval": {
+        "approvedBy": "审批人",
+        "approvedAt": "审批时间",
+        "approvalReason": "审批理由",
+        "statusReason": "状态原因",
+        "admissionTrace": "准入追踪引用"
+      },
+      "entry": {
+        "token": "Token",
+        "side": "方向",
+        "orderType": "订单类型",
+        "limitPrice": "限价",
+        "shares": "份额",
+        "maxSlippage": "最大滑点",
+        "validUntil": "有效期至"
+      },
+      "exit": {
+        "settlementMode": "结算模式",
+        "redeemPolicy": "赎回策略",
+        "takeProfit": "止盈（价 / 比例）",
+        "stopLoss": "止损（价 / 比例）",
+        "timeExit": "时间离场",
+        "maxHold": "最长持有",
+        "entryReference": "入场参考价",
+        "partialNodes": "分批离场节点",
+        "invalidationRules": "信号失效规则"
+      }
+    }
+  },
+  "quantExecutionOrders": {
+    "listTitle": "执行订单",
+    "filters": {
+      "state": "状态",
+      "phase": "阶段",
+      "orderIntentId": "意图 ID",
+      "marketId": "市场 ID",
+      "tokenId": "Token ID",
+      "createdAt": "创建时间"
+    },
+    "columns": {
+      "executionOrderId": "订单",
+      "orderIntentId": "意图",
+      "phase": "阶段",
+      "market": "市场",
+      "token": "Token",
+      "side": "方向",
+      "type": "类型",
+      "price": "价格",
+      "shares": "份额",
+      "cost": "成本",
+      "state": "状态",
+      "venueOrderId": "交易所订单",
+      "venueStatus": "交易所状态",
+      "submittedAt": "提交时间",
+      "filledAt": "成交时间",
+      "cancelledAt": "取消时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情"
+    },
+    "detail": {
+      "title": "执行订单",
+      "gtdExpiration": "GTD 过期",
+      "error": "错误",
+      "sections": {
+        "order": "订单",
+        "venue": "交易所"
+      }
+    }
+  },
+  "quantPositions": {
+    "listTitle": "持仓",
+    "filters": {
+      "state": "状态",
+      "orderIntentId": "意图 ID",
+      "marketId": "市场 ID",
+      "tokenId": "Token ID",
+      "openedAt": "开仓时间"
+    },
+    "columns": {
+      "positionId": "持仓",
+      "orderIntentId": "意图",
+      "market": "市场",
+      "state": "状态",
+      "shares": "份额",
+      "avgPrice": "均价",
+      "cost": "成本",
+      "realizedPnl": "已实现盈亏",
+      "openedAt": "开仓时间",
+      "closedAt": "平仓时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情"
+    },
+    "detail": {
+      "title": "持仓",
+      "orderIntentId": "意图",
+      "token": "Token",
+      "updatedAt": "更新时间",
+      "viewOrders": "查看执行订单",
+      "viewAttribution": "查看推荐归因",
+      "sections": {
+        "lot": "仓位批次"
+      }
+    }
+  },
+  "quantReconciliations": {
+    "listTitle": "对账",
+    "filters": {
+      "result": "结果",
+      "executionOrderId": "执行订单 ID",
+      "orderIntentId": "意图 ID",
+      "detectedAt": "检测时间"
+    },
+    "queue": {
+      "unresolved": "未解决",
+      "resolved": "已解决",
+      "all": "全部"
+    },
+    "resolvedState": {
+      "resolved": "已解决",
+      "unresolved": "未解决"
+    },
+    "columns": {
+      "reconciliationId": "对账",
+      "result": "结果",
+      "currentResult": "当前结果",
+      "resolvedState": "解决状态",
+      "executionOrderId": "执行订单",
+      "orderIntentId": "意图",
+      "discrepancy": "差异",
+      "detectedAt": "检测时间",
+      "resolvedAt": "解决时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情",
+      "resolve": "解决"
+    },
+    "resolve": {
+      "title": "解决对账",
+      "summary": "以操作员裁决解决对账 {id}。",
+      "result": "裁决结果",
+      "filledShares": "成交份额",
+      "filledSharesHelp": "观察到的交易所成交（可选，用于部分/全部成交裁决）。",
+      "avgPrice": "平均价"
+    },
+    "feedback": {
+      "resolved": "对账已解决。",
+      "nextSteps": "恢复后续步骤：{steps}"
+    },
+    "detail": {
+      "title": "对账",
+      "venueFilledShares": "交易所成交份额",
+      "venueAvgPrice": "交易所均价",
+      "resolvedBy": "解决人",
+      "evidenceShares": "份额",
+      "evidencePrice": "价格",
+      "noEvidence": "暂无证据记录。",
+      "sections": {
+        "summary": "概要",
+        "evidence": "证据链"
+      }
+    }
+  },
+  "quantSettlementRedeems": {
+    "listTitle": "结算赎回",
+    "filters": {
+      "state": "状态",
+      "marketId": "市场 ID",
+      "createdAt": "创建时间"
+    },
+    "columns": {
+      "batchId": "批次",
+      "market": "市场",
+      "state": "状态",
+      "lotCount": "批次仓位数",
+      "payout": "赔付",
+      "attempts": "尝试次数",
+      "txHash": "交易哈希",
+      "submittedAt": "提交时间",
+      "confirmedAt": "确认时间",
+      "createdAt": "创建时间",
+      "operation": "操作"
+    },
+    "actions": {
+      "detail": "详情"
+    },
+    "lots": {
+      "token": "Token",
+      "shares": "份额",
+      "costBasis": "成本基础",
+      "payout": "赔付",
+      "realizedPnl": "已实现盈亏",
+      "intent": "意图"
+    },
+    "detail": {
+      "title": "结算赎回",
+      "funder": "资金地址",
+      "walletKind": "钱包类型",
+      "gasFee": "Gas 费（POL）",
+      "nextAttemptAt": "下次尝试",
+      "failedAt": "失败时间",
+      "lastError": "最近错误",
+      "noLots": "该批次暂无仓位。",
+      "sections": {
+        "batch": "批次",
+        "lots": "已赎回仓位"
+      }
     }
   },
   "quantReports": {

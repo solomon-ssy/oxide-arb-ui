@@ -84,12 +84,17 @@ export interface ReportLifecycleEvent {
 
 /** `quant.intent` lifecycle event kinds (discriminated by `event`). */
 export type IntentLifecycleEventKind =
+  | 'admission_rejected'
   | 'approved'
   | 'cancelled'
   | 'created'
   | 'expired'
+  | 'failed'
+  | 'filled'
   | 'invalidated'
-  | 'rejected';
+  | 'partially_filled'
+  | 'rejected'
+  | 'submitted';
 
 /**
  * WS `quant.intent` payload — order-intent lifecycle transition (mirrors Rust

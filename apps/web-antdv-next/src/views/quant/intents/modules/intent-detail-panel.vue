@@ -1,0 +1,490 @@
+<script lang="ts" setup>
+import type { ExecutionOrderView, OrderIntentView } from '@vben/types';
+
+import { computed, onMounted, ref, watch } from 'vue';
+
+import { useRequestHandler } from '@vben/request/qp';
+import { intentActions, isIntentSubmittableStatus } from '@vben/types';
+
+import {
+  Button,
+  Card,
+  Descriptions,
+  DescriptionsItem,
+  Empty,
+  Table,
+  Tag,
+  Tooltip,
+} from 'antdv-next';
+
+import { listExecutionOrders } from '#/api/execution-orders';
+import { $t } from '#/locales';
+import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import {
+  EMPTY_PLACEHOLDER,
+  formatBps,
+  formatDateTimeLocal,
+  formatDurationSecs,
+  formatPercent,
+  formatPrice,
+  formatShares,
+} from '#/shared/components/format';
+import {
+  findTagOption,
+  useApprovalStatusTagOptions,
+  useExecutionOrderStateTagOptions,
+  useOrderIntentKindTagOptions,
+  useOrderIntentStatusTagOptions,
+  useQuantRuntimeModeTagOptions,
+  useSideTagOptions,
+} from '#/shared/components/format/tag-options';
+
+import { useIntentActions } from './use-intent-actions';
+
+defineOptions({ name: 'IntentDetailPanel' });
+
+const props = defineProps<{
+  intent: OrderIntentView;
+}>();
+
+const emit = defineEmits<{
+  changed: [];
+}>();
+
+const { handleRequest } = useRequestHandler();
+
+const statusTagOptions = useOrderIntentStatusTagOptions();
+const approvalTagOptions = useApprovalStatusTagOptions();
+const modeTagOptions = useQuantRuntimeModeTagOptions();
+const kindTagOptions = useOrderIntentKindTagOptions();
+const sideTagOptions = useSideTagOptions();
+const executionStateTagOptions = useExecutionOrderStateTagOptions();
+
+const {
+  approve,
+  canApprove,
+  canCancel,
+  canReject,
+  canSubmit,
+  cancel,
+  reject,
+  submit,
+  submitGate,
+} = useIntentActions(() => emit('changed'));
+
+const executionOrders = ref<ExecutionOrderView[]>([]);
+const loadingOrders = ref(false);
+
+const fsm = computed(() => intentActions(props.intent.status));
+const entry = computed(() => props.intent.entry_order);
+const exit = computed(() => props.intent.exit_policy);
+
+const showApprove = computed(() => canApprove && fsm.value.canApprove);
+const showReject = computed(() => canReject && fsm.value.canReject);
+const showCancel = computed(() => canCancel && fsm.value.canCancel);
+// Submit is shown for any submittable status the operator may submit; the
+// live fail-closed gate then enables/disables it with an explanatory tooltip.
+const showSubmit = computed(
+  () => canSubmit && isIntentSubmittableStatus(props.intent.status),
+);
+const submitGateResult = computed(() => submitGate(props.intent));
+const submitDisabledReason = computed(() =>
+  submitGateResult.value.enabled || !submitGateResult.value.reason
+    ? undefined
+    : $t(`page.quantIntents.submit.disabled.${submitGateResult.value.reason}`),
+);
+
+const executionColumns = [
+  {
+    dataIndex: 'execution_order_id',
+    key: 'execution_order_id',
+    title: $t('page.quantExecutionOrders.columns.executionOrderId'),
+  },
+  {
+    dataIndex: 'order_phase',
+    key: 'order_phase',
+    title: $t('page.quantExecutionOrders.columns.phase'),
+  },
+  {
+    dataIndex: 'state',
+    key: 'state',
+    title: $t('page.quantExecutionOrders.columns.state'),
+  },
+  {
+    dataIndex: 'price',
+    key: 'price',
+    title: $t('page.quantExecutionOrders.columns.price'),
+  },
+  {
+    dataIndex: 'shares',
+    key: 'shares',
+    title: $t('page.quantExecutionOrders.columns.shares'),
+  },
+  {
+    dataIndex: 'submitted_at',
+    key: 'submitted_at',
+    title: $t('page.quantExecutionOrders.columns.submittedAt'),
+  },
+];
+
+async function loadExecutionOrders() {
+  loadingOrders.value = true;
+  try {
+    const page = await handleRequest(
+      () =>
+        listExecutionOrders({
+          order_intent_id: props.intent.order_intent_id,
+          size: 100,
+        }),
+      { silent: true },
+    );
+    executionOrders.value = page?.items ?? [];
+  } finally {
+    loadingOrders.value = false;
+  }
+}
+
+watch(
+  () => props.intent.order_intent_id,
+  () => void loadExecutionOrders(),
+);
+onMounted(() => void loadExecutionOrders());
+</script>
+
+<template>
+  <div class="flex flex-col gap-4">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <Tag :color="findTagOption(statusTagOptions, intent.status)?.color">
+            {{ findTagOption(statusTagOptions, intent.status)?.label }}
+          </Tag>
+          <Tag
+            :color="
+              findTagOption(approvalTagOptions, intent.approval_status)?.color
+            "
+          >
+            {{
+              findTagOption(approvalTagOptions, intent.approval_status)?.label
+            }}
+          </Tag>
+          <Tag
+            :color="findTagOption(modeTagOptions, intent.runtime_mode)?.color"
+          >
+            {{ findTagOption(modeTagOptions, intent.runtime_mode)?.label }}
+          </Tag>
+          <Tag
+            :color="findTagOption(kindTagOptions, intent.intent_kind)?.color"
+          >
+            {{ findTagOption(kindTagOptions, intent.intent_kind)?.label }}
+          </Tag>
+        </div>
+        <span class="font-mono text-xs break-all">
+          {{ intent.order_intent_id }}
+        </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <Button v-if="showApprove" type="primary" @click="approve(intent)">
+          {{ $t('page.quantIntents.actions.approve') }}
+        </Button>
+        <Tooltip v-if="showSubmit" :title="submitDisabledReason">
+          <span>
+            <Button
+              :disabled="!submitGateResult.enabled"
+              type="primary"
+              @click="submit(intent)"
+            >
+              {{ $t('page.quantIntents.actions.submit') }}
+            </Button>
+          </span>
+        </Tooltip>
+        <Button v-if="showReject" danger @click="reject(intent)">
+          {{ $t('page.quantIntents.actions.reject') }}
+        </Button>
+        <Button v-if="showCancel" danger @click="cancel(intent)">
+          {{ $t('page.quantIntents.actions.cancel') }}
+        </Button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <Card
+        size="small"
+        :title="$t('page.quantIntents.detail.sections.identity')"
+      >
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.recommendationId')"
+          >
+            <EntityRouteLink
+              mono
+              :label="intent.recommendation_id"
+              :to="`/quant/recommendations/${intent.recommendation_id}`"
+            />
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.runtimeConfig')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ intent.runtime_config_version_id }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.modelVersion')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ intent.model_version_id }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.policyId')"
+          >
+            {{ intent.policy_id ?? EMPTY_PLACEHOLDER }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.policyHash')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ intent.policy_hash ?? EMPTY_PLACEHOLDER }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.riskEnvelopeHash')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ intent.risk_envelope_hash }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.createdAt')"
+          >
+            {{ formatDateTimeLocal(intent.created_at) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.identity.expiresAt')"
+          >
+            {{ formatDateTimeLocal(intent.expires_at) }}
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+
+      <Card
+        size="small"
+        :title="$t('page.quantIntents.detail.sections.approval')"
+      >
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.approval.approvedBy')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ intent.approved_by ?? EMPTY_PLACEHOLDER }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.approval.approvedAt')"
+          >
+            {{ formatDateTimeLocal(intent.approved_at) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.approval.approvalReason')"
+          >
+            {{ intent.approval_reason ?? EMPTY_PLACEHOLDER }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.approval.statusReason')"
+          >
+            {{ intent.status_reason ?? EMPTY_PLACEHOLDER }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.approval.admissionTrace')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ intent.admission_trace_ref ?? EMPTY_PLACEHOLDER }}
+            </span>
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+
+      <Card size="small" :title="$t('page.quantIntents.detail.sections.entry')">
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem :label="$t('page.quantIntents.detail.entry.token')">
+            <span class="font-mono text-xs break-all">
+              {{ entry.token_id }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem :label="$t('page.quantIntents.detail.entry.side')">
+            <Tag :color="findTagOption(sideTagOptions, entry.side)?.color">
+              {{ findTagOption(sideTagOptions, entry.side)?.label }}
+            </Tag>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.orderType')"
+          >
+            {{
+              typeof entry.order_type === 'string'
+                ? $t(`enum.orderTypeKind.${entry.order_type}`)
+                : $t('enum.orderTypeKind.gtd')
+            }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.limitPrice')"
+          >
+            <span class="font-mono">{{ formatPrice(entry.limit_price) }}</span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.shares')"
+          >
+            <span class="font-mono">{{ formatShares(entry.shares) }}</span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.maxSlippage')"
+          >
+            <span class="font-mono">{{
+              formatBps(entry.max_slippage_bps)
+            }}</span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.validUntil')"
+          >
+            {{ formatDateTimeLocal(entry.valid_until) }}
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+
+      <Card size="small" :title="$t('page.quantIntents.detail.sections.exit')">
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.settlementMode')"
+          >
+            {{ $t(`enum.exitSettlementMode.${exit.settlement_mode}`) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.redeemPolicy')"
+          >
+            {{ $t(`enum.redeemPolicy.${exit.redeem_policy}`) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.takeProfit')"
+          >
+            <span class="font-mono">
+              {{ formatPrice(exit.take_profit_price) }}
+              <template v-if="exit.take_profit_pct">
+                / {{ formatPercent(exit.take_profit_pct) }}
+              </template>
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.stopLoss')"
+          >
+            <span class="font-mono">
+              {{ formatPrice(exit.stop_loss_price) }}
+              <template v-if="exit.stop_loss_pct">
+                / {{ formatPercent(exit.stop_loss_pct) }}
+              </template>
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.timeExit')"
+          >
+            {{ formatDateTimeLocal(exit.time_exit_at) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.maxHold')"
+          >
+            {{
+              exit.max_hold_secs === null
+                ? EMPTY_PLACEHOLDER
+                : formatDurationSecs(exit.max_hold_secs)
+            }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.entryReference')"
+          >
+            <span class="font-mono">
+              {{ formatPrice(exit.entry_reference_price) }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.partialNodes')"
+          >
+            {{ exit.partial_exit_nodes.length }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.exit.invalidationRules')"
+          >
+            {{ exit.signal_invalidation_rules.length }}
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+    </div>
+
+    <Card
+      size="small"
+      :title="$t('page.quantIntents.detail.sections.executionOrders')"
+    >
+      <template #extra>
+        <EntityRouteLink
+          :label="$t('page.quantIntents.detail.viewAllOrders')"
+          :to="`/quant/execution-orders?order_intent_id=${intent.order_intent_id}`"
+        />
+      </template>
+      <Table
+        v-if="executionOrders.length > 0"
+        :columns="executionColumns"
+        :data-source="executionOrders"
+        :loading="loadingOrders"
+        :pagination="false"
+        row-key="execution_order_id"
+        size="small"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'execution_order_id'">
+            <EntityRouteLink
+              mono
+              :label="record.execution_order_id"
+              :to="`/quant/execution-orders?open=${record.execution_order_id}`"
+            />
+          </template>
+          <template v-else-if="column.key === 'order_phase'">
+            {{ $t(`enum.executionOrderPhase.${record.order_phase}`) }}
+          </template>
+          <template v-else-if="column.key === 'state'">
+            <Tooltip v-if="record.error_message" :title="record.error_message">
+              <Tag
+                :color="
+                  findTagOption(executionStateTagOptions, record.state)?.color
+                "
+              >
+                {{
+                  findTagOption(executionStateTagOptions, record.state)?.label
+                }}
+              </Tag>
+            </Tooltip>
+            <Tag
+              v-else
+              :color="
+                findTagOption(executionStateTagOptions, record.state)?.color
+              "
+            >
+              {{ findTagOption(executionStateTagOptions, record.state)?.label }}
+            </Tag>
+          </template>
+          <template v-else-if="column.key === 'price'">
+            <span class="font-mono">{{ formatPrice(record.price) }}</span>
+          </template>
+          <template v-else-if="column.key === 'shares'">
+            <span class="font-mono">{{ formatShares(record.shares) }}</span>
+          </template>
+          <template v-else-if="column.key === 'submitted_at'">
+            {{ formatDateTimeLocal(record.submitted_at) }}
+          </template>
+        </template>
+      </Table>
+      <Empty
+        v-else
+        :description="$t('page.quantIntents.detail.noExecutionOrders')"
+        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+      />
+    </Card>
+  </div>
+</template>

@@ -11,6 +11,7 @@ import {
   OPERATION_OUTCOMES,
   ORDER_INTENT_KINDS,
   ORDER_INTENT_STATUSES,
+  ORDER_TYPE_KINDS,
   OUTCOME_SIDES,
   POSITION_LEDGER_STATES,
   PUBLICATION_STATUSES,
@@ -76,10 +77,10 @@ export function useOperationCategoryTagOptions() {
     Object.values(OPERATION_CATEGORIES),
     (value) => $t(`enum.operationCategory.${value}`),
     {
-      [OPERATION_CATEGORIES.auth]: 'default',
+      [OPERATION_CATEGORIES.auth]: 'blue',
       [OPERATION_CATEGORIES.governance]: 'purple',
       [OPERATION_CATEGORIES.market]: 'cyan',
-      [OPERATION_CATEGORIES.other]: 'default',
+      [OPERATION_CATEGORIES.other]: 'lime',
       [OPERATION_CATEGORIES.rbac]: 'geekblue',
       [OPERATION_CATEGORIES.runtimeConfig]: 'orange',
       [OPERATION_CATEGORIES.system]: 'processing',
@@ -95,8 +96,8 @@ export const ACTING_ROLE_COLORS: Record<string, string> = {
   operator: 'processing',
   risk_owner: 'gold',
   super_admin: 'magenta',
-  system: 'default',
-  viewer: 'default',
+  system: 'cyan',
+  viewer: 'blue',
 };
 
 /** Acting role tags shared by audit chain and operation log. */
@@ -120,20 +121,20 @@ export function useResourceTypeTagOptions() {
       [RESOURCE_TYPES.factorDefinition]: 'geekblue',
       [RESOURCE_TYPES.market]: 'cyan',
       [RESOURCE_TYPES.materialization]: 'geekblue',
-      [RESOURCE_TYPES.menu]: 'default',
-      [RESOURCE_TYPES.operationLog]: 'default',
+      [RESOURCE_TYPES.menu]: 'geekblue',
+      [RESOURCE_TYPES.operationLog]: 'purple',
       [RESOURCE_TYPES.orderIntent]: 'processing',
-      [RESOURCE_TYPES.permission]: 'default',
+      [RESOURCE_TYPES.permission]: 'geekblue',
       [RESOURCE_TYPES.position]: 'blue',
       [RESOURCE_TYPES.publication]: 'purple',
       [RESOURCE_TYPES.quantReport]: 'success',
       [RESOURCE_TYPES.recommendationAttribution]: 'cyan',
       [RESOURCE_TYPES.reconciliation]: 'warning',
       [RESOURCE_TYPES.replay]: 'geekblue',
-      [RESOURCE_TYPES.role]: 'default',
+      [RESOURCE_TYPES.role]: 'purple',
       [RESOURCE_TYPES.runtimeConfig]: 'orange',
       [RESOURCE_TYPES.settlementRedeem]: 'gold',
-      [RESOURCE_TYPES.system]: 'default',
+      [RESOURCE_TYPES.system]: 'cyan',
       [RESOURCE_TYPES.user]: 'processing',
     },
   );
@@ -158,7 +159,7 @@ export function useRuntimeConfigVersionSourceTagOptions() {
     Object.values(RUNTIME_CONFIG_VERSION_SOURCES),
     (value) => $t(`enum.runtimeConfigVersionSource.${value}`),
     {
-      [RUNTIME_CONFIG_VERSION_SOURCES.bootstrap]: 'default',
+      [RUNTIME_CONFIG_VERSION_SOURCES.bootstrap]: 'geekblue',
       [RUNTIME_CONFIG_VERSION_SOURCES.import]: 'cyan',
       [RUNTIME_CONFIG_VERSION_SOURCES.operator]: 'processing',
     },
@@ -203,10 +204,10 @@ export function useRecommendationReportStatusTagOptions() {
     (value) => $t(`enum.recommendationReportStatus.${value}`),
     {
       [RECOMMENDATION_REPORT_STATUSES.building]: 'processing',
-      [RECOMMENDATION_REPORT_STATUSES.expired]: 'default',
+      [RECOMMENDATION_REPORT_STATUSES.expired]: 'gold',
       [RECOMMENDATION_REPORT_STATUSES.failed]: 'error',
       [RECOMMENDATION_REPORT_STATUSES.published]: 'success',
-      [RECOMMENDATION_REPORT_STATUSES.publishedEmpty]: 'default',
+      [RECOMMENDATION_REPORT_STATUSES.publishedEmpty]: 'cyan',
       [RECOMMENDATION_REPORT_STATUSES.revoked]: 'warning',
     },
   );
@@ -220,7 +221,7 @@ export function useRecommendationStatusTagOptions() {
     {
       [RECOMMENDATION_STATUSES.attributed]: 'cyan',
       [RECOMMENDATION_STATUSES.executed]: 'success',
-      [RECOMMENDATION_STATUSES.expired]: 'default',
+      [RECOMMENDATION_STATUSES.expired]: 'gold',
       [RECOMMENDATION_STATUSES.intentCreated]: 'processing',
       [RECOMMENDATION_STATUSES.published]: 'blue',
       [RECOMMENDATION_STATUSES.revoked]: 'warning',
@@ -238,9 +239,9 @@ export function useOrderIntentStatusTagOptions() {
       [ORDER_INTENT_STATUSES.admissionRejected]: 'error',
       [ORDER_INTENT_STATUSES.approved]: 'success',
       [ORDER_INTENT_STATUSES.approvedByPolicy]: 'success',
-      [ORDER_INTENT_STATUSES.cancelled]: 'default',
-      [ORDER_INTENT_STATUSES.draft]: 'default',
-      [ORDER_INTENT_STATUSES.expired]: 'default',
+      [ORDER_INTENT_STATUSES.cancelled]: 'volcano',
+      [ORDER_INTENT_STATUSES.draft]: 'geekblue',
+      [ORDER_INTENT_STATUSES.expired]: 'gold',
       [ORDER_INTENT_STATUSES.failed]: 'error',
       [ORDER_INTENT_STATUSES.filled]: 'success',
       [ORDER_INTENT_STATUSES.invalidated]: 'error',
@@ -259,8 +260,8 @@ export function useApprovalStatusTagOptions() {
     (value) => $t(`enum.approvalStatus.${value}`),
     {
       [APPROVAL_STATUSES.approved]: 'success',
-      [APPROVAL_STATUSES.expired]: 'default',
-      [APPROVAL_STATUSES.notRequired]: 'default',
+      [APPROVAL_STATUSES.expired]: 'gold',
+      [APPROVAL_STATUSES.notRequired]: 'geekblue',
       [APPROVAL_STATUSES.pending]: 'warning',
       [APPROVAL_STATUSES.rejected]: 'error',
     },
@@ -275,12 +276,12 @@ export function useExecutionOrderStateTagOptions() {
     {
       [EXECUTION_ORDER_STATES.accepted]: 'processing',
       [EXECUTION_ORDER_STATES.ambiguous]: 'warning',
-      [EXECUTION_ORDER_STATES.cancelled]: 'default',
+      [EXECUTION_ORDER_STATES.cancelled]: 'volcano',
       [EXECUTION_ORDER_STATES.cancelRequested]: 'warning',
       [EXECUTION_ORDER_STATES.failed]: 'error',
       [EXECUTION_ORDER_STATES.filled]: 'success',
       [EXECUTION_ORDER_STATES.partiallyFilled]: 'cyan',
-      [EXECUTION_ORDER_STATES.planned]: 'default',
+      [EXECUTION_ORDER_STATES.planned]: 'geekblue',
       [EXECUTION_ORDER_STATES.submitted]: 'processing',
     },
   );
@@ -304,7 +305,7 @@ export function usePositionLedgerStateTagOptions() {
     Object.values(POSITION_LEDGER_STATES),
     (value) => $t(`enum.positionLedgerState.${value}`),
     {
-      [POSITION_LEDGER_STATES.closed]: 'default',
+      [POSITION_LEDGER_STATES.closed]: 'volcano',
       [POSITION_LEDGER_STATES.closing]: 'warning',
       [POSITION_LEDGER_STATES.open]: 'processing',
       [POSITION_LEDGER_STATES.settled]: 'success',
@@ -318,9 +319,9 @@ export function useReconciliationResultTagOptions() {
     Object.values(RECONCILIATION_RESULTS),
     (value) => $t(`enum.reconciliationResult.${value}`),
     {
-      [RECONCILIATION_RESULTS.cancelled]: 'default',
+      [RECONCILIATION_RESULTS.cancelled]: 'volcano',
       [RECONCILIATION_RESULTS.filled]: 'success',
-      [RECONCILIATION_RESULTS.notFilled]: 'default',
+      [RECONCILIATION_RESULTS.notFilled]: 'geekblue',
       [RECONCILIATION_RESULTS.partiallyFilled]: 'cyan',
       [RECONCILIATION_RESULTS.pending]: 'warning',
       [RECONCILIATION_RESULTS.unresolvable]: 'error',
@@ -351,8 +352,8 @@ export function useMarketStatusTagOptions() {
     {
       [MARKET_STATUSES.active]: 'success',
       [MARKET_STATUSES.delisted]: 'error',
-      [MARKET_STATUSES.discovered]: 'default',
-      [MARKET_STATUSES.filtered]: 'default',
+      [MARKET_STATUSES.discovered]: 'cyan',
+      [MARKET_STATUSES.filtered]: 'geekblue',
       [MARKET_STATUSES.manuallyBlocked]: 'magenta',
       [MARKET_STATUSES.paused]: 'warning',
       [MARKET_STATUSES.settled]: 'processing',
@@ -371,7 +372,7 @@ export function useMarketCategoryTagOptions() {
       [MARKET_CATEGORIES.economics]: 'orange',
       [MARKET_CATEGORIES.finance]: 'geekblue',
       [MARKET_CATEGORIES.geopolitics]: 'magenta',
-      [MARKET_CATEGORIES.other]: 'default',
+      [MARKET_CATEGORIES.other]: 'lime',
       [MARKET_CATEGORIES.politics]: 'processing',
       [MARKET_CATEGORIES.sports]: 'success',
       [MARKET_CATEGORIES.tech]: 'cyan',
@@ -387,10 +388,10 @@ export function usePublicationStatusTagOptions() {
     (value) => $t(`enum.publicationStatus.${value}`),
     {
       [PUBLICATION_STATUSES.candidate]: 'processing',
-      [PUBLICATION_STATUSES.draft]: 'default',
+      [PUBLICATION_STATUSES.draft]: 'geekblue',
       [PUBLICATION_STATUSES.published]: 'success',
       [PUBLICATION_STATUSES.rejected]: 'error',
-      [PUBLICATION_STATUSES.retired]: 'default',
+      [PUBLICATION_STATUSES.retired]: 'gold',
       [PUBLICATION_STATUSES.shadow]: 'purple',
     },
   );
@@ -405,8 +406,21 @@ export function useMaterializationRunStatusTagOptions() {
       [MATERIALIZATION_RUN_STATUSES.cancelled]: 'warning',
       [MATERIALIZATION_RUN_STATUSES.completed]: 'success',
       [MATERIALIZATION_RUN_STATUSES.failed]: 'error',
-      [MATERIALIZATION_RUN_STATUSES.queued]: 'default',
+      [MATERIALIZATION_RUN_STATUSES.queued]: 'geekblue',
       [MATERIALIZATION_RUN_STATUSES.running]: 'processing',
+    },
+  );
+}
+
+/** CLOB order type tags (FOK / GTC / GTD). */
+export function useOrderTypeKindTagOptions() {
+  return buildTagOptions(
+    Object.values(ORDER_TYPE_KINDS),
+    (value) => $t(`enum.orderTypeKind.${value}`),
+    {
+      [ORDER_TYPE_KINDS.fok]: 'volcano',
+      [ORDER_TYPE_KINDS.gtc]: 'blue',
+      [ORDER_TYPE_KINDS.gtd]: 'purple',
     },
   );
 }
@@ -441,7 +455,7 @@ export function useFactorDirectionTagOptions() {
     (value) => $t(`enum.factorDirection.${value}`),
     {
       [FACTOR_DIRECTIONS.negative]: 'error',
-      [FACTOR_DIRECTIONS.neutral]: 'default',
+      [FACTOR_DIRECTIONS.neutral]: 'geekblue',
       [FACTOR_DIRECTIONS.positive]: 'success',
     },
   );
@@ -453,8 +467,8 @@ export function useRecommendationAttributionOutcomeTagOptions() {
     Object.values(RECOMMENDATION_ATTRIBUTION_OUTCOMES),
     (value) => $t(`enum.recommendationAttributionOutcome.${value}`),
     {
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.cancelledUnfilled]: 'default',
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.expiredUnfilled]: 'default',
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.cancelledUnfilled]: 'volcano',
+      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.expiredUnfilled]: 'gold',
       [RECOMMENDATION_ATTRIBUTION_OUTCOMES.failedUnfilled]: 'error',
       [RECOMMENDATION_ATTRIBUTION_OUTCOMES.filledExited]: 'success',
       [RECOMMENDATION_ATTRIBUTION_OUTCOMES.filledSettled]: 'cyan',

@@ -2,10 +2,9 @@
  * Governed "create order intent from recommendation" flow.
  *
  * Opens the canonical governed-action modal (acting role + reason), calls
- * `POST /quant/intents` with the recommendation id, and on success navigates to
- * the intents plane. 409/403/422 fail-closed details are surfaced by the shared
- * governed modal — never swallowed. Intent detail deep-linking + the approval
- * console land in Phase 10.4; this phase creates and navigates to the list.
+ * `POST /quant/intents` with the recommendation id, and on success deep-links to
+ * the newly created intent's full-screen detail. 409/403/422 fail-closed details
+ * are surfaced by the shared governed modal — never swallowed.
  */
 import type { OrderIntentView, QuantRecommendationView } from '@vben/types';
 
@@ -97,7 +96,7 @@ export function useCreateIntentAction() {
     );
     if (intent) {
       message.success($t('page.quantRecommendations.createIntent.success'));
-      void router.push('/quant/intents');
+      void router.push(`/quant/intents/${intent.order_intent_id}`);
     }
     return intent;
   }

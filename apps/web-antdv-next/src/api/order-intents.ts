@@ -1,4 +1,5 @@
 import type {
+  ApproveOrderIntentRequest,
   CreateOrderIntentRequest,
   ExecutionOrderView,
   IntentActionRequest,
@@ -41,10 +42,10 @@ export async function createOrderIntent(
   return governedPost<OrderIntentView>(OrderIntentApi.base, body, ctx);
 }
 
-/** `POST /quant/intents/{id}/approve` — governed approval. */
+/** `POST /quant/intents/{id}/approve` — governed approval (optional overrides). */
 export async function approveOrderIntent(
   id: string,
-  body: IntentActionRequest,
+  body: ApproveOrderIntentRequest,
   ctx: GovernedContext,
 ) {
   return governedPost<OrderIntentView>(OrderIntentApi.approve(id), body, ctx);

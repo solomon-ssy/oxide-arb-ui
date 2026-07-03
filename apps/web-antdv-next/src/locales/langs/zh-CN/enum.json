@@ -215,6 +215,19 @@
     "entry": "入场",
     "exit": "离场"
   },
+  "orderTypeKind": {
+    "fok": "FOK",
+    "gtc": "GTC",
+    "gtd": "GTD"
+  },
+  "venueOrderStatus": {
+    "filled": "已成交",
+    "partially_filled": "部分成交",
+    "rejected": "已拒绝",
+    "cancelled": "已取消",
+    "open": "挂单中",
+    "expired": "已过期"
+  },
   "orderIntentKind": {
     "buy": "买入"
   },
@@ -231,6 +244,14 @@
     "partially_filled": "部分成交",
     "cancelled": "已取消",
     "unresolvable": "无法解决"
+  },
+  "reconciliationEvidenceKind": {
+    "clob_order_status": "CLOB 订单状态",
+    "clob_trades": "CLOB 成交流水",
+    "token_balance_delta": "Token 余额变动",
+    "account_balance_delta": "账户余额变动",
+    "book_context": "盘口上下文",
+    "operator_note": "操作员备注"
   },
   "settlementRedeemState": {
     "pending": "待处理",

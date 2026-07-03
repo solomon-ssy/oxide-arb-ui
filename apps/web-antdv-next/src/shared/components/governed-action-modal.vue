@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import type { RoleView } from '@vben/types';
 
-import { computed, ref, watch } from 'vue';
+import type { GovernedField } from '#/shared/composables/governed-field';
+import type { GovernedContext } from '#/shared/composables/use-governed-action';
+
+import { computed, reactive, ref, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -14,6 +17,7 @@ import {
   TextArea,
 } from 'antdv-next';
 
+import { isGovernedFieldValid } from '#/shared/composables/governed-field';
 import { useAuthStore } from '#/store';
 
 interface GovernedDetailRow {
@@ -26,9 +30,10 @@ export interface GovernedActionPayload {
   confirmWord?: string;
   danger?: boolean;
   details?: GovernedDetailRow[];
+  fields?: GovernedField[];
   onCancel?: () => void;
   /** Return `true` when the governed mutation succeeded. */
-  onSubmit: (ctx: { actingRole: string; reason: string }) => Promise<boolean>;
+  onSubmit: (ctx: GovernedContext) => Promise<boolean>;
   summary?: string;
   title: string;
 }
@@ -38,6 +43,8 @@ const authStore = useAuthStore();
 const actingRole = ref<string>('');
 const reason = ref('');
 const confirmWordInput = ref('');
+/** Raw string values of the payload's typed fields, keyed by field name. */
+const fieldValues = reactive<Record<string, string>>({});
 
 const roleOptions = computed(() =>
   authStore.meRoles.map((role: RoleView) => ({
@@ -50,9 +57,19 @@ const payload = ref<GovernedActionPayload | null>(null);
 
 const isSingleRole = computed(() => roleOptions.value.length <= 1);
 
+const fieldsValid = computed(
+  () =>
+    !payload.value?.fields?.some(
+      (field) => !isGovernedFieldValid(field, fieldValues[field.name]),
+    ),
+);
+
 const canSubmit = computed(() => {
   const trimmedReason = reason.value.trim();
   if (trimmedReason.length < 4 || !actingRole.value) {
+    return false;
+  }
+  if (!fieldsValid.value) {
     return false;
   }
   if (payload.value?.danger && payload.value.confirmWord) {
@@ -60,6 +77,16 @@ const canSubmit = computed(() => {
   }
   return true;
 });
+
+/** Normalize collected field inputs to `undefined` for empty strings. */
+function collectFields(): Record<string, string | undefined> {
+  const result: Record<string, string | undefined> = {};
+  for (const field of payload.value?.fields ?? []) {
+    const raw = (fieldValues[field.name] ?? '').trim();
+    result[field.name] = raw === '' ? undefined : raw;
+  }
+  return result;
+}
 
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
@@ -75,6 +102,7 @@ const [Modal, modalApi] = useVbenModal({
     try {
       const succeeded = await payload.value.onSubmit({
         actingRole: actingRole.value,
+        fields: collectFields(),
         reason: reason.value.trim(),
       });
       if (succeeded) {
@@ -91,6 +119,12 @@ const [Modal, modalApi] = useVbenModal({
       reason.value = '';
       confirmWordInput.value = '';
       actingRole.value = roleOptions.value[0]?.value ?? '';
+      for (const key of Object.keys(fieldValues)) {
+        delete fieldValues[key];
+      }
+      for (const field of payload.value?.fields ?? []) {
+        fieldValues[field.name] = '';
+      }
     }
   },
 });
@@ -128,6 +162,33 @@ watch(roleOptions, (options) => {
           </span>
         </DescriptionsItem>
       </Descriptions>
+
+      <div
+        v-for="field in payload?.fields ?? []"
+        :key="field.name"
+        class="flex flex-col gap-1"
+      >
+        <span class="text-sm font-medium">
+          {{ field.label }}
+          <span v-if="field.required" class="text-destructive">*</span>
+        </span>
+        <Select
+          v-if="field.kind === 'select'"
+          v-model:value="fieldValues[field.name]"
+          allow-clear
+          :options="field.options"
+          :placeholder="field.placeholder"
+        />
+        <Input
+          v-else
+          v-model:value="fieldValues[field.name]"
+          :inputmode="field.kind === 'text' ? undefined : 'decimal'"
+          :placeholder="field.placeholder"
+        />
+        <span v-if="field.help" class="text-xs text-gray-500">
+          {{ field.help }}
+        </span>
+      </div>
 
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">{{

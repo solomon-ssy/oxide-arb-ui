@@ -26,6 +26,7 @@ const recommendation = ref<null | QuantRecommendationView>(null);
 const loading = ref(false);
 
 const recommendationId = computed(() => route.params.id as string);
+const initialTab = computed(() => (route.query.tab as string) || undefined);
 
 async function load() {
   if (!recommendationId.value) {
@@ -64,6 +65,7 @@ onMounted(() => void load());
     <Spin :spinning="loading">
       <RecommendationDetailPanel
         v-if="recommendation"
+        :initial-tab="initialTab"
         :recommendation="recommendation"
       />
       <Empty

@@ -14,6 +14,8 @@ export interface PositionView {
   position_plane: 'system_lot';
   position_id: UuidString;
   order_intent_id: UuidString;
+  /** Originating recommendation (attribution deep-link target). */
+  recommendation_id: UuidString;
   token_id: string;
   market_id: string;
   state: PositionLedgerState;
