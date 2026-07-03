@@ -229,53 +229,5 @@
         "placeholder": "请输入报表默认标题"
       }
     }
-  },
-  "runtimeConfig": {
-    "title": "运行时配置",
-    "noApplyAccess": "当前角色仅可查看配置；创建并激活配置版本需要 runtime_config:create 与 runtime_config:activate 权限。",
-    "applyTitle": "应用运行时配置",
-    "applySummary": "将基于当前编辑内容创建新版本并立即激活。请仔细核对以下变更：",
-    "applySuccess": "运行时配置版本已创建并激活",
-    "diff": {
-      "title": "变更预览",
-      "acknowledgeMoneyCritical": "我已确认上述资金关键变更"
-    },
-    "state": {
-      "dirty": "已修改",
-      "moneyCritical": "资金关键",
-      "moneyCriticalShort": "资金",
-      "sensitive": "敏感"
-    },
-    "group": {
-      "schema": "Schema",
-      "marketData": "市场数据",
-      "detection": "检测算法",
-      "execution": "执行链路",
-      "risk": "风控限制",
-      "settlement": "结算",
-      "notification": "通知"
-    },
-    "groupDescription": {
-      "default": "运行时可热更新配置分组。",
-      "schema": "配置文档版本。",
-      "marketData": "订单簿和市场数据新鲜度门槛。",
-      "detection": "机会检测、endgame 与评分参数。",
-      "execution": "执行管线、聚合和超时参数。",
-      "risk": "直接约束资金敞口和熔断的关键参数。",
-      "settlement": "结算、赎回和 oracle 操作参数。",
-      "notification": "告警通知渠道和凭证。"
-    },
-    "error": {
-      "missingGovernanceBridge": "治理弹窗未挂载，无法提交运行时配置。",
-      "createdButNotActivated": "版本 {link} 已创建但未激活，请在 Runtime Config 页面处理。",
-      "confirmDiffRequired": "请先确认资金关键变更后再应用。"
-    },
-    "field": {
-      "allCategoriesEnabledHint": "空列表表示全部品类可交易。勾选下方选项以收窄热交易集合。",
-      "restrictCategories": "限制可交易品类",
-      "genericJsonHint": "高级 JSON 结构 — 使用树形模式编辑。优先使用 typed 控件。",
-      "stringListEmpty": "暂无条目 — 空列表合法。",
-      "stringListPlaceholder": "输入 ID 后点击添加"
-    }
   }
 }

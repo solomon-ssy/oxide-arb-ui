@@ -229,53 +229,5 @@
         "placeholder": "Please enter the default report title"
       }
     }
-  },
-  "runtimeConfig": {
-    "title": "Runtime Config",
-    "noApplyAccess": "Your role can read config only. Creating and activating versions requires runtime_config:create and runtime_config:activate.",
-    "applyTitle": "Apply Runtime Config",
-    "applySummary": "A new version will be created from the edited config and activated immediately. Review the changes carefully:",
-    "applySuccess": "Runtime config version created and activated",
-    "diff": {
-      "title": "Diff Preview",
-      "acknowledgeMoneyCritical": "I have reviewed the money-critical changes above"
-    },
-    "state": {
-      "dirty": "Dirty",
-      "moneyCritical": "Money Critical",
-      "moneyCriticalShort": "Money",
-      "sensitive": "Sensitive"
-    },
-    "group": {
-      "schema": "Schema",
-      "marketData": "Market Data",
-      "detection": "Detection",
-      "execution": "Execution",
-      "risk": "Risk",
-      "settlement": "Settlement",
-      "notification": "Notification"
-    },
-    "groupDescription": {
-      "default": "Hot-reloadable runtime configuration section.",
-      "schema": "Configuration document version.",
-      "marketData": "Book and market-data freshness gates.",
-      "detection": "Opportunity detection, endgame and scoring parameters.",
-      "execution": "Execution pipeline, coalescing and timeout parameters.",
-      "risk": "Money-critical limits that bound exposure and circuit breakers.",
-      "settlement": "Settlement, redeem and oracle operation parameters.",
-      "notification": "Alert channels and credentials."
-    },
-    "error": {
-      "missingGovernanceBridge": "Governance modal bridge is not mounted; runtime config cannot be submitted.",
-      "createdButNotActivated": "Version {link} was created but not activated. Open it in Runtime Config to resolve.",
-      "confirmDiffRequired": "Review and acknowledge money-critical diffs before applying."
-    },
-    "field": {
-      "allCategoriesEnabledHint": "An empty list on the wire means every category is tradeable. Enable restriction to pick a subset.",
-      "restrictCategories": "Restrict tradeable categories",
-      "genericJsonHint": "Advanced JSON structure — edit in tree mode. Prefer typed controls when available.",
-      "stringListEmpty": "No entries — empty list is valid.",
-      "stringListPlaceholder": "Enter an ID and press Add"
-    }
   }
 }

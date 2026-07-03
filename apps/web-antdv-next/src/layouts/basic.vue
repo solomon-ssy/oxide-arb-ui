@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onUnmounted, provide, watch } from 'vue';
+import { computed, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -8,15 +8,11 @@ import {
   BasicLayout,
   LockScreen,
   Notification,
-  RuntimeConfigGovernedKey,
-  RuntimeConfigRequestClientKey,
-  RuntimeConfigRevisionKey,
   UserDropdown,
 } from '@vben/layouts';
 import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
-import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
 import KillSwitchIndicator from '#/shared/components/header/kill-switch-indicator.vue';
 import RuntimeModeIndicator from '#/shared/components/header/runtime-mode-indicator.vue';
@@ -26,15 +22,10 @@ import PreflightResultDrawer from '#/shared/components/preflight-result-drawer.v
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useSystemStatusBootstrap } from '#/shared/composables/use-system-status';
-import { useAuthStore, useSystemStore } from '#/store';
+import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
-const systemStore = useSystemStore();
-
-const { GovernedActionHost, governed } = useGovernedAction();
-provide(RuntimeConfigGovernedKey, governed);
-provide(RuntimeConfigRequestClientKey, requestClient);
-provide(RuntimeConfigRevisionKey, () => systemStore.activeConfigVersion);
+const { GovernedActionHost } = useGovernedAction();
 
 const qpWs = useQpWs();
 useSystemStatusBootstrap();

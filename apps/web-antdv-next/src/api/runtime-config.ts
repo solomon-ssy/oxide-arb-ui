@@ -5,6 +5,8 @@ import type {
   RuntimeConfigPatch,
   RuntimeConfigSchemaView,
   RuntimeConfigVersionView,
+  SchedulePreviewRequest,
+  SchedulePreviewView,
   UuidString,
 } from '@vben/types';
 
@@ -16,6 +18,7 @@ import { requestClient } from '#/api/request';
 export namespace RuntimeConfigApi {
   export const base = '/runtime-config';
   export const schema = `${base}/schema`;
+  export const schedulePreview = `${base}/schedule-preview`;
   export const versions = `${base}/versions`;
   export const activateVersion = (id: UuidString) =>
     `${versions}/${id}/activate`;
@@ -49,6 +52,14 @@ export async function getCurrentRuntimeConfig() {
 /** `GET /runtime-config/schema` — schema-driven form leaf metadata. */
 export async function getRuntimeConfigSchema() {
   return requestClient.get<RuntimeConfigSchemaView>(RuntimeConfigApi.schema);
+}
+
+/** `POST /runtime-config/schedule-preview` — next fire times for a cadence. */
+export async function previewSchedule(body: SchedulePreviewRequest) {
+  return requestClient.post<SchedulePreviewView>(
+    RuntimeConfigApi.schedulePreview,
+    body,
+  );
 }
 
 /** `GET /runtime-config/versions` — immutable version catalog. */

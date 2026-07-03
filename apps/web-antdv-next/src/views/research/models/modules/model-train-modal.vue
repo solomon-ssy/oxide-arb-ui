@@ -11,6 +11,7 @@ import { Input, InputNumber, message, Select } from 'antdv-next';
 import { listModelSpecs } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
+import InputNumberWithAddon from '#/shared/components/input-number-with-addon.vue';
 
 import { useTrainableDatasetOptions } from '../../shared/use-trainable-dataset-options';
 
@@ -42,6 +43,7 @@ const runtimeConfigVersionId = ref<string | undefined>();
 const modelFamily = ref<string>('weighted_factor');
 const labelName = ref<string>('');
 const labelHorizonSecs = ref<number>(0);
+const predictionHorizonSecs = ref<number>(86_400);
 const validationFolds = ref<number>(3);
 
 const prefillDatasetId = ref<string | undefined>();
@@ -82,7 +84,8 @@ const [Modal, modalApi] = useVbenModal({
       !trainingDatasetId.value ||
       !runtimeConfigVersionId.value ||
       !modelFamily.value ||
-      !labelName.value
+      !labelName.value ||
+      predictionHorizonSecs.value < 1
     ) {
       message.warning($t('page.research.models.train.incomplete'));
       return;
@@ -97,6 +100,7 @@ const [Modal, modalApi] = useVbenModal({
         label_name: labelName.value,
         model_family: modelFamily.value,
         model_spec_id: modelSpecId.value,
+        prediction_horizon_secs: predictionHorizonSecs.value,
         runtime_config_version_id: runtimeConfigVersionId.value,
         training_dataset_id: trainingDatasetId.value,
         validation_folds: validationFolds.value,
@@ -187,6 +191,19 @@ const [Modal, modalApi] = useVbenModal({
             class="w-full"
           />
         </div>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium">
+          {{ $t('page.research.models.train.predictionHorizonSecs') }}
+        </span>
+        <InputNumberWithAddon
+          v-model="predictionHorizonSecs"
+          :min="1"
+          addon-after="s"
+        />
+        <p class="text-muted-foreground text-xs">
+          {{ $t('page.research.models.train.predictionHorizonHelp') }}
+        </p>
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">

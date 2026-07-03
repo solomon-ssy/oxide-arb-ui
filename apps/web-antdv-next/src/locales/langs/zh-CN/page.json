@@ -153,6 +153,8 @@
         "modelFamilyPlaceholder": "weighted_factor 或 classical:<kind>",
         "labelName": "标签名称",
         "labelHorizonSecs": "标签地平线（秒）",
+        "predictionHorizonSecs": "预测地平线（秒）",
+        "predictionHorizonHelp": "冻结写入训练产物，在线用于 horizon 分数乘子与 suggested_horizon_secs。非运行配置字段——按每次训练设定（默认 86400 = 24 小时）。",
         "validationFolds": "验证折数",
         "incomplete": "请填写模型规格、数据集、版本、模型族与标签。",
         "feedback": "训练已提交；候选版本已登记。",
@@ -466,7 +468,20 @@
     },
     "recovery": {
       "title": "执行恢复",
-      "loadFailed": "无法加载恢复状态，请重试或检查系统访问权限。"
+      "loadFailed": "无法加载恢复状态，请重试或检查系统访问权限。",
+      "refresh": "刷新",
+      "clear": "无恢复阻塞项",
+      "autoExecutionBlocked": "自动执行因恢复阻塞而暂停",
+      "unresolvable": "不可自动消解的对账",
+      "nextSteps": "后续步骤",
+      "blocking": "阻塞对账",
+      "none": "无",
+      "killSwitch": "熔断开关",
+      "requiresAck": "需要操作员确认",
+      "ack": "确认熔断开关",
+      "lastReason": "最近原因",
+      "resolve": "消解",
+      "resolveHint": "请在 reconciliation 队列中消解阻塞项；解阻塞需凭证且不会在此伪造。"
     }
   },
   "systemAdmin": {
@@ -506,21 +521,6 @@
       "skipped": "已跳过",
       "checkedAt": "检查于",
       "messageAgeMs": "末消息 {ms}ms"
-    },
-    "recovery": {
-      "title": "执行恢复",
-      "clear": "无恢复阻塞项",
-      "autoExecutionBlocked": "自动执行被阻塞，等待恢复",
-      "unresolvable": "无法解决的对账",
-      "nextSteps": "后续步骤",
-      "killSwitch": "熔断开关",
-      "requiresAck": "需要操作员确认",
-      "ack": "确认熔断开关",
-      "lastReason": "最近原因",
-      "resolve": "解决",
-      "resolveHint": "在对账队列中解决阻塞对账；解除阻塞受凭证约束，绝不在此伪造。",
-      "blocking": "阻塞的对账",
-      "none": "无"
     },
     "deployConfig": {
       "title": "部署配置",
@@ -1478,6 +1478,76 @@
     "feedback": {
       "activated": "版本已激活",
       "rolledBack": "配置已回滚"
+    },
+    "editor": {
+      "open": "编辑配置",
+      "title": "编辑运行时配置",
+      "applyTitle": "应用运行时配置",
+      "applyJson": "应用完整文档",
+      "viewVersion": "查看版本",
+      "advancedSummary": "完整运行时配置文档将作为新版本替换当前生效配置并立即激活，请仔细核对。",
+      "advancedHint": "高级模式会替换整个文档。局部修改请优先使用表单编辑器。",
+      "noApplyAccess": "当前角色仅可查看配置；创建并激活配置版本需要 runtime_config:create 与 runtime_config:activate 权限。",
+      "mode": {
+        "form": "表单",
+        "json": "高级 JSON"
+      },
+      "feedback": {
+        "applied": "运行时配置版本已创建并激活"
+      },
+      "diff": {
+        "title": "变更预览",
+        "acknowledgeGovernanceCritical": "我已确认上述治理关键变更"
+      },
+      "state": {
+        "dirty": "已修改",
+        "governanceCritical": "治理关键",
+        "sensitive": "敏感"
+      },
+      "switchSection": {
+        "title": "未保存的更改",
+        "content": "「{section}」有未保存的更改。仍要切换分区吗？草稿会保留，直到你应用或重置。",
+        "continue": "切换分区"
+      },
+      "error": {
+        "createdButNotActivated": "版本已创建但未激活。请在下方打开该版本以激活或回滚。",
+        "confirmDiffRequired": "请先确认治理关键变更后再应用。",
+        "jsonObjectRequired": "运行时配置文档必须是 JSON 对象。"
+      },
+      "field": {
+        "restrictCategories": "限制可交易品类",
+        "genericJsonHint": "结构化 JSON 编辑器 — 数值列表用表格模式，嵌套对象用树形模式。",
+        "stringListEmpty": "暂无条目 — 空列表合法。",
+        "stringListPlaceholder": "输入 ID 后点击添加",
+        "secretPlaceholder": "留空则保持当前值"
+      },
+      "cadence": {
+        "interval": "固定间隔",
+        "cron": "Cron",
+        "timezoneUtc": "时区（默认 UTC）",
+        "nextRuns": "接下来运行",
+        "noPreview": "该节奏暂无即将运行的时间。"
+      },
+      "cron": {
+        "format": "6 段：秒 分 时 日 月 周（未设置时区时按 UTC）。"
+      },
+      "schedule": {
+        "id": "计划 ID",
+        "enabled": "开",
+        "disabled": "关",
+        "topN": "TopN",
+        "sourceDelay": "数据源延迟",
+        "add": "新增计划",
+        "remove": "删除"
+      },
+      "weightMap": {
+        "sum": "权重合计"
+      }
+    },
+    "deploy": {
+      "open": "部署配置",
+      "title": "部署配置（只读）",
+      "restartBound": "部署配置为重启生效：修改后需重启进程方可生效。请在运维侧编辑 config/quant-pivot.toml。"
     }
   },
   "operationLog": {

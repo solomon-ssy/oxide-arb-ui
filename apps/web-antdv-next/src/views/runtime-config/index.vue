@@ -16,6 +16,7 @@ import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import {
+  Alert,
   Button,
   Card,
   Descriptions,
@@ -32,6 +33,7 @@ import {
   getCurrentRuntimeConfig,
   rollbackRuntimeConfigVersion,
 } from '#/api/runtime-config';
+import { getDeployConfig } from '#/api/system';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import {
@@ -43,6 +45,7 @@ import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useSystemStore } from '#/store';
 
+import RuntimeConfigEditor from './modules/editor/runtime-config-editor.vue';
 import { useRuntimeConfigVersionColumns } from './modules/schemas';
 import VersionDetailDrawer from './modules/widgets/version-detail-drawer.vue';
 
@@ -56,6 +59,10 @@ const systemStore = useSystemStore();
 
 const canActivate = hasAccessByCodes(['runtime_config:activate']);
 const canRollback = hasAccessByCodes(['runtime_config:rollback']);
+const canEdit = hasAccessByCodes(['runtime_config:create']) && canActivate;
+const canViewDeploy = hasAccessByCodes(['system:read']);
+
+const deployConfig = ref<Record<string, unknown>>({});
 
 const currentConfig = ref<RuntimeConfigDocument>({});
 const activeVersion = ref<null | RuntimeConfigVersionView>(null);
@@ -88,6 +95,14 @@ const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 const [CurrentConfigDrawer, currentConfigDrawerApi] = useVbenDrawer({
+  destroyOnClose: true,
+  footer: false,
+});
+const [EditorDrawer, editorDrawerApi] = useVbenDrawer({
+  destroyOnClose: true,
+  footer: false,
+});
+const [DeployDrawer, deployDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
   footer: false,
 });
@@ -142,7 +157,7 @@ const [Grid, gridApi] = useVbenVxeGrid<RuntimeConfigVersionRow>({
         ? 'bg-primary/10'
         : '',
     rowConfig: { keyField: 'runtime_config_version_id' },
-    toolbarConfig: { refresh: { code: 'query' } },
+    toolbarConfig: { refresh: true, refreshOptions: { code: 'query' } },
   },
 });
 
@@ -164,6 +179,27 @@ function openDetail(row: RuntimeConfigVersionView) {
 
 function openCurrentConfigDrawer() {
   currentConfigDrawerApi.open();
+}
+
+function openEditorDrawer() {
+  editorDrawerApi.open();
+}
+
+function openVersionById(versionId: string) {
+  const row = versionRows.value.find(
+    (item) => item.runtime_config_version_id === versionId,
+  );
+  if (row) {
+    openDetail(row);
+  }
+}
+
+async function openDeployDrawer() {
+  const loaded = await handleRequest(() => getDeployConfig());
+  if (loaded) {
+    deployConfig.value = loaded as unknown as Record<string, unknown>;
+  }
+  deployDrawerApi.open();
 }
 
 async function activate(row: RuntimeConfigVersionView) {
@@ -266,7 +302,10 @@ onMounted(() => {
 
 <template>
   <Page auto-content-height>
-    <Card class="mb-4" :title="$t('page.runtimeConfig.current.title')">
+    <Card
+      class="runtime-config-current-card mb-4"
+      :title="$t('page.runtimeConfig.current.title')"
+    >
       <Descriptions v-if="activeVersion" :column="3" bordered size="small">
         <DescriptionsItem :label="$t('page.runtimeConfig.current.version')">
           <span class="font-mono text-xs">{{
@@ -300,12 +339,23 @@ onMounted(() => {
           </Tag>
         </DescriptionsItem>
       </Descriptions>
-      <div class="mt-3">
+      <div class="mt-4 flex flex-wrap gap-2">
         <Button size="small" @click="openCurrentConfigDrawer">
           {{ $t('page.runtimeConfig.current.viewConfig') }}
         </Button>
+        <Button
+          v-if="canEdit"
+          size="small"
+          type="primary"
+          @click="openEditorDrawer"
+        >
+          {{ $t('page.runtimeConfig.editor.open') }}
+        </Button>
+        <Button v-if="canViewDeploy" size="small" @click="openDeployDrawer">
+          {{ $t('page.runtimeConfig.deploy.open') }}
+        </Button>
       </div>
-      <div v-if="!activeVersion" class="text-muted-foreground text-sm">
+      <div v-if="!activeVersion" class="text-muted-foreground mt-2 text-sm">
         {{ $t('page.runtimeConfig.current.empty') }}
       </div>
     </Card>
@@ -318,5 +368,41 @@ onMounted(() => {
     >
       <JsonEditorShell v-model="currentConfig" :mode="Mode.tree" read-only />
     </CurrentConfigDrawer>
+    <EditorDrawer
+      :title="$t('page.runtimeConfig.editor.title')"
+      class="w-full max-w-5xl"
+    >
+      <RuntimeConfigEditor
+        @changed="() => gridApi.query()"
+        @open-version="openVersionById"
+      />
+    </EditorDrawer>
+    <DeployDrawer
+      :title="$t('page.runtimeConfig.deploy.title')"
+      class="w-full max-w-4xl"
+    >
+      <Alert
+        :message="$t('page.runtimeConfig.deploy.restartBound')"
+        class="mb-4"
+        show-icon
+        type="info"
+      />
+      <JsonEditorShell v-model="deployConfig" :mode="Mode.tree" read-only />
+    </DeployDrawer>
   </Page>
 </template>
+
+<style scoped>
+.runtime-config-current-card :deep(.ant-card-head) {
+  background: linear-gradient(
+    180deg,
+    hsl(var(--muted) / 45%) 0%,
+    hsl(var(--card)) 100%
+  );
+  border-bottom: 1px solid hsl(var(--border) / 60%);
+}
+
+.runtime-config-current-card :deep(.ant-card-head-title) {
+  font-weight: 600;
+}
+</style>

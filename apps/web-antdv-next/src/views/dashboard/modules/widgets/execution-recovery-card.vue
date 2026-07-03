@@ -114,7 +114,7 @@ onMounted(() => {
   >
     <template #extra>
       <Button :loading="loading" size="small" @click="loadRecovery">
-        {{ $t('page.systemAdmin.refresh') }}
+        {{ $t('page.dashboard.recovery.refresh') }}
       </Button>
     </template>
     <div class="flex flex-col gap-3">
@@ -129,8 +129,8 @@ onMounted(() => {
         v-else-if="recovery"
         :message="
           recoveryBlocked
-            ? $t('page.systemAdmin.recovery.autoExecutionBlocked')
-            : $t('page.systemAdmin.recovery.clear')
+            ? $t('page.dashboard.recovery.autoExecutionBlocked')
+            : $t('page.dashboard.recovery.clear')
         "
         :type="recoveryBlocked ? 'warning' : 'success'"
         show-icon
@@ -140,7 +140,7 @@ onMounted(() => {
         v-if="recovery"
         class="text-muted-foreground grid grid-cols-2 gap-x-3 gap-y-1 text-xs"
       >
-        <span>{{ $t('page.systemAdmin.recovery.unresolvable') }}</span>
+        <span>{{ $t('page.dashboard.recovery.unresolvable') }}</span>
         <span class="text-foreground text-right tabular-nums">
           {{ recovery.summary.unresolvable_count }}
         </span>
@@ -152,17 +152,17 @@ onMounted(() => {
       >
         <div class="flex items-center gap-2">
           <span class="text-muted-foreground">
-            {{ $t('page.systemAdmin.recovery.killSwitch') }}
+            {{ $t('page.dashboard.recovery.killSwitch') }}
           </span>
           <Tag :color="killSwitchTag?.color ?? 'default'">
             {{ killSwitchTag?.label ?? killSwitch.state }}
           </Tag>
           <span v-if="killSwitch.requires_operator_ack" class="text-amber-600">
-            {{ $t('page.systemAdmin.recovery.requiresAck') }}
+            {{ $t('page.dashboard.recovery.requiresAck') }}
           </span>
         </div>
         <Button v-if="canAck" danger size="small" @click="acknowledge">
-          {{ $t('page.systemAdmin.recovery.ack') }}
+          {{ $t('page.dashboard.recovery.ack') }}
         </Button>
       </div>
 
@@ -171,7 +171,7 @@ onMounted(() => {
         class="flex flex-col gap-1"
       >
         <span class="text-muted-foreground text-xs font-medium">
-          {{ $t('page.systemAdmin.recovery.nextSteps') }}
+          {{ $t('page.dashboard.recovery.nextSteps') }}
         </span>
         <ol class="list-inside list-decimal text-xs">
           <li
@@ -185,13 +185,13 @@ onMounted(() => {
 
       <div class="flex flex-col gap-1">
         <span class="text-muted-foreground text-xs font-medium">
-          {{ $t('page.systemAdmin.recovery.blocking') }}
+          {{ $t('page.dashboard.recovery.blocking') }}
         </span>
         <div
           v-if="(recovery?.blocking_reconciliations.length ?? 0) === 0"
           class="text-muted-foreground text-xs"
         >
-          {{ $t('page.systemAdmin.recovery.none') }}
+          {{ $t('page.dashboard.recovery.none') }}
         </div>
         <div
           v-for="row in recovery?.blocking_reconciliations ?? []"
@@ -224,7 +224,7 @@ onMounted(() => {
           v-if="(recovery?.blocking_reconciliations.length ?? 0) > 0"
           class="text-muted-foreground text-xs"
         >
-          {{ $t('page.systemAdmin.recovery.resolveHint') }}
+          {{ $t('page.dashboard.recovery.resolveHint') }}
         </span>
       </div>
     </div>

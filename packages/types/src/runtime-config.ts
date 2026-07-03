@@ -8,6 +8,7 @@ import type {
 export type JsonValueType =
   | 'array'
   | 'boolean'
+  | 'decimal_map'
   | 'enum'
   | 'enum_array'
   | 'enum_decimal_map'
@@ -19,9 +20,13 @@ export type JsonValueType =
 /** Wire format hint for schema leaves (decimal money stays `string`). */
 export type SchemaFieldFormat = 'decimal' | 'duration_ms' | 'integer';
 
+/** Homogeneous JSON-array element type for compact table editors. */
+export type ArrayItemType = 'integer' | 'string' | 'unknown';
+
 /** Server-side widget hint for the preferences form renderer. */
 export type FieldWidget =
   | 'boolean'
+  | 'decimal_map'
   | 'decimal_string'
   | 'duration_ms'
   | 'enum_decimal_map'
@@ -30,46 +35,40 @@ export type FieldWidget =
   | 'integer'
   | 'json_tree'
   | 'plain_string'
+  | 'ratio_slider'
+  | 'schedule_list'
   | 'secret_string'
-  | 'string_list';
+  | 'string_list'
+  | 'weight_map';
 
-/** Domain semantics beyond raw JSON Schema type information. */
-export type FieldSemantics = 'empty_means_all';
+/** Field behavior/governance hint (distinct from the render `widget`). */
+export type FieldSemantics =
+  | 'credential'
+  | 'empty_means_all'
+  | 'governance_critical';
 
 /** Comparison operator for cross-field UI rules. */
-export type WhenOperator =
-  | 'between'
-  | 'contains'
-  | 'eq'
-  | 'gt'
-  | 'gte'
-  | 'in'
-  | 'lt'
-  | 'lte'
-  | 'ne'
-  | 'neq'
-  | 'not_between'
-  | 'not_in'
-  | 'not_null'
-  | 'prefix'
-  | 'regex'
-  | 'suffix';
+export type WhenOperator = 'eq' | 'ne';
 
 /** Effect applied when a `when` rule matches. */
-export type WhenEffect =
-  | 'disable'
-  | 'enable'
-  | 'if'
-  | 'if_not'
-  | 'invisible'
-  | 'optional'
-  | 'require'
-  | 'visible';
+export type WhenEffect = 'if' | 'require';
 
-/** Localized or plain text embedded in the schema envelope. */
-export type UiText =
-  | { kind: 'localized'; locales: Record<string, string> }
-  | { kind: 'simple'; value: string };
+/** Presentation hints for a field (unit suffix, grid width, read-only). */
+export interface UiProps {
+  col_span?: number;
+  placeholder?: UiText;
+  prefix?: string;
+  read_only?: boolean;
+  slider_max?: number;
+  slider_min?: number;
+  slider_step?: number;
+  suffix?: string;
+}
+
+/** Localized text embedded in the schema envelope, keyed by SPA locale id. */
+export interface UiText {
+  locales: Record<string, string>;
+}
 
 /** One selectable enum wire value with localized label. */
 export interface EnumItemView {
@@ -97,38 +96,92 @@ export interface SchemaFieldConstraints {
   pattern?: string;
 }
 
-/** One schema leaf for the runtime-config form renderer. */
+/** One schema leaf (dictionary entry) for the runtime-config form renderer. */
 export interface RuntimeConfigSchemaFieldView {
+  array_item_type?: ArrayItemType;
   constraints?: SchemaFieldConstraints;
   default: unknown;
   description: string;
   enum_items?: EnumItemView[];
   format?: SchemaFieldFormat;
-  group: string;
   help: UiText;
   label: UiText;
-  money_critical: boolean;
-  order: number;
   path: string;
   semantics?: FieldSemantics;
   sensitive: boolean;
+  ui_props?: UiProps;
   value_type: JsonValueType;
   when?: FieldWhenView[];
   widget?: FieldWidget;
 }
 
-/** One preferences group in `GET /runtime-config/schema`. */
-export interface RuntimeConfigSchemaGroupView {
+/** A (possibly nested) group of layout nodes rendered as a collapsible card. */
+export interface SchemaSection {
+  children: SchemaNode[];
+  collapsible: boolean;
   description?: UiText;
+  /** Iconify icon id (same convention as RBAC menu icons, e.g. `lucide:wallet`). */
+  icon?: string;
   id: string;
+  kind: 'section';
   label: UiText;
   order: number;
 }
 
+/** A reference to one field in the field dictionary, keyed by dotted path. */
+export interface SchemaFieldRef {
+  kind: 'field';
+  order: number;
+  path: string;
+}
+
+/** One case of a discriminated union node. */
+export interface SchemaUnionCase {
+  case_value: unknown;
+  children: SchemaNode[];
+}
+
+/** A discriminated group: only the case matching the live discriminator renders. */
+export interface SchemaUnion {
+  cases: SchemaUnionCase[];
+  discriminator: string;
+  kind: 'union';
+  label?: UiText;
+  order: number;
+}
+
+/** One node of the runtime-config layout tree. */
+export type SchemaNode = SchemaFieldRef | SchemaSection | SchemaUnion;
+
 /** Envelope returned by `GET /runtime-config/schema`. */
 export interface RuntimeConfigSchemaView {
   fields: RuntimeConfigSchemaFieldView[];
-  groups: RuntimeConfigSchemaGroupView[];
+  tree: SchemaNode[];
+}
+
+/** Report-schedule cadence (tagged union on `kind`). */
+export type ScheduleCadence =
+  | { expr: string; kind: 'cron'; timezone?: null | string }
+  | { interval_secs: number; kind: 'interval' };
+
+/** One report schedule row edited by the `schedule_list` widget. */
+export interface ReportScheduleConfig {
+  cadence: ScheduleCadence;
+  enabled: boolean;
+  schedule_id: string;
+  source_delay_secs: number;
+  top_n: number;
+}
+
+/** Body for `POST /runtime-config/schedule-preview`. */
+export interface SchedulePreviewRequest {
+  cadence: ScheduleCadence;
+  count?: number;
+}
+
+/** Response of `POST /runtime-config/schedule-preview`. */
+export interface SchedulePreviewView {
+  next_fire_times: IsoDateTime[];
 }
 
 /** Masked immutable runtime-config version row. */
@@ -165,11 +218,7 @@ export interface RuntimeConfigActivationInfo {
 }
 
 /** Runtime config document is schema-driven; field-level typing lives server-side. */
-export type RuntimeConfigDocument = Record<string, unknown> & {
-  risk?: {
-    max_daily_loss_usd?: string;
-  };
-};
+export type RuntimeConfigDocument = Record<string, unknown>;
 
 /** Sparse patch body for preferences Apply (`POST /runtime-config/versions`). */
 export type RuntimeConfigPatch = Record<string, unknown>;

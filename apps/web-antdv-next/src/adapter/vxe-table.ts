@@ -74,7 +74,8 @@ setupVbenVxeTable({
         size: 'small',
         toolbarConfig: {
           custom: true,
-          refresh: { code: 'query' },
+          refresh: true,
+          refreshOptions: { code: 'query' },
           zoom: true,
         },
       } as VxeTableGridOptions,
@@ -533,9 +534,47 @@ setupVbenVxeTable({
 /** Standard quant-pivot grid toolbar: refresh, fullscreen (zoom), column settings. */
 export const QP_GRID_TOOLBAR_CONFIG = {
   custom: true,
-  refresh: { code: 'query' },
+  refresh: true,
+  refreshOptions: { code: 'query' },
   zoom: true,
 } as const;
+
+type ToolbarConfigRecord = Record<string, unknown>;
+
+function isPlainObject(value: unknown): value is ToolbarConfigRecord {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** vxe-table 4.19+ rejects object-style toolbar flags (refresh/zoom/...). */
+function normalizeToolbarConfig<T extends ToolbarConfigRecord>(config: T): T {
+  let normalized = config;
+  const pairs = [
+    ['custom', 'customOptions'],
+    ['export', 'exportOptions'],
+    ['import', 'importOptions'],
+    ['print', 'printOptions'],
+    ['refresh', 'refreshOptions'],
+    ['zoom', 'zoomOptions'],
+  ] as const;
+
+  for (const [flagKey, optionsKey] of pairs) {
+    const flag = normalized[flagKey];
+    if (!isPlainObject(flag)) {
+      continue;
+    }
+    const options = normalized[optionsKey];
+    normalized = {
+      ...normalized,
+      [flagKey]: true,
+      [optionsKey]: {
+        ...(isPlainObject(options) ? options : {}),
+        ...flag,
+      },
+    };
+  }
+
+  return normalized;
+}
 
 export const useVbenVxeGrid = <T extends Record<string, any>>(
   options: Parameters<typeof useGrid<T, ComponentType, ComponentPropsMap>>[0],
@@ -551,10 +590,10 @@ export const useVbenVxeGrid = <T extends Record<string, any>>(
           toolbarConfig:
             toolbarConfig?.enabled === false
               ? toolbarConfig
-              : {
+              : normalizeToolbarConfig({
                   ...QP_GRID_TOOLBAR_CONFIG,
                   ...toolbarConfig,
-                },
+                }),
         }
       : { toolbarConfig: QP_GRID_TOOLBAR_CONFIG },
   });

@@ -56,15 +56,17 @@ async function countInFlightOrders() {
     EXECUTION_ORDER_STATES.partiallyFilled,
     EXECUTION_ORDER_STATES.ambiguous,
   ] as const;
-  let total = 0;
-  for (const state of states) {
-    const page = await handleRequest(
-      () => listExecutionOrders({ size: 1, state }),
-      { silent: true },
-    );
-    total += page?.total ?? 0;
-  }
-  inFlightOrders.value = total;
+  const pages = await Promise.all(
+    states.map((state) =>
+      handleRequest(() => listExecutionOrders({ size: 1, state }), {
+        silent: true,
+      }),
+    ),
+  );
+  inFlightOrders.value = pages.reduce(
+    (total, page) => total + (page?.total ?? 0),
+    0,
+  );
 }
 
 async function loadUnresolvedReconciliations() {

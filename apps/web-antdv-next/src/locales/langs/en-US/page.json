@@ -153,6 +153,8 @@
         "modelFamilyPlaceholder": "weighted_factor or classical:<kind>",
         "labelName": "Label Name",
         "labelHorizonSecs": "Label Horizon (s)",
+        "predictionHorizonSecs": "Prediction Horizon (s)",
+        "predictionHorizonHelp": "Frozen into the trained artifact and used online for horizon score multiplier and suggested_horizon_secs. Not a runtime-config field — set per training run (default 86400 = 24h).",
         "validationFolds": "Validation Folds",
         "incomplete": "Fill in model spec, dataset, version, family, and label.",
         "feedback": "Training submitted; candidate registered.",
@@ -466,7 +468,20 @@
     },
     "recovery": {
       "title": "Execution Recovery",
-      "loadFailed": "Unable to load recovery status. Retry or check system access."
+      "loadFailed": "Unable to load recovery status. Retry or check system access.",
+      "refresh": "Refresh",
+      "clear": "No recovery blockers",
+      "autoExecutionBlocked": "Auto-execution is blocked pending recovery",
+      "unresolvable": "Unresolvable reconciliations",
+      "nextSteps": "Next Steps",
+      "blocking": "Blocking Reconciliations",
+      "none": "None",
+      "killSwitch": "Kill Switch",
+      "requiresAck": "Requires operator acknowledgement",
+      "ack": "Acknowledge kill switch",
+      "lastReason": "Last reason",
+      "resolve": "Resolve",
+      "resolveHint": "Resolve blocking reconciliations from the reconciliation queue; unblocking is credential-gated and never fabricated here."
     }
   },
   "systemAdmin": {
@@ -506,21 +521,6 @@
       "skipped": "Skipped",
       "checkedAt": "Checked at",
       "messageAgeMs": "Last msg {ms}ms"
-    },
-    "recovery": {
-      "title": "Execution Recovery",
-      "clear": "No recovery blockers",
-      "autoExecutionBlocked": "Auto-execution is blocked pending recovery",
-      "unresolvable": "Unresolvable reconciliations",
-      "nextSteps": "Next Steps",
-      "blocking": "Blocking Reconciliations",
-      "none": "None",
-      "killSwitch": "Kill Switch",
-      "requiresAck": "Requires operator acknowledgement",
-      "ack": "Acknowledge kill switch",
-      "lastReason": "Last reason",
-      "resolve": "Resolve",
-      "resolveHint": "Resolve blocking reconciliations from the reconciliation queue; unblocking is credential-gated and never fabricated here."
     },
     "deployConfig": {
       "title": "Deploy Config",
@@ -1478,6 +1478,76 @@
     "feedback": {
       "activated": "Version activated",
       "rolledBack": "Config rolled back"
+    },
+    "editor": {
+      "open": "Edit Config",
+      "title": "Edit Runtime Config",
+      "applyTitle": "Apply Runtime Config",
+      "applyJson": "Apply Full Document",
+      "viewVersion": "View Version",
+      "advancedSummary": "The full runtime-config document will replace the live config as a new version and be activated immediately. Review carefully.",
+      "advancedHint": "Advanced mode replaces the entire document. Prefer the form editor for scoped changes.",
+      "noApplyAccess": "Your role can read config only. Creating and activating versions requires runtime_config:create and runtime_config:activate.",
+      "mode": {
+        "form": "Form",
+        "json": "Advanced JSON"
+      },
+      "feedback": {
+        "applied": "Runtime config version created and activated"
+      },
+      "diff": {
+        "title": "Diff Preview",
+        "acknowledgeGovernanceCritical": "I have reviewed the governance-critical changes above"
+      },
+      "state": {
+        "dirty": "Dirty",
+        "governanceCritical": "Governance Critical",
+        "sensitive": "Sensitive"
+      },
+      "switchSection": {
+        "title": "Unsaved changes",
+        "content": "\"{section}\" has unsaved changes. Switch section anyway? Your draft will be kept until you apply or reset.",
+        "continue": "Switch section"
+      },
+      "error": {
+        "createdButNotActivated": "The version was created but not activated. Open it below to activate or roll back.",
+        "confirmDiffRequired": "Review and acknowledge governance-critical diffs before applying.",
+        "jsonObjectRequired": "The runtime-config document must be a JSON object."
+      },
+      "field": {
+        "restrictCategories": "Restrict tradeable categories",
+        "genericJsonHint": "Structured JSON editor — table mode for numeric lists, tree mode for nested objects.",
+        "stringListEmpty": "No entries — empty list is valid.",
+        "stringListPlaceholder": "Enter an ID and press Add",
+        "secretPlaceholder": "leave blank to keep current"
+      },
+      "cadence": {
+        "interval": "Fixed interval",
+        "cron": "Cron",
+        "timezoneUtc": "Timezone (defaults to UTC)",
+        "nextRuns": "Next runs",
+        "noPreview": "No upcoming runs for this cadence."
+      },
+      "cron": {
+        "format": "6 fields: second minute hour day-of-month month day-of-week (UTC unless a timezone is set)."
+      },
+      "schedule": {
+        "id": "Schedule ID",
+        "enabled": "On",
+        "disabled": "Off",
+        "topN": "TopN",
+        "sourceDelay": "Source delay",
+        "add": "Add schedule",
+        "remove": "Remove"
+      },
+      "weightMap": {
+        "sum": "Weight sum"
+      }
+    },
+    "deploy": {
+      "open": "Deploy Config",
+      "title": "Deploy Config (read-only)",
+      "restartBound": "Deploy config is restart-bound: changes take effect only after the process restarts. Edit config/quant-pivot.toml on the ops side."
     }
   },
   "operationLog": {

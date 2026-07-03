@@ -176,6 +176,11 @@ export interface TrainModelRequest {
   label_name: string;
   /** Target label horizon in seconds (`0` for horizon-independent labels). */
   label_horizon_secs: number;
+  /**
+   * Model-intrinsic prediction horizon frozen into the trained artifact and used
+   * online for horizon score multiplier / suggested_horizon_secs (`>= 1`, default 86400).
+   */
+  prediction_horizon_secs?: number;
   /** Rolling validation folds (`2..=20`, defaults to 3 server-side). */
   validation_folds?: number;
   reason: string;
