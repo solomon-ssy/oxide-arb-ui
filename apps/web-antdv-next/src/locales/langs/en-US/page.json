@@ -465,7 +465,8 @@
       "title": "Subsystem Health"
     },
     "recovery": {
-      "title": "Execution Recovery"
+      "title": "Execution Recovery",
+      "loadFailed": "Unable to load recovery status. Retry or check system access."
     }
   },
   "systemAdmin": {

@@ -160,6 +160,8 @@ export interface TrainedModelView {
   publication_status: PublicationStatus;
   metrics: ModelMetrics;
   created_at: IsoDateTime;
+  /** Present on `POST .../train` only — materialization run id for WS hints. */
+  model_run_id?: UuidString;
 }
 
 /** `POST /research/models/train` governed request body (mirrors Rust `TrainModelRequest`). */

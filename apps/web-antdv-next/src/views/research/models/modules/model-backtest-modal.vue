@@ -24,7 +24,7 @@ export interface ModelBacktestPayload {
   modelVersionId: string;
   /** The model's own training dataset, prefilled as the default replay set. */
   trainingDatasetId?: string;
-  onSubmit: (body: BacktestBody) => void;
+  onSubmit: (body: BacktestBody) => Promise<boolean>;
 }
 
 interface OptionItem {
@@ -84,18 +84,29 @@ async function loadComparisonModels() {
 
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
-  onConfirm() {
+  async onConfirm() {
     if (!trainingDatasetId.value || !runtimeConfigVersionId.value) {
       message.warning($t('page.research.models.backtest.incomplete'));
       return;
     }
-    payload.value?.onSubmit({
-      calibrate: calibrate.value,
-      comparison_model_version_id: comparisonModelVersionId.value || undefined,
-      runtime_config_version_id: runtimeConfigVersionId.value,
-      training_dataset_id: trainingDatasetId.value,
-    });
-    modalApi.close();
+    if (!payload.value) {
+      return;
+    }
+    modalApi.lock();
+    try {
+      const ok = await payload.value.onSubmit({
+        calibrate: calibrate.value,
+        comparison_model_version_id:
+          comparisonModelVersionId.value || undefined,
+        runtime_config_version_id: runtimeConfigVersionId.value,
+        training_dataset_id: trainingDatasetId.value,
+      });
+      if (ok) {
+        modalApi.close();
+      }
+    } finally {
+      modalApi.unlock();
+    }
   },
   onOpenChange(isOpen) {
     if (isOpen) {

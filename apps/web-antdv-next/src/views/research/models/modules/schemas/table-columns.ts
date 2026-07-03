@@ -122,7 +122,7 @@ export function useTrainedModelColumns(
             {
               danger: true,
               show: (row) =>
-                access.canRollback && row.publication_status === 'retired',
+                access.canRollback && row.publication_status === 'published',
             },
           ),
         ],

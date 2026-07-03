@@ -7,7 +7,14 @@ import { useRoute } from 'vue-router';
 import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Card, Descriptions, DescriptionsItem, Empty, Spin } from 'antdv-next';
+import {
+  Card,
+  Descriptions,
+  DescriptionsItem,
+  Empty,
+  message,
+  Spin,
+} from 'antdv-next';
 import { Mode } from 'vanilla-jsoneditor';
 
 import { getComparisonReport } from '#/api/research';
@@ -34,9 +41,13 @@ async function loadReport(id: string) {
   report.value = null;
   loading.value = true;
   try {
-    report.value = await handleRequest(() => getComparisonReport(id), {
+    const loaded = await handleRequest(() => getComparisonReport(id), {
       silent: true,
     });
+    report.value = loaded ?? null;
+    if (!loaded) {
+      message.error($t('page.common.deepLinkNotFound'));
+    }
   } finally {
     loading.value = false;
   }

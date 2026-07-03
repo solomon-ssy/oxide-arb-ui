@@ -22,7 +22,7 @@ export type TrainModelBody = Omit<TrainModelRequest, 'reason'>;
 export interface ModelTrainPayload {
   /** Preselected dataset id (from a dataset-row "Train" handoff), if any. */
   trainingDatasetId?: string;
-  onSubmit: (body: TrainModelBody) => void;
+  onSubmit: (body: TrainModelBody) => Promise<boolean>;
 }
 
 interface OptionItem {
@@ -76,7 +76,7 @@ async function loadOptions() {
 
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
-  onConfirm() {
+  async onConfirm() {
     if (
       !modelSpecId.value ||
       !trainingDatasetId.value ||
@@ -87,16 +87,26 @@ const [Modal, modalApi] = useVbenModal({
       message.warning($t('page.research.models.train.incomplete'));
       return;
     }
-    payload.value?.onSubmit({
-      label_horizon_secs: labelHorizonSecs.value,
-      label_name: labelName.value,
-      model_family: modelFamily.value,
-      model_spec_id: modelSpecId.value,
-      runtime_config_version_id: runtimeConfigVersionId.value,
-      training_dataset_id: trainingDatasetId.value,
-      validation_folds: validationFolds.value,
-    });
-    modalApi.close();
+    if (!payload.value) {
+      return;
+    }
+    modalApi.lock();
+    try {
+      const ok = await payload.value.onSubmit({
+        label_horizon_secs: labelHorizonSecs.value,
+        label_name: labelName.value,
+        model_family: modelFamily.value,
+        model_spec_id: modelSpecId.value,
+        runtime_config_version_id: runtimeConfigVersionId.value,
+        training_dataset_id: trainingDatasetId.value,
+        validation_folds: validationFolds.value,
+      });
+      if (ok) {
+        modalApi.close();
+      }
+    } finally {
+      modalApi.unlock();
+    }
   },
   onOpenChange(isOpen) {
     if (isOpen) {

@@ -465,7 +465,8 @@
       "title": "子系统健康"
     },
     "recovery": {
-      "title": "执行恢复"
+      "title": "执行恢复",
+      "loadFailed": "无法加载恢复状态，请重试或检查系统访问权限。"
     }
   },
   "systemAdmin": {

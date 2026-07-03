@@ -39,12 +39,14 @@ const killSwitchStateTagOptions = useKillSwitchStateTagOptions();
 
 const recovery = ref<ExecutionRecoveryView | null>(null);
 const loading = ref(false);
+const loadFailed = ref(false);
 
 async function loadRecovery() {
   loading.value = true;
-  await handleRequest(getExecutionRecovery, (view) => {
-    recovery.value = view;
-  });
+  loadFailed.value = false;
+  const view = await handleRequest(getExecutionRecovery);
+  recovery.value = view;
+  loadFailed.value = view === null;
   loading.value = false;
 }
 
@@ -117,7 +119,14 @@ onMounted(() => {
     </template>
     <div class="flex flex-col gap-3">
       <Alert
-        v-if="recovery"
+        v-if="loadFailed"
+        :message="$t('page.dashboard.recovery.loadFailed')"
+        show-icon
+        type="error"
+      />
+
+      <Alert
+        v-else-if="recovery"
         :message="
           recoveryBlocked
             ? $t('page.systemAdmin.recovery.autoExecutionBlocked')

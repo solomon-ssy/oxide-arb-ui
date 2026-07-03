@@ -113,13 +113,13 @@ const [Grid, gridApi] = useVbenVxeGrid<TrainedModelView>({
 function openTrain(trainingDatasetId?: string) {
   trainModalApi
     .setData({
-      onSubmit: (body: TrainModelBody) => void submitTrain(body),
+      onSubmit: (body: TrainModelBody) => submitTrain(body),
       trainingDatasetId,
     })
     .open();
 }
 
-async function submitTrain(body: TrainModelBody) {
+async function submitTrain(body: TrainModelBody): Promise<boolean> {
   const result = await governed(
     (ctx) => trainModel({ ...body, reason: ctx.reason }, ctx),
     {
@@ -131,7 +131,9 @@ async function submitTrain(body: TrainModelBody) {
     message.success($t('page.research.models.train.feedback'));
     void gridApi.query();
     drawerApi.setData({ model: result }).open();
+    return true;
   }
+  return false;
 }
 
 function openBacktest(model: TrainedModelView) {
@@ -139,13 +141,16 @@ function openBacktest(model: TrainedModelView) {
     .setData({
       modelVersionId: model.model_version_id,
       onSubmit: (body: BacktestBody) =>
-        void submitBacktest(model.model_version_id, body),
+        submitBacktest(model.model_version_id, body),
       trainingDatasetId: model.training_dataset_id ?? undefined,
     })
     .open();
 }
 
-async function submitBacktest(modelVersionId: string, body: BacktestBody) {
+async function submitBacktest(
+  modelVersionId: string,
+  body: BacktestBody,
+): Promise<boolean> {
   const result = await governed(
     (ctx) =>
       backtestModel(modelVersionId, { ...body, reason: ctx.reason }, ctx),
@@ -156,10 +161,10 @@ async function submitBacktest(modelVersionId: string, body: BacktestBody) {
   );
   if (result) {
     message.success($t('page.research.models.backtest.feedback'));
-    // Deep-link into the backtests catalog; its `?open=` handler opens the
-    // freshly produced report drawer.
     await router.push(`/research/backtests?open=${result.backtest_report_id}`);
+    return true;
   }
+  return false;
 }
 
 async function publish(model: TrainedModelView) {

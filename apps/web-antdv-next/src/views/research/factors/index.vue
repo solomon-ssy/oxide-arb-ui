@@ -3,6 +3,8 @@ import type { FactorDefinitionView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
+import { watch } from 'vue';
+
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
@@ -19,6 +21,7 @@ import { $t } from '#/locales';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
+import { useResearchStore } from '#/store';
 
 import FactorDetailDrawer from './modules/factor-detail-drawer.vue';
 import {
@@ -31,6 +34,7 @@ defineOptions({ name: 'ResearchFactorsPage' });
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
+const researchStore = useResearchStore();
 
 const access = {
   canPublish: hasAccessByCodes(['factor_definition:publish']),
@@ -139,6 +143,11 @@ useQueryOpenDrawer({
   fetch: (id) => getFactor(id),
   open: (factor) => drawerApi.setData({ factor }).open(),
 });
+
+watch(
+  () => researchStore.revision,
+  () => void gridApi.query(),
+);
 </script>
 
 <template>
