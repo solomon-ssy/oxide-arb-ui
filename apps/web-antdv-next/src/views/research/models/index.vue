@@ -18,6 +18,7 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   backtestModel,
   getModel,
+  getModelQualityGate,
   listModels,
   publishModel,
   retireModel,
@@ -169,12 +170,40 @@ async function submitBacktest(
 
 async function publish(model: TrainedModelView) {
   const id = model.model_version_id;
+  // Preflight the publish gate (same evaluator the backend enforces) so the
+  // operator sees a clear readiness verdict instead of a raw 409 after the fact.
+  const readiness = await handleRequest(
+    () => getModelQualityGate(id, { intent: 'publish' }),
+    { silent: true },
+  );
+  if (readiness && !readiness.passed) {
+    const hardCount = readiness.gates.filter(
+      (out) => out.class === 'hard' && out.status === 'fail',
+    ).length;
+    message.error(
+      $t('page.research.models.publish.blocked', { count: hardCount }),
+    );
+    // Open the detail drawer so the operator can inspect the failing gates.
+    drawerApi.setData({ model }).open();
+    return;
+  }
+  const softCount = readiness
+    ? readiness.gates.filter(
+        (out) => out.class === 'soft' && out.status === 'warn',
+      ).length
+    : 0;
   const result = await governed(
     (ctx) => publishModel(id, { reason: ctx.reason }, ctx),
     {
       confirmWord: 'PUBLISH',
       danger: true,
-      summary: $t('page.research.models.publish.summary', { id }),
+      summary:
+        softCount > 0
+          ? $t('page.research.models.publish.summaryWithWarnings', {
+              count: softCount,
+              id,
+            })
+          : $t('page.research.models.publish.summary', { id }),
       title: $t('page.research.models.publish.title'),
     },
   );

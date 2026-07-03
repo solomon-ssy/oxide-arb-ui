@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import type { BacktestReportView, TrainedModelView } from '@vben/types';
+import type {
+  BacktestReportView,
+  QualityGateReportView,
+  TrainedModelView,
+} from '@vben/types';
 
 import { computed, ref } from 'vue';
 
@@ -14,9 +18,12 @@ import {
   Spin,
   Tag,
 } from 'antdv-next';
-import { Mode } from 'vanilla-jsoneditor';
 
-import { getModel, listBacktestReports } from '#/api/research';
+import {
+  getModel,
+  getModelQualityGate,
+  listBacktestReports,
+} from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
@@ -24,7 +31,9 @@ import {
   findTagOption,
   usePublicationStatusTagOptions,
 } from '#/shared/components/format/tag-options';
-import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
+
+import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
+import ModelMetricsPanel from './model-metrics-panel.vue';
 
 defineOptions({ name: 'ModelDetailDrawer' });
 
@@ -37,7 +46,9 @@ const statusTagOptions = usePublicationStatusTagOptions();
 
 const model = ref<null | TrainedModelView>(null);
 const backtests = ref<BacktestReportView[]>([]);
+const gate = ref<null | QualityGateReportView>(null);
 const loading = ref(false);
+const gateLoading = ref(false);
 const openId = ref<null | string>(null);
 
 const metrics = computed(() => model.value?.metrics ?? {});
@@ -47,6 +58,7 @@ const statusTag = computed(() =>
 
 async function refresh(id: string) {
   loading.value = true;
+  gateLoading.value = true;
   try {
     const [fresh, reports] = await Promise.all([
       handleRequest(() => getModel(id), { silent: true }),
@@ -62,6 +74,21 @@ async function refresh(id: string) {
   } finally {
     loading.value = false;
   }
+  // The publish gate is a separate dry-run: keep it non-blocking so the summary
+  // renders even when readiness evaluation is slow or fails closed.
+  try {
+    const readiness = await handleRequest(
+      () => getModelQualityGate(id, { intent: 'publish' }),
+      { silent: true },
+    );
+    if (openId.value === id) {
+      gate.value = readiness ?? null;
+    }
+  } finally {
+    if (openId.value === id) {
+      gateLoading.value = false;
+    }
+  }
 }
 
 const [Drawer, drawerApi] = useVbenDrawer({
@@ -71,11 +98,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
       const data = drawerApi.getData<ModelDrawerData>();
       openId.value = data.model.model_version_id;
       model.value = data.model;
+      gate.value = null;
       void refresh(data.model.model_version_id);
     } else {
       openId.value = null;
       model.value = null;
       backtests.value = [];
+      gate.value = null;
     }
   },
 });
@@ -89,6 +118,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
     <Spin :spinning="loading">
       <div v-if="model" class="flex flex-col gap-4">
         <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
+
+        <Card
+          size="small"
+          :title="$t('page.research.models.detail.publishReadiness')"
+        >
+          <QualityGateScorecard :loading="gateLoading" :report="gate" />
+        </Card>
 
         <Card size="small" :title="$t('page.research.models.detail.summary')">
           <Descriptions :column="1" bordered size="small">
@@ -135,7 +171,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
 
         <Card size="small" :title="$t('page.research.models.detail.metrics')">
-          <JsonEditorShell :model-value="metrics" :mode="Mode.tree" read-only />
+          <ModelMetricsPanel :metrics="metrics" />
         </Card>
 
         <Card size="small" :title="$t('page.research.models.detail.backtests')">

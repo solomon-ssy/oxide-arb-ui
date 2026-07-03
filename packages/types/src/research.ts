@@ -335,6 +335,65 @@ export interface ComparisonReportListQuery extends PageQuery, TimeRangeQuery {
   candidate_model_version_id?: UuidString;
 }
 
+// ── Model quality gate (publish readiness) ──────────────────────────────────
+
+/** Whether a gate blocks the advance (`hard`) or is advisory only (`soft`). */
+export type GateClass = 'hard' | 'soft';
+
+/** Evaluated state of one gate against its threshold. */
+export type GateStatus = 'fail' | 'not_applicable' | 'pass' | 'warn';
+
+/** Which lifecycle transition a gate preview evaluates. */
+export type GatePreviewIntent = 'auto_execution' | 'candidate' | 'publish';
+
+/**
+ * Stable gate identity wire name (append-only). The SPA keys its labels off
+ * this; an unknown id degrades to the raw string.
+ */
+export type GateId =
+  | 'backtest_required'
+  | 'category_concentration'
+  | 'critical_feature_coverage'
+  | 'hit_rate'
+  | 'label_coverage'
+  | 'liquidity_exit_feasible'
+  | 'max_drawdown'
+  | 'no_pit_leakage'
+  | 'rank_ic'
+  | 'sample_count'
+  | 'sell_fallback_ratio'
+  | 'sell_l2_book_fidelity'
+  | 'shadow_overlap_stability';
+
+/** One evaluated gate row — the self-describing scorecard entry. */
+export interface GateOutcome {
+  gate: GateId;
+  class: GateClass;
+  status: GateStatus;
+  observed: string;
+  threshold: string;
+  detail: string;
+}
+
+/**
+ * `GET /research/models/{id}/quality-gate` — read-only publish-readiness
+ * dry-run. `gates` is the complete ledger; the hard/soft split is derived by
+ * filtering on `class` / `status`.
+ */
+export interface QualityGateReportView {
+  intent: GatePreviewIntent;
+  evaluated_at: IsoDateTime;
+  passed: boolean;
+  gates: GateOutcome[];
+  report_hash: string;
+}
+
+/** Query for `GET /research/models/{id}/quality-gate`. */
+export interface QualityGatePreviewQuery {
+  intent?: GatePreviewIntent;
+  backtest_report_id?: UuidString;
+}
+
 // ── Factor definitions ──────────────────────────────────────────────────────
 
 /** Factor definition governance projection. */

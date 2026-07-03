@@ -174,6 +174,8 @@
       "publish": {
         "title": "发布模型",
         "summary": "将模型版本 {id} 提升为已发布。",
+        "summaryWithWarnings": "将模型版本 {id} 提升为已发布。有 {count} 项软门禁警告——确认前请复核。",
+        "blocked": "无法发布：{count} 项硬门禁未过。请查看发布就绪度评分卡。",
         "feedback": "模型已发布。"
       },
       "rollback": {
@@ -189,7 +191,22 @@
       "detail": {
         "title": "已训练模型",
         "summary": "概要",
+        "publishReadiness": "发布就绪度",
         "metrics": "训练指标",
+        "metricsPanel": {
+          "objectiveValue": "样本内目标值",
+          "summary": "摘要",
+          "kind": "类型",
+          "featureCount": "特征数",
+          "trainSamples": "训练样本数",
+          "validationObjective": "验证目标值",
+          "meanObjective": "平均交叉验证目标值",
+          "validationSamples": "验证样本数",
+          "folds": "折",
+          "featureImportances": "特征重要度",
+          "empty": "该版本暂无训练指标。",
+          "raw": "原始 JSON"
+        },
         "backtests": "回测报告",
         "noBacktests": "该版本暂无回测报告。"
       }
@@ -216,12 +233,23 @@
       "detail": {
         "title": "回测报告",
         "summary": "概要",
+        "gateContribution": "门禁贡献（候选）",
         "modelRunId": "模型运行 ID",
         "maxDrawdown": "最大回撤",
         "turnover": "换手率",
         "tailLoss": "尾部损失",
+        "liquidityFeasibility": "流动性可行性",
         "expectedVsRealized": "预期 vs 实际",
         "categoryBreakdown": "分类拆解",
+        "categoryPanel": {
+          "category": "类目",
+          "samples": "样本数",
+          "share": "样本占比",
+          "rankIc": "Rank IC",
+          "hitRate": "命中率",
+          "meanRealized": "平均实际",
+          "empty": "此报告无分类拆解。"
+        },
         "pnlSimulation": "盈亏模拟",
         "pnlChart": {
           "seriesLabel": "累计已实现盈亏",
@@ -235,12 +263,7 @@
           "meanRealized": "平均实际收益",
           "correlation": "Pearson 相关系数",
           "bias": "预测偏差",
-          "decile": "分位",
-          "expectedBps": "预期 (bps)",
-          "realizedBps": "实际 (bps)",
-          "samples": "样本数",
-          "empty": "此报告无可结构化的预期 vs 实际指标。",
-          "raw": "原始 JSON"
+          "empty": "此报告无可结构化的预期 vs 实际指标。"
         }
       }
     },
@@ -298,7 +321,37 @@
         "baselineReport": "基线报告",
         "createdAt": "创建时间",
         "categoryDiff": "分类 Rank IC Δ",
-        "notFound": "未找到对比报告。"
+        "notFound": "未找到对比报告。",
+        "verdict": {
+          "improved": "候选优于基线（Rank IC 与已实现盈亏）。",
+          "regressed": "候选劣于基线（Rank IC 与已实现盈亏）。",
+          "mixed": "结果分歧——Rank IC 与已实现盈亏方向不一致。"
+        },
+        "sideBySide": {
+          "title": "基线 vs 候选",
+          "metric": "指标",
+          "baseline": "基线",
+          "candidate": "候选",
+          "delta": "Δ",
+          "empty": "无法加载回测报告，绝对值指标不可用。"
+        },
+        "categoryDiffPanel": {
+          "category": "类目",
+          "baseline": "基线 Rank IC",
+          "candidate": "候选 Rank IC",
+          "delta": "Rank IC Δ",
+          "empty": "此对比无分类分歧。"
+        }
+      }
+    },
+    "qualityGate": {
+      "empty": "尚未评估发布就绪度。",
+      "intentLabel": "意图",
+      "notApplicable": "此意图未评估（{count}）",
+      "verdict": {
+        "ready": "可发布——所有硬门禁均已通过。",
+        "warnings": "可发布，但有 {count} 项软门禁警告。",
+        "blocked": "{count} 项硬门禁未过——发布被阻断。"
       }
     }
   },

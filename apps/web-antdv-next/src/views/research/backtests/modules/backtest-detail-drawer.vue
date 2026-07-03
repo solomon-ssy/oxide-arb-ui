@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { BacktestReportView } from '@vben/types';
+import type { BacktestReportView, QualityGateReportView } from '@vben/types';
 
 import { computed, ref } from 'vue';
 
@@ -7,14 +7,14 @@ import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { Card, Descriptions, DescriptionsItem, Spin } from 'antdv-next';
-import { Mode } from 'vanilla-jsoneditor';
 
-import { getBacktestReport } from '#/api/research';
+import { getBacktestReport, getModelQualityGate } from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 
+import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
+import BacktestCategoryBreakdown from './backtest-category-breakdown.vue';
 import BacktestExpectedVsRealized from './backtest-expected-vs-realized.vue';
 import BacktestPnlChart from './backtest-pnl-chart.vue';
 
@@ -27,7 +27,9 @@ interface BacktestDrawerData {
 const { handleRequest } = useRequestHandler();
 
 const report = ref<BacktestReportView | null>(null);
+const gate = ref<null | QualityGateReportView>(null);
 const loading = ref(false);
+const gateLoading = ref(false);
 const openId = ref<null | string>(null);
 
 const expectedVsRealized = computed(
@@ -52,6 +54,34 @@ async function refresh(id: string) {
   } finally {
     loading.value = false;
   }
+  await refreshGate(id);
+}
+
+// Report-scoped gate: evaluate this specific report against the `candidate`
+// gate (backtest + coverage, no shadow) — "does this backtest clear the gate?".
+async function refreshGate(id: string) {
+  const current = report.value;
+  if (!current || openId.value !== id) {
+    return;
+  }
+  gateLoading.value = true;
+  try {
+    const readiness = await handleRequest(
+      () =>
+        getModelQualityGate(current.model_version_id, {
+          backtest_report_id: current.backtest_report_id,
+          intent: 'candidate',
+        }),
+      { silent: true },
+    );
+    if (openId.value === id) {
+      gate.value = readiness ?? null;
+    }
+  } finally {
+    if (openId.value === id) {
+      gateLoading.value = false;
+    }
+  }
 }
 
 const [Drawer, drawerApi] = useVbenDrawer({
@@ -61,10 +91,12 @@ const [Drawer, drawerApi] = useVbenDrawer({
       const data = drawerApi.getData<BacktestDrawerData>();
       openId.value = data.report.backtest_report_id;
       report.value = data.report;
+      gate.value = null;
       void refresh(data.report.backtest_report_id);
     } else {
       openId.value = null;
       report.value = null;
+      gate.value = null;
     }
   },
 });
@@ -77,6 +109,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
   >
     <Spin :spinning="loading">
       <div v-if="report" class="flex flex-col gap-4">
+        <Card
+          size="small"
+          :title="$t('page.research.backtests.detail.gateContribution')"
+        >
+          <QualityGateScorecard :loading="gateLoading" :report="gate" />
+        </Card>
+
         <Card
           size="small"
           :title="$t('page.research.backtests.detail.summary')"
@@ -162,11 +201,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           size="small"
           :title="$t('page.research.backtests.detail.categoryBreakdown')"
         >
-          <JsonEditorShell
-            :model-value="categoryBreakdown"
-            :mode="Mode.tree"
-            read-only
-          />
+          <BacktestCategoryBreakdown :value="categoryBreakdown" />
         </Card>
 
         <Card

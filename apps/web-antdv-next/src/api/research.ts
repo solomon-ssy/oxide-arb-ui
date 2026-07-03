@@ -11,6 +11,8 @@ import type {
   Paginated,
   PublishFactorRequest,
   PublishModelRequest,
+  QualityGatePreviewQuery,
+  QualityGateReportView,
   QuantModelSpecView,
   RetireFactorRequest,
   RetireModelRequest,
@@ -38,6 +40,8 @@ export namespace ResearchApi {
   export const modelSpecs = '/research/model-specs';
   export const trainModel = '/research/models/train';
   export const model = (id: string) => `/research/models/${id}`;
+  export const modelQualityGate = (id: string) =>
+    `/research/models/${id}/quality-gate`;
   export const backtestModel = (id: string) =>
     `/research/models/${id}/backtest`;
   export const publishModel = (id: string) => `/research/models/${id}/publish`;
@@ -155,6 +159,21 @@ export async function trainModel(
 /** `GET /research/models/{id}` — trained model version. */
 export async function getModel(id: string) {
   return requestClient.get<TrainedModelView>(ResearchApi.model(id));
+}
+
+/**
+ * `GET /research/models/{id}/quality-gate` — read-only publish-readiness
+ * dry-run. Runs the same gate as publish (no persistence) and returns the full
+ * per-gate scorecard.
+ */
+export async function getModelQualityGate(
+  id: string,
+  query: QualityGatePreviewQuery = {},
+) {
+  return requestClient.get<QualityGateReportView>(
+    ResearchApi.modelQualityGate(id),
+    { params: query },
+  );
 }
 
 /** `POST /research/models/{id}/backtest` — governed PIT backtest. */

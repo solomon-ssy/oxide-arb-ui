@@ -346,5 +346,35 @@
     "role": "角色",
     "menu": "菜单",
     "permission": "权限"
+  },
+  "gateClass": {
+    "hard": "硬门禁",
+    "soft": "软门禁"
+  },
+  "gateStatus": {
+    "pass": "通过",
+    "fail": "未过",
+    "warn": "警告",
+    "not_applicable": "不适用"
+  },
+  "gatePreviewIntent": {
+    "candidate": "候选",
+    "publish": "发布",
+    "auto_execution": "自动执行"
+  },
+  "qualityGate": {
+    "sample_count": "样本数",
+    "label_coverage": "标签覆盖率",
+    "critical_feature_coverage": "特征覆盖率",
+    "no_pit_leakage": "无未来泄漏",
+    "max_drawdown": "最大回撤",
+    "liquidity_exit_feasible": "流动性退出可行性",
+    "shadow_overlap_stability": "影子重合稳定度",
+    "backtest_required": "回测必需",
+    "rank_ic": "Rank IC",
+    "hit_rate": "命中率",
+    "category_concentration": "类目集中度",
+    "sell_l2_book_fidelity": "卖出 L2 盘口保真度",
+    "sell_fallback_ratio": "卖出回退比例"
   }
 }

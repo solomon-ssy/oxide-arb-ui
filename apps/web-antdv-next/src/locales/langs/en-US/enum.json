@@ -346,5 +346,35 @@
     "role": "Role",
     "menu": "Menu",
     "permission": "Permission"
+  },
+  "gateClass": {
+    "hard": "Hard",
+    "soft": "Soft"
+  },
+  "gateStatus": {
+    "pass": "Pass",
+    "fail": "Fail",
+    "warn": "Warn",
+    "not_applicable": "N/A"
+  },
+  "gatePreviewIntent": {
+    "candidate": "Candidate",
+    "publish": "Publish",
+    "auto_execution": "Auto-Execution"
+  },
+  "qualityGate": {
+    "sample_count": "Sample Count",
+    "label_coverage": "Label Coverage",
+    "critical_feature_coverage": "Feature Coverage",
+    "no_pit_leakage": "No PIT Leakage",
+    "max_drawdown": "Max Drawdown",
+    "liquidity_exit_feasible": "Liquidity Exit Feasibility",
+    "shadow_overlap_stability": "Shadow Overlap Stability",
+    "backtest_required": "Backtest Required",
+    "rank_ic": "Rank IC",
+    "hit_rate": "Hit Rate",
+    "category_concentration": "Category Concentration",
+    "sell_l2_book_fidelity": "Sell L2 Book Fidelity",
+    "sell_fallback_ratio": "Sell Fallback Ratio"
   }
 }

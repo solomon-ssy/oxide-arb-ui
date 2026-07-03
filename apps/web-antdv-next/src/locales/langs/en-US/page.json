@@ -174,6 +174,8 @@
       "publish": {
         "title": "Publish model",
         "summary": "Promote model version {id} to Published.",
+        "summaryWithWarnings": "Promote model version {id} to Published. {count} soft gate warning(s) — review before confirming.",
+        "blocked": "Cannot publish: {count} hard gate(s) failing. Review the publish readiness scorecard.",
         "feedback": "Model published."
       },
       "rollback": {
@@ -189,7 +191,22 @@
       "detail": {
         "title": "Trained Model",
         "summary": "Summary",
+        "publishReadiness": "Publish Readiness",
         "metrics": "Trainer Metrics",
+        "metricsPanel": {
+          "objectiveValue": "In-sample Objective",
+          "summary": "Summary",
+          "kind": "Kind",
+          "featureCount": "Feature Count",
+          "trainSamples": "Train Samples",
+          "validationObjective": "Validation Objective",
+          "meanObjective": "Mean CV Objective",
+          "validationSamples": "Validation Samples",
+          "folds": "Folds",
+          "featureImportances": "Feature Importances",
+          "empty": "No trainer metrics for this version.",
+          "raw": "Raw JSON"
+        },
         "backtests": "Backtest Reports",
         "noBacktests": "No backtest reports for this version yet."
       }
@@ -216,12 +233,23 @@
       "detail": {
         "title": "Backtest Report",
         "summary": "Summary",
+        "gateContribution": "Gate Contribution (candidate)",
         "modelRunId": "Model Run ID",
         "maxDrawdown": "Max Drawdown",
         "turnover": "Turnover",
         "tailLoss": "Tail Loss",
+        "liquidityFeasibility": "Liquidity Feasibility",
         "expectedVsRealized": "Expected vs Realized",
         "categoryBreakdown": "Category Breakdown",
+        "categoryPanel": {
+          "category": "Category",
+          "samples": "Samples",
+          "share": "Sample Share",
+          "rankIc": "Rank IC",
+          "hitRate": "Hit Rate",
+          "meanRealized": "Mean Realized",
+          "empty": "No per-category breakdown in this report."
+        },
         "pnlSimulation": "PnL Simulation",
         "pnlChart": {
           "seriesLabel": "Cumulative realized PnL",
@@ -235,12 +263,7 @@
           "meanRealized": "Mean Realized Return",
           "correlation": "Pearson Correlation",
           "bias": "Prediction Bias",
-          "decile": "Decile",
-          "expectedBps": "Expected (bps)",
-          "realizedBps": "Realized (bps)",
-          "samples": "Samples",
-          "empty": "No structured expected-vs-realized metrics in this report.",
-          "raw": "Raw JSON"
+          "empty": "No structured expected-vs-realized metrics in this report."
         }
       }
     },
@@ -298,7 +321,37 @@
         "baselineReport": "Baseline Report",
         "createdAt": "Created",
         "categoryDiff": "Per-category Rank IC Δ",
-        "notFound": "Comparison report not found."
+        "notFound": "Comparison report not found.",
+        "verdict": {
+          "improved": "Candidate improves on the baseline (rank IC and realized PnL).",
+          "regressed": "Candidate regresses against the baseline (rank IC and realized PnL).",
+          "mixed": "Mixed result — rank IC and realized PnL disagree on direction."
+        },
+        "sideBySide": {
+          "title": "Baseline vs Candidate",
+          "metric": "Metric",
+          "baseline": "Baseline",
+          "candidate": "Candidate",
+          "delta": "Δ",
+          "empty": "Absolute metrics unavailable — a backtest report could not be loaded."
+        },
+        "categoryDiffPanel": {
+          "category": "Category",
+          "baseline": "Baseline Rank IC",
+          "candidate": "Candidate Rank IC",
+          "delta": "Rank IC Δ",
+          "empty": "No per-category divergence in this comparison."
+        }
+      }
+    },
+    "qualityGate": {
+      "empty": "Publish readiness has not been evaluated.",
+      "intentLabel": "Intent",
+      "notApplicable": "Not evaluated for this intent ({count})",
+      "verdict": {
+        "ready": "Ready to publish — all hard gates cleared.",
+        "warnings": "Publishable with {count} soft warning(s).",
+        "blocked": "{count} hard gate(s) failing — publish blocked."
       }
     }
   },
