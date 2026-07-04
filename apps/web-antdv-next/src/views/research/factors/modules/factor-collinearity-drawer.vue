@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
-import type { FactorCollinearityView } from '@vben/types';
+import type {
+  FactorCollinearitySource,
+  FactorCollinearityView,
+} from '@vben/types';
 
 import { computed, ref, watch } from 'vue';
 
@@ -14,6 +17,7 @@ import {
   Descriptions,
   DescriptionsItem,
   Empty,
+  Segmented,
   Spin,
   Table,
 } from 'antdv-next';
@@ -29,6 +33,16 @@ const CHART_HEIGHT = '420px';
 const { handleRequest } = useRequestHandler();
 const report = ref<FactorCollinearityView | null>(null);
 const loading = ref(false);
+// Raw (pre-normalization) is the methodologically correct plane for detecting
+// same-signal factors; normalized is offered as a secondary view.
+const source = ref<FactorCollinearitySource>('raw');
+const sourceOptions = computed(() => [
+  { label: $t('page.research.factors.collinearity.sourceRaw'), value: 'raw' },
+  {
+    label: $t('page.research.factors.collinearity.sourceNormalized'),
+    value: 'normalized',
+  },
+]);
 
 const chartRef = ref<EchartsUIType>();
 const chartAreaRef = ref<HTMLElement | null>(null);
@@ -66,9 +80,10 @@ useResizeObserver(
 async function load() {
   loading.value = true;
   try {
-    report.value = await handleRequest(() => getFactorCollinearity(), {
-      silent: true,
-    });
+    report.value = await handleRequest(
+      () => getFactorCollinearity({ source: source.value }),
+      { silent: true },
+    );
   } finally {
     loading.value = false;
   }
@@ -124,6 +139,13 @@ function render() {
 
 watch(report, () => render());
 
+// Re-query when the operator switches the correlation plane.
+watch(source, () => {
+  if (report.value !== null || loading.value) {
+    void load();
+  }
+});
+
 const [Drawer, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
@@ -150,6 +172,12 @@ defineExpose({ open: () => drawerApi.open() });
           type="info"
           show-icon
         />
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-muted-foreground">
+            {{ $t('page.research.factors.collinearity.source') }}
+          </span>
+          <Segmented v-model:value="source" :options="sourceOptions" />
+        </div>
         <Descriptions v-if="report" :column="3" bordered size="small">
           <DescriptionsItem
             :label="$t('page.research.factors.collinearity.threshold')"
@@ -165,6 +193,15 @@ defineExpose({ open: () => drawerApi.open() });
             :label="$t('page.research.factors.collinearity.lookback')"
           >
             {{ Math.round(report.lookback_secs / 3600) }}h
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.factors.collinearity.panel')"
+          >
+            {{
+              report.panel_source === 'raw'
+                ? $t('page.research.factors.collinearity.sourceRaw')
+                : $t('page.research.factors.collinearity.sourceNormalized')
+            }}
           </DescriptionsItem>
         </Descriptions>
 

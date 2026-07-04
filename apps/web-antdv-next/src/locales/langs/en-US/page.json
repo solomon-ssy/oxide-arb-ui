@@ -320,6 +320,10 @@
         "threshold": "Threshold",
         "observations": "Observations",
         "lookback": "Lookback",
+        "panel": "Panel",
+        "source": "Plane",
+        "sourceRaw": "Raw",
+        "sourceNormalized": "Normalized",
         "empty": "No factor values in the recent window to analyze.",
         "clean": "No factor pair exceeds the correlation threshold.",
         "violationsTitle": "{count} collinear factor pair(s) exceed the threshold",
@@ -1431,6 +1435,7 @@
         "weight": "Weight",
         "contribution": "Contribution",
         "confidence": "Confidence",
+        "sourceRefs": "Sources",
         "explanation": "Explanation"
       }
     },

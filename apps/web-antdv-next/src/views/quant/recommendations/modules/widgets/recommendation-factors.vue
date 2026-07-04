@@ -80,11 +80,22 @@ const columns = [
     width: 110,
   },
   {
+    dataIndex: 'source_refs',
+    key: 'source_refs',
+    title: $t('page.quantRecommendations.factors.columns.sourceRefs'),
+    width: 180,
+  },
+  {
     dataIndex: 'explanation',
     key: 'explanation',
     title: $t('page.quantRecommendations.factors.columns.explanation'),
   },
 ];
+
+/** A factor without a usable normalized score carries no meaningful confidence. */
+function isScored(record: FactorBreakdownEntry): boolean {
+  return record.normalized_score !== null;
+}
 </script>
 
 <template>
@@ -151,7 +162,28 @@ const columns = [
         <span class="font-mono">{{ formatScore(record.contribution) }}</span>
       </template>
       <template v-else-if="column.key === 'confidence'">
-        <span class="font-mono">{{ formatPercent(record.confidence) }}</span>
+        <span class="font-mono">{{
+          isScored(record)
+            ? formatPercent(record.confidence)
+            : EMPTY_PLACEHOLDER
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'source_refs'">
+        <div
+          v-if="record.source_refs && record.source_refs.length > 0"
+          class="flex flex-wrap gap-1"
+        >
+          <Tag
+            v-for="ref in record.source_refs"
+            :key="ref"
+            class="font-mono text-xs"
+          >
+            {{ ref }}
+          </Tag>
+        </div>
+        <span v-else class="text-muted-foreground">{{
+          EMPTY_PLACEHOLDER
+        }}</span>
       </template>
       <template v-else-if="column.key === 'explanation'">
         <Tooltip :title="record.explanation">

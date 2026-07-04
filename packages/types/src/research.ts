@@ -435,6 +435,13 @@ export interface CollinearPairView {
   correlation: DecimalString;
 }
 
+/**
+ * Which value plane the collinearity matrix is computed over. `raw` (default)
+ * correlates pre-normalization values — the correct plane for detecting
+ * same-signal factors; `normalized` correlates the post-normalization scores.
+ */
+export type FactorCollinearitySource = 'normalized' | 'raw';
+
 /** `GET /research/factors/collinearity` — Spearman collinearity analysis. */
 export interface FactorCollinearityView {
   factors: string[];
@@ -443,12 +450,14 @@ export interface FactorCollinearityView {
   threshold: DecimalString;
   observation_count: number;
   lookback_secs: number;
+  panel_source: FactorCollinearitySource;
 }
 
 /** Query for `GET /research/factors/collinearity`. */
 export interface FactorCollinearityQuery {
   lookback_secs?: number;
   threshold?: string;
+  source?: FactorCollinearitySource;
 }
 
 /** `POST /research/factors/{id}/publish` governed request body. */

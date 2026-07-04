@@ -320,6 +320,10 @@
         "threshold": "阈值",
         "observations": "观测数",
         "lookback": "回看窗口",
+        "panel": "计算平面",
+        "source": "平面",
+        "sourceRaw": "原始值",
+        "sourceNormalized": "归一化",
         "empty": "近端窗口内没有可分析的因子值。",
         "clean": "没有因子对超过相关阈值。",
         "violationsTitle": "有 {count} 对因子超过相关阈值",
@@ -1431,6 +1435,7 @@
         "weight": "权重",
         "contribution": "贡献",
         "confidence": "置信度",
+        "sourceRefs": "证据来源",
         "explanation": "说明"
       }
     },
