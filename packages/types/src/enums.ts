@@ -298,6 +298,35 @@ export const FACTOR_DIRECTIONS = {
 
 export type FactorDirection = WireEnum<typeof FACTOR_DIRECTIONS>;
 
+/** Cross-sectional normalization method a factor is mapped through. */
+export const FACTOR_NORMALIZATIONS = {
+  minMax: 'min_max',
+  rank: 'rank',
+  winsorizedZscore: 'winsorized_zscore',
+} as const;
+
+export type FactorNormalization = WireEnum<typeof FACTOR_NORMALIZATIONS>;
+
+/** How a factor's normalized score was derived. */
+export const NORMALIZATION_SOURCES = {
+  crossSection: 'cross_section',
+  historicalQuantile: 'historical_quantile',
+  perMarket: 'per_market',
+} as const;
+
+export type NormalizationSource = WireEnum<typeof NORMALIZATION_SOURCES>;
+
+/** Why a factor produced no normalized score (never a silent neutral). */
+export const FACTOR_INDETERMINATE_REASONS = {
+  crossSectionTooSmall: 'cross_section_too_small',
+  noHistory: 'no_history',
+  zeroVariance: 'zero_variance',
+} as const;
+
+export type FactorIndeterminateReason = WireEnum<
+  typeof FACTOR_INDETERMINATE_REASONS
+>;
+
 /** Position-sizing model that produced a recommendation's size. */
 export const SIZING_MODEL_KINDS = {
   kelly: 'kelly',

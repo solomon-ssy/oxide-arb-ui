@@ -302,9 +302,32 @@
       "detail": {
         "title": "Factor Definition",
         "summary": "Summary",
+        "normalization": "Normalization",
+        "direction": "Direction",
+        "required": "Required",
+        "requiredYes": "Required",
+        "requiredNo": "Optional",
+        "inputFeatures": "Input Features",
+        "qualityGates": "Quality Gates",
         "inputSchemaVersion": "Input Schema Version",
         "outputSchemaVersion": "Output Schema Version",
         "createdAt": "Created"
+      },
+      "collinearity": {
+        "action": "Collinearity",
+        "title": "Factor Collinearity",
+        "hint": "Pairwise Spearman rank correlation across recent factor values. Highly correlated factors carry redundant signal.",
+        "threshold": "Threshold",
+        "observations": "Observations",
+        "lookback": "Lookback",
+        "empty": "No factor values in the recent window to analyze.",
+        "clean": "No factor pair exceeds the correlation threshold.",
+        "violationsTitle": "{count} collinear factor pair(s) exceed the threshold",
+        "columns": {
+          "left": "Factor A",
+          "right": "Factor B",
+          "correlation": "Spearman ρ"
+        }
       }
     },
     "comparisons": {
@@ -1397,12 +1420,14 @@
     },
     "factors": {
       "empty": "No factor breakdown available.",
+      "indeterminateHint": "This factor had no usable cross-section, so it produced no score and did not contribute (never a fabricated neutral).",
       "columns": {
         "name": "Factor",
         "family": "Family",
         "direction": "Direction",
         "raw": "Raw",
         "normalized": "Normalized",
+        "source": "Normalization",
         "weight": "Weight",
         "contribution": "Contribution",
         "confidence": "Confidence",

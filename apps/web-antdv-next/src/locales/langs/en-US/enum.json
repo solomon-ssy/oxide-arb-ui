@@ -127,6 +127,21 @@
     "neutral": "Neutral",
     "negative": "Negative"
   },
+  "factorNormalization": {
+    "winsorized_zscore": "Winsorized z-score",
+    "rank": "Cross-sectional rank",
+    "min_max": "Min/max"
+  },
+  "normalizationSource": {
+    "cross_section": "Cross-section",
+    "per_market": "Per-market",
+    "historical_quantile": "Historical quantile"
+  },
+  "factorIndeterminateReason": {
+    "cross_section_too_small": "Cross-section too small",
+    "zero_variance": "Zero variance",
+    "no_history": "No history"
+  },
   "factorFamily": {
     "activity": "Activity",
     "data_quality": "Data Quality",

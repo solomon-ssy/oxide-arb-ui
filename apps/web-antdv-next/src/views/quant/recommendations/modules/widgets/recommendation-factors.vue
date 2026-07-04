@@ -53,6 +53,12 @@ const columns = [
     width: 110,
   },
   {
+    dataIndex: 'normalization_source',
+    key: 'normalization_source',
+    title: $t('page.quantRecommendations.factors.columns.source'),
+    width: 150,
+  },
+  {
     align: 'right' as const,
     dataIndex: 'weight',
     key: 'weight',
@@ -113,7 +119,29 @@ const columns = [
       </template>
       <template v-else-if="column.key === 'normalized_score'">
         <span class="font-mono">{{
-          formatPercent(record.normalized_score)
+          record.normalized_score === null
+            ? EMPTY_PLACEHOLDER
+            : formatPercent(record.normalized_score)
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'normalization_source'">
+        <Tag v-if="record.normalization_source" color="blue">
+          {{ $t(`enum.normalizationSource.${record.normalization_source}`) }}
+        </Tag>
+        <Tooltip
+          v-else-if="record.indeterminate_reason"
+          :title="$t('page.quantRecommendations.factors.indeterminateHint')"
+        >
+          <Tag color="warning">
+            {{
+              $t(
+                `enum.factorIndeterminateReason.${record.indeterminate_reason}`,
+              )
+            }}
+          </Tag>
+        </Tooltip>
+        <span v-else class="text-muted-foreground">{{
+          EMPTY_PLACEHOLDER
         }}</span>
       </template>
       <template v-else-if="column.key === 'weight'">

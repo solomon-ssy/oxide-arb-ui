@@ -15,9 +15,11 @@ import type {
   ExitTriggerKind,
   FactorDirection,
   FactorFamily,
+  FactorIndeterminateReason,
   IneligibilityReason,
   MarketCategory,
   MarketStatus,
+  NormalizationSource,
   OutcomeSide,
   QuantRuntimeMode,
   RecommendationAttributionOutcome,
@@ -115,7 +117,12 @@ export interface FactorBreakdownEntry {
   factor_name: string;
   family: FactorFamily;
   raw_value: DecimalString | null;
-  normalized_score: ProbabilityString;
+  /** `null` when the factor was missing-input or indeterminate. */
+  normalized_score: null | ProbabilityString;
+  /** How the score was derived; `null` when missing / indeterminate. */
+  normalization_source: NormalizationSource | null;
+  /** Why the factor was indeterminate; `null` when scored / missing. */
+  indeterminate_reason: FactorIndeterminateReason | null;
   confidence: ProbabilityString;
   weight: DecimalString;
   contribution: DecimalString;

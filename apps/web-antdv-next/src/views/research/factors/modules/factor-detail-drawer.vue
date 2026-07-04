@@ -13,6 +13,7 @@ import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import {
   findTagOption,
+  useFactorDirectionTagOptions,
   useFactorFamilyTagOptions,
   useFactorScopeTagOptions,
   usePublicationStatusTagOptions,
@@ -28,6 +29,7 @@ const { handleRequest } = useRequestHandler();
 const statusTagOptions = usePublicationStatusTagOptions();
 const familyTagOptions = useFactorFamilyTagOptions();
 const scopeTagOptions = useFactorScopeTagOptions();
+const directionTagOptions = useFactorDirectionTagOptions();
 
 const factor = ref<FactorDefinitionView | null>(null);
 const loading = ref(false);
@@ -41,6 +43,9 @@ const familyTag = computed(() =>
 );
 const scopeTag = computed(() =>
   findTagOption(scopeTagOptions, factor.value?.scope),
+);
+const directionTag = computed(() =>
+  findTagOption(directionTagOptions, factor.value?.direction ?? undefined),
 );
 
 async function refresh(id: string) {
@@ -94,6 +99,61 @@ const [Drawer, drawerApi] = useVbenDrawer({
             </DescriptionsItem>
             <DescriptionsItem :label="$t('page.research.factors.columns.name')">
               {{ factor.name }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.factors.detail.normalization')"
+            >
+              <Tag v-if="factor.normalization" color="geekblue">
+                {{ $t(`enum.factorNormalization.${factor.normalization}`) }}
+              </Tag>
+              <span v-else>—</span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.factors.detail.direction')"
+            >
+              <Tag v-if="factor.direction" :color="directionTag?.color">
+                {{ directionTag?.label }}
+              </Tag>
+              <span v-else>—</span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.factors.detail.required')"
+            >
+              <Tag :color="factor.required ? 'warning' : 'default'">
+                {{
+                  factor.required
+                    ? $t('page.research.factors.detail.requiredYes')
+                    : $t('page.research.factors.detail.requiredNo')
+                }}
+              </Tag>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.factors.detail.inputFeatures')"
+            >
+              <div class="flex flex-wrap gap-1">
+                <Tag
+                  v-for="feature in factor.input_features"
+                  :key="feature"
+                  class="font-mono text-xs"
+                >
+                  {{ feature }}
+                </Tag>
+                <span v-if="factor.input_features.length === 0">—</span>
+              </div>
+            </DescriptionsItem>
+            <DescriptionsItem
+              v-if="factor.quality_gates.length > 0"
+              :label="$t('page.research.factors.detail.qualityGates')"
+            >
+              <div class="flex flex-wrap gap-1">
+                <Tag
+                  v-for="gate in factor.quality_gates"
+                  :key="gate"
+                  color="purple"
+                >
+                  {{ gate }}
+                </Tag>
+              </div>
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.factors.detail.inputSchemaVersion')"

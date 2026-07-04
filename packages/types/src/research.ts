@@ -9,7 +9,9 @@ import type {
 } from './common';
 import type {
   FactorDefinitionScope,
+  FactorDirection,
   FactorFamily,
+  FactorNormalization,
   MarketCategory,
   PublicationStatus,
   TrainingDatasetStatus,
@@ -405,6 +407,16 @@ export interface FactorDefinitionView {
   input_schema_version: string;
   output_schema_version: string;
   status: PublicationStatus;
+  /** Normalization method projected from the governed definition. */
+  normalization: FactorNormalization | null;
+  /** Default contribution direction. */
+  direction: FactorDirection | null;
+  /** Stable feature names this factor consumes. */
+  input_features: string[];
+  /** Whether the factor is required (declares at least one quality gate). */
+  required: boolean;
+  /** Names of the quality gates governing this factor. */
+  quality_gates: string[];
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
 }
@@ -414,6 +426,29 @@ export interface FactorDefinitionListQuery extends PageQuery {
   factor_family?: FactorFamily;
   scope?: FactorDefinitionScope;
   status?: PublicationStatus;
+}
+
+/** One collinear factor pair from the collinearity report. */
+export interface CollinearPairView {
+  left: string;
+  right: string;
+  correlation: DecimalString;
+}
+
+/** `GET /research/factors/collinearity` — Spearman collinearity analysis. */
+export interface FactorCollinearityView {
+  factors: string[];
+  matrix: DecimalString[][];
+  violations: CollinearPairView[];
+  threshold: DecimalString;
+  observation_count: number;
+  lookback_secs: number;
+}
+
+/** Query for `GET /research/factors/collinearity`. */
+export interface FactorCollinearityQuery {
+  lookback_secs?: number;
+  threshold?: string;
 }
 
 /** `POST /research/factors/{id}/publish` governed request body. */

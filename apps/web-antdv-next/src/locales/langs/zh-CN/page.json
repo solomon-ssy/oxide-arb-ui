@@ -302,9 +302,32 @@
       "detail": {
         "title": "因子定义",
         "summary": "概要",
+        "normalization": "归一化",
+        "direction": "方向",
+        "required": "是否必需",
+        "requiredYes": "必需",
+        "requiredNo": "可选",
+        "inputFeatures": "输入特征",
+        "qualityGates": "质量门",
         "inputSchemaVersion": "输入 Schema 版本",
         "outputSchemaVersion": "输出 Schema 版本",
         "createdAt": "创建时间"
+      },
+      "collinearity": {
+        "action": "共线分析",
+        "title": "因子共线性",
+        "hint": "近端因子值的两两 Spearman 秩相关。高相关因子携带冗余信号。",
+        "threshold": "阈值",
+        "observations": "观测数",
+        "lookback": "回看窗口",
+        "empty": "近端窗口内没有可分析的因子值。",
+        "clean": "没有因子对超过相关阈值。",
+        "violationsTitle": "有 {count} 对因子超过相关阈值",
+        "columns": {
+          "left": "因子 A",
+          "right": "因子 B",
+          "correlation": "Spearman ρ"
+        }
       }
     },
     "comparisons": {
@@ -1397,12 +1420,14 @@
     },
     "factors": {
       "empty": "无因子拆解。",
+      "indeterminateHint": "该因子无可用截面，因此没有分数且不参与贡献（绝不伪造中性值）。",
       "columns": {
         "name": "因子",
         "family": "族",
         "direction": "方向",
         "raw": "原始值",
         "normalized": "归一化",
+        "source": "归一化来源",
         "weight": "权重",
         "contribution": "贡献",
         "confidence": "置信度",

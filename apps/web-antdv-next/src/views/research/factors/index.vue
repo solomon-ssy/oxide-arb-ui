@@ -3,12 +3,12 @@ import type { FactorDefinitionView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { message } from 'antdv-next';
+import { Button, message } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -23,6 +23,7 @@ import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
 import { useResearchStore } from '#/store';
 
+import FactorCollinearityDrawer from './modules/factor-collinearity-drawer.vue';
 import FactorDetailDrawer from './modules/factor-detail-drawer.vue';
 import {
   useFactorDefinitionColumns,
@@ -53,6 +54,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: FactorDetailDrawer,
   destroyOnClose: true,
 });
+
+const collinearityRef = ref<InstanceType<typeof FactorCollinearityDrawer>>();
 
 const [Grid, gridApi] = useVbenVxeGrid<FactorDefinitionView>({
   formOptions: { schema: useFactorDefinitionSearchSchema() },
@@ -152,7 +155,14 @@ watch(
 
 <template>
   <Page auto-content-height>
-    <Grid :table-title="$t('page.research.factors.listTitle')" />
+    <Grid :table-title="$t('page.research.factors.listTitle')">
+      <template #toolbar-tools>
+        <Button type="primary" @click="collinearityRef?.open()">
+          {{ $t('page.research.factors.collinearity.action') }}
+        </Button>
+      </template>
+    </Grid>
     <Drawer />
+    <FactorCollinearityDrawer ref="collinearityRef" />
   </Page>
 </template>

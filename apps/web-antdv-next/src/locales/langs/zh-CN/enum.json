@@ -127,6 +127,21 @@
     "neutral": "中性",
     "negative": "负向"
   },
+  "factorNormalization": {
+    "winsorized_zscore": "Winsorize z-score",
+    "rank": "截面排名",
+    "min_max": "最小/最大缩放"
+  },
+  "normalizationSource": {
+    "cross_section": "截面",
+    "per_market": "单市场",
+    "historical_quantile": "历史分位"
+  },
+  "factorIndeterminateReason": {
+    "cross_section_too_small": "截面样本过少",
+    "zero_variance": "零方差",
+    "no_history": "无历史"
+  },
   "factorFamily": {
     "activity": "活跃度",
     "data_quality": "数据质量",

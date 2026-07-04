@@ -3,6 +3,8 @@ import type {
   BacktestReportView,
   BuildTrainingDatasetRequest,
   ComparisonReportListQuery,
+  FactorCollinearityQuery,
+  FactorCollinearityView,
   FactorDefinitionListQuery,
   FactorDefinitionView,
   ModelComparisonReportView,
@@ -55,6 +57,7 @@ export namespace ResearchApi {
   export const comparisonReport = (id: string) =>
     `/research/comparison-reports/${id}`;
   export const factors = '/research/factors';
+  export const factorCollinearity = '/research/factors/collinearity';
   export const factor = (id: string) => `/research/factors/${id}`;
   export const publishFactor = (id: string) =>
     `/research/factors/${id}/publish`;
@@ -122,6 +125,16 @@ export async function listFactors(query: FactorDefinitionListQuery = {}) {
 /** `GET /research/factors/{id}` — single factor definition (detail drawer). */
 export async function getFactor(id: string) {
   return requestClient.get<FactorDefinitionView>(ResearchApi.factor(id));
+}
+
+/** `GET /research/factors/collinearity` — Spearman collinearity analysis. */
+export async function getFactorCollinearity(
+  query: FactorCollinearityQuery = {},
+) {
+  return requestClient.get<FactorCollinearityView>(
+    ResearchApi.factorCollinearity,
+    { params: query },
+  );
 }
 
 /** `POST /research/training-datasets/plan` — governed dry-run plan. */
