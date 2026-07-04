@@ -196,7 +196,7 @@
         "featureSchemaVersion": "Feature schema version",
         "labelSchemaVersion": "Label schema version",
         "specJson": "Spec metadata (JSON)",
-        "specJsonHelp": "Optional free-form JSON (authoring notes, tuning intent); defaults to {}.",
+        "specJsonHelp": "Optional free-form JSON (authoring notes, tuning intent); defaults to an empty object.",
         "incomplete": "Provide a name; prediction horizon must be >= 1.",
         "feedback": "Model spec created."
       }

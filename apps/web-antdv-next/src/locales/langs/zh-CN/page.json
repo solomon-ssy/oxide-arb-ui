@@ -196,7 +196,7 @@
         "featureSchemaVersion": "特征 Schema 版本",
         "labelSchemaVersion": "标签 Schema 版本",
         "specJson": "规格元数据（JSON）",
-        "specJsonHelp": "可选自由 JSON（作者备注、调参意图），默认 {}。",
+        "specJsonHelp": "可选自由 JSON（作者备注、调参意图），默认为空对象。",
         "incomplete": "请填写名称，且预测地平线需 ≥ 1。",
         "feedback": "模型规格已创建。"
       }
