@@ -124,6 +124,12 @@ export interface MaterializationRunEvent {
   run_id: UuidString;
   kind: MaterializationRunKind;
   status: MaterializationRunStatus;
+  /** The durable research-job id driving this run (async job engine). */
+  job_id?: string;
+  /** Current execution phase (e.g. `materialize`, `finalize`). */
+  phase?: string;
+  /** Completion fraction in `[0, 1]` when a positive total is known. */
+  pct?: number;
 }
 
 /**

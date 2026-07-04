@@ -16,6 +16,8 @@ import type {
   QualityGatePreviewQuery,
   QualityGateReportView,
   QuantModelSpecView,
+  ResearchJobListQuery,
+  ResearchJobView,
   RetireFactorRequest,
   RetireModelRequest,
   RollbackModelRequest,
@@ -62,6 +64,10 @@ export namespace ResearchApi {
   export const publishFactor = (id: string) =>
     `/research/factors/${id}/publish`;
   export const retireFactor = (id: string) => `/research/factors/${id}/retire`;
+  export const jobs = '/research/jobs';
+  export const job = (id: string) => `/research/jobs/${id}`;
+  export const cancelJob = (id: string) => `/research/jobs/${id}/cancel`;
+  export const retryJob = (id: string) => `/research/jobs/${id}/retry`;
 }
 
 /** `GET /research/training-datasets` — paginated dataset ledger catalog. */
@@ -149,24 +155,24 @@ export async function planTrainingDataset(
   );
 }
 
-/** `POST /research/training-datasets/build` — governed dataset build. */
+/** `POST /research/training-datasets/build` — enqueue an async build job. */
 export async function buildTrainingDataset(
   body: BuildTrainingDatasetRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<TrainingDatasetView>(
+  return governedPost<ResearchJobView>(
     ResearchApi.buildTrainingDataset,
     body,
     ctx,
   );
 }
 
-/** `POST /research/models/train` — governed model training. */
+/** `POST /research/models/train` — enqueue an async training job. */
 export async function trainModel(
   body: TrainModelRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<TrainedModelView>(ResearchApi.trainModel, body, ctx);
+  return governedPost<ResearchJobView>(ResearchApi.trainModel, body, ctx);
 }
 
 /** `GET /research/models/{id}` — trained model version. */
@@ -189,15 +195,45 @@ export async function getModelQualityGate(
   );
 }
 
-/** `POST /research/models/{id}/backtest` — governed PIT backtest. */
+/** `POST /research/models/{id}/backtest` — enqueue an async PIT backtest job. */
 export async function backtestModel(
   id: string,
   body: RunBacktestRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<BacktestReportView>(
+  return governedPost<ResearchJobView>(
     ResearchApi.backtestModel(id),
     body,
+    ctx,
+  );
+}
+
+/** `GET /research/jobs` — paginated research-job ledger (task center). */
+export async function listResearchJobs(query: ResearchJobListQuery = {}) {
+  return requestClient.get<Paginated<ResearchJobView>>(ResearchApi.jobs, {
+    params: query,
+  });
+}
+
+/** `GET /research/jobs/{id}` — single job (poll target). */
+export async function getResearchJob(id: string) {
+  return requestClient.get<ResearchJobView>(ResearchApi.job(id));
+}
+
+/** `POST /research/jobs/{id}/cancel` — governed cancel (queued→terminal, running→cooperative). */
+export async function cancelResearchJob(id: string, ctx: GovernedContext) {
+  return governedPost<ResearchJobView>(
+    ResearchApi.cancelJob(id),
+    { reason: ctx.reason },
+    ctx,
+  );
+}
+
+/** `POST /research/jobs/{id}/retry` — governed re-enqueue of a terminal job. */
+export async function retryResearchJob(id: string, ctx: GovernedContext) {
+  return governedPost<ResearchJobView>(
+    ResearchApi.retryJob(id),
+    { reason: ctx.reason },
     ctx,
   );
 }

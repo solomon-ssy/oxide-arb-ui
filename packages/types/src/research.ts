@@ -14,6 +14,8 @@ import type {
   FactorNormalization,
   MarketCategory,
   PublicationStatus,
+  ResearchJobKind,
+  ResearchJobStatus,
   TrainingDatasetStatus,
 } from './enums';
 
@@ -25,6 +27,14 @@ export type TrainingSampleSource =
 
 // ── Training datasets ───────────────────────────────────────────────────────
 
+/** Aggregate counts of exclusion reasons for a market selection snapshot. */
+export interface SelectionExclusionSummary {
+  stale_book_count: number;
+  insufficient_liquidity_count: number;
+  excluded_by_operator_count: number;
+  other_count: number;
+}
+
 /** Optional training-matrix probe (build-time diagnostic; does not gate build). */
 export interface MatrixCoverageProbe {
   accepted_rows: number;
@@ -35,8 +45,8 @@ export interface MatrixCoverageProbe {
 }
 
 /**
- * `TrainingDatasetView.coverage_json` content — per-sample build accounting.
- * Backend types the column as opaque JSON but always writes `DatasetCoverage`.
+ * `TrainingDatasetView.coverage_json` / research-job coverage mirror — per-sample
+ * build accounting (mirrors Rust `DatasetCoverage`).
  */
 export interface DatasetCoverage {
   planned_samples: number;
@@ -53,6 +63,9 @@ export interface DatasetCoverage {
   exit_decision_built: number;
   exit_fill_l2_rows: number;
   exit_fill_fallback_rows: number;
+  pit_selection_candidates: number;
+  pit_selection_included: number;
+  pit_selection_excluded: SelectionExclusionSummary;
   matrix_probe?: MatrixCoverageProbe | null;
 }
 
@@ -63,7 +76,27 @@ export interface TrainingDatasetPlanView {
   runtime_config_version_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
+  /**
+   * Upper-bound total samples (spine + live attribution + exit decision). The
+   * exact eligible count only emerges from the build's coverage.
+   */
   planned_samples: number;
+  /** Deterministic historical spine size (selection × alive instants). */
+  spine_upper_bound: number;
+  /** When true the UI must block build and prompt to narrow window/interval. */
+  hard_cap_exceeded: boolean;
+  /**
+   * Estimated samples after point-in-time selection eligibility: the upper bound
+   * scaled by the sampled keep-rate (falls back to the upper bound when disabled).
+   */
+  estimated_eligible_samples: number;
+  /**
+   * Sampled fraction of candidate markets passing the PIT selection funnel, in
+   * `[0, 1]`; `null` when the estimate is disabled or has no candidates.
+   */
+  keep_rate: null | number;
+  /** Number of `(market, slice)` eligibility trials backing `keep_rate`. */
+  keep_rate_sample_size: number;
 }
 
 /** `GET /research/training-datasets/{id}` / build result. */
@@ -186,6 +219,8 @@ export interface TrainModelRequest {
   /** Rolling validation folds (`2..=20`, defaults to 3 server-side). */
   validation_folds?: number;
   reason: string;
+  /** Pre-assigned by the job engine on async enqueue; omit on direct calls. */
+  model_version_id?: UuidString;
 }
 
 /** Model-spec catalog projection (the dataset/training selector source). */
@@ -306,6 +341,8 @@ export interface RunBacktestRequest {
   /** When set, run pair mode: replay this baseline and persist a comparison. */
   comparison_model_version_id?: UuidString;
   reason: string;
+  /** Pre-assigned candidate report id on async enqueue; omit on direct calls. */
+  backtest_report_id?: UuidString;
 }
 
 /** Filter + pagination for `GET /research/backtest-reports`. */
@@ -394,6 +431,75 @@ export interface QualityGateReportView {
 export interface QualityGatePreviewQuery {
   intent?: GatePreviewIntent;
   backtest_report_id?: UuidString;
+}
+
+// ── Research jobs (async long-task engine) ──────────────────────────────────
+
+/** Live progress snapshot (phase + processed/total). */
+export interface ResearchJobProgress {
+  phase: string;
+  processed: number;
+  total?: null | number;
+}
+
+/** Stable machine code recorded on a research job's failure (mirrors Rust `ResearchJobErrorCode`). */
+export type ResearchJobErrorCode =
+  | 'cancelled'
+  | 'execution_failed'
+  | 'interrupted_by_restart'
+  | 'interrupted_exceeded_attempts';
+
+/** Structured failure payload recorded on a terminal `failed` job. */
+export interface ResearchJobError {
+  code: ResearchJobErrorCode;
+  message: string;
+}
+
+/** `GET /research/jobs/{id}` / enqueue result — one durable research job. */
+export interface ResearchJobView {
+  job_id: UuidString;
+  kind: ResearchJobKind;
+  status: ResearchJobStatus;
+  model_spec_id?: null | string;
+  runtime_config_version_id?: null | UuidString;
+  /** Frozen request body (detail drawer / retry preview). */
+  params: Record<string, unknown>;
+  progress?: null | ResearchJobProgress;
+  /** Completion fraction in `[0, 1]` when a positive total is known. */
+  progress_pct?: null | number;
+  /** Terminal result id (dataset / model version / backtest report). */
+  result_ref?: null | UuidString;
+  error?: null | ResearchJobError;
+  coverage_json?: DatasetCoverage | null;
+  requested_by?: null | string;
+  acting_role: string;
+  parent_job_id?: null | UuidString;
+  /** Automatic crash-recovery re-queues so far. */
+  recovery_attempt: number;
+  max_recovery_attempts: number;
+  lease_expires_at?: IsoDateTime | null;
+  started_at?: IsoDateTime | null;
+  finished_at?: IsoDateTime | null;
+  heartbeat_at?: IsoDateTime | null;
+  created_at: IsoDateTime;
+  updated_at: IsoDateTime;
+}
+
+/** Filter + pagination for `GET /research/jobs`. */
+export interface ResearchJobListQuery extends PageQuery, TimeRangeQuery {
+  kind?: ResearchJobKind;
+  status?: ResearchJobStatus;
+  model_spec_id?: string;
+}
+
+/** `POST /research/jobs/{id}/cancel` governed request body. */
+export interface CancelResearchJobRequest {
+  reason: string;
+}
+
+/** `POST /research/jobs/{id}/retry` governed request body. */
+export interface RetryResearchJobRequest {
+  reason: string;
 }
 
 // ── Factor definitions ──────────────────────────────────────────────────────

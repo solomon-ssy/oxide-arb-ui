@@ -114,21 +114,20 @@ async function runPlan(
   );
 }
 
-/** Governed build; on success refreshes the grid and opens the detail drawer. */
+/** Governed build; enqueues an async job and hands off to the task center. */
 async function runBuild(body: DatasetFormBody): Promise<boolean> {
-  const dataset = await governed(
+  const job = await governed(
     (ctx) => buildTrainingDataset({ ...body, reason: ctx.reason }, ctx),
     {
       summary: $t('page.research.datasets.build.summary'),
       title: $t('page.research.datasets.build.title'),
     },
   );
-  if (!dataset) {
+  if (!job) {
     return false;
   }
   message.success($t('page.research.datasets.build.feedback'));
-  void gridApi.query();
-  drawerApi.setData({ dataset }).open();
+  void router.push(`/research/jobs?open=${job.job_id}`);
   return true;
 }
 

@@ -23,6 +23,8 @@ import {
   RECOMMENDATION_REPORT_STATUSES,
   RECOMMENDATION_STATUSES,
   RECONCILIATION_RESULTS,
+  RESEARCH_JOB_KINDS,
+  RESEARCH_JOB_STATUSES,
   RESOURCE_TYPES,
   RUNTIME_CONFIG_ACTIVATION_KINDS,
   RUNTIME_CONFIG_VERSION_SOURCES,
@@ -464,6 +466,34 @@ export function useFactorScopeTagOptions() {
       [FACTOR_DEFINITION_SCOPES.domainSports]: 'success',
       [FACTOR_DEFINITION_SCOPES.domainWeather]: 'blue',
       [FACTOR_DEFINITION_SCOPES.generic]: 'geekblue',
+    },
+  );
+}
+
+/** Research-job lifecycle status tags. */
+export function useResearchJobStatusTagOptions() {
+  return buildTagOptions(
+    Object.values(RESEARCH_JOB_STATUSES),
+    (value) => $t(`enum.researchJobStatus.${value}`),
+    {
+      [RESEARCH_JOB_STATUSES.cancelled]: 'volcano',
+      [RESEARCH_JOB_STATUSES.failed]: 'error',
+      [RESEARCH_JOB_STATUSES.queued]: 'geekblue',
+      [RESEARCH_JOB_STATUSES.running]: 'processing',
+      [RESEARCH_JOB_STATUSES.succeeded]: 'success',
+    },
+  );
+}
+
+/** Research-job kind tags. */
+export function useResearchJobKindTagOptions() {
+  return buildTagOptions(
+    Object.values(RESEARCH_JOB_KINDS),
+    (value) => $t(`enum.researchJobKind.${value}`),
+    {
+      [RESEARCH_JOB_KINDS.backtest]: 'geekblue',
+      [RESEARCH_JOB_KINDS.datasetBuild]: 'cyan',
+      [RESEARCH_JOB_KINDS.modelTrain]: 'purple',
     },
   );
 }

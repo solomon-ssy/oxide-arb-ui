@@ -16,6 +16,7 @@ const PATH_KEY_ROUTE_NAMES = new Set([
   'research-backtests',
   'research-datasets',
   'research-factors',
+  'research-jobs',
   'research-models',
 ]);
 

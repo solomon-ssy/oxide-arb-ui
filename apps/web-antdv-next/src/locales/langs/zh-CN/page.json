@@ -37,6 +37,7 @@
     "researchDatasets": "训练数据集",
     "researchModels": "模型",
     "researchBacktests": "回测",
+    "researchJobs": "任务中心",
     "researchFactors": "因子",
     "researchComparisonDetail": "对比报告",
     "runtimeConfig": "运行配置",
@@ -46,6 +47,65 @@
     "operationLog": "操作日志"
   },
   "research": {
+    "jobs": {
+      "listTitle": "任务中心",
+      "columns": {
+        "jobId": "任务 ID",
+        "kind": "类型",
+        "status": "状态",
+        "progress": "进度",
+        "submittedBy": "提交角色",
+        "createdAt": "创建时间",
+        "finishedAt": "结束时间",
+        "result": "结果",
+        "operation": "操作"
+      },
+      "filters": {
+        "kind": "类型",
+        "status": "状态",
+        "createdAt": "创建时间"
+      },
+      "actions": {
+        "detail": "详情",
+        "cancel": "取消",
+        "retry": "重试",
+        "openResult": "查看结果"
+      },
+      "progress": {
+        "queued": "排队中",
+        "pending": "等待开始",
+        "phase": "阶段"
+      },
+      "recovery": {
+        "badge": "已自动重排 {count} 次",
+        "hint": "该任务曾因服务中断被自动重排"
+      },
+      "detail": {
+        "title": "任务详情",
+        "params": "请求参数",
+        "progress": "实时进度",
+        "coverage": "覆盖率诊断",
+        "error": "失败信息",
+        "lineage": "重试来源",
+        "recoveryAttempt": "自动重排次数",
+        "maxRecoveryAttempts": "最大自动重排",
+        "leaseExpiresAt": "租约到期",
+        "heartbeatAt": "最近心跳",
+        "startedAt": "开始时间",
+        "acting": "提交角色"
+      },
+      "cancel": {
+        "title": "取消任务",
+        "summary": "取消该研究任务。排队中的任务立即终止；运行中的任务将协作式停止。",
+        "confirmWord": "CANCEL",
+        "feedback": "已请求取消"
+      },
+      "retry": {
+        "title": "重试任务",
+        "summary": "以相同的冻结参数重新入队一个新任务（记录重试来源）。",
+        "feedback": "已重新入队"
+      }
+    },
     "datasets": {
       "listTitle": "训练数据集",
       "columns": {
@@ -76,7 +136,11 @@
         "summary": "试算样本网格；不写入产物或台账行。",
         "feedback": "试算完成：预计 {samples} 个样本。",
         "reviewSummary": "确认试算结果后，将复用此数据集 ID 进行构建。",
-        "plannedSamples": "预计样本数",
+        "plannedSamples": "预计样本数（上界）",
+        "spineUpperBound": "历史样本上界",
+        "estimatedEligible": "预计可用样本（PIT 选择后）",
+        "keepRateHint": "按时点选择漏斗采样估计，保留率约 {rate}%（样本 {n} 次）",
+        "hardCapExceeded": "样本量超出硬上限，请收窄时间窗口、增大采样间隔或缩小市场选择范围后再构建。",
         "datasetId": "数据集 ID",
         "backToForm": "返回修改",
         "confirmBuild": "开始构建",

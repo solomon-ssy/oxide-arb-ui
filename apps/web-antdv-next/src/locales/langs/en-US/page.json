@@ -37,6 +37,7 @@
     "researchDatasets": "Training Datasets",
     "researchModels": "Models",
     "researchBacktests": "Backtests",
+    "researchJobs": "Task Center",
     "researchFactors": "Factors",
     "researchComparisonDetail": "Comparison Report",
     "runtimeConfig": "Runtime Config",
@@ -46,6 +47,65 @@
     "operationLog": "Operation Log"
   },
   "research": {
+    "jobs": {
+      "listTitle": "Task Center",
+      "columns": {
+        "jobId": "Job ID",
+        "kind": "Kind",
+        "status": "Status",
+        "progress": "Progress",
+        "submittedBy": "Acting role",
+        "createdAt": "Created",
+        "finishedAt": "Finished",
+        "result": "Result",
+        "operation": "Actions"
+      },
+      "filters": {
+        "kind": "Kind",
+        "status": "Status",
+        "createdAt": "Created"
+      },
+      "actions": {
+        "detail": "Detail",
+        "cancel": "Cancel",
+        "retry": "Retry",
+        "openResult": "Open result"
+      },
+      "progress": {
+        "queued": "Queued",
+        "pending": "Pending start",
+        "phase": "Phase"
+      },
+      "recovery": {
+        "badge": "Auto-requeued {count}x",
+        "hint": "This job was auto-requeued after a service interruption"
+      },
+      "detail": {
+        "title": "Job Detail",
+        "params": "Request params",
+        "progress": "Live progress",
+        "coverage": "Coverage diagnostics",
+        "error": "Failure",
+        "lineage": "Retried from",
+        "recoveryAttempt": "Auto-recovery attempts",
+        "maxRecoveryAttempts": "Max auto-recovery",
+        "leaseExpiresAt": "Lease expires",
+        "heartbeatAt": "Last heartbeat",
+        "startedAt": "Started",
+        "acting": "Acting role"
+      },
+      "cancel": {
+        "title": "Cancel job",
+        "summary": "Cancel this research job. A queued job stops immediately; a running job stops cooperatively.",
+        "confirmWord": "CANCEL",
+        "feedback": "Cancellation requested"
+      },
+      "retry": {
+        "title": "Retry job",
+        "summary": "Re-enqueue a fresh job with the same frozen params (records retry lineage).",
+        "feedback": "Re-enqueued"
+      }
+    },
     "datasets": {
       "listTitle": "Training Datasets",
       "columns": {
@@ -76,7 +136,11 @@
         "summary": "Dry-run the sample grid; no artifact or ledger row is written.",
         "feedback": "Plan complete: {samples} planned samples.",
         "reviewSummary": "Review the dry-run result, then build reusing this dataset id.",
-        "plannedSamples": "Planned Samples",
+        "plannedSamples": "Planned Samples (upper bound)",
+        "spineUpperBound": "Historical spine upper bound",
+        "estimatedEligible": "Estimated eligible samples (after PIT selection)",
+        "keepRateHint": "Sampled point-in-time keep-rate ≈ {rate}% (n={n})",
+        "hardCapExceeded": "Sample count exceeds the hard cap — narrow the window, widen the interval, or scope the selection before building.",
         "datasetId": "Dataset ID",
         "backToForm": "Back",
         "confirmBuild": "Build dataset",

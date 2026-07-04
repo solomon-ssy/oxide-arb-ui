@@ -166,8 +166,7 @@ async function submitTrain(body: TrainModelBody): Promise<boolean> {
   );
   if (result) {
     message.success($t('page.research.models.train.feedback'));
-    void gridApi.query();
-    drawerApi.setData({ model: result }).open();
+    void router.push(`/research/jobs?open=${result.job_id}`);
     return true;
   }
   return false;
@@ -198,7 +197,7 @@ async function submitBacktest(
   );
   if (result) {
     message.success($t('page.research.models.backtest.feedback'));
-    await router.push(`/research/backtests?open=${result.backtest_report_id}`);
+    await router.push(`/research/jobs?open=${result.job_id}`);
     return true;
   }
   return false;

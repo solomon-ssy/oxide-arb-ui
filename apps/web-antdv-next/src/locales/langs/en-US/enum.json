@@ -313,6 +313,18 @@
     "failed": "Failed",
     "cancelled": "Cancelled"
   },
+  "researchJobStatus": {
+    "queued": "Queued",
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "researchJobKind": {
+    "dataset_build": "Dataset build",
+    "model_train": "Model train",
+    "backtest": "Backtest"
+  },
   "operationCategory": {
     "auth": "Auth",
     "rbac": "RBAC",

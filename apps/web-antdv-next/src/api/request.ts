@@ -85,7 +85,9 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     defaultResponseInterceptor({
       codeField: 'code',
       dataField: 'data',
-      successCode: 200,
+      // Async research enqueue endpoints return HTTP 202 (`code: 202`); treat any
+      // 2xx envelope as success so governed POST handoffs do not fail client-side.
+      successCode: (code: number) => code >= 200 && code < 300,
     }),
   );
 
@@ -110,6 +112,10 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
 
 export const requestClient = createRequestClient(apiURL, {
   responseReturn: 'data',
+  // Long-running research work is async (job engine); admin requests are all
+  // fast enqueue/poll/list calls. A 30s ceiling absorbs slower list/aggregate
+  // reads without the old 10s default aborting them mid-flight.
+  timeout: 30_000,
 });
 
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });

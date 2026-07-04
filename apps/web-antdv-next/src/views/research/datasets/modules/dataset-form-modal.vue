@@ -12,6 +12,7 @@ import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import {
+  Alert,
   DatePicker,
   Descriptions,
   DescriptionsItem,
@@ -184,6 +185,10 @@ const [Modal, modalApi] = useVbenModal({
       if (!body || !datasetId) {
         return;
       }
+      if (planResult.value?.hard_cap_exceeded) {
+        message.warning($t('page.research.datasets.plan.hardCapExceeded'));
+        return;
+      }
       await submitBuild({ ...body, training_dataset_id: datasetId });
       return;
     }
@@ -239,11 +244,40 @@ const [Modal, modalApi] = useVbenModal({
       <p class="text-muted-foreground text-sm">
         {{ $t('page.research.datasets.plan.reviewSummary') }}
       </p>
+      <Alert
+        v-if="planResult.hard_cap_exceeded"
+        type="warning"
+        show-icon
+        :message="$t('page.research.datasets.plan.hardCapExceeded')"
+      />
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem
           :label="$t('page.research.datasets.plan.plannedSamples')"
         >
           <span class="tabular-nums">{{ planResult.planned_samples }}</span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.datasets.plan.spineUpperBound')"
+        >
+          <span class="tabular-nums">{{ planResult.spine_upper_bound }}</span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.datasets.plan.estimatedEligible')"
+        >
+          <span class="tabular-nums">
+            {{ planResult.estimated_eligible_samples }}
+          </span>
+          <span
+            v-if="planResult.keep_rate !== null"
+            class="text-muted-foreground ml-2 text-xs"
+          >
+            {{
+              $t('page.research.datasets.plan.keepRateHint', {
+                rate: (planResult.keep_rate * 100).toFixed(1),
+                n: planResult.keep_rate_sample_size,
+              })
+            }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.research.datasets.plan.datasetId')">
           <span class="font-mono text-xs break-all">

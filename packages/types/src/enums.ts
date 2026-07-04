@@ -599,6 +599,41 @@ export const MATERIALIZATION_RUN_KINDS = {
 
 export type MaterializationRunKind = WireEnum<typeof MATERIALIZATION_RUN_KINDS>;
 
+/** Durable research-job kind (mirrors Rust `ResearchJobKind`). */
+export const RESEARCH_JOB_KINDS = {
+  backtest: 'backtest',
+  datasetBuild: 'dataset_build',
+  modelTrain: 'model_train',
+} as const;
+
+export type ResearchJobKind = WireEnum<typeof RESEARCH_JOB_KINDS>;
+
+/** Durable research-job lifecycle state (mirrors Rust `ResearchJobStatus`). */
+export const RESEARCH_JOB_STATUSES = {
+  cancelled: 'cancelled',
+  failed: 'failed',
+  queued: 'queued',
+  running: 'running',
+  succeeded: 'succeeded',
+} as const;
+
+export type ResearchJobStatus = WireEnum<typeof RESEARCH_JOB_STATUSES>;
+
+/** Whether a job is still pending/executing (occupies a slot; cancellable). */
+export function isActiveResearchJobStatus(status: ResearchJobStatus): boolean {
+  return (
+    status === RESEARCH_JOB_STATUSES.queued ||
+    status === RESEARCH_JOB_STATUSES.running
+  );
+}
+
+/** Whether a job has reached a terminal state (retryable). */
+export function isTerminalResearchJobStatus(
+  status: ResearchJobStatus,
+): boolean {
+  return !isActiveResearchJobStatus(status);
+}
+
 /** Training-dataset build lifecycle (mirrors Rust `TrainingDatasetStatus`). */
 export const TRAINING_DATASET_STATUSES = {
   building: 'building',
