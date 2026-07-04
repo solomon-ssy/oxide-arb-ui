@@ -182,6 +182,25 @@
         "coverage": "构建覆盖率"
       }
     },
+    "modelSpecs": {
+      "actions": {
+        "create": "新建模型规格"
+      },
+      "create": {
+        "title": "新建模型规格",
+        "summary": "模型规格是离线研究生命周期的起点：声明模型族、预测地平线与特征/标签 Schema 版本；随后据此规划训练数据集、训练版本。规格以草稿状态创建。",
+        "name": "名称",
+        "namePlaceholder": "如 buy-weighted-baseline",
+        "modelFamily": "模型族",
+        "predictionHorizonSecs": "预测地平线（秒）",
+        "featureSchemaVersion": "特征 Schema 版本",
+        "labelSchemaVersion": "标签 Schema 版本",
+        "specJson": "规格元数据（JSON）",
+        "specJsonHelp": "可选自由 JSON（作者备注、调参意图），默认 {}。",
+        "incomplete": "请填写名称，且预测地平线需 ≥ 1。",
+        "feedback": "模型规格已创建。"
+      }
+    },
     "models": {
       "listTitle": "已训练模型",
       "columns": {
@@ -362,6 +381,19 @@
         "title": "下线因子",
         "summary": "下线因子定义 {name}。",
         "feedback": "因子已下线。"
+      },
+      "register": {
+        "action": "注册启用因子",
+        "title": "注册启用因子",
+        "summary": "把当前运行配置启用的因子集幂等登记为草稿（保留已注册因子的发布状态）。这是让线上报告可用的引导第一步。",
+        "feedback": "已注册 {count} 个因子定义。"
+      },
+      "publishBatch": {
+        "action": "发布全部草稿",
+        "title": "批量发布因子",
+        "summary": "把 {count} 个草稿因子定义一并发布。",
+        "empty": "没有待发布的草稿因子定义。",
+        "feedback": "已发布 {count} 个因子定义。"
       },
       "detail": {
         "title": "因子定义",

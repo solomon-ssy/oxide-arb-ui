@@ -182,6 +182,25 @@
         "coverage": "Build Coverage"
       }
     },
+    "modelSpecs": {
+      "actions": {
+        "create": "New model spec"
+      },
+      "create": {
+        "title": "New model spec",
+        "summary": "A model spec is the root of the offline research lifecycle: declare the model family, prediction horizon, and feature/label schema versions the downstream dataset build and training runs bind to. Created as a draft.",
+        "name": "Name",
+        "namePlaceholder": "e.g. buy-weighted-baseline",
+        "modelFamily": "Model family",
+        "predictionHorizonSecs": "Prediction horizon (secs)",
+        "featureSchemaVersion": "Feature schema version",
+        "labelSchemaVersion": "Label schema version",
+        "specJson": "Spec metadata (JSON)",
+        "specJsonHelp": "Optional free-form JSON (authoring notes, tuning intent); defaults to {}.",
+        "incomplete": "Provide a name; prediction horizon must be >= 1.",
+        "feedback": "Model spec created."
+      }
+    },
     "models": {
       "listTitle": "Trained Models",
       "columns": {
@@ -362,6 +381,19 @@
         "title": "Retire factor",
         "summary": "Retire factor definition {name}.",
         "feedback": "Factor retired."
+      },
+      "register": {
+        "action": "Register enabled factors",
+        "title": "Register enabled factors",
+        "summary": "Idempotently register the enabled factor set (from the active runtime config) as Draft, preserving the status of already-registered definitions. This is the first bootstrap step toward a working live report.",
+        "feedback": "Registered {count} factor definitions."
+      },
+      "publishBatch": {
+        "action": "Publish all drafts",
+        "title": "Publish factors",
+        "summary": "Publish {count} draft factor definitions in one action.",
+        "empty": "No draft factor definitions to publish.",
+        "feedback": "Published {count} factor definitions."
       },
       "detail": {
         "title": "Factor Definition",

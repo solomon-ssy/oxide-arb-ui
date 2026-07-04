@@ -223,15 +223,40 @@ export interface TrainModelRequest {
   model_version_id?: UuidString;
 }
 
+/** Model family taxonomy (canonical wire labels of `qp_model_family`). */
+export type ModelFamily =
+  | 'classical_elastic_net'
+  | 'classical_extra_trees'
+  | 'classical_lasso'
+  | 'classical_logistic_regression'
+  | 'classical_random_forest'
+  | 'classical_ridge'
+  | 'hold_vs_exit_weighted'
+  | 'weighted_factor';
+
 /** Model-spec catalog projection (the dataset/training selector source). */
 export interface QuantModelSpecView {
   model_spec_id: string;
   name: string;
   model_family: string;
   prediction_horizon_secs: number;
+  feature_schema_version: number;
+  label_schema_version: number;
+  spec_json: unknown;
   status: PublicationStatus;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
+}
+
+/** `POST /research/model-specs` governed request body (mirrors Rust `CreateModelSpecRequest`). */
+export interface CreateModelSpecRequest {
+  name: string;
+  model_family: ModelFamily;
+  prediction_horizon_secs: number;
+  feature_schema_version?: number;
+  label_schema_version?: number;
+  spec_json?: unknown;
+  reason: string;
 }
 
 /** Filter + pagination for `GET /research/model-specs`. */
@@ -573,5 +598,16 @@ export interface PublishFactorRequest {
 
 /** `POST /research/factors/{id}/retire` governed request body. */
 export interface RetireFactorRequest {
+  reason: string;
+}
+
+/** `POST /research/factors/register` governed request body. */
+export interface RegisterFactorDefinitionsRequest {
+  reason: string;
+}
+
+/** `POST /research/factors/publish-batch` governed request body. */
+export interface PublishFactorsBatchRequest {
+  factor_definition_ids: UuidString[];
   reason: string;
 }

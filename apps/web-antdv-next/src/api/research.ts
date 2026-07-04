@@ -3,6 +3,7 @@ import type {
   BacktestReportView,
   BuildTrainingDatasetRequest,
   ComparisonReportListQuery,
+  CreateModelSpecRequest,
   FactorCollinearityQuery,
   FactorCollinearityView,
   FactorDefinitionListQuery,
@@ -12,10 +13,12 @@ import type {
   ModelVersionListQuery,
   Paginated,
   PublishFactorRequest,
+  PublishFactorsBatchRequest,
   PublishModelRequest,
   QualityGatePreviewQuery,
   QualityGateReportView,
   QuantModelSpecView,
+  RegisterFactorDefinitionsRequest,
   ResearchJobListQuery,
   ResearchJobView,
   RetireFactorRequest,
@@ -42,6 +45,7 @@ export namespace ResearchApi {
   export const buildTrainingDataset = '/research/training-datasets/build';
   export const models = '/research/models';
   export const modelSpecs = '/research/model-specs';
+  export const modelSpec = (id: string) => `/research/model-specs/${id}`;
   export const trainModel = '/research/models/train';
   export const model = (id: string) => `/research/models/${id}`;
   export const modelQualityGate = (id: string) =>
@@ -59,6 +63,8 @@ export namespace ResearchApi {
   export const comparisonReport = (id: string) =>
     `/research/comparison-reports/${id}`;
   export const factors = '/research/factors';
+  export const registerFactors = '/research/factors/register';
+  export const publishFactorsBatch = '/research/factors/publish-batch';
   export const factorCollinearity = '/research/factors/collinearity';
   export const factor = (id: string) => `/research/factors/${id}`;
   export const publishFactor = (id: string) =>
@@ -93,6 +99,19 @@ export async function listModelSpecs(query: ModelSpecListQuery = {}) {
     ResearchApi.modelSpecs,
     { params: query },
   );
+}
+
+/** `GET /research/model-specs/{id}` — single model-spec row (detail drawer). */
+export async function getModelSpec(id: string) {
+  return requestClient.get<QuantModelSpecView>(ResearchApi.modelSpec(id));
+}
+
+/** `POST /research/model-specs` — governed model-spec authoring. */
+export async function createModelSpec(
+  body: CreateModelSpecRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<QuantModelSpecView>(ResearchApi.modelSpecs, body, ctx);
 }
 
 /** `GET /research/models` — paginated trained-model registry catalog. */
@@ -306,6 +325,30 @@ export async function retireFactor(
 ) {
   return governedPost<FactorDefinitionView>(
     ResearchApi.retireFactor(id),
+    body,
+    ctx,
+  );
+}
+
+/** `POST /research/factors/register` — governed register of enabled definitions. */
+export async function registerFactorDefinitions(
+  body: RegisterFactorDefinitionsRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<FactorDefinitionView[]>(
+    ResearchApi.registerFactors,
+    body,
+    ctx,
+  );
+}
+
+/** `POST /research/factors/publish-batch` — governed batch publish. */
+export async function publishFactorsBatch(
+  body: PublishFactorsBatchRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<FactorDefinitionView[]>(
+    ResearchApi.publishFactorsBatch,
     body,
     ctx,
   );
