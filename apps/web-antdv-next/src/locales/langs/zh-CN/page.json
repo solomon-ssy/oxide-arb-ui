@@ -27,6 +27,7 @@
     "quantReports": "推荐报告",
     "reportDetail": "报告详情",
     "recommendationDetail": "推荐详情",
+    "structuralMonitor": "Neg-risk 监控",
     "orderIntents": "订单意图",
     "orderIntentDetail": "意图详情",
     "executionOrders": "执行订单",
@@ -40,6 +41,7 @@
     "researchBacktests": "回测",
     "researchJobs": "任务中心",
     "researchFactors": "因子",
+    "researchBiasTables": "偏差表",
     "researchComparisonDetail": "对比报告",
     "runtimeConfig": "运行配置",
     "users": "用户",
@@ -1552,6 +1554,8 @@
     "factors": {
       "empty": "无因子拆解。",
       "indeterminateHint": "该因子无可用截面，因此没有分数且不参与贡献（绝不伪造中性值）。",
+      "notApplicableLabel": "—（不适用）",
+      "missingInputLabel": "—（数据缺失）",
       "columns": {
         "name": "因子",
         "family": "族",

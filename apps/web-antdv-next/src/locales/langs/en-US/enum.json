@@ -140,30 +140,29 @@
   "factorIndeterminateReason": {
     "cross_section_too_small": "Cross-section too small",
     "zero_variance": "Zero variance",
-    "no_history": "No history"
+    "no_history": "No history",
+    "leg_book_missing": "Neg-risk leg book missing"
+  },
+  "factorValueState": {
+    "scored": "Scored",
+    "missing_input": "Missing input",
+    "not_applicable": "Not applicable",
+    "indeterminate": "Indeterminate"
   },
   "factorFamily": {
     "activity": "Activity",
     "data_quality": "Data Quality",
-    "domain_crypto": "Domain: Crypto",
-    "domain_geopolitics": "Domain: Geopolitics",
-    "domain_politics": "Domain: Politics",
-    "domain_sports": "Domain: Sports",
-    "domain_weather": "Domain: Weather",
     "liquidity": "Liquidity",
     "mean_reversion": "Mean Reversion",
     "microstructure": "Microstructure",
     "momentum": "Momentum",
     "resolution": "Resolution",
+    "structural": "Structural",
     "volatility": "Volatility"
   },
   "factorScope": {
-    "domain_crypto": "Domain: Crypto",
-    "domain_geopolitics": "Domain: Geopolitics",
-    "domain_politics": "Domain: Politics",
-    "domain_sports": "Domain: Sports",
-    "domain_weather": "Domain: Weather",
-    "generic": "Generic"
+    "generic": "Generic",
+    "structural": "Structural"
   },
   "trainingDatasetStatus": {
     "planned": "Planned",
@@ -333,7 +332,8 @@
   "researchJobKind": {
     "dataset_build": "Dataset build",
     "model_train": "Model train",
-    "backtest": "Backtest"
+    "backtest": "Backtest",
+    "bias_table_fit": "Bias-table fit"
   },
   "operationCategory": {
     "auth": "Auth",

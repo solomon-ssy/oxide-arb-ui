@@ -140,30 +140,29 @@
   "factorIndeterminateReason": {
     "cross_section_too_small": "截面样本过少",
     "zero_variance": "零方差",
-    "no_history": "无历史"
+    "no_history": "无历史",
+    "leg_book_missing": "Neg-risk 腿订单簿缺失"
+  },
+  "factorValueState": {
+    "scored": "已评分",
+    "missing_input": "输入缺失",
+    "not_applicable": "不适用",
+    "indeterminate": "不确定"
   },
   "factorFamily": {
     "activity": "活跃度",
     "data_quality": "数据质量",
-    "domain_crypto": "领域：加密",
-    "domain_geopolitics": "领域：地缘",
-    "domain_politics": "领域：政治",
-    "domain_sports": "领域：体育",
-    "domain_weather": "领域：天气",
     "liquidity": "流动性",
     "mean_reversion": "均值回归",
     "microstructure": "微观结构",
     "momentum": "动量",
     "resolution": "结算",
+    "structural": "结构性",
     "volatility": "波动率"
   },
   "factorScope": {
-    "domain_crypto": "领域：加密",
-    "domain_geopolitics": "领域：地缘政治",
-    "domain_politics": "领域：政治",
-    "domain_sports": "领域：体育",
-    "domain_weather": "领域：天气",
-    "generic": "通用"
+    "generic": "通用",
+    "structural": "结构性"
   },
   "trainingDatasetStatus": {
     "planned": "已计划",
@@ -333,7 +332,8 @@
   "researchJobKind": {
     "dataset_build": "数据集构建",
     "model_train": "模型训练",
-    "backtest": "回测"
+    "backtest": "回测",
+    "bias_table_fit": "偏差表拟合"
   },
   "operationCategory": {
     "auth": "认证",

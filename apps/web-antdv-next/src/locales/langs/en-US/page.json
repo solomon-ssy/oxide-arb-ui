@@ -27,6 +27,7 @@
     "quantReports": "Reports",
     "reportDetail": "Report Detail",
     "recommendationDetail": "Recommendation Detail",
+    "structuralMonitor": "Neg-risk Monitor",
     "orderIntents": "Order Intents",
     "orderIntentDetail": "Intent Detail",
     "executionOrders": "Execution Orders",
@@ -40,6 +41,7 @@
     "researchBacktests": "Backtests",
     "researchJobs": "Task Center",
     "researchFactors": "Factors",
+    "researchBiasTables": "Bias Tables",
     "researchComparisonDetail": "Comparison Report",
     "runtimeConfig": "Runtime Config",
     "users": "Users",
@@ -1552,6 +1554,8 @@
     "factors": {
       "empty": "No factor breakdown available.",
       "indeterminateHint": "This factor had no usable cross-section, so it produced no score and did not contribute (never a fabricated neutral).",
+      "notApplicableLabel": "— (not applicable)",
+      "missingInputLabel": "— (missing input)",
       "columns": {
         "name": "Factor",
         "family": "Family",

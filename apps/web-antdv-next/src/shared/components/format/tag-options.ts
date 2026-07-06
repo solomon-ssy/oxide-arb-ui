@@ -440,16 +440,12 @@ export function useFactorFamilyTagOptions() {
     {
       [FACTOR_FAMILIES.activity]: 'lime',
       [FACTOR_FAMILIES.dataQuality]: 'geekblue',
-      [FACTOR_FAMILIES.domainCrypto]: 'gold',
-      [FACTOR_FAMILIES.domainGeopolitics]: 'magenta',
-      [FACTOR_FAMILIES.domainPolitics]: 'processing',
-      [FACTOR_FAMILIES.domainSports]: 'success',
-      [FACTOR_FAMILIES.domainWeather]: 'blue',
       [FACTOR_FAMILIES.liquidity]: 'cyan',
       [FACTOR_FAMILIES.meanReversion]: 'purple',
       [FACTOR_FAMILIES.microstructure]: 'geekblue',
       [FACTOR_FAMILIES.momentum]: 'orange',
       [FACTOR_FAMILIES.resolution]: 'volcano',
+      [FACTOR_FAMILIES.structural]: 'gold',
       [FACTOR_FAMILIES.volatility]: 'red',
     },
   );
@@ -479,12 +475,8 @@ export function useFactorScopeTagOptions() {
     Object.values(FACTOR_DEFINITION_SCOPES),
     (value) => $t(`enum.factorScope.${value}`),
     {
-      [FACTOR_DEFINITION_SCOPES.domainCrypto]: 'gold',
-      [FACTOR_DEFINITION_SCOPES.domainGeopolitics]: 'magenta',
-      [FACTOR_DEFINITION_SCOPES.domainPolitics]: 'processing',
-      [FACTOR_DEFINITION_SCOPES.domainSports]: 'success',
-      [FACTOR_DEFINITION_SCOPES.domainWeather]: 'blue',
       [FACTOR_DEFINITION_SCOPES.generic]: 'geekblue',
+      [FACTOR_DEFINITION_SCOPES.structural]: 'gold',
     },
   );
 }
@@ -511,6 +503,7 @@ export function useResearchJobKindTagOptions() {
     (value) => $t(`enum.researchJobKind.${value}`),
     {
       [RESEARCH_JOB_KINDS.backtest]: 'geekblue',
+      [RESEARCH_JOB_KINDS.biasTableFit]: 'gold',
       [RESEARCH_JOB_KINDS.datasetBuild]: 'cyan',
       [RESEARCH_JOB_KINDS.modelTrain]: 'purple',
     },

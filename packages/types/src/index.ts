@@ -25,6 +25,7 @@ export type * from './settlement-redeem';
 export * from './submit-intent-gate';
 export type * from './system';
 export type * from './user';
+export type * from './vertical-alpha';
 // `ws` carries the runtime `WS_CHANNELS` constant, so it is a value export.
 export * from './ws';
 export type * from '@vben-core/typings';

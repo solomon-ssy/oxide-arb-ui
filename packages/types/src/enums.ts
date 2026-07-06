@@ -319,6 +319,7 @@ export type NormalizationSource = WireEnum<typeof NORMALIZATION_SOURCES>;
 /** Why a factor produced no normalized score (never a silent neutral). */
 export const FACTOR_INDETERMINATE_REASONS = {
   crossSectionTooSmall: 'cross_section_too_small',
+  legBookMissing: 'leg_book_missing',
   noHistory: 'no_history',
   zeroVariance: 'zero_variance',
 } as const;
@@ -326,6 +327,16 @@ export const FACTOR_INDETERMINATE_REASONS = {
 export type FactorIndeterminateReason = WireEnum<
   typeof FACTOR_INDETERMINATE_REASONS
 >;
+
+/** Authoritative persisted outcome state for a factor value. */
+export const FACTOR_VALUE_STATES = {
+  scored: 'scored',
+  missingInput: 'missing_input',
+  notApplicable: 'not_applicable',
+  indeterminate: 'indeterminate',
+} as const;
+
+export type FactorValueState = WireEnum<typeof FACTOR_VALUE_STATES>;
 
 /** Position-sizing model that produced a recommendation's size. */
 export const SIZING_MODEL_KINDS = {
@@ -602,6 +613,7 @@ export type MaterializationRunKind = WireEnum<typeof MATERIALIZATION_RUN_KINDS>;
 /** Durable research-job kind (mirrors Rust `ResearchJobKind`). */
 export const RESEARCH_JOB_KINDS = {
   backtest: 'backtest',
+  biasTableFit: 'bias_table_fit',
   datasetBuild: 'dataset_build',
   modelTrain: 'model_train',
 } as const;
@@ -661,16 +673,12 @@ export function isTrainableDatasetStatus(
 export const FACTOR_FAMILIES = {
   activity: 'activity',
   dataQuality: 'data_quality',
-  domainCrypto: 'domain_crypto',
-  domainGeopolitics: 'domain_geopolitics',
-  domainPolitics: 'domain_politics',
-  domainSports: 'domain_sports',
-  domainWeather: 'domain_weather',
   liquidity: 'liquidity',
   meanReversion: 'mean_reversion',
   microstructure: 'microstructure',
   momentum: 'momentum',
   resolution: 'resolution',
+  structural: 'structural',
   volatility: 'volatility',
 } as const;
 
@@ -690,14 +698,10 @@ export const MODEL_FAMILIES = {
 
 export type ModelFamily = WireEnum<typeof MODEL_FAMILIES>;
 
-/** Factor definition scope — generic plane or vertical domain. */
+/** Factor definition scope — generic plane or platform-internal structural. */
 export const FACTOR_DEFINITION_SCOPES = {
-  domainCrypto: 'domain_crypto',
-  domainGeopolitics: 'domain_geopolitics',
-  domainPolitics: 'domain_politics',
-  domainSports: 'domain_sports',
-  domainWeather: 'domain_weather',
   generic: 'generic',
+  structural: 'structural',
 } as const;
 
 export type FactorDefinitionScope = WireEnum<typeof FACTOR_DEFINITION_SCOPES>;

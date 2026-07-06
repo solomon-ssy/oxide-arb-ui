@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { FactorBreakdownEntry } from '@vben/types';
 
+import { FACTOR_VALUE_STATES } from '@vben/types';
+
 import { Empty, Table, Tag, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
@@ -94,7 +96,25 @@ const columns = [
 
 /** A factor without a usable normalized score carries no meaningful confidence. */
 function isScored(record: FactorBreakdownEntry): boolean {
-  return record.normalized_score !== null;
+  return record.value_state === FACTOR_VALUE_STATES.scored;
+}
+
+/** Display label for non-scored normalized column by authoritative state. */
+function unscoredLabel(record: FactorBreakdownEntry): string {
+  switch (record.value_state) {
+    case FACTOR_VALUE_STATES.indeterminate: {
+      return EMPTY_PLACEHOLDER;
+    }
+    case FACTOR_VALUE_STATES.missingInput: {
+      return $t('page.quantRecommendations.factors.missingInputLabel');
+    }
+    case FACTOR_VALUE_STATES.notApplicable: {
+      return $t('page.quantRecommendations.factors.notApplicableLabel');
+    }
+    default: {
+      return EMPTY_PLACEHOLDER;
+    }
+  }
 }
 </script>
 
@@ -130,14 +150,20 @@ function isScored(record: FactorBreakdownEntry): boolean {
       </template>
       <template v-else-if="column.key === 'normalized_score'">
         <span class="font-mono">{{
-          record.normalized_score === null
-            ? EMPTY_PLACEHOLDER
-            : formatPercent(record.normalized_score)
+          isScored(record)
+            ? formatPercent(record.normalized_score!)
+            : unscoredLabel(record)
         }}</span>
       </template>
       <template v-else-if="column.key === 'normalization_source'">
         <Tag v-if="record.normalization_source" color="blue">
           {{ $t(`enum.normalizationSource.${record.normalization_source}`) }}
+        </Tag>
+        <Tag
+          v-else-if="record.value_state === FACTOR_VALUE_STATES.notApplicable"
+          color="default"
+        >
+          {{ $t(`enum.factorValueState.${record.value_state}`) }}
         </Tag>
         <Tooltip
           v-else-if="record.indeterminate_reason"

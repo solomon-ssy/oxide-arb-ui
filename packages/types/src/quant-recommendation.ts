@@ -16,6 +16,7 @@ import type {
   FactorDirection,
   FactorFamily,
   FactorIndeterminateReason,
+  FactorValueState,
   IneligibilityReason,
   MarketCategory,
   MarketStatus,
@@ -116,8 +117,10 @@ export interface RiskEnvelope {
 export interface FactorBreakdownEntry {
   factor_name: string;
   family: FactorFamily;
+  /** Authoritative outcome state — orthogonal to `indeterminate_reason`. */
+  value_state: FactorValueState;
   raw_value: DecimalString | null;
-  /** `null` when the factor was missing-input or indeterminate. */
+  /** `null` when the factor was missing-input, not-applicable, or indeterminate. */
   normalized_score: null | ProbabilityString;
   /** How the score was derived; `null` when missing / indeterminate. */
   normalization_source: NormalizationSource | null;
