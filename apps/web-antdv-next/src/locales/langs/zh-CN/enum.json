@@ -298,6 +298,16 @@
     "failed": "失败",
     "manual_required": "需人工处理"
   },
+  "modelFamily": {
+    "weighted_factor": "加权因子（Buy 排序）",
+    "hold_vs_exit_weighted": "Hold vs Exit（Sell 退出）",
+    "classical_random_forest": "经典：随机森林",
+    "classical_extra_trees": "经典：Extra Trees",
+    "classical_logistic_regression": "经典：逻辑回归",
+    "classical_ridge": "经典：Ridge",
+    "classical_lasso": "经典：Lasso",
+    "classical_elastic_net": "经典：Elastic Net"
+  },
   "publicationStatus": {
     "draft": "草稿",
     "candidate": "候选",

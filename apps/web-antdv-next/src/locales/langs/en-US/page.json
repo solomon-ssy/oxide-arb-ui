@@ -35,7 +35,8 @@
     "settlementRedeems": "Settlement Redeems",
     "account": "Account",
     "researchDatasets": "Training Datasets",
-    "researchModels": "Models",
+    "researchModelSpecs": "Model Specs",
+    "researchModels": "Trained Models",
     "researchBacktests": "Backtests",
     "researchJobs": "Task Center",
     "researchFactors": "Factors",
@@ -183,8 +184,24 @@
       }
     },
     "modelSpecs": {
+      "listTitle": "Model Specs",
       "actions": {
-        "create": "New model spec"
+        "create": "New model spec",
+        "detail": "Details"
+      },
+      "columns": {
+        "specId": "Spec ID",
+        "name": "Name",
+        "modelFamily": "Model family",
+        "status": "Status",
+        "predictionHorizon": "Prediction horizon",
+        "schemaVersions": "Schema versions",
+        "createdAt": "Created",
+        "operation": "Actions"
+      },
+      "filters": {
+        "modelFamily": "Model family",
+        "status": "Status"
       },
       "create": {
         "title": "New model spec",
@@ -198,7 +215,21 @@
         "specJson": "Spec metadata (JSON)",
         "specJsonHelp": "Optional free-form JSON (authoring notes, tuning intent); defaults to an empty object.",
         "incomplete": "Provide a name; prediction horizon must be >= 1.",
-        "feedback": "Model spec created."
+        "duplicateName": "Name \"{name}\" already exists — choose another or open the existing spec.",
+        "feedback": "Model spec created.",
+        "feedbackNamed": "Model spec \"{name}\" created."
+      },
+      "detail": {
+        "title": "Model spec details",
+        "summary": "Overview",
+        "featureSchemaVersion": "Feature schema version",
+        "labelSchemaVersion": "Label schema version",
+        "updatedAt": "Updated",
+        "specJson": "Spec metadata",
+        "nextSteps": "Next steps",
+        "nextStepsHelp": "After authoring a spec, build a training dataset, then train a model version.",
+        "buildDataset": "Build training dataset",
+        "viewTrainedModels": "View trained models"
       }
     },
     "models": {

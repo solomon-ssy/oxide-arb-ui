@@ -13,6 +13,7 @@ import type {
   FactorFamily,
   FactorNormalization,
   MarketCategory,
+  ModelFamily,
   PublicationStatus,
   ResearchJobKind,
   ResearchJobStatus,
@@ -224,15 +225,7 @@ export interface TrainModelRequest {
 }
 
 /** Model family taxonomy (canonical wire labels of `qp_model_family`). */
-export type ModelFamily =
-  | 'classical_elastic_net'
-  | 'classical_extra_trees'
-  | 'classical_lasso'
-  | 'classical_logistic_regression'
-  | 'classical_random_forest'
-  | 'classical_ridge'
-  | 'hold_vs_exit_weighted'
-  | 'weighted_factor';
+export type { ModelFamily } from './enums';
 
 /** Model-spec catalog projection (the dataset/training selector source). */
 export interface QuantModelSpecView {
@@ -261,6 +254,7 @@ export interface CreateModelSpecRequest {
 
 /** Filter + pagination for `GET /research/model-specs`. */
 export interface ModelSpecListQuery extends PageQuery {
+  model_family?: ModelFamily;
   status?: PublicationStatus;
 }
 

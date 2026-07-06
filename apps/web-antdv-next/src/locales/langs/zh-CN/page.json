@@ -35,7 +35,8 @@
     "settlementRedeems": "结算赎回",
     "account": "账户",
     "researchDatasets": "训练数据集",
-    "researchModels": "模型",
+    "researchModelSpecs": "模型规格",
+    "researchModels": "已训练模型",
     "researchBacktests": "回测",
     "researchJobs": "任务中心",
     "researchFactors": "因子",
@@ -183,8 +184,24 @@
       }
     },
     "modelSpecs": {
+      "listTitle": "模型规格",
       "actions": {
-        "create": "新建模型规格"
+        "create": "新建模型规格",
+        "detail": "详情"
+      },
+      "columns": {
+        "specId": "规格 ID",
+        "name": "名称",
+        "modelFamily": "模型族",
+        "status": "状态",
+        "predictionHorizon": "预测地平线",
+        "schemaVersions": "Schema 版本",
+        "createdAt": "创建时间",
+        "operation": "操作"
+      },
+      "filters": {
+        "modelFamily": "模型族",
+        "status": "状态"
       },
       "create": {
         "title": "新建模型规格",
@@ -198,7 +215,21 @@
         "specJson": "规格元数据（JSON）",
         "specJsonHelp": "可选自由 JSON（作者备注、调参意图），默认为空对象。",
         "incomplete": "请填写名称，且预测地平线需 ≥ 1。",
-        "feedback": "模型规格已创建。"
+        "duplicateName": "名称「{name}」已存在，请更换或打开已有规格。",
+        "feedback": "模型规格已创建。",
+        "feedbackNamed": "模型规格「{name}」已创建。"
+      },
+      "detail": {
+        "title": "模型规格详情",
+        "summary": "规格概要",
+        "featureSchemaVersion": "特征 Schema 版本",
+        "labelSchemaVersion": "标签 Schema 版本",
+        "updatedAt": "更新时间",
+        "specJson": "规格元数据",
+        "nextSteps": "下一步",
+        "nextStepsHelp": "规格创建后，通常先构建训练数据集，再训练模型版本。",
+        "buildDataset": "构建训练数据集",
+        "viewTrainedModels": "查看已训练模型"
       }
     },
     "models": {

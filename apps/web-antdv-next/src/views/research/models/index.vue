@@ -2,7 +2,6 @@
 import type { TrainedModelView } from '@vben/types';
 
 import type { BacktestBody } from './modules/model-backtest-modal.vue';
-import type { CreateModelSpecBody } from './modules/model-spec-create-modal.vue';
 import type { TrainModelBody } from './modules/model-train-modal.vue';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
@@ -18,7 +17,6 @@ import { Button, message } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   backtestModel,
-  createModelSpec,
   getModel,
   getModelQualityGate,
   listModels,
@@ -35,7 +33,6 @@ import { useResearchStore } from '#/store';
 
 import ModelBacktestModal from './modules/model-backtest-modal.vue';
 import ModelDetailDrawer from './modules/model-detail-drawer.vue';
-import ModelSpecCreateModal from './modules/model-spec-create-modal.vue';
 import ModelTrainModal from './modules/model-train-modal.vue';
 import {
   useTrainedModelColumns,
@@ -52,7 +49,6 @@ const { hasAccessByCodes } = useQpAccess();
 const researchStore = useResearchStore();
 
 const canTrain = hasAccessByCodes(['materialization:create']);
-const canCreateSpec = hasAccessByCodes(['materialization:create']);
 const access = {
   canBacktest: hasAccessByCodes(['replay:create']),
   canPublish: hasAccessByCodes(['publication:publish']),
@@ -81,9 +77,6 @@ const [TrainModal, trainModalApi] = useVbenModal({
 });
 const [BacktestModal, backtestModalApi] = useVbenModal({
   connectedComponent: ModelBacktestModal,
-});
-const [SpecCreateModal, specCreateModalApi] = useVbenModal({
-  connectedComponent: ModelSpecCreateModal,
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<TrainedModelView>({
@@ -117,30 +110,6 @@ const [Grid, gridApi] = useVbenVxeGrid<TrainedModelView>({
     toolbarConfig: { refresh: { code: 'query' } },
   },
 });
-
-function openCreateSpec() {
-  specCreateModalApi
-    .setData({
-      onSubmit: (body: CreateModelSpecBody) => submitCreateSpec(body),
-    })
-    .open();
-}
-
-async function submitCreateSpec(body: CreateModelSpecBody): Promise<boolean> {
-  const result = await governed(
-    (ctx) => createModelSpec({ ...body, reason: ctx.reason }, ctx),
-    {
-      summary: $t('page.research.modelSpecs.create.summary'),
-      title: $t('page.research.modelSpecs.create.title'),
-    },
-  );
-  if (result) {
-    message.success($t('page.research.modelSpecs.create.feedback'));
-    void gridApi.query();
-    return true;
-  }
-  return false;
-}
 
 function openTrain(trainingDatasetId?: string) {
   trainModalApi
@@ -369,9 +338,6 @@ watch(
   <Page auto-content-height>
     <Grid :table-title="$t('page.research.models.listTitle')">
       <template #toolbar-tools>
-        <Button v-if="canCreateSpec" class="mr-2" @click="openCreateSpec()">
-          {{ $t('page.research.modelSpecs.actions.create') }}
-        </Button>
         <Button v-if="canTrain" type="primary" @click="openTrain()">
           {{ $t('page.research.models.actions.train') }}
         </Button>
@@ -380,6 +346,5 @@ watch(
     <Drawer />
     <TrainModal />
     <BacktestModal />
-    <SpecCreateModal />
   </Page>
 </template>

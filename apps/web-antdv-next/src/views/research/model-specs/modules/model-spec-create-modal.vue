@@ -4,9 +4,12 @@ import type { CreateModelSpecRequest, ModelFamily } from '@vben/types';
 import { ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
+import { useRequestHandler } from '@vben/request/qp';
+import { MODEL_FAMILIES } from '@vben/types';
 
 import { Input, InputNumber, message, Select } from 'antdv-next';
 
+import { listModelSpecs } from '#/api/research';
 import { $t } from '#/locales';
 import InputNumberWithAddon from '#/shared/components/input-number-with-addon.vue';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
@@ -20,27 +23,18 @@ export interface ModelSpecCreatePayload {
   onSubmit: (body: CreateModelSpecBody) => Promise<boolean>;
 }
 
-const FAMILY_OPTIONS: { label: string; value: ModelFamily }[] = [
-  { label: 'weighted_factor (Buy ranker)', value: 'weighted_factor' },
-  {
-    label: 'hold_vs_exit_weighted (Sell/exit)',
-    value: 'hold_vs_exit_weighted',
-  },
-  { label: 'classical_random_forest', value: 'classical_random_forest' },
-  { label: 'classical_extra_trees', value: 'classical_extra_trees' },
-  {
-    label: 'classical_logistic_regression',
-    value: 'classical_logistic_regression',
-  },
-  { label: 'classical_ridge', value: 'classical_ridge' },
-  { label: 'classical_lasso', value: 'classical_lasso' },
-  { label: 'classical_elastic_net', value: 'classical_elastic_net' },
-];
+const FAMILY_OPTIONS = Object.values(MODEL_FAMILIES).map((value) => ({
+  label: $t(`enum.modelFamily.${value}`),
+  value,
+}));
+
+const { handleRequest } = useRequestHandler();
 
 const payload = ref<ModelSpecCreatePayload | null>(null);
+const existingNames = ref<Set<string>>(new Set());
 
 const name = ref<string>('');
-const modelFamily = ref<ModelFamily>('weighted_factor');
+const modelFamily = ref<ModelFamily>(MODEL_FAMILIES.weightedFactor);
 const predictionHorizonSecs = ref<number>(86_400);
 const featureSchemaVersion = ref<number>(1);
 const labelSchemaVersion = ref<number>(1);
@@ -48,18 +42,34 @@ const specJson = ref<unknown>({});
 
 function reset() {
   name.value = '';
-  modelFamily.value = 'weighted_factor';
+  modelFamily.value = MODEL_FAMILIES.weightedFactor;
   predictionHorizonSecs.value = 86_400;
   featureSchemaVersion.value = 1;
   labelSchemaVersion.value = 1;
   specJson.value = {};
 }
 
+async function loadExistingNames() {
+  const page = await handleRequest(() => listModelSpecs({ size: 500 }), {
+    silent: true,
+  });
+  existingNames.value = new Set(
+    (page?.items ?? []).map((row) => row.name.trim().toLowerCase()),
+  );
+}
+
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
   async onConfirm() {
-    if (!name.value.trim() || predictionHorizonSecs.value < 1) {
+    const trimmed = name.value.trim();
+    if (!trimmed || predictionHorizonSecs.value < 1) {
       message.warning($t('page.research.modelSpecs.create.incomplete'));
+      return;
+    }
+    if (existingNames.value.has(trimmed.toLowerCase())) {
+      message.error(
+        $t('page.research.modelSpecs.create.duplicateName', { name: trimmed }),
+      );
       return;
     }
     if (!payload.value) {
@@ -71,7 +81,7 @@ const [Modal, modalApi] = useVbenModal({
         feature_schema_version: featureSchemaVersion.value,
         label_schema_version: labelSchemaVersion.value,
         model_family: modelFamily.value,
-        name: name.value.trim(),
+        name: trimmed,
         prediction_horizon_secs: predictionHorizonSecs.value,
         spec_json: specJson.value ?? {},
       });
@@ -86,6 +96,7 @@ const [Modal, modalApi] = useVbenModal({
     if (isOpen) {
       reset();
       payload.value = modalApi.getData<ModelSpecCreatePayload>();
+      void loadExistingNames();
     }
   },
 });

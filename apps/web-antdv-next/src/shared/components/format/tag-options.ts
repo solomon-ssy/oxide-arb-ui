@@ -9,6 +9,7 @@ import {
   MARKET_CATEGORIES,
   MARKET_STATUSES,
   MATERIALIZATION_RUN_STATUSES,
+  MODEL_FAMILIES,
   OPERATION_CATEGORIES,
   OPERATION_OUTCOMES,
   ORDER_INTENT_KINDS,
@@ -450,6 +451,24 @@ export function useFactorFamilyTagOptions() {
       [FACTOR_FAMILIES.momentum]: 'orange',
       [FACTOR_FAMILIES.resolution]: 'volcano',
       [FACTOR_FAMILIES.volatility]: 'red',
+    },
+  );
+}
+
+/** Model family tags (Buy ranker, exit scorer, classical ML). */
+export function useModelFamilyTagOptions() {
+  return buildTagOptions(
+    Object.values(MODEL_FAMILIES),
+    (value) => $t(`enum.modelFamily.${value}`),
+    {
+      [MODEL_FAMILIES.classicalElasticNet]: 'purple',
+      [MODEL_FAMILIES.classicalExtraTrees]: 'purple',
+      [MODEL_FAMILIES.classicalLasso]: 'purple',
+      [MODEL_FAMILIES.classicalLogisticRegression]: 'purple',
+      [MODEL_FAMILIES.classicalRandomForest]: 'purple',
+      [MODEL_FAMILIES.classicalRidge]: 'purple',
+      [MODEL_FAMILIES.holdVsExitWeighted]: 'orange',
+      [MODEL_FAMILIES.weightedFactor]: 'processing',
     },
   );
 }

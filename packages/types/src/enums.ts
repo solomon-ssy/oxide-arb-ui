@@ -676,6 +676,20 @@ export const FACTOR_FAMILIES = {
 
 export type FactorFamily = WireEnum<typeof FACTOR_FAMILIES>;
 
+/** Model family taxonomy (mirrors Rust `ModelFamily` / `qp_model_family`). */
+export const MODEL_FAMILIES = {
+  classicalElasticNet: 'classical_elastic_net',
+  classicalExtraTrees: 'classical_extra_trees',
+  classicalLasso: 'classical_lasso',
+  classicalLogisticRegression: 'classical_logistic_regression',
+  classicalRandomForest: 'classical_random_forest',
+  classicalRidge: 'classical_ridge',
+  holdVsExitWeighted: 'hold_vs_exit_weighted',
+  weightedFactor: 'weighted_factor',
+} as const;
+
+export type ModelFamily = WireEnum<typeof MODEL_FAMILIES>;
+
 /** Factor definition scope — generic plane or vertical domain. */
 export const FACTOR_DEFINITION_SCOPES = {
   domainCrypto: 'domain_crypto',
