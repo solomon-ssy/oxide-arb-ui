@@ -43,7 +43,17 @@ const imageStyle = computed<CSSProperties>(() => {
 });
 
 const text = computed(() => {
-  return props.alt.slice(-2).toUpperCase();
+  const trimmed = props.alt.trim();
+  if (!trimmed) {
+    return '?';
+  }
+
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return `${words[0]![0]!}${words[1]![0]!}`.toUpperCase();
+  }
+
+  return words[0]!.slice(0, 2).toUpperCase();
 });
 
 const rootStyle = computed(() => {

@@ -70,7 +70,7 @@ const menus = computed(() => [
 ]);
 
 const avatar = computed(() => {
-  return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
+  return userStore.userInfo?.avatar || preferences.app.defaultAvatar;
 });
 
 async function handleLogout() {
@@ -153,6 +153,7 @@ watch(
     <template #user-dropdown>
       <UserDropdown
         :avatar
+        :avatar-alt="preferences.app.name"
         :menus
         :text="userStore.userInfo?.realName"
         :description="userStore.userInfo?.username"

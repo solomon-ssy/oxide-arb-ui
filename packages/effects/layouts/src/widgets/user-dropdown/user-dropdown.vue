@@ -37,6 +37,10 @@ interface Props {
    */
   avatar?: string;
   /**
+   * 头像占位符 alt（默认回退到 text）
+   */
+  avatarAlt?: string;
+  /**
    * @zh_CN 描述
    */
   description?: string;
@@ -73,6 +77,7 @@ defineOptions({
 
 const props = withDefaults(defineProps<Props>(), {
   avatar: '',
+  avatarAlt: '',
   description: '',
   enableShortcutKey: true,
   menus: () => [],
@@ -123,6 +128,8 @@ watch(
 );
 
 const altView = computed(() => (isWindowsOs() ? 'Alt' : '⌥'));
+
+const avatarFallbackAlt = computed(() => props.avatarAlt || props.text);
 
 const enableLogoutShortcutKey = computed(() => {
   return props.enableShortcutKey && globalLogoutShortcutKey.value;
@@ -216,7 +223,12 @@ if (enableShortcutKey.value) {
     <DropdownMenuTrigger ref="refTrigger" :disabled="props.trigger === 'hover'">
       <div class="mr-2 ml-1 cursor-pointer rounded-full p-1.5 hover:bg-accent">
         <div class="flex-center hover:text-accent-foreground">
-          <VbenAvatar :alt="text" :src="avatar" class="size-8" dot />
+          <VbenAvatar
+            :alt="avatarFallbackAlt"
+            :src="avatar"
+            class="size-8"
+            dot
+          />
         </div>
       </div>
     </DropdownMenuTrigger>
@@ -224,7 +236,7 @@ if (enableShortcutKey.value) {
       <div ref="refContent">
         <DropdownMenuLabel class="flex items-center p-3">
           <VbenAvatar
-            :alt="text"
+            :alt="avatarFallbackAlt"
             :src="avatar"
             class="size-12"
             dot
