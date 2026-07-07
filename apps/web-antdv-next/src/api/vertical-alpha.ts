@@ -6,8 +6,11 @@ import type {
   FitBiasTableRequest,
   NegRiskEventDriftView,
   Paginated,
+  ParticipantConcentrationDetailView,
+  ParticipantConcentrationSummaryView,
   ResearchJobView,
   RuntimeConfigVersionView,
+  TradeTapeCoverageView,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
@@ -22,6 +25,11 @@ export namespace VerticalAlphaApi {
   export const activateBiasTable = (id: string) =>
     `/research/bias-tables/${id}/activate`;
   export const negRiskEvents = '/quant/structural/negrisk-events';
+  export const tradeTapeCoverage = '/quant/structural/trade-tape/coverage';
+  export const participantConcentration =
+    '/quant/structural/participant-concentration';
+  export const participantConcentrationMarket = (marketId: string) =>
+    `/quant/structural/participant-concentration/${marketId}`;
 }
 
 /** `GET /research/bias-tables` — paginated favorite-longshot bias-table catalog. */
@@ -70,5 +78,26 @@ export async function activateBiasTable(
 export async function listNegRiskEvents() {
   return requestClient.get<NegRiskEventDriftView[]>(
     VerticalAlphaApi.negRiskEvents,
+  );
+}
+
+/** `GET /quant/structural/trade-tape/coverage` — source coverage and lag. */
+export async function getTradeTapeCoverage() {
+  return requestClient.get<TradeTapeCoverageView>(
+    VerticalAlphaApi.tradeTapeCoverage,
+  );
+}
+
+/** `GET /quant/structural/participant-concentration` — top concentrated markets. */
+export async function getParticipantConcentration() {
+  return requestClient.get<ParticipantConcentrationSummaryView>(
+    VerticalAlphaApi.participantConcentration,
+  );
+}
+
+/** `GET /quant/structural/participant-concentration/{market_id}` — participant detail. */
+export async function getParticipantConcentrationMarket(marketId: string) {
+  return requestClient.get<null | ParticipantConcentrationDetailView>(
+    VerticalAlphaApi.participantConcentrationMarket(marketId),
   );
 }

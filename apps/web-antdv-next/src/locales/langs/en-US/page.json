@@ -27,7 +27,7 @@
     "quantReports": "Reports",
     "reportDetail": "Report Detail",
     "recommendationDetail": "Recommendation Detail",
-    "structuralMonitor": "Neg-risk Monitor",
+    "structuralMonitor": "Structural Alpha",
     "orderIntents": "Order Intents",
     "orderIntentDetail": "Intent Detail",
     "executionOrders": "Execution Orders",
@@ -48,6 +48,96 @@
     "roles": "Roles",
     "menus": "Menus",
     "operationLog": "Operation Log"
+  },
+  "structuralAlpha": {
+    "title": "Structural Alpha",
+    "subtitle": "Trade-tape participant concentration and neg-risk structural drift",
+    "refresh": "Refresh",
+    "tabs": {
+      "concentration": "Participant Concentration",
+      "negrisk": "Neg-risk Drift"
+    },
+    "kpi": {
+      "coverage": "On-chain Tape Coverage",
+      "activeMarkets": "Active Markets",
+      "worstLag": "Worst Lag",
+      "missingMarkets": "Missing Markets"
+    },
+    "coverage": {
+      "title": "On-chain Trade Tape Coverage",
+      "source": "Source",
+      "onChainSource": "On-chain OrderFilled",
+      "pitAsOf": "PIT as-of",
+      "pitCutoff": "Readable through",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "cursors": "Cursors",
+      "marketCursors": "Market cursors",
+      "health": "Cursor health",
+      "bootstrap": "Bootstrap",
+      "catchingUp": "Catching up",
+      "live": "Live",
+      "empty": "Empty",
+      "error": "Error",
+      "window": "Window",
+      "delay": "Delay",
+      "updatedAt": "Updated"
+    },
+    "thresholds": {
+      "minParticipants": "Min participants",
+      "minNotional": "Min notional",
+      "minCoverage": "Min coverage"
+    },
+    "chart": {
+      "title": "Top Concentrated Markets",
+      "cr1Share": "CR1",
+      "hhi": "HHI",
+      "gini": "Gini"
+    },
+    "grid": {
+      "title": "Top Markets",
+      "market": "Market",
+      "trades": "Trades",
+      "participants": "Participants",
+      "notional": "Notional",
+      "coverageRatio": "Coverage",
+      "cr1Share": "CR1",
+      "composite": "Composite",
+      "lag": "Lag",
+      "hhi": "HHI",
+      "gini": "Gini",
+      "status": "Status"
+    },
+    "status": {
+      "scored": "Scored"
+    },
+    "reason": {
+      "trade_tape_unavailable": "Trade tape unavailable",
+      "insufficient_trade_tape": "Insufficient trade tape",
+      "insufficient_role_coverage": "Insufficient role coverage"
+    },
+    "lag": {
+      "blocks": "{n} blocks"
+    },
+    "detail": {
+      "title": "Market Participant Detail",
+      "empty": "No participant detail",
+      "marketId": "Market ID",
+      "participant": "Participant",
+      "role": "Role",
+      "fillParticipant": "Maker",
+      "trades": "Trades",
+      "notional": "Notional",
+      "share": "Share"
+    },
+    "negrisk": {
+      "empty": "No active neg-risk events",
+      "leg": "Leg",
+      "bestAsk": "Best ask",
+      "askSum": "Σ ask",
+      "drift": "Drift",
+      "legs": "legs"
+    }
   },
   "research": {
     "jobs": {

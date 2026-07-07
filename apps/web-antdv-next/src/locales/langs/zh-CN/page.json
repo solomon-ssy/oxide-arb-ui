@@ -27,7 +27,7 @@
     "quantReports": "推荐报告",
     "reportDetail": "报告详情",
     "recommendationDetail": "推荐详情",
-    "structuralMonitor": "Neg-risk 监控",
+    "structuralMonitor": "结构性 Alpha",
     "orderIntents": "订单意图",
     "orderIntentDetail": "意图详情",
     "executionOrders": "执行订单",
@@ -48,6 +48,96 @@
     "roles": "角色",
     "menus": "菜单",
     "operationLog": "操作日志"
+  },
+  "structuralAlpha": {
+    "title": "Structural Alpha",
+    "subtitle": "Trade tape participant concentration 与 neg-risk 结构性漂移监控",
+    "refresh": "刷新",
+    "tabs": {
+      "concentration": "参与者集中度",
+      "negrisk": "Neg-risk 漂移"
+    },
+    "kpi": {
+      "coverage": "链上 Tape 覆盖率",
+      "activeMarkets": "活跃市场",
+      "worstLag": "最大滞后",
+      "missingMarkets": "缺源市场"
+    },
+    "coverage": {
+      "title": "链上 Trade tape 覆盖",
+      "source": "数据源",
+      "onChainSource": "链上 OrderFilled",
+      "pitAsOf": "PIT 截止",
+      "pitCutoff": "可读至",
+      "enabled": "启用",
+      "disabled": "停用",
+      "cursors": "Cursor 数",
+      "marketCursors": "市场 cursor",
+      "health": "Cursor 健康态",
+      "bootstrap": "引导",
+      "catchingUp": "追赶",
+      "live": "实时",
+      "empty": "空窗",
+      "error": "错误",
+      "window": "窗口",
+      "delay": "延迟",
+      "updatedAt": "最近更新"
+    },
+    "thresholds": {
+      "minParticipants": "最少参与者",
+      "minNotional": "最少名义额",
+      "minCoverage": "最少覆盖率"
+    },
+    "chart": {
+      "title": "Top 集中度市场",
+      "cr1Share": "CR1",
+      "hhi": "HHI",
+      "gini": "Gini"
+    },
+    "grid": {
+      "title": "Top markets",
+      "market": "市场",
+      "trades": "成交数",
+      "participants": "参与者",
+      "notional": "名义金额",
+      "coverageRatio": "覆盖率",
+      "cr1Share": "CR1",
+      "composite": "复合分",
+      "lag": "滞后",
+      "hhi": "HHI",
+      "gini": "Gini",
+      "status": "状态"
+    },
+    "status": {
+      "scored": "已评分"
+    },
+    "reason": {
+      "trade_tape_unavailable": "Trade tape 不可用",
+      "insufficient_trade_tape": "Trade tape 样本不足",
+      "insufficient_role_coverage": "角色覆盖不足"
+    },
+    "lag": {
+      "blocks": "{n} 块"
+    },
+    "detail": {
+      "title": "市场参与者明细",
+      "empty": "暂无参与者明细",
+      "marketId": "Market ID",
+      "participant": "参与者",
+      "role": "角色",
+      "fillParticipant": "Maker",
+      "trades": "成交数",
+      "notional": "名义金额",
+      "share": "占比"
+    },
+    "negrisk": {
+      "empty": "暂无活跃 neg-risk 事件",
+      "leg": "Leg",
+      "bestAsk": "Best ask",
+      "askSum": "Σ ask",
+      "drift": "漂移",
+      "legs": "legs"
+    }
   },
   "research": {
     "jobs": {

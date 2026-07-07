@@ -67,7 +67,7 @@ export interface ActivateBiasTableRequest {
   reason: string;
 }
 
-// ── Neg-risk structural monitor (Phase 11.2.1) ──────────────────────────────
+// ── Structural Alpha monitor (Phase 11.2.1+) ────────────────────────────────
 
 /** One YES leg of a neg-risk event with its live best ask. */
 export interface NegRiskLegView {
@@ -86,4 +86,83 @@ export interface NegRiskEventDriftView {
   drift: DecimalString | null;
   legs: NegRiskLegView[];
   as_of: IsoDateTime;
+}
+
+export interface MissingReasonCountView {
+  reason: string;
+  count: number;
+}
+
+export interface TradeTapeSourceHealthView {
+  source: string;
+  enabled: boolean;
+  token_cursor_count: number;
+  bootstrap_count: number;
+  catching_up_count: number;
+  live_count: number;
+  empty_count: number;
+  error_count: number;
+  worst_lag_blocks: null | number;
+  last_updated_at: IsoDateTime | null;
+}
+
+export interface TradeTapeCoverageView {
+  as_of: IsoDateTime;
+  pit_as_of: IsoDateTime;
+  pit_cutoff: IsoDateTime;
+  window_secs: number;
+  source_delay_secs: number;
+  active_market_count: number;
+  token_cursor_count: number;
+  market_cursor_count: number;
+  covered_market_ratio: DecimalString;
+  source_health: TradeTapeSourceHealthView[];
+  missing_reason_breakdown: MissingReasonCountView[];
+}
+
+export interface ParticipantConcentrationMarketView {
+  market_id: string;
+  token_id: string;
+  question: string;
+  pit_as_of: IsoDateTime;
+  pit_cutoff: IsoDateTime;
+  trade_count: null | number;
+  participant_count: null | number;
+  notional_usd: DecimalString | null;
+  coverage_ratio: DecimalString | null;
+  gini: DecimalString | null;
+  hhi: DecimalString | null;
+  cr1_share: DecimalString | null;
+  composite_raw: DecimalString | null;
+  lag_blocks: null | number;
+  missing_reason: null | string;
+}
+
+export interface ParticipantConcentrationSummaryView {
+  as_of: IsoDateTime;
+  pit_as_of: IsoDateTime;
+  pit_cutoff: IsoDateTime;
+  window_secs: number;
+  source_delay_secs: number;
+  min_unique_participants: number;
+  min_notional_usd: DecimalString;
+  min_coverage_ratio: DecimalString;
+  markets: ParticipantConcentrationMarketView[];
+  missing_reason_breakdown: MissingReasonCountView[];
+}
+
+export interface ParticipantConcentrationParticipantView {
+  participant_address: string;
+  participant_role: string;
+  trade_count: number;
+  notional_usd: DecimalString;
+  share: DecimalString;
+}
+
+export interface ParticipantConcentrationDetailView {
+  as_of: IsoDateTime;
+  pit_as_of: IsoDateTime;
+  pit_cutoff: IsoDateTime;
+  market: ParticipantConcentrationMarketView;
+  top_participants: ParticipantConcentrationParticipantView[];
 }
