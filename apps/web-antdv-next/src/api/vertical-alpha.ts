@@ -3,12 +3,19 @@ import type {
   BiasTableDetailView,
   BiasTableListQuery,
   BiasTableSummaryView,
+  DomainSourceCursorView,
   FitBiasTableRequest,
+  LinkageResolveSummaryView,
+  MarketLinkageDetailView,
+  MarketLinkageListQuery,
+  MarketLinkageSummaryView,
   NegRiskEventDriftView,
+  OverrideLinkageRequest,
   Paginated,
   ParticipantConcentrationDetailView,
   ParticipantConcentrationSummaryView,
   ResearchJobView,
+  ResolveLinkagesRequest,
   RuntimeConfigVersionView,
   TradeTapeCoverageView,
 } from '@vben/types';
@@ -30,6 +37,13 @@ export namespace VerticalAlphaApi {
     '/quant/structural/participant-concentration';
   export const participantConcentrationMarket = (marketId: string) =>
     `/quant/structural/participant-concentration/${marketId}`;
+  export const marketLinkages = '/research/market-linkages';
+  export const marketLinkage = (marketId: string) =>
+    `/research/market-linkages/${marketId}`;
+  export const resolveMarketLinkages = '/research/market-linkages/resolve';
+  export const overrideMarketLinkage = (marketId: string) =>
+    `/research/market-linkages/${marketId}/override`;
+  export const domainSources = '/research/domain-sources';
 }
 
 /** `GET /research/bias-tables` — paginated favorite-longshot bias-table catalog. */
@@ -71,6 +85,53 @@ export async function activateBiasTable(
     VerticalAlphaApi.activateBiasTable(id),
     body,
     ctx,
+  );
+}
+
+/** `GET /research/market-linkages` — paginated linkage ledger catalog. */
+export async function listMarketLinkages(query: MarketLinkageListQuery = {}) {
+  return requestClient.get<Paginated<MarketLinkageSummaryView>>(
+    VerticalAlphaApi.marketLinkages,
+    { params: query },
+  );
+}
+
+/** `GET /research/market-linkages/{market_id}` — latest PIT-valid linkage. */
+export async function getMarketLinkage(marketId: string) {
+  return requestClient.get<MarketLinkageDetailView>(
+    VerticalAlphaApi.marketLinkage(marketId),
+  );
+}
+
+/** `POST /research/market-linkages/resolve` — trigger offline re-resolution. */
+export async function resolveMarketLinkages(
+  body: ResolveLinkagesRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<LinkageResolveSummaryView>(
+    VerticalAlphaApi.resolveMarketLinkages,
+    body,
+    ctx,
+  );
+}
+
+/** `POST /research/market-linkages/{market_id}/override` — audited override. */
+export async function overrideMarketLinkage(
+  marketId: string,
+  body: OverrideLinkageRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<MarketLinkageDetailView>(
+    VerticalAlphaApi.overrideMarketLinkage(marketId),
+    body,
+    ctx,
+  );
+}
+
+/** `GET /research/domain-sources` — domain ingest cursor health. */
+export async function listDomainSources() {
+  return requestClient.get<DomainSourceCursorView[]>(
+    VerticalAlphaApi.domainSources,
   );
 }
 

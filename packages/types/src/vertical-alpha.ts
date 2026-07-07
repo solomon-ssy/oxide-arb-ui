@@ -166,3 +166,79 @@ export interface ParticipantConcentrationDetailView {
   market: ParticipantConcentrationMarketView;
   top_participants: ParticipantConcentrationParticipantView[];
 }
+
+// ── Crypto domain linkage + ingest (Phase 11.2.2) ───────────────────────────
+
+/** Linkage ledger summary row (`GET /research/market-linkages`). */
+export interface MarketLinkageSummaryView {
+  linkage_id: UuidString;
+  market_id: string;
+  domain_family: string;
+  status: string;
+  resolver_tier: string;
+  resolver_version: number;
+  confidence: DecimalString;
+  instrument_key: null | string;
+  content_hash: string;
+  derived_at: IsoDateTime;
+  created_at: IsoDateTime;
+}
+
+/** Full linkage detail (`GET /research/market-linkages/{market_id}`). */
+export interface MarketLinkageDetailView {
+  linkage_id: UuidString;
+  market_id: string;
+  domain_family: string;
+  status: string;
+  resolver_tier: string;
+  resolver_version: number;
+  confidence: DecimalString;
+  outcome: Record<string, unknown>;
+  instrument_key: null | string;
+  metadata_hash: string;
+  content_hash: string;
+  derived_at: IsoDateTime;
+  created_at: IsoDateTime;
+}
+
+/** Filter + pagination for `GET /research/market-linkages`. */
+export type MarketLinkageListQuery = PageQuery & {
+  family?: string;
+  from?: IsoDateTime;
+  latest_only?: boolean;
+  market_id?: string;
+  status?: string;
+  to?: IsoDateTime;
+};
+
+/** `POST /research/market-linkages/resolve` governed request body. */
+export interface ResolveLinkagesRequest {
+  market_ids?: string[];
+  reason: string;
+}
+
+/** Summary returned by an offline resolver pass. */
+export interface LinkageResolveSummaryView {
+  examined: number;
+  appended: number;
+  unchanged: number;
+  resolved: number;
+  unresolved: number;
+}
+
+/** `POST /research/market-linkages/{market_id}/override` governed request body. */
+export interface OverrideLinkageRequest {
+  instrument_key: string;
+  reason: string;
+  subject: Record<string, unknown>;
+}
+
+/** Domain ingest cursor health row (`GET /research/domain-sources`). */
+export interface DomainSourceCursorView {
+  source_id: string;
+  instrument_key: string;
+  last_event_time: IsoDateTime;
+  status: string;
+  lag_secs: number;
+  updated_at: IsoDateTime;
+}

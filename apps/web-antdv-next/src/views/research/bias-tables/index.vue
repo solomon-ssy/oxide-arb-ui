@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { BiasTableSummaryView } from '@vben/types';
 
+import type { OnActionClickParams } from '#/adapter/vxe-table';
+
 import { watch } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
@@ -15,12 +17,15 @@ import {
   getBiasTable,
   listBiasTables,
 } from '#/api/vertical-alpha';
+import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
+import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
 import { useResearchStore } from '#/store';
 
 import BiasTableDetailDrawer from './modules/bias-table-detail-drawer.vue';
+import { useBiasTableColumns } from './modules/schemas';
 
 defineOptions({ name: 'ResearchBiasTablesPage' });
 
@@ -50,36 +55,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
 const [Grid, gridApi] = useVbenVxeGrid<BiasTableSummaryView>({
   gridOptions: {
-    columns: [
-      {
-        field: 'content_hash',
-        title: 'Content hash',
-        minWidth: 220,
-        slots: { default: 'content_hash' },
-      },
-      { field: 'category_count', title: 'Categories', width: 110 },
-      { field: 'total_sample_count', title: 'Samples', width: 110 },
-      {
-        field: 'fit_window_start',
-        title: 'Fit window',
-        minWidth: 260,
-        slots: { default: 'fit_window' },
-      },
-      {
-        field: 'created_at',
-        title: 'Created',
-        width: 180,
-        formatter: ({ cellValue }: { cellValue: string }) =>
-          formatDateTimeLocal(cellValue),
-      },
-      {
-        field: 'actions',
-        title: 'Actions',
-        fixed: 'right',
-        width: 200,
-        slots: { default: 'actions' },
-      },
-    ],
+    columns: useBiasTableColumns(onActionClick, { canActivate }),
     proxyConfig: {
       ajax: {
         query: async ({
@@ -118,12 +94,14 @@ async function fit() {
         ctx,
       ),
     {
-      summary: `Fit a favorite-longshot bias table over the trailing ${FIT_WINDOW_DAYS} days. Fails closed (no artifact) when the settlement spine is too thin.`,
-      title: 'Fit bias table',
+      summary: $t('page.research.biasTables.fit.summary', {
+        days: FIT_WINDOW_DAYS,
+      }),
+      title: $t('page.research.biasTables.fit.title'),
     },
   );
   if (job) {
-    message.success('Bias-table fit enqueued');
+    message.success($t('page.research.biasTables.fit.feedback'));
     void gridApi.query();
   }
 }
@@ -132,13 +110,12 @@ async function activate(row: BiasTableSummaryView) {
   const version = await governed(
     (ctx) => activateBiasTable(row.bias_table_id, { reason: ctx.reason }, ctx),
     {
-      summary:
-        'Stage a runtime-config version pinning this bias table as the favorite-longshot source. Activate that version from the runtime-config console to make it live.',
-      title: 'Activate bias table',
+      summary: $t('page.research.biasTables.activate.summary'),
+      title: $t('page.research.biasTables.activate.title'),
     },
   );
   if (version) {
-    message.success('Config version staged — activate it in runtime config');
+    message.success($t('page.research.biasTables.activate.feedback'));
   }
 }
 
@@ -149,37 +126,44 @@ function openDetail(row: BiasTableSummaryView) {
     }
   });
 }
+
+function onActionClick({
+  code,
+  row,
+}: OnActionClickParams<BiasTableSummaryView>) {
+  switch (code) {
+    case 'activate': {
+      void activate(row);
+      break;
+    }
+    case 'detail': {
+      openDetail(row);
+      break;
+    }
+    // No default
+  }
+}
+
+useQueryOpenDrawer({
+  fetch: (id) => getBiasTable(id),
+  open: (detail) => drawerApi.setData({ detail }).open(),
+});
 </script>
 
 <template>
   <Page auto-content-height>
-    <Grid table-title="Favorite-longshot bias tables">
+    <Grid :table-title="$t('page.research.biasTables.listTitle')">
       <template #toolbar-tools>
         <Button v-if="canFit" type="primary" @click="fit">
-          Fit bias table
+          {{ $t('page.research.biasTables.fit.action') }}
         </Button>
-      </template>
-      <template #content_hash="{ row }">
-        <span class="font-mono text-xs break-all">{{ row.content_hash }}</span>
       </template>
       <template #fit_window="{ row }">
         <span class="text-xs">
-          {{ formatDateTimeLocal(row.fit_window_start) }} →
+          {{ formatDateTimeLocal(row.fit_window_start) }}
+          {{ $t('page.research.biasTables.fitWindowSeparator') }}
           {{ formatDateTimeLocal(row.fit_window_end) }}
         </span>
-      </template>
-      <template #actions="{ row }">
-        <div class="flex gap-2">
-          <Button size="small" @click="openDetail(row)">Detail</Button>
-          <Button
-            v-if="canActivate"
-            size="small"
-            type="link"
-            @click="activate(row)"
-          >
-            Activate
-          </Button>
-        </div>
       </template>
     </Grid>
     <Drawer />

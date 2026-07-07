@@ -397,6 +397,36 @@
     "publish": "Publish",
     "auto_execution": "Auto-Execution"
   },
+  "linkageStatus": {
+    "resolved": "Resolved",
+    "unresolved": "Unresolved",
+    "overridden": "Overridden"
+  },
+  "resolverTier": {
+    "tier0_slug": "Tier 0 (slug)",
+    "tier1_template": "Tier 1 (template)",
+    "tier2_llm": "Tier 2 (LLM)",
+    "override": "Override"
+  },
+  "domainFamily": {
+    "crypto": "Crypto"
+  },
+  "domainCursorStatus": {
+    "bootstrap": "Bootstrap",
+    "backfilling": "Backfilling",
+    "live": "Live",
+    "error": "Error"
+  },
+  "priceComparator": {
+    "up_vs_reference": "Up vs reference",
+    "above": "Above strike",
+    "below": "Below strike",
+    "between": "Between bounds"
+  },
+  "resolutionOracle": {
+    "chainlink_data_streams": "Chainlink Data Streams",
+    "binance_kline": "Binance kline"
+  },
   "qualityGate": {
     "sample_count": "Sample Count",
     "label_coverage": "Label Coverage",

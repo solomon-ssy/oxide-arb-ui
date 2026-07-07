@@ -6,6 +6,7 @@ const ACTION_ICONS = {
   block: 'lucide:shield-off',
   cancel: 'lucide:ban',
   detail: 'lucide:eye',
+  override: 'lucide:pen-line',
   publish: 'lucide:badge-check',
   reject: 'lucide:x',
   resolve: 'lucide:check-check',

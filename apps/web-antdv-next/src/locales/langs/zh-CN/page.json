@@ -42,6 +42,8 @@
     "researchJobs": "任务中心",
     "researchFactors": "因子",
     "researchBiasTables": "偏差表",
+    "researchMarketLinkages": "市场联动",
+    "researchDomainSources": "域数据源",
     "researchComparisonDetail": "对比报告",
     "runtimeConfig": "运行配置",
     "users": "用户",
@@ -551,6 +553,162 @@
           "right": "因子 B",
           "correlation": "Spearman ρ"
         }
+      }
+    },
+    "biasTables": {
+      "listTitle": "Favorite-longshot 偏差表",
+      "fitWindowSeparator": "→",
+      "columns": {
+        "contentHash": "Content hash",
+        "categoryCount": "分类数",
+        "sampleCount": "样本数",
+        "fitWindow": "拟合窗口",
+        "createdAt": "创建时间",
+        "operation": "操作"
+      },
+      "actions": {
+        "detail": "详情",
+        "activate": "激活"
+      },
+      "fit": {
+        "action": "拟合偏差表",
+        "title": "拟合偏差表",
+        "summary": "对最近 {days} 天已结算市场拟合 favorite-longshot 偏差表。结算 spine 过薄时 fail-closed（不产出 artifact）。",
+        "feedback": "偏差表拟合任务已入队"
+      },
+      "activate": {
+        "title": "激活偏差表",
+        "summary": "暂存一条 runtime-config 版本，将本偏差表固定为 favorite-longshot 来源。请在 runtime-config 控制台激活该版本后才会生效。",
+        "feedback": "配置版本已暂存 — 请在 runtime config 中激活"
+      },
+      "detail": {
+        "title": "偏差表",
+        "provenance": "溯源",
+        "emptyCategory": "无合格分类",
+        "icSignificant": "IC {ic}（显著）",
+        "icGatedOff": "IC {ic}（已门控关闭）",
+        "categorySamples": "{count} 个样本",
+        "fields": {
+          "contentHash": "Content hash",
+          "fitWindow": "拟合窗口",
+          "calibrationSplitHash": "Calibration split hash",
+          "categoryCount": "分类数",
+          "sampleCount": "样本数"
+        },
+        "binColumns": {
+          "priceLo": "价格 ≥",
+          "priceHi": "价格 <",
+          "implied": "隐含",
+          "realized": "已实现",
+          "bias": "偏差",
+          "samples": "样本"
+        }
+      }
+    },
+    "marketLinkages": {
+      "listTitle": "市场联动",
+      "filters": {
+        "status": "状态",
+        "family": "域垂直族",
+        "marketId": "市场 ID",
+        "marketIdPlaceholder": "按市场 ID 筛选",
+        "latestOnly": "仅最新台账行"
+      },
+      "columns": {
+        "marketId": "市场",
+        "status": "状态",
+        "tier": "解析层级",
+        "confidence": "置信度",
+        "family": "垂直族",
+        "instrument": "标的键",
+        "derivedAt": "解析时间",
+        "operation": "操作"
+      },
+      "actions": {
+        "detail": "详情",
+        "override": "人工覆盖",
+        "reResolveAll": "全量重解析"
+      },
+      "resolve": {
+        "title": "重解析市场联动",
+        "summary": "对 metadata 已变更的、有分类映射的市场重新运行离线联动解析器。仅追加台账行，绝不改写历史。",
+        "feedback": "解析完成：{resolved} 已解析，{unresolved} 未解析"
+      },
+      "override": {
+        "title": "覆盖市场联动",
+        "drawerTitle": "覆盖联动",
+        "summary": "对市场 {marketId} 的审计操作员覆盖。追加 resolver_tier=override 台账行；历史绝不改写。",
+        "feedback": "覆盖已记录",
+        "invalidSubjectJson": "Subject JSON 无效",
+        "instrumentKeyHint": "规范 domain instrument key（由 oracle 自动推导，提交前可编辑）。",
+        "sections": {
+          "cryptoSubject": "Crypto subject",
+          "resolutionOracle": "结算 oracle"
+        },
+        "fields": {
+          "marketId": "市场 ID",
+          "instrumentKey": "Instrument key",
+          "subjectJson": "Subject JSON",
+          "asset": "资产",
+          "quote": "报价货币",
+          "comparator": "价格比较语义",
+          "strike": "行权价 (USD)",
+          "betweenHi": "上界 (USD)",
+          "referenceAt": "参考时刻 (ISO-8601)",
+          "observationAt": "观测时刻 (ISO-8601)",
+          "oracleKind": "Oracle 类型",
+          "chainlinkFeed": "Chainlink feed",
+          "binanceSymbol": "Binance symbol",
+          "binanceInterval": "K 线周期"
+        },
+        "validation": {
+          "observationAtRequired": "观测时刻必填。",
+          "referenceAtRequired": "Up/Down 市场必须填写参考时刻。",
+          "strikeRequired": "Above/Below 市场必须填写行权价。",
+          "betweenHiRequired": "Between 市场必须填写上界。",
+          "instrumentKeyRequired": "Instrument key 必填。"
+        },
+        "submit": "提交覆盖"
+      },
+      "detail": {
+        "title": "市场联动",
+        "provenance": "溯源",
+        "outcome": "结果（subject + grounding）",
+        "fields": {
+          "marketId": "市场 ID",
+          "status": "状态",
+          "tier": "层级",
+          "confidence": "置信度",
+          "instrument": "标的键",
+          "metadataHash": "Metadata hash",
+          "contentHash": "Content hash",
+          "derivedAt": "解析于"
+        }
+      },
+      "emptyInstrument": "—"
+    },
+    "domainSources": {
+      "listTitle": "域摄取 cursor",
+      "refresh": "刷新",
+      "cards": {
+        "binance": "Binance K 线",
+        "chainlink": "Chainlink 聚合器",
+        "health": "健康度",
+        "activeCursors": "活跃 cursor",
+        "activeFeeds": "活跃 feed",
+        "worstLag": "最大滞后",
+        "binanceHint": "REST 摄取，带 weight 预算限流",
+        "chainlinkHint": "Polygon 链上预言机交叉核验源",
+        "staleCursors": "{count} 个 cursor 滞后 > 5 分钟"
+      },
+      "table": {
+        "title": "摄取 cursor",
+        "source": "数据源",
+        "instrument": "Instrument",
+        "status": "状态",
+        "lag": "滞后 (s)",
+        "lastEvent": "最近事件",
+        "cursorUpdated": "Cursor 更新"
       }
     },
     "comparisons": {

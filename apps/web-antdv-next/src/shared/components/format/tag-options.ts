@@ -600,3 +600,53 @@ export function useSideTagOptions() {
     },
   );
 }
+
+/** Market-linkage ledger status tags (Phase 11.2.2). */
+export function useLinkageStatusTagOptions() {
+  return buildTagOptions(
+    ['resolved', 'unresolved', 'overridden'],
+    (value) => $t(`enum.linkageStatus.${value}`),
+    {
+      overridden: 'purple',
+      resolved: 'success',
+      unresolved: 'warning',
+    },
+  );
+}
+
+/** Linkage resolver tier tags. */
+export function useResolverTierTagOptions() {
+  return buildTagOptions(
+    ['tier0_slug', 'tier1_template', 'tier2_llm', 'override'],
+    (value) => $t(`enum.resolverTier.${value}`),
+    {
+      override: 'purple',
+      tier0_slug: 'cyan',
+      tier1_template: 'blue',
+      tier2_llm: 'geekblue',
+    },
+  );
+}
+
+/** External domain vertical family tags. */
+export function useDomainFamilyTagOptions() {
+  return buildTagOptions(
+    ['crypto'],
+    (value) => $t(`enum.domainFamily.${value}`),
+    { crypto: 'gold' },
+  );
+}
+
+/** Domain ingest cursor status tags. */
+export function useDomainCursorStatusTagOptions() {
+  return buildTagOptions(
+    ['bootstrap', 'backfilling', 'live', 'error'],
+    (value) => $t(`enum.domainCursorStatus.${value}`),
+    {
+      backfilling: 'processing',
+      bootstrap: 'default',
+      error: 'error',
+      live: 'success',
+    },
+  );
+}

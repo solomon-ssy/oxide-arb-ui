@@ -42,6 +42,8 @@
     "researchJobs": "Task Center",
     "researchFactors": "Factors",
     "researchBiasTables": "Bias Tables",
+    "researchMarketLinkages": "Market Linkages",
+    "researchDomainSources": "Domain Sources",
     "researchComparisonDetail": "Comparison Report",
     "runtimeConfig": "Runtime Config",
     "users": "Users",
@@ -551,6 +553,162 @@
           "right": "Factor B",
           "correlation": "Spearman ρ"
         }
+      }
+    },
+    "biasTables": {
+      "listTitle": "Favorite-longshot bias tables",
+      "fitWindowSeparator": "→",
+      "columns": {
+        "contentHash": "Content hash",
+        "categoryCount": "Categories",
+        "sampleCount": "Samples",
+        "fitWindow": "Fit window",
+        "createdAt": "Created",
+        "operation": "Actions"
+      },
+      "actions": {
+        "detail": "Detail",
+        "activate": "Activate"
+      },
+      "fit": {
+        "action": "Fit bias table",
+        "title": "Fit bias table",
+        "summary": "Fit a favorite-longshot bias table over the trailing {days} days. Fails closed (no artifact) when the settlement spine is too thin.",
+        "feedback": "Bias-table fit enqueued"
+      },
+      "activate": {
+        "title": "Activate bias table",
+        "summary": "Stage a runtime-config version pinning this bias table as the favorite-longshot source. Activate that version from the runtime-config console to make it live.",
+        "feedback": "Config version staged — activate it in runtime config"
+      },
+      "detail": {
+        "title": "Bias table",
+        "provenance": "Provenance",
+        "emptyCategory": "No qualifying category",
+        "icSignificant": "IC {ic} (significant)",
+        "icGatedOff": "IC {ic} (gated off)",
+        "categorySamples": "{count} samples",
+        "fields": {
+          "contentHash": "Content hash",
+          "fitWindow": "Fit window",
+          "calibrationSplitHash": "Calibration split hash",
+          "categoryCount": "Categories",
+          "sampleCount": "Samples"
+        },
+        "binColumns": {
+          "priceLo": "Price ≥",
+          "priceHi": "Price <",
+          "implied": "Implied",
+          "realized": "Realized",
+          "bias": "Bias",
+          "samples": "Samples"
+        }
+      }
+    },
+    "marketLinkages": {
+      "listTitle": "Market Linkages",
+      "filters": {
+        "status": "Status",
+        "family": "Domain family",
+        "marketId": "Market ID",
+        "marketIdPlaceholder": "Filter by market id",
+        "latestOnly": "Latest ledger row only"
+      },
+      "columns": {
+        "marketId": "Market",
+        "status": "Status",
+        "tier": "Resolver tier",
+        "confidence": "Confidence",
+        "family": "Family",
+        "instrument": "Instrument",
+        "derivedAt": "Derived",
+        "operation": "Actions"
+      },
+      "actions": {
+        "detail": "Detail",
+        "override": "Override",
+        "reResolveAll": "Re-resolve all"
+      },
+      "resolve": {
+        "title": "Resolve market linkages",
+        "summary": "Re-run the offline linkage resolver for every category-mapped market whose metadata changed. Appends new ledger rows; never mutates history.",
+        "feedback": "Resolver pass complete: {resolved} resolved, {unresolved} unresolved"
+      },
+      "override": {
+        "title": "Override market linkage",
+        "drawerTitle": "Override linkage",
+        "summary": "Audited operator override for market {marketId}. Appends a resolver_tier=override ledger row; history is never mutated.",
+        "feedback": "Override recorded",
+        "invalidSubjectJson": "Subject JSON is invalid",
+        "instrumentKeyHint": "Canonical domain instrument key (auto-derived from oracle; editable before submit).",
+        "sections": {
+          "cryptoSubject": "Crypto subject",
+          "resolutionOracle": "Resolution oracle"
+        },
+        "fields": {
+          "marketId": "Market ID",
+          "instrumentKey": "Instrument key",
+          "subjectJson": "Subject JSON",
+          "asset": "Asset",
+          "quote": "Quote",
+          "comparator": "Price comparator",
+          "strike": "Strike (USD)",
+          "betweenHi": "Upper bound (USD)",
+          "referenceAt": "Reference at (ISO-8601)",
+          "observationAt": "Observation at (ISO-8601)",
+          "oracleKind": "Oracle kind",
+          "chainlinkFeed": "Chainlink feed",
+          "binanceSymbol": "Binance symbol",
+          "binanceInterval": "Kline interval"
+        },
+        "validation": {
+          "observationAtRequired": "Observation time is required.",
+          "referenceAtRequired": "Reference time is required for up/down markets.",
+          "strikeRequired": "Strike is required for above/below markets.",
+          "betweenHiRequired": "Upper bound is required for between markets.",
+          "instrumentKeyRequired": "Instrument key is required."
+        },
+        "submit": "Submit override"
+      },
+      "detail": {
+        "title": "Market linkage",
+        "provenance": "Provenance",
+        "outcome": "Outcome (subject + grounding)",
+        "fields": {
+          "marketId": "Market ID",
+          "status": "Status",
+          "tier": "Tier",
+          "confidence": "Confidence",
+          "instrument": "Instrument",
+          "metadataHash": "Metadata hash",
+          "contentHash": "Content hash",
+          "derivedAt": "Derived at"
+        }
+      },
+      "emptyInstrument": "—"
+    },
+    "domainSources": {
+      "listTitle": "Domain ingest cursors",
+      "refresh": "Refresh",
+      "cards": {
+        "binance": "Binance klines",
+        "chainlink": "Chainlink aggregator",
+        "health": "Health",
+        "activeCursors": "Active cursors",
+        "activeFeeds": "Active feeds",
+        "worstLag": "Worst lag",
+        "binanceHint": "REST ingest with weight-budget governor",
+        "chainlinkHint": "Polygon on-chain oracle cross-check source",
+        "staleCursors": "{count} cursor(s) > 5m lag"
+      },
+      "table": {
+        "title": "Ingest cursors",
+        "source": "Source",
+        "instrument": "Instrument",
+        "status": "Status",
+        "lag": "Lag (s)",
+        "lastEvent": "Last event",
+        "cursorUpdated": "Cursor updated"
       }
     },
     "comparisons": {

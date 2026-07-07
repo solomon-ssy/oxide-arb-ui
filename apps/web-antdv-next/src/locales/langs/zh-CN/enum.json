@@ -397,6 +397,36 @@
     "publish": "发布",
     "auto_execution": "自动执行"
   },
+  "linkageStatus": {
+    "resolved": "已解析",
+    "unresolved": "未解析",
+    "overridden": "已覆盖"
+  },
+  "resolverTier": {
+    "tier0_slug": "Tier 0（slug）",
+    "tier1_template": "Tier 1（模板）",
+    "tier2_llm": "Tier 2（LLM）",
+    "override": "人工覆盖"
+  },
+  "domainFamily": {
+    "crypto": "加密"
+  },
+  "domainCursorStatus": {
+    "bootstrap": "引导",
+    "backfilling": "回填中",
+    "live": "实时",
+    "error": "错误"
+  },
+  "priceComparator": {
+    "up_vs_reference": "相对参考价 Up/Down",
+    "above": "高于行权价",
+    "below": "低于行权价",
+    "between": "区间内"
+  },
+  "resolutionOracle": {
+    "chainlink_data_streams": "Chainlink Data Streams",
+    "binance_kline": "Binance K 线"
+  },
   "qualityGate": {
     "sample_count": "样本数",
     "label_coverage": "标签覆盖率",
