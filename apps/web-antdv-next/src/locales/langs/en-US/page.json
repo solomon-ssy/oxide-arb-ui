@@ -658,7 +658,16 @@
         "instrumentKeyHint": "Canonical feature-source instrument key — always the Binance kline key for the selected asset, per the frozen resolver ruleset, regardless of which oracle settles the market. Auto-derived; not independently editable.",
         "sections": {
           "cryptoSubject": "Crypto subject",
-          "resolutionOracle": "Resolution oracle"
+          "resolutionOracle": "Resolution oracle",
+          "evidence": "Evidence (literal citations)"
+        },
+        "evidenceHint": "An override is a human decision, not text-extracted — but every load-bearing identity field below still requires a literal citation copied from the market's real metadata. It is checked byte-exact server-side; a fabricated or paraphrased citation is rejected.",
+        "evidenceTextPlaceholder": "Paste the exact text as it appears in the source field",
+        "evidenceSources": {
+          "slug": "Slug",
+          "question": "Question",
+          "description": "Description",
+          "series_slug": "Series slug"
         },
         "fields": {
           "marketId": "Market ID",
@@ -674,14 +683,20 @@
           "oracleKind": "Oracle kind",
           "chainlinkFeed": "Chainlink feed",
           "binanceSymbol": "Binance symbol",
-          "binanceInterval": "Kline interval"
+          "binanceInterval": "Kline interval",
+          "assetEvidence": "Asset citation",
+          "oracleEvidence": "Resolution-oracle citation",
+          "strikeEvidence": "Strike citation"
         },
         "validation": {
           "observationAtRequired": "Observation time is required.",
           "referenceAtRequired": "Reference time is required for up/down markets.",
           "strikeRequired": "Strike is required for above/below markets.",
           "betweenHiRequired": "Upper bound is required for between markets.",
-          "instrumentKeyRequired": "Instrument key is required."
+          "instrumentKeyRequired": "Instrument key is required.",
+          "assetEvidenceRequired": "A literal citation for the asset is required.",
+          "oracleEvidenceRequired": "A literal citation for the resolution oracle is required.",
+          "strikeEvidenceRequired": "A literal citation for the strike is required."
         },
         "submit": "Submit override"
       },
@@ -769,7 +784,8 @@
       "filters": {
         "marketId": "Market ID",
         "marketIdPlaceholder": "Filter by market id",
-        "timeRange": "As of"
+        "timeRange": "As of",
+        "openOnly": "Unacknowledged only"
       },
       "columns": {
         "marketId": "Market",
@@ -778,7 +794,21 @@
         "basisBps": "Basis (bps)",
         "thresholdBps": "Threshold (bps)",
         "asOf": "As of",
-        "createdAt": "Recorded at"
+        "createdAt": "Recorded at",
+        "acknowledged": "Triage status",
+        "operation": "Actions"
+      },
+      "actions": {
+        "acknowledge": "Acknowledge"
+      },
+      "acknowledged": {
+        "yes": "Acknowledged",
+        "yesBy": "Acknowledged — {actor}",
+        "no": "Open"
+      },
+      "acknowledge": {
+        "title": "Acknowledge basis alert",
+        "summary": "Mark this basis-cross-check exceedance for market {marketId} as triaged. Records who and when on the alert row; never mutates the linkage ledger."
       }
     },
     "comparisons": {

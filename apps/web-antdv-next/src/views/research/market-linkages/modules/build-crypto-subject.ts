@@ -1,6 +1,17 @@
 /** Wire values aligned with backend `MarketSubject` / `CryptoSubject` serde. */
 
+import type { GroundingFieldSource, ManualEvidenceInput } from '@vben/types';
+
 export const CRYPTO_ASSETS = ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE'] as const;
+
+/** Which frozen metadata field an operator can cite evidence from
+ * (mirrors Rust `GroundingField`). */
+export const GROUNDING_FIELD_SOURCES: GroundingFieldSource[] = [
+  'slug',
+  'question',
+  'description',
+  'series_slug',
+];
 
 export type CryptoAssetTicker = (typeof CRYPTO_ASSETS)[number];
 
@@ -35,6 +46,14 @@ export interface CryptoOverrideFormState {
   binanceSymbol: string;
   binanceInterval: string;
   instrumentKey: string;
+  /** Literal-text citations grounding the load-bearing identity fields
+   * (11.2.2 remediation R4) — verified byte-exact server-side. */
+  assetEvidenceSource: GroundingFieldSource;
+  assetEvidenceText: string;
+  oracleEvidenceSource: GroundingFieldSource;
+  oracleEvidenceText: string;
+  strikeEvidenceSource: GroundingFieldSource;
+  strikeEvidenceText: string;
 }
 
 export function defaultCryptoOverrideForm(
@@ -54,6 +73,12 @@ export function defaultCryptoOverrideForm(
     binanceSymbol: 'BTCUSDT',
     binanceInterval: '1m',
     instrumentKey: 'BINANCE:BTCUSDT:1m',
+    assetEvidenceSource: 'slug',
+    assetEvidenceText: '',
+    oracleEvidenceSource: 'description',
+    oracleEvidenceText: '',
+    strikeEvidenceSource: 'description',
+    strikeEvidenceText: '',
   };
 }
 
@@ -140,6 +165,41 @@ export function buildCryptoMarketSubject(
   };
 }
 
+/** Whether this form's comparator carries a strike (so its evidence citation
+ * is required too — mirrors the backend's conditional `strike.is_some()`
+ * grounding requirement). */
+function formHasStrike(form: CryptoOverrideFormState): boolean {
+  return form.comparator === 'above' || form.comparator === 'below';
+}
+
+/** Build the `evidence` array `OverrideLinkageRequest` requires (11.2.2
+ * remediation R4) — one citation per load-bearing identity field the backend
+ * grounds (`asset` / `resolution_oracle` always, `strike` when present). */
+export function buildManualEvidence(
+  form: CryptoOverrideFormState,
+): ManualEvidenceInput[] {
+  const evidence: ManualEvidenceInput[] = [
+    {
+      source: form.assetEvidenceSource,
+      subject_field: 'asset',
+      text: form.assetEvidenceText.trim(),
+    },
+    {
+      source: form.oracleEvidenceSource,
+      subject_field: 'resolution_oracle',
+      text: form.oracleEvidenceText.trim(),
+    },
+  ];
+  if (formHasStrike(form)) {
+    evidence.push({
+      source: form.strikeEvidenceSource,
+      subject_field: 'strike',
+      text: form.strikeEvidenceText.trim(),
+    });
+  }
+  return evidence;
+}
+
 export function validateCryptoOverrideForm(
   form: CryptoOverrideFormState,
 ): null | string {
@@ -149,10 +209,7 @@ export function validateCryptoOverrideForm(
   if (form.comparator === 'between' && !form.betweenHi.trim()) {
     return 'betweenHiRequired';
   }
-  if (
-    (form.comparator === 'above' || form.comparator === 'below') &&
-    !form.strike.trim()
-  ) {
+  if (formHasStrike(form) && !form.strike.trim()) {
     return 'strikeRequired';
   }
   if (form.comparator === 'up_vs_reference' && !form.referenceAt.trim()) {
@@ -160,6 +217,15 @@ export function validateCryptoOverrideForm(
   }
   if (!form.instrumentKey.trim()) {
     return 'instrumentKeyRequired';
+  }
+  if (!form.assetEvidenceText.trim()) {
+    return 'assetEvidenceRequired';
+  }
+  if (!form.oracleEvidenceText.trim()) {
+    return 'oracleEvidenceRequired';
+  }
+  if (formHasStrike(form) && !form.strikeEvidenceText.trim()) {
+    return 'strikeEvidenceRequired';
   }
   return null;
 }

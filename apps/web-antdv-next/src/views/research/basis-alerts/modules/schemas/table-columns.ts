@@ -1,10 +1,18 @@
 import type { BasisAlertView } from '@vben/types';
 
-import type { VxeTableGridOptions } from '#/adapter/vxe-table';
+import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import { iconOp } from '#/shared/table/cell-operation-presets';
 
-export function useBasisAlertColumns(): VxeTableGridOptions<BasisAlertView>['columns'] {
+export interface BasisAlertActionAccess {
+  canMutate: boolean;
+}
+
+export function useBasisAlertColumns(
+  onActionClick: OnActionClickFn<BasisAlertView>,
+  access: BasisAlertActionAccess,
+): VxeTableGridOptions<BasisAlertView>['columns'] {
   return [
     {
       cellRender: {
@@ -53,6 +61,33 @@ export function useBasisAlertColumns(): VxeTableGridOptions<BasisAlertView>['col
       field: 'created_at',
       title: $t('page.research.basisAlerts.columns.createdAt'),
       width: 180,
+    },
+    {
+      field: 'acknowledged',
+      slots: { default: 'acknowledged' },
+      title: $t('page.research.basisAlerts.columns.acknowledged'),
+      width: 160,
+    },
+    {
+      align: 'right',
+      cellRender: {
+        attrs: { nameField: 'alert_id', onClick: onActionClick },
+        name: 'CellOperation',
+        options: [
+          iconOp<BasisAlertView>(
+            'acknowledge',
+            $t('page.research.basisAlerts.actions.acknowledge'),
+            {
+              show: (row: BasisAlertView) =>
+                access.canMutate && !row.acknowledged,
+            },
+          ),
+        ],
+      },
+      field: 'operation',
+      fixed: 'right',
+      title: $t('page.research.basisAlerts.columns.operation'),
+      width: 120,
     },
   ];
 }

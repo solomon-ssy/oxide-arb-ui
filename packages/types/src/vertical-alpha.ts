@@ -181,6 +181,9 @@ export interface MarketLinkageSummaryView {
   instrument_key: null | string;
   content_hash: string;
   derived_at: IsoDateTime;
+  /** Populated only for `resolver_tier = 'override'` rows (11.2.2 remediation R4). */
+  override_reason: null | string;
+  override_actor: null | string;
   created_at: IsoDateTime;
 }
 
@@ -218,9 +221,13 @@ export type GroundingFieldSource =
   | 'series_slug'
   | 'slug';
 
-/** Whether a grounding span is independently-literal evidence or
- * template-entailed (mirrors Rust `GroundingKind`). */
-export type GroundingSpanKind = 'literal_span' | 'template_entailed';
+/** Whether a grounding span is independently-literal evidence,
+ * template-entailed, or an operator-cited manual-override citation (mirrors
+ * Rust `GroundingKind`; `manual_evidence` added by 11.2.2 remediation R4). */
+export type GroundingSpanKind =
+  | 'literal_span'
+  | 'manual_evidence'
+  | 'template_entailed';
 
 /** One extracted subject field tied to its literal source-text span. */
 export interface GroundingSpanView {
@@ -271,6 +278,8 @@ export interface MarketLinkageDetailView {
   metadata_hash: string;
   content_hash: string;
   derived_at: IsoDateTime;
+  override_reason: null | string;
+  override_actor: null | string;
   created_at: IsoDateTime;
 }
 
@@ -286,6 +295,8 @@ export interface MarketLinkageHistoryEntryView {
   instrument_key: null | string;
   content_hash: string;
   derived_at: IsoDateTime;
+  override_reason: null | string;
+  override_actor: null | string;
   created_at: IsoDateTime;
 }
 
@@ -314,8 +325,19 @@ export interface LinkageResolveSummaryView {
   unresolved: number;
 }
 
+/** One operator-cited literal-text justification for a manual override
+ * (mirrors Rust `ManualEvidenceInput`; 11.2.2 remediation R4). Verified
+ * byte-exact against the market's real metadata server-side — never
+ * trusted as submitted. */
+export interface ManualEvidenceInput {
+  subject_field: string;
+  source: GroundingFieldSource;
+  text: string;
+}
+
 /** `POST /research/market-linkages/{market_id}/override` governed request body. */
 export interface OverrideLinkageRequest {
+  evidence: ManualEvidenceInput[];
   instrument_key: string;
   reason: string;
   subject: Record<string, unknown>;
@@ -340,6 +362,8 @@ export interface DomainSourceCursorView {
 export type BasisAlertListQuery = PageQuery & {
   from?: IsoDateTime;
   market_id?: string;
+  /** When true, return only unacknowledged alerts (the review-queue default view). */
+  open_only?: boolean;
   to?: IsoDateTime;
 };
 
@@ -352,5 +376,13 @@ export interface BasisAlertView {
   basis_bps: DecimalString;
   threshold_bps: DecimalString;
   as_of: IsoDateTime;
+  acknowledged: boolean;
+  acknowledged_at: IsoDateTime | null;
+  acknowledged_by: null | string;
   created_at: IsoDateTime;
+}
+
+/** `POST /research/basis-alerts/{alert_id}/acknowledge` governed request body. */
+export interface AcknowledgeBasisAlertRequest {
+  reason: string;
 }

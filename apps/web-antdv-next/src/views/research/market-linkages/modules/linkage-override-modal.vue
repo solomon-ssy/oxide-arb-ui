@@ -13,8 +13,10 @@ import { useGovernedAction } from '#/shared/composables/use-governed-action';
 
 import {
   buildCryptoMarketSubject,
+  buildManualEvidence,
   CRYPTO_ASSETS,
   defaultCryptoOverrideForm,
+  GROUNDING_FIELD_SOURCES,
   KLINE_INTERVALS,
   PRICE_COMPARATORS,
   RESOLUTION_ORACLE_KINDS,
@@ -49,6 +51,12 @@ const oracleOptions = computed(() =>
 );
 const intervalOptions = computed(() =>
   KLINE_INTERVALS.map((value) => ({ label: value, value })),
+);
+const evidenceSourceOptions = computed(() =>
+  GROUNDING_FIELD_SOURCES.map((value) => ({
+    label: $t(`page.research.marketLinkages.override.evidenceSources.${value}`),
+    value,
+  })),
 );
 
 const showStrike = computed(
@@ -98,11 +106,13 @@ async function submit() {
   }
 
   const subject = buildCryptoMarketSubject(form.value);
+  const evidence = buildManualEvidence(form.value);
   const detail = await governed(
     (ctx) =>
       overrideMarketLinkage(
         marketId.value,
         {
+          evidence,
           instrument_key: form.value.instrumentKey.trim(),
           reason: ctx.reason,
           subject,
@@ -280,6 +290,87 @@ async function submit() {
         <Input v-model:value="form.instrumentKey" disabled />
         <div class="mt-1 text-xs text-muted-foreground">
           {{ $t('page.research.marketLinkages.override.instrumentKeyHint') }}
+        </div>
+      </div>
+
+      <div class="rounded-md border p-3">
+        <div class="mb-1 text-sm font-medium">
+          {{ $t('page.research.marketLinkages.override.sections.evidence') }}
+        </div>
+        <div class="mb-3 text-xs text-muted-foreground">
+          {{ $t('page.research.marketLinkages.override.evidenceHint') }}
+        </div>
+        <div class="grid grid-cols-1 gap-3">
+          <div>
+            <div class="mb-1 text-xs text-muted-foreground">
+              {{
+                $t('page.research.marketLinkages.override.fields.assetEvidence')
+              }}
+            </div>
+            <div class="flex gap-2">
+              <Select
+                v-model:value="form.assetEvidenceSource"
+                class="w-40"
+                :options="evidenceSourceOptions"
+              />
+              <Input
+                v-model:value="form.assetEvidenceText"
+                :placeholder="
+                  $t(
+                    'page.research.marketLinkages.override.evidenceTextPlaceholder',
+                  )
+                "
+              />
+            </div>
+          </div>
+          <div>
+            <div class="mb-1 text-xs text-muted-foreground">
+              {{
+                $t(
+                  'page.research.marketLinkages.override.fields.oracleEvidence',
+                )
+              }}
+            </div>
+            <div class="flex gap-2">
+              <Select
+                v-model:value="form.oracleEvidenceSource"
+                class="w-40"
+                :options="evidenceSourceOptions"
+              />
+              <Input
+                v-model:value="form.oracleEvidenceText"
+                :placeholder="
+                  $t(
+                    'page.research.marketLinkages.override.evidenceTextPlaceholder',
+                  )
+                "
+              />
+            </div>
+          </div>
+          <div v-if="showStrike">
+            <div class="mb-1 text-xs text-muted-foreground">
+              {{
+                $t(
+                  'page.research.marketLinkages.override.fields.strikeEvidence',
+                )
+              }}
+            </div>
+            <div class="flex gap-2">
+              <Select
+                v-model:value="form.strikeEvidenceSource"
+                class="w-40"
+                :options="evidenceSourceOptions"
+              />
+              <Input
+                v-model:value="form.strikeEvidenceText"
+                :placeholder="
+                  $t(
+                    'page.research.marketLinkages.override.evidenceTextPlaceholder',
+                  )
+                "
+              />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -163,16 +163,12 @@ const historyColumns = [
 
 const historyRows = computed(() =>
   history.value.map((row) => ({
-    actor:
-      row.outcome.status === 'resolved'
-        ? (row.outcome.override_context?.actor ?? '—')
-        : '—',
+    actor: row.override_actor ?? '—',
     derived_at: formatDateTimeLocal(row.derived_at),
     key: row.linkage_id,
     reason:
-      row.outcome.status === 'resolved'
-        ? (row.outcome.override_context?.reason ?? '—')
-        : row.outcome.reason,
+      row.override_reason ??
+      (row.outcome.status === 'unresolved' ? row.outcome.reason : '—'),
     resolver_tier: row.resolver_tier,
     status: row.status,
   })),
@@ -202,10 +198,17 @@ const basisAlertColumns = [
     key: 'oracle_instrument_key',
     title: $t('page.research.basisAlerts.columns.oracleInstrument'),
   },
+  {
+    dataIndex: 'acknowledged',
+    key: 'acknowledged',
+    title: $t('page.research.basisAlerts.columns.acknowledged'),
+    width: 120,
+  },
 ];
 
 const basisAlertRows = computed(() =>
   basisAlerts.value.map((row) => ({
+    acknowledged: row.acknowledged,
     as_of: formatDateTimeLocal(row.as_of),
     basis_bps: row.basis_bps,
     key: row.alert_id,
@@ -505,6 +508,15 @@ const [Drawer, drawerApi] = useVbenDrawer({
               <span class="break-all font-mono text-xs">{{
                 record.oracle_instrument_key
               }}</span>
+            </template>
+            <template v-else-if="column.key === 'acknowledged'">
+              <Tag :color="record.acknowledged ? 'success' : 'warning'">
+                {{
+                  record.acknowledged
+                    ? $t('page.research.basisAlerts.acknowledged.yes')
+                    : $t('page.research.basisAlerts.acknowledged.no')
+                }}
+              </Tag>
             </template>
           </template>
         </Table>

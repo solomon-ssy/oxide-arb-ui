@@ -1,5 +1,6 @@
 /** Iconify icon ids for table row operation buttons (icon-only + tooltip). */
 const ACTION_ICONS = {
+  acknowledge: 'lucide:check-circle',
   activate: 'lucide:play',
   approve: 'lucide:check',
   backtest: 'lucide:history',

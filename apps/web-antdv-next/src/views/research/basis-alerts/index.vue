@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 import type { BasisAlertView } from '@vben/types';
 
+import type { OnActionClickParams } from '#/adapter/vxe-table';
+
 import { onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
+import { Tag } from 'antdv-next';
+
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { listBasisAlerts } from '#/api/vertical-alpha';
+import { acknowledgeBasisAlert, listBasisAlerts } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
 import { timeRangeFromFormValues } from '#/shared/components/query/time-range';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import {
   useBasisAlertColumns,
@@ -21,6 +27,10 @@ defineOptions({ name: 'ResearchBasisAlertsPage' });
 
 const route = useRoute();
 const { handleRequest } = useRequestHandler();
+const { governed } = useGovernedAction();
+const { hasAccessByCodes } = useQpAccess();
+
+const canMutate = hasAccessByCodes(['materialization:create']);
 
 const emptyPage = {
   has_next: false,
@@ -33,7 +43,7 @@ const emptyPage = {
 const [Grid, gridApi] = useVbenVxeGrid<BasisAlertView>({
   formOptions: { schema: useBasisAlertSearchSchema() },
   gridOptions: {
-    columns: useBasisAlertColumns(),
+    columns: useBasisAlertColumns(onActionClick, { canMutate }),
     proxyConfig: {
       ajax: {
         query: async (
@@ -45,6 +55,7 @@ const [Grid, gridApi] = useVbenVxeGrid<BasisAlertView>({
             listBasisAlerts({
               from,
               market_id: (formValues.market_id as string) || undefined,
+              open_only: formValues.open_only !== false,
               page: page.currentPage,
               size: page.pageSize,
               to,
@@ -71,6 +82,31 @@ function applyRouteMarketFilter(): void {
   void gridApi.query();
 }
 
+async function acknowledgeOne(row: BasisAlertView) {
+  const result = await governed(
+    (ctx) => acknowledgeBasisAlert(row.alert_id, { reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.research.basisAlerts.acknowledge.summary', {
+        marketId: row.market_id,
+      }),
+      title: $t('page.research.basisAlerts.acknowledge.title'),
+    },
+  );
+  if (result) {
+    void gridApi.query();
+  }
+}
+
+function onActionClick({ code, row }: OnActionClickParams<BasisAlertView>) {
+  switch (code) {
+    case 'acknowledge': {
+      void acknowledgeOne(row);
+      break;
+    }
+    // No default
+  }
+}
+
 onMounted(applyRouteMarketFilter);
 watch(() => route.query.market_id, applyRouteMarketFilter);
 </script>
@@ -89,6 +125,21 @@ watch(() => route.query.market_id, applyRouteMarketFilter);
         >
           {{ row.basis_bps }}
         </span>
+      </template>
+      <template #acknowledged="{ row }">
+        <Tag v-if="row.acknowledged && row.acknowledged_by" color="success">
+          {{
+            $t('page.research.basisAlerts.acknowledged.yesBy', {
+              actor: row.acknowledged_by,
+            })
+          }}
+        </Tag>
+        <Tag v-else-if="row.acknowledged" color="success">
+          {{ $t('page.research.basisAlerts.acknowledged.yes') }}
+        </Tag>
+        <Tag v-else color="warning">
+          {{ $t('page.research.basisAlerts.acknowledged.no') }}
+        </Tag>
       </template>
     </Grid>
   </Page>

@@ -658,7 +658,16 @@
         "instrumentKeyHint": "规范特征源 instrument key —— 无论选择哪个结算 oracle，按冻结的解析规则集，始终是所选资产的 Binance K 线键。自动推导，不可单独编辑。",
         "sections": {
           "cryptoSubject": "Crypto subject",
-          "resolutionOracle": "结算 oracle"
+          "resolutionOracle": "结算 oracle",
+          "evidence": "证据（原文引用）"
+        },
+        "evidenceHint": "覆盖是人工判断,不是从文本抽取的——但下面每一个可锚定的关键字段,仍然要求你从市场真实元数据里原样复制一段引用。后端会做逐字节校验,臆造或转述的引用会被拒绝。",
+        "evidenceTextPlaceholder": "粘贴源字段里出现的原文",
+        "evidenceSources": {
+          "slug": "Slug",
+          "question": "Question",
+          "description": "Description",
+          "series_slug": "Series slug"
         },
         "fields": {
           "marketId": "市场 ID",
@@ -674,14 +683,20 @@
           "oracleKind": "Oracle 类型",
           "chainlinkFeed": "Chainlink feed",
           "binanceSymbol": "Binance symbol",
-          "binanceInterval": "K 线周期"
+          "binanceInterval": "K 线周期",
+          "assetEvidence": "资产引用",
+          "oracleEvidence": "结算 oracle 引用",
+          "strikeEvidence": "行权价引用"
         },
         "validation": {
           "observationAtRequired": "观测时刻必填。",
           "referenceAtRequired": "Up/Down 市场必须填写参考时刻。",
           "strikeRequired": "Above/Below 市场必须填写行权价。",
           "betweenHiRequired": "Between 市场必须填写上界。",
-          "instrumentKeyRequired": "Instrument key 必填。"
+          "instrumentKeyRequired": "Instrument key 必填。",
+          "assetEvidenceRequired": "资产的原文引用必填。",
+          "oracleEvidenceRequired": "结算 oracle 的原文引用必填。",
+          "strikeEvidenceRequired": "行权价的原文引用必填。"
         },
         "submit": "提交覆盖"
       },
@@ -769,7 +784,8 @@
       "filters": {
         "marketId": "市场 ID",
         "marketIdPlaceholder": "按市场 ID 筛选",
-        "timeRange": "发生时间"
+        "timeRange": "发生时间",
+        "openOnly": "仅未确认"
       },
       "columns": {
         "marketId": "市场",
@@ -778,7 +794,21 @@
         "basisBps": "基差 (bps)",
         "thresholdBps": "阈值 (bps)",
         "asOf": "发生时间",
-        "createdAt": "记录时间"
+        "createdAt": "记录时间",
+        "acknowledged": "处理状态",
+        "operation": "操作"
+      },
+      "actions": {
+        "acknowledge": "确认"
+      },
+      "acknowledged": {
+        "yes": "已确认",
+        "yesBy": "已确认 — {actor}",
+        "no": "待处理"
+      },
+      "acknowledge": {
+        "title": "确认基差告警",
+        "summary": "将市场 {marketId} 的基差交叉核验超阈值事件标记为已处理。只会记录处理人与时间到告警行本身,绝不修改 linkage 台账。"
       }
     },
     "comparisons": {

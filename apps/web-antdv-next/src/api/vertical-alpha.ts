@@ -1,4 +1,5 @@
 import type {
+  AcknowledgeBasisAlertRequest,
   ActivateBiasTableRequest,
   BasisAlertListQuery,
   BasisAlertView,
@@ -50,6 +51,8 @@ export namespace VerticalAlphaApi {
     `/research/market-linkages/${marketId}/history`;
   export const domainSources = '/research/domain-sources';
   export const basisAlerts = '/research/basis-alerts';
+  export const acknowledgeBasisAlert = (alertId: string) =>
+    `/research/basis-alerts/${alertId}/acknowledge`;
 }
 
 /** `GET /research/bias-tables` — paginated favorite-longshot bias-table catalog. */
@@ -154,6 +157,20 @@ export async function listBasisAlerts(query: BasisAlertListQuery = {}) {
   return requestClient.get<Paginated<BasisAlertView>>(
     VerticalAlphaApi.basisAlerts,
     { params: query },
+  );
+}
+
+/** `POST /research/basis-alerts/{alert_id}/acknowledge` — audited triage
+ * (R6 review-queue closed loop). */
+export async function acknowledgeBasisAlert(
+  alertId: string,
+  body: AcknowledgeBasisAlertRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<BasisAlertView>(
+    VerticalAlphaApi.acknowledgeBasisAlert(alertId),
+    body,
+    ctx,
   );
 }
 

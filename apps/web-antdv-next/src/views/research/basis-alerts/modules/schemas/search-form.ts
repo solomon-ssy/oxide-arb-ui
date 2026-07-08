@@ -17,5 +17,11 @@ export function useBasisAlertSearchSchema(): VbenFormSchema[] {
       label: $t('page.research.basisAlerts.filters.marketId'),
     },
     useTimeRangeSearchField('page.research.basisAlerts.filters.timeRange'),
+    {
+      component: 'Switch',
+      defaultValue: true,
+      fieldName: 'open_only',
+      label: $t('page.research.basisAlerts.filters.openOnly'),
+    },
   ];
 }
