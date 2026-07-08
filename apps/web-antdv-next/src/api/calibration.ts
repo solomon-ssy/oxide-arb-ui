@@ -6,6 +6,7 @@ import type {
   CalibrationArtifactSummaryView,
   FitBiasTableRequest,
   FitModelCalibratorRequest,
+  ModelCalibrationFitPreflightView,
   Paginated,
   ResearchJobView,
   RuntimeConfigVersionView,
@@ -28,6 +29,8 @@ export namespace CalibrationApi {
     `/research/calibration-artifacts/${id}/activate`;
   export const bindCalibration = (modelVersionId: string) =>
     `/research/models/${modelVersionId}/bind-calibration`;
+  export const calibrationFitPreflight = (modelVersionId: string) =>
+    `/research/models/${modelVersionId}/calibration-fit-preflight`;
 }
 
 /** `GET /research/calibration-artifacts` — paginated calibration-artifact catalog. */
@@ -93,5 +96,20 @@ export async function bindCalibration(
     CalibrationApi.bindCalibration(modelVersionId),
     body,
     ctx,
+  );
+}
+
+/**
+ * `GET /research/models/{id}/calibration-fit-preflight` — read-only
+ * disjoint + embargo check, surfaced live as the operator picks a
+ * model/dataset pair (never enqueues a job).
+ */
+export async function fetchCalibrationFitPreflight(
+  modelVersionId: string,
+  calibrationDatasetId: string,
+) {
+  return requestClient.get<ModelCalibrationFitPreflightView>(
+    CalibrationApi.calibrationFitPreflight(modelVersionId),
+    { params: { calibration_dataset_id: calibrationDatasetId } },
   );
 }

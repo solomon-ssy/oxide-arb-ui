@@ -72,6 +72,14 @@ export interface ReportSummary {
   published_recommendation_count: number;
   total_suggested_usd: UsdString;
   max_single_recommendation_usd: UsdString;
+  /**
+   * The aggregate-exposure hard cap actually enforced by the LP
+   * (`capital_base_usd × portfolio.kelly_safety.max_aggregate_exposure_pct`),
+   * frozen from the exact account + runtime-config this report solved
+   * against. `null` when the cap is disabled or the capital base is
+   * non-positive — never re-derive this client-side.
+   */
+  aggregate_exposure_cap_usd?: null | UsdString;
   category_allocation: Partial<Record<MarketCategory, UsdString>>;
   event_allocation: Record<string, UsdString>;
   average_score: ProbabilityString;

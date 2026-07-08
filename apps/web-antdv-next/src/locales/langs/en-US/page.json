@@ -602,6 +602,7 @@
         "no": "Inactive"
       },
       "columns": {
+        "artifactId": "Artifact ID",
         "contentHash": "Content hash",
         "kind": "Kind",
         "sampleCount": "Samples",
@@ -630,7 +631,16 @@
         "modelPlaceholder": "Select model version",
         "calibrationDataset": "Calibration dataset",
         "datasetPlaceholder": "Select calibration dataset",
-        "method": "Calibration method"
+        "method": "Calibration method",
+        "preflight": {
+          "disjointOk": "Disjoint from every training dataset",
+          "disjointFail": "Overlaps an existing training dataset — the fit will be rejected",
+          "embargoOk": "Embargo gap satisfied",
+          "embargoFail": "Starts before the required embargo gap — the fit will be rejected",
+          "requiredStart": "Must start at/after {time}",
+          "window": "Calibration window {calStart} → {calEnd} · training window ends {trainEnd}",
+          "checkFailed": "Could not run the preflight check (the fit will still be validated server-side on submit)"
+        }
       },
       "activate": {
         "title": "Activate bias table",
@@ -645,7 +655,10 @@
         "icGatedOff": "IC {ic} (gated off)",
         "categorySamples": "{count} samples",
         "reliabilityTitle": "Reliability report",
-        "reliabilityHint": "Predicted vs empirical frequency by score bucket (diagonal = perfect calibration).",
+        "reliabilityHint": "Predicted vs empirical frequency by calibrated-probability bucket (diagonal = perfect calibration); vertical bars are the Wilson confidence interval.",
+        "reliabilityEmpty": "No reliability samples",
+        "reliabilityXAxis": "Predicted probability",
+        "reliabilityYAxis": "Empirical frequency",
         "fields": {
           "kind": "Kind",
           "contentHash": "Content hash",
@@ -654,7 +667,9 @@
           "sampleCount": "Samples",
           "active": "Active",
           "mappingMethod": "Mapping method",
-          "calibrationSamples": "Calibration samples"
+          "calibrationSamples": "Calibration samples",
+          "modelVersionId": "Model version",
+          "calibrationDatasetId": "Calibration dataset"
         },
         "metrics": {
           "brier": "Brier score",
@@ -670,8 +685,8 @@
           "samples": "Samples"
         },
         "reliabilityColumns": {
-          "scoreLo": "Score ≥",
-          "scoreHi": "Score <",
+          "predictedLo": "Predicted probability ≥",
+          "predictedHi": "Predicted probability <",
           "predicted": "Predicted",
           "empirical": "Empirical",
           "mae": "Mean MAE (bps)",
@@ -1792,6 +1807,7 @@
         "aggregateExposure": "Aggregate Exposure Cap",
         "aggregateExposureAllocated": "Allocated",
         "aggregateExposureCap": "Cap",
+        "aggregateExposureDisabled": "No aggregate exposure cap was enforced for this report (disabled, or the capital base was non-positive).",
         "warnings": "Warnings",
         "count": "Count"
       },
@@ -1919,10 +1935,20 @@
       "bindingConstraint": "Binding Constraint",
       "sizingModel": "Sizing Model",
       "edge": "Edge",
-      "kelly": "Kelly Fraction",
+      "kelly": "Applied Multiplier (kelly_fraction × every shrink)",
       "edgeUncertaintyShrink": "Edge-uncertainty shrink",
       "correlationShrink": "Correlation shrink",
-      "reason": "Sizing Reason"
+      "reason": "Sizing Reason",
+      "waterfall": {
+        "title": "Kelly sizing waterfall",
+        "fStar": "f* (full Kelly)",
+        "kellyFraction": "Kelly fraction",
+        "confidence": "Confidence",
+        "drawdown": "Drawdown",
+        "edgeUncertainty": "Edge uncertainty",
+        "correlation": "Correlation",
+        "cap": "Position cap"
+      }
     },
     "exitPlan": {
       "title": "Exit Plan",

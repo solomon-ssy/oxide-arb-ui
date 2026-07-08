@@ -1,7 +1,10 @@
 <script lang="ts" setup>
-import type { FitModelCalibratorRequest } from '@vben/types';
+import type {
+  FitModelCalibratorRequest,
+  ModelCalibrationFitPreflightView,
+} from '@vben/types';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -11,10 +14,13 @@ import {
   TRAINING_DATASET_STATUSES,
 } from '@vben/types';
 
-import { message, Select } from 'antdv-next';
+import { useDebounceFn } from '@vueuse/core';
+import { Alert, message, Select, Spin } from 'antdv-next';
 
+import { fetchCalibrationFitPreflight } from '#/api/calibration';
 import { listModels, listTrainingDatasets } from '#/api/research';
 import { $t } from '#/locales';
+import { formatDateTimeLocal } from '#/shared/components/format';
 
 defineOptions({ name: 'FitModelCalibratorModal' });
 
@@ -41,6 +47,41 @@ const calibrationDatasetId = ref<string | undefined>();
 const method = ref<FitModelCalibratorBody['method']>(
   CALIBRATION_METHODS.isotonic,
 );
+
+const preflight = ref<ModelCalibrationFitPreflightView | null>(null);
+const preflightLoading = ref(false);
+const preflightError = ref<null | string>(null);
+
+const runPreflight = useDebounceFn(async () => {
+  const model = modelVersionId.value;
+  const dataset = calibrationDatasetId.value;
+  if (!model || !dataset) {
+    preflight.value = null;
+    preflightError.value = null;
+    return;
+  }
+  preflightLoading.value = true;
+  preflightError.value = null;
+  try {
+    preflight.value = await fetchCalibrationFitPreflight(model, dataset);
+  } catch {
+    // Preflight is advisory only — the authoritative check still runs
+    // server-side at fit time, so a transient preflight failure must never
+    // block the operator from submitting.
+    preflight.value = null;
+    preflightError.value = $t(
+      'page.research.calibrationArtifacts.fitCalibrator.preflight.checkFailed',
+    );
+  } finally {
+    preflightLoading.value = false;
+  }
+}, 400);
+
+watch([modelVersionId, calibrationDatasetId], () => {
+  preflight.value = null;
+  preflightError.value = null;
+  void runPreflight();
+});
 
 async function loadOptions() {
   loading.value = true;
@@ -130,6 +171,8 @@ const [Modal, modalApi] = useVbenModal({
       modelVersionId.value = undefined;
       calibrationDatasetId.value = undefined;
       method.value = CALIBRATION_METHODS.isotonic;
+      preflight.value = null;
+      preflightError.value = null;
       void loadOptions();
     } else {
       payload.value = null;
@@ -186,6 +229,70 @@ const [Modal, modalApi] = useVbenModal({
         </span>
         <Select v-model:value="method" :options="methodOptions" />
       </div>
+
+      <Spin v-if="preflightLoading" size="small" />
+      <Alert
+        v-else-if="preflightError"
+        :message="preflightError"
+        show-icon
+        type="warning"
+      />
+      <template v-else-if="preflight">
+        <Alert
+          :message="
+            $t(
+              preflight.disjoint_ok
+                ? 'page.research.calibrationArtifacts.fitCalibrator.preflight.disjointOk'
+                : 'page.research.calibrationArtifacts.fitCalibrator.preflight.disjointFail',
+            )
+          "
+          :type="preflight.disjoint_ok ? 'success' : 'error'"
+          show-icon
+        />
+        <Alert
+          :message="
+            $t(
+              preflight.embargo_ok
+                ? 'page.research.calibrationArtifacts.fitCalibrator.preflight.embargoOk'
+                : 'page.research.calibrationArtifacts.fitCalibrator.preflight.embargoFail',
+            )
+          "
+          :description="
+            preflight.required_start
+              ? $t(
+                  'page.research.calibrationArtifacts.fitCalibrator.preflight.requiredStart',
+                  { time: formatDateTimeLocal(preflight.required_start) },
+                )
+              : undefined
+          "
+          :type="preflight.embargo_ok ? 'success' : 'error'"
+          show-icon
+        />
+        <ul
+          v-if="preflight.messages.length > 0"
+          class="text-destructive list-disc pl-4 text-xs"
+        >
+          <li v-for="(msg, index) in preflight.messages" :key="index">
+            {{ msg }}
+          </li>
+        </ul>
+        <p class="text-muted-foreground text-xs">
+          {{
+            $t(
+              'page.research.calibrationArtifacts.fitCalibrator.preflight.window',
+              {
+                calStart: formatDateTimeLocal(
+                  preflight.calibration_window_start,
+                ),
+                calEnd: formatDateTimeLocal(preflight.calibration_window_end),
+                trainEnd: preflight.training_window_end
+                  ? formatDateTimeLocal(preflight.training_window_end)
+                  : '—',
+              },
+            )
+          }}
+        </p>
+      </template>
     </div>
   </Modal>
 </template>

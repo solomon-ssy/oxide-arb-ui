@@ -82,15 +82,15 @@ const binColumns = computed(() => [
 
 const reliabilityBinColumns = computed(() => [
   {
-    dataIndex: 'score_lo',
+    dataIndex: 'predicted_lo',
     title: $t(
-      'page.research.calibrationArtifacts.detail.reliabilityColumns.scoreLo',
+      'page.research.calibrationArtifacts.detail.reliabilityColumns.predictedLo',
     ),
   },
   {
-    dataIndex: 'score_hi',
+    dataIndex: 'predicted_hi',
     title: $t(
-      'page.research.calibrationArtifacts.detail.reliabilityColumns.scoreHi',
+      'page.research.calibrationArtifacts.detail.reliabilityColumns.predictedHi',
     ),
   },
   {
@@ -296,6 +296,28 @@ const [Drawer, drawerApi] = useVbenDrawer({
               >
                 {{ modelPayload.reliability.n_samples }}
               </DescriptionsItem>
+              <DescriptionsItem
+                :label="
+                  $t(
+                    'page.research.calibrationArtifacts.detail.fields.modelVersionId',
+                  )
+                "
+              >
+                <span class="break-all font-mono text-xs">
+                  {{ modelPayload.model_version_id }}
+                </span>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="
+                  $t(
+                    'page.research.calibrationArtifacts.detail.fields.calibrationDatasetId',
+                  )
+                "
+              >
+                <span class="break-all font-mono text-xs">
+                  {{ modelPayload.calibration_dataset_id }}
+                </span>
+              </DescriptionsItem>
             </Descriptions>
           </div>
           <Table
@@ -303,7 +325,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
             :columns="reliabilityBinColumns"
             :data-source="modelPayload.reliability.bins"
             :pagination="false"
-            row-key="score_lo"
+            row-key="predicted_lo"
             size="small"
           >
             <template #bodyCell="{ column, record }">

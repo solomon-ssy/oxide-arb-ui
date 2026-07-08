@@ -31,11 +31,8 @@ import {
 defineOptions({ name: 'ReportOverview' });
 
 const props = defineProps<{
-  maxAggregateExposurePct?: number;
   report: QuantReportDetailView;
 }>();
-
-const DEFAULT_AGGREGATE_EXPOSURE_PCT = 0.25;
 
 const router = useRouter();
 
@@ -57,16 +54,17 @@ const eventAllocations = computed(() =>
   Object.entries(summary.value.event_allocation),
 );
 
-const aggregateExposurePct = computed(
-  () => props.maxAggregateExposurePct ?? DEFAULT_AGGREGATE_EXPOSURE_PCT,
-);
-
+// Frozen server-side at report-compose time from the exact account +
+// runtime-config this report solved against (Phase 11.3 §10) — never
+// re-derived client-side from a separately-fetched runtime-config version,
+// which may not even be the one this report used and may use a different
+// (pre-11.3-fix) bankroll denominator than the LP actually enforced.
 const aggregateExposureCapUsd = computed(() => {
-  const bankroll = Number(props.report.capital_base_usd);
-  if (!Number.isFinite(bankroll) || bankroll <= 0) {
-    return 0;
-  }
-  return bankroll * aggregateExposurePct.value;
+  const raw = summary.value.aggregate_exposure_cap_usd;
+  const parsed = raw === null || raw === undefined ? null : Number(raw);
+  return parsed !== null && Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : null;
 });
 
 const aggregateExposureAllocatedUsd = computed(() =>
@@ -75,7 +73,7 @@ const aggregateExposureAllocatedUsd = computed(() =>
 
 const aggregateExposureProgress = computed(() => {
   const cap = aggregateExposureCapUsd.value;
-  if (cap <= 0) {
+  if (cap === null) {
     return 0;
   }
   return Math.min(
@@ -247,7 +245,7 @@ function openRuntimeConfig() {
       size="small"
       :title="$t('page.quantReports.detail.summary.aggregateExposure')"
     >
-      <div class="flex flex-col gap-2">
+      <div v-if="aggregateExposureCapUsd !== null" class="flex flex-col gap-2">
         <Progress
           :percent="aggregateExposureProgress"
           :status="aggregateExposureProgress >= 100 ? 'exception' : 'active'"
@@ -266,10 +264,17 @@ function openRuntimeConfig() {
             <span class="font-mono">{{
               formatUsd(String(aggregateExposureCapUsd))
             }}</span>
-            ({{ formatPercent(String(aggregateExposurePct)) }})
           </span>
         </div>
       </div>
+      <Alert
+        v-else
+        :message="
+          $t('page.quantReports.detail.summary.aggregateExposureDisabled')
+        "
+        show-icon
+        type="info"
+      />
     </Card>
 
     <Card size="small" :title="$t('page.quantReports.detail.summary.title')">

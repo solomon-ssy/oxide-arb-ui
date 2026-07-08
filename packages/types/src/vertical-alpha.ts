@@ -7,11 +7,7 @@ import type {
 
 // Calibration artifact types moved to `./calibration` (Phase 11.3 §3.4).
 export type {
-  ActivateBiasTableRequest,
   ActivateCalibrationArtifactRequest,
-  BiasTableDetailView,
-  BiasTableListQuery,
-  BiasTableSummaryView,
   BindCalibrationRequest,
   CalibrationArtifactDetailView,
   CalibrationArtifactListQuery,

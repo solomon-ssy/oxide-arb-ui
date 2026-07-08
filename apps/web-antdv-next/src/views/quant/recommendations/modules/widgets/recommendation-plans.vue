@@ -34,6 +34,110 @@ const sizing = computed(() => props.recommendation.sizing_plan);
 const exit = computed(() => props.recommendation.exit_plan);
 const risk = computed(() => props.recommendation.risk_envelope);
 
+/** One multiplier stage in the Kelly sizing waterfall. */
+interface WaterfallStep {
+  key: string;
+  label: string;
+  /** The multiplier applied at this stage (`null` for the starting f*). */
+  factor: null | number;
+  /** The running fraction after this stage. */
+  value: number;
+  /** Whether this stage's shrink is the one that bound the Kelly-stage size. */
+  isBinding: boolean;
+}
+
+/**
+ * The full f* → ×kelly_fraction → ×confidence → ×drawdown →
+ * ×edge_uncertainty → ×correlation → raw → cap waterfall (Phase 11.3 §10).
+ * `null` when the recommendation's return model is uncalibrated / edge-free
+ * (no Kelly provenance was recorded for it).
+ */
+const waterfallSteps = computed<null | WaterfallStep[]>(() => {
+  const plan = sizing.value;
+  const fStar = toNumber(plan.f_star_applied);
+  if (fStar === null) {
+    return null;
+  }
+  const kellyFractionConfig = toNumber(plan.kelly_fraction_config_applied) ?? 1;
+  const confidenceShrink = toNumber(plan.confidence_shrink_applied) ?? 1;
+  const drawdownShrink = toNumber(plan.drawdown_shrink_applied) ?? 1;
+  const edgeUncertaintyShrink =
+    toNumber(plan.edge_uncertainty_shrink_applied) ?? 1;
+  const correlationShrink = toNumber(plan.correlation_shrink_applied) ?? 1;
+  const positionCap = toNumber(plan.position_cap_fraction_applied);
+
+  const binding = plan.binding_constraint;
+  let running = fStar;
+  const steps: WaterfallStep[] = [
+    {
+      key: 'f_star',
+      label: $t('page.quantRecommendations.sizingPlan.waterfall.fStar'),
+      factor: null,
+      value: running,
+      isBinding: false,
+    },
+  ];
+  const stage = (
+    key: string,
+    labelKey: string,
+    factor: number,
+    bindingConstraint: string,
+  ) => {
+    running *= factor;
+    steps.push({
+      key,
+      label: $t(`page.quantRecommendations.sizingPlan.waterfall.${labelKey}`),
+      factor,
+      value: running,
+      isBinding: binding === bindingConstraint,
+    });
+  };
+  stage('kelly_fraction', 'kellyFraction', kellyFractionConfig, 'kelly_cap');
+  stage('confidence', 'confidence', confidenceShrink, 'confidence_cap');
+  stage('drawdown', 'drawdown', drawdownShrink, 'drawdown_cap');
+  stage(
+    'edge_uncertainty',
+    'edgeUncertainty',
+    edgeUncertaintyShrink,
+    'aggregate_exposure_cap',
+  );
+  stage('correlation', 'correlation', correlationShrink, 'correlation_cap');
+  if (positionCap !== null) {
+    steps.push({
+      key: 'cap',
+      label: $t('page.quantRecommendations.sizingPlan.waterfall.cap'),
+      factor: null,
+      value: Math.min(running, positionCap),
+      isBinding: running > positionCap,
+    });
+  }
+  return steps;
+});
+
+const waterfallMax = computed(() => {
+  const steps = waterfallSteps.value;
+  if (!steps || steps.length === 0) {
+    return 1;
+  }
+  return Math.max(...steps.map((step) => step.value), 1e-9);
+});
+
+function toNumber(value: null | string | undefined): null | number {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatFraction(value: number): string {
+  return `${(value * 100).toFixed(2)}%`;
+}
+
+function formatFactor(factor: null | number): string {
+  return factor === null ? '' : `×${factor.toFixed(3)}`;
+}
+
 const trailingStopLabel = computed(() => {
   const stop = exit.value.trailing_stop;
   if (!stop) {
@@ -265,6 +369,41 @@ function millis(value: number): string {
           {{ sizing.sizing_reason || EMPTY_PLACEHOLDER }}
         </DescriptionsItem>
       </Descriptions>
+
+      <div v-if="waterfallSteps" class="mt-3">
+        <p class="text-muted-foreground mb-2 text-xs">
+          {{ $t('page.quantRecommendations.sizingPlan.waterfall.title') }}
+        </p>
+        <div class="flex flex-col gap-1.5">
+          <div
+            v-for="step in waterfallSteps"
+            :key="step.key"
+            class="flex items-center gap-2 text-xs"
+          >
+            <span
+              class="w-28 shrink-0"
+              :class="{ 'font-semibold': step.isBinding }"
+            >
+              {{ step.label }}
+              <span v-if="step.factor !== null" class="text-muted-foreground">
+                ({{ formatFactor(step.factor) }})
+              </span>
+            </span>
+            <div class="bg-muted h-3 flex-1 overflow-hidden rounded">
+              <div
+                class="h-full rounded"
+                :class="step.isBinding ? 'bg-destructive' : 'bg-primary'"
+                :style="{
+                  width: `${Math.min(100, (step.value / waterfallMax) * 100)}%`,
+                }"
+              ></div>
+            </div>
+            <span class="w-16 shrink-0 text-right font-mono">
+              {{ formatFraction(step.value) }}
+            </span>
+          </div>
+        </div>
+      </div>
     </Card>
 
     <Card size="small" :title="$t('page.quantRecommendations.exitPlan.title')">

@@ -41,7 +41,7 @@
     "researchBacktests": "回测",
     "researchJobs": "任务中心",
     "researchFactors": "因子",
-    "researchCalibrationArtifacts": "校准 Artifact",
+    "researchCalibrationArtifacts": "校准产物",
     "researchMarketLinkages": "市场联动",
     "researchDomainSources": "域数据源",
     "researchBasisAlerts": "基差告警",
@@ -590,7 +590,7 @@
       }
     },
     "calibrationArtifacts": {
-      "listTitle": "校准 Artifact 目录",
+      "listTitle": "校准产物目录",
       "fitWindowSeparator": "→",
       "tabs": {
         "all": "全部",
@@ -602,7 +602,8 @@
         "no": "未激活"
       },
       "columns": {
-        "contentHash": "Content hash",
+        "artifactId": "产物 ID",
+        "contentHash": "内容哈希",
         "kind": "类型",
         "sampleCount": "样本数",
         "active": "激活",
@@ -630,7 +631,16 @@
         "modelPlaceholder": "选择模型版本",
         "calibrationDataset": "校准数据集",
         "datasetPlaceholder": "选择校准数据集",
-        "method": "校准方法"
+        "method": "校准方法",
+        "preflight": {
+          "disjointOk": "与所有训练数据集不相交",
+          "disjointFail": "与已有训练数据集重叠——提交后拟合会被拒绝",
+          "embargoOk": "满足 embargo 间隔要求",
+          "embargoFail": "早于所需 embargo 间隔——提交后拟合会被拒绝",
+          "requiredStart": "必须晚于或等于 {time} 开始",
+          "window": "校准窗口 {calStart} → {calEnd} · 训练窗口结束于 {trainEnd}",
+          "checkFailed": "无法执行预检（提交时后端仍会校验）"
+        }
       },
       "activate": {
         "title": "激活偏差表",
@@ -638,27 +648,32 @@
         "feedback": "配置版本已暂存 — 请在 runtime config 中激活"
       },
       "detail": {
-        "title": "校准 Artifact",
+        "title": "校准产物",
         "provenance": "溯源",
         "emptyCategory": "无合格分类",
         "icSignificant": "IC {ic}（显著）",
         "icGatedOff": "IC {ic}（已门控关闭）",
         "categorySamples": "{count} 个样本",
         "reliabilityTitle": "可靠性报告",
-        "reliabilityHint": "各分数桶的预测频率 vs 经验频率（对角线 = 完美校准）。",
+        "reliabilityHint": "各校准后概率桶的预测频率 vs 经验频率（对角线 = 完美校准）；竖线为 Wilson 置信区间。",
+        "reliabilityEmpty": "无可靠性样本",
+        "reliabilityXAxis": "预测概率",
+        "reliabilityYAxis": "经验频率",
         "fields": {
           "kind": "类型",
-          "contentHash": "Content hash",
+          "contentHash": "内容哈希",
           "fitWindow": "拟合窗口",
-          "calibrationSplitHash": "Calibration split hash",
+          "calibrationSplitHash": "校准集哈希",
           "sampleCount": "样本数",
           "active": "激活",
           "mappingMethod": "映射方法",
-          "calibrationSamples": "校准样本数"
+          "calibrationSamples": "校准样本数",
+          "modelVersionId": "模型版本",
+          "calibrationDatasetId": "校准数据集"
         },
         "metrics": {
           "brier": "Brier 分数",
-          "logLoss": "Log loss",
+          "logLoss": "Log 损失",
           "ece": "ECE"
         },
         "binColumns": {
@@ -670,8 +685,8 @@
           "samples": "样本"
         },
         "reliabilityColumns": {
-          "scoreLo": "分数 ≥",
-          "scoreHi": "分数 <",
+          "predictedLo": "预测概率 ≥",
+          "predictedHi": "预测概率 <",
           "predicted": "预测",
           "empirical": "经验",
           "mae": "平均 MAE (bps)",
@@ -1792,6 +1807,7 @@
         "aggregateExposure": "总敞口上限",
         "aggregateExposureAllocated": "已分配",
         "aggregateExposureCap": "上限",
+        "aggregateExposureDisabled": "本报告未施加总敞口上限（未启用，或资金基准非正）。",
         "warnings": "告警",
         "count": "数量"
       },
@@ -1919,10 +1935,20 @@
       "bindingConstraint": "约束因子",
       "sizingModel": "仓位模型",
       "edge": "边际",
-      "kelly": "凯利系数",
+      "kelly": "应用乘数（kelly_fraction × 各项收缩之积）",
       "edgeUncertaintyShrink": "Edge 不确定性收缩",
       "correlationShrink": "相关性收缩",
-      "reason": "仓位原因"
+      "reason": "仓位原因",
+      "waterfall": {
+        "title": "Kelly 仓位瀑布图",
+        "fStar": "f*（满额 Kelly）",
+        "kellyFraction": "Kelly 分数",
+        "confidence": "置信度",
+        "drawdown": "回撤",
+        "edgeUncertainty": "Edge 不确定性",
+        "correlation": "相关性",
+        "cap": "单仓上限"
+      }
     },
     "exitPlan": {
       "title": "退出计划",

@@ -23,9 +23,15 @@ export function useCalibrationArtifactColumns(
             `/research/calibration-artifacts?open=${row.artifact_id}`,
         },
       },
-      field: 'content_hash',
+      field: 'artifact_id',
       minWidth: 220,
       showOverflow: 'tooltip',
+      title: $t('page.research.calibrationArtifacts.columns.artifactId'),
+    },
+    {
+      cellRender: { name: 'CellCopy' },
+      field: 'content_hash',
+      minWidth: 160,
       title: $t('page.research.calibrationArtifacts.columns.contentHash'),
     },
     {

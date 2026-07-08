@@ -78,6 +78,7 @@ export interface SizingPlan {
   category_exposure_after_usd: UsdString;
   suggested_shares: SharesString;
   portfolio_weight_pct: DecimalString;
+  /** The merged product of every stage below — not the config constant (see `kelly_fraction_config_applied`). */
   kelly_fraction_applied: DecimalString | null;
   edge_uncertainty_shrink_applied?: DecimalString | null;
   correlation_shrink_applied?: DecimalString | null;
@@ -85,6 +86,16 @@ export interface SizingPlan {
   sizing_reason: string;
   sizing_model: SizingModelKind;
   edge_bps: BpsString | null;
+  /** Sizing waterfall provenance (Phase 11.3 §10) — the raw full-Kelly fraction. */
+  f_star_applied?: DecimalString | null;
+  /** The governed static fractional-Kelly constant (e.g. 0.5 for half-Kelly). */
+  kelly_fraction_config_applied?: DecimalString | null;
+  confidence_shrink_applied?: DecimalString | null;
+  drawdown_shrink_applied?: DecimalString | null;
+  /** Fraction before the per-position equity cap. */
+  raw_fraction_applied?: DecimalString | null;
+  /** The per-position equity cap (`portfolio.sizing.max_position_pct`). */
+  position_cap_fraction_applied?: DecimalString | null;
 }
 
 export interface ExitPlan {

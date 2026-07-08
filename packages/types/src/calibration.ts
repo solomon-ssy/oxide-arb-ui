@@ -47,10 +47,10 @@ export type MonotoneMappingView =
   | { a: DecimalString; b: DecimalString; method: 'platt' }
   | { knots: IsotonicKnotView[]; method: 'isotonic' };
 
-/** One score-bucket reliability-diagram row (mirrors Rust `ReliabilityBin`). */
+/** One calibrated-probability-bucket reliability-diagram row (mirrors Rust `ReliabilityBin`). */
 export interface ReliabilityBinView {
-  score_lo: DecimalString;
-  score_hi: DecimalString;
+  predicted_lo: DecimalString;
+  predicted_hi: DecimalString;
   sample_count: number;
   mean_predicted: ProbabilityString;
   empirical_frequency: ProbabilityString;
@@ -69,6 +69,8 @@ export interface ReliabilityReportView {
 
 /** Parsed `model_score` artifact payload. */
 export interface ModelScoreCalibrationPayload {
+  model_version_id: UuidString;
+  calibration_dataset_id: UuidString;
   mapping: MonotoneMappingView;
   reliability: ReliabilityReportView;
 }
@@ -134,28 +136,17 @@ export interface BindCalibrationRequest {
   reason: string;
 }
 
-// ── Backward-compat aliases (Phase 11.2 → 11.3) ────────────────────────────
-
-/** @deprecated Use {@link CalibrationArtifactSummaryView} with `artifact_id`. */
-export interface BiasTableSummaryView extends CalibrationArtifactSummaryView {
-  bias_table_id: UuidString;
-  category_count: number;
-  total_sample_count: number;
+/**
+ * Read-only disjoint + embargo preflight result for the "Fit Model
+ * Calibrator" wizard (mirrors Rust `ModelCalibrationFitPreflightView`).
+ */
+export interface ModelCalibrationFitPreflightView {
+  disjoint_ok: boolean;
+  embargo_ok: boolean;
+  calibration_window_start: IsoDateTime;
+  calibration_window_end: IsoDateTime;
+  training_window_start: IsoDateTime | null;
+  training_window_end: IsoDateTime | null;
+  required_start: IsoDateTime | null;
+  messages: string[];
 }
-
-/** @deprecated Use {@link CalibrationArtifactDetailView} with `artifact_id`. */
-export interface BiasTableDetailView extends Omit<
-  CalibrationArtifactDetailView,
-  'kind' | 'payload_json'
-> {
-  bias_table_id: UuidString;
-  category_count: number;
-  total_sample_count: number;
-  by_category: MarketPriceBiasPayload;
-}
-
-/** @deprecated Use {@link CalibrationArtifactListQuery}. */
-export type BiasTableListQuery = CalibrationArtifactListQuery;
-
-/** @deprecated Use {@link ActivateCalibrationArtifactRequest}. */
-export type ActivateBiasTableRequest = ActivateCalibrationArtifactRequest;

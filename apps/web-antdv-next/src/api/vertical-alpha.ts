@@ -1,20 +1,13 @@
 import type {
   AcknowledgeBasisAlertRequest,
-  ActivateCalibrationArtifactRequest,
   BasisAlertListQuery,
   BasisAlertView,
-  BiasTableDetailView,
-  BiasTableListQuery,
-  BiasTableSummaryView,
-  CalibrationArtifactDetailView,
-  CalibrationArtifactSummaryView,
   DomainSourceCursorView,
   LinkageResolveSummaryView,
   MarketLinkageDetailView,
   MarketLinkageHistoryEntryView,
   MarketLinkageListQuery,
   MarketLinkageSummaryView,
-  MarketPriceBiasPayload,
   NegRiskEventDriftView,
   OverrideLinkageRequest,
   Paginated,
@@ -26,11 +19,6 @@ import type {
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
-import {
-  activateCalibrationArtifact,
-  getCalibrationArtifact,
-  listCalibrationArtifacts,
-} from '#/api/calibration';
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
@@ -62,66 +50,6 @@ export namespace VerticalAlphaApi {
   export const basisAlerts = '/research/basis-alerts';
   export const acknowledgeBasisAlert = (alertId: string) =>
     `/research/basis-alerts/${alertId}/acknowledge`;
-}
-
-function toBiasTableSummary(
-  row: CalibrationArtifactSummaryView,
-): BiasTableSummaryView {
-  return {
-    ...row,
-    bias_table_id: row.artifact_id,
-    category_count: 0,
-    total_sample_count: row.sample_count,
-  };
-}
-
-function toBiasTableDetail(
-  detail: CalibrationArtifactDetailView,
-): BiasTableDetailView {
-  const byCategory =
-    detail.kind === 'market_price_bias'
-      ? (detail.payload_json as MarketPriceBiasPayload)
-      : {};
-  return {
-    artifact_id: detail.artifact_id,
-    bias_table_id: detail.artifact_id,
-    content_hash: detail.content_hash,
-    fit_window_start: detail.fit_window_start,
-    fit_window_end: detail.fit_window_end,
-    calibration_split_hash: detail.calibration_split_hash,
-    sample_count: detail.sample_count,
-    active: detail.active,
-    created_at: detail.created_at,
-    category_count: Object.keys(byCategory).length,
-    total_sample_count: detail.sample_count,
-    by_category: byCategory,
-  };
-}
-
-/** @deprecated Use {@link listCalibrationArtifacts}. */
-export async function listBiasTables(query: BiasTableListQuery = {}) {
-  const page = await listCalibrationArtifacts({
-    ...query,
-    kind: 'market_price_bias',
-  });
-  return {
-    ...page,
-    items: page.items.map((row) => toBiasTableSummary(row)),
-  } satisfies Paginated<BiasTableSummaryView>;
-}
-
-/** @deprecated Use {@link getCalibrationArtifact}. */
-export async function getBiasTable(id: string) {
-  return toBiasTableDetail(await getCalibrationArtifact(id));
-}
-
-/** @deprecated Use {@link activateCalibrationArtifact}. */
-export async function activateBiasTable(
-  id: string,
-  body: ActivateCalibrationArtifactRequest,
-  ctx: GovernedContext,
-) {
-  return activateCalibrationArtifact(id, body, ctx);
 }
 
 /** `GET /research/market-linkages` — paginated linkage ledger catalog. */
