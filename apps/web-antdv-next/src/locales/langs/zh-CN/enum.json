@@ -182,6 +182,7 @@
     "kelly": "凯利"
   },
   "bindingConstraint": {
+    "aggregate_exposure_cap": "总敞口上限",
     "available_cash": "可用现金",
     "category_cap": "类别上限",
     "confidence_cap": "置信度上限",
@@ -333,7 +334,19 @@
     "dataset_build": "数据集构建",
     "model_train": "模型训练",
     "backtest": "回测",
-    "bias_table_fit": "偏差表拟合"
+    "bias_table_fit": "偏差表拟合",
+    "model_calibration_fit": "模型校准器拟合"
+  },
+  "calibrationKind": {
+    "model_score": "模型分数",
+    "market_price_bias": "市场价格偏差"
+  },
+  "calibrationMethod": {
+    "isotonic": "Isotonic",
+    "platt": "Platt"
+  },
+  "downsideSource": {
+    "mfe_mae": "MFE/MAE"
   },
   "operationCategory": {
     "auth": "认证",

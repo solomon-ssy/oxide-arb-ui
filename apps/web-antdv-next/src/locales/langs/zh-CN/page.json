@@ -41,7 +41,7 @@
     "researchBacktests": "回测",
     "researchJobs": "任务中心",
     "researchFactors": "因子",
-    "researchBiasTables": "偏差表",
+    "researchCalibrationArtifacts": "校准 Artifact",
     "researchMarketLinkages": "市场联动",
     "researchDomainSources": "域数据源",
     "researchBasisAlerts": "基差告警",
@@ -311,6 +311,7 @@
         "predictionHorizonSecs": "预测地平线（秒）",
         "featureSchemaVersion": "特征 Schema 版本",
         "labelSchemaVersion": "标签 Schema 版本",
+        "featureRequirements": "特征需求",
         "specJson": "规格元数据（JSON）",
         "specJsonHelp": "可选自由 JSON（作者备注、调参意图），默认为空对象。",
         "incomplete": "请填写名称，且预测地平线需 ≥ 1。",
@@ -324,11 +325,22 @@
         "featureSchemaVersion": "特征 Schema 版本",
         "labelSchemaVersion": "标签 Schema 版本",
         "updatedAt": "更新时间",
+        "featureRequirements": "特征需求",
         "specJson": "规格元数据",
         "nextSteps": "下一步",
         "nextStepsHelp": "规格创建后，通常先构建训练数据集，再训练模型版本。",
         "buildDataset": "构建训练数据集",
         "viewTrainedModels": "查看已训练模型"
+      },
+      "featureRequirements": {
+        "generic": "通用需求",
+        "genericPlaceholder": "选择所有候选都必须具备的特征",
+        "genericHelp": "未配置 category 路由时对所有市场生效；特征名须存在于受治理的特征 Schema。",
+        "byCategory": "按分类的附加需求",
+        "categoryPlaceholder": "选择该分类路由所需的特征",
+        "categoryHelp": "当运行配置中配置了 category 指针时，在通用需求之上追加。",
+        "cryptoTemplate": "一键填充 Crypto 模板",
+        "clearCategory": "清空该分类"
       }
     },
     "models": {
@@ -402,9 +414,26 @@
         "summary": "下线已发布的模型版本 {id}。",
         "feedback": "模型已下线。"
       },
+      "bindCalibration": {
+        "action": "绑定校准器",
+        "title": "绑定校准器",
+        "summary": "创建新的候选模型版本，其收益模型由所选校准 artifact 导出。",
+        "calibrator": "模型分数校准器",
+        "calibratorPlaceholder": "选择校准 artifact",
+        "downsideSource": "Downside 来源",
+        "validation": "请选择校准 artifact。"
+      },
       "detail": {
         "title": "已训练模型",
         "summary": "概要",
+        "returnModel": "收益模型",
+        "returnModelKind": "类型",
+        "returnModelHeuristic": "启发式（未校准）",
+        "returnModelCalibrated": "已校准",
+        "returnModelHeuristicWarning": "该模型使用未校准启发式收益映射。绑定校准器前，发布与执行路径 fail-closed。",
+        "returnModelUnknown": "该版本未暴露收益模型溯源信息。",
+        "calibratorRef": "校准器",
+        "downsideSource": "Downside 来源",
         "publishReadiness": "发布就绪度",
         "metrics": "训练指标",
         "metricsPanel": {
@@ -560,13 +589,23 @@
         }
       }
     },
-    "biasTables": {
-      "listTitle": "Favorite-longshot 偏差表",
+    "calibrationArtifacts": {
+      "listTitle": "校准 Artifact 目录",
       "fitWindowSeparator": "→",
+      "tabs": {
+        "all": "全部",
+        "modelScore": "模型分数",
+        "marketPriceBias": "市场价格偏差"
+      },
+      "active": {
+        "yes": "已激活",
+        "no": "未激活"
+      },
       "columns": {
         "contentHash": "Content hash",
-        "categoryCount": "分类数",
+        "kind": "类型",
         "sampleCount": "样本数",
+        "active": "激活",
         "fitWindow": "拟合窗口",
         "createdAt": "创建时间",
         "operation": "操作"
@@ -575,30 +614,52 @@
         "detail": "详情",
         "activate": "激活"
       },
-      "fit": {
+      "fitBiasTable": {
         "action": "拟合偏差表",
         "title": "拟合偏差表",
         "summary": "对最近 {days} 天已结算市场拟合 favorite-longshot 偏差表。结算 spine 过薄时 fail-closed（不产出 artifact）。",
         "feedback": "偏差表拟合任务已入队"
       },
+      "fitCalibrator": {
+        "action": "拟合模型校准器",
+        "title": "拟合模型校准器",
+        "summary": "使用独立 held-out 校准集，为候选模型版本拟合概率校准器。",
+        "feedback": "模型校准器拟合任务已入队",
+        "validation": "请选择模型版本与校准数据集。",
+        "model": "模型版本",
+        "modelPlaceholder": "选择模型版本",
+        "calibrationDataset": "校准数据集",
+        "datasetPlaceholder": "选择校准数据集",
+        "method": "校准方法"
+      },
       "activate": {
         "title": "激活偏差表",
-        "summary": "暂存一条 runtime-config 版本，将本偏差表固定为 favorite-longshot 来源。请在 runtime-config 控制台激活该版本后才会生效。",
+        "summary": "暂存一条 runtime-config 版本，将本 market-price bias artifact 固定为 favorite-longshot 来源。请在 runtime-config 控制台激活该版本后才会生效。",
         "feedback": "配置版本已暂存 — 请在 runtime config 中激活"
       },
       "detail": {
-        "title": "偏差表",
+        "title": "校准 Artifact",
         "provenance": "溯源",
         "emptyCategory": "无合格分类",
         "icSignificant": "IC {ic}（显著）",
         "icGatedOff": "IC {ic}（已门控关闭）",
         "categorySamples": "{count} 个样本",
+        "reliabilityTitle": "可靠性报告",
+        "reliabilityHint": "各分数桶的预测频率 vs 经验频率（对角线 = 完美校准）。",
         "fields": {
+          "kind": "类型",
           "contentHash": "Content hash",
           "fitWindow": "拟合窗口",
           "calibrationSplitHash": "Calibration split hash",
-          "categoryCount": "分类数",
-          "sampleCount": "样本数"
+          "sampleCount": "样本数",
+          "active": "激活",
+          "mappingMethod": "映射方法",
+          "calibrationSamples": "校准样本数"
+        },
+        "metrics": {
+          "brier": "Brier 分数",
+          "logLoss": "Log loss",
+          "ece": "ECE"
         },
         "binColumns": {
           "priceLo": "价格 ≥",
@@ -606,6 +667,14 @@
           "implied": "隐含",
           "realized": "已实现",
           "bias": "偏差",
+          "samples": "样本"
+        },
+        "reliabilityColumns": {
+          "scoreLo": "分数 ≥",
+          "scoreHi": "分数 <",
+          "predicted": "预测",
+          "empirical": "经验",
+          "mae": "平均 MAE (bps)",
           "samples": "样本"
         }
       }
@@ -1720,6 +1789,9 @@
         "topRejections": "主要被拒原因",
         "categoryAllocation": "类别分配",
         "eventAllocation": "事件分配",
+        "aggregateExposure": "总敞口上限",
+        "aggregateExposureAllocated": "已分配",
+        "aggregateExposureCap": "上限",
         "warnings": "告警",
         "count": "数量"
       },
@@ -1848,6 +1920,8 @@
       "sizingModel": "仓位模型",
       "edge": "边际",
       "kelly": "凯利系数",
+      "edgeUncertaintyShrink": "Edge 不确定性收缩",
+      "correlationShrink": "相关性收缩",
       "reason": "仓位原因"
     },
     "exitPlan": {

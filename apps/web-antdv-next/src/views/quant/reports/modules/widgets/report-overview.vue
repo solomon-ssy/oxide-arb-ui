@@ -10,6 +10,7 @@ import {
   Card,
   Descriptions,
   DescriptionsItem,
+  Progress,
   Tag,
 } from 'antdv-next';
 
@@ -29,7 +30,12 @@ import {
 
 defineOptions({ name: 'ReportOverview' });
 
-const props = defineProps<{ report: QuantReportDetailView }>();
+const props = defineProps<{
+  maxAggregateExposurePct?: number;
+  report: QuantReportDetailView;
+}>();
+
+const DEFAULT_AGGREGATE_EXPOSURE_PCT = 0.25;
 
 const router = useRouter();
 
@@ -50,6 +56,33 @@ const categoryAllocations = computed(() =>
 const eventAllocations = computed(() =>
   Object.entries(summary.value.event_allocation),
 );
+
+const aggregateExposurePct = computed(
+  () => props.maxAggregateExposurePct ?? DEFAULT_AGGREGATE_EXPOSURE_PCT,
+);
+
+const aggregateExposureCapUsd = computed(() => {
+  const bankroll = Number(props.report.capital_base_usd);
+  if (!Number.isFinite(bankroll) || bankroll <= 0) {
+    return 0;
+  }
+  return bankroll * aggregateExposurePct.value;
+});
+
+const aggregateExposureAllocatedUsd = computed(() =>
+  Number(summary.value.total_suggested_usd),
+);
+
+const aggregateExposureProgress = computed(() => {
+  const cap = aggregateExposureCapUsd.value;
+  if (cap <= 0) {
+    return 0;
+  }
+  return Math.min(
+    100,
+    Math.round((aggregateExposureAllocatedUsd.value / cap) * 100),
+  );
+});
 
 function openRuntimeConfig() {
   void router.push(
@@ -208,6 +241,35 @@ function openRuntimeConfig() {
           }}</span>
         </DescriptionsItem>
       </Descriptions>
+    </Card>
+
+    <Card
+      size="small"
+      :title="$t('page.quantReports.detail.summary.aggregateExposure')"
+    >
+      <div class="flex flex-col gap-2">
+        <Progress
+          :percent="aggregateExposureProgress"
+          :status="aggregateExposureProgress >= 100 ? 'exception' : 'active'"
+        />
+        <div class="flex items-center justify-between text-sm">
+          <span>
+            {{
+              $t('page.quantReports.detail.summary.aggregateExposureAllocated')
+            }}
+            <span class="font-mono">{{
+              formatUsd(String(aggregateExposureAllocatedUsd))
+            }}</span>
+          </span>
+          <span>
+            {{ $t('page.quantReports.detail.summary.aggregateExposureCap') }}
+            <span class="font-mono">{{
+              formatUsd(String(aggregateExposureCapUsd))
+            }}</span>
+            ({{ formatPercent(String(aggregateExposurePct)) }})
+          </span>
+        </div>
+      </div>
     </Card>
 
     <Card size="small" :title="$t('page.quantReports.detail.summary.title')">

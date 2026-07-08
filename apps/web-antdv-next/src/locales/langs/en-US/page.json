@@ -41,7 +41,7 @@
     "researchBacktests": "Backtests",
     "researchJobs": "Task Center",
     "researchFactors": "Factors",
-    "researchBiasTables": "Bias Tables",
+    "researchCalibrationArtifacts": "Calibration Artifacts",
     "researchMarketLinkages": "Market Linkages",
     "researchDomainSources": "Domain Sources",
     "researchBasisAlerts": "Basis Alerts",
@@ -311,6 +311,7 @@
         "predictionHorizonSecs": "Prediction horizon (secs)",
         "featureSchemaVersion": "Feature schema version",
         "labelSchemaVersion": "Label schema version",
+        "featureRequirements": "Feature requirements",
         "specJson": "Spec metadata (JSON)",
         "specJsonHelp": "Optional free-form JSON (authoring notes, tuning intent); defaults to an empty object.",
         "incomplete": "Provide a name; prediction horizon must be >= 1.",
@@ -324,11 +325,22 @@
         "featureSchemaVersion": "Feature schema version",
         "labelSchemaVersion": "Label schema version",
         "updatedAt": "Updated",
+        "featureRequirements": "Feature requirements",
         "specJson": "Spec metadata",
         "nextSteps": "Next steps",
         "nextStepsHelp": "After authoring a spec, build a training dataset, then train a model version.",
         "buildDataset": "Build training dataset",
         "viewTrainedModels": "View trained models"
+      },
+      "featureRequirements": {
+        "generic": "Generic requirements",
+        "genericPlaceholder": "Select features required for every candidate",
+        "genericHelp": "Applied to all markets when no category-specific model is routed. Names must exist in the governed feature schema.",
+        "byCategory": "Category-specific requirements",
+        "categoryPlaceholder": "Select features required for this category route",
+        "categoryHelp": "Additive to generic requirements when a category pointer is configured in runtime config.",
+        "cryptoTemplate": "Fill crypto template",
+        "clearCategory": "Clear category"
       }
     },
     "models": {
@@ -402,9 +414,26 @@
         "summary": "Retire published model version {id}.",
         "feedback": "Model retired."
       },
+      "bindCalibration": {
+        "action": "Bind calibrator",
+        "title": "Bind calibrator",
+        "summary": "Create a new candidate model version whose return model is calibrated from the selected artifact.",
+        "calibrator": "Model-score calibrator",
+        "calibratorPlaceholder": "Select calibrator artifact",
+        "downsideSource": "Downside source",
+        "validation": "Select a calibrator artifact."
+      },
       "detail": {
         "title": "Trained Model",
         "summary": "Summary",
+        "returnModel": "Return Model",
+        "returnModelKind": "Kind",
+        "returnModelHeuristic": "Heuristic (uncalibrated)",
+        "returnModelCalibrated": "Calibrated",
+        "returnModelHeuristicWarning": "This model uses an uncalibrated heuristic return mapping. Publish and execution paths fail closed until a calibrator is bound.",
+        "returnModelUnknown": "Return-model provenance not exposed for this version.",
+        "calibratorRef": "Calibrator",
+        "downsideSource": "Downside source",
         "publishReadiness": "Publish Readiness",
         "metrics": "Trainer Metrics",
         "metricsPanel": {
@@ -560,13 +589,23 @@
         }
       }
     },
-    "biasTables": {
-      "listTitle": "Favorite-longshot bias tables",
+    "calibrationArtifacts": {
+      "listTitle": "Calibration artifacts",
       "fitWindowSeparator": "→",
+      "tabs": {
+        "all": "All",
+        "modelScore": "Model Score",
+        "marketPriceBias": "Market Price Bias"
+      },
+      "active": {
+        "yes": "Active",
+        "no": "Inactive"
+      },
       "columns": {
         "contentHash": "Content hash",
-        "categoryCount": "Categories",
+        "kind": "Kind",
         "sampleCount": "Samples",
+        "active": "Active",
         "fitWindow": "Fit window",
         "createdAt": "Created",
         "operation": "Actions"
@@ -575,30 +614,52 @@
         "detail": "Detail",
         "activate": "Activate"
       },
-      "fit": {
+      "fitBiasTable": {
         "action": "Fit bias table",
         "title": "Fit bias table",
         "summary": "Fit a favorite-longshot bias table over the trailing {days} days. Fails closed (no artifact) when the settlement spine is too thin.",
         "feedback": "Bias-table fit enqueued"
       },
+      "fitCalibrator": {
+        "action": "Fit model calibrator",
+        "title": "Fit model calibrator",
+        "summary": "Fit a held-out probability calibrator for a candidate model version using an independent calibration dataset.",
+        "feedback": "Model calibrator fit enqueued",
+        "validation": "Select a model version and calibration dataset.",
+        "model": "Model version",
+        "modelPlaceholder": "Select model version",
+        "calibrationDataset": "Calibration dataset",
+        "datasetPlaceholder": "Select calibration dataset",
+        "method": "Calibration method"
+      },
       "activate": {
         "title": "Activate bias table",
-        "summary": "Stage a runtime-config version pinning this bias table as the favorite-longshot source. Activate that version from the runtime-config console to make it live.",
+        "summary": "Stage a runtime-config version pinning this market-price bias artifact as the favorite-longshot source. Activate that version from the runtime-config console to make it live.",
         "feedback": "Config version staged — activate it in runtime config"
       },
       "detail": {
-        "title": "Bias table",
+        "title": "Calibration artifact",
         "provenance": "Provenance",
         "emptyCategory": "No qualifying category",
         "icSignificant": "IC {ic} (significant)",
         "icGatedOff": "IC {ic} (gated off)",
         "categorySamples": "{count} samples",
+        "reliabilityTitle": "Reliability report",
+        "reliabilityHint": "Predicted vs empirical frequency by score bucket (diagonal = perfect calibration).",
         "fields": {
+          "kind": "Kind",
           "contentHash": "Content hash",
           "fitWindow": "Fit window",
           "calibrationSplitHash": "Calibration split hash",
-          "categoryCount": "Categories",
-          "sampleCount": "Samples"
+          "sampleCount": "Samples",
+          "active": "Active",
+          "mappingMethod": "Mapping method",
+          "calibrationSamples": "Calibration samples"
+        },
+        "metrics": {
+          "brier": "Brier score",
+          "logLoss": "Log loss",
+          "ece": "ECE"
         },
         "binColumns": {
           "priceLo": "Price ≥",
@@ -606,6 +667,14 @@
           "implied": "Implied",
           "realized": "Realized",
           "bias": "Bias",
+          "samples": "Samples"
+        },
+        "reliabilityColumns": {
+          "scoreLo": "Score ≥",
+          "scoreHi": "Score <",
+          "predicted": "Predicted",
+          "empirical": "Empirical",
+          "mae": "Mean MAE (bps)",
           "samples": "Samples"
         }
       }
@@ -1720,6 +1789,9 @@
         "topRejections": "Top Rejection Reasons",
         "categoryAllocation": "Category Allocation",
         "eventAllocation": "Event Allocation",
+        "aggregateExposure": "Aggregate Exposure Cap",
+        "aggregateExposureAllocated": "Allocated",
+        "aggregateExposureCap": "Cap",
         "warnings": "Warnings",
         "count": "Count"
       },
@@ -1848,6 +1920,8 @@
       "sizingModel": "Sizing Model",
       "edge": "Edge",
       "kelly": "Kelly Fraction",
+      "edgeUncertaintyShrink": "Edge-uncertainty shrink",
+      "correlationShrink": "Correlation shrink",
       "reason": "Sizing Reason"
     },
     "exitPlan": {

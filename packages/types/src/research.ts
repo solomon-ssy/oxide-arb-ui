@@ -8,6 +8,8 @@ import type {
   UuidString,
 } from './common';
 import type {
+  DatasetPurpose,
+  DownsideSource,
   FactorDefinitionScope,
   FactorDirection,
   FactorFamily,
@@ -101,6 +103,25 @@ export interface TrainingDatasetPlanView {
   keep_rate_sample_size: number;
 }
 
+/** Heuristic (uncalibrated) return model embedded in a trained artifact. */
+export interface HeuristicReturnModelView {
+  calibration: 'heuristic';
+  max_expected_return_bps: DecimalString;
+  max_downside_bps: DecimalString;
+}
+
+/** Calibrated return model bound to a model-score calibration artifact. */
+export interface CalibratedReturnModelView {
+  calibration: 'calibrated';
+  calibrator_ref: UuidString;
+  downside_source: DownsideSource;
+}
+
+/** Return / downside mapping provenance on a trained model version. */
+export type ReturnModelView =
+  | CalibratedReturnModelView
+  | HeuristicReturnModelView;
+
 /** `GET /research/training-datasets/{id}` / build result. */
 export interface TrainingDatasetView {
   training_dataset_id: UuidString;
@@ -108,6 +129,7 @@ export interface TrainingDatasetView {
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   status: TrainingDatasetStatus;
+  purpose: DatasetPurpose;
   feature_schema_hash: string;
   factor_schema_hash: string;
   label_schema_hash: string;
@@ -146,6 +168,7 @@ export interface BuildTrainingDatasetRequest {
 /** Filter + pagination for `GET /research/training-datasets`. */
 export interface TrainingDatasetListQuery extends PageQuery, TimeRangeQuery {
   model_spec_id?: string;
+  purpose?: DatasetPurpose;
   status?: TrainingDatasetStatus;
 }
 
@@ -199,6 +222,8 @@ export interface TrainedModelView {
   created_at: IsoDateTime;
   /** Present on `POST .../train` only — materialization run id for WS hints. */
   model_run_id?: UuidString;
+  /** Return-model provenance when exposed by the registry projection. */
+  return_model?: ReturnModelView;
 }
 
 /** `POST /research/models/train` governed request body (mirrors Rust `TrainModelRequest`). */
@@ -228,6 +253,19 @@ export interface TrainModelRequest {
 /** Model family taxonomy (canonical wire labels of `qp_model_family`). */
 export type { ModelFamily } from './enums';
 
+/** Governed feature-requirements contract (mirrors `ModelFeatureRequirements`). */
+export interface ModelFeatureRequirements {
+  /** Required for every candidate when no category-specific route applies. */
+  generic: string[];
+  /** Per-category additive requirements when a category pointer is configured. */
+  by_category: Partial<Record<MarketCategory, string[]>>;
+}
+
+export const EMPTY_FEATURE_REQUIREMENTS: ModelFeatureRequirements = {
+  generic: [],
+  by_category: {},
+};
+
 /** Model-spec catalog projection (the dataset/training selector source). */
 export interface QuantModelSpecView {
   model_spec_id: string;
@@ -237,6 +275,7 @@ export interface QuantModelSpecView {
   feature_schema_version: number;
   label_schema_version: number;
   spec_json: unknown;
+  feature_requirements: ModelFeatureRequirements;
   status: PublicationStatus;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
@@ -250,6 +289,7 @@ export interface CreateModelSpecRequest {
   feature_schema_version?: number;
   label_schema_version?: number;
   spec_json?: unknown;
+  feature_requirements?: ModelFeatureRequirements;
   reason: string;
 }
 

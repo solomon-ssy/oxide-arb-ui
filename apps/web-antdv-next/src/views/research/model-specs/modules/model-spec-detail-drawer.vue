@@ -27,6 +27,8 @@ import {
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
+import FeatureRequirementsEditor from './feature-requirements-editor.vue';
+
 defineOptions({ name: 'ModelSpecDetailDrawer' });
 
 interface ModelSpecDrawerData {
@@ -158,6 +160,18 @@ const [Drawer, drawerApi] = useVbenDrawer({
               {{ formatDateTimeLocal(spec.updated_at) }}
             </DescriptionsItem>
           </Descriptions>
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.modelSpecs.detail.featureRequirements')"
+        >
+          <FeatureRequirementsEditor
+            :model-value="
+              spec.feature_requirements ?? { generic: [], by_category: {} }
+            "
+            read-only
+          />
         </Card>
 
         <Card

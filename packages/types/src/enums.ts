@@ -347,6 +347,7 @@ export type SizingModelKind = WireEnum<typeof SIZING_MODEL_KINDS>;
 
 /** The cap that bound a recommendation's final size. */
 export const BINDING_CONSTRAINTS = {
+  aggregateExposureCap: 'aggregate_exposure_cap',
   availableCash: 'available_cash',
   categoryCap: 'category_cap',
   confidenceCap: 'confidence_cap',
@@ -615,8 +616,40 @@ export const RESEARCH_JOB_KINDS = {
   backtest: 'backtest',
   biasTableFit: 'bias_table_fit',
   datasetBuild: 'dataset_build',
+  modelCalibrationFit: 'model_calibration_fit',
   modelTrain: 'model_train',
 } as const;
+
+/** Calibration artifact family (mirrors Rust `CalibrationKind`). */
+export const CALIBRATION_KINDS = {
+  marketPriceBias: 'market_price_bias',
+  modelScore: 'model_score',
+} as const;
+
+export type CalibrationKind = WireEnum<typeof CALIBRATION_KINDS>;
+
+/** Model-score calibrator fitting method (mirrors Rust `CalibrationMethod`). */
+export const CALIBRATION_METHODS = {
+  isotonic: 'isotonic',
+  platt: 'platt',
+} as const;
+
+export type CalibrationMethod = WireEnum<typeof CALIBRATION_METHODS>;
+
+/** Calibrated return-model downside source (mirrors Rust `DownsideSource`). */
+export const DOWNSIDE_SOURCES = {
+  mfeMae: 'mfe_mae',
+} as const;
+
+export type DownsideSource = WireEnum<typeof DOWNSIDE_SOURCES>;
+
+/** Training-dataset purpose (mirrors Rust `DatasetPurpose`). */
+export const DATASET_PURPOSES = {
+  calibration: 'calibration',
+  training: 'training',
+} as const;
+
+export type DatasetPurpose = WireEnum<typeof DATASET_PURPOSES>;
 
 export type ResearchJobKind = WireEnum<typeof RESEARCH_JOB_KINDS>;
 

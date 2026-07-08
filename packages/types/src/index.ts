@@ -1,4 +1,5 @@
 export type * from './account';
+export type * from './calibration';
 export type * from './common';
 export type * from './data-quality';
 // Runtime enum const objects (`QUANT_RUNTIME_MODES`, …) live here alongside types.
@@ -18,7 +19,7 @@ export type * from './quant-recommendation';
 export type * from './quant-report';
 export type * from './rbac';
 export * from './reconciliation';
-export type * from './research';
+export * from './research';
 export type * from './runtime-config';
 export type * from './settlement-redeem';
 // Pure submit-intent gate predicate (runtime function) mirroring backend guards.

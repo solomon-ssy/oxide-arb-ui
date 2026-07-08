@@ -42,8 +42,9 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
     case RESEARCH_JOB_KINDS.backtest: {
       return `/research/backtests?open=${row.result_ref}`;
     }
-    case RESEARCH_JOB_KINDS.biasTableFit: {
-      return `/research/bias-tables?open=${row.result_ref}`;
+    case RESEARCH_JOB_KINDS.biasTableFit:
+    case RESEARCH_JOB_KINDS.modelCalibrationFit: {
+      return `/research/calibration-artifacts?open=${row.result_ref}`;
     }
     case RESEARCH_JOB_KINDS.datasetBuild: {
       return `/research/datasets?open=${row.result_ref}`;

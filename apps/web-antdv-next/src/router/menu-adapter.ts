@@ -14,7 +14,7 @@ const ENABLED = 'enabled';
  */
 const PATH_KEY_ROUTE_NAMES = new Set([
   'research-backtests',
-  'research-bias-tables',
+  'research-calibration-artifacts',
   'research-datasets',
   'research-domain-sources',
   'research-factors',

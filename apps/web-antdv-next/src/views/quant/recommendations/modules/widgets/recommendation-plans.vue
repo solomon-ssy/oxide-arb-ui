@@ -246,6 +246,20 @@ function millis(value: number): string {
           {{ formatPercent(sizing.kelly_fraction_applied) }}
         </DescriptionsItem>
         <DescriptionsItem
+          v-if="sizing.edge_uncertainty_shrink_applied != null"
+          :label="
+            $t('page.quantRecommendations.sizingPlan.edgeUncertaintyShrink')
+          "
+        >
+          {{ formatPercent(sizing.edge_uncertainty_shrink_applied) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          v-if="sizing.correlation_shrink_applied != null"
+          :label="$t('page.quantRecommendations.sizingPlan.correlationShrink')"
+        >
+          {{ formatPercent(sizing.correlation_shrink_applied) }}
+        </DescriptionsItem>
+        <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.reason')"
         >
           {{ sizing.sizing_reason || EMPTY_PLACEHOLDER }}

@@ -5,7 +5,7 @@ import { ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
-import { MODEL_FAMILIES } from '@vben/types';
+import { EMPTY_FEATURE_REQUIREMENTS, MODEL_FAMILIES } from '@vben/types';
 
 import { Input, InputNumber, message, Select } from 'antdv-next';
 
@@ -13,6 +13,8 @@ import { listModelSpecs } from '#/api/research';
 import { $t } from '#/locales';
 import InputNumberWithAddon from '#/shared/components/input-number-with-addon.vue';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
+
+import FeatureRequirementsEditor from './feature-requirements-editor.vue';
 
 defineOptions({ name: 'ModelSpecCreateModal' });
 
@@ -36,17 +38,22 @@ const existingNames = ref<Set<string>>(new Set());
 const name = ref<string>('');
 const modelFamily = ref<ModelFamily>(MODEL_FAMILIES.weightedFactor);
 const predictionHorizonSecs = ref<number>(86_400);
-const featureSchemaVersion = ref<number>(1);
+const featureSchemaVersion = ref<number>(5);
 const labelSchemaVersion = ref<number>(1);
 const specJson = ref<unknown>({});
+const featureRequirements = ref({ ...EMPTY_FEATURE_REQUIREMENTS });
 
 function reset() {
   name.value = '';
   modelFamily.value = MODEL_FAMILIES.weightedFactor;
   predictionHorizonSecs.value = 86_400;
-  featureSchemaVersion.value = 1;
+  featureSchemaVersion.value = 5;
   labelSchemaVersion.value = 1;
   specJson.value = {};
+  featureRequirements.value = {
+    ...EMPTY_FEATURE_REQUIREMENTS,
+    by_category: {},
+  };
 }
 
 async function loadExistingNames() {
@@ -79,6 +86,7 @@ const [Modal, modalApi] = useVbenModal({
     try {
       const ok = await payload.value.onSubmit({
         feature_schema_version: featureSchemaVersion.value,
+        feature_requirements: featureRequirements.value,
         label_schema_version: labelSchemaVersion.value,
         model_family: modelFamily.value,
         name: trimmed,
@@ -154,6 +162,12 @@ const [Modal, modalApi] = useVbenModal({
             class="w-full"
           />
         </div>
+      </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-medium">
+          {{ $t('page.research.modelSpecs.create.featureRequirements') }}
+        </span>
+        <FeatureRequirementsEditor v-model="featureRequirements" />
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">

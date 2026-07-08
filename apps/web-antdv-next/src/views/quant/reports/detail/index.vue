@@ -13,6 +13,7 @@ import { useRequestHandler } from '@vben/request/qp';
 import { Button, Empty, Spin, TabPane, Tabs } from 'antdv-next';
 
 import { getQuantReport, listReportRecommendations } from '#/api/quant-reports';
+import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
 import { useOrderIntentStore, useQuantReportStore } from '#/store';
 import RecommendationDetailDrawer from '#/views/quant/recommendations/modules/recommendation-detail-drawer.vue';
@@ -32,6 +33,7 @@ const orderIntentStore = useOrderIntentStore();
 
 const report = ref<null | QuantReportDetailView>(null);
 const recommendations = ref<QuantRecommendationView[]>([]);
+const maxAggregateExposurePct = ref<number | undefined>();
 const loading = ref(false);
 const activeTab = ref('overview');
 
@@ -66,6 +68,9 @@ async function load() {
     );
     report.value = result?.detail ?? null;
     recommendations.value = result?.recs ?? [];
+    maxAggregateExposurePct.value = await resolveMaxAggregateExposurePct(
+      result?.detail?.runtime_config_version_id,
+    );
   } finally {
     loading.value = false;
   }
@@ -77,6 +82,30 @@ function goBack() {
 
 function openRecommendation(recommendation: QuantRecommendationView) {
   recDrawerApi.setData({ recommendation }).open();
+}
+
+async function resolveMaxAggregateExposurePct(
+  runtimeConfigVersionId?: string,
+): Promise<number | undefined> {
+  if (!runtimeConfigVersionId) {
+    return undefined;
+  }
+  const versions = await handleRequest(
+    () => fetchRuntimeConfigVersions({ limit: 500 }),
+    { silent: true },
+  );
+  const match = versions?.find(
+    (version) => version.runtime_config_version_id === runtimeConfigVersionId,
+  );
+  const raw = (
+    match?.config_json as {
+      portfolio?: {
+        kelly_safety?: { max_aggregate_exposure_pct?: { value?: string } };
+      };
+    }
+  )?.portfolio?.kelly_safety?.max_aggregate_exposure_pct?.value;
+  const parsed = raw === undefined ? Number.NaN : Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function onRevoke() {
@@ -116,7 +145,10 @@ onMounted(() => void load());
             key="overview"
             :tab="$t('page.quantReports.detail.tabs.overview')"
           >
-            <ReportOverview :report="report" />
+            <ReportOverview
+              :max-aggregate-exposure-pct="maxAggregateExposurePct"
+              :report="report"
+            />
           </TabPane>
           <TabPane
             key="recommendations"

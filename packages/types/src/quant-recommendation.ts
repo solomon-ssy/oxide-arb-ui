@@ -79,6 +79,8 @@ export interface SizingPlan {
   suggested_shares: SharesString;
   portfolio_weight_pct: DecimalString;
   kelly_fraction_applied: DecimalString | null;
+  edge_uncertainty_shrink_applied?: DecimalString | null;
+  correlation_shrink_applied?: DecimalString | null;
   binding_constraint: BindingConstraint;
   sizing_reason: string;
   sizing_model: SizingModelKind;

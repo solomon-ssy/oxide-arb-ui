@@ -2,15 +2,20 @@
 import type {
   BacktestReportView,
   QualityGateReportView,
+  ReturnModelView,
   TrainedModelView,
 } from '@vben/types';
 
+import type { BindCalibrationBody } from './model-bind-calibration-modal.vue';
+
 import { computed, ref } from 'vue';
 
-import { useVbenDrawer } from '@vben/common-ui';
+import { useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import {
+  Alert,
+  Button,
   Card,
   Descriptions,
   DescriptionsItem,
@@ -19,6 +24,7 @@ import {
   Tag,
 } from 'antdv-next';
 
+import { bindCalibration } from '#/api/calibration';
 import {
   getModel,
   getModelQualityGate,
@@ -31,8 +37,11 @@ import {
   findTagOption,
   usePublicationStatusTagOptions,
 } from '#/shared/components/format/tag-options';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
+import ModelBindCalibrationModal from './model-bind-calibration-modal.vue';
 import ModelMetricsPanel from './model-metrics-panel.vue';
 
 defineOptions({ name: 'ModelDetailDrawer' });
@@ -42,7 +51,11 @@ interface ModelDrawerData {
 }
 
 const { handleRequest } = useRequestHandler();
+const { governed } = useGovernedAction();
+const { hasAccessByCodes } = useQpAccess();
 const statusTagOptions = usePublicationStatusTagOptions();
+
+const canBindCalibration = hasAccessByCodes(['publication:create']);
 
 const model = ref<null | TrainedModelView>(null);
 const backtests = ref<BacktestReportView[]>([]);
@@ -55,6 +68,53 @@ const metrics = computed(() => model.value?.metrics ?? {});
 const statusTag = computed(() =>
   findTagOption(statusTagOptions, model.value?.publication_status),
 );
+
+const returnModel = computed<null | ReturnModelView>(
+  () => model.value?.return_model ?? null,
+);
+
+const isCalibratedReturnModel = computed(
+  () => returnModel.value?.calibration === 'calibrated',
+);
+
+const [BindModal, bindModalApi] = useVbenModal({
+  connectedComponent: ModelBindCalibrationModal,
+});
+
+function openBindCalibration() {
+  const current = model.value;
+  if (!current) {
+    return;
+  }
+  bindModalApi
+    .setData({
+      modelVersionId: current.model_version_id,
+      onSubmit: (body: BindCalibrationBody) =>
+        submitBindCalibration(current.model_version_id, body),
+    })
+    .open();
+}
+
+async function submitBindCalibration(
+  modelVersionId: string,
+  body: BindCalibrationBody,
+): Promise<boolean> {
+  const result = await governed(
+    (ctx) =>
+      bindCalibration(modelVersionId, { ...body, reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.research.models.bindCalibration.summary'),
+      title: $t('page.research.models.bindCalibration.title'),
+    },
+  );
+  if (result) {
+    openId.value = result.model_version_id;
+    model.value = result;
+    void refresh(result.model_version_id);
+    return true;
+  }
+  return false;
+}
 
 async function refresh(id: string) {
   loading.value = true;
@@ -124,6 +184,61 @@ const [Drawer, drawerApi] = useVbenDrawer({
           :title="$t('page.research.models.detail.publishReadiness')"
         >
           <QualityGateScorecard :loading="gateLoading" :report="gate" />
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.models.detail.returnModel')"
+        >
+          <Alert
+            v-if="!isCalibratedReturnModel"
+            class="mb-3"
+            :message="
+              $t('page.research.models.detail.returnModelHeuristicWarning')
+            "
+            show-icon
+            type="warning"
+          />
+          <Descriptions v-if="returnModel" :column="1" bordered size="small">
+            <DescriptionsItem
+              :label="$t('page.research.models.detail.returnModelKind')"
+            >
+              {{
+                returnModel.calibration === 'calibrated'
+                  ? $t('page.research.models.detail.returnModelCalibrated')
+                  : $t('page.research.models.detail.returnModelHeuristic')
+              }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              v-if="returnModel.calibration === 'calibrated'"
+              :label="$t('page.research.models.detail.calibratorRef')"
+            >
+              <EntityRouteLink
+                mono
+                :label="returnModel.calibrator_ref"
+                :to="`/research/calibration-artifacts?open=${returnModel.calibrator_ref}`"
+              />
+            </DescriptionsItem>
+            <DescriptionsItem
+              v-if="returnModel.calibration === 'calibrated'"
+              :label="$t('page.research.models.detail.downsideSource')"
+            >
+              {{ $t(`enum.downsideSource.${returnModel.downside_source}`) }}
+            </DescriptionsItem>
+          </Descriptions>
+          <Empty
+            v-else
+            :description="$t('page.research.models.detail.returnModelUnknown')"
+            :image="Empty.PRESENTED_IMAGE_SIMPLE"
+          />
+          <Button
+            v-if="canBindCalibration"
+            class="mt-3"
+            type="primary"
+            @click="openBindCalibration"
+          >
+            {{ $t('page.research.models.bindCalibration.action') }}
+          </Button>
         </Card>
 
         <Card size="small" :title="$t('page.research.models.detail.summary')">
@@ -199,5 +314,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
       </div>
     </Spin>
+    <BindModal />
   </Drawer>
 </template>

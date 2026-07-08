@@ -182,6 +182,7 @@
     "kelly": "Kelly"
   },
   "bindingConstraint": {
+    "aggregate_exposure_cap": "Aggregate exposure cap",
     "available_cash": "Available cash",
     "category_cap": "Category cap",
     "confidence_cap": "Confidence cap",
@@ -333,7 +334,19 @@
     "dataset_build": "Dataset build",
     "model_train": "Model train",
     "backtest": "Backtest",
-    "bias_table_fit": "Bias-table fit"
+    "bias_table_fit": "Bias-table fit",
+    "model_calibration_fit": "Model calibrator fit"
+  },
+  "calibrationKind": {
+    "model_score": "Model score",
+    "market_price_bias": "Market price bias"
+  },
+  "calibrationMethod": {
+    "isotonic": "Isotonic",
+    "platt": "Platt"
+  },
+  "downsideSource": {
+    "mfe_mae": "MFE/MAE"
   },
   "operationCategory": {
     "auth": "Auth",

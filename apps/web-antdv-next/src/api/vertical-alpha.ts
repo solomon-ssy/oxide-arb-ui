@@ -1,40 +1,49 @@
 import type {
   AcknowledgeBasisAlertRequest,
-  ActivateBiasTableRequest,
+  ActivateCalibrationArtifactRequest,
   BasisAlertListQuery,
   BasisAlertView,
   BiasTableDetailView,
   BiasTableListQuery,
   BiasTableSummaryView,
+  CalibrationArtifactDetailView,
+  CalibrationArtifactSummaryView,
   DomainSourceCursorView,
-  FitBiasTableRequest,
   LinkageResolveSummaryView,
   MarketLinkageDetailView,
   MarketLinkageHistoryEntryView,
   MarketLinkageListQuery,
   MarketLinkageSummaryView,
+  MarketPriceBiasPayload,
   NegRiskEventDriftView,
   OverrideLinkageRequest,
   Paginated,
   ParticipantConcentrationDetailView,
   ParticipantConcentrationSummaryView,
-  ResearchJobView,
   ResolveLinkagesRequest,
-  RuntimeConfigVersionView,
   TradeTapeCoverageView,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
+import {
+  activateCalibrationArtifact,
+  getCalibrationArtifact,
+  listCalibrationArtifacts,
+} from '#/api/calibration';
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
+export {
+  activateCalibrationArtifact,
+  bindCalibration,
+  fitBiasTable,
+  fitModelCalibrator,
+  getCalibrationArtifact,
+  listCalibrationArtifacts,
+} from '#/api/calibration';
+
 export namespace VerticalAlphaApi {
-  export const biasTables = '/research/bias-tables';
-  export const biasTable = (id: string) => `/research/bias-tables/${id}`;
-  export const fitBiasTable = '/research/bias-tables/fit';
-  export const activateBiasTable = (id: string) =>
-    `/research/bias-tables/${id}/activate`;
   export const negRiskEvents = '/quant/structural/negrisk-events';
   export const tradeTapeCoverage = '/quant/structural/trade-tape/coverage';
   export const participantConcentration =
@@ -55,46 +64,64 @@ export namespace VerticalAlphaApi {
     `/research/basis-alerts/${alertId}/acknowledge`;
 }
 
-/** `GET /research/bias-tables` — paginated favorite-longshot bias-table catalog. */
+function toBiasTableSummary(
+  row: CalibrationArtifactSummaryView,
+): BiasTableSummaryView {
+  return {
+    ...row,
+    bias_table_id: row.artifact_id,
+    category_count: 0,
+    total_sample_count: row.sample_count,
+  };
+}
+
+function toBiasTableDetail(
+  detail: CalibrationArtifactDetailView,
+): BiasTableDetailView {
+  const byCategory =
+    detail.kind === 'market_price_bias'
+      ? (detail.payload_json as MarketPriceBiasPayload)
+      : {};
+  return {
+    artifact_id: detail.artifact_id,
+    bias_table_id: detail.artifact_id,
+    content_hash: detail.content_hash,
+    fit_window_start: detail.fit_window_start,
+    fit_window_end: detail.fit_window_end,
+    calibration_split_hash: detail.calibration_split_hash,
+    sample_count: detail.sample_count,
+    active: detail.active,
+    created_at: detail.created_at,
+    category_count: Object.keys(byCategory).length,
+    total_sample_count: detail.sample_count,
+    by_category: byCategory,
+  };
+}
+
+/** @deprecated Use {@link listCalibrationArtifacts}. */
 export async function listBiasTables(query: BiasTableListQuery = {}) {
-  return requestClient.get<Paginated<BiasTableSummaryView>>(
-    VerticalAlphaApi.biasTables,
-    { params: query },
-  );
+  const page = await listCalibrationArtifacts({
+    ...query,
+    kind: 'market_price_bias',
+  });
+  return {
+    ...page,
+    items: page.items.map((row) => toBiasTableSummary(row)),
+  } satisfies Paginated<BiasTableSummaryView>;
 }
 
-/** `GET /research/bias-tables/{id}` — full per-category curve detail. */
+/** @deprecated Use {@link getCalibrationArtifact}. */
 export async function getBiasTable(id: string) {
-  return requestClient.get<BiasTableDetailView>(VerticalAlphaApi.biasTable(id));
+  return toBiasTableDetail(await getCalibrationArtifact(id));
 }
 
-/** `POST /research/bias-tables/fit` — enqueue an async bias-table fit job. */
-export async function fitBiasTable(
-  body: FitBiasTableRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<ResearchJobView>(
-    VerticalAlphaApi.fitBiasTable,
-    body,
-    ctx,
-  );
-}
-
-/**
- * `POST /research/bias-tables/{id}/activate` — stage a runtime-config version
- * pinning this table as the favorite-longshot bias source. The operator then
- * activates that version through the runtime-config governance flow.
- */
+/** @deprecated Use {@link activateCalibrationArtifact}. */
 export async function activateBiasTable(
   id: string,
-  body: ActivateBiasTableRequest,
+  body: ActivateCalibrationArtifactRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<RuntimeConfigVersionView>(
-    VerticalAlphaApi.activateBiasTable(id),
-    body,
-    ctx,
-  );
+  return activateCalibrationArtifact(id, body, ctx);
 }
 
 /** `GET /research/market-linkages` — paginated linkage ledger catalog. */
