@@ -387,28 +387,34 @@ const [Drawer, drawerApi] = useVbenDrawer({
             </DescriptionsItem>
           </Descriptions>
 
-          <div
+          <Alert
             v-if="binding.override_context"
-            class="mt-3 rounded-md border border-amber-300/60 bg-amber-50/40 p-3 text-xs dark:bg-amber-950/20"
+            class="mt-3"
+            show-icon
+            type="warning"
           >
-            <div class="font-medium">
+            <template #message>
               {{
                 $t('page.research.marketLinkages.detail.overrideContext.title')
               }}
-            </div>
-            <div class="mt-1">
-              {{
-                $t('page.research.marketLinkages.detail.overrideContext.actor')
-              }}: {{ binding.override_context.actor }}
-            </div>
-            <div class="mt-1">
-              {{
-                $t(
-                  'page.research.marketLinkages.detail.overrideContext.reason',
-                )
-              }}: {{ binding.override_context.reason }}
-            </div>
-          </div>
+            </template>
+            <template #description>
+              <div>
+                {{
+                  $t(
+                    'page.research.marketLinkages.detail.overrideContext.actor',
+                  )
+                }}: {{ binding.override_context.actor }}
+              </div>
+              <div class="mt-1">
+                {{
+                  $t(
+                    'page.research.marketLinkages.detail.overrideContext.reason',
+                  )
+                }}: {{ binding.override_context.reason }}
+              </div>
+            </template>
+          </Alert>
 
           <div class="mt-3">
             <div class="mb-2 text-sm font-medium">

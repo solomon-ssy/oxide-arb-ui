@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import type { DecimalSign } from '#/shared/components/format';
 
-import { computed } from 'vue';
-
 import { IconifyIcon } from '@vben/icons';
 
 import { Skeleton, Tooltip } from 'antdv-next';
 
+import SignedValue from '#/shared/components/signed-value.vue';
+
 defineOptions({ name: 'StatCard' });
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     loading?: boolean;
     /** Sign drives value coloring: positive green, negative red. */
@@ -21,16 +21,6 @@ const props = withDefaults(
   }>(),
   { loading: false, sign: null, tooltip: undefined },
 );
-
-const valueClass = computed(() => {
-  if (props.sign === 1) {
-    return 'text-success';
-  }
-  if (props.sign === -1) {
-    return 'text-destructive';
-  }
-  return '';
-});
 </script>
 
 <template>
@@ -47,9 +37,12 @@ const valueClass = computed(() => {
       :title="{ width: '60%' }"
       active
     />
-    <div v-else :class="valueClass" class="font-mono text-2xl font-semibold">
-      {{ value }}
-    </div>
+    <SignedValue
+      v-else
+      :sign="sign"
+      class="text-2xl font-semibold"
+      :value="value"
+    />
     <div v-if="$slots.footer" class="text-muted-foreground text-xs">
       <slot name="footer"></slot>
     </div>

@@ -1,5 +1,9 @@
 <script lang="ts" setup>
+import type { TableColumnsType } from 'antdv-next';
+
 import type { ExecutionRecoveryView } from '@vben/types';
+
+import type { KeyValueGridItem } from '#/shared/components/key-value-grid.vue';
 
 import { computed, onMounted, ref, watch } from 'vue';
 
@@ -7,11 +11,12 @@ import { useRequestHandler } from '@vben/request/qp';
 import { KILL_SWITCH_STATES } from '@vben/types';
 
 import { useDebounceFn } from '@vueuse/core';
-import { Alert, Button, Tag } from 'antdv-next';
+import { Alert, Button, Empty, Steps, Tag } from 'antdv-next';
 
 import { getExecutionRecovery } from '#/api/system';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import DataList from '#/shared/components/data-list.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import {
   formatExecutionRecoveryStep,
@@ -23,11 +28,15 @@ import {
   useKillSwitchStateTagOptions,
   useReconciliationResultTagOptions,
 } from '#/shared/components/format/tag-options';
+import KeyValueGrid from '#/shared/components/key-value-grid.vue';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useKillSwitchAction } from '#/shared/composables/use-system-actions';
 import { useReconciliationStore, useSettlementRedeemStore } from '#/store';
 
 defineOptions({ name: 'ExecutionRecoveryCard' });
+
+type BlockingReconciliationRow =
+  ExecutionRecoveryView['blocking_reconciliations'][number];
 
 const reconciliationStore = useReconciliationStore();
 const settlementStore = useSettlementRedeemStore();
@@ -73,6 +82,49 @@ const canAck = computed(
       killSwitch.value.state,
       KILL_SWITCH_STATES.closed,
     ),
+);
+
+const unresolvableItems = computed<KeyValueGridItem[]>(() => {
+  if (!recovery.value) {
+    return [];
+  }
+  return [
+    {
+      key: 'unresolvable',
+      label: $t('page.dashboard.recovery.unresolvable'),
+      value: String(recovery.value.summary.unresolvable_count),
+    },
+  ];
+});
+
+const blockingRows = computed(
+  () => recovery.value?.blocking_reconciliations ?? [],
+);
+
+const blockingColumns = computed<TableColumnsType<BlockingReconciliationRow>>(
+  () => [
+    {
+      dataIndex: 'reconciliation_id',
+      key: 'reconciliation_id',
+    },
+    {
+      align: 'right',
+      dataIndex: 'discrepancy_usd',
+      key: 'discrepancy_usd',
+    },
+    {
+      align: 'right',
+      dataIndex: 'result',
+      key: 'result',
+    },
+  ],
+);
+
+const nextStepItems = computed(() =>
+  (recovery.value?.summary.next_steps ?? []).map((step, index) => ({
+    key: String(index),
+    title: formatExecutionRecoveryStep(step),
+  })),
 );
 
 async function acknowledge() {
@@ -136,15 +188,12 @@ onMounted(() => {
         show-icon
       />
 
-      <div
+      <KeyValueGrid
         v-if="recovery"
-        class="text-muted-foreground grid grid-cols-2 gap-x-3 gap-y-1 text-xs"
-      >
-        <span>{{ $t('page.dashboard.recovery.unresolvable') }}</span>
-        <span class="text-foreground text-right tabular-nums">
-          {{ recovery.summary.unresolvable_count }}
-        </span>
-      </div>
+        :bordered="false"
+        :column="1"
+        :items="unresolvableItems"
+      />
 
       <div
         v-if="killSwitch"
@@ -157,71 +206,72 @@ onMounted(() => {
           <Tag :color="killSwitchTag?.color ?? 'default'">
             {{ killSwitchTag?.label ?? killSwitch.state }}
           </Tag>
-          <span v-if="killSwitch.requires_operator_ack" class="text-amber-600">
+          <Tag v-if="killSwitch.requires_operator_ack" color="warning">
             {{ $t('page.dashboard.recovery.requiresAck') }}
-          </span>
+          </Tag>
         </div>
         <Button v-if="canAck" danger size="small" @click="acknowledge">
           {{ $t('page.dashboard.recovery.ack') }}
         </Button>
       </div>
 
-      <div
-        v-if="(recovery?.summary.next_steps.length ?? 0) > 0"
-        class="flex flex-col gap-1"
-      >
+      <div v-if="nextStepItems.length > 0" class="flex flex-col gap-1">
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.dashboard.recovery.nextSteps') }}
         </span>
-        <ol class="list-inside list-decimal text-xs">
-          <li
-            v-for="(step, index) in recovery?.summary.next_steps"
-            :key="index"
-          >
-            {{ formatExecutionRecoveryStep(step) }}
-          </li>
-        </ol>
+        <Steps
+          direction="vertical"
+          progress-dot
+          size="small"
+          :items="nextStepItems"
+        />
       </div>
 
       <div class="flex flex-col gap-1">
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.dashboard.recovery.blocking') }}
         </span>
-        <div
-          v-if="(recovery?.blocking_reconciliations.length ?? 0) === 0"
-          class="text-muted-foreground text-xs"
+        <Empty
+          v-if="blockingRows.length === 0"
+          :description="$t('page.dashboard.recovery.none')"
+          :image="Empty.PRESENTED_IMAGE_SIMPLE"
+        />
+        <DataList
+          v-else
+          :columns="blockingColumns"
+          :data-source="blockingRows"
+          row-key="reconciliation_id"
         >
-          {{ $t('page.dashboard.recovery.none') }}
-        </div>
-        <div
-          v-for="row in recovery?.blocking_reconciliations ?? []"
-          :key="row.reconciliation_id"
-          class="flex items-center justify-between gap-2 border-b pb-1.5 text-xs last:border-b-0"
-        >
-          <EntityRouteLink
-            mono
-            :label="truncateHexId(row.reconciliation_id, 8, 4)"
-            :to="`/quant/reconciliations?open=${row.reconciliation_id}`"
-          />
-          <div class="flex items-center gap-2">
-            <span class="text-muted-foreground tabular-nums">
-              {{ formatUsd(row.discrepancy_usd) }}
-            </span>
-            <Tag
-              :color="
-                findTagOption(reconciliationResultTagOptions, row.result)
-                  ?.color ?? 'default'
-              "
-            >
-              {{
-                findTagOption(reconciliationResultTagOptions, row.result)
-                  ?.label ?? row.result
-              }}
-            </Tag>
-          </div>
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'reconciliation_id'">
+              <EntityRouteLink
+                mono
+                :label="truncateHexId(record.reconciliation_id, 8, 4)"
+                :to="`/quant/reconciliations?open=${record.reconciliation_id}`"
+              />
+            </template>
+            <template v-else-if="column.key === 'discrepancy_usd'">
+              <span class="text-muted-foreground tabular-nums">
+                {{ formatUsd(record.discrepancy_usd) }}
+              </span>
+            </template>
+            <template v-else-if="column.key === 'result'">
+              <Tag
+                :color="
+                  findTagOption(reconciliationResultTagOptions, record.result)
+                    ?.color ?? 'default'
+                "
+              >
+                {{
+                  findTagOption(reconciliationResultTagOptions, record.result)
+                    ?.label ?? record.result
+                }}
+              </Tag>
+            </template>
+          </template>
+        </DataList>
         <span
-          v-if="(recovery?.blocking_reconciliations.length ?? 0) > 0"
+          v-if="blockingRows.length > 0"
           class="text-muted-foreground text-xs"
         >
           {{ $t('page.dashboard.recovery.resolveHint') }}

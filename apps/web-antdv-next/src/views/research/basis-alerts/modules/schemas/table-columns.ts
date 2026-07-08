@@ -47,6 +47,7 @@ export function useBasisAlertColumns(
     },
     {
       field: 'threshold_bps',
+      slots: { default: 'thresholdBps' },
       title: $t('page.research.basisAlerts.columns.thresholdBps'),
       width: 130,
     },

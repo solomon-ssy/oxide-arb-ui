@@ -372,6 +372,11 @@
     "promote": "Promote",
     "rollback": "Rollback"
   },
+  "runtimeConfigDiffType": {
+    "added": "Added",
+    "changed": "Changed",
+    "removed": "Removed"
+  },
   "resourceType": {
     "system": "System",
     "market": "Market",

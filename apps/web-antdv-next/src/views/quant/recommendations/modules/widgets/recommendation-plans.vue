@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import type { QuantRecommendationView } from '@vben/types';
 
+import type { WaterfallChartStep } from '#/shared/components/waterfall-chart.vue';
+
 import { computed } from 'vue';
 
 import {
+  Alert,
   Card,
   Collapse,
   CollapsePanel,
@@ -14,6 +17,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import BulletList from '#/shared/components/bullet-list.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatBps,
@@ -24,6 +28,7 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
+import WaterfallChart from '#/shared/components/waterfall-chart.vue';
 
 defineOptions({ name: 'RecommendationPlans' });
 
@@ -34,25 +39,13 @@ const sizing = computed(() => props.recommendation.sizing_plan);
 const exit = computed(() => props.recommendation.exit_plan);
 const risk = computed(() => props.recommendation.risk_envelope);
 
-/** One multiplier stage in the Kelly sizing waterfall. */
-interface WaterfallStep {
-  key: string;
-  label: string;
-  /** The multiplier applied at this stage (`null` for the starting f*). */
-  factor: null | number;
-  /** The running fraction after this stage. */
-  value: number;
-  /** Whether this stage's shrink is the one that bound the Kelly-stage size. */
-  isBinding: boolean;
-}
-
 /**
  * The full f* → ×kelly_fraction → ×confidence → ×drawdown →
  * ×edge_uncertainty → ×correlation → raw → cap waterfall (Phase 11.3 §10).
  * `null` when the recommendation's return model is uncalibrated / edge-free
  * (no Kelly provenance was recorded for it).
  */
-const waterfallSteps = computed<null | WaterfallStep[]>(() => {
+const waterfallSteps = computed<null | WaterfallChartStep[]>(() => {
   const plan = sizing.value;
   const fStar = toNumber(plan.f_star_applied);
   if (fStar === null) {
@@ -68,7 +61,7 @@ const waterfallSteps = computed<null | WaterfallStep[]>(() => {
 
   const binding = plan.binding_constraint;
   let running = fStar;
-  const steps: WaterfallStep[] = [
+  const steps: WaterfallChartStep[] = [
     {
       key: 'f_star',
       label: $t('page.quantRecommendations.sizingPlan.waterfall.fStar'),
@@ -114,28 +107,12 @@ const waterfallSteps = computed<null | WaterfallStep[]>(() => {
   return steps;
 });
 
-const waterfallMax = computed(() => {
-  const steps = waterfallSteps.value;
-  if (!steps || steps.length === 0) {
-    return 1;
-  }
-  return Math.max(...steps.map((step) => step.value), 1e-9);
-});
-
 function toNumber(value: null | string | undefined): null | number {
   if (value === null || value === undefined) {
     return null;
   }
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function formatFraction(value: number): string {
-  return `${(value * 100).toFixed(2)}%`;
-}
-
-function formatFactor(factor: null | number): string {
-  return factor === null ? '' : `×${factor.toFixed(3)}`;
 }
 
 const trailingStopLabel = computed(() => {
@@ -210,6 +187,10 @@ const invalidationColumns = [
   },
 ];
 
+function boolTagColor(value: boolean): 'default' | 'success' {
+  return value ? 'success' : 'default';
+}
+
 function boolLabel(value: boolean): string {
   return value ? $t('common.yes') : $t('common.no');
 }
@@ -268,7 +249,9 @@ function millis(value: number): string {
             $t('page.quantRecommendations.entryPlan.cancelIfNotTriggered')
           "
         >
-          {{ boolLabel(entry.cancel_if_not_triggered) }}
+          <Tag :color="boolTagColor(entry.cancel_if_not_triggered)">
+            {{ boolLabel(entry.cancel_if_not_triggered) }}
+          </Tag>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.reason')"
@@ -374,36 +357,17 @@ function millis(value: number): string {
         <p class="text-muted-foreground mb-2 text-xs">
           {{ $t('page.quantRecommendations.sizingPlan.waterfall.title') }}
         </p>
-        <div class="flex flex-col gap-1.5">
-          <div
-            v-for="step in waterfallSteps"
-            :key="step.key"
-            class="flex items-center gap-2 text-xs"
-          >
-            <span
-              class="w-28 shrink-0"
-              :class="{ 'font-semibold': step.isBinding }"
-            >
-              {{ step.label }}
-              <span v-if="step.factor !== null" class="text-muted-foreground">
-                ({{ formatFactor(step.factor) }})
-              </span>
-            </span>
-            <div class="bg-muted h-3 flex-1 overflow-hidden rounded">
-              <div
-                class="h-full rounded"
-                :class="step.isBinding ? 'bg-destructive' : 'bg-primary'"
-                :style="{
-                  width: `${Math.min(100, (step.value / waterfallMax) * 100)}%`,
-                }"
-              ></div>
-            </div>
-            <span class="w-16 shrink-0 text-right font-mono">
-              {{ formatFraction(step.value) }}
-            </span>
-          </div>
-        </div>
+        <WaterfallChart :steps="waterfallSteps" />
       </div>
+      <Alert
+        v-else
+        class="mt-3"
+        :message="
+          $t('page.quantRecommendations.sizingPlan.waterfall.uncalibrated')
+        "
+        show-icon
+        type="info"
+      />
     </Card>
 
     <Card size="small" :title="$t('page.quantRecommendations.exitPlan.title')">
@@ -573,14 +537,18 @@ function millis(value: number): string {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.riskEnvelope.requiresApproval')"
         >
-          {{ boolLabel(risk.requires_approval) }}
+          <Tag :color="boolTagColor(risk.requires_approval)">
+            {{ boolLabel(risk.requires_approval) }}
+          </Tag>
         </DescriptionsItem>
         <DescriptionsItem
           :label="
             $t('page.quantRecommendations.riskEnvelope.autoExecutionAllowed')
           "
         >
-          {{ boolLabel(risk.auto_execution_allowed) }}
+          <Tag :color="boolTagColor(risk.auto_execution_allowed)">
+            {{ boolLabel(risk.auto_execution_allowed) }}
+          </Tag>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.riskEnvelope.envelopeHash')"
@@ -593,11 +561,7 @@ function millis(value: number): string {
           v-if="risk.risk_notes.length > 0"
           :label="$t('page.quantRecommendations.riskEnvelope.notes')"
         >
-          <ul class="list-disc pl-4">
-            <li v-for="(note, index) in risk.risk_notes" :key="index">
-              {{ note }}
-            </li>
-          </ul>
+          <BulletList :items="risk.risk_notes" />
         </DescriptionsItem>
       </Descriptions>
     </Card>

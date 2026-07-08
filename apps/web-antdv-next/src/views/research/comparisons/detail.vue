@@ -34,6 +34,7 @@ import {
   formatUsd,
   parseDecimal,
 } from '#/shared/components/format';
+import SignedValue from '#/shared/components/signed-value.vue';
 import StatCard from '#/shared/components/stat-card.vue';
 
 import CategoryDiffTable from './modules/category-diff-table.vue';
@@ -248,16 +249,6 @@ const metricColumns = computed(() => [
   },
 ]);
 
-function signClass(sign: DecimalSign | null): string {
-  if (sign === 1) {
-    return 'text-success';
-  }
-  if (sign === -1) {
-    return 'text-destructive';
-  }
-  return '';
-}
-
 async function loadReport(id: string) {
   // Clear stale content while the next report loads (route param can change
   // without a remount when navigating between comparison deep links).
@@ -387,9 +378,7 @@ watch(
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'delta'">
-                <span :class="signClass(record.deltaSign)" class="font-mono">
-                  {{ record.delta }}
-                </span>
+                <SignedValue :sign="record.deltaSign" :value="record.delta" />
               </template>
               <template v-else-if="column.key === 'candidate'">
                 <span class="font-mono">{{ record.candidate }}</span>

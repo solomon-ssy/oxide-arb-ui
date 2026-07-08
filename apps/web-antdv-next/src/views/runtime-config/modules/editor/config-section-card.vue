@@ -14,6 +14,11 @@ import { preferences } from '@vben/preferences';
 import { Alert, Checkbox } from 'antdv-next';
 
 import { $t } from '#/locales';
+import {
+  findTagOption,
+  useRuntimeConfigDiffTypeTagOptions,
+} from '#/shared/components/format/tag-options';
+import JsonDiffList from '#/shared/components/json-diff-list.vue';
 
 import ConfigNodeChildren from './config-node-children.vue';
 import { isFieldVisible } from './field-when';
@@ -46,6 +51,7 @@ const emit = defineEmits<{
 const draft = reactive<Record<string, unknown>>({});
 const applyError = ref('');
 const diffAcknowledged = ref(false);
+const diffTypeTagOptions = useRuntimeConfigDiffTypeTagOptions();
 
 const locale = computed(() => preferences.app.locale);
 const description = computed(() =>
@@ -109,6 +115,17 @@ const draftState = computed(() => {
 const validationError = computed(() => draftState.value.validationError);
 const diffs = computed(() => draftState.value.diffs);
 const error = computed(() => validationError.value || applyError.value);
+
+const diffItems = computed(() =>
+  diffs.value.map((diff) => ({
+    badge: findTagOption(diffTypeTagOptions, 'changed'),
+    key: diff.path,
+    next: diff.next,
+    previous: diff.previous,
+    subtitle: diff.path,
+    title: resolveUiText(diff.field.label, locale.value),
+  })),
+);
 
 const dirty = computed(() => diffs.value.length > 0);
 const requireDiffAck = computed(() => hasGovernanceCriticalDiff(diffs.value));
@@ -188,38 +205,7 @@ defineExpose({ apply, resetDraft });
       >
         {{ $t('page.runtimeConfig.editor.diff.acknowledgeGovernanceCritical') }}
       </Checkbox>
-      <div class="max-h-48 space-y-3 overflow-auto text-xs">
-        <div
-          v-for="diff in diffs"
-          :key="diff.path"
-          class="border-border/60 rounded-md border bg-background p-2"
-        >
-          <div class="font-medium">
-            {{ resolveUiText(diff.field.label, locale) }}
-          </div>
-          <div class="text-muted-foreground mb-2 font-mono">
-            {{ diff.path }}
-          </div>
-          <div class="grid gap-2 md:grid-cols-2">
-            <div>
-              <div class="text-muted-foreground mb-1 text-[10px] uppercase">
-                {{ $t('page.runtimeConfig.editor.diff.before') }}
-              </div>
-              <pre class="bg-muted rounded p-2">{{
-                JSON.stringify(diff.previous, null, 2)
-              }}</pre>
-            </div>
-            <div>
-              <div class="text-muted-foreground mb-1 text-[10px] uppercase">
-                {{ $t('page.runtimeConfig.editor.diff.after') }}
-              </div>
-              <pre class="bg-muted rounded p-2">{{
-                JSON.stringify(diff.next, null, 2)
-              }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
+      <JsonDiffList :items="diffItems" />
     </div>
   </div>
 </template>

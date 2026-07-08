@@ -4,7 +4,7 @@ import type {
   ModelCalibrationFitPreflightView,
 } from '@vben/types';
 
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -15,11 +15,13 @@ import {
 } from '@vben/types';
 
 import { useDebounceFn } from '@vueuse/core';
-import { Alert, message, Select, Spin } from 'antdv-next';
+import { Alert, Spin } from 'antdv-next';
 
+import { useVbenForm } from '#/adapter/form';
 import { fetchCalibrationFitPreflight } from '#/api/calibration';
 import { listModels, listTrainingDatasets } from '#/api/research';
 import { $t } from '#/locales';
+import BulletList from '#/shared/components/bullet-list.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
 defineOptions({ name: 'FitModelCalibratorModal' });
@@ -38,96 +40,10 @@ interface OptionItem {
 const { handleRequest } = useRequestHandler();
 
 const payload = ref<FitModelCalibratorPayload | null>(null);
-const modelOptions = ref<OptionItem[]>([]);
-const datasetOptions = ref<OptionItem[]>([]);
-const loading = ref(false);
-
-const modelVersionId = ref<string | undefined>();
-const calibrationDatasetId = ref<string | undefined>();
-const method = ref<FitModelCalibratorBody['method']>(
-  CALIBRATION_METHODS.isotonic,
-);
 
 const preflight = ref<ModelCalibrationFitPreflightView | null>(null);
 const preflightLoading = ref(false);
 const preflightError = ref<null | string>(null);
-
-const runPreflight = useDebounceFn(async () => {
-  const model = modelVersionId.value;
-  const dataset = calibrationDatasetId.value;
-  if (!model || !dataset) {
-    preflight.value = null;
-    preflightError.value = null;
-    return;
-  }
-  preflightLoading.value = true;
-  preflightError.value = null;
-  try {
-    preflight.value = await fetchCalibrationFitPreflight(model, dataset);
-  } catch {
-    // Preflight is advisory only — the authoritative check still runs
-    // server-side at fit time, so a transient preflight failure must never
-    // block the operator from submitting.
-    preflight.value = null;
-    preflightError.value = $t(
-      'page.research.calibrationArtifacts.fitCalibrator.preflight.checkFailed',
-    );
-  } finally {
-    preflightLoading.value = false;
-  }
-}, 400);
-
-watch([modelVersionId, calibrationDatasetId], () => {
-  preflight.value = null;
-  preflightError.value = null;
-  void runPreflight();
-});
-
-async function loadOptions() {
-  loading.value = true;
-  try {
-    const [models, built, ready] = await Promise.all([
-      handleRequest(() => listModels({ size: 200 }), { silent: true }),
-      handleRequest(
-        () =>
-          listTrainingDatasets({
-            purpose: DATASET_PURPOSES.calibration,
-            size: 200,
-            status: TRAINING_DATASET_STATUSES.built,
-          }),
-        { silent: true },
-      ),
-      handleRequest(
-        () =>
-          listTrainingDatasets({
-            purpose: DATASET_PURPOSES.calibration,
-            size: 200,
-            status: TRAINING_DATASET_STATUSES.ready,
-          }),
-        { silent: true },
-      ),
-    ]);
-    modelOptions.value = (models?.items ?? []).map((model) => ({
-      label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
-      value: model.model_version_id,
-    }));
-    const seen = new Set<string>();
-    const datasets: OptionItem[] = [];
-    for (const dataset of [...(built?.items ?? []), ...(ready?.items ?? [])]) {
-      if (seen.has(dataset.training_dataset_id)) {
-        continue;
-      }
-      seen.add(dataset.training_dataset_id);
-      datasets.push({
-        label: `${dataset.training_dataset_id} · ${dataset.status} · ${dataset.sample_count}`,
-        value: dataset.training_dataset_id,
-      });
-    }
-    datasetOptions.value = datasets;
-  } finally {
-    loading.value = false;
-  }
-}
 
 const methodOptions = [
   {
@@ -140,39 +56,181 @@ const methodOptions = [
   },
 ];
 
-const [Modal, modalApi] = useVbenModal({
-  onConfirm: async () => {
-    if (!payload.value) {
-      return;
+const runPreflight = useDebounceFn(async () => {
+  const values = await formApi.getValues();
+  const model = values.model_version_id as string | undefined;
+  const dataset = values.calibration_dataset_id as string | undefined;
+  if (!model || !dataset) {
+    preflight.value = null;
+    preflightError.value = null;
+    return;
+  }
+  preflightLoading.value = true;
+  preflightError.value = null;
+  try {
+    preflight.value = await fetchCalibrationFitPreflight(model, dataset);
+  } catch {
+    preflight.value = null;
+    preflightError.value = $t(
+      'page.research.calibrationArtifacts.fitCalibrator.preflight.checkFailed',
+    );
+  } finally {
+    preflightLoading.value = false;
+  }
+}, 400);
+
+async function loadOptions() {
+  const [models, built, ready] = await Promise.all([
+    handleRequest(() => listModels({ size: 200 }), { silent: true }),
+    handleRequest(
+      () =>
+        listTrainingDatasets({
+          purpose: DATASET_PURPOSES.calibration,
+          size: 200,
+          status: TRAINING_DATASET_STATUSES.built,
+        }),
+      { silent: true },
+    ),
+    handleRequest(
+      () =>
+        listTrainingDatasets({
+          purpose: DATASET_PURPOSES.calibration,
+          size: 200,
+          status: TRAINING_DATASET_STATUSES.ready,
+        }),
+      { silent: true },
+    ),
+  ]);
+  const modelOptions: OptionItem[] = (models?.items ?? []).map((model) => ({
+    label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
+    value: model.model_version_id,
+  }));
+  const seen = new Set<string>();
+  const datasets: OptionItem[] = [];
+  for (const dataset of [...(built?.items ?? []), ...(ready?.items ?? [])]) {
+    if (seen.has(dataset.training_dataset_id)) {
+      continue;
     }
-    if (!modelVersionId.value || !calibrationDatasetId.value) {
-      message.warning(
-        $t('page.research.calibrationArtifacts.fitCalibrator.validation'),
-      );
-      return;
+    seen.add(dataset.training_dataset_id);
+    datasets.push({
+      label: `${dataset.training_dataset_id} · ${dataset.status} · ${dataset.sample_count}`,
+      value: dataset.training_dataset_id,
+    });
+  }
+  formApi.updateSchema([
+    {
+      componentProps: {
+        loading: false,
+        options: modelOptions,
+        showSearch: true,
+      },
+      fieldName: 'model_version_id',
+    },
+    {
+      componentProps: {
+        loading: false,
+        options: datasets,
+        showSearch: true,
+      },
+      fieldName: 'calibration_dataset_id',
+    },
+  ]);
+}
+
+async function onSubmit(values: Record<string, unknown>) {
+  if (!payload.value) {
+    return;
+  }
+  modalApi.setState({ confirmLoading: true });
+  try {
+    const ok = await payload.value.onSubmit({
+      calibration_dataset_id: values.calibration_dataset_id as string,
+      method: values.method as FitModelCalibratorBody['method'],
+      model_version_id: values.model_version_id as string,
+    });
+    if (ok) {
+      modalApi.close();
     }
-    modalApi.setState({ confirmLoading: true });
-    try {
-      const ok = await payload.value.onSubmit({
-        calibration_dataset_id: calibrationDatasetId.value,
-        method: method.value,
-        model_version_id: modelVersionId.value,
-      });
-      if (ok) {
-        modalApi.close();
-      }
-    } finally {
-      modalApi.setState({ confirmLoading: false });
-    }
+  } finally {
+    modalApi.setState({ confirmLoading: false });
+  }
+}
+
+const [Form, formApi] = useVbenForm({
+  commonConfig: {
+    componentProps: { class: 'w-full' },
   },
+  handleSubmit: onSubmit,
+  schema: [
+    {
+      component: 'Select',
+      componentProps: {
+        loading: false,
+        options: [],
+        placeholder: $t(
+          'page.research.calibrationArtifacts.fitCalibrator.modelPlaceholder',
+        ),
+        showSearch: true,
+      },
+      fieldName: 'model_version_id',
+      label: $t('page.research.calibrationArtifacts.fitCalibrator.model'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        loading: false,
+        options: [],
+        placeholder: $t(
+          'page.research.calibrationArtifacts.fitCalibrator.datasetPlaceholder',
+        ),
+        showSearch: true,
+      },
+      dependencies: {
+        trigger() {
+          preflight.value = null;
+          preflightError.value = null;
+          void runPreflight();
+        },
+        triggerFields: ['model_version_id', 'calibration_dataset_id'],
+      },
+      fieldName: 'calibration_dataset_id',
+      label: $t(
+        'page.research.calibrationArtifacts.fitCalibrator.calibrationDataset',
+      ),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: { options: methodOptions },
+      defaultValue: CALIBRATION_METHODS.isotonic,
+      fieldName: 'method',
+      label: $t('page.research.calibrationArtifacts.fitCalibrator.method'),
+      rules: 'selectRequired',
+    },
+  ],
+  showDefaultActions: false,
+});
+
+const [Modal, modalApi] = useVbenModal({
+  onConfirm: () => formApi.validateAndSubmitForm(),
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<FitModelCalibratorPayload>();
-      modelVersionId.value = undefined;
-      calibrationDatasetId.value = undefined;
-      method.value = CALIBRATION_METHODS.isotonic;
       preflight.value = null;
       preflightError.value = null;
+      formApi.resetForm();
+      formApi.setValues({ method: CALIBRATION_METHODS.isotonic });
+      formApi.updateSchema([
+        {
+          componentProps: { loading: true, options: [] },
+          fieldName: 'model_version_id',
+        },
+        {
+          componentProps: { loading: true, options: [] },
+          fieldName: 'calibration_dataset_id',
+        },
+      ]);
       void loadOptions();
     } else {
       payload.value = null;
@@ -186,50 +244,8 @@ const [Modal, modalApi] = useVbenModal({
     :title="$t('page.research.calibrationArtifacts.fitCalibrator.title')"
     class="w-full max-w-lg"
   >
-    <div class="flex flex-col gap-4 py-2">
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.calibrationArtifacts.fitCalibrator.model') }}
-        </span>
-        <Select
-          v-model:value="modelVersionId"
-          :loading="loading"
-          :options="modelOptions"
-          :placeholder="
-            $t(
-              'page.research.calibrationArtifacts.fitCalibrator.modelPlaceholder',
-            )
-          "
-          show-search
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{
-            $t(
-              'page.research.calibrationArtifacts.fitCalibrator.calibrationDataset',
-            )
-          }}
-        </span>
-        <Select
-          v-model:value="calibrationDatasetId"
-          :loading="loading"
-          :options="datasetOptions"
-          :placeholder="
-            $t(
-              'page.research.calibrationArtifacts.fitCalibrator.datasetPlaceholder',
-            )
-          "
-          show-search
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.calibrationArtifacts.fitCalibrator.method') }}
-        </span>
-        <Select v-model:value="method" :options="methodOptions" />
-      </div>
-
+    <Form />
+    <div class="mt-4 flex flex-col gap-4">
       <Spin v-if="preflightLoading" size="small" />
       <Alert
         v-else-if="preflightError"
@@ -268,14 +284,11 @@ const [Modal, modalApi] = useVbenModal({
           :type="preflight.embargo_ok ? 'success' : 'error'"
           show-icon
         />
-        <ul
+        <BulletList
           v-if="preflight.messages.length > 0"
-          class="text-destructive list-disc pl-4 text-xs"
-        >
-          <li v-for="(msg, index) in preflight.messages" :key="index">
-            {{ msg }}
-          </li>
-        </ul>
+          tone="destructive"
+          :items="preflight.messages"
+        />
         <p class="text-muted-foreground text-xs">
           {{
             $t(

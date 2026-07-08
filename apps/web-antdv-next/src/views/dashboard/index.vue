@@ -12,7 +12,7 @@ import { useRouter } from 'vue-router';
 import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, Empty, Tag } from 'antdv-next';
+import { Button, Empty, Tag, Timeline, TimelineItem } from 'antdv-next';
 
 import { getLatestEquitySnapshotOptional, getLiveAccount } from '#/api/account';
 import { getDataQualitySnapshot } from '#/api/data-quality';
@@ -252,25 +252,23 @@ onUnmounted(() => {
         icon="lucide:bell-ring"
         tone="violet"
       >
-        <div v-if="recentAlerts.length > 0" class="flex flex-col gap-2">
-          <div
-            v-for="alert in recentAlerts"
-            :key="alert.id"
-            class="flex flex-col gap-0.5 border-b pb-1.5 last:border-b-0"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <span class="truncate text-sm font-medium">{{
-                alert.title
-              }}</span>
-              <span class="text-muted-foreground shrink-0 text-xs">
-                {{ alert.date }}
+        <Timeline v-if="recentAlerts.length > 0">
+          <TimelineItem v-for="alert in recentAlerts" :key="alert.id">
+            <div class="flex flex-col gap-0.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="truncate text-sm font-medium">{{
+                  alert.title
+                }}</span>
+                <span class="text-muted-foreground shrink-0 text-xs">
+                  {{ alert.date }}
+                </span>
+              </div>
+              <span class="text-muted-foreground truncate text-xs">
+                {{ alert.message }}
               </span>
             </div>
-            <span class="text-muted-foreground truncate text-xs">
-              {{ alert.message }}
-            </span>
-          </div>
-        </div>
+          </TimelineItem>
+        </Timeline>
         <Empty
           v-else
           :description="$t('page.dashboard.alerts.none')"

@@ -11,6 +11,31 @@
     "no": "No",
     "deepLinkNotFound": "The linked record was not found or is no longer available."
   },
+  "shared": {
+    "detailBack": "Back",
+    "asyncState": {
+      "loadError": "Failed to load",
+      "retry": "Retry",
+      "notFound": "Record not found"
+    },
+    "jsonDiffList": {
+      "noChange": "No effective change"
+    },
+    "marketFreshness": {
+      "unknown": "Book age unknown",
+      "fresh": "Book is fresh",
+      "stale": "Book is stale"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "tabs": {
+      "basic": "Basic settings",
+      "security": "Security",
+      "password": "Change password",
+      "notice": "Notifications"
+    }
+  },
   "menu": {
     "group": {
       "commandCenter": "Command Center",
@@ -659,6 +684,9 @@
         "reliabilityEmpty": "No reliability samples",
         "reliabilityXAxis": "Predicted probability",
         "reliabilityYAxis": "Empirical frequency",
+        "reliabilityDiagonal": "Perfect calibration",
+        "reliabilityBins": "Calibration bins",
+        "reliabilityAria": "Reliability diagram over {binCount} calibration bins totaling {sampleCount} samples. Predicted probability ranges from {predictedMin} to {predictedMax}; empirical frequency ranges from {empiricalMin} to {empiricalMax}. The dashed diagonal marks perfect calibration.",
         "fields": {
           "kind": "Kind",
           "contentHash": "Content hash",
@@ -755,6 +783,7 @@
         },
         "fields": {
           "marketId": "Market ID",
+          "overrideDetails": "Override details",
           "instrumentKey": "Instrument key",
           "subjectJson": "Subject JSON",
           "asset": "Asset",
@@ -1314,6 +1343,7 @@
     },
     "positions": {
       "title": "Venue Positions",
+      "empty": "No open positions",
       "outcome": "Outcome",
       "token": "Token",
       "market": "Market",
@@ -1529,6 +1559,7 @@
     },
     "detail": {
       "title": "Execution Order",
+      "notFound": "Execution order not found.",
       "gtdExpiration": "GTD Expiration",
       "error": "Error",
       "viewReconciliation": "View reconciliation queue",
@@ -1567,6 +1598,7 @@
     },
     "detail": {
       "title": "Position",
+      "notFound": "Position not found.",
       "orderIntentId": "Intent",
       "token": "Token",
       "updatedAt": "Updated",
@@ -1672,6 +1704,7 @@
     },
     "detail": {
       "title": "Settlement Redeem",
+      "notFound": "Settlement redeem batch not found.",
       "funder": "Funder",
       "walletKind": "Wallet Kind",
       "gasFee": "Gas Fee (POL)",
@@ -1941,13 +1974,15 @@
       "reason": "Sizing Reason",
       "waterfall": {
         "title": "Kelly sizing waterfall",
+        "uncalibrated": "Kelly waterfall unavailable — return model is uncalibrated (no f* provenance recorded for this recommendation).",
         "fStar": "f* (full Kelly)",
         "kellyFraction": "Kelly fraction",
         "confidence": "Confidence",
         "drawdown": "Drawdown",
         "edgeUncertainty": "Edge uncertainty",
         "correlation": "Correlation",
-        "cap": "Position cap"
+        "cap": "Position cap",
+        "aria": "Kelly sizing waterfall with {stepCount} steps, ending at {finalValue} of the starting fraction. The binding constraint is {bindingLabel}."
       }
     },
     "exitPlan": {
@@ -2029,8 +2064,7 @@
       "modelVersion": "Model Version",
       "factorDefinitions": "Factor Definition Versions",
       "dataQualitySnapshot": "Data Quality Snapshot",
-      "empty": "Evidence is unavailable for this recommendation.",
-      "copied": "Copied to clipboard"
+      "empty": "Evidence is unavailable for this recommendation."
     },
     "attribution": {
       "title": "Attribution",
@@ -2160,6 +2194,8 @@
       },
       "diff": {
         "title": "Diff Preview",
+        "before": "Before",
+        "after": "After",
         "acknowledgeGovernanceCritical": "I have reviewed the governance-critical changes above"
       },
       "state": {

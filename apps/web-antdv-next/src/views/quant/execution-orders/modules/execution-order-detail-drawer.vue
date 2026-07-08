@@ -7,10 +7,12 @@ import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 import { EXECUTION_ORDER_STATES } from '@vben/types';
 
-import { Card, Descriptions, DescriptionsItem, Spin, Tag } from 'antdv-next';
+import { Card, Descriptions, DescriptionsItem } from 'antdv-next';
 
 import { getExecutionOrder } from '#/api/execution-orders';
 import { $t } from '#/locales';
+import AsyncState from '#/shared/components/async-state.vue';
+import EntityDetailHeader from '#/shared/components/entity-detail-header.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import {
   EMPTY_PLACEHOLDER,
@@ -38,7 +40,33 @@ const { handleRequest } = useRequestHandler();
 
 const order = ref<ExecutionOrderView | null>(null);
 const loading = ref(false);
+const loadError = ref<null | string>(null);
 const openOrderId = ref<null | string>(null);
+
+const notFound = computed(
+  () => !order.value && !loading.value && !loadError.value,
+);
+
+const headerTags = computed(() => {
+  const current = order.value;
+  if (!current) {
+    return [];
+  }
+  return [
+    {
+      color: findTagOption(stateTagOptions, current.state)?.color,
+      label: findTagOption(stateTagOptions, current.state)?.label ?? '',
+    },
+    {
+      color: findTagOption(phaseTagOptions, current.order_phase)?.color,
+      label: findTagOption(phaseTagOptions, current.order_phase)?.label ?? '',
+    },
+    {
+      color: findTagOption(sideTagOptions, current.side)?.color,
+      label: findTagOption(sideTagOptions, current.side)?.label ?? '',
+    },
+  ];
+});
 
 const stateTagOptions = useExecutionOrderStateTagOptions();
 const phaseTagOptions = useExecutionOrderPhaseTagOptions();
@@ -69,9 +97,15 @@ const reconciliationLink = computed(() => {
 
 async function refreshOrder(id: string) {
   loading.value = true;
+  loadError.value = null;
   try {
     const fresh = await handleRequest(() => getExecutionOrder(id), {
       silent: true,
+      onError: (err) => {
+        if (err.httpStatus !== 404) {
+          loadError.value = err.message;
+        }
+      },
     });
     if (openOrderId.value === id) {
       order.value = fresh ?? null;
@@ -87,11 +121,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
     if (isOpen) {
       const data = drawerApi.getData<ExecutionOrderDrawerData>();
       openOrderId.value = data.order.execution_order_id;
+      loadError.value = null;
       order.value = data.order;
       void refreshOrder(data.order.execution_order_id);
     } else {
       openOrderId.value = null;
       order.value = null;
+      loadError.value = null;
     }
   },
 });
@@ -104,21 +140,22 @@ useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
     :title="$t('page.quantExecutionOrders.detail.title')"
     class="w-full max-w-3xl"
   >
-    <Spin :spinning="loading">
+    <AsyncState
+      :error-message="loadError"
+      :loading="loading && !order"
+      :not-found="notFound"
+      :not-found-text="$t('page.quantExecutionOrders.detail.notFound')"
+      @retry="
+        () => {
+          const id = openOrderId;
+          if (id) {
+            void refreshOrder(id);
+          }
+        }
+      "
+    >
       <div v-if="order" class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="findTagOption(stateTagOptions, order.state)?.color">
-            {{ findTagOption(stateTagOptions, order.state)?.label }}
-          </Tag>
-          <Tag
-            :color="findTagOption(phaseTagOptions, order.order_phase)?.color"
-          >
-            {{ findTagOption(phaseTagOptions, order.order_phase)?.label }}
-          </Tag>
-          <Tag :color="findTagOption(sideTagOptions, order.side)?.color">
-            {{ findTagOption(sideTagOptions, order.side)?.label }}
-          </Tag>
-        </div>
+        <EntityDetailHeader :id="order.execution_order_id" :tags="headerTags" />
 
         <Card
           size="small"
@@ -237,6 +274,6 @@ useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
           />
         </Card>
       </div>
-    </Spin>
+    </AsyncState>
   </Drawer>
 </template>

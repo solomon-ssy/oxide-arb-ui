@@ -22,8 +22,7 @@ import {
 
 import { $t } from '#/locales';
 import { formatDateTimeLocal, formatPercent } from '#/shared/components/format';
-
-import ReliabilityDiagram from './reliability-diagram.vue';
+import ReliabilityChart from '#/shared/components/reliability-chart.vue';
 
 defineOptions({ name: 'CalibrationArtifactDetailDrawer' });
 
@@ -276,7 +275,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
           "
         >
           <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <ReliabilityDiagram :bins="modelPayload.reliability.bins" />
+            <ReliabilityChart :bins="modelPayload.reliability.bins" />
             <Descriptions :column="1" bordered size="small">
               <DescriptionsItem
                 :label="

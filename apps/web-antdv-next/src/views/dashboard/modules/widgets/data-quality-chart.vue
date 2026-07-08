@@ -2,15 +2,18 @@
 import type { EchartsUIType } from '@vben/plugins/echarts';
 import type { DataQualitySnapshot } from '@vben/types';
 
-import { ref, watch } from 'vue';
+import type { KeyValueGridItem } from '#/shared/components/key-value-grid.vue';
+
+import { computed, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
-import { useDebounceFn, useResizeObserver } from '@vueuse/core';
 import { Empty, Skeleton, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import KeyValueGrid from '#/shared/components/key-value-grid.vue';
+import SignedValue from '#/shared/components/signed-value.vue';
 
 defineOptions({ name: 'DataQualityChart' });
 
@@ -21,16 +24,34 @@ const props = defineProps<{
 
 const CHART_HEIGHT = '200px';
 
+// `useEcharts` already observes `chartRef`'s own element for resize — no
+// separate observer needed (see packages/effects/plugins/src/echarts).
 const chartRef = ref<EchartsUIType>();
-const chartAreaRef = ref<HTMLElement | null>(null);
-const { renderEcharts, resize } = useEcharts(chartRef);
+const { renderEcharts } = useEcharts(chartRef);
 
-useResizeObserver(
-  chartAreaRef,
-  useDebounceFn(() => {
-    resize();
-  }, 200),
-);
+const kvItems = computed<KeyValueGridItem[]>(() => {
+  const snapshot = props.snapshot;
+  if (!snapshot) {
+    return [];
+  }
+  return [
+    {
+      key: 'totalTokens',
+      label: $t('page.dashboard.dataQuality.totalTokens'),
+      value: String(snapshot.total_tokens),
+    },
+    {
+      key: 'worstBookAge',
+      label: $t('page.dashboard.dataQuality.worstBookAge'),
+      value: `${snapshot.worst_book_age_ms}ms / ${snapshot.max_book_age_ms}ms`,
+    },
+    {
+      key: 'worstIngestLag',
+      label: $t('page.dashboard.dataQuality.worstIngestLag'),
+      value: `${snapshot.worst_ingest_lag_ms}ms / ${snapshot.max_ingest_lag_ms}ms`,
+    },
+  ];
+});
 
 function render() {
   const snapshot = props.snapshot;
@@ -87,11 +108,7 @@ watch(
     tone="sky"
   >
     <div class="flex flex-col gap-3">
-      <div
-        ref="chartAreaRef"
-        :style="{ height: CHART_HEIGHT }"
-        class="relative w-full"
-      >
+      <div :style="{ height: CHART_HEIGHT }" class="relative w-full">
         <Skeleton v-if="loading" :paragraph="{ rows: 5 }" active />
         <div
           v-else-if="!snapshot"
@@ -103,27 +120,14 @@ watch(
       </div>
 
       <template v-if="snapshot">
-        <div
-          class="text-muted-foreground grid grid-cols-2 gap-x-3 gap-y-1 text-xs"
-        >
-          <span>{{ $t('page.dashboard.dataQuality.totalTokens') }}</span>
-          <span class="text-right font-medium tabular-nums">
-            {{ snapshot.total_tokens }}
-          </span>
-          <span>{{ $t('page.dashboard.dataQuality.worstBookAge') }}</span>
-          <span class="text-right tabular-nums">
-            {{ snapshot.worst_book_age_ms }}ms /
-            {{ snapshot.max_book_age_ms }}ms
-          </span>
-          <span>{{ $t('page.dashboard.dataQuality.worstIngestLag') }}</span>
-          <span
-            :class="{ 'text-destructive': snapshot.ingest_lag_exceeded }"
-            class="text-right tabular-nums"
-          >
-            {{ snapshot.worst_ingest_lag_ms }}ms /
-            {{ snapshot.max_ingest_lag_ms }}ms
-          </span>
-        </div>
+        <KeyValueGrid :bordered="false" :items="kvItems">
+          <template #worstIngestLag="{ item }">
+            <SignedValue
+              :sign="snapshot.ingest_lag_exceeded ? -1 : null"
+              :value="item.value ?? ''"
+            />
+          </template>
+        </KeyValueGrid>
         <div class="flex flex-wrap gap-1.5">
           <Tag color="success">
             {{ $t('page.dashboard.dataQuality.fresh') }}: {{ snapshot.fresh }}

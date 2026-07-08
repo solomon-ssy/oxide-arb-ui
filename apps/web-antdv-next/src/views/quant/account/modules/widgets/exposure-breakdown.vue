@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { TableColumnsType } from 'antdv-next';
+
 import type { ExposureBreakdown } from '@vben/types';
 
 import { computed } from 'vue';
@@ -7,6 +9,7 @@ import { Empty } from 'antdv-next';
 
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import DataList from '#/shared/components/data-list.vue';
 import { formatUsd, truncateHexId } from '#/shared/components/format';
 
 defineOptions({ name: 'ExposureBreakdownPanel' });
@@ -16,16 +19,22 @@ const props = defineProps<{
 }>();
 
 interface ExposureRow {
+  key: string;
   label: string;
   value: string;
 }
+
+const allocationColumns: TableColumnsType<ExposureRow> = [
+  { dataIndex: 'label', ellipsis: true, key: 'label' },
+  { align: 'right', dataIndex: 'value', key: 'value' },
+];
 
 function toRows(
   map: Record<string, string> | undefined,
   labelFn: (key: string) => string,
 ): ExposureRow[] {
   return Object.entries(map ?? {})
-    .map(([key, value]) => ({ label: labelFn(key), value }))
+    .map(([key, value]) => ({ key, label: labelFn(key), value }))
     .toSorted((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
 }
 
@@ -65,40 +74,61 @@ const isEmpty = computed(
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.quantAccount.exposure.byCategory') }}
         </span>
-        <div
-          v-for="row in perCategory"
-          :key="row.label"
-          class="flex justify-between text-sm"
+        <DataList
+          :columns="allocationColumns"
+          :data-source="perCategory"
+          row-key="key"
         >
-          <span class="truncate">{{ row.label }}</span>
-          <span class="font-mono tabular-nums">{{ formatUsd(row.value) }}</span>
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'value'">
+              <span class="font-mono tabular-nums">{{
+                formatUsd(record.value)
+              }}</span>
+            </template>
+          </template>
+        </DataList>
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.quantAccount.exposure.byMarket') }}
         </span>
-        <div
-          v-for="row in perMarket"
-          :key="row.label"
-          class="flex justify-between text-sm"
+        <DataList
+          :columns="allocationColumns"
+          :data-source="perMarket"
+          row-key="key"
         >
-          <span class="truncate font-mono text-xs">{{ row.label }}</span>
-          <span class="font-mono tabular-nums">{{ formatUsd(row.value) }}</span>
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'label'">
+              <span class="font-mono text-xs">{{ record.label }}</span>
+            </template>
+            <template v-else-if="column.key === 'value'">
+              <span class="font-mono tabular-nums">{{
+                formatUsd(record.value)
+              }}</span>
+            </template>
+          </template>
+        </DataList>
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.quantAccount.exposure.byEvent') }}
         </span>
-        <div
-          v-for="row in perEvent"
-          :key="row.label"
-          class="flex justify-between text-sm"
+        <DataList
+          :columns="allocationColumns"
+          :data-source="perEvent"
+          row-key="key"
         >
-          <span class="truncate font-mono text-xs">{{ row.label }}</span>
-          <span class="font-mono tabular-nums">{{ formatUsd(row.value) }}</span>
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'label'">
+              <span class="font-mono text-xs">{{ record.label }}</span>
+            </template>
+            <template v-else-if="column.key === 'value'">
+              <span class="font-mono tabular-nums">{{
+                formatUsd(record.value)
+              }}</span>
+            </template>
+          </template>
+        </DataList>
       </div>
     </div>
   </DashboardPanel>

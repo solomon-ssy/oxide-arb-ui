@@ -24,8 +24,11 @@ import {
 } from '#/shared/components/format';
 import {
   findTagOption,
+  marketFreshnessBadgeStatus,
+  resolveMarketFreshnessState,
   useMarketStatusTagOptions,
 } from '#/shared/components/format/tag-options';
+import StateBadge from '#/shared/components/state-badge.vue';
 
 defineOptions({ name: 'MarketDetailHeader' });
 
@@ -56,13 +59,20 @@ const statusTag = computed(() =>
 
 const isBlocked = computed(() => props.market.status === 'manually_blocked');
 
-/** Freshness dot color: fresh green, stale amber, absent gray. */
-const freshnessClass = computed(() => {
-  if (props.bookAgeMs === null) {
-    return 'bg-gray-400';
-  }
-  return props.fresh ? 'bg-emerald-500' : 'bg-amber-500';
-});
+const freshnessState = computed(() =>
+  resolveMarketFreshnessState({
+    bookAgeMs: props.bookAgeMs,
+    fresh: props.fresh,
+  }),
+);
+
+const freshnessBadgeStatus = computed(() =>
+  marketFreshnessBadgeStatus(freshnessState.value),
+);
+
+const freshnessLabel = computed(() =>
+  $t(`page.shared.marketFreshness.${freshnessState.value}`),
+);
 
 const bookAgeLabel = computed(() =>
   props.bookAgeMs === null
@@ -111,10 +121,10 @@ function copyId(value: string) {
               {{ $t('page.markets.detail.eventId') }}: {{ market.event_id }}
             </span>
             <span class="flex items-center gap-1.5">
-              <span
-                :class="freshnessClass"
-                class="inline-block size-2 rounded-full"
-              ></span>
+              <StateBadge
+                :label="freshnessLabel"
+                :status="freshnessBadgeStatus"
+              />
               {{ $t('page.markets.detail.bookAge') }}: {{ bookAgeLabel }}
             </span>
           </div>

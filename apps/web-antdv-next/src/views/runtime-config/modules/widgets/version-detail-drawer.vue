@@ -5,8 +5,6 @@ import type {
   RuntimeConfigVersionView,
 } from '@vben/types';
 
-import type { JsonDiffRow } from './json-diff';
-
 import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
@@ -16,6 +14,11 @@ import { Mode } from 'vanilla-jsoneditor';
 
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import {
+  findTagOption,
+  useRuntimeConfigDiffTypeTagOptions,
+} from '#/shared/components/format/tag-options';
+import JsonDiffList from '#/shared/components/json-diff-list.vue';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 
 import { diffJson } from './json-diff';
@@ -31,11 +34,7 @@ interface VersionDetailDrawerData {
   versionCatalog: RuntimeConfigVersionView[];
 }
 
-const diffTagClass: Record<JsonDiffRow['type'], string> = {
-  added: 'bg-green-500/15 text-green-700',
-  changed: 'bg-amber-500/15 text-amber-700',
-  removed: 'bg-red-500/15 text-red-600',
-};
+const diffTypeTagOptions = useRuntimeConfigDiffTypeTagOptions();
 
 const version = ref<null | RuntimeConfigVersionView>(null);
 const currentConfig = ref<RuntimeConfigDocument>({});
@@ -55,6 +54,16 @@ const diffs = computed(() => {
   });
   return diffJson(baseline, version.value.config_json);
 });
+
+const diffItems = computed(() =>
+  diffs.value.map((row) => ({
+    badge: findTagOption(diffTypeTagOptions, row.type),
+    key: row.path,
+    next: row.next,
+    previous: row.previous,
+    subtitle: row.path,
+  })),
+);
 
 const [Drawer, drawerApi] = useVbenDrawer({
   footer: false,
@@ -112,37 +121,10 @@ const [Drawer, drawerApi] = useVbenDrawer({
           />
         </TabPane>
         <TabPane key="diff" :tab="$t('page.runtimeConfig.detail.diffTab')">
-          <div class="space-y-2">
-            <div
-              v-for="row in diffs"
-              :key="row.path"
-              class="rounded border p-2 text-xs"
-            >
-              <div class="mb-1 flex items-center gap-2">
-                <span class="font-mono text-primary">{{ row.path }}</span>
-                <span
-                  class="rounded px-1.5 py-0.5"
-                  :class="diffTagClass[row.type]"
-                >
-                  {{ row.type }}
-                </span>
-              </div>
-              <div class="grid gap-2 md:grid-cols-2">
-                <pre class="bg-muted rounded p-2">{{
-                  JSON.stringify(row.previous, null, 2)
-                }}</pre>
-                <pre class="bg-muted rounded p-2">{{
-                  JSON.stringify(row.next, null, 2)
-                }}</pre>
-              </div>
-            </div>
-            <div
-              v-if="diffs.length === 0"
-              class="text-muted-foreground text-sm"
-            >
-              {{ $t('page.runtimeConfig.detail.noDiff') }}
-            </div>
-          </div>
+          <JsonDiffList
+            :empty-text="$t('page.runtimeConfig.detail.noDiff')"
+            :items="diffItems"
+          />
         </TabPane>
       </Tabs>
     </template>

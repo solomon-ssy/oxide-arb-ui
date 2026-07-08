@@ -7,10 +7,10 @@ import { useRoute, useRouter } from 'vue-router';
 import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, Empty, Spin } from 'antdv-next';
-
 import { getRecommendation } from '#/api/quant-recommendations';
 import { $t } from '#/locales';
+import AsyncState from '#/shared/components/async-state.vue';
+import DetailBackNav from '#/shared/components/detail-back-nav.vue';
 import { useOrderIntentStore } from '#/store';
 
 import RecommendationDetailPanel from './modules/recommendation-detail-panel.vue';
@@ -24,6 +24,7 @@ const orderIntentStore = useOrderIntentStore();
 
 const recommendation = ref<null | QuantRecommendationView>(null);
 const loading = ref(false);
+const loadError = ref<null | string>(null);
 
 const recommendationId = computed(() => route.params.id as string);
 const initialTab = computed(() => (route.query.tab as string) || undefined);
@@ -33,11 +34,20 @@ async function load() {
     return;
   }
   loading.value = true;
+  loadError.value = null;
   try {
-    recommendation.value = await handleRequest(
+    const result = await handleRequest(
       () => getRecommendation(recommendationId.value),
-      { silent: true },
+      {
+        silent: true,
+        onError: (err) => {
+          if (err.httpStatus !== 404) {
+            loadError.value = err.message;
+          }
+        },
+      },
     );
+    recommendation.value = result ?? null;
   } finally {
     loading.value = false;
   }
@@ -57,22 +67,22 @@ onMounted(() => void load());
 
 <template>
   <Page auto-content-height>
-    <div class="mb-4">
-      <Button type="link" @click="goBack">
-        {{ $t('page.quantRecommendations.back') }}
-      </Button>
-    </div>
-    <Spin :spinning="loading">
+    <DetailBackNav
+      :label="$t('page.quantRecommendations.back')"
+      @back="goBack"
+    />
+    <AsyncState
+      :error-message="loadError"
+      :loading="loading"
+      :not-found="!recommendation && !loading && !loadError"
+      :not-found-text="$t('page.quantRecommendations.notFound')"
+      @retry="load"
+    >
       <RecommendationDetailPanel
         v-if="recommendation"
         :initial-tab="initialTab"
         :recommendation="recommendation"
       />
-      <Empty
-        v-else-if="!loading"
-        :description="$t('page.quantRecommendations.notFound')"
-        :image="Empty.PRESENTED_IMAGE_SIMPLE"
-      />
-    </Spin>
+    </AsyncState>
   </Page>
 </template>

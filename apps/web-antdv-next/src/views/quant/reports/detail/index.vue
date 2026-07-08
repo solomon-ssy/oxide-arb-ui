@@ -10,10 +10,12 @@ import { useRoute, useRouter } from 'vue-router';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, Empty, Spin, TabPane, Tabs } from 'antdv-next';
+import { Button, TabPane, Tabs } from 'antdv-next';
 
 import { getQuantReport, listReportRecommendations } from '#/api/quant-reports';
 import { $t } from '#/locales';
+import AsyncState from '#/shared/components/async-state.vue';
+import DetailBackNav from '#/shared/components/detail-back-nav.vue';
 import { useOrderIntentStore, useQuantReportStore } from '#/store';
 import RecommendationDetailDrawer from '#/views/quant/recommendations/modules/recommendation-detail-drawer.vue';
 
@@ -33,6 +35,7 @@ const orderIntentStore = useOrderIntentStore();
 const report = ref<null | QuantReportDetailView>(null);
 const recommendations = ref<QuantRecommendationView[]>([]);
 const loading = ref(false);
+const loadError = ref<null | string>(null);
 const activeTab = ref('overview');
 
 const reportId = computed(() => route.params.id as string);
@@ -53,6 +56,7 @@ async function load() {
     return;
   }
   loading.value = true;
+  loadError.value = null;
   try {
     const result = await handleRequest(
       async () => {
@@ -62,7 +66,14 @@ async function load() {
         ]);
         return { detail, recs };
       },
-      { silent: true },
+      {
+        silent: true,
+        onError: (err) => {
+          if (err.httpStatus !== 404) {
+            loadError.value = err.message;
+          }
+        },
+      },
     );
     report.value = result?.detail ?? null;
     recommendations.value = result?.recs ?? [];
@@ -86,12 +97,10 @@ function onRevoke() {
 }
 
 watch(reportId, () => void load());
-// Report lifecycle (revoke/expire/publish) arrives on `quant.report`.
 watch(
   () => quantReportStore.revision,
   () => void load(),
 );
-// Intent lifecycle updates recommendation status / blocking intent on this report.
 watch(
   () => orderIntentStore.revision,
   () => void load(),
@@ -102,42 +111,46 @@ onMounted(() => void load());
 <template>
   <Page auto-content-height>
     <div class="mb-4 flex items-center justify-between">
-      <Button type="link" @click="goBack">
-        {{ $t('page.quantReports.detail.back') }}
-      </Button>
+      <DetailBackNav
+        :label="$t('page.quantReports.detail.back')"
+        @back="goBack"
+      />
       <Button v-if="showRevoke" danger @click="onRevoke">
         {{ $t('page.quantReports.actions.revoke') }}
       </Button>
     </div>
-    <Spin :spinning="loading">
-      <template v-if="report">
-        <Tabs v-model:active-key="activeTab" destroy-inactive-tab-pane>
-          <TabPane
-            key="overview"
-            :tab="$t('page.quantReports.detail.tabs.overview')"
-          >
-            <ReportOverview :report="report" />
-          </TabPane>
-          <TabPane
-            key="recommendations"
-            :tab="$t('page.quantReports.detail.tabs.recommendations')"
-          >
-            <ReportRecommendationsTable
-              :recommendations="recommendations"
-              @select="openRecommendation"
-            />
-          </TabPane>
-          <TabPane key="diff" :tab="$t('page.quantReports.detail.tabs.diff')">
-            <ReportDiffPanel :report="report" />
-          </TabPane>
-        </Tabs>
-      </template>
-      <Empty
-        v-else-if="!loading"
-        :description="$t('page.quantReports.detail.notFound')"
-        :image="Empty.PRESENTED_IMAGE_SIMPLE"
-      />
-    </Spin>
+    <AsyncState
+      :error-message="loadError"
+      :loading="loading"
+      :not-found="!report && !loading && !loadError"
+      :not-found-text="$t('page.quantReports.detail.notFound')"
+      @retry="load"
+    >
+      <Tabs
+        v-if="report"
+        v-model:active-key="activeTab"
+        destroy-inactive-tab-pane
+      >
+        <TabPane
+          key="overview"
+          :tab="$t('page.quantReports.detail.tabs.overview')"
+        >
+          <ReportOverview :report="report" />
+        </TabPane>
+        <TabPane
+          key="recommendations"
+          :tab="$t('page.quantReports.detail.tabs.recommendations')"
+        >
+          <ReportRecommendationsTable
+            :recommendations="recommendations"
+            @select="openRecommendation"
+          />
+        </TabPane>
+        <TabPane key="diff" :tab="$t('page.quantReports.detail.tabs.diff')">
+          <ReportDiffPanel :report="report" />
+        </TabPane>
+      </Tabs>
+    </AsyncState>
     <RecDrawer />
   </Page>
 </template>

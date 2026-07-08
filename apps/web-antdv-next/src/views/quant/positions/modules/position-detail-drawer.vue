@@ -7,14 +7,15 @@ import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 import { POSITION_LEDGER_STATES } from '@vben/types';
 
-import { Card, Descriptions, DescriptionsItem, Spin, Tag } from 'antdv-next';
+import { Card, Descriptions, DescriptionsItem } from 'antdv-next';
 
 import { getPosition } from '#/api/positions';
 import { $t } from '#/locales';
+import AsyncState from '#/shared/components/async-state.vue';
+import EntityDetailHeader from '#/shared/components/entity-detail-header.vue';
 import EntityRouteButton from '#/shared/components/entity-route-button.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import {
-  EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
   formatPrice,
   formatShares,
@@ -40,7 +41,26 @@ const { handleRequest } = useRequestHandler();
 
 const position = ref<null | PositionView>(null);
 const loading = ref(false);
+const loadError = ref<null | string>(null);
 const openPositionId = ref<null | string>(null);
+
+const notFound = computed(
+  () => !position.value && !loading.value && !loadError.value,
+);
+
+const headerTags = computed(() => {
+  const current = position.value;
+  if (!current) {
+    return [];
+  }
+  return [
+    {
+      color: findTagOption(stateTagOptions, current.state)?.color,
+      label: findTagOption(stateTagOptions, current.state)?.label ?? '',
+    },
+    { color: 'default', label: current.position_plane },
+  ];
+});
 
 const stateTagOptions = usePositionLedgerStateTagOptions();
 
@@ -69,8 +89,16 @@ const settlementLink = computed(() =>
 
 async function refreshPosition(id: string) {
   loading.value = true;
+  loadError.value = null;
   try {
-    const fresh = await handleRequest(() => getPosition(id), { silent: true });
+    const fresh = await handleRequest(() => getPosition(id), {
+      silent: true,
+      onError: (err) => {
+        if (err.httpStatus !== 404) {
+          loadError.value = err.message;
+        }
+      },
+    });
     if (openPositionId.value === id) {
       position.value = fresh ?? null;
     }
@@ -85,11 +113,13 @@ const [Drawer, drawerApi] = useVbenDrawer({
     if (isOpen) {
       const data = drawerApi.getData<PositionDrawerData>();
       openPositionId.value = data.position.position_id;
+      loadError.value = null;
       position.value = data.position;
       void refreshPosition(data.position.position_id);
     } else {
       openPositionId.value = null;
       position.value = null;
+      loadError.value = null;
     }
   },
 });
@@ -102,23 +132,23 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
     :title="$t('page.quantPositions.detail.title')"
     class="w-full max-w-3xl"
   >
-    <Spin :spinning="loading">
+    <AsyncState
+      :error-message="loadError"
+      :loading="loading && !position"
+      :not-found="notFound"
+      :not-found-text="$t('page.quantPositions.detail.notFound')"
+      @retry="
+        () => {
+          const id = openPositionId;
+          if (id) {
+            void refreshPosition(id);
+          }
+        }
+      "
+    >
       <div v-if="position" class="flex flex-col gap-4">
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <Tag
-                :color="findTagOption(stateTagOptions, position.state)?.color"
-              >
-                {{ findTagOption(stateTagOptions, position.state)?.label }}
-              </Tag>
-              <Tag color="default">{{ position.position_plane }}</Tag>
-            </div>
-            <span class="font-mono text-xs break-all">
-              {{ position.position_id }}
-            </span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
+        <EntityDetailHeader :id="position.position_id" :tags="headerTags">
+          <template #actions>
             <EntityRouteButton
               icon="lucide:list-ordered"
               :label="$t('page.quantPositions.detail.viewOrders')"
@@ -141,8 +171,8 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
               :label="$t('page.quantPositions.detail.viewSettlement')"
               :to="settlementLink"
             />
-          </div>
-        </div>
+          </template>
+        </EntityDetailHeader>
 
         <Card
           size="small"
@@ -215,7 +245,6 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
           </Descriptions>
         </Card>
       </div>
-      <span v-else class="text-gray-500">{{ EMPTY_PLACEHOLDER }}</span>
-    </Spin>
+    </AsyncState>
   </Drawer>
 </template>

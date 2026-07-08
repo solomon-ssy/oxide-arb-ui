@@ -16,6 +16,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import DataList from '#/shared/components/data-list.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
 import { gateStatusColor, parseQualityGate } from './quality-gate';
@@ -72,6 +73,67 @@ const intentLabel = computed(() => {
   return label === key ? intent : label;
 });
 
+interface EvaluatedRow extends GateOutcome {
+  key: string;
+}
+
+interface NotApplicableRow {
+  detail: string;
+  gate: string;
+  key: string;
+}
+
+type BodyCell<T> = {
+  column: { key?: string };
+  record: T;
+};
+
+function asBodyCell<T extends object>(slotProps: unknown): BodyCell<T> {
+  return slotProps as BodyCell<T>;
+}
+
+function asEvaluatedBodyCell(slotProps: unknown): BodyCell<EvaluatedRow> {
+  return asBodyCell<EvaluatedRow>(slotProps);
+}
+
+function asNotApplicableBodyCell(
+  slotProps: unknown,
+): BodyCell<NotApplicableRow> {
+  return asBodyCell<NotApplicableRow>(slotProps);
+}
+
+const evaluatedRows = computed<EvaluatedRow[]>(() =>
+  (parsed.value?.evaluated ?? []).map((outcome) => ({
+    ...outcome,
+    key: `${outcome.class}-${outcome.gate}`,
+  })),
+);
+
+const notApplicableRows = computed<NotApplicableRow[]>(() =>
+  (parsed.value?.notApplicable ?? []).map((outcome) => ({
+    ...outcome,
+    key: outcome.gate,
+  })),
+);
+
+const evaluatedColumns = computed(() => [
+  { dataIndex: 'gate', key: 'gate' },
+  {
+    align: 'right' as const,
+    dataIndex: 'metrics',
+    key: 'metrics',
+  },
+]);
+
+const notApplicableColumns = computed(() => [
+  { dataIndex: 'gate', key: 'gate' },
+  {
+    align: 'right' as const,
+    dataIndex: 'detail',
+    key: 'detail',
+  },
+]);
+
 function gateLabel(gate: string): string {
   const key = `enum.qualityGate.${gate}`;
   const label = $t(key);
@@ -119,64 +181,95 @@ function showDetail(outcome: GateOutcome): boolean {
       </template>
     </Alert>
 
-    <div class="flex flex-col">
-      <div
-        v-for="outcome in parsed.evaluated"
-        :key="`${outcome.class}-${outcome.gate}`"
-        class="flex items-center justify-between gap-2 border-b py-1.5 text-xs last:border-b-0"
-      >
-        <div class="flex min-w-0 items-center gap-2">
-          <span class="truncate font-medium">{{
-            gateLabel(outcome.gate)
-          }}</span>
-          <Tag
-            :color="outcome.class === 'hard' ? 'default' : 'blue'"
-            :bordered="false"
+    <DataList
+      :columns="evaluatedColumns"
+      :data-source="evaluatedRows"
+      row-key="key"
+    >
+      <template #bodyCell="slotProps">
+        <template v-if="asEvaluatedBodyCell(slotProps).column.key === 'gate'">
+          <div class="flex min-w-0 items-center gap-2 text-xs">
+            <span class="truncate font-medium">{{
+              gateLabel(asEvaluatedBodyCell(slotProps).record.gate)
+            }}</span>
+            <Tag
+              :color="
+                asEvaluatedBodyCell(slotProps).record.class === 'hard'
+                  ? 'default'
+                  : 'blue'
+              "
+              :bordered="false"
+            >
+              {{ classLabel(asEvaluatedBodyCell(slotProps).record.class) }}
+            </Tag>
+          </div>
+        </template>
+        <template
+          v-else-if="asEvaluatedBodyCell(slotProps).column.key === 'metrics'"
+        >
+          <div
+            class="flex flex-shrink-0 items-center justify-end gap-2 text-xs"
           >
-            {{ classLabel(outcome.class) }}
-          </Tag>
-        </div>
-        <div class="flex flex-shrink-0 items-center gap-2">
-          <span class="text-muted-foreground font-mono">
-            {{ outcome.observed }}
-            <span class="opacity-60">/ {{ outcome.threshold }}</span>
-          </span>
-          <Tooltip v-if="showDetail(outcome)" :title="outcome.detail">
-            <IconifyIcon
-              class="text-muted-foreground size-3.5 cursor-help"
-              icon="lucide:info"
-            />
-          </Tooltip>
-          <Tag :color="gateStatusColor(outcome.status)">
-            {{ statusLabel(outcome.status) }}
-          </Tag>
-        </div>
-      </div>
-    </div>
+            <span class="text-muted-foreground font-mono">
+              {{ asEvaluatedBodyCell(slotProps).record.observed }}
+              <span class="opacity-60">
+                / {{ asEvaluatedBodyCell(slotProps).record.threshold }}
+              </span>
+            </span>
+            <Tooltip
+              v-if="showDetail(asEvaluatedBodyCell(slotProps).record)"
+              :title="asEvaluatedBodyCell(slotProps).record.detail"
+            >
+              <IconifyIcon
+                class="text-muted-foreground size-3.5 cursor-help"
+                icon="lucide:info"
+              />
+            </Tooltip>
+            <Tag
+              :color="
+                gateStatusColor(asEvaluatedBodyCell(slotProps).record.status)
+              "
+            >
+              {{ statusLabel(asEvaluatedBodyCell(slotProps).record.status) }}
+            </Tag>
+          </div>
+        </template>
+      </template>
+    </DataList>
 
-    <Collapse v-if="parsed.notApplicable.length > 0" ghost>
+    <Collapse v-if="notApplicableRows.length > 0" ghost>
       <CollapsePanel
         key="na"
         :header="
           $t('page.research.qualityGate.notApplicable', {
-            count: parsed.notApplicable.length,
+            count: notApplicableRows.length,
           })
         "
       >
-        <div class="flex flex-col">
-          <div
-            v-for="outcome in parsed.notApplicable"
-            :key="outcome.gate"
-            class="flex items-center justify-between gap-2 border-b py-1.5 text-xs last:border-b-0"
-          >
-            <span class="truncate font-medium">{{
-              gateLabel(outcome.gate)
-            }}</span>
-            <span class="text-muted-foreground truncate">{{
-              outcome.detail
-            }}</span>
-          </div>
-        </div>
+        <DataList
+          :columns="notApplicableColumns"
+          :data-source="notApplicableRows"
+          row-key="key"
+        >
+          <template #bodyCell="slotProps">
+            <template
+              v-if="asNotApplicableBodyCell(slotProps).column.key === 'gate'"
+            >
+              <span class="truncate text-xs font-medium">{{
+                gateLabel(asNotApplicableBodyCell(slotProps).record.gate)
+              }}</span>
+            </template>
+            <template
+              v-else-if="
+                asNotApplicableBodyCell(slotProps).column.key === 'detail'
+              "
+            >
+              <span class="text-muted-foreground truncate text-xs">{{
+                asNotApplicableBodyCell(slotProps).record.detail
+              }}</span>
+            </template>
+          </template>
+        </DataList>
       </CollapsePanel>
     </Collapse>
   </div>

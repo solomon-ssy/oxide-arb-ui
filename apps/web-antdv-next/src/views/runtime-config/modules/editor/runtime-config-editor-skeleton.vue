@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Skeleton } from 'antdv-next';
+
 defineOptions({ name: 'RuntimeConfigEditorSkeleton' });
 </script>
 
@@ -8,7 +10,9 @@ defineOptions({ name: 'RuntimeConfigEditorSkeleton' });
     aria-busy="true"
     aria-live="polite"
   >
-    <div class="bg-muted/60 h-9 w-full animate-pulse rounded-lg"></div>
+    <div class="h-9">
+      <Skeleton active :paragraph="false" :title="{ width: '100%' }" />
+    </div>
 
     <div class="space-y-2">
       <div
@@ -16,20 +20,24 @@ defineOptions({ name: 'RuntimeConfigEditorSkeleton' });
         :key="index"
         class="border-border/60 overflow-hidden rounded-lg border"
       >
-        <div class="bg-muted/40 flex h-11 items-center gap-3 px-4">
-          <div class="bg-muted size-4 animate-pulse rounded"></div>
-          <div
-            class="bg-muted h-4 animate-pulse rounded"
-            :class="index === 1 ? 'w-36' : 'w-28'"
-          ></div>
+        <div class="px-4 py-3">
+          <Skeleton
+            active
+            :paragraph="false"
+            :title="{ width: index === 1 ? '36%' : '28%' }"
+          />
         </div>
         <div v-if="index === 1" class="space-y-3 p-4">
-          <div class="bg-muted/50 h-3 w-3/4 animate-pulse rounded"></div>
+          <Skeleton
+            active
+            :paragraph="{ rows: 1, width: '75%' }"
+            :title="false"
+          />
           <div class="grid gap-3 md:grid-cols-2">
-            <div class="bg-muted/40 h-10 animate-pulse rounded-md"></div>
-            <div class="bg-muted/40 h-10 animate-pulse rounded-md"></div>
+            <Skeleton active :paragraph="{ rows: 1 }" :title="false" />
+            <Skeleton active :paragraph="{ rows: 1 }" :title="false" />
           </div>
-          <div class="bg-muted/40 h-24 animate-pulse rounded-md"></div>
+          <Skeleton active :paragraph="{ rows: 3 }" :title="false" />
         </div>
       </div>
     </div>

@@ -649,3 +649,45 @@ export function useDomainCursorStatusTagOptions() {
     },
   );
 }
+
+/** Market book freshness — maps to antdv `Badge` dot status. */
+export type MarketFreshnessState = 'fresh' | 'stale' | 'unknown';
+
+export function marketFreshnessBadgeStatus(
+  state: MarketFreshnessState,
+): 'default' | 'success' | 'warning' {
+  switch (state) {
+    case 'fresh': {
+      return 'success';
+    }
+    case 'stale': {
+      return 'warning';
+    }
+    default: {
+      return 'default';
+    }
+  }
+}
+
+export function resolveMarketFreshnessState(input: {
+  bookAgeMs: null | number;
+  fresh: boolean;
+}): MarketFreshnessState {
+  if (input.bookAgeMs === null) {
+    return 'unknown';
+  }
+  return input.fresh ? 'fresh' : 'stale';
+}
+
+/** Runtime-config JSON diff change kind → Tag color. */
+export function useRuntimeConfigDiffTypeTagOptions() {
+  return buildTagOptions(
+    ['added', 'changed', 'removed'],
+    (value) => $t(`enum.runtimeConfigDiffType.${value}`),
+    {
+      added: 'success',
+      changed: 'warning',
+      removed: 'error',
+    },
+  );
+}

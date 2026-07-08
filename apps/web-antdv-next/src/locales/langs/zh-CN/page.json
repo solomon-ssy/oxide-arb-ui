@@ -11,6 +11,31 @@
     "no": "否",
     "deepLinkNotFound": "深链记录不存在或已不可用。"
   },
+  "shared": {
+    "detailBack": "返回",
+    "asyncState": {
+      "loadError": "加载失败",
+      "retry": "重试",
+      "notFound": "记录不存在"
+    },
+    "jsonDiffList": {
+      "noChange": "无实际变化"
+    },
+    "marketFreshness": {
+      "unknown": "订单簿年龄未知",
+      "fresh": "订单簿新鲜",
+      "stale": "订单簿陈旧"
+    }
+  },
+  "profile": {
+    "title": "个人中心",
+    "tabs": {
+      "basic": "基本设置",
+      "security": "安全设置",
+      "password": "修改密码",
+      "notice": "新消息提醒"
+    }
+  },
   "menu": {
     "group": {
       "commandCenter": "指挥中心",
@@ -659,6 +684,9 @@
         "reliabilityEmpty": "无可靠性样本",
         "reliabilityXAxis": "预测概率",
         "reliabilityYAxis": "经验频率",
+        "reliabilityDiagonal": "完全校准线",
+        "reliabilityBins": "校准分桶",
+        "reliabilityAria": "可靠性图，共 {binCount} 个校准分桶、{sampleCount} 个样本。预测概率范围 {predictedMin} 至 {predictedMax}；经验频率范围 {empiricalMin} 至 {empiricalMax}。虚线对角线代表完全校准。",
         "fields": {
           "kind": "类型",
           "contentHash": "内容哈希",
@@ -755,6 +783,7 @@
         },
         "fields": {
           "marketId": "市场 ID",
+          "overrideDetails": "覆盖详情",
           "instrumentKey": "Instrument key",
           "subjectJson": "Subject JSON",
           "asset": "资产",
@@ -1314,6 +1343,7 @@
     },
     "positions": {
       "title": "Venue 持仓",
+      "empty": "暂无持仓",
       "outcome": "结果",
       "token": "Token",
       "market": "市场",
@@ -1529,6 +1559,7 @@
     },
     "detail": {
       "title": "执行订单",
+      "notFound": "未找到执行订单。",
       "gtdExpiration": "GTD 过期",
       "error": "错误",
       "viewReconciliation": "查看对账队列",
@@ -1567,6 +1598,7 @@
     },
     "detail": {
       "title": "持仓",
+      "notFound": "未找到持仓。",
       "orderIntentId": "意图",
       "token": "Token",
       "updatedAt": "更新时间",
@@ -1672,6 +1704,7 @@
     },
     "detail": {
       "title": "结算赎回",
+      "notFound": "未找到结算赎回批次。",
       "funder": "资金地址",
       "walletKind": "钱包类型",
       "gasFee": "Gas 费（POL）",
@@ -1941,13 +1974,15 @@
       "reason": "仓位原因",
       "waterfall": {
         "title": "Kelly 仓位瀑布图",
+        "uncalibrated": "Kelly 瀑布图不可用 — 收益模型未校准（该推荐未记录 f* 来源）。",
         "fStar": "f*（满额 Kelly）",
         "kellyFraction": "Kelly 分数",
         "confidence": "置信度",
         "drawdown": "回撤",
         "edgeUncertainty": "Edge 不确定性",
         "correlation": "相关性",
-        "cap": "单仓上限"
+        "cap": "单仓上限",
+        "aria": "Kelly 仓位瀑布图，共 {stepCount} 个步骤，最终为起始分数的 {finalValue}。约束生效步骤为{bindingLabel}。"
       }
     },
     "exitPlan": {
@@ -2029,8 +2064,7 @@
       "modelVersion": "模型版本",
       "factorDefinitions": "因子定义版本",
       "dataQualitySnapshot": "数据质量快照",
-      "empty": "该推荐暂无证据。",
-      "copied": "已复制到剪贴板"
+      "empty": "该推荐暂无证据。"
     },
     "attribution": {
       "title": "归因",
@@ -2160,6 +2194,8 @@
       },
       "diff": {
         "title": "变更预览",
+        "before": "变更前",
+        "after": "变更后",
         "acknowledgeGovernanceCritical": "我已确认上述治理关键变更"
       },
       "state": {

@@ -13,24 +13,19 @@ import { useRequestHandler } from '@vben/request/qp';
 
 import {
   Alert,
-  DatePicker,
   Descriptions,
   DescriptionsItem,
-  Input,
-  InputNumber,
   message,
-  Select,
   Steps,
 } from 'antdv-next';
 
+import { useVbenForm } from '#/adapter/form';
 import { listModelSpecs } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
 defineOptions({ name: 'DatasetFormModal' });
-
-const RangePicker = DatePicker.RangePicker;
 
 /** Domain body collected by the form (governed `reason` is added by the caller). */
 export type DatasetFormBody = Omit<BuildTrainingDatasetRequest, 'reason'>;
@@ -55,15 +50,6 @@ interface OptionItem {
 const { handleRequest } = useRequestHandler();
 
 const payload = ref<DatasetFormPayload | null>(null);
-const specOptions = ref<OptionItem[]>([]);
-const versionOptions = ref<OptionItem[]>([]);
-
-const modelSpecId = ref<string | undefined>();
-const runtimeConfigVersionId = ref<string | undefined>();
-const range = ref<[string, string] | undefined>();
-const sampleIntervalSecs = ref<number>(60);
-const horizonsSecs = ref<string>('3600');
-const sourceDelaySecs = ref<number>(1);
 
 const wizardStep = ref<'form' | 'review'>('form');
 const pendingBody = ref<DatasetFormBody | null>(null);
@@ -77,19 +63,21 @@ const wizardStepItems = computed<StepItem[]>(() => [
   { title: $t('page.research.datasets.plan.steps.review') },
 ]);
 
-function parseHorizons(): number[] {
-  return horizonsSecs.value
+function parseHorizons(raw: string): number[] {
+  return raw
     .split(',')
     .map((token) => Number(token.trim()))
     .filter((value) => Number.isInteger(value) && value > 0);
 }
 
-function collectBody(): DatasetFormBody | null {
-  const horizons = parseHorizons();
+async function collectBody(): Promise<DatasetFormBody | null> {
+  const values = await formApi.getValues();
+  const horizons = parseHorizons(String(values.horizons_secs ?? ''));
+  const range = values.window as [string, string] | undefined;
   if (
-    !modelSpecId.value ||
-    !runtimeConfigVersionId.value ||
-    !range.value ||
+    !values.model_spec_id ||
+    !values.runtime_config_version_id ||
+    !range ||
     horizons.length === 0
   ) {
     message.warning($t('page.research.datasets.form.incomplete'));
@@ -97,12 +85,12 @@ function collectBody(): DatasetFormBody | null {
   }
   return {
     horizons_secs: horizons,
-    model_spec_id: modelSpecId.value,
-    runtime_config_version_id: runtimeConfigVersionId.value,
-    sample_interval_secs: sampleIntervalSecs.value,
-    source_delay_secs: sourceDelaySecs.value,
-    window_end: range.value[1],
-    window_start: range.value[0],
+    model_spec_id: values.model_spec_id as string,
+    runtime_config_version_id: values.runtime_config_version_id as string,
+    sample_interval_secs: values.sample_interval_secs as number,
+    source_delay_secs: values.source_delay_secs as number,
+    window_end: range[1],
+    window_start: range[0],
   };
 }
 
@@ -113,14 +101,32 @@ async function loadOptions() {
       silent: true,
     }),
   ]);
-  specOptions.value = (specs?.items ?? []).map((spec) => ({
+  const specOptions: OptionItem[] = (specs?.items ?? []).map((spec) => ({
     label: `${spec.name} · ${spec.model_spec_id}`,
     value: spec.model_spec_id,
   }));
-  versionOptions.value = (versions ?? []).map((version) => ({
+  const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
     label: version.runtime_config_version_id,
     value: version.runtime_config_version_id,
   }));
+  formApi.updateSchema([
+    {
+      componentProps: {
+        optionFilterProp: 'label',
+        options: specOptions,
+        placeholder: $t('page.research.datasets.form.modelSpecPlaceholder'),
+      },
+      fieldName: 'model_spec_id',
+    },
+    {
+      componentProps: {
+        optionFilterProp: 'label',
+        options: versionOptions,
+        placeholder: $t('page.research.datasets.form.versionPlaceholder'),
+      },
+      fieldName: 'runtime_config_version_id',
+    },
+  ]);
 }
 
 function applyFooter() {
@@ -164,10 +170,128 @@ async function submitBuild(body: DatasetFormBody) {
   }
 }
 
+async function handleConfirm() {
+  if (!payload.value) {
+    return;
+  }
+  if (isReview.value) {
+    const body = pendingBody.value;
+    const datasetId = planResult.value?.training_dataset_id;
+    if (!body || !datasetId) {
+      return;
+    }
+    if (planResult.value?.hard_cap_exceeded) {
+      message.warning($t('page.research.datasets.plan.hardCapExceeded'));
+      return;
+    }
+    await submitBuild({ ...body, training_dataset_id: datasetId });
+    return;
+  }
+
+  const valid = await formApi.validate();
+  if (Object.keys(valid?.errors ?? {}).length > 0) {
+    return;
+  }
+  const body = await collectBody();
+  if (!body) {
+    return;
+  }
+  if (!isWizard.value) {
+    await submitBuild(body);
+    return;
+  }
+
+  modalApi.lock();
+  let plan: null | TrainingDatasetPlanView;
+  try {
+    plan = await payload.value.onPlan(body);
+  } finally {
+    modalApi.unlock();
+  }
+  if (plan) {
+    pendingBody.value = body;
+    planResult.value = plan;
+    wizardStep.value = 'review';
+    applyFooter();
+  }
+}
+
+const [Form, formApi] = useVbenForm({
+  commonConfig: {
+    componentProps: { class: 'w-full' },
+  },
+  schema: [
+    {
+      component: 'Select',
+      componentProps: {
+        optionFilterProp: 'label',
+        options: [],
+        placeholder: $t('page.research.datasets.form.modelSpecPlaceholder'),
+        showSearch: true,
+      },
+      fieldName: 'model_spec_id',
+      label: $t('page.research.datasets.form.modelSpec'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        optionFilterProp: 'label',
+        options: [],
+        placeholder: $t('page.research.datasets.form.versionPlaceholder'),
+        showSearch: true,
+      },
+      fieldName: 'runtime_config_version_id',
+      label: $t('page.research.datasets.form.runtimeConfigVersion'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'RangePicker',
+      componentProps: {
+        showTime: true,
+        valueFormat: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
+      },
+      fieldName: 'window',
+      label: $t('page.research.datasets.form.window'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 1 },
+      defaultValue: 60,
+      fieldName: 'sample_interval_secs',
+      formItemClass: 'col-span-1',
+      label: $t('page.research.datasets.form.sampleIntervalSecs'),
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 1 },
+      defaultValue: 1,
+      fieldName: 'source_delay_secs',
+      formItemClass: 'col-span-1',
+      label: $t('page.research.datasets.form.sourceDelaySecs'),
+      rules: 'required',
+    },
+    {
+      component: 'Input',
+      componentProps: {
+        placeholder: $t('page.research.datasets.form.horizonsPlaceholder'),
+      },
+      defaultValue: '3600',
+      fieldName: 'horizons_secs',
+      help: $t('page.research.datasets.form.horizonsHelp'),
+      label: $t('page.research.datasets.form.horizonsSecs'),
+      rules: 'required',
+    },
+  ],
+  showDefaultActions: false,
+  wrapperClass: 'grid-cols-1 md:grid-cols-2',
+});
+
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
   onCancel() {
-    // In review, "cancel" is a step-back to the form, not a modal close.
     if (isReview.value) {
       wizardStep.value = 'form';
       applyFooter();
@@ -175,51 +299,17 @@ const [Modal, modalApi] = useVbenModal({
     }
     modalApi.close();
   },
-  async onConfirm() {
-    if (!payload.value) {
-      return;
-    }
-    if (isReview.value) {
-      const body = pendingBody.value;
-      const datasetId = planResult.value?.training_dataset_id;
-      if (!body || !datasetId) {
-        return;
-      }
-      if (planResult.value?.hard_cap_exceeded) {
-        message.warning($t('page.research.datasets.plan.hardCapExceeded'));
-        return;
-      }
-      await submitBuild({ ...body, training_dataset_id: datasetId });
-      return;
-    }
-
-    const body = collectBody();
-    if (!body) {
-      return;
-    }
-    if (!isWizard.value) {
-      await submitBuild(body);
-      return;
-    }
-
-    modalApi.lock();
-    let plan: null | TrainingDatasetPlanView;
-    try {
-      plan = await payload.value.onPlan(body);
-    } finally {
-      modalApi.unlock();
-    }
-    if (plan) {
-      pendingBody.value = body;
-      planResult.value = plan;
-      wizardStep.value = 'review';
-      applyFooter();
-    }
-  },
+  onConfirm: handleConfirm,
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<DatasetFormPayload>();
       resetWizard();
+      formApi.resetForm();
+      formApi.setValues({
+        horizons_secs: '3600',
+        sample_interval_secs: 60,
+        source_delay_secs: 1,
+      });
       applyFooter();
       void loadOptions();
     }
@@ -328,75 +418,7 @@ const [Modal, modalApi] = useVbenModal({
       <p class="text-muted-foreground text-sm">
         {{ $t('page.research.datasets.form.summary') }}
       </p>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.datasets.form.modelSpec') }}
-        </span>
-        <Select
-          v-model:value="modelSpecId"
-          :options="specOptions"
-          :placeholder="$t('page.research.datasets.form.modelSpecPlaceholder')"
-          show-search
-          option-filter-prop="label"
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.datasets.form.runtimeConfigVersion') }}
-        </span>
-        <Select
-          v-model:value="runtimeConfigVersionId"
-          :options="versionOptions"
-          :placeholder="$t('page.research.datasets.form.versionPlaceholder')"
-          show-search
-          option-filter-prop="label"
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.datasets.form.window') }}
-        </span>
-        <RangePicker
-          v-model:value="range"
-          show-time
-          value-format="YYYY-MM-DDTHH:mm:ss.SSSZ"
-          class="w-full"
-        />
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium">
-            {{ $t('page.research.datasets.form.sampleIntervalSecs') }}
-          </span>
-          <InputNumber
-            v-model:value="sampleIntervalSecs"
-            :min="1"
-            class="w-full"
-          />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium">
-            {{ $t('page.research.datasets.form.sourceDelaySecs') }}
-          </span>
-          <InputNumber
-            v-model:value="sourceDelaySecs"
-            :min="1"
-            class="w-full"
-          />
-        </div>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.datasets.form.horizonsSecs') }}
-        </span>
-        <Input
-          v-model:value="horizonsSecs"
-          :placeholder="$t('page.research.datasets.form.horizonsPlaceholder')"
-        />
-        <span class="text-muted-foreground text-xs">
-          {{ $t('page.research.datasets.form.horizonsHelp') }}
-        </span>
-      </div>
+      <Form />
     </div>
   </Modal>
 </template>

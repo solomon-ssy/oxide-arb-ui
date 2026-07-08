@@ -15,6 +15,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import BulletList from '#/shared/components/bullet-list.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import {
   EMPTY_PLACEHOLDER,
@@ -381,17 +382,14 @@ function onCreateIntent() {
               $t('page.quantRecommendations.eligibility.ineligibilityReasons')
             "
           >
-            <ul
+            <BulletList
               v-if="eligibility.ineligibility_reasons.length > 0"
-              class="list-disc pl-4"
-            >
-              <li
-                v-for="reason in eligibility.ineligibility_reasons"
-                :key="reason"
-              >
-                {{ $t(`enum.ineligibilityReason.${reason}`) }}
-              </li>
-            </ul>
+              :items="
+                eligibility.ineligibility_reasons.map((reason) =>
+                  $t(`enum.ineligibilityReason.${reason}`),
+                )
+              "
+            />
             <span v-else>{{
               $t('page.quantRecommendations.eligibility.none')
             }}</span>

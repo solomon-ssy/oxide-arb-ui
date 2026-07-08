@@ -3,7 +3,7 @@ import type { ReportLifecycleEventKind } from '@vben/types';
 
 import { computed } from 'vue';
 
-import { Button, Spin, Tag } from 'antdv-next';
+import { Button, Empty, Spin, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
@@ -60,8 +60,10 @@ const inProgress = computed(() => lastEvent.value?.event === 'started');
         {{ $t(`enum.quantRuntimeMode.${lastEvent.runtime_mode}`) }}
       </span>
     </div>
-    <div v-else class="text-muted-foreground text-sm">
-      {{ $t('page.dashboard.reportLifecycle.none') }}
-    </div>
+    <Empty
+      v-else
+      :description="$t('page.dashboard.reportLifecycle.none')"
+      :image="Empty.PRESENTED_IMAGE_SIMPLE"
+    />
   </DashboardPanel>
 </template>

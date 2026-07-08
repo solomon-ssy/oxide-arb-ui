@@ -7,8 +7,7 @@ import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 import { CALIBRATION_KINDS, DOWNSIDE_SOURCES } from '@vben/types';
 
-import { message, Select } from 'antdv-next';
-
+import { useVbenForm } from '#/adapter/form';
 import { listCalibrationArtifacts } from '#/api/calibration';
 import { $t } from '#/locales';
 
@@ -29,33 +28,6 @@ interface OptionItem {
 const { handleRequest } = useRequestHandler();
 
 const payload = ref<ModelBindCalibrationPayload | null>(null);
-const calibratorOptions = ref<OptionItem[]>([]);
-const loading = ref(false);
-
-const calibratorRef = ref<string | undefined>();
-const downsideSource = ref<BindCalibrationBody['downside_source']>(
-  DOWNSIDE_SOURCES.mfeMae,
-);
-
-async function loadCalibrators() {
-  loading.value = true;
-  try {
-    const page = await handleRequest(
-      () =>
-        listCalibrationArtifacts({
-          kind: CALIBRATION_KINDS.modelScore,
-          size: 200,
-        }),
-      { silent: true },
-    );
-    calibratorOptions.value = (page?.items ?? []).map((row) => ({
-      label: `${row.artifact_id} · ${row.sample_count} samples`,
-      value: row.artifact_id,
-    }));
-  } finally {
-    loading.value = false;
-  }
-}
 
 const downsideOptions = [
   {
@@ -64,33 +36,92 @@ const downsideOptions = [
   },
 ];
 
-const [Modal, modalApi] = useVbenModal({
-  onConfirm: async () => {
-    if (!payload.value) {
-      return;
+async function loadCalibrators() {
+  const page = await handleRequest(
+    () =>
+      listCalibrationArtifacts({
+        kind: CALIBRATION_KINDS.modelScore,
+        size: 200,
+      }),
+    { silent: true },
+  );
+  const options: OptionItem[] = (page?.items ?? []).map((row) => ({
+    label: `${row.artifact_id} · ${row.sample_count} samples`,
+    value: row.artifact_id,
+  }));
+  formApi.updateSchema([
+    {
+      componentProps: { loading: false, options },
+      fieldName: 'calibrator_ref',
+    },
+  ]);
+}
+
+async function onSubmit(values: Record<string, unknown>) {
+  if (!payload.value) {
+    return;
+  }
+  modalApi.setState({ confirmLoading: true });
+  try {
+    const ok = await payload.value.onSubmit({
+      calibrator_ref: values.calibrator_ref as string,
+      downside_source:
+        values.downside_source as BindCalibrationBody['downside_source'],
+    });
+    if (ok) {
+      modalApi.close();
     }
-    if (!calibratorRef.value) {
-      message.warning($t('page.research.models.bindCalibration.validation'));
-      return;
-    }
-    modalApi.setState({ confirmLoading: true });
-    try {
-      const ok = await payload.value.onSubmit({
-        calibrator_ref: calibratorRef.value,
-        downside_source: downsideSource.value,
-      });
-      if (ok) {
-        modalApi.close();
-      }
-    } finally {
-      modalApi.setState({ confirmLoading: false });
-    }
+  } finally {
+    modalApi.setState({ confirmLoading: false });
+  }
+}
+
+const [Form, formApi] = useVbenForm({
+  commonConfig: {
+    componentProps: { class: 'w-full' },
   },
+  handleSubmit: onSubmit,
+  schema: [
+    {
+      component: 'Select',
+      componentProps: {
+        loading: false,
+        optionFilterProp: 'label',
+        options: [],
+        placeholder: $t(
+          'page.research.models.bindCalibration.calibratorPlaceholder',
+        ),
+        showSearch: true,
+      },
+      fieldName: 'calibrator_ref',
+      label: $t('page.research.models.bindCalibration.calibrator'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: { options: downsideOptions },
+      defaultValue: DOWNSIDE_SOURCES.mfeMae,
+      fieldName: 'downside_source',
+      label: $t('page.research.models.bindCalibration.downsideSource'),
+      rules: 'selectRequired',
+    },
+  ],
+  showDefaultActions: false,
+});
+
+const [Modal, modalApi] = useVbenModal({
+  onConfirm: () => formApi.validateAndSubmitForm(),
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<ModelBindCalibrationPayload>();
-      calibratorRef.value = undefined;
-      downsideSource.value = DOWNSIDE_SOURCES.mfeMae;
+      formApi.resetForm();
+      formApi.setValues({ downside_source: DOWNSIDE_SOURCES.mfeMae });
+      formApi.updateSchema([
+        {
+          componentProps: { loading: true, options: [] },
+          fieldName: 'calibrator_ref',
+        },
+      ]);
       void loadCalibrators();
     } else {
       payload.value = null;
@@ -104,30 +135,9 @@ const [Modal, modalApi] = useVbenModal({
     :title="$t('page.research.models.bindCalibration.title')"
     class="w-full max-w-lg"
   >
-    <div class="flex flex-col gap-4 py-2">
-      <p class="text-muted-foreground text-sm">
-        {{ $t('page.research.models.bindCalibration.summary') }}
-      </p>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.models.bindCalibration.calibrator') }}
-        </span>
-        <Select
-          v-model:value="calibratorRef"
-          :loading="loading"
-          :options="calibratorOptions"
-          :placeholder="
-            $t('page.research.models.bindCalibration.calibratorPlaceholder')
-          "
-          show-search
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.models.bindCalibration.downsideSource') }}
-        </span>
-        <Select v-model:value="downsideSource" :options="downsideOptions" />
-      </div>
-    </div>
+    <p class="text-muted-foreground mb-4 text-sm">
+      {{ $t('page.research.models.bindCalibration.summary') }}
+    </p>
+    <Form />
   </Modal>
 </template>

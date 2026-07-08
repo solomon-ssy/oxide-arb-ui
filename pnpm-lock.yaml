@@ -168,6 +168,9 @@ catalogs:
     '@vitejs/plugin-vue-jsx':
       specifier: ^5.1.5
       version: 5.1.5
+    '@vue-js-cron/core':
+      specifier: ^6.3.0
+      version: 6.3.0
     '@vue/shared':
       specifier: ^3.5.35
       version: 3.5.35
@@ -240,6 +243,9 @@ catalogs:
     defu:
       specifier: ^6.1.7
       version: 6.1.7
+    dompurify:
+      specifier: ^3.4.11
+      version: 3.4.11
     dotenv:
       specifier: ^17.4.2
       version: 17.4.2
@@ -315,6 +321,9 @@ catalogs:
     json-editor-vue:
       specifier: ^0.18.1
       version: 0.18.1
+    jsondiffpatch:
+      specifier: ^0.7.6
+      version: 0.7.6
     jsonwebtoken:
       specifier: ^9.0.3
       version: 9.0.3
@@ -773,7 +782,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@vue-js-cron/core':
-        specifier: ^6.3.0
+        specifier: 'catalog:'
         version: 6.3.0
       '@vueuse/core':
         specifier: 'catalog:'
@@ -787,9 +796,15 @@ importers:
       decimal.js:
         specifier: 'catalog:'
         version: 10.6.0
+      dompurify:
+        specifier: 'catalog:'
+        version: 3.4.11
       json-editor-vue:
         specifier: 'catalog:'
         version: 0.18.1(@typescript-eslint/types@8.60.1)(vue@3.5.35(typescript@6.0.3))
+      jsondiffpatch:
+        specifier: 'catalog:'
+        version: 0.7.6
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(typescript@6.0.3)(vue@3.5.35(typescript@6.0.3))
@@ -3307,6 +3322,9 @@ packages:
 
   '@cyberalien/svg-utils@1.2.15':
     resolution: {integrity: sha512-ZbKU6npzW5PNocdoLVJYfKzaP+c/RpT6JUkoaKrW1DOcw6lyXub8XtcNpI3xok6FnyNjS6ZbsrrtjTnS9yeZAQ==}
+
+  '@dmsnell/diff-match-patch@1.1.0':
+    resolution: {integrity: sha512-yejLPmM5pjsGvxS9gXablUSbInW7H976c/FJ4iQxWIm7/38xBySRemTPDe34lhg1gVLbJntX0+sH0jYfU+PN9A==}
 
   '@docsearch/css@4.6.3':
     resolution: {integrity: sha512-nlOwcXcsNAptQl4vlL4MA78qNJKO0Qlds5GuBjCoePgkebTXLSf8Qt1oyZ3YBshYupKXG9VRGEsk1zr23d+bzQ==}
@@ -7418,6 +7436,9 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
+  dompurify@3.4.11:
+    resolution: {integrity: sha512-zhlUV12GsaRzMsf9q5M254YhA4+VuF0fG+QFqu6aYpoGlKtz+w8//jBcGVYBgQkR5GHjUomejY84AV+/uPbWdw==}
+
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
 
@@ -8711,6 +8732,11 @@ packages:
   jsonc-eslint-parser@3.1.0:
     resolution: {integrity: sha512-75EA7EWZExL/j+MDKQrRbdzcRI2HOkRlmUw8fZJc1ioqFEOvBsq7Rt+A6yCxOt9w/TYNpkt52gC6nm/g5tFIng==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  jsondiffpatch@0.7.6:
+    resolution: {integrity: sha512-zE9+AXFq+MkTolDor2Cw1nJzLC0aleqPkYf52Kb4Kn4mJcka/gFHpGI2JBVEJCfWOvBl0OoxZS+wuLdislQcqg==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
@@ -13162,6 +13188,8 @@ snapshots:
     dependencies:
       '@iconify/types': 2.0.0
 
+  '@dmsnell/diff-match-patch@1.1.0': {}
+
   '@docsearch/css@4.6.3': {}
 
   '@docsearch/js@4.6.3': {}
@@ -16843,6 +16871,10 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
+  dompurify@3.4.11:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
+
   domutils@3.2.2:
     dependencies:
       dom-serializer: 2.0.0
@@ -18288,6 +18320,10 @@ snapshots:
       acorn: 8.16.0
       eslint-visitor-keys: 5.0.1
       semver: 7.8.2
+
+  jsondiffpatch@0.7.6:
+    dependencies:
+      '@dmsnell/diff-match-patch': 1.1.0
 
   jsonfile@4.0.0:
     optionalDependencies:

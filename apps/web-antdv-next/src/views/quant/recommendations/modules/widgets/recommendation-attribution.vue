@@ -16,6 +16,7 @@ import {
 
 import { getRecommendationAttribution } from '#/api/quant-recommendations';
 import { $t } from '#/locales';
+import BulletList from '#/shared/components/bullet-list.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatBps,
@@ -238,14 +239,7 @@ watch(
             :label="$t('page.quantRecommendations.attribution.detail.notes')"
             :span="2"
           >
-            <ul class="list-disc pl-4">
-              <li
-                v-for="(note, index) in attribution.attribution.notes"
-                :key="index"
-              >
-                {{ note }}
-              </li>
-            </ul>
+            <BulletList :items="attribution.attribution.notes" />
           </DescriptionsItem>
         </Descriptions>
       </Card>

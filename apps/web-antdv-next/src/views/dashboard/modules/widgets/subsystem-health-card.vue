@@ -1,19 +1,24 @@
 <script lang="ts" setup>
+import type { TableColumnsType } from 'antdv-next';
+
 import type { HealthReport } from '@vben/types';
 
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert, Button, Tag } from 'antdv-next';
+import { Alert, Button, Tag, Tooltip } from 'antdv-next';
 
 import { getSystemHealth } from '#/api/system';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import DataList from '#/shared/components/data-list.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'SubsystemHealthCard' });
+
+type HealthCheckRow = HealthReport['checks'][number];
 
 const systemStore = useSystemStore();
 const { handleRequest } = useRequestHandler();
@@ -29,7 +34,7 @@ async function loadHealth() {
   loading.value = false;
 }
 
-function subsystemStatusColor(check: HealthReport['checks'][number]): string {
+function subsystemStatusColor(check: HealthCheckRow): string {
   switch (check.status.status) {
     case 'healthy': {
       return 'success';
@@ -43,13 +48,13 @@ function subsystemStatusColor(check: HealthReport['checks'][number]): string {
   }
 }
 
-function subsystemStatusLabel(check: HealthReport['checks'][number]): string {
+function subsystemStatusLabel(check: HealthCheckRow): string {
   const state = check.status;
   const label = $t(`page.systemAdmin.health.${state.status}`);
   return state.status === 'skipped' ? `${label} (${state.reason})` : label;
 }
 
-function latencyLabel(check: HealthReport['checks'][number]): string {
+function latencyLabel(check: HealthCheckRow): string {
   if (check.latency_ms === null) {
     return '';
   }
@@ -60,6 +65,15 @@ function latencyLabel(check: HealthReport['checks'][number]): string {
   }
   return `${check.latency_ms}ms`;
 }
+
+const healthRows = computed(() => health.value?.checks ?? []);
+
+const healthColumns = computed<TableColumnsType<HealthCheckRow>>(() => [
+  { dataIndex: 'name', key: 'name' },
+  { dataIndex: 'detail', key: 'detail' },
+  { align: 'right', dataIndex: 'latency_ms', key: 'latency_ms' },
+  { align: 'right', dataIndex: 'status', key: 'status' },
+]);
 
 watch(
   () => systemStore.status?.operational_phase.phase,
@@ -96,31 +110,38 @@ onMounted(() => {
         :type="health.overall_healthy ? 'success' : 'error'"
         show-icon
       />
-      <div
-        v-for="check in health?.checks ?? []"
-        :key="check.name"
-        class="flex items-center justify-between gap-2 border-b pb-1.5 text-sm last:border-b-0"
+      <DataList
+        :columns="healthColumns"
+        :data-source="healthRows"
+        :loading="loading"
+        row-key="name"
       >
-        <span class="font-medium">{{ check.name }}</span>
-        <div class="flex items-center gap-2">
-          <span
-            v-if="check.detail"
-            :title="check.detail"
-            class="text-muted-foreground max-w-56 truncate text-xs"
-          >
-            {{ check.detail }}
-          </span>
-          <span
-            v-if="check.latency_ms !== null"
-            class="text-muted-foreground text-xs tabular-nums"
-          >
-            {{ latencyLabel(check) }}
-          </span>
-          <Tag :color="subsystemStatusColor(check)">
-            {{ subsystemStatusLabel(check) }}
-          </Tag>
-        </div>
-      </div>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'name'">
+            <span class="font-medium">{{ record.name }}</span>
+          </template>
+          <template v-else-if="column.key === 'detail'">
+            <Tooltip v-if="record.detail" :title="record.detail">
+              <span class="text-muted-foreground max-w-56 truncate text-xs">
+                {{ record.detail }}
+              </span>
+            </Tooltip>
+          </template>
+          <template v-else-if="column.key === 'latency_ms'">
+            <span
+              v-if="record.latency_ms !== null"
+              class="text-muted-foreground text-xs tabular-nums"
+            >
+              {{ latencyLabel(record) }}
+            </span>
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <Tag :color="subsystemStatusColor(record)">
+              {{ subsystemStatusLabel(record) }}
+            </Tag>
+          </template>
+        </template>
+      </DataList>
       <div
         v-if="health"
         class="text-muted-foreground text-right text-xs tabular-nums"

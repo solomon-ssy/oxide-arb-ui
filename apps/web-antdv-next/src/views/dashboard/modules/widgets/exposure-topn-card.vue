@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { TableColumnsType } from 'antdv-next';
+
 import type { ExposureBreakdown } from '@vben/types';
 
 import { computed } from 'vue';
@@ -7,6 +9,7 @@ import { Button, Empty } from 'antdv-next';
 
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import DataList from '#/shared/components/data-list.vue';
 import { formatUsd, truncateHexId } from '#/shared/components/format';
 
 defineOptions({ name: 'ExposureTopNCard' });
@@ -20,6 +23,7 @@ const emit = defineEmits<{
 }>();
 
 interface ExposureRow {
+  key: string;
   label: string;
   value: string;
 }
@@ -30,7 +34,7 @@ function toRows(
   limit: number,
 ): ExposureRow[] {
   return Object.entries(map ?? {})
-    .map(([key, value]) => ({ label: labelFn(key), value }))
+    .map(([key, value]) => ({ key, label: labelFn(key), value }))
     .toSorted((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0))
     .slice(0, limit);
 }
@@ -50,6 +54,11 @@ const topMarkets = computed(() =>
 const isEmpty = computed(
   () => topCategories.value.length === 0 && topMarkets.value.length === 0,
 );
+
+const exposureColumns = computed<TableColumnsType<ExposureRow>>(() => [
+  { dataIndex: 'label', key: 'label' },
+  { align: 'right', dataIndex: 'value', key: 'value' },
+]);
 </script>
 
 <template>
@@ -74,31 +83,43 @@ const isEmpty = computed(
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.dashboard.exposureTopN.byCategory') }}
         </span>
-        <div
-          v-for="row in topCategories"
-          :key="row.label"
-          class="flex items-center justify-between gap-2 text-sm"
+        <DataList
+          :columns="exposureColumns"
+          :data-source="topCategories"
+          row-key="key"
         >
-          <span class="truncate">{{ row.label }}</span>
-          <span class="shrink-0 font-medium tabular-nums">
-            {{ formatUsd(row.value) }}
-          </span>
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'label'">
+              <span class="truncate">{{ record.label }}</span>
+            </template>
+            <template v-else-if="column.key === 'value'">
+              <span class="font-medium tabular-nums">
+                {{ formatUsd(record.value) }}
+              </span>
+            </template>
+          </template>
+        </DataList>
       </div>
       <div class="flex flex-col gap-1.5">
         <span class="text-muted-foreground text-xs font-medium">
           {{ $t('page.dashboard.exposureTopN.byMarket') }}
         </span>
-        <div
-          v-for="row in topMarkets"
-          :key="row.label"
-          class="flex items-center justify-between gap-2 text-sm"
+        <DataList
+          :columns="exposureColumns"
+          :data-source="topMarkets"
+          row-key="key"
         >
-          <span class="font-mono text-xs">{{ row.label }}</span>
-          <span class="shrink-0 font-medium tabular-nums">
-            {{ formatUsd(row.value) }}
-          </span>
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'label'">
+              <span class="font-mono text-xs">{{ record.label }}</span>
+            </template>
+            <template v-else-if="column.key === 'value'">
+              <span class="font-medium tabular-nums">
+                {{ formatUsd(record.value) }}
+              </span>
+            </template>
+          </template>
+        </DataList>
       </div>
     </div>
   </DashboardPanel>

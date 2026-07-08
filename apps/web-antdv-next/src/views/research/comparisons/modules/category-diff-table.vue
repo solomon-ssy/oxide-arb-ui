@@ -15,6 +15,8 @@ import {
   findTagOption,
   useMarketCategoryTagOptions,
 } from '#/shared/components/format/tag-options';
+import InlineBar from '#/shared/components/inline-bar.vue';
+import SignedValue from '#/shared/components/signed-value.vue';
 
 defineOptions({ name: 'CategoryDiffTable' });
 
@@ -27,8 +29,6 @@ const props = withDefaults(
 
 const categoryTagOptions = useMarketCategoryTagOptions();
 
-// Scale the diverging bar to the largest absolute delta so the widest bar
-// fills half the track (positive right, negative left).
 const maxAbsDelta = computed(() => {
   let max = 0;
   for (const row of props.value) {
@@ -70,26 +70,6 @@ const columns = computed(() => [
     width: 220,
   },
 ]);
-
-function signClass(value: string): string {
-  const sign = decimalSign(value);
-  if (sign === 1) {
-    return 'text-success';
-  }
-  if (sign === -1) {
-    return 'text-destructive';
-  }
-  return '';
-}
-
-/** Half-track width % for the diverging bar of one delta value. */
-function barWidth(value: string): number {
-  if (maxAbsDelta.value === 0) {
-    return 0;
-  }
-  const magnitude = Math.abs(parseDecimal(value)?.toNumber() ?? 0);
-  return Math.round((magnitude / maxAbsDelta.value) * 50);
-}
 </script>
 
 <template>
@@ -111,37 +91,33 @@ function barWidth(value: string): number {
         </Tag>
       </template>
       <template v-else-if="column.key === 'baseline_rank_ic'">
-        <span class="font-mono">{{
-          formatScore(record.baseline_rank_ic)
-        }}</span>
+        <SignedValue
+          :sign="null"
+          :value="formatScore(record.baseline_rank_ic)"
+        />
       </template>
       <template v-else-if="column.key === 'candidate_rank_ic'">
-        <span class="font-mono">{{
-          formatScore(record.candidate_rank_ic)
-        }}</span>
+        <SignedValue
+          :sign="null"
+          :value="formatScore(record.candidate_rank_ic)"
+        />
       </template>
       <template v-else-if="column.key === 'rank_ic_delta'">
         <div class="flex items-center gap-2">
-          <!-- Diverging track: center line, positive fills right, negative left. -->
-          <div class="relative h-2 flex-1">
-            <div class="bg-border absolute inset-y-0 left-1/2 w-px"></div>
-            <div
-              v-if="decimalSign(record.rank_ic_delta) === 1"
-              :style="{ width: `${barWidth(record.rank_ic_delta)}%` }"
-              class="bg-success absolute inset-y-0 left-1/2 rounded-r-full"
-            ></div>
-            <div
-              v-else-if="decimalSign(record.rank_ic_delta) === -1"
-              :style="{ width: `${barWidth(record.rank_ic_delta)}%` }"
-              class="bg-destructive absolute inset-y-0 right-1/2 rounded-l-full"
-            ></div>
-          </div>
-          <span
-            :class="signClass(record.rank_ic_delta)"
-            class="w-16 text-right font-mono"
-          >
-            {{ formatScore(record.rank_ic_delta) }}
-          </span>
+          <InlineBar
+            class="flex-1"
+            mode="diverging"
+            :center="0"
+            :label="`${record.category} rank IC delta`"
+            :max="maxAbsDelta"
+            :min="-maxAbsDelta"
+            :value="parseDecimal(record.rank_ic_delta)?.toNumber() ?? 0"
+          />
+          <SignedValue
+            class="w-16 text-right"
+            :sign="decimalSign(record.rank_ic_delta)"
+            :value="formatScore(record.rank_ic_delta)"
+          />
         </div>
       </template>
     </template>

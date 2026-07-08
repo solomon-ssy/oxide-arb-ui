@@ -15,6 +15,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import DataList from '#/shared/components/data-list.vue';
 import {
   formatDateTimeLocal,
   formatDurationSecs,
@@ -47,11 +48,48 @@ const isEmpty = computed(
     summary.value.published_recommendation_count === 0,
 );
 
-const categoryAllocations = computed(() =>
-  Object.entries(summary.value.category_allocation),
+interface AllocationRow {
+  key: string;
+  label: string;
+  value: string;
+}
+
+interface RejectionRow {
+  count: number;
+  key: string;
+  label: string;
+}
+
+const allocationColumns = [
+  { dataIndex: 'label', ellipsis: true, key: 'label' },
+  { align: 'right' as const, dataIndex: 'value', key: 'value' },
+];
+
+const rejectionColumns = [
+  { dataIndex: 'label', ellipsis: true, key: 'label' },
+  { align: 'right' as const, dataIndex: 'count', key: 'count' },
+];
+
+const categoryAllocations = computed<AllocationRow[]>(() =>
+  Object.entries(summary.value.category_allocation).map(([category, usd]) => ({
+    key: category,
+    label: $t(`enum.marketCategory.${category}`),
+    value: usd,
+  })),
 );
-const eventAllocations = computed(() =>
-  Object.entries(summary.value.event_allocation),
+const eventAllocations = computed<AllocationRow[]>(() =>
+  Object.entries(summary.value.event_allocation).map(([event, usd]) => ({
+    key: event,
+    label: event,
+    value: usd,
+  })),
+);
+const rejectionRows = computed<RejectionRow[]>(() =>
+  summary.value.top_rejection_reasons.map((item) => ({
+    count: item.count,
+    key: item.reason,
+    label: $t(`enum.rejectionReason.${item.reason}`),
+  })),
 );
 
 // Frozen server-side at report-compose time from the exact account +
@@ -415,21 +453,21 @@ function openRuntimeConfig() {
           </DescriptionsItem>
         </Descriptions>
 
-        <div
-          v-if="summary.top_rejection_reasons.length > 0"
-          class="flex flex-col gap-1"
-        >
+        <div v-if="rejectionRows.length > 0" class="flex flex-col gap-1">
           <span class="text-sm font-medium">
             {{ $t('page.quantReports.detail.summary.topRejections') }}
           </span>
-          <div
-            v-for="item in summary.top_rejection_reasons"
-            :key="item.reason"
-            class="flex items-center justify-between text-sm"
+          <DataList
+            :columns="rejectionColumns"
+            :data-source="rejectionRows"
+            row-key="key"
           >
-            <span>{{ $t(`enum.rejectionReason.${item.reason}`) }}</span>
-            <span class="font-mono">{{ item.count }}</span>
-          </div>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'count'">
+                <span class="font-mono">{{ record.count }}</span>
+              </template>
+            </template>
+          </DataList>
         </div>
       </div>
 
@@ -441,27 +479,36 @@ function openRuntimeConfig() {
           <span class="text-sm font-medium">
             {{ $t('page.quantReports.detail.summary.categoryAllocation') }}
           </span>
-          <div
-            v-for="[category, usd] in categoryAllocations"
-            :key="category"
-            class="flex items-center justify-between text-sm"
+          <DataList
+            :columns="allocationColumns"
+            :data-source="categoryAllocations"
+            row-key="key"
           >
-            <span>{{ $t(`enum.marketCategory.${category}`) }}</span>
-            <span class="font-mono">{{ formatUsd(usd) }}</span>
-          </div>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'value'">
+                <span class="font-mono">{{ formatUsd(record.value) }}</span>
+              </template>
+            </template>
+          </DataList>
         </div>
         <div v-if="eventAllocations.length > 0" class="flex flex-col gap-1">
           <span class="text-sm font-medium">
             {{ $t('page.quantReports.detail.summary.eventAllocation') }}
           </span>
-          <div
-            v-for="[event, usd] in eventAllocations"
-            :key="event"
-            class="flex items-center justify-between text-sm"
+          <DataList
+            :columns="allocationColumns"
+            :data-source="eventAllocations"
+            row-key="key"
           >
-            <span class="font-mono text-xs">{{ event }}</span>
-            <span class="font-mono">{{ formatUsd(usd) }}</span>
-          </div>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'label'">
+                <span class="font-mono text-xs">{{ record.label }}</span>
+              </template>
+              <template v-else-if="column.key === 'value'">
+                <span class="font-mono">{{ formatUsd(record.value) }}</span>
+              </template>
+            </template>
+          </DataList>
         </div>
       </div>
 

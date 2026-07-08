@@ -26,6 +26,7 @@ import {
   formatUsd,
   truncateHexId,
 } from '#/shared/components/format';
+import StatCard from '#/shared/components/stat-card.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import EquityChart from './modules/widgets/equity-chart.vue';
@@ -197,46 +198,26 @@ onMounted(() => {
         </template>
         <div v-if="liveAccount" class="flex flex-col gap-3">
           <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-            <div class="flex flex-col gap-1">
-              <span class="text-muted-foreground text-xs">
-                {{ $t('page.quantAccount.fields.netLiq') }}
-              </span>
-              <span class="font-mono text-lg font-semibold tabular-nums">
-                {{ formatUsd(liveAccount.venue_net_liquidation_usd) }}
-              </span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <span class="text-muted-foreground text-xs">
-                {{ $t('page.quantAccount.fields.capitalBase') }}
-              </span>
-              <span class="font-mono text-lg font-semibold tabular-nums">
-                {{ formatUsd(liveAccount.capital_base_usd) }}
-              </span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <span class="text-muted-foreground text-xs">
-                {{ $t('page.quantAccount.fields.available') }}
-              </span>
-              <span class="font-mono text-lg font-semibold tabular-nums">
-                {{ formatUsd(liveAccount.available_usd) }}
-              </span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <span class="text-muted-foreground text-xs">
-                {{ $t('page.quantAccount.fields.reserved') }}
-              </span>
-              <span class="font-mono text-lg font-semibold tabular-nums">
-                {{ formatUsd(liveAccount.reserved_usd) }}
-              </span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <span class="text-muted-foreground text-xs">
-                {{ $t('page.quantAccount.fields.budgetCap') }}
-              </span>
-              <span class="font-mono text-lg font-semibold tabular-nums">
-                {{ formatUsd(liveAccount.budget_cap_usd) }}
-              </span>
-            </div>
+            <StatCard
+              :title="$t('page.quantAccount.fields.netLiq')"
+              :value="formatUsd(liveAccount.venue_net_liquidation_usd)"
+            />
+            <StatCard
+              :title="$t('page.quantAccount.fields.capitalBase')"
+              :value="formatUsd(liveAccount.capital_base_usd)"
+            />
+            <StatCard
+              :title="$t('page.quantAccount.fields.available')"
+              :value="formatUsd(liveAccount.available_usd)"
+            />
+            <StatCard
+              :title="$t('page.quantAccount.fields.reserved')"
+              :value="formatUsd(liveAccount.reserved_usd)"
+            />
+            <StatCard
+              :title="$t('page.quantAccount.fields.budgetCap')"
+              :value="formatUsd(liveAccount.budget_cap_usd)"
+            />
           </div>
           <div
             class="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 text-xs"
@@ -251,8 +232,26 @@ onMounted(() => {
             </span>
           </div>
         </div>
+        <div
+          v-else-if="accountLoading"
+          class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5"
+        >
+          <StatCard
+            v-for="field in [
+              'netLiq',
+              'capitalBase',
+              'available',
+              'reserved',
+              'budgetCap',
+            ]"
+            :key="field"
+            :loading="true"
+            :title="$t(`page.quantAccount.fields.${field}`)"
+            value=""
+          />
+        </div>
         <Empty
-          v-else-if="!accountLoading"
+          v-else
           :description="$t('page.quantAccount.live.unavailable')"
           :image="Empty.PRESENTED_IMAGE_SIMPLE"
         />
@@ -267,10 +266,17 @@ onMounted(() => {
         <Table
           :columns="positionColumns"
           :data-source="positions"
+          :loading="accountLoading"
           :pagination="false"
           row-key="token_id"
           size="small"
         >
+          <template #emptyText>
+            <Empty
+              :description="$t('page.quantAccount.positions.empty')"
+              :image="Empty.PRESENTED_IMAGE_SIMPLE"
+            />
+          </template>
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'token'">
               <span class="font-mono text-xs">

@@ -21,6 +21,7 @@ import {
   Card,
   Descriptions,
   DescriptionsItem,
+  Empty,
   message,
   Tag,
 } from 'antdv-next';
@@ -306,7 +307,13 @@ onMounted(() => {
       class="runtime-config-current-card mb-4"
       :title="$t('page.runtimeConfig.current.title')"
     >
-      <Descriptions v-if="activeVersion" :column="3" bordered size="small">
+      <Empty
+        v-if="!activeVersion"
+        :description="$t('page.runtimeConfig.current.empty')"
+        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+        class="py-4"
+      />
+      <Descriptions v-else :column="3" bordered size="small">
         <DescriptionsItem :label="$t('page.runtimeConfig.current.version')">
           <span class="font-mono text-xs">{{
             activeVersion.runtime_config_version_id
@@ -339,7 +346,7 @@ onMounted(() => {
           </Tag>
         </DescriptionsItem>
       </Descriptions>
-      <div class="mt-4 flex flex-wrap gap-2">
+      <div v-if="activeVersion" class="mt-4 flex flex-wrap gap-2">
         <Button size="small" @click="openCurrentConfigDrawer">
           {{ $t('page.runtimeConfig.current.viewConfig') }}
         </Button>
@@ -354,9 +361,6 @@ onMounted(() => {
         <Button v-if="canViewDeploy" size="small" @click="openDeployDrawer">
           {{ $t('page.runtimeConfig.deploy.open') }}
         </Button>
-      </div>
-      <div v-if="!activeVersion" class="text-muted-foreground mt-2 text-sm">
-        {{ $t('page.runtimeConfig.current.empty') }}
       </div>
     </Card>
 

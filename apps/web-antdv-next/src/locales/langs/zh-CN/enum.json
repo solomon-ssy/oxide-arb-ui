@@ -372,6 +372,11 @@
     "promote": "提升",
     "rollback": "回滚"
   },
+  "runtimeConfigDiffType": {
+    "added": "新增",
+    "changed": "变更",
+    "removed": "移除"
+  },
   "resourceType": {
     "system": "系统",
     "market": "市场",

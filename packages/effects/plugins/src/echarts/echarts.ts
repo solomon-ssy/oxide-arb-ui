@@ -7,6 +7,7 @@ import {
   ScatterChart,
 } from 'echarts/charts';
 import {
+  AriaComponent,
   DatasetComponent,
   GridComponent,
   LegendComponent,
@@ -25,6 +26,7 @@ import {
 import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([
+  AriaComponent,
   TitleComponent,
   PieChart,
   RadarChart,

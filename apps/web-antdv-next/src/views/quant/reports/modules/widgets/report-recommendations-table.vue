@@ -34,6 +34,21 @@ function openFullPage(id: string) {
   void router.push(`/quant/recommendations/${id}`);
 }
 
+function rowProps(record: QuantRecommendationView) {
+  return {
+    class: 'cursor-pointer',
+    role: 'button',
+    tabindex: 0,
+    onClick: () => emit('select', record),
+    onKeydown: (event: KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        emit('select', record);
+      }
+    },
+  };
+}
+
 const sideTagOptions = useOutcomeSideTagOptions();
 const statusTagOptions = useRecommendationStatusTagOptions();
 
@@ -122,12 +137,7 @@ const columns = [
   <Table
     v-else
     :columns="columns"
-    :custom-row="
-      (record: QuantRecommendationView) => ({
-        class: 'cursor-pointer',
-        onClick: () => emit('select', record),
-      })
-    "
+    :custom-row="rowProps"
     :data-source="recommendations"
     :pagination="false"
     row-key="recommendation_id"

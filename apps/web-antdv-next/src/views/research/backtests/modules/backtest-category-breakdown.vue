@@ -17,6 +17,8 @@ import {
   findTagOption,
   useMarketCategoryTagOptions,
 } from '#/shared/components/format/tag-options';
+import InlineBar from '#/shared/components/inline-bar.vue';
+import SignedValue from '#/shared/components/signed-value.vue';
 
 defineOptions({ name: 'BacktestCategoryBreakdown' });
 
@@ -34,7 +36,10 @@ interface CategoryRow extends CategoryMetric {
 }
 
 const rows = computed<CategoryRow[]>(() => {
-  const total = props.value.reduce((sum, item) => sum + item.sample_count, 0);
+  let total = 0;
+  for (const item of props.value) {
+    total += item.sample_count;
+  }
   return props.value.map((item) => ({
     ...item,
     share: total > 0 ? item.sample_count / total : 0,
@@ -96,17 +101,6 @@ const columns = computed(() => [
     title: $t('page.research.backtests.detail.categoryPanel.meanRealized'),
   },
 ]);
-
-function signClass(value: string): string {
-  const sign = decimalSign(value);
-  if (sign === 1) {
-    return 'text-success';
-  }
-  if (sign === -1) {
-    return 'text-destructive';
-  }
-  return '';
-}
 </script>
 
 <template>
@@ -129,34 +123,35 @@ function signClass(value: string): string {
       </template>
       <template v-else-if="column.key === 'share'">
         <div class="flex items-center gap-2">
-          <div class="bg-accent h-1.5 flex-1 overflow-hidden rounded-full">
-            <div
-              :class="
-                record.category === maxShareCategory
-                  ? 'bg-warning'
-                  : 'bg-primary'
-              "
-              :style="{ width: `${Math.round(record.share * 100)}%` }"
-              class="h-full rounded-full"
-            ></div>
-          </div>
-          <span class="text-muted-foreground w-12 text-right font-mono text-xs">
-            {{ formatPercent(String(record.share)) }}
-          </span>
+          <InlineBar
+            class="flex-1"
+            :label="`${record.category} share`"
+            :max="1"
+            :min="0"
+            :tone="record.category === maxShareCategory ? 'warning' : 'primary'"
+            :value="record.share"
+          />
+          <SignedValue
+            class="w-12 text-right"
+            :sign="null"
+            :value="formatPercent(String(record.share))"
+          />
         </div>
       </template>
       <template v-else-if="column.key === 'rank_ic'">
-        <span :class="signClass(record.rank_ic)" class="font-mono">
-          {{ formatScore(record.rank_ic) }}
-        </span>
+        <SignedValue
+          :sign="decimalSign(record.rank_ic)"
+          :value="formatScore(record.rank_ic)"
+        />
       </template>
       <template v-else-if="column.key === 'hit_rate'">
-        <span class="font-mono">{{ formatPercent(record.hit_rate) }}</span>
+        <SignedValue :sign="null" :value="formatPercent(record.hit_rate)" />
       </template>
       <template v-else-if="column.key === 'mean_realized_bps'">
-        <span :class="signClass(record.mean_realized_bps)" class="font-mono">
-          {{ formatBps(record.mean_realized_bps) }}
-        </span>
+        <SignedValue
+          :sign="decimalSign(record.mean_realized_bps)"
+          :value="formatBps(record.mean_realized_bps)"
+        />
       </template>
     </template>
   </Table>

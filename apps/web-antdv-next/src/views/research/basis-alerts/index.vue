@@ -15,6 +15,7 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { acknowledgeBasisAlert, listBasisAlerts } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
 import { timeRangeFromFormValues } from '#/shared/components/query/time-range';
+import SignedValue from '#/shared/components/signed-value.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
@@ -115,16 +116,13 @@ watch(() => route.query.market_id, applyRouteMarketFilter);
   <Page auto-content-height>
     <Grid :table-title="$t('page.research.basisAlerts.listTitle')">
       <template #basisBps="{ row }">
-        <span
-          class="font-medium"
-          :class="
-            Number(row.basis_bps) > Number(row.threshold_bps)
-              ? 'text-destructive'
-              : ''
-          "
-        >
-          {{ row.basis_bps }}
-        </span>
+        <SignedValue
+          :sign="Number(row.basis_bps) > Number(row.threshold_bps) ? -1 : null"
+          :value="row.basis_bps"
+        />
+      </template>
+      <template #thresholdBps="{ row }">
+        <SignedValue :sign="null" :value="row.threshold_bps" />
       </template>
       <template #acknowledged="{ row }">
         <Tag v-if="row.acknowledged && row.acknowledged_by" color="success">

@@ -3,9 +3,9 @@ import type { SchemaSection } from '@vben/types';
 
 import type { ConfigSectionMeta } from './types';
 
-import { nextTick, useTemplateRef } from 'vue';
+import { nextTick, ref, useTemplateRef } from 'vue';
 
-import { Modal } from 'antdv-next';
+import { useVbenModal } from '@vben/common-ui';
 
 import { $t } from '#/locales';
 
@@ -33,6 +33,29 @@ const activeSectionKey = defineModel<string>('activeSectionKey', {
 
 const rootRef = useTemplateRef<HTMLElement>('rootRef');
 
+interface ConfirmDialogState {
+  cancelText: string;
+  content: string;
+  okText: string;
+  title: string;
+}
+
+const confirmDialog = ref<ConfirmDialogState | null>(null);
+let confirmResolve: ((value: boolean) => void) | null = null;
+
+const [SwitchSectionConfirmModal, switchSectionConfirmModalApi] = useVbenModal({
+  onCancel() {
+    confirmResolve?.(false);
+    confirmResolve = null;
+    switchSectionConfirmModalApi.close();
+  },
+  onConfirm() {
+    confirmResolve?.(true);
+    confirmResolve = null;
+    switchSectionConfirmModalApi.close();
+  },
+});
+
 function panelId(sectionId: string) {
   return `runtime-config-section-panel-${sectionId}`;
 }
@@ -42,17 +65,20 @@ function sectionTitle(section: SchemaSection) {
 }
 
 function confirmDirtySwitch(sectionLabel: string): Promise<boolean> {
+  // A second caller while a dialog is already open must not orphan the
+  // first caller's `await` — resolve it as cancelled.
+  confirmResolve?.(false);
+  confirmDialog.value = {
+    cancelText: $t('common.cancel'),
+    content: $t('page.runtimeConfig.editor.switchSection.content', {
+      section: sectionLabel,
+    }),
+    okText: $t('page.runtimeConfig.editor.switchSection.continue'),
+    title: $t('page.runtimeConfig.editor.switchSection.title'),
+  };
   return new Promise((resolve) => {
-    Modal.confirm({
-      title: $t('page.runtimeConfig.editor.switchSection.title'),
-      content: $t('page.runtimeConfig.editor.switchSection.content', {
-        section: sectionLabel,
-      }),
-      okText: $t('page.runtimeConfig.editor.switchSection.continue'),
-      cancelText: $t('common.cancel'),
-      onOk: () => resolve(true),
-      onCancel: () => resolve(false),
-    });
+    confirmResolve = resolve;
+    switchSectionConfirmModalApi.open();
   });
 }
 
@@ -117,6 +143,16 @@ function beamColorFor(section: SchemaSection) {
       <slot name="body" :section="section"></slot>
     </RuntimeConfigSectionPanel>
   </div>
+
+  <SwitchSectionConfirmModal
+    v-if="confirmDialog"
+    :cancel-text="confirmDialog.cancelText"
+    :confirm-text="confirmDialog.okText"
+    :title="confirmDialog.title"
+    class="max-w-md"
+  >
+    {{ confirmDialog.content }}
+  </SwitchSectionConfirmModal>
 </template>
 
 <style scoped>

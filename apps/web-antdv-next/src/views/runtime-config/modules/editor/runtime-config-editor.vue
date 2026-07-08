@@ -10,10 +10,11 @@ import type { ConfigSectionMeta, RuntimeConfigApplyPayload } from './types';
 
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 
+import { useVbenModal } from '@vben/common-ui';
 import { preferences } from '@vben/preferences';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert, Button, message, Modal, Segmented, Tag } from 'antdv-next';
+import { Alert, Button, message, Segmented, Tag } from 'antdv-next';
 import { Mode } from 'vanilla-jsoneditor';
 
 import {
@@ -86,6 +87,29 @@ const sectionCards = reactive<
   Record<string, InstanceType<typeof ConfigSectionCard> | null>
 >({});
 
+interface ConfirmDialogState {
+  cancelText: string;
+  content: string;
+  okText: string;
+  title: string;
+}
+
+const confirmDialog = ref<ConfirmDialogState | null>(null);
+let confirmResolve: ((value: boolean) => void) | null = null;
+
+const [ReloadConfirmModal, reloadConfirmModalApi] = useVbenModal({
+  onCancel() {
+    confirmResolve?.(false);
+    confirmResolve = null;
+    reloadConfirmModalApi.close();
+  },
+  onConfirm() {
+    confirmResolve?.(true);
+    confirmResolve = null;
+    reloadConfirmModalApi.close();
+  },
+});
+
 const modeOptions = computed(() => [
   { label: $t('page.runtimeConfig.editor.mode.form'), value: 'form' },
   { label: $t('page.runtimeConfig.editor.mode.json'), value: 'json' },
@@ -152,15 +176,18 @@ function bindSectionCard(
 }
 
 function confirmDiscardDraftsForReload(): Promise<boolean> {
+  // A second caller (e.g. a WS-driven reload) while a dialog is already open
+  // must not orphan the first caller's `await` — resolve it as cancelled.
+  confirmResolve?.(false);
+  confirmDialog.value = {
+    cancelText: $t('common.cancel'),
+    content: $t('page.runtimeConfig.editor.reloadLiveConfig.content'),
+    okText: $t('page.runtimeConfig.editor.reloadLiveConfig.continue'),
+    title: $t('page.runtimeConfig.editor.reloadLiveConfig.title'),
+  };
   return new Promise((resolve) => {
-    Modal.confirm({
-      title: $t('page.runtimeConfig.editor.reloadLiveConfig.title'),
-      content: $t('page.runtimeConfig.editor.reloadLiveConfig.content'),
-      okText: $t('page.runtimeConfig.editor.reloadLiveConfig.continue'),
-      cancelText: $t('common.cancel'),
-      onOk: () => resolve(true),
-      onCancel: () => resolve(false),
-    });
+    confirmResolve = resolve;
+    reloadConfirmModalApi.open();
   });
 }
 
@@ -461,6 +488,16 @@ onMounted(() => {
         </template>
       </div>
     </template>
+
+    <ReloadConfirmModal
+      v-if="confirmDialog"
+      :cancel-text="confirmDialog.cancelText"
+      :confirm-text="confirmDialog.okText"
+      :title="confirmDialog.title"
+      class="max-w-md"
+    >
+      {{ confirmDialog.content }}
+    </ReloadConfirmModal>
   </div>
 </template>
 

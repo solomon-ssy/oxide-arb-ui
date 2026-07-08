@@ -27,7 +27,7 @@ import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
 import { useResearchStore } from '#/store';
 
 import LinkageDetailDrawer from './modules/linkage-detail-drawer.vue';
-import LinkageOverrideModal from './modules/linkage-override-modal.vue';
+import LinkageOverrideDrawer from './modules/linkage-override-drawer.vue';
 import {
   useMarketLinkageColumns,
   useMarketLinkageSearchSchema,
@@ -55,8 +55,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 
-const [OverrideModal, overrideModalApi] = useVbenDrawer({
-  connectedComponent: LinkageOverrideModal,
+const [OverrideDrawer, overrideDrawerApi] = useVbenDrawer({
+  connectedComponent: LinkageOverrideDrawer,
   destroyOnClose: true,
 });
 
@@ -166,7 +166,7 @@ function openDetail(row: MarketLinkageSummaryView) {
 }
 
 function openOverride(row: MarketLinkageSummaryView) {
-  overrideModalApi
+  overrideDrawerApi
     .setData({
       alreadyResolved: row.status === 'resolved' || row.status === 'overridden',
       marketId: row.market_id,
@@ -245,7 +245,7 @@ useQueryOpenDrawer({
       </template>
     </Grid>
     <Drawer />
-    <OverrideModal
+    <OverrideDrawer
       @success="
         () => {
           gridApi.query();

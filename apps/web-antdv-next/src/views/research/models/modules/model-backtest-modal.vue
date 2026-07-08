@@ -6,8 +6,7 @@ import { ref } from 'vue';
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { message, Select, Switch } from 'antdv-next';
-
+import { useVbenForm } from '#/adapter/form';
 import { listModels } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
@@ -35,90 +34,164 @@ interface OptionItem {
 const { handleRequest } = useRequestHandler();
 
 const payload = ref<ModelBacktestPayload | null>(null);
-const versionOptions = ref<OptionItem[]>([]);
-const comparisonOptions = ref<OptionItem[]>([]);
-const comparisonLoading = ref(false);
-
-const trainingDatasetId = ref<string | undefined>();
-const runtimeConfigVersionId = ref<string | undefined>();
-const calibrate = ref<boolean>(false);
-const comparisonModelVersionId = ref<string | undefined>();
-
 const prefillDatasetId = ref<string | undefined>();
 const {
   datasetOptions,
   loading: datasetLoading,
   reload: reloadDatasets,
-} = useTrainableDatasetOptions({
-  prefillId: prefillDatasetId,
-});
+} = useTrainableDatasetOptions({ prefillId: prefillDatasetId });
 
 async function loadOptions() {
-  const versions = await handleRequest(
-    () => fetchRuntimeConfigVersions({ limit: 200 }),
-    { silent: true },
-  );
-  versionOptions.value = (versions ?? []).map((version) => ({
+  // `handleRequest` never rejects (errors are normalized + toasted internally),
+  // so `loading: false` in the post-fetch `updateSchema` below always runs.
+  formApi.updateSchema([
+    {
+      componentProps: { loading: true },
+      fieldName: 'comparison_model_version_id',
+    },
+  ]);
+  const [versions, page] = await Promise.all([
+    handleRequest(() => fetchRuntimeConfigVersions({ limit: 200 }), {
+      silent: true,
+    }),
+    handleRequest(() => listModels({ size: 200 }), { silent: true }),
+  ]);
+  const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
     label: version.runtime_config_version_id,
     value: version.runtime_config_version_id,
   }));
+  const currentId = payload.value?.modelVersionId;
+  const comparisonOptions: OptionItem[] = (page?.items ?? [])
+    .filter((model) => model.model_version_id !== currentId)
+    .map((model) => ({
+      label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
+      value: model.model_version_id,
+    }));
+  formApi.updateSchema([
+    {
+      componentProps: { optionFilterProp: 'label', options: versionOptions },
+      fieldName: 'runtime_config_version_id',
+    },
+    {
+      componentProps: {
+        allowClear: true,
+        loading: false,
+        optionFilterProp: 'label',
+        options: comparisonOptions,
+      },
+      fieldName: 'comparison_model_version_id',
+    },
+  ]);
 }
 
-async function loadComparisonModels() {
-  const currentId = payload.value?.modelVersionId;
-  comparisonLoading.value = true;
+function syncDatasetSchema() {
+  formApi.updateSchema([
+    {
+      componentProps: {
+        loading: datasetLoading.value,
+        optionFilterProp: 'label',
+        options: datasetOptions.value,
+        placeholder: $t('page.research.datasets.selector.placeholder'),
+      },
+      fieldName: 'training_dataset_id',
+    },
+  ]);
+}
+
+async function onSubmit(values: Record<string, unknown>) {
+  if (!payload.value) {
+    return;
+  }
+  modalApi.lock();
   try {
-    const page = await handleRequest(() => listModels({ size: 200 }), {
-      silent: true,
+    const ok = await payload.value.onSubmit({
+      calibrate: Boolean(values.calibrate),
+      comparison_model_version_id:
+        (values.comparison_model_version_id as string | undefined) || undefined,
+      runtime_config_version_id: values.runtime_config_version_id as string,
+      training_dataset_id: values.training_dataset_id as string,
     });
-    comparisonOptions.value = (page?.items ?? [])
-      .filter((model) => model.model_version_id !== currentId)
-      .map((model) => ({
-        label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
-        value: model.model_version_id,
-      }));
+    if (ok) {
+      modalApi.close();
+    }
   } finally {
-    comparisonLoading.value = false;
+    modalApi.unlock();
   }
 }
 
+const [Form, formApi] = useVbenForm({
+  commonConfig: {
+    componentProps: { class: 'w-full' },
+  },
+  handleSubmit: onSubmit,
+  schema: [
+    {
+      component: 'Select',
+      componentProps: {
+        loading: false,
+        optionFilterProp: 'label',
+        options: [],
+        placeholder: $t('page.research.datasets.selector.placeholder'),
+        showSearch: true,
+      },
+      fieldName: 'training_dataset_id',
+      label: $t('page.research.models.backtest.trainingDataset'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        optionFilterProp: 'label',
+        options: [],
+        showSearch: true,
+      },
+      fieldName: 'runtime_config_version_id',
+      label: $t('page.research.models.backtest.runtimeConfigVersion'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        loading: false,
+        optionFilterProp: 'label',
+        options: [],
+        placeholder: $t('page.research.models.backtest.comparisonPlaceholder'),
+        showSearch: true,
+      },
+      fieldName: 'comparison_model_version_id',
+      label: $t('page.research.models.backtest.comparisonModel'),
+    },
+    {
+      component: 'Switch',
+      defaultValue: false,
+      fieldName: 'calibrate',
+      label: $t('page.research.models.backtest.calibrate'),
+    },
+  ],
+  showDefaultActions: false,
+});
+
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
-  async onConfirm() {
-    if (!trainingDatasetId.value || !runtimeConfigVersionId.value) {
-      message.warning($t('page.research.models.backtest.incomplete'));
-      return;
-    }
-    if (!payload.value) {
-      return;
-    }
-    modalApi.lock();
-    try {
-      const ok = await payload.value.onSubmit({
-        calibrate: calibrate.value,
-        comparison_model_version_id:
-          comparisonModelVersionId.value || undefined,
-        runtime_config_version_id: runtimeConfigVersionId.value,
-        training_dataset_id: trainingDatasetId.value,
-      });
-      if (ok) {
-        modalApi.close();
-      }
-    } finally {
-      modalApi.unlock();
-    }
-  },
+  onConfirm: () => formApi.validateAndSubmitForm(),
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<ModelBacktestPayload>();
-      trainingDatasetId.value = payload.value?.trainingDatasetId || undefined;
       prefillDatasetId.value = payload.value?.trainingDatasetId || undefined;
-      runtimeConfigVersionId.value = undefined;
-      calibrate.value = false;
-      comparisonModelVersionId.value = undefined;
+      formApi.resetForm();
+      formApi.setValues({
+        calibrate: false,
+        training_dataset_id: payload.value?.trainingDatasetId || undefined,
+      });
+      // Force the spinner on before `reload()` resolves — `datasetLoading`
+      // flips back to `false` internally by the time `.then()` runs, so
+      // syncing only there would never actually show the loading state.
+      formApi.updateSchema([
+        { componentProps: { loading: true }, fieldName: 'training_dataset_id' },
+      ]);
+      void reloadDatasets().then(syncDatasetSchema);
       void loadOptions();
-      void reloadDatasets();
-      void loadComparisonModels();
     }
   },
 });
@@ -126,62 +199,9 @@ const [Modal, modalApi] = useVbenModal({
 
 <template>
   <Modal :title="$t('page.research.models.backtest.title')">
-    <div class="flex flex-col gap-4">
-      <p class="text-muted-foreground text-sm">
-        {{ $t('page.research.models.backtest.summary') }}
-      </p>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.models.backtest.trainingDataset') }}
-        </span>
-        <Select
-          v-model:value="trainingDatasetId"
-          :loading="datasetLoading"
-          :options="datasetOptions"
-          :placeholder="$t('page.research.datasets.selector.placeholder')"
-          show-search
-          option-filter-prop="label"
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.models.backtest.runtimeConfigVersion') }}
-        </span>
-        <Select
-          v-model:value="runtimeConfigVersionId"
-          :options="versionOptions"
-          show-search
-          option-filter-prop="label"
-        />
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
-          {{ $t('page.research.models.backtest.comparisonModel') }}
-        </span>
-        <Select
-          v-model:value="comparisonModelVersionId"
-          allow-clear
-          :loading="comparisonLoading"
-          :options="comparisonOptions"
-          :placeholder="
-            $t('page.research.models.backtest.comparisonPlaceholder')
-          "
-          show-search
-          option-filter-prop="label"
-        />
-      </div>
-      <div class="flex items-center gap-2">
-        <Switch v-model:checked="calibrate" />
-        <span class="text-sm">
-          {{ $t('page.research.models.backtest.calibrate') }}
-        </span>
-      </div>
-    </div>
+    <p class="text-muted-foreground mb-4 text-sm">
+      {{ $t('page.research.models.backtest.summary') }}
+    </p>
+    <Form />
   </Modal>
 </template>
-
-<style scoped>
-:deep(.ant-select) {
-  width: 100%;
-}
-</style>

@@ -4,6 +4,8 @@ import { onMounted, ref, watch } from 'vue';
 import { useRequestHandler } from '@vben/request/qp';
 import { EXECUTION_ORDER_STATES } from '@vben/types';
 
+import { Card, Skeleton, Spin, Statistic } from 'antdv-next';
+
 import { listExecutionOrders } from '#/api/execution-orders';
 import { listOrderIntents } from '#/api/order-intents';
 import { listReconciliations } from '#/api/reconciliations';
@@ -115,49 +117,63 @@ onMounted(() => {
     tone="amber"
     fill
   >
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <button
-        v-if="canReadIntents"
-        class="hover:bg-accent flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors"
-        type="button"
-        @click="emit('navigateIntents')"
-      >
-        <span class="font-mono text-3xl font-semibold tabular-nums">
-          {{ pendingIntents ?? '—' }}
-        </span>
-        <span class="text-muted-foreground text-xs">
-          {{ $t('page.dashboard.pipeline.pendingIntents') }}
-        </span>
-      </button>
-      <button
-        v-if="canReadExecutionOrders"
-        class="hover:bg-accent flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors"
-        type="button"
-        @click="emit('navigateExecutionOrders')"
-      >
-        <span class="font-mono text-3xl font-semibold tabular-nums">
-          {{ inFlightOrders ?? '—' }}
-        </span>
-        <span class="text-muted-foreground text-xs">
-          {{ $t('page.dashboard.pipeline.inFlightOrders') }}
-        </span>
-      </button>
-      <button
-        v-if="canReadReconciliations"
-        class="hover:bg-accent flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors"
-        type="button"
-        @click="emit('navigateReconciliations')"
-      >
-        <span class="font-mono text-3xl font-semibold tabular-nums">
-          {{ unresolvedReconciliations ?? '—' }}
-        </span>
-        <span class="text-muted-foreground text-xs">
-          {{ $t('page.dashboard.pipeline.unresolvedReconciliations') }}
-        </span>
-      </button>
-    </div>
-    <div v-if="loading" class="text-muted-foreground mt-2 text-center text-xs">
-      {{ $t('page.dashboard.pipeline.loading') }}
-    </div>
+    <Spin :spinning="loading">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card
+          v-if="canReadIntents"
+          hoverable
+          size="small"
+          @click="emit('navigateIntents')"
+        >
+          <Skeleton
+            v-if="loading && pendingIntents === null"
+            :paragraph="false"
+            :title="{ width: '40%' }"
+            active
+          />
+          <Statistic
+            v-else
+            :title="$t('page.dashboard.pipeline.pendingIntents')"
+            :value="pendingIntents ?? '—'"
+          />
+        </Card>
+        <Card
+          v-if="canReadExecutionOrders"
+          hoverable
+          size="small"
+          @click="emit('navigateExecutionOrders')"
+        >
+          <Skeleton
+            v-if="loading && inFlightOrders === null"
+            :paragraph="false"
+            :title="{ width: '40%' }"
+            active
+          />
+          <Statistic
+            v-else
+            :title="$t('page.dashboard.pipeline.inFlightOrders')"
+            :value="inFlightOrders ?? '—'"
+          />
+        </Card>
+        <Card
+          v-if="canReadReconciliations"
+          hoverable
+          size="small"
+          @click="emit('navigateReconciliations')"
+        >
+          <Skeleton
+            v-if="loading && unresolvedReconciliations === null"
+            :paragraph="false"
+            :title="{ width: '40%' }"
+            active
+          />
+          <Statistic
+            v-else
+            :title="$t('page.dashboard.pipeline.unresolvedReconciliations')"
+            :value="unresolvedReconciliations ?? '—'"
+          />
+        </Card>
+      </div>
+    </Spin>
   </DashboardPanel>
 </template>

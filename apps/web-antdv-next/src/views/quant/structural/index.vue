@@ -10,7 +10,7 @@ import type {
 
 import { computed, ref, watch } from 'vue';
 
-import { Page } from '@vben/common-ui';
+import { Page, useVbenDrawer } from '@vben/common-ui';
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { useRequestHandler } from '@vben/request/qp';
 
@@ -19,7 +19,6 @@ import {
   Card,
   Descriptions,
   DescriptionsItem,
-  Drawer,
   Empty,
   Statistic,
   Table,
@@ -36,6 +35,7 @@ import {
   listNegRiskEvents,
 } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
+import AsyncState from '#/shared/components/async-state.vue';
 import EchartsCard from '#/shared/components/echarts-card.vue';
 import {
   formatDateTimeLocal,
@@ -54,8 +54,8 @@ const pollingEnabled = ref(true);
 const coverage = ref<null | TradeTapeCoverageView>(null);
 const concentration = ref<null | ParticipantConcentrationSummaryView>(null);
 const negRiskEvents = ref<NegRiskEventDriftView[]>([]);
-const detailOpen = ref(false);
 const detailLoading = ref(false);
+const detailError = ref<null | string>(null);
 const detail = ref<null | ParticipantConcentrationDetailView>(null);
 
 const chartRef = ref<EchartsUIType>();
@@ -269,17 +269,45 @@ async function refresh() {
 }
 
 async function openMarketDetail(row: ParticipantConcentrationMarketView) {
-  detailOpen.value = true;
+  detailDrawerApi.setData({ row }).open();
+}
+
+async function loadMarketDetail(row: ParticipantConcentrationMarketView) {
   detailLoading.value = true;
+  detailError.value = null;
+  detail.value = null;
   try {
-    const result = await handleRequest(() =>
-      getParticipantConcentrationMarket(row.market_id),
+    const result = await handleRequest(
+      () => getParticipantConcentrationMarket(row.market_id),
+      {
+        silent: true,
+        onError: (err) => {
+          if (err.httpStatus !== 404) {
+            detailError.value = err.message;
+          }
+        },
+      },
     );
     detail.value = result ?? null;
   } finally {
     detailLoading.value = false;
   }
 }
+
+const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
+  footer: false,
+  onOpenChange(isOpen) {
+    if (isOpen) {
+      const row = detailDrawerApi.getData<{
+        row: ParticipantConcentrationMarketView;
+      }>().row;
+      void loadMarketDetail(row);
+    } else {
+      detail.value = null;
+      detailError.value = null;
+    }
+  },
+});
 
 function onMarketCellClick(event: {
   row?: ParticipantConcentrationMarketView;
@@ -352,19 +380,13 @@ watch(topMarkets, () => {
 
 <template>
   <Page auto-content-height>
-    <div class="mb-3 flex items-center justify-between gap-3">
-      <div>
-        <h2 class="text-base font-medium">
-          {{ $t('page.structuralAlpha.title') }}
-        </h2>
-        <p class="text-muted-foreground m-0 text-xs">
-          {{ $t('page.structuralAlpha.subtitle') }}
-        </p>
-      </div>
+    <template #title>{{ $t('page.structuralAlpha.title') }}</template>
+    <template #description>{{ $t('page.structuralAlpha.subtitle') }}</template>
+    <template #extra>
       <Button :loading="loading" size="small" @click="refresh">
         {{ $t('page.structuralAlpha.refresh') }}
       </Button>
-    </div>
+    </template>
 
     <div class="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       <Card size="small">
@@ -531,62 +553,71 @@ watch(topMarkets, () => {
       </TabPane>
     </Tabs>
 
-    <Drawer
-      v-model:open="detailOpen"
+    <DetailDrawer
       :title="$t('page.structuralAlpha.detail.title')"
-      width="720"
+      class="w-full max-w-3xl"
     >
-      <Empty
-        v-if="!detail && !detailLoading"
-        :description="$t('page.structuralAlpha.detail.empty')"
-      />
-      <template v-else-if="detail">
+      <AsyncState
+        :error-message="detailError"
+        :loading="detailLoading"
+        :not-found="!detail && !detailLoading && !detailError"
+        :not-found-text="$t('page.structuralAlpha.detail.empty')"
+        @retry="
+          () => {
+            const row = detailDrawerApi.getData<{
+              row: ParticipantConcentrationMarketView;
+            }>()?.row;
+            if (row) {
+              void loadMarketDetail(row);
+            }
+          }
+        "
+      >
         <Descriptions bordered size="small" :column="1" class="mb-4">
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.market')">
-            {{ detail.market.question }}
+            {{ detail!.market.question }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.detail.marketId')">
-            {{ detail.market.market_id }}
+            {{ detail!.market.market_id }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.trades')">
-            {{ formatOptionalCount(detail.market.trade_count) }}
+            {{ formatOptionalCount(detail!.market.trade_count) }}
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.structuralAlpha.grid.participants')"
           >
-            {{ formatOptionalCount(detail.market.participant_count) }}
+            {{ formatOptionalCount(detail!.market.participant_count) }}
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.structuralAlpha.grid.coverageRatio')"
           >
-            {{ formatPercent(detail.market.coverage_ratio, 1) }}
+            {{ formatPercent(detail!.market.coverage_ratio, 1) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.gini')">
-            {{ formatRatio(detail.market.gini) }}
+            {{ formatRatio(detail!.market.gini) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.hhi')">
-            {{ formatRatio(detail.market.hhi) }}
+            {{ formatRatio(detail!.market.hhi) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.cr1Share')">
-            {{ formatPercent(detail.market.cr1_share, 1) }}
+            {{ formatPercent(detail!.market.cr1_share, 1) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.composite')">
-            {{ formatRatio(detail.market.composite_raw) }}
+            {{ formatRatio(detail!.market.composite_raw) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.lag')">
-            {{ formatLagBlocks(detail.market.lag_blocks) }}
+            {{ formatLagBlocks(detail!.market.lag_blocks) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.notional')">
-            {{ formatUsd(detail.market.notional_usd) }}
+            {{ formatUsd(detail!.market.notional_usd) }}
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.structuralAlpha.grid.status')">
-            {{ formatReason(detail.market.missing_reason) }}
+            {{ formatReason(detail!.market.missing_reason) }}
           </DescriptionsItem>
         </Descriptions>
         <Table
           :columns="participantColumns"
-          :data-source="detail.top_participants"
-          :loading="detailLoading"
+          :data-source="detail!.top_participants"
           :pagination="false"
           row-key="participant_address"
           size="small"
@@ -603,7 +634,7 @@ watch(topMarkets, () => {
             </template>
           </template>
         </Table>
-      </template>
-    </Drawer>
+      </AsyncState>
+    </DetailDrawer>
   </Page>
 </template>

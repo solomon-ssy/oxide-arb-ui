@@ -9,8 +9,8 @@ import {
   Descriptions,
   DescriptionsItem,
   Empty,
-  message,
   Spin,
+  Typography,
 } from 'antdv-next';
 
 import { getRecommendationEvidence } from '#/api/quant-recommendations';
@@ -22,12 +22,13 @@ defineOptions({ name: 'RecommendationEvidence' });
 const props = defineProps<{ active: boolean; recommendationId: string }>();
 
 const { handleRequest } = useRequestHandler();
+const { Text } = Typography;
 
 const evidence = ref<null | QuantEvidenceView>(null);
 const loading = ref(false);
 let loaded = false;
 
-/** Single-value replay handles rendered as click-to-copy rows. */
+/** Single-value replay handles rendered as copyable rows. */
 const handleRows = computed<Array<{ label: string; value: string }>>(() => {
   const view = evidence.value;
   if (!view) {
@@ -69,15 +70,6 @@ const handleRows = computed<Array<{ label: string; value: string }>>(() => {
   ];
 });
 
-async function copy(value: string) {
-  try {
-    await navigator.clipboard.writeText(value);
-    message.success($t('page.quantRecommendations.evidence.copied'));
-  } catch {
-    // Clipboard unavailable (insecure context); copy silently fails.
-  }
-}
-
 async function loadOnce() {
   if (loaded) {
     return;
@@ -94,7 +86,6 @@ async function loadOnce() {
   }
 }
 
-// Fetch the first time the evidence tab becomes active; never re-fetch after.
 watch(
   () => props.active,
   (active) => {
@@ -114,12 +105,13 @@ watch(
         :key="row.label"
         :label="row.label"
       >
-        <span
-          class="cursor-pointer font-mono text-xs break-all"
-          @click="copy(row.value)"
+        <Text
+          class="font-mono text-xs break-all"
+          copyable
+          :aria-label="`${row.label}: ${row.value}`"
         >
           {{ row.value }}
-        </span>
+        </Text>
       </DescriptionsItem>
       <DescriptionsItem
         :label="$t('page.quantRecommendations.evidence.factorDefinitions')"
@@ -128,14 +120,15 @@ watch(
           v-if="evidence.factor_definition_versions.length > 0"
           class="flex flex-col gap-1"
         >
-          <span
+          <Text
             v-for="version in evidence.factor_definition_versions"
             :key="version"
-            class="cursor-pointer font-mono text-xs break-all"
-            @click="copy(version)"
+            class="font-mono text-xs break-all"
+            copyable
+            :aria-label="version"
           >
             {{ version }}
-          </span>
+          </Text>
         </div>
         <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
       </DescriptionsItem>
