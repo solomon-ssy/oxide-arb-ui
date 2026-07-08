@@ -184,6 +184,79 @@ export interface MarketLinkageSummaryView {
   created_at: IsoDateTime;
 }
 
+/** How a crypto market's question compares the underlying price to its strike. */
+export type PriceComparatorView =
+  | { hi: DecimalString; kind: 'between' }
+  | { kind: 'above' }
+  | { kind: 'below' }
+  | { kind: 'up_vs_reference' };
+
+/** The settlement oracle a crypto market resolves against. */
+export type ResolutionOracleView =
+  | { descriptor: string; kind: 'other' }
+  | { feed: string; kind: 'chainlink_data_streams' }
+  | { interval: string; kind: 'binance_kline'; symbol: string };
+
+/** The extracted subject of a crypto market (mirrors Rust `CryptoSubject`). */
+export interface CryptoSubjectView {
+  asset: string;
+  comparator: PriceComparatorView;
+  observation_at: IsoDateTime;
+  quote: string;
+  reference_at: IsoDateTime | null;
+  resolution_oracle: ResolutionOracleView;
+  strike: DecimalString | null;
+}
+
+/** A market's extracted external subject (one variant per domain family). */
+export type MarketSubjectView = CryptoSubjectView & { family: 'crypto' };
+
+/** Which metadata field a grounding span was located in. */
+export type GroundingFieldSource =
+  | 'description'
+  | 'question'
+  | 'series_slug'
+  | 'slug';
+
+/** Whether a grounding span is independently-literal evidence or
+ * template-entailed (mirrors Rust `GroundingKind`). */
+export type GroundingSpanKind = 'literal_span' | 'template_entailed';
+
+/** One extracted subject field tied to its literal source-text span. */
+export interface GroundingSpanView {
+  end: number;
+  kind: GroundingSpanKind;
+  source: GroundingFieldSource;
+  start: number;
+  subject_field: string;
+  text: string;
+}
+
+/** The full field → source-span mapping for one accepted subject. */
+export interface GroundingProofView {
+  spans: GroundingSpanView[];
+}
+
+/** The audited human justification for an operator override — present only
+ * on a `resolver_tier = override` binding. */
+export interface OverrideContextView {
+  actor: string;
+  reason: string;
+}
+
+/** A validated subject binding (mirrors Rust `ResolvedBinding`). */
+export interface ResolvedBindingView {
+  grounding: GroundingProofView;
+  instrument_key: string;
+  override_context: null | OverrideContextView;
+  subject: MarketSubjectView;
+}
+
+/** The resolver's outcome for one linkage record (mirrors Rust `LinkageOutcome`). */
+export type LinkageOutcomeView =
+  | (ResolvedBindingView & { status: 'resolved' })
+  | { reason: string; status: 'unresolved' };
+
 /** Full linkage detail (`GET /research/market-linkages/{market_id}`). */
 export interface MarketLinkageDetailView {
   linkage_id: UuidString;
@@ -193,9 +266,24 @@ export interface MarketLinkageDetailView {
   resolver_tier: string;
   resolver_version: number;
   confidence: DecimalString;
-  outcome: Record<string, unknown>;
+  outcome: LinkageOutcomeView;
   instrument_key: null | string;
   metadata_hash: string;
+  content_hash: string;
+  derived_at: IsoDateTime;
+  created_at: IsoDateTime;
+}
+
+/** One historical ledger row for a market's linkage audit trail
+ * (`GET /research/market-linkages/{market_id}/history`), oldest first. */
+export interface MarketLinkageHistoryEntryView {
+  linkage_id: UuidString;
+  status: string;
+  resolver_tier: string;
+  resolver_version: number;
+  confidence: DecimalString;
+  outcome: LinkageOutcomeView;
+  instrument_key: null | string;
   content_hash: string;
   derived_at: IsoDateTime;
   created_at: IsoDateTime;
@@ -239,6 +327,30 @@ export interface DomainSourceCursorView {
   instrument_key: string;
   last_event_time: IsoDateTime;
   status: string;
+  /** Detail from the most recent failed tick; `null` when the last tick
+   * succeeded (R10 ingest hardening). */
+  last_error: null | string;
   lag_secs: number;
   updated_at: IsoDateTime;
+}
+
+// ── Basis cross-check alerts (11.2.2 remediation R6) ────────────────────────
+
+/** Filter + pagination for `GET /research/basis-alerts`. */
+export type BasisAlertListQuery = PageQuery & {
+  from?: IsoDateTime;
+  market_id?: string;
+  to?: IsoDateTime;
+};
+
+/** One feature-source-vs-settlement-oracle basis exceedance row. */
+export interface BasisAlertView {
+  alert_id: UuidString;
+  market_id: string;
+  instrument_key: string;
+  oracle_instrument_key: string;
+  basis_bps: DecimalString;
+  threshold_bps: DecimalString;
+  as_of: IsoDateTime;
+  created_at: IsoDateTime;
 }

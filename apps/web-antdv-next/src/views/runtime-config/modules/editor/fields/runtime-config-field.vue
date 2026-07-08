@@ -17,6 +17,7 @@ import RuntimeConfigEnumDecimalMapField from './runtime-config-enum-decimal-map-
 import RuntimeConfigEnumSetField from './runtime-config-enum-set-field.vue';
 import RuntimeConfigFieldShell from './runtime-config-field-shell.vue';
 import RuntimeConfigJsonLeafEditor from './runtime-config-json-leaf-editor.vue';
+import RuntimeConfigModelVersionSelectField from './runtime-config-model-version-select-field.vue';
 import RuntimeConfigRatioSliderField from './runtime-config-ratio-slider-field.vue';
 import RuntimeConfigStringListField from './runtime-config-string-list-field.vue';
 import RuntimeConfigWeightMapField from './runtime-config-weight-map-field.vue';
@@ -144,6 +145,15 @@ const enumDecimalMapModel = computed({
 
   <RuntimeConfigRatioSliderField
     v-else-if="widget === 'ratio_slider'"
+    v-model="stringModel"
+    :disabled="disabled"
+    :field="field"
+    :label="label"
+    :locale="locale"
+  />
+
+  <RuntimeConfigModelVersionSelectField
+    v-else-if="widget === 'model_version_select'"
     v-model="stringModel"
     :disabled="disabled"
     :field="field"

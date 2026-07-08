@@ -19,6 +19,7 @@ import type {
   ResearchJobStatus,
   TrainingDatasetStatus,
 } from './enums';
+import type { ModelPickerSide } from './runtime-config';
 
 /** Sample source for a training-dataset build (mirrors Rust `TrainingSampleSource`). */
 export type TrainingSampleSource =
@@ -262,6 +263,25 @@ export interface ModelSpecListQuery extends PageQuery {
 export interface ModelVersionListQuery extends PageQuery, TimeRangeQuery {
   model_spec_id?: string;
   publication_status?: PublicationStatus;
+}
+
+/** Query for `GET /research/models/published-catalog` (the governed
+ * `ModelVersionSelect` picker source, 11.2.2 remediation R8). */
+export interface ModelPublishedCatalogQuery {
+  category?: MarketCategory;
+  side: ModelPickerSide;
+}
+
+/** One `Published` model version offered by the picker widget. */
+export interface PublishedModelOptionView {
+  model_version_id: UuidString;
+  model_spec_id: string;
+  spec_name: string;
+  version: number;
+  model_family: string;
+  /** The artifact's own declared scope (`null` = generic cross-category). */
+  category_scope: MarketCategory | null;
+  published_at: IsoDateTime | null;
 }
 
 /** `POST /research/models/{id}/publish` governed request body. */

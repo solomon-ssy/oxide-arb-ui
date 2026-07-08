@@ -1,5 +1,7 @@
 import type {
   ActivateBiasTableRequest,
+  BasisAlertListQuery,
+  BasisAlertView,
   BiasTableDetailView,
   BiasTableListQuery,
   BiasTableSummaryView,
@@ -7,6 +9,7 @@ import type {
   FitBiasTableRequest,
   LinkageResolveSummaryView,
   MarketLinkageDetailView,
+  MarketLinkageHistoryEntryView,
   MarketLinkageListQuery,
   MarketLinkageSummaryView,
   NegRiskEventDriftView,
@@ -43,7 +46,10 @@ export namespace VerticalAlphaApi {
   export const resolveMarketLinkages = '/research/market-linkages/resolve';
   export const overrideMarketLinkage = (marketId: string) =>
     `/research/market-linkages/${marketId}/override`;
+  export const marketLinkageHistory = (marketId: string) =>
+    `/research/market-linkages/${marketId}/history`;
   export const domainSources = '/research/domain-sources';
+  export const basisAlerts = '/research/basis-alerts';
 }
 
 /** `GET /research/bias-tables` — paginated favorite-longshot bias-table catalog. */
@@ -103,6 +109,14 @@ export async function getMarketLinkage(marketId: string) {
   );
 }
 
+/** `GET /research/market-linkages/{market_id}/history` — the full ledger
+ * history for one market, oldest first (the audit trail). */
+export async function getMarketLinkageHistory(marketId: string) {
+  return requestClient.get<MarketLinkageHistoryEntryView[]>(
+    VerticalAlphaApi.marketLinkageHistory(marketId),
+  );
+}
+
 /** `POST /research/market-linkages/resolve` — trigger offline re-resolution. */
 export async function resolveMarketLinkages(
   body: ResolveLinkagesRequest,
@@ -132,6 +146,14 @@ export async function overrideMarketLinkage(
 export async function listDomainSources() {
   return requestClient.get<DomainSourceCursorView[]>(
     VerticalAlphaApi.domainSources,
+  );
+}
+
+/** `GET /research/basis-alerts` — paginated basis-cross-check exceedance feed. */
+export async function listBasisAlerts(query: BasisAlertListQuery = {}) {
+  return requestClient.get<Paginated<BasisAlertView>>(
+    VerticalAlphaApi.basisAlerts,
+    { params: query },
   );
 }
 

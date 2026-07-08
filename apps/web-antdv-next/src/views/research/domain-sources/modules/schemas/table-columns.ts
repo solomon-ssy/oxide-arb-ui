@@ -35,6 +35,13 @@ export function useDomainSourceColumns(): VxeTableGridOptions<DomainSourceCursor
       width: 100,
     },
     {
+      field: 'last_error',
+      minWidth: 240,
+      showOverflow: 'tooltip',
+      slots: { default: 'lastError' },
+      title: $t('page.research.domainSources.table.lastError'),
+    },
+    {
       cellRender: { name: 'CellDateTime' },
       field: 'last_event_time',
       title: $t('page.research.domainSources.table.lastEvent'),

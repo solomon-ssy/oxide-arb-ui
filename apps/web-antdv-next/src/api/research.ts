@@ -9,9 +9,11 @@ import type {
   FactorDefinitionListQuery,
   FactorDefinitionView,
   ModelComparisonReportView,
+  ModelPublishedCatalogQuery,
   ModelSpecListQuery,
   ModelVersionListQuery,
   Paginated,
+  PublishedModelOptionView,
   PublishFactorRequest,
   PublishFactorsBatchRequest,
   PublishModelRequest,
@@ -44,6 +46,7 @@ export namespace ResearchApi {
   export const planTrainingDataset = '/research/training-datasets/plan';
   export const buildTrainingDataset = '/research/training-datasets/build';
   export const models = '/research/models';
+  export const publishedModelCatalog = '/research/models/published-catalog';
   export const modelSpecs = '/research/model-specs';
   export const modelSpec = (id: string) => `/research/model-specs/${id}`;
   export const trainModel = '/research/models/train';
@@ -119,6 +122,17 @@ export async function listModels(query: ModelVersionListQuery = {}) {
   return requestClient.get<Paginated<TrainedModelView>>(ResearchApi.models, {
     params: query,
   });
+}
+
+/** `GET /research/models/published-catalog` — the `ModelVersionSelect`
+ * picker source: `Published`, side-and-category-eligible versions. */
+export async function listPublishedModelOptions(
+  query: ModelPublishedCatalogQuery,
+) {
+  return requestClient.get<PublishedModelOptionView[]>(
+    ResearchApi.publishedModelCatalog,
+    { params: query },
+  );
 }
 
 /** `GET /research/backtest-reports` — paginated backtest-report catalog. */

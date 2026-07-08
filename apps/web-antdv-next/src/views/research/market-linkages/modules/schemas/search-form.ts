@@ -1,6 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
 import { $t } from '#/locales';
+import { useTimeRangeSearchField } from '#/shared/components/query/time-range';
 
 const LINKAGE_STATUSES = ['resolved', 'unresolved', 'overridden'] as const;
 const DOMAIN_FAMILIES = ['crypto'] as const;
@@ -42,6 +43,7 @@ export function useMarketLinkageSearchSchema(): VbenFormSchema[] {
       fieldName: 'market_id',
       label: $t('page.research.marketLinkages.filters.marketId'),
     },
+    useTimeRangeSearchField('page.research.marketLinkages.filters.timeRange'),
     {
       component: 'Switch',
       defaultValue: true,

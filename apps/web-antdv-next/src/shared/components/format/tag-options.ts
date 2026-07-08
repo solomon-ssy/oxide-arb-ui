@@ -617,13 +617,12 @@ export function useLinkageStatusTagOptions() {
 /** Linkage resolver tier tags. */
 export function useResolverTierTagOptions() {
   return buildTagOptions(
-    ['tier0_slug', 'tier1_template', 'tier2_llm', 'override'],
+    ['tier0_slug', 'tier1_template', 'override'],
     (value) => $t(`enum.resolverTier.${value}`),
     {
       override: 'purple',
       tier0_slug: 'cyan',
       tier1_template: 'blue',
-      tier2_llm: 'geekblue',
     },
   );
 }

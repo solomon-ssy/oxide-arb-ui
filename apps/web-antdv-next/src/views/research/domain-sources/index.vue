@@ -41,6 +41,10 @@ const staleCount = computed(
   () => rows.value.filter((row) => row.lag_secs > STALE_LAG_SECS).length,
 );
 
+const errorCount = computed(
+  () => rows.value.filter((row) => row.status === 'error').length,
+);
+
 const emptyPage = {
   has_next: false,
   items: [] as DomainSourceCursorView[],
@@ -130,11 +134,18 @@ function lagClass(lag: number) {
           :title="$t('page.research.domainSources.cards.worstLag')"
           :value="worstLag"
         />
-        <div class="mt-2">
+        <div class="mt-2 flex flex-wrap gap-2">
           <Tag :color="lagTagColor(worstLag)">
             {{
               $t('page.research.domainSources.cards.staleCursors', {
                 count: staleCount,
+              })
+            }}
+          </Tag>
+          <Tag :color="errorCount > 0 ? 'error' : 'success'">
+            {{
+              $t('page.research.domainSources.cards.errorCursors', {
+                count: errorCount,
               })
             }}
           </Tag>
@@ -155,6 +166,15 @@ function lagClass(lag: number) {
       </template>
       <template #lag="{ row }">
         <span :class="lagClass(row.lag_secs)">{{ row.lag_secs }}</span>
+      </template>
+      <template #lastError="{ row }">
+        <span
+          v-if="row.last_error"
+          class="break-all font-mono text-xs text-destructive"
+        >
+          {{ row.last_error }}
+        </span>
+        <span v-else class="text-muted-foreground">—</span>
       </template>
     </Grid>
   </Page>

@@ -53,19 +53,25 @@ export function defaultCryptoOverrideForm(
     chainlinkFeed: 'BTC-USD',
     binanceSymbol: 'BTCUSDT',
     binanceInterval: '1m',
-    instrumentKey: 'CHAINLINK:BTC-USD',
+    instrumentKey: 'BINANCE:BTCUSDT:1m',
   };
 }
 
+/**
+ * `instrument_key` is the **feature-source** join key — always the Binance
+ * kline key (`BINANCE:{symbol}:1m`), per `ruleset.rs::instrument_key()` —
+ * regardless of which `resolution_oracle` (Chainlink or Binance) is selected
+ * for settlement. Binding it to the Chainlink feed instead (the pre-R8 bug)
+ * makes `validate_structural_consistency` reject every override submitted
+ * with the default Chainlink oracle, since the ruleset only ever recognizes
+ * the Binance key as the instrument binding for an asset.
+ */
 export function syncDerivedInstrumentFields(
   form: CryptoOverrideFormState,
 ): CryptoOverrideFormState {
   const chainlinkFeed = `${form.asset}-USD`;
   const binanceSymbol = `${form.asset}USDT`;
-  const instrumentKey =
-    form.oracleKind === 'chainlink_data_streams'
-      ? `CHAINLINK:${chainlinkFeed}`
-      : `BINANCE:${binanceSymbol}:${form.binanceInterval}`;
+  const instrumentKey = `BINANCE:${binanceSymbol}:${form.binanceInterval}`;
   return {
     ...form,
     chainlinkFeed,

@@ -405,7 +405,6 @@
   "resolverTier": {
     "tier0_slug": "Tier 0（slug）",
     "tier1_template": "Tier 1（模板）",
-    "tier2_llm": "Tier 2（LLM）",
     "override": "人工覆盖"
   },
   "domainFamily": {
@@ -425,7 +424,18 @@
   },
   "resolutionOracle": {
     "chainlink_data_streams": "Chainlink Data Streams",
-    "binance_kline": "Binance K 线"
+    "binance_kline": "Binance K 线",
+    "other": "其他（未分类）"
+  },
+  "groundingSource": {
+    "slug": "Slug",
+    "question": "问题标题",
+    "description": "规则描述",
+    "series_slug": "系列 Slug"
+  },
+  "groundingKind": {
+    "literal_span": "字面片段",
+    "template_entailed": "模板蕴含"
   },
   "qualityGate": {
     "sample_count": "样本数",

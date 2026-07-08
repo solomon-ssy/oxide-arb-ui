@@ -5,7 +5,7 @@ import { computed, ref, watch } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 
-import { Button, Input, message, Select } from 'antdv-next';
+import { Alert, Button, Input, message, Select } from 'antdv-next';
 
 import { overrideMarketLinkage } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
@@ -29,6 +29,7 @@ const emit = defineEmits<{ success: [] }>();
 const { governed } = useGovernedAction();
 
 const marketId = ref('');
+const alreadyResolved = ref(false);
 const form = ref<CryptoOverrideFormState>(defaultCryptoOverrideForm());
 
 const assetOptions = computed(() =>
@@ -74,7 +75,12 @@ watch(
 const [Drawer, drawerApi] = useVbenDrawer({
   onOpenChange(isOpen) {
     if (isOpen) {
-      marketId.value = drawerApi.getData<{ marketId: string }>().marketId;
+      const data = drawerApi.getData<{
+        alreadyResolved?: boolean;
+        marketId: string;
+      }>();
+      marketId.value = data.marketId;
+      alreadyResolved.value = data.alreadyResolved ?? false;
       form.value = defaultCryptoOverrideForm();
     }
   },
@@ -107,7 +113,9 @@ async function submit() {
       summary: $t('page.research.marketLinkages.override.summary', {
         marketId: marketId.value,
       }),
-      title: $t('page.research.marketLinkages.override.title'),
+      title: alreadyResolved.value
+        ? $t('page.research.marketLinkages.override.supersedeTitle')
+        : $t('page.research.marketLinkages.override.title'),
     },
   );
   if (detail) {
@@ -121,9 +129,19 @@ async function submit() {
 <template>
   <Drawer
     class="w-full max-w-2xl"
-    :title="$t('page.research.marketLinkages.override.drawerTitle')"
+    :title="
+      alreadyResolved
+        ? $t('page.research.marketLinkages.override.supersedeDrawerTitle')
+        : $t('page.research.marketLinkages.override.drawerTitle')
+    "
   >
     <div class="flex flex-col gap-4">
+      <Alert
+        v-if="alreadyResolved"
+        :message="$t('page.research.marketLinkages.override.supersedeWarning')"
+        show-icon
+        type="warning"
+      />
       <div>
         <div class="mb-1 text-sm font-medium">
           {{ $t('page.research.marketLinkages.override.fields.marketId') }}
@@ -259,7 +277,7 @@ async function submit() {
         <div class="mb-1 text-sm font-medium">
           {{ $t('page.research.marketLinkages.override.fields.instrumentKey') }}
         </div>
-        <Input v-model:value="form.instrumentKey" />
+        <Input v-model:value="form.instrumentKey" disabled />
         <div class="mt-1 text-xs text-muted-foreground">
           {{ $t('page.research.marketLinkages.override.instrumentKeyHint') }}
         </div>

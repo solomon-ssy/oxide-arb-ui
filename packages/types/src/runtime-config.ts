@@ -1,5 +1,6 @@
 import type { IsoDateTime, UuidString } from './common';
 import type {
+  MarketCategory,
   RuntimeConfigActivationKind,
   RuntimeConfigVersionSource,
 } from './enums';
@@ -34,12 +35,24 @@ export type FieldWidget =
   | 'enum_set'
   | 'integer'
   | 'json_tree'
+  | 'model_version_select'
   | 'plain_string'
   | 'ratio_slider'
   | 'schedule_list'
   | 'secret_string'
   | 'string_list'
   | 'weight_map';
+
+/** Which model-runtime slot a `model_version_select` field fills. */
+export type ModelPickerSide = 'buy' | 'sell';
+
+/** Category/side filtering for a `model_version_select` field. */
+export interface ModelPickerProps {
+  /** Restrict candidates to this category's scope (or an unscoped/generic
+   * artifact); absent = no category filter (the generic pointer fields). */
+  category?: MarketCategory;
+  side: ModelPickerSide;
+}
 
 /** Field behavior/governance hint (distinct from the render `widget`). */
 export type FieldSemantics =
@@ -106,6 +119,7 @@ export interface RuntimeConfigSchemaFieldView {
   format?: SchemaFieldFormat;
   help: UiText;
   label: UiText;
+  model_picker?: ModelPickerProps;
   path: string;
   semantics?: FieldSemantics;
   sensitive: boolean;

@@ -44,6 +44,7 @@
     "researchBiasTables": "偏差表",
     "researchMarketLinkages": "市场联动",
     "researchDomainSources": "域数据源",
+    "researchBasisAlerts": "基差告警",
     "researchComparisonDetail": "对比报告",
     "runtimeConfig": "运行配置",
     "users": "用户",
@@ -142,6 +143,10 @@
     }
   },
   "research": {
+    "common": {
+      "timeRangeStart": "起始",
+      "timeRangeEnd": "结束"
+    },
     "jobs": {
       "listTitle": "任务中心",
       "columns": {
@@ -612,7 +617,8 @@
         "family": "域垂直族",
         "marketId": "市场 ID",
         "marketIdPlaceholder": "按市场 ID 筛选",
-        "latestOnly": "仅最新台账行"
+        "latestOnly": "仅最新台账行",
+        "timeRange": "解析时间"
       },
       "columns": {
         "marketId": "市场",
@@ -627,20 +633,29 @@
       "actions": {
         "detail": "详情",
         "override": "人工覆盖",
-        "reResolveAll": "全量重解析"
+        "reResolveAll": "全量重解析",
+        "reResolveOne": "重解析此市场",
+        "unresolvedQueue": "未解析队列"
       },
       "resolve": {
         "title": "重解析市场联动",
         "summary": "对 metadata 已变更的、有分类映射的市场重新运行离线联动解析器。仅追加台账行，绝不改写历史。",
-        "feedback": "解析完成：{resolved} 已解析，{unresolved} 未解析"
+        "feedback": "解析完成 —— 检查 {examined}，新增 {appended}，未变 {unchanged}，已解析 {resolved}，未解析 {unresolved}"
+      },
+      "resolveOne": {
+        "title": "重解析市场联动",
+        "summary": "若市场 {marketId} 的 metadata 或规则集发生变化，重新运行离线联动解析器。仅追加一条新台账行；绝不改写历史。"
       },
       "override": {
         "title": "覆盖市场联动",
         "drawerTitle": "覆盖联动",
+        "supersedeDrawerTitle": "替代联动",
+        "supersedeTitle": "替代已解析联动",
+        "supersedeWarning": "该联动已存在已解析/已覆盖的绑定。提交后会追加一条新的 resolver_tier=override 台账行，自此以后取代原绑定 —— 原绑定仍保留在历史中，绝不删除。",
         "summary": "对市场 {marketId} 的审计操作员覆盖。追加 resolver_tier=override 台账行；历史绝不改写。",
         "feedback": "覆盖已记录",
         "invalidSubjectJson": "Subject JSON 无效",
-        "instrumentKeyHint": "规范 domain instrument key（由 oracle 自动推导，提交前可编辑）。",
+        "instrumentKeyHint": "规范特征源 instrument key —— 无论选择哪个结算 oracle，按冻结的解析规则集，始终是所选资产的 Binance K 线键。自动推导，不可单独编辑。",
         "sections": {
           "cryptoSubject": "Crypto subject",
           "resolutionOracle": "结算 oracle"
@@ -683,6 +698,42 @@
           "metadataHash": "Metadata hash",
           "contentHash": "Content hash",
           "derivedAt": "解析于"
+        },
+        "subject": {
+          "asset": "资产 / 报价货币",
+          "comparator": "比较语义",
+          "strike": "行权价",
+          "referenceAt": "参考时刻",
+          "observationAt": "观测时刻",
+          "oracle": "结算 oracle"
+        },
+        "overrideContext": {
+          "title": "操作员覆盖审计",
+          "actor": "操作人",
+          "reason": "原因"
+        },
+        "grounding": {
+          "title": "锚定证据（字段 → 来源 → 片段）",
+          "empty": "无锚定片段（人工覆盖 —— 见上方审计信息）。",
+          "field": "Subject 字段",
+          "source": "来源",
+          "span": "字面片段",
+          "kind": "类型"
+        },
+        "history": {
+          "title": "审计历史",
+          "empty": "暂无台账历史。",
+          "derivedAt": "解析于",
+          "status": "状态",
+          "tier": "层级",
+          "actor": "操作人",
+          "reason": "原因"
+        },
+        "basisAlerts": {
+          "title": "基差交叉核验告警",
+          "viewAll": "查看全部 ({count})",
+          "empty": "该市场暂无基差越界记录。",
+          "notApplicable": "不适用基差交叉核验 —— 结算 oracle 非 Chainlink Data Streams。"
         }
       },
       "emptyInstrument": "—"
@@ -699,7 +750,8 @@
         "worstLag": "最大滞后",
         "binanceHint": "REST 摄取，带 weight 预算限流",
         "chainlinkHint": "Polygon 链上预言机交叉核验源",
-        "staleCursors": "{count} 个 cursor 滞后 > 5 分钟"
+        "staleCursors": "{count} 个 cursor 滞后 > 5 分钟",
+        "errorCursors": "{count} 个 cursor 处于错误状态"
       },
       "table": {
         "title": "摄取 cursor",
@@ -707,8 +759,26 @@
         "instrument": "Instrument",
         "status": "状态",
         "lag": "滞后 (s)",
+        "lastError": "最近错误",
         "lastEvent": "最近事件",
         "cursorUpdated": "Cursor 更新"
+      }
+    },
+    "basisAlerts": {
+      "listTitle": "基差告警",
+      "filters": {
+        "marketId": "市场 ID",
+        "marketIdPlaceholder": "按市场 ID 筛选",
+        "timeRange": "发生时间"
+      },
+      "columns": {
+        "marketId": "市场",
+        "instrument": "特征源标的",
+        "oracleInstrument": "结算 oracle 标的",
+        "basisBps": "基差 (bps)",
+        "thresholdBps": "阈值 (bps)",
+        "asOf": "发生时间",
+        "createdAt": "记录时间"
       }
     },
     "comparisons": {
@@ -1989,7 +2059,12 @@
         "genericJsonHint": "结构化 JSON 编辑器 — 数值列表用表格模式，嵌套对象用树形模式。",
         "stringListEmpty": "暂无条目 — 空列表合法。",
         "stringListPlaceholder": "输入 ID 后点击添加",
-        "secretPlaceholder": "留空则保持当前值"
+        "secretPlaceholder": "留空则保持当前值",
+        "modelVersionPlaceholder": "无活动模型（留空）",
+        "modelVersionEmptyOption": "— 无 —",
+        "modelVersionLoadError": "加载可选模型版本失败。",
+        "modelVersionScopeWarning": "该版本的 category_scope（{scope}）与此槽位不匹配 —— 路由器会在配置生效时与加载时都拒绝它并回落到通用模型。",
+        "modelVersionScopeGeneric": "通用（无分类）"
       },
       "cadence": {
         "interval": "固定间隔",

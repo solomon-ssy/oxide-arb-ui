@@ -79,11 +79,14 @@ export function useMarketLinkageColumns(
             $t('page.research.marketLinkages.actions.detail'),
           ),
           iconOp<MarketLinkageSummaryView>(
+            'resolve',
+            $t('page.research.marketLinkages.actions.reResolveOne'),
+            { show: () => access.canMutate },
+          ),
+          iconOp<MarketLinkageSummaryView>(
             'override',
             $t('page.research.marketLinkages.actions.override'),
-            {
-              show: (row) => access.canMutate && row.status !== 'resolved',
-            },
+            { show: () => access.canMutate },
           ),
         ],
       },

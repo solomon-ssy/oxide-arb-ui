@@ -405,7 +405,6 @@
   "resolverTier": {
     "tier0_slug": "Tier 0 (slug)",
     "tier1_template": "Tier 1 (template)",
-    "tier2_llm": "Tier 2 (LLM)",
     "override": "Override"
   },
   "domainFamily": {
@@ -425,7 +424,18 @@
   },
   "resolutionOracle": {
     "chainlink_data_streams": "Chainlink Data Streams",
-    "binance_kline": "Binance kline"
+    "binance_kline": "Binance kline",
+    "other": "Other (unclassified)"
+  },
+  "groundingSource": {
+    "slug": "Slug",
+    "question": "Question",
+    "description": "Description",
+    "series_slug": "Series slug"
+  },
+  "groundingKind": {
+    "literal_span": "Literal span",
+    "template_entailed": "Template-entailed"
   },
   "qualityGate": {
     "sample_count": "Sample Count",

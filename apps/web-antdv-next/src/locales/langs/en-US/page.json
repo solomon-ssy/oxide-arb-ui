@@ -44,6 +44,7 @@
     "researchBiasTables": "Bias Tables",
     "researchMarketLinkages": "Market Linkages",
     "researchDomainSources": "Domain Sources",
+    "researchBasisAlerts": "Basis Alerts",
     "researchComparisonDetail": "Comparison Report",
     "runtimeConfig": "Runtime Config",
     "users": "Users",
@@ -142,6 +143,10 @@
     }
   },
   "research": {
+    "common": {
+      "timeRangeStart": "From",
+      "timeRangeEnd": "To"
+    },
     "jobs": {
       "listTitle": "Task Center",
       "columns": {
@@ -612,7 +617,8 @@
         "family": "Domain family",
         "marketId": "Market ID",
         "marketIdPlaceholder": "Filter by market id",
-        "latestOnly": "Latest ledger row only"
+        "latestOnly": "Latest ledger row only",
+        "timeRange": "Derived at"
       },
       "columns": {
         "marketId": "Market",
@@ -627,20 +633,29 @@
       "actions": {
         "detail": "Detail",
         "override": "Override",
-        "reResolveAll": "Re-resolve all"
+        "reResolveAll": "Re-resolve all",
+        "reResolveOne": "Re-resolve this market",
+        "unresolvedQueue": "Unresolved queue"
       },
       "resolve": {
         "title": "Resolve market linkages",
         "summary": "Re-run the offline linkage resolver for every category-mapped market whose metadata changed. Appends new ledger rows; never mutates history.",
-        "feedback": "Resolver pass complete: {resolved} resolved, {unresolved} unresolved"
+        "feedback": "Resolver pass complete — examined {examined}, appended {appended}, unchanged {unchanged}, resolved {resolved}, unresolved {unresolved}"
+      },
+      "resolveOne": {
+        "title": "Resolve market linkage",
+        "summary": "Re-run the offline linkage resolver for market {marketId} if its metadata or ruleset changed. Appends a new ledger row; never mutates history."
       },
       "override": {
         "title": "Override market linkage",
         "drawerTitle": "Override linkage",
+        "supersedeDrawerTitle": "Supersede linkage",
+        "supersedeTitle": "Supersede resolved linkage",
+        "supersedeWarning": "This linkage already has a resolved/overridden binding. Submitting appends a new resolver_tier=override row that supersedes it going forward — the prior binding stays in history, never deleted.",
         "summary": "Audited operator override for market {marketId}. Appends a resolver_tier=override ledger row; history is never mutated.",
         "feedback": "Override recorded",
         "invalidSubjectJson": "Subject JSON is invalid",
-        "instrumentKeyHint": "Canonical domain instrument key (auto-derived from oracle; editable before submit).",
+        "instrumentKeyHint": "Canonical feature-source instrument key — always the Binance kline key for the selected asset, per the frozen resolver ruleset, regardless of which oracle settles the market. Auto-derived; not independently editable.",
         "sections": {
           "cryptoSubject": "Crypto subject",
           "resolutionOracle": "Resolution oracle"
@@ -683,6 +698,42 @@
           "metadataHash": "Metadata hash",
           "contentHash": "Content hash",
           "derivedAt": "Derived at"
+        },
+        "subject": {
+          "asset": "Asset / quote",
+          "comparator": "Comparator",
+          "strike": "Strike",
+          "referenceAt": "Reference at",
+          "observationAt": "Observation at",
+          "oracle": "Resolution oracle"
+        },
+        "overrideContext": {
+          "title": "Operator override audit",
+          "actor": "Actor",
+          "reason": "Reason"
+        },
+        "grounding": {
+          "title": "Grounding proof (field → source → span)",
+          "empty": "No grounding spans (operator override — see audit above).",
+          "field": "Subject field",
+          "source": "Source",
+          "span": "Literal span",
+          "kind": "Kind"
+        },
+        "history": {
+          "title": "Audit history",
+          "empty": "No ledger history yet.",
+          "derivedAt": "Derived at",
+          "status": "Status",
+          "tier": "Tier",
+          "actor": "Actor",
+          "reason": "Reason"
+        },
+        "basisAlerts": {
+          "title": "Basis cross-check alerts",
+          "viewAll": "View all ({count})",
+          "empty": "No basis exceedances recorded for this market.",
+          "notApplicable": "Basis cross-check does not apply — settlement oracle is not Chainlink Data Streams."
         }
       },
       "emptyInstrument": "—"
@@ -699,7 +750,8 @@
         "worstLag": "Worst lag",
         "binanceHint": "REST ingest with weight-budget governor",
         "chainlinkHint": "Polygon on-chain oracle cross-check source",
-        "staleCursors": "{count} cursor(s) > 5m lag"
+        "staleCursors": "{count} cursor(s) > 5m lag",
+        "errorCursors": "{count} cursor(s) in error"
       },
       "table": {
         "title": "Ingest cursors",
@@ -707,8 +759,26 @@
         "instrument": "Instrument",
         "status": "Status",
         "lag": "Lag (s)",
+        "lastError": "Last error",
         "lastEvent": "Last event",
         "cursorUpdated": "Cursor updated"
+      }
+    },
+    "basisAlerts": {
+      "listTitle": "Basis Alerts",
+      "filters": {
+        "marketId": "Market ID",
+        "marketIdPlaceholder": "Filter by market id",
+        "timeRange": "As of"
+      },
+      "columns": {
+        "marketId": "Market",
+        "instrument": "Feature-source instrument",
+        "oracleInstrument": "Settlement-oracle instrument",
+        "basisBps": "Basis (bps)",
+        "thresholdBps": "Threshold (bps)",
+        "asOf": "As of",
+        "createdAt": "Recorded at"
       }
     },
     "comparisons": {
@@ -1989,7 +2059,12 @@
         "genericJsonHint": "Structured JSON editor — table mode for numeric lists, tree mode for nested objects.",
         "stringListEmpty": "No entries — empty list is valid.",
         "stringListPlaceholder": "Enter an ID and press Add",
-        "secretPlaceholder": "leave blank to keep current"
+        "secretPlaceholder": "leave blank to keep current",
+        "modelVersionPlaceholder": "No active model (empty)",
+        "modelVersionEmptyOption": "— none —",
+        "modelVersionLoadError": "Failed to load eligible model versions.",
+        "modelVersionScopeWarning": "This version's category_scope ({scope}) does not match this slot — the router will reject it and fall back to generic at both config-apply time and load time.",
+        "modelVersionScopeGeneric": "generic (no category)"
       },
       "cadence": {
         "interval": "Fixed interval",
