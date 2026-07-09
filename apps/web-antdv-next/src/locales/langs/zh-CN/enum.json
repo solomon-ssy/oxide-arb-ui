@@ -336,6 +336,7 @@
     "dataset_build": "数据集构建",
     "model_train": "模型训练",
     "backtest": "回测",
+    "cpcv_backtest": "CPCV 验证",
     "bias_table_fit": "偏差表拟合",
     "model_calibration_fit": "模型校准器拟合"
   },
@@ -471,7 +472,13 @@
     "category_concentration": "类目集中度",
     "sell_l2_book_fidelity": "卖出 L2 盘口保真度",
     "sell_fallback_ratio": "卖出回退比例",
-    "calibration_required": "需要校准"
+    "calibration_required": "需要校准",
+    "cpcv_required": "需要 CPCV 路径集",
+    "deflated_sharpe": "Deflated Sharpe Ratio",
+    "min_track_record_length": "最短跟踪记录长度",
+    "pbo": "回测过拟合概率",
+    "tail_loss_budget": "尾部损失预算",
+    "turnover_budget": "换手预算"
   },
   "datasetPurpose": {
     "training": "训练",

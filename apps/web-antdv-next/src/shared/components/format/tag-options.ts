@@ -504,7 +504,9 @@ export function useResearchJobKindTagOptions() {
     {
       [RESEARCH_JOB_KINDS.backtest]: 'geekblue',
       [RESEARCH_JOB_KINDS.biasTableFit]: 'gold',
+      [RESEARCH_JOB_KINDS.cpcvBacktest]: 'magenta',
       [RESEARCH_JOB_KINDS.datasetBuild]: 'cyan',
+      [RESEARCH_JOB_KINDS.modelCalibrationFit]: 'orange',
       [RESEARCH_JOB_KINDS.modelTrain]: 'purple',
     },
   );

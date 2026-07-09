@@ -6,6 +6,7 @@ const ACTION_ICONS = {
   backtest: 'lucide:history',
   block: 'lucide:shield-off',
   cancel: 'lucide:ban',
+  cpcv: 'lucide:git-branch',
   detail: 'lucide:eye',
   override: 'lucide:pen-line',
   publish: 'lucide:badge-check',

@@ -392,6 +392,7 @@
       "actions": {
         "detail": "Details",
         "backtest": "Backtest",
+        "cpcv": "Run CPCV",
         "publish": "Publish",
         "retire": "Retire",
         "rollback": "Rollback",
@@ -437,6 +438,20 @@
         "calibrate": "Fit a calibrated return curve",
         "incomplete": "Fill in the dataset and version.",
         "feedback": "Backtest submitted."
+      },
+      "cpcv": {
+        "title": "Run CPCV validation",
+        "summary": "Combinatorial purged CV + trial grid (DSR/PBO). Publish needs both a single-path backtest (risk gates) and a CPCV path set (alpha significance).",
+        "trainingDataset": "Training Dataset ID",
+        "runtimeConfigVersion": "Runtime Config Version",
+        "modelFamily": "Model family",
+        "labelName": "Label name",
+        "labelHorizonSecs": "Label horizon (s)",
+        "predictionHorizonSecs": "Prediction horizon (s)",
+        "incomplete": "Fill in dataset, runtime config, family, and label.",
+        "feedback": "CPCV validation submitted.",
+        "action": "Run CPCV",
+        "dualTrackHint": "Publish requires a single-path backtest (turnover / tail loss / max drawdown) and a CPCV path set (median rank IC / DSR / PBO)."
       },
       "publish": {
         "title": "Publish model",
@@ -1025,6 +1040,25 @@
         "warnings": "Publishable with {count} soft warning(s).",
         "blocked": "{count} hard gate(s) failing — publish blocked."
       }
+    },
+    "cpcv": {
+      "title": "CPCV Validation",
+      "empty": "No CPCV path set has been run for this model version yet.",
+      "emptyDistribution": "Sharpe distribution unavailable.",
+      "pathSetId": "Path set",
+      "createdAt": "Created",
+      "pathCount": "Paths / combinations",
+      "medianRankIc": "Median rank IC",
+      "deflatedSharpe": "Deflated Sharpe",
+      "pbo": "PBO",
+      "minTrl": "Min track record (secs)",
+      "minTrlUnavailable": "N/A",
+      "trialCount": "Trial count (DSR N)",
+      "trialGridCount": "Trial grid",
+      "coordSearchEffectiveN": "Coord-search effective N",
+      "sharpeUnannualized": "Sharpe values are unannualized (periods_per_year = 1).",
+      "sharpeDistribution": "Sharpe distribution",
+      "paths": "φ paths"
     }
   },
   "ws": {

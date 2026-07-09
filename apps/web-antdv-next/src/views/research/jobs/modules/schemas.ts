@@ -46,6 +46,16 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
     case RESEARCH_JOB_KINDS.modelCalibrationFit: {
       return `/research/calibration-artifacts?open=${row.result_ref}`;
     }
+    case RESEARCH_JOB_KINDS.cpcvBacktest: {
+      // result_ref is path_set_id; deep-link via frozen params.model_version_id.
+      const modelVersionId =
+        typeof row.params?.model_version_id === 'string'
+          ? row.params.model_version_id
+          : undefined;
+      return modelVersionId
+        ? `/research/models?open=${modelVersionId}`
+        : undefined;
+    }
     case RESEARCH_JOB_KINDS.datasetBuild: {
       return `/research/datasets?open=${row.result_ref}`;
     }

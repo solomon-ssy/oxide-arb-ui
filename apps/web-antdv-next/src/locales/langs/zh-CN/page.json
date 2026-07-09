@@ -392,6 +392,7 @@
       "actions": {
         "detail": "详情",
         "backtest": "回测",
+        "cpcv": "运行 CPCV",
         "publish": "发布",
         "retire": "下线",
         "rollback": "回滚",
@@ -437,6 +438,20 @@
         "calibrate": "拟合校准收益曲线",
         "incomplete": "请填写数据集与版本。",
         "feedback": "回测已提交。"
+      },
+      "cpcv": {
+        "title": "运行 CPCV 验证",
+        "summary": "组合净化交叉验证 + trial 网格（DSR/PBO）。发布需要单路径回测（风险门禁）与 CPCV 路径集（阿尔法显著性）两者齐全。",
+        "trainingDataset": "训练数据集 ID",
+        "runtimeConfigVersion": "运行配置版本",
+        "modelFamily": "模型家族",
+        "labelName": "标签名",
+        "labelHorizonSecs": "标签 horizon（秒）",
+        "predictionHorizonSecs": "预测 horizon（秒）",
+        "incomplete": "请填写数据集、运行配置、家族与标签。",
+        "feedback": "CPCV 验证已提交。",
+        "action": "运行 CPCV",
+        "dualTrackHint": "发布需要单路径回测（换手 / 尾部损失 / 最大回撤）与 CPCV 路径集（中位 rank IC / DSR / PBO）。"
       },
       "publish": {
         "title": "发布模型",
@@ -1025,6 +1040,25 @@
         "warnings": "可发布，但有 {count} 项软门禁警告。",
         "blocked": "{count} 项硬门禁未过——发布被阻断。"
       }
+    },
+    "cpcv": {
+      "title": "CPCV 验证",
+      "empty": "此模型版本尚未运行 CPCV 路径集。",
+      "emptyDistribution": "Sharpe 分布不可用。",
+      "pathSetId": "路径集",
+      "createdAt": "创建时间",
+      "pathCount": "路径数 / 组合数",
+      "medianRankIc": "中位 rank IC",
+      "deflatedSharpe": "Deflated Sharpe",
+      "pbo": "PBO",
+      "minTrl": "最短跟踪记录（秒）",
+      "minTrlUnavailable": "不可用",
+      "trialCount": "Trial 数（DSR N）",
+      "trialGridCount": "Trial 网格",
+      "coordSearchEffectiveN": "坐标搜索有效 N",
+      "sharpeUnannualized": "Sharpe 未年化（periods_per_year = 1）。",
+      "sharpeDistribution": "Sharpe 分布",
+      "paths": "φ 路径"
     }
   },
   "ws": {

@@ -2,6 +2,7 @@
 import type { TrainedModelView } from '@vben/types';
 
 import type { BacktestBody } from './modules/model-backtest-modal.vue';
+import type { CpcvBody } from './modules/model-cpcv-modal.vue';
 import type { TrainModelBody } from './modules/model-train-modal.vue';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
@@ -17,6 +18,7 @@ import { Button, message } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   backtestModel,
+  cpcvBacktestModel,
   getModel,
   getModelQualityGate,
   listModels,
@@ -32,6 +34,7 @@ import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
 import { useResearchStore } from '#/store';
 
 import ModelBacktestModal from './modules/model-backtest-modal.vue';
+import ModelCpcvModal from './modules/model-cpcv-modal.vue';
 import ModelDetailDrawer from './modules/model-detail-drawer.vue';
 import ModelTrainModal from './modules/model-train-modal.vue';
 import {
@@ -51,6 +54,7 @@ const researchStore = useResearchStore();
 const canTrain = hasAccessByCodes(['materialization:create']);
 const access = {
   canBacktest: hasAccessByCodes(['replay:create']),
+  canCpcv: hasAccessByCodes(['replay:create']),
   canPublish: hasAccessByCodes(['publication:publish']),
   canRetire: hasAccessByCodes(['publication:retire']),
   canRollback: hasAccessByCodes(['publication:rollback']),
@@ -77,6 +81,9 @@ const [TrainModal, trainModalApi] = useVbenModal({
 });
 const [BacktestModal, backtestModalApi] = useVbenModal({
   connectedComponent: ModelBacktestModal,
+});
+const [CpcvModal, cpcvModalApi] = useVbenModal({
+  connectedComponent: ModelCpcvModal,
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<TrainedModelView>({
@@ -203,6 +210,37 @@ async function submitBacktest(
   return false;
 }
 
+function openCpcv(model: TrainedModelView) {
+  cpcvModalApi
+    .setData({
+      modelSpecId: model.model_spec_id,
+      modelVersionId: model.model_version_id,
+      onSubmit: (body: CpcvBody) => submitCpcv(model.model_version_id, body),
+      trainingDatasetId: model.training_dataset_id ?? undefined,
+    })
+    .open();
+}
+
+async function submitCpcv(
+  modelVersionId: string,
+  body: CpcvBody,
+): Promise<boolean> {
+  const result = await governed(
+    (ctx) =>
+      cpcvBacktestModel(modelVersionId, { ...body, reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.research.models.cpcv.summary'),
+      title: $t('page.research.models.cpcv.title'),
+    },
+  );
+  if (result) {
+    message.success($t('page.research.models.cpcv.feedback'));
+    await router.push(`/research/jobs?open=${result.job_id}`);
+    return true;
+  }
+  return false;
+}
+
 async function publish(model: TrainedModelView) {
   const id = model.model_version_id;
   // Preflight the publish gate (same evaluator the backend enforces) so the
@@ -288,6 +326,10 @@ function onActionClick({ code, row }: OnActionClickParams<TrainedModelView>) {
       openBacktest(row);
       break;
     }
+    case 'cpcv': {
+      openCpcv(row);
+      break;
+    }
     case 'detail': {
       drawerApi.setData({ model: row }).open();
       break;
@@ -346,5 +388,6 @@ watch(
     <Drawer />
     <TrainModal />
     <BacktestModal />
+    <CpcvModal />
   </Page>
 </template>

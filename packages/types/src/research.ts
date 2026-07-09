@@ -136,6 +136,12 @@ export interface TrainingDatasetView {
   dataset_hash: string;
   parquet_uri: string;
   sample_count: number;
+  /** Feature source visibility delay in seconds (PIT cutoff). */
+  source_delay_secs: number;
+  /** Deterministic sample grid step in seconds. */
+  sample_interval_secs: number;
+  /** Forward label horizons frozen into this dataset (seconds). */
+  horizons_secs: number[];
   coverage_json: DatasetCoverage;
   runtime_config_version_id: UuidString;
   created_at: IsoDateTime;
@@ -461,6 +467,7 @@ export interface BacktestReportView {
   sample_count: number;
   missing_feature_count: number;
   rank_ic: DecimalString;
+  sharpe: DecimalString;
   hit_rate: ProbabilityString;
   expected_vs_realized: ExpectedVsRealized;
   max_drawdown: DecimalString;
@@ -473,6 +480,49 @@ export interface BacktestReportView {
   parquet_uri: null | string;
   created_at: IsoDateTime;
   comparison_report_id: null | UuidString;
+}
+
+/** Sharpe ratio distribution across CPCV φ paths. */
+export interface SharpeDistribution {
+  min: DecimalString;
+  p25: DecimalString;
+  median: DecimalString;
+  p75: DecimalString;
+  max: DecimalString;
+}
+
+/** One reconstructed CPCV backtest path. */
+export interface BacktestPathView {
+  path_index: number;
+  sharpe: DecimalString;
+  rank_ic: DecimalString;
+  max_drawdown: DecimalString;
+  tail_loss: DecimalString;
+}
+
+/** `GET /research/backtest-path-sets/{id}` CPCV validation result. */
+export interface BacktestPathSetView {
+  path_set_id: UuidString;
+  model_version_id: UuidString;
+  model_run_id: UuidString;
+  training_dataset_id: UuidString;
+  runtime_config_version_id: UuidString;
+  window_start: IsoDateTime;
+  window_end: IsoDateTime;
+  path_count: number;
+  combination_count: number;
+  median_rank_ic: DecimalString;
+  sharpe_distribution: SharpeDistribution;
+  paths: BacktestPathView[];
+  deflated_sharpe: DecimalString;
+  dsr_benchmark_sharpe: DecimalString;
+  pbo: DecimalString;
+  min_track_record_length_secs: null | number;
+  /** Total DSR N = trial_grid_count + coord_search_effective_n. */
+  trial_count: number;
+  trial_grid_count: number;
+  coord_search_effective_n: number;
+  created_at: IsoDateTime;
 }
 
 /**
@@ -493,8 +543,25 @@ export interface RunBacktestRequest {
   backtest_report_id?: UuidString;
 }
 
+/** `POST /research/models/{id}/cpcv-backtest` governed request body. */
+export interface RunCpcvBacktestRequest {
+  training_dataset_id: UuidString;
+  runtime_config_version_id: UuidString;
+  model_family: string;
+  label_name: string;
+  label_horizon_secs: number;
+  prediction_horizon_secs: number;
+  reason: string;
+  path_set_id?: UuidString;
+}
+
 /** Filter + pagination for `GET /research/backtest-reports`. */
 export interface BacktestReportListQuery extends PageQuery, TimeRangeQuery {
+  model_version_id?: UuidString;
+}
+
+/** Filter + pagination for `GET /research/backtest-path-sets`. */
+export interface BacktestPathSetListQuery extends PageQuery, TimeRangeQuery {
   model_version_id?: UuidString;
 }
 
@@ -541,17 +608,23 @@ export type GateId =
   | 'backtest_required'
   | 'calibration_required'
   | 'category_concentration'
+  | 'cpcv_required'
   | 'critical_feature_coverage'
+  | 'deflated_sharpe'
   | 'hit_rate'
   | 'label_coverage'
   | 'liquidity_exit_feasible'
   | 'max_drawdown'
+  | 'min_track_record_length'
   | 'no_pit_leakage'
+  | 'pbo'
   | 'rank_ic'
   | 'sample_count'
   | 'sell_fallback_ratio'
   | 'sell_l2_book_fidelity'
-  | 'shadow_overlap_stability';
+  | 'shadow_overlap_stability'
+  | 'tail_loss_budget'
+  | 'turnover_budget';
 
 /** One evaluated gate row — the self-describing scorecard entry. */
 export interface GateOutcome {

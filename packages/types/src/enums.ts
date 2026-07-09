@@ -605,6 +605,7 @@ export type MaterializationRunStatus = WireEnum<
 /** Which materialization job a run-update describes (mirrors Rust `MaterializationRunKind`). */
 export const MATERIALIZATION_RUN_KINDS = {
   backtest: 'backtest',
+  cpcvBacktest: 'cpcv_backtest',
   dataset: 'dataset',
   training: 'training',
 } as const;
@@ -615,6 +616,7 @@ export type MaterializationRunKind = WireEnum<typeof MATERIALIZATION_RUN_KINDS>;
 export const RESEARCH_JOB_KINDS = {
   backtest: 'backtest',
   biasTableFit: 'bias_table_fit',
+  cpcvBacktest: 'cpcv_backtest',
   datasetBuild: 'dataset_build',
   modelCalibrationFit: 'model_calibration_fit',
   modelTrain: 'model_train',

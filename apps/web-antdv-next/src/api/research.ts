@@ -1,4 +1,6 @@
 import type {
+  BacktestPathSetListQuery,
+  BacktestPathSetView,
   BacktestReportListQuery,
   BacktestReportView,
   BuildTrainingDatasetRequest,
@@ -27,6 +29,7 @@ import type {
   RetireModelRequest,
   RollbackModelRequest,
   RunBacktestRequest,
+  RunCpcvBacktestRequest,
   TrainedModelView,
   TrainingDatasetListQuery,
   TrainingDatasetPlanView,
@@ -62,6 +65,11 @@ export namespace ResearchApi {
   export const backtestReports = '/research/backtest-reports';
   export const backtestReport = (id: string) =>
     `/research/backtest-reports/${id}`;
+  export const backtestPathSets = '/research/backtest-path-sets';
+  export const backtestPathSet = (id: string) =>
+    `/research/backtest-path-sets/${id}`;
+  export const cpcvBacktestModel = (id: string) =>
+    `/research/models/${id}/cpcv-backtest`;
   export const comparisonReports = '/research/comparison-reports';
   export const comparisonReport = (id: string) =>
     `/research/comparison-reports/${id}`;
@@ -238,6 +246,36 @@ export async function backtestModel(
     ResearchApi.backtestModel(id),
     body,
     ctx,
+  );
+}
+
+/** `POST /research/models/{id}/cpcv-backtest` — enqueue async CPCV validation. */
+export async function cpcvBacktestModel(
+  id: string,
+  body: RunCpcvBacktestRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<ResearchJobView>(
+    ResearchApi.cpcvBacktestModel(id),
+    body,
+    ctx,
+  );
+}
+
+/** `GET /research/backtest-path-sets` — paginated CPCV path-set catalog. */
+export async function listBacktestPathSets(
+  query: BacktestPathSetListQuery = {},
+) {
+  return requestClient.get<Paginated<BacktestPathSetView>>(
+    ResearchApi.backtestPathSets,
+    { params: query },
+  );
+}
+
+/** `GET /research/backtest-path-sets/{id}` — stored CPCV path set. */
+export async function getBacktestPathSet(id: string) {
+  return requestClient.get<BacktestPathSetView>(
+    ResearchApi.backtestPathSet(id),
   );
 }
 

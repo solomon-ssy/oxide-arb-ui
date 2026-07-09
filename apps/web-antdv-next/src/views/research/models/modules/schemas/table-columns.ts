@@ -9,6 +9,7 @@ import { iconOp } from '#/shared/table/cell-operation-presets';
 /** Row-action permission gates for the model governance controls. */
 export interface ModelActionAccess {
   canBacktest: boolean;
+  canCpcv: boolean;
   canPublish: boolean;
   canRollback: boolean;
   canRetire: boolean;
@@ -99,6 +100,11 @@ export function useTrainedModelColumns(
             { show: () => access.canBacktest },
           ),
           iconOp<TrainedModelView>(
+            'cpcv',
+            $t('page.research.models.actions.cpcv'),
+            { show: () => access.canCpcv },
+          ),
+          iconOp<TrainedModelView>(
             'publish',
             $t('page.research.models.actions.publish'),
             {
@@ -130,7 +136,7 @@ export function useTrainedModelColumns(
       field: 'operation',
       fixed: 'right',
       title: $t('page.research.models.columns.operation'),
-      width: 150,
+      width: 180,
     },
   ];
 }

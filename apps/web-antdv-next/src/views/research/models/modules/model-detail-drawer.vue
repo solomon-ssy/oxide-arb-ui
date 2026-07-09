@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import type {
+  BacktestPathSetView,
   BacktestReportView,
   QualityGateReportView,
   ReturnModelView,
   TrainedModelView,
 } from '@vben/types';
 
+import type { BacktestBody } from './model-backtest-modal.vue';
 import type { BindCalibrationBody } from './model-bind-calibration-modal.vue';
+import type { CpcvBody } from './model-cpcv-modal.vue';
 
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -20,14 +24,19 @@ import {
   Descriptions,
   DescriptionsItem,
   Empty,
+  message,
+  Space,
   Spin,
   Tag,
 } from 'antdv-next';
 
 import { bindCalibration } from '#/api/calibration';
 import {
+  backtestModel,
+  cpcvBacktestModel,
   getModel,
   getModelQualityGate,
+  listBacktestPathSets,
   listBacktestReports,
 } from '#/api/research';
 import { $t } from '#/locales';
@@ -39,9 +48,13 @@ import {
 } from '#/shared/components/format/tag-options';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
+import { useResearchStore } from '#/store';
 
+import CpcvValidationPanel from '../../shared/cpcv-validation-panel.vue';
 import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
+import ModelBacktestModal from './model-backtest-modal.vue';
 import ModelBindCalibrationModal from './model-bind-calibration-modal.vue';
+import ModelCpcvModal from './model-cpcv-modal.vue';
 import ModelMetricsPanel from './model-metrics-panel.vue';
 
 defineOptions({ name: 'ModelDetailDrawer' });
@@ -53,12 +66,16 @@ interface ModelDrawerData {
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
+const router = useRouter();
+const researchStore = useResearchStore();
 const statusTagOptions = usePublicationStatusTagOptions();
 
 const canBindCalibration = hasAccessByCodes(['publication:create']);
+const canReplay = hasAccessByCodes(['replay:create']);
 
 const model = ref<null | TrainedModelView>(null);
 const backtests = ref<BacktestReportView[]>([]);
+const pathSet = ref<BacktestPathSetView | null>(null);
 const gate = ref<null | QualityGateReportView>(null);
 const loading = ref(false);
 const gateLoading = ref(false);
@@ -98,6 +115,12 @@ const isCalibratedReturnModel = computed(
 const [BindModal, bindModalApi] = useVbenModal({
   connectedComponent: ModelBindCalibrationModal,
 });
+const [BacktestModal, backtestModalApi] = useVbenModal({
+  connectedComponent: ModelBacktestModal,
+});
+const [CpcvModal, cpcvModalApi] = useVbenModal({
+  connectedComponent: ModelCpcvModal,
+});
 
 function openBindCalibration() {
   const current = model.value;
@@ -109,6 +132,36 @@ function openBindCalibration() {
       modelVersionId: current.model_version_id,
       onSubmit: (body: BindCalibrationBody) =>
         submitBindCalibration(current.model_version_id, body),
+    })
+    .open();
+}
+
+function openBacktest() {
+  const current = model.value;
+  if (!current) {
+    return;
+  }
+  backtestModalApi
+    .setData({
+      modelVersionId: current.model_version_id,
+      onSubmit: (body: BacktestBody) =>
+        submitBacktest(current.model_version_id, body),
+      trainingDatasetId: current.training_dataset_id ?? undefined,
+    })
+    .open();
+}
+
+function openCpcv() {
+  const current = model.value;
+  if (!current) {
+    return;
+  }
+  cpcvModalApi
+    .setData({
+      modelSpecId: current.model_spec_id,
+      modelVersionId: current.model_version_id,
+      onSubmit: (body: CpcvBody) => submitCpcv(current.model_version_id, body),
+      trainingDatasetId: current.training_dataset_id ?? undefined,
     })
     .open();
 }
@@ -134,20 +187,65 @@ async function submitBindCalibration(
   return false;
 }
 
+async function submitBacktest(
+  modelVersionId: string,
+  body: BacktestBody,
+): Promise<boolean> {
+  const result = await governed(
+    (ctx) =>
+      backtestModel(modelVersionId, { ...body, reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.research.models.backtest.summary'),
+      title: $t('page.research.models.backtest.title'),
+    },
+  );
+  if (result) {
+    message.success($t('page.research.models.backtest.feedback'));
+    await router.push(`/research/jobs?open=${result.job_id}`);
+    return true;
+  }
+  return false;
+}
+
+async function submitCpcv(
+  modelVersionId: string,
+  body: CpcvBody,
+): Promise<boolean> {
+  const result = await governed(
+    (ctx) =>
+      cpcvBacktestModel(modelVersionId, { ...body, reason: ctx.reason }, ctx),
+    {
+      summary: $t('page.research.models.cpcv.summary'),
+      title: $t('page.research.models.cpcv.title'),
+    },
+  );
+  if (result) {
+    message.success($t('page.research.models.cpcv.feedback'));
+    await router.push(`/research/jobs?open=${result.job_id}`);
+    return true;
+  }
+  return false;
+}
+
 async function refresh(id: string) {
   loading.value = true;
   gateLoading.value = true;
   try {
-    const [fresh, reports] = await Promise.all([
+    const [fresh, reports, pathSets] = await Promise.all([
       handleRequest(() => getModel(id), { silent: true }),
       handleRequest(
         () => listBacktestReports({ model_version_id: id, size: 50 }),
+        { silent: true },
+      ),
+      handleRequest(
+        () => listBacktestPathSets({ model_version_id: id, size: 1 }),
         { silent: true },
       ),
     ]);
     if (openId.value === id) {
       model.value = fresh ?? null;
       backtests.value = reports?.items ?? [];
+      pathSet.value = pathSets?.items?.[0] ?? null;
     }
   } finally {
     loading.value = false;
@@ -182,10 +280,21 @@ const [Drawer, drawerApi] = useVbenDrawer({
       openId.value = null;
       model.value = null;
       backtests.value = [];
+      pathSet.value = null;
       gate.value = null;
     }
   },
 });
+
+// Refresh path set / backtests / gate when a research job completes (WS bump).
+watch(
+  () => researchStore.revision,
+  () => {
+    if (openId.value) {
+      void refresh(openId.value);
+    }
+  },
+);
 </script>
 
 <template>
@@ -195,7 +304,23 @@ const [Drawer, drawerApi] = useVbenDrawer({
   >
     <Spin :spinning="loading">
       <div v-if="model" class="flex flex-col gap-4">
-        <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
+          <Space v-if="canReplay">
+            <Button size="small" @click="openBacktest">
+              {{ $t('page.research.models.actions.backtest') }}
+            </Button>
+            <Button size="small" type="primary" @click="openCpcv">
+              {{ $t('page.research.models.actions.cpcv') }}
+            </Button>
+          </Space>
+        </div>
+
+        <Alert
+          :message="$t('page.research.models.cpcv.dualTrackHint')"
+          show-icon
+          type="info"
+        />
 
         <Card
           size="small"
@@ -412,8 +537,14 @@ const [Drawer, drawerApi] = useVbenDrawer({
             :image="Empty.PRESENTED_IMAGE_SIMPLE"
           />
         </Card>
+
+        <Card size="small" :title="$t('page.research.cpcv.title')">
+          <CpcvValidationPanel :path-set="pathSet" />
+        </Card>
       </div>
     </Spin>
     <BindModal />
+    <BacktestModal />
+    <CpcvModal />
   </Drawer>
 </template>
