@@ -182,22 +182,81 @@ export interface TrainingDatasetListQuery extends PageQuery, TimeRangeQuery {
 
 // ── Models ──────────────────────────────────────────────────────────────────
 
-/** Out-of-sample rolling-validation objective shared by trainer families. */
+/** Ranking diagnostics (not part of the training loss). */
+export interface RankingDiagnosticsMetrics {
+  mean_rank_ic: DecimalString;
+  mean_ndcg_at_k: DecimalString;
+  ndcg_k: number;
+  group_count: number;
+}
+
+/** Discriminates the physical meaning of `held_out_objective` across families. */
+export type HeldOutMetricKind =
+  | 'mean_rolling_fold_rank_ic'
+  | 'neg_total_ltr_loss';
+
+/** Out-of-sample / held-out validation objective shared by trainer families. */
 export interface ModelValidationMetrics {
-  mean_objective: DecimalString;
+  held_out_objective: DecimalString;
+  /** Weighted LTR: `-total_loss`; classical: mean rolling fold Rank IC. */
+  held_out_metric?: HeldOutMetricKind;
+  held_out_components?: null | ObjectiveComponentMetrics;
+  held_out_diagnostics?: null | RankingDiagnosticsMetrics;
   fold_objectives: DecimalString[];
+  fold_components?: ObjectiveComponentMetrics[];
   sample_count: number;
+  dropped_singleton_groups?: number;
+  dropped_singleton_rows?: number;
+}
+
+/** Rank loss optimized by the governed weighted trainer (simplex surrogates). */
+export type RankLossKind = 'pairwise_ranknet' | 'rank_ic_weighted_ranknet';
+
+/** Optimizer policy for weighted-model simplex training. */
+export type TrainingOptimizerKind = 'argmin' | 'coordinate_search';
+
+/** Frozen training-objective provenance on a model version. */
+export interface TrainingObjectiveView {
+  rank_loss: RankLossKind;
+  optimizer: TrainingOptimizerKind;
+  lambda_tail: DecimalString;
+  tail_fraction: DecimalString;
+  lambda_turnover: DecimalString;
+  lambda_l2: DecimalString;
+  ndcg_k: number;
+  pseudo_top_n: number;
+  kind?: string;
+  note?: string;
+}
+
+/** Component-level objective breakdown emitted by LTR trainers. */
+export interface ObjectiveComponentMetrics {
+  rank_loss: DecimalString;
+  tail_penalty: DecimalString;
+  turnover_penalty: DecimalString;
+  l2_penalty: DecimalString;
+  total_loss: DecimalString;
+  group_count: number;
+  rank_loss_group_count?: number;
+  pair_count: number;
 }
 
 /** Weighted-factor / sell-scorer trainer metrics. */
 export interface WeightedFactorModelMetrics {
-  in_sample: { objective_value: DecimalString; summary: string };
+  objective?: Record<string, unknown> | TrainingObjectiveView;
+  in_sample: {
+    components?: ObjectiveComponentMetrics;
+    diagnostics?: RankingDiagnosticsMetrics;
+    objective_value: DecimalString;
+    summary: string;
+  };
   validation: ModelValidationMetrics;
 }
 
 /** Classical (feature-matrix) trainer metrics (`ml-classical` feature). */
 export interface ClassicalModelMetrics {
   kind: string;
+  objective?: Record<string, unknown>;
   in_sample: {
     feature_count: number;
     train_samples: number;
@@ -227,6 +286,8 @@ export interface TrainedModelView {
   training_dataset_id: null | UuidString;
   publication_status: PublicationStatus;
   metrics: ModelMetrics;
+  /** Frozen objective provenance; classical/imported models use explicit non-LTR records. */
+  training_objective: Record<string, unknown> | TrainingObjectiveView;
   created_at: IsoDateTime;
   /** Present on `POST .../train` only — materialization run id for WS hints. */
   model_run_id?: UuidString;

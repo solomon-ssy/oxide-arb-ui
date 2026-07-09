@@ -7,6 +7,7 @@ import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
 import { useDebounceFn, useResizeObserver } from '@vueuse/core';
 import {
+  Alert,
   Collapse,
   CollapsePanel,
   Descriptions,
@@ -68,11 +69,64 @@ const kind = computed<MetricsKind>(() => {
 
 const inSample = computed(() => asRecord(record.value?.in_sample));
 const validation = computed(() => asRecord(record.value?.validation));
+const inSampleComponents = computed(() => asRecord(inSample.value?.components));
+const inSampleDiagnostics = computed(() =>
+  asRecord(inSample.value?.diagnostics),
+);
+const validationComponents = computed(() =>
+  asRecord(validation.value?.held_out_components),
+);
+const validationDiagnostics = computed(() =>
+  asRecord(validation.value?.held_out_diagnostics),
+);
 
 const folds = computed(() => {
   const raw = validation.value?.fold_objectives;
   return Array.isArray(raw) ? raw.map((value) => asString(value) ?? '') : [];
 });
+
+const foldComponents = computed(() => {
+  const raw = validation.value?.fold_components;
+  if (!Array.isArray(raw)) {
+    return [] as Record<string, unknown>[];
+  }
+  return raw
+    .map((item) => asRecord(item))
+    .filter((item): item is Record<string, unknown> => item !== null);
+});
+
+const heldOutLabelKey = computed(() => {
+  const metric = asString(validation.value?.held_out_metric);
+  if (metric === 'mean_rolling_fold_rank_ic') {
+    return 'page.research.models.detail.metricsPanel.heldOutMetricClassical';
+  }
+  if (metric === 'neg_total_ltr_loss' || kind.value === 'weighted_factor') {
+    return 'page.research.models.detail.metricsPanel.heldOutMetricLtr';
+  }
+  if (kind.value === 'classical') {
+    return 'page.research.models.detail.metricsPanel.heldOutMetricClassical';
+  }
+  return 'page.research.models.detail.metricsPanel.heldOutObjective';
+});
+
+const diagnosticKeys = [
+  'mean_rank_ic',
+  'mean_ndcg_at_k',
+  'ndcg_k',
+  'group_count',
+] as const;
+
+function diagnosticRows(diagnostics: null | Record<string, unknown>) {
+  if (!diagnostics) {
+    return [];
+  }
+  return diagnosticKeys
+    .filter((key) => diagnostics[key] !== undefined)
+    .map((key) => ({
+      key,
+      value: asString(diagnostics[key]) ?? '',
+    }));
+}
 
 const featureImportances = computed(() => {
   const raw = record.value?.feature_importances;
@@ -93,6 +147,33 @@ const featureImportances = computed(() => {
     .toSorted((a, b) => Math.abs(b.importance) - Math.abs(a.importance))
     .slice(0, CHART_MAX_FEATURES);
 });
+
+const componentKeys = [
+  'rank_loss',
+  'tail_penalty',
+  'turnover_penalty',
+  'l2_penalty',
+  'total_loss',
+  'group_count',
+  'rank_loss_group_count',
+  'pair_count',
+] as const;
+
+function componentRows(components: null | Record<string, unknown>) {
+  if (!components) {
+    return [];
+  }
+  return componentKeys
+    .filter((key) => components[key] !== undefined)
+    .map((key) => ({
+      key,
+      value: asString(components[key]) ?? '',
+    }));
+}
+
+function isCountKey(key: string) {
+  return key.endsWith('_count');
+}
 
 const chartRef = ref<EchartsUIType>();
 const chartAreaRef = ref<HTMLElement | null>(null);
@@ -150,6 +231,50 @@ watch(featureImportances, () => render(), { immediate: true });
           {{ asString(inSample?.summary) }}
         </DescriptionsItem>
       </Descriptions>
+      <Alert
+        class="mb-1"
+        :message="$t('page.research.models.detail.metricsPanel.proxyNote')"
+        show-icon
+        type="info"
+      />
+      <Descriptions
+        v-if="componentRows(inSampleComponents).length > 0"
+        :column="2"
+        bordered
+        size="small"
+        :title="
+          $t('page.research.models.detail.metricsPanel.inSampleComponents')
+        "
+      >
+        <DescriptionsItem
+          v-for="row in componentRows(inSampleComponents)"
+          :key="row.key"
+          :label="$t(`page.research.models.detail.metricsPanel.${row.key}`)"
+        >
+          {{ isCountKey(row.key) ? row.value : formatScore(row.value) }}
+        </DescriptionsItem>
+      </Descriptions>
+      <Descriptions
+        v-if="diagnosticRows(inSampleDiagnostics).length > 0"
+        :column="2"
+        bordered
+        size="small"
+        :title="
+          $t('page.research.models.detail.metricsPanel.inSampleDiagnostics')
+        "
+      >
+        <DescriptionsItem
+          v-for="row in diagnosticRows(inSampleDiagnostics)"
+          :key="row.key"
+          :label="$t(`page.research.models.detail.metricsPanel.${row.key}`)"
+        >
+          {{
+            row.key === 'ndcg_k' || row.key === 'group_count'
+              ? row.value
+              : formatScore(row.value)
+          }}
+        </DescriptionsItem>
+      </Descriptions>
     </template>
 
     <template v-else-if="kind === 'classical'">
@@ -183,12 +308,10 @@ watch(featureImportances, () => render(), { immediate: true });
       </Descriptions>
     </template>
 
-    <!-- Cross-validation summary (both trained families). -->
+    <!-- Cross-validation / held-out summary (both trained families). -->
     <Descriptions v-if="validation" :column="2" bordered size="small">
-      <DescriptionsItem
-        :label="$t('page.research.models.detail.metricsPanel.meanObjective')"
-      >
-        {{ formatScore(asString(validation?.mean_objective)) }}
+      <DescriptionsItem :label="$t(heldOutLabelKey)">
+        {{ formatScore(asString(validation?.held_out_objective)) }}
       </DescriptionsItem>
       <DescriptionsItem
         :label="
@@ -196,6 +319,62 @@ watch(featureImportances, () => render(), { immediate: true });
         "
       >
         {{ asString(validation?.sample_count) }}
+      </DescriptionsItem>
+      <DescriptionsItem
+        v-if="validation?.dropped_singleton_groups !== undefined"
+        :label="
+          $t('page.research.models.detail.metricsPanel.droppedSingletonGroups')
+        "
+      >
+        {{ asString(validation?.dropped_singleton_groups) }}
+      </DescriptionsItem>
+      <DescriptionsItem
+        v-if="validation?.dropped_singleton_rows !== undefined"
+        :label="
+          $t('page.research.models.detail.metricsPanel.droppedSingletonRows')
+        "
+      >
+        {{ asString(validation?.dropped_singleton_rows) }}
+      </DescriptionsItem>
+    </Descriptions>
+
+    <Descriptions
+      v-if="componentRows(validationComponents).length > 0"
+      :column="2"
+      bordered
+      size="small"
+      :title="
+        $t('page.research.models.detail.metricsPanel.validationComponents')
+      "
+    >
+      <DescriptionsItem
+        v-for="row in componentRows(validationComponents)"
+        :key="row.key"
+        :label="$t(`page.research.models.detail.metricsPanel.${row.key}`)"
+      >
+        {{ isCountKey(row.key) ? row.value : formatScore(row.value) }}
+      </DescriptionsItem>
+    </Descriptions>
+
+    <Descriptions
+      v-if="diagnosticRows(validationDiagnostics).length > 0"
+      :column="2"
+      bordered
+      size="small"
+      :title="
+        $t('page.research.models.detail.metricsPanel.validationDiagnostics')
+      "
+    >
+      <DescriptionsItem
+        v-for="row in diagnosticRows(validationDiagnostics)"
+        :key="row.key"
+        :label="$t(`page.research.models.detail.metricsPanel.${row.key}`)"
+      >
+        {{
+          row.key === 'ndcg_k' || row.key === 'group_count'
+            ? row.value
+            : formatScore(row.value)
+        }}
       </DescriptionsItem>
     </Descriptions>
 
@@ -207,6 +386,33 @@ watch(featureImportances, () => render(), { immediate: true });
         {{ index + 1 }}: {{ formatScore(fold) }}
       </Tag>
     </div>
+
+    <Collapse v-if="foldComponents.length > 0" ghost>
+      <CollapsePanel
+        key="fold-components"
+        :header="$t('page.research.models.detail.metricsPanel.foldComponents')"
+      >
+        <div
+          v-for="(components, index) in foldComponents"
+          :key="index"
+          class="mb-3"
+        >
+          <div class="text-muted-foreground mb-1 text-xs">
+            {{ $t('page.research.models.detail.metricsPanel.folds') }}
+            {{ index + 1 }}
+          </div>
+          <Descriptions :column="2" bordered size="small">
+            <DescriptionsItem
+              v-for="row in componentRows(components)"
+              :key="row.key"
+              :label="$t(`page.research.models.detail.metricsPanel.${row.key}`)"
+            >
+              {{ isCountKey(row.key) ? row.value : formatScore(row.value) }}
+            </DescriptionsItem>
+          </Descriptions>
+        </div>
+      </CollapsePanel>
+    </Collapse>
 
     <div v-if="featureImportances.length > 0" class="flex flex-col gap-1">
       <span class="text-muted-foreground text-xs">

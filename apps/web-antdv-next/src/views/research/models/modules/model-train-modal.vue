@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import type { TrainModelRequest } from '@vben/types';
+import type { RuntimeConfigVersionView, TrainModelRequest } from '@vben/types';
 
-import { markRaw, ref, watch } from 'vue';
+import { computed, markRaw, ref, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+
+import { Alert, Descriptions, DescriptionsItem } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
 import { listModelSpecs } from '#/api/research';
@@ -35,6 +37,8 @@ const { handleRequest } = useRequestHandler();
 const payload = ref<ModelTrainPayload | null>(null);
 const modelSpecId = ref<string | undefined>();
 const prefillDatasetId = ref<string | undefined>();
+const runtimeConfigVersionId = ref<string | undefined>();
+const runtimeVersions = ref<RuntimeConfigVersionView[]>([]);
 const {
   datasetOptions,
   loading: datasetLoading,
@@ -79,7 +83,8 @@ async function loadOptions() {
     label: `${spec.name} · ${spec.model_spec_id}`,
     value: spec.model_spec_id,
   }));
-  const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
+  runtimeVersions.value = versions ?? [];
+  const versionOptions: OptionItem[] = runtimeVersions.value.map((version) => ({
     label: version.runtime_config_version_id,
     value: version.runtime_config_version_id,
   }));
@@ -94,6 +99,42 @@ async function loadOptions() {
     },
   ]);
 }
+
+function asRecord(value: unknown): null | Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function field(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return '—';
+  }
+  return String(value);
+}
+
+const modelFamily = ref<string | undefined>();
+
+const selectedRuntimeVersion = computed(() =>
+  runtimeVersions.value.find(
+    (version) =>
+      version.runtime_config_version_id === runtimeConfigVersionId.value,
+  ),
+);
+
+const isClassicalFamily = computed(() =>
+  (modelFamily.value ?? '').startsWith('classical'),
+);
+
+const objectiveSnapshot = computed(() => {
+  if (isClassicalFamily.value) {
+    return null;
+  }
+  const config = asRecord(selectedRuntimeVersion.value?.config_json);
+  const research = asRecord(config?.research);
+  return asRecord(research?.training);
+});
 
 async function onSubmit(values: Record<string, unknown>) {
   if (!payload.value) {
@@ -162,6 +203,14 @@ const [Form, formApi] = useVbenForm({
         options: [],
         showSearch: true,
       },
+      dependencies: {
+        trigger(values) {
+          runtimeConfigVersionId.value = values.runtime_config_version_id as
+            | string
+            | undefined;
+        },
+        triggerFields: ['runtime_config_version_id'],
+      },
       fieldName: 'runtime_config_version_id',
       label: $t('page.research.models.train.runtimeConfigVersion'),
       rules: 'selectRequired',
@@ -170,6 +219,12 @@ const [Form, formApi] = useVbenForm({
       component: 'Input',
       componentProps: {
         placeholder: $t('page.research.models.train.modelFamilyPlaceholder'),
+      },
+      dependencies: {
+        trigger(values) {
+          modelFamily.value = values.model_family as string | undefined;
+        },
+        triggerFields: ['model_family'],
       },
       defaultValue: 'weighted_factor',
       fieldName: 'model_family',
@@ -222,6 +277,9 @@ const [Modal, modalApi] = useVbenModal({
       payload.value = modalApi.getData<ModelTrainPayload>();
       prefillDatasetId.value = payload.value?.trainingDatasetId || undefined;
       modelSpecId.value = undefined;
+      runtimeConfigVersionId.value = undefined;
+      modelFamily.value = 'weighted_factor';
+      runtimeVersions.value = [];
       formApi.resetForm();
       formApi.setValues({
         label_horizon_secs: 0,
@@ -246,6 +304,62 @@ const [Modal, modalApi] = useVbenModal({
       {{ $t('page.research.models.train.summary') }}
     </p>
     <Form />
+    <div class="mt-4">
+      <Alert
+        v-if="isClassicalFamily"
+        :message="$t('page.research.models.train.classicalObjectiveHint')"
+        show-icon
+        type="info"
+      />
+      <Descriptions
+        v-else-if="objectiveSnapshot"
+        :column="2"
+        bordered
+        size="small"
+        :title="$t('page.research.models.train.objectiveSnapshot')"
+      >
+        <DescriptionsItem :label="$t('page.research.models.train.rankLoss')">
+          {{ field(objectiveSnapshot.rank_loss) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.research.models.train.optimizer')">
+          {{ field(objectiveSnapshot.optimizer) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.research.models.train.lambdaTail')">
+          {{ field(objectiveSnapshot.lambda_tail) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.models.train.tailFraction')"
+        >
+          {{ field(objectiveSnapshot.tail_fraction) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.models.train.lambdaTurnover')"
+        >
+          {{ field(objectiveSnapshot.lambda_turnover) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.research.models.train.lambdaL2')">
+          {{ field(objectiveSnapshot.lambda_l2) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.research.models.train.ndcgK')">
+          {{ field(objectiveSnapshot.ndcg_k) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.research.models.train.pseudoTopN')">
+          {{ field(objectiveSnapshot.pseudo_top_n) }}
+        </DescriptionsItem>
+      </Descriptions>
+      <Alert
+        v-else
+        :message="$t('page.research.models.train.objectiveSelectHint')"
+        show-icon
+        type="info"
+      />
+      <p
+        v-if="objectiveSnapshot && !isClassicalFamily"
+        class="text-muted-foreground mt-2 text-xs"
+      >
+        {{ $t('page.research.models.train.objectiveProxyHint') }}
+      </p>
+    </div>
   </Modal>
 </template>
 

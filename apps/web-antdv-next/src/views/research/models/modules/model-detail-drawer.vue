@@ -73,6 +73,24 @@ const returnModel = computed<null | ReturnModelView>(
   () => model.value?.return_model ?? null,
 );
 
+function asRecord(value: unknown): null | Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function field(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return '—';
+  }
+  return String(value);
+}
+
+const trainingObjective = computed(() =>
+  asRecord(model.value?.training_objective),
+);
+
 const isCalibratedReturnModel = computed(
   () => returnModel.value?.calibration === 'calibrated',
 );
@@ -239,6 +257,88 @@ const [Drawer, drawerApi] = useVbenDrawer({
           >
             {{ $t('page.research.models.bindCalibration.action') }}
           </Button>
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.models.detail.trainingObjective')"
+        >
+          <Empty
+            v-if="!trainingObjective"
+            :description="$t('page.research.models.detail.objectiveUnknown')"
+            :image="Empty.PRESENTED_IMAGE_SIMPLE"
+          />
+          <template v-else>
+            <Descriptions :column="2" bordered size="small">
+              <DescriptionsItem
+                v-if="trainingObjective.kind"
+                :label="$t('page.research.models.detail.objectiveKind')"
+              >
+                {{ field(trainingObjective.kind) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.rank_loss"
+                :label="$t('page.research.models.detail.rankLoss')"
+              >
+                {{ field(trainingObjective.rank_loss) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.optimizer"
+                :label="$t('page.research.models.detail.optimizer')"
+              >
+                {{ field(trainingObjective.optimizer) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.lambda_tail"
+                :label="$t('page.research.models.detail.lambdaTail')"
+              >
+                {{ field(trainingObjective.lambda_tail) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.tail_fraction"
+                :label="$t('page.research.models.detail.tailFraction')"
+              >
+                {{ field(trainingObjective.tail_fraction) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.lambda_turnover"
+                :label="$t('page.research.models.detail.lambdaTurnover')"
+              >
+                {{ field(trainingObjective.lambda_turnover) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.lambda_l2"
+                :label="$t('page.research.models.detail.lambdaL2')"
+              >
+                {{ field(trainingObjective.lambda_l2) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.ndcg_k !== undefined"
+                :label="$t('page.research.models.detail.ndcgK')"
+              >
+                {{ field(trainingObjective.ndcg_k) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.pseudo_top_n !== undefined"
+                :label="$t('page.research.models.detail.pseudoTopN')"
+              >
+                {{ field(trainingObjective.pseudo_top_n) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjective.note"
+                :label="$t('page.research.models.detail.objectiveNote')"
+                :span="2"
+              >
+                {{ field(trainingObjective.note) }}
+              </DescriptionsItem>
+            </Descriptions>
+            <p
+              v-if="trainingObjective.rank_loss && !trainingObjective.kind"
+              class="text-muted-foreground mt-2 text-xs"
+            >
+              {{ $t('page.research.models.detail.objectiveProxyHint') }}
+            </p>
+          </template>
         </Card>
 
         <Card size="small" :title="$t('page.research.models.detail.summary')">
