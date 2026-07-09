@@ -3,6 +3,7 @@ import type {
   BacktestPathSetView,
   BacktestReportListQuery,
   BacktestReportView,
+  BindPublishPathSetRequest,
   BuildTrainingDatasetRequest,
   ComparisonReportListQuery,
   CreateModelSpecRequest,
@@ -59,6 +60,8 @@ export namespace ResearchApi {
   export const backtestModel = (id: string) =>
     `/research/models/${id}/backtest`;
   export const publishModel = (id: string) => `/research/models/${id}/publish`;
+  export const bindPublishPathSet = (id: string) =>
+    `/research/models/${id}/bind-publish-path-set`;
   export const rollbackModel = (id: string) =>
     `/research/models/${id}/rollback`;
   export const retireModel = (id: string) => `/research/models/${id}/retire`;
@@ -329,6 +332,19 @@ export async function publishModel(
 ) {
   return governedPost<TrainedModelView>(
     ResearchApi.publishModel(id),
+    body,
+    ctx,
+  );
+}
+
+/** `POST /research/models/{id}/bind-publish-path-set` — pin CPCV path set for publish gates. */
+export async function bindPublishPathSet(
+  id: string,
+  body: BindPublishPathSetRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<TrainedModelView>(
+    ResearchApi.bindPublishPathSet(id),
     body,
     ctx,
   );

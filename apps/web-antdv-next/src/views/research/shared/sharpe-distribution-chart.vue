@@ -45,11 +45,11 @@ function renderChart() {
     grid: { left: 72, right: 16, top: 16, bottom: 24 },
     xAxis: {
       type: 'value',
-      name: 'Sharpe',
+      name: $t('page.research.cpcv.pathSharpe'),
     },
     yAxis: {
       type: 'category',
-      data: labels.map((key) => key.toUpperCase()),
+      data: labels.map((key) => $t(`page.research.cpcv.distribution.${key}`)),
     },
     tooltip: {
       trigger: 'axis',

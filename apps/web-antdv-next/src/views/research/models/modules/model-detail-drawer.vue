@@ -3,6 +3,7 @@ import type {
   BacktestPathSetView,
   BacktestReportView,
   QualityGateReportView,
+  ResearchJobView,
   ReturnModelView,
   TrainedModelView,
 } from '@vben/types';
@@ -12,10 +13,11 @@ import type { BindCalibrationBody } from './model-bind-calibration-modal.vue';
 import type { CpcvBody } from './model-cpcv-modal.vue';
 
 import { computed, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import { useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { isActiveResearchJobStatus, RESEARCH_JOB_KINDS } from '@vben/types';
 
 import {
   Alert,
@@ -33,11 +35,14 @@ import {
 import { bindCalibration } from '#/api/calibration';
 import {
   backtestModel,
+  bindPublishPathSet,
   cpcvBacktestModel,
+  getBacktestPathSet,
   getModel,
   getModelQualityGate,
   listBacktestPathSets,
   listBacktestReports,
+  listResearchJobs,
 } from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
@@ -66,24 +71,83 @@ interface ModelDrawerData {
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
+const route = useRoute();
 const router = useRouter();
 const researchStore = useResearchStore();
 const statusTagOptions = usePublicationStatusTagOptions();
 
 const canBindCalibration = hasAccessByCodes(['publication:create']);
+const canBindPathSet = hasAccessByCodes(['publication:create']);
 const canReplay = hasAccessByCodes(['replay:create']);
 
 const model = ref<null | TrainedModelView>(null);
 const backtests = ref<BacktestReportView[]>([]);
+const pathSets = ref<BacktestPathSetView[]>([]);
 const pathSet = ref<BacktestPathSetView | null>(null);
+const selectedPathSetId = ref<null | string>(null);
+const activeCpcvJob = ref<null | ResearchJobView>(null);
 const gate = ref<null | QualityGateReportView>(null);
 const loading = ref(false);
 const gateLoading = ref(false);
+const bindPathSetLoading = ref(false);
 const openId = ref<null | string>(null);
 
 const metrics = computed(() => model.value?.metrics ?? {});
 const statusTag = computed(() =>
   findTagOption(statusTagOptions, model.value?.publication_status),
+);
+
+const cpcvInProgress = computed(() => !!activeCpcvJob.value);
+
+/** Need to run CPCV: no path sets yet, or alpha metrics fail on a bound set. */
+const needsCpcvRunCta = computed(() => {
+  const report = gate.value;
+  if (!report || report.passed || !canReplay) {
+    return false;
+  }
+  const hardFails = report.gates.filter(
+    (out) => out.class === 'hard' && out.status === 'fail',
+  );
+  const missingPathSet = hardFails.some((out) => out.gate === 'cpcv_required');
+  if (missingPathSet && pathSets.value.length === 0) {
+    return true;
+  }
+  // Bound path set exists but alpha metrics fail → re-run CPCV (or re-bind another).
+  const alphaFail = hardFails.some(
+    (out) =>
+      out.gate === 'pbo' ||
+      out.gate === 'deflated_sharpe' ||
+      out.gate === 'rank_ic',
+  );
+  return alphaFail && !!model.value?.publish_path_set_id;
+});
+
+/** Path sets exist but none is publish-bound → bind CTA, not re-run. */
+const needsBindCta = computed(() => {
+  const report = gate.value;
+  if (!report || report.passed || !canBindPathSet) {
+    return false;
+  }
+  const missingPathSet = report.gates.some(
+    (out) =>
+      out.class === 'hard' &&
+      out.status === 'fail' &&
+      out.gate === 'cpcv_required',
+  );
+  return (
+    missingPathSet &&
+    pathSets.value.length > 0 &&
+    !model.value?.publish_path_set_id
+  );
+});
+
+const cpcvGateOutcomes = computed(() => {
+  const ids = new Set(['cpcv_required', 'deflated_sharpe', 'pbo', 'rank_ic']);
+  return (gate.value?.gates ?? []).filter((row) => ids.has(row.gate));
+});
+
+const publishBoundPathSetId = computed(
+  () => model.value?.publish_path_set_id ?? null,
 );
 
 const returnModel = computed<null | ReturnModelView>(
@@ -221,31 +285,108 @@ async function submitCpcv(
   );
   if (result) {
     message.success($t('page.research.models.cpcv.feedback'));
-    await router.push(`/research/jobs?open=${result.job_id}`);
+    await refresh(modelVersionId);
     return true;
   }
   return false;
+}
+
+async function submitBindPublishPathSet() {
+  const id = model.value?.model_version_id;
+  const pathSetId = selectedPathSetId.value;
+  if (!id || !pathSetId) {
+    return;
+  }
+  bindPathSetLoading.value = true;
+  try {
+    const updated = await governed(
+      (ctx) =>
+        bindPublishPathSet(
+          id,
+          { path_set_id: pathSetId, reason: ctx.reason },
+          ctx,
+        ),
+      {
+        summary: $t('page.research.cpcv.bindSummary', {
+          id: pathSetId.slice(0, 8),
+        }),
+        title: $t('page.research.cpcv.bindTitle'),
+      },
+    );
+    if (updated) {
+      message.success($t('page.research.cpcv.bindFeedback'));
+      await refresh(id);
+    }
+  } finally {
+    bindPathSetLoading.value = false;
+  }
+}
+
+async function selectPathSet(id: string) {
+  selectedPathSetId.value = id;
+  const fromList = pathSets.value.find((row) => row.path_set_id === id);
+  if (fromList) {
+    pathSet.value = fromList;
+    return;
+  }
+  const fetched = await handleRequest(() => getBacktestPathSet(id), {
+    silent: true,
+  });
+  if (fetched && openId.value) {
+    pathSet.value = fetched;
+  }
 }
 
 async function refresh(id: string) {
   loading.value = true;
   gateLoading.value = true;
   try {
-    const [fresh, reports, pathSets] = await Promise.all([
+    const [fresh, reports, listed, jobs] = await Promise.all([
       handleRequest(() => getModel(id), { silent: true }),
       handleRequest(
         () => listBacktestReports({ model_version_id: id, size: 50 }),
         { silent: true },
       ),
       handleRequest(
-        () => listBacktestPathSets({ model_version_id: id, size: 1 }),
+        () => listBacktestPathSets({ model_version_id: id, size: 20 }),
+        { silent: true },
+      ),
+      handleRequest(
+        () =>
+          listResearchJobs({
+            kind: RESEARCH_JOB_KINDS.cpcvBacktest,
+            size: 20,
+          }),
         { silent: true },
       ),
     ]);
     if (openId.value === id) {
       model.value = fresh ?? null;
       backtests.value = reports?.items ?? [];
-      pathSet.value = pathSets?.items?.[0] ?? null;
+      pathSets.value = listed?.items ?? [];
+      const preferred =
+        selectedPathSetId.value ??
+        fresh?.publish_path_set_id ??
+        listed?.items?.[0]?.path_set_id ??
+        null;
+      if (preferred) {
+        selectedPathSetId.value = preferred;
+        pathSet.value =
+          pathSets.value.find((row) => row.path_set_id === preferred) ??
+          pathSets.value[0] ??
+          null;
+        if (!pathSet.value) {
+          void selectPathSet(preferred);
+        }
+      } else {
+        pathSet.value = null;
+      }
+      activeCpcvJob.value =
+        (jobs?.items ?? []).find(
+          (job) =>
+            isActiveResearchJobStatus(job.status) &&
+            job.params?.model_version_id === id,
+        ) ?? null;
     }
   } finally {
     loading.value = false;
@@ -275,12 +416,21 @@ const [Drawer, drawerApi] = useVbenDrawer({
       openId.value = data.model.model_version_id;
       model.value = data.model;
       gate.value = null;
+      selectedPathSetId.value =
+        (typeof route.query.path_set_id === 'string'
+          ? route.query.path_set_id
+          : null) ??
+        data.model.publish_path_set_id ??
+        null;
       void refresh(data.model.model_version_id);
     } else {
       openId.value = null;
       model.value = null;
       backtests.value = [];
+      pathSets.value = [];
       pathSet.value = null;
+      selectedPathSetId.value = null;
+      activeCpcvJob.value = null;
       gate.value = null;
     }
   },
@@ -327,6 +477,18 @@ watch(
           :title="$t('page.research.models.detail.publishReadiness')"
         >
           <QualityGateScorecard :loading="gateLoading" :report="gate" />
+          <Space v-if="needsCpcvRunCta || needsBindCta" class="mt-3">
+            <Button v-if="needsCpcvRunCta" type="primary" @click="openCpcv">
+              {{ $t('page.research.models.cpcv.action') }}
+            </Button>
+            <Button
+              v-if="needsBindCta"
+              type="primary"
+              @click="submitBindPublishPathSet"
+            >
+              {{ $t('page.research.cpcv.bindPublish') }}
+            </Button>
+          </Space>
         </Card>
 
         <Card
@@ -539,7 +701,21 @@ watch(
         </Card>
 
         <Card size="small" :title="$t('page.research.cpcv.title')">
-          <CpcvValidationPanel :path-set="pathSet" />
+          <CpcvValidationPanel
+            :active-job-id="activeCpcvJob?.job_id ?? null"
+            :bind-loading="bindPathSetLoading"
+            :can-bind="canBindPathSet"
+            :gate-outcomes="cpcvGateOutcomes"
+            :in-progress="cpcvInProgress"
+            :path-set="pathSet"
+            :path-sets="pathSets"
+            :progress-phase="activeCpcvJob?.progress?.phase ?? null"
+            :progress-pct="activeCpcvJob?.progress_pct ?? null"
+            :publish-bound-path-set-id="publishBoundPathSetId"
+            :selected-path-set-id="selectedPathSetId"
+            @bind-publish-path-set="submitBindPublishPathSet"
+            @update:selected-path-set-id="selectPathSet"
+          />
         </Card>
       </div>
     </Spin>

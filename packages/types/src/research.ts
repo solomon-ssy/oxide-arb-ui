@@ -290,6 +290,8 @@ export interface TrainedModelView {
   version: number;
   artifact_hash: string;
   training_dataset_id: null | UuidString;
+  /** CPCV path set bound for publish gates (`undefined` until bound). */
+  publish_path_set_id?: null | UuidString;
   publication_status: PublicationStatus;
   metrics: ModelMetrics;
   /** Frozen objective provenance; classical/imported models use explicit non-LTR records. */
@@ -414,6 +416,12 @@ export interface RetireModelRequest {
   reason: string;
 }
 
+/** `POST /research/models/{id}/bind-publish-path-set` governed request body. */
+export interface BindPublishPathSetRequest {
+  path_set_id: UuidString;
+  reason: string;
+}
+
 // ── Backtests / comparison ──────────────────────────────────────────────────
 
 /** Expected-vs-realized agreement summary (`BacktestReportView`). */
@@ -518,10 +526,13 @@ export interface BacktestPathSetView {
   dsr_benchmark_sharpe: DecimalString;
   pbo: DecimalString;
   min_track_record_length_secs: null | number;
-  /** Total DSR N = trial_grid_count + coord_search_effective_n. */
+  /** DSR multiple-testing N (= trial_grid_count). Same population as V. */
   trial_count: number;
   trial_grid_count: number;
+  /** Audit-only production coord-search effort (not included in DSR N). */
   coord_search_effective_n: number;
+  /** Content hash of the persisted path-set payload (audit / replay). */
+  path_set_hash: string;
   created_at: IsoDateTime;
 }
 

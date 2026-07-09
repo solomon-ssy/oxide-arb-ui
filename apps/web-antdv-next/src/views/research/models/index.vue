@@ -250,14 +250,34 @@ async function publish(model: TrainedModelView) {
     { silent: true },
   );
   if (readiness && !readiness.passed) {
-    const hardCount = readiness.gates.filter(
+    const hardFails = readiness.gates.filter(
       (out) => out.class === 'hard' && out.status === 'fail',
-    ).length;
-    message.error(
-      $t('page.research.models.publish.blocked', { count: hardCount }),
     );
-    // Open the detail drawer so the operator can inspect the failing gates.
+    const gateNames = hardFails.map((out) => out.gate).join(', ');
+    const cpcvRequiredFail = hardFails.some(
+      (out) => out.gate === 'cpcv_required',
+    );
+    const alphaMetricFail = hardFails.some(
+      (out) =>
+        out.gate === 'pbo' ||
+        out.gate === 'deflated_sharpe' ||
+        out.gate === 'rank_ic',
+    );
+    message.error(
+      $t('page.research.models.publish.blockedNamed', {
+        count: hardFails.length,
+        gates: gateNames,
+      }),
+    );
     drawerApi.setData({ model }).open();
+    if (access.canCpcv) {
+      if (cpcvRequiredFail && !model.publish_path_set_id && !alphaMetricFail) {
+        // Unbound: either never ran CPCV, or ran but did not pin — drawer shows both CTAs.
+        message.info($t('page.research.models.publish.bindPathSetHint'));
+      } else if (alphaMetricFail || cpcvRequiredFail) {
+        message.info($t('page.research.models.publish.runCpcvHint'));
+      }
+    }
     return;
   }
   const softCount = readiness
