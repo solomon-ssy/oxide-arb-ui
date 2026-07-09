@@ -11,7 +11,7 @@ import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 import { CALIBRATION_KINDS } from '@vben/types';
 
-import { Button, message, TabPane, Tabs } from 'antdv-next';
+import { Button, Empty, message, TabPane, Tabs } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -222,6 +222,25 @@ useQueryOpenDrawer({
       />
     </Tabs>
     <Grid :table-title="$t('page.research.calibrationArtifacts.listTitle')">
+      <template #empty>
+        <Empty
+          :description="
+            $t('page.research.calibrationArtifacts.empty.description')
+          "
+          :image="Empty.PRESENTED_IMAGE_SIMPLE"
+        >
+          <div v-if="canFit" class="flex flex-wrap justify-center gap-2">
+            <Button @click="fitBiasTableJob">
+              {{ $t('page.research.calibrationArtifacts.fitBiasTable.action') }}
+            </Button>
+            <Button type="primary" @click="openFitCalibratorModal">
+              {{
+                $t('page.research.calibrationArtifacts.fitCalibrator.action')
+              }}
+            </Button>
+          </div>
+        </Empty>
+      </template>
       <template #toolbar-tools>
         <Button v-if="canFit" @click="fitBiasTableJob">
           {{ $t('page.research.calibrationArtifacts.fitBiasTable.action') }}

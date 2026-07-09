@@ -105,6 +105,12 @@ const reliabilityBinColumns = computed(() => [
     ),
   },
   {
+    key: 'wilson_ci',
+    title: $t(
+      'page.research.calibrationArtifacts.detail.reliabilityColumns.wilsonCi',
+    ),
+  },
+  {
     dataIndex: 'mean_adverse_excursion_bps',
     title: $t(
       'page.research.calibrationArtifacts.detail.reliabilityColumns.mae',
@@ -333,6 +339,11 @@ const [Drawer, drawerApi] = useVbenDrawer({
               </template>
               <template v-else-if="column.dataIndex === 'empirical_frequency'">
                 {{ formatPercent(record.empirical_frequency) }}
+              </template>
+              <template v-else-if="column.key === 'wilson_ci'">
+                {{
+                  `${formatPercent(record.wilson_ci[0])} – ${formatPercent(record.wilson_ci[1])}`
+                }}
               </template>
             </template>
           </Table>

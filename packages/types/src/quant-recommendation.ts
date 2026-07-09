@@ -96,6 +96,8 @@ export interface SizingPlan {
   raw_fraction_applied?: DecimalString | null;
   /** The per-position equity cap (`portfolio.sizing.max_position_pct`). */
   position_cap_fraction_applied?: DecimalString | null;
+  /** Bet structure that produced `f_star_applied` (`resolution` | `heuristic_tp_sl`). */
+  bet_structure_applied?: 'heuristic_tp_sl' | 'resolution' | null;
 }
 
 export interface ExitPlan {

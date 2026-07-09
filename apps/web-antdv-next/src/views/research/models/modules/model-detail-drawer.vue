@@ -197,7 +197,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
               $t('page.research.models.detail.returnModelHeuristicWarning')
             "
             show-icon
-            type="warning"
+            type="error"
           />
           <Descriptions v-if="returnModel" :column="1" bordered size="small">
             <DescriptionsItem

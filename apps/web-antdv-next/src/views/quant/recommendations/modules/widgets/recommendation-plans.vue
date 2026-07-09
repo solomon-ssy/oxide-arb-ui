@@ -14,6 +14,7 @@ import {
   DescriptionsItem,
   Table,
   Tag,
+  Tooltip,
 } from 'antdv-next';
 
 import { $t } from '#/locales';
@@ -57,6 +58,7 @@ const waterfallSteps = computed<null | WaterfallChartStep[]>(() => {
   const edgeUncertaintyShrink =
     toNumber(plan.edge_uncertainty_shrink_applied) ?? 1;
   const correlationShrink = toNumber(plan.correlation_shrink_applied) ?? 1;
+  const rawFraction = toNumber(plan.raw_fraction_applied);
   const positionCap = toNumber(plan.position_cap_fraction_applied);
 
   const binding = plan.binding_constraint;
@@ -92,20 +94,64 @@ const waterfallSteps = computed<null | WaterfallChartStep[]>(() => {
     'edge_uncertainty',
     'edgeUncertainty',
     edgeUncertaintyShrink,
-    'aggregate_exposure_cap',
+    '__none__',
   );
   stage('correlation', 'correlation', correlationShrink, 'correlation_cap');
+  if (rawFraction !== null) {
+    steps.push({
+      key: 'raw_fraction',
+      label: $t('page.quantRecommendations.sizingPlan.waterfall.rawFraction'),
+      factor: null,
+      value: rawFraction,
+      isBinding: false,
+    });
+    running = rawFraction;
+  }
   if (positionCap !== null) {
+    const capped = Math.min(running, positionCap);
     steps.push({
       key: 'cap',
       label: $t('page.quantRecommendations.sizingPlan.waterfall.cap'),
       factor: null,
-      value: Math.min(running, positionCap),
-      isBinding: running > positionCap,
+      value: capped,
+      isBinding: binding === 'kelly_cap' && running > positionCap,
+    });
+    running = capped;
+  }
+  if (binding === 'aggregate_exposure_cap') {
+    steps.push({
+      key: 'aggregate_exposure_cap',
+      label: $t(
+        'page.quantRecommendations.sizingPlan.waterfall.aggregateExposureCap',
+      ),
+      factor: null,
+      value: running,
+      isBinding: true,
     });
   }
   return steps;
 });
+
+const bindingConstraintColor = computed(() => {
+  const binding = sizing.value.binding_constraint;
+  if (binding === 'none') {
+    return 'default';
+  }
+  if (
+    binding === 'aggregate_exposure_cap' ||
+    binding === 'available_cash' ||
+    binding === 'portfolio_budget'
+  ) {
+    return 'error';
+  }
+  return 'warning';
+});
+
+const bindingConstraintTooltip = computed(() =>
+  $t('page.quantRecommendations.sizingPlan.bindingConstraintHelp', {
+    constraint: $t(`enum.bindingConstraint.${sizing.value.binding_constraint}`),
+  }),
+);
 
 function toNumber(value: null | string | undefined): null | number {
   if (value === null || value === undefined) {
@@ -313,9 +359,11 @@ function millis(value: number): string {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.bindingConstraint')"
         >
-          <Tag>
-            {{ $t(`enum.bindingConstraint.${sizing.binding_constraint}`) }}
-          </Tag>
+          <Tooltip :title="bindingConstraintTooltip">
+            <Tag :color="bindingConstraintColor">
+              {{ $t(`enum.bindingConstraint.${sizing.binding_constraint}`) }}
+            </Tag>
+          </Tooltip>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.sizingModel')"
@@ -366,7 +414,7 @@ function millis(value: number): string {
           $t('page.quantRecommendations.sizingPlan.waterfall.uncalibrated')
         "
         show-icon
-        type="info"
+        type="error"
       />
     </Card>
 

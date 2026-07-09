@@ -236,6 +236,7 @@
       "columns": {
         "datasetId": "Dataset ID",
         "modelSpec": "Model Spec",
+        "purpose": "Purpose",
         "status": "Status",
         "sampleCount": "Samples",
         "windowStart": "Window Start",
@@ -245,6 +246,7 @@
       },
       "filters": {
         "modelSpec": "Model Spec",
+        "purpose": "Purpose",
         "status": "Status",
         "createdAt": "Created"
       },
@@ -296,6 +298,8 @@
         "horizonsSecs": "Label Horizons (s)",
         "horizonsPlaceholder": "e.g. 3600,86400",
         "horizonsHelp": "Comma-separated positive integers (one label column per horizon).",
+        "purpose": "Dataset Purpose",
+        "purposeHelp": "Training datasets feed model training; Calibration datasets are independent held-out splits for probability calibrator fitting (must be disjoint + embargoed from training data).",
         "incomplete": "Fill in model spec, version, window, and at least one horizon."
       },
       "detail": {
@@ -616,6 +620,9 @@
     },
     "calibrationArtifacts": {
       "listTitle": "Calibration artifacts",
+      "empty": {
+        "description": "No calibration artifacts yet. Fit a bias table or model-score calibrator to start the calibration loop."
+      },
       "fitWindowSeparator": "→",
       "tabs": {
         "all": "All",
@@ -717,6 +724,7 @@
           "predictedHi": "Predicted probability <",
           "predicted": "Predicted",
           "empirical": "Empirical",
+          "wilsonCi": "Wilson CI",
           "mae": "Mean MAE (bps)",
           "samples": "Samples"
         }
@@ -1966,6 +1974,7 @@
       "eventExposureAfter": "Event Exposure After",
       "categoryExposureAfter": "Category Exposure After",
       "bindingConstraint": "Binding Constraint",
+      "bindingConstraintHelp": "The dominant constraint that limited the final size: {constraint}.",
       "sizingModel": "Sizing Model",
       "edge": "Edge",
       "kelly": "Applied Multiplier (kelly_fraction × every shrink)",
@@ -1981,6 +1990,8 @@
         "drawdown": "Drawdown",
         "edgeUncertainty": "Edge uncertainty",
         "correlation": "Correlation",
+        "rawFraction": "Raw fraction (pre-cap)",
+        "aggregateExposureCap": "Aggregate exposure cap",
         "cap": "Position cap",
         "aria": "Kelly sizing waterfall with {stepCount} steps, ending at {finalValue} of the starting fraction. The binding constraint is {bindingLabel}."
       }

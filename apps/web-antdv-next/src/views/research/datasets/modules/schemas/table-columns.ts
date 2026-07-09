@@ -35,6 +35,26 @@ export function useTrainingDatasetColumns(
     {
       cellRender: {
         name: 'CellTag',
+        options: [
+          {
+            color: 'processing',
+            label: $t('enum.datasetPurpose.training'),
+            value: 'training',
+          },
+          {
+            color: 'purple',
+            label: $t('enum.datasetPurpose.calibration'),
+            value: 'calibration',
+          },
+        ],
+      },
+      field: 'purpose',
+      title: $t('page.research.datasets.columns.purpose'),
+      width: 120,
+    },
+    {
+      cellRender: {
+        name: 'CellTag',
         options: useTrainingDatasetStatusTagOptions(),
       },
       field: 'status',

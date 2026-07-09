@@ -148,6 +148,14 @@ export interface TrainingDatasetView {
  */
 export interface BuildTrainingDatasetRequest {
   model_spec_id: string;
+  /**
+   * What the materialized examples are used for (Phase 11.3 §4). Defaults to
+   * `training` server-side; set `calibration` to build an independent
+   * held-out split for `ProbabilityCalibrator` fitting (must be disjoint +
+   * embargoed from the target model's own training dataset — enforced at
+   * fit time, surfaced live by the Fit Model Calibrator preflight check).
+   */
+  purpose?: DatasetPurpose;
   runtime_config_version_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
@@ -470,6 +478,7 @@ export type GatePreviewIntent = 'auto_execution' | 'candidate' | 'publish';
  */
 export type GateId =
   | 'backtest_required'
+  | 'calibration_required'
   | 'category_concentration'
   | 'critical_feature_coverage'
   | 'hit_rate'

@@ -83,6 +83,7 @@ const [Grid, gridApi] = useVbenVxeGrid<TrainingDatasetView>({
               model_spec_id:
                 (formValues.model_spec_id as string | undefined) || undefined,
               page: page.currentPage,
+              purpose: (formValues.purpose as any) || undefined,
               size: page.pageSize,
               status: (formValues.status as any) || undefined,
               to: (range[1] as string | undefined) || undefined,

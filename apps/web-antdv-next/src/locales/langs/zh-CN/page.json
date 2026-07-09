@@ -236,6 +236,7 @@
       "columns": {
         "datasetId": "数据集 ID",
         "modelSpec": "模型规格",
+        "purpose": "用途",
         "status": "状态",
         "sampleCount": "样本数",
         "windowStart": "窗口开始",
@@ -245,6 +246,7 @@
       },
       "filters": {
         "modelSpec": "模型规格",
+        "purpose": "用途",
         "status": "状态",
         "createdAt": "创建时间"
       },
@@ -296,6 +298,8 @@
         "horizonsSecs": "标签地平线（秒）",
         "horizonsPlaceholder": "例如 3600,86400",
         "horizonsHelp": "逗号分隔的正整数（每个地平线一列标签）。",
+        "purpose": "数据集用途",
+        "purposeHelp": "训练数据集用于模型训练；校准数据集是独立的 held-out 切分，供概率校准器拟合（必须与训练数据 disjoint 且满足 embargo）。",
         "incomplete": "请填写模型规格、版本、窗口，以及至少一个地平线。"
       },
       "detail": {
@@ -616,6 +620,9 @@
     },
     "calibrationArtifacts": {
       "listTitle": "校准产物目录",
+      "empty": {
+        "description": "尚无校准产物。拟合偏差表或模型分数校准器以启动校准闭环。"
+      },
       "fitWindowSeparator": "→",
       "tabs": {
         "all": "全部",
@@ -717,6 +724,7 @@
           "predictedHi": "预测概率 <",
           "predicted": "预测",
           "empirical": "经验",
+          "wilsonCi": "Wilson 置信区间",
           "mae": "平均 MAE (bps)",
           "samples": "样本"
         }
@@ -1966,6 +1974,7 @@
       "eventExposureAfter": "事件敞口(后)",
       "categoryExposureAfter": "类别敞口(后)",
       "bindingConstraint": "约束因子",
+      "bindingConstraintHelp": "限制最终仓位的主导约束：{constraint}。",
       "sizingModel": "仓位模型",
       "edge": "边际",
       "kelly": "应用乘数（kelly_fraction × 各项收缩之积）",
@@ -1981,6 +1990,8 @@
         "drawdown": "回撤",
         "edgeUncertainty": "Edge 不确定性",
         "correlation": "相关性",
+        "rawFraction": "原始分数（上限前）",
+        "aggregateExposureCap": "总敞口上限",
         "cap": "单仓上限",
         "aria": "Kelly 仓位瀑布图，共 {stepCount} 个步骤，最终为起始分数的 {finalValue}。约束生效步骤为{bindingLabel}。"
       }

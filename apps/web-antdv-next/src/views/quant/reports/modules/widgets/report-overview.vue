@@ -120,6 +120,31 @@ const aggregateExposureProgress = computed(() => {
   );
 });
 
+const aggregateExposureProgressStatus = computed(() => {
+  const pct = aggregateExposureProgress.value;
+  if (pct >= 100) {
+    return 'exception' as const;
+  }
+  if (pct >= 90) {
+    return 'exception' as const;
+  }
+  if (pct >= 80) {
+    return 'normal' as const;
+  }
+  return 'active' as const;
+});
+
+const aggregateExposureStrokeColor = computed(() => {
+  const pct = aggregateExposureProgress.value;
+  if (pct >= 90) {
+    return { from: '#ff4d4f', to: '#cf1322' };
+  }
+  if (pct >= 80) {
+    return { from: '#faad14', to: '#ff4d4f' };
+  }
+  return undefined;
+});
+
 function openRuntimeConfig() {
   void router.push(
     `/runtime-config?version_id=${props.report.runtime_config_version_id}`,
@@ -286,7 +311,8 @@ function openRuntimeConfig() {
       <div v-if="aggregateExposureCapUsd !== null" class="flex flex-col gap-2">
         <Progress
           :percent="aggregateExposureProgress"
-          :status="aggregateExposureProgress >= 100 ? 'exception' : 'active'"
+          :status="aggregateExposureProgressStatus"
+          :stroke-color="aggregateExposureStrokeColor"
         />
         <div class="flex items-center justify-between text-sm">
           <span>

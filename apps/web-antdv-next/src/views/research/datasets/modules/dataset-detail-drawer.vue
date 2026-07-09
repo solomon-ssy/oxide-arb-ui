@@ -133,6 +133,11 @@ function onTrain() {
               {{ dataset.model_spec_id }}
             </DescriptionsItem>
             <DescriptionsItem
+              :label="$t('page.research.datasets.form.purpose')"
+            >
+              {{ $t(`enum.datasetPurpose.${dataset.purpose}`) }}
+            </DescriptionsItem>
+            <DescriptionsItem
               :label="$t('page.research.datasets.detail.runtimeConfigVersion')"
             >
               <span class="font-mono text-xs break-all">

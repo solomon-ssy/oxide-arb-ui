@@ -84,7 +84,8 @@
     "model_not_published": "模型未发布",
     "report_only_mode": "仅报告模式",
     "risk_envelope_invalid": "风险边界无效",
-    "shadow_not_passed": "影子门未通过"
+    "shadow_not_passed": "影子门未通过",
+    "return_model_uncalibrated": "收益模型未校准"
   },
   "rejectionReason": {
     "available_cash_exhausted": "可用现金耗尽",
@@ -97,7 +98,8 @@
     "invalid_edge_inputs": "边际输入无效",
     "liquidity_infeasible": "流动性不可行",
     "market_cap_exhausted": "单市场上限耗尽",
-    "no_positive_signal": "无正向信号"
+    "no_positive_signal": "无正向信号",
+    "aggregate_exposure_cap_exhausted": "总敞口上限耗尽"
   },
   "recommendationAttributionOutcome": {
     "filled_exited": "成交并退出",
@@ -468,6 +470,11 @@
     "hit_rate": "命中率",
     "category_concentration": "类目集中度",
     "sell_l2_book_fidelity": "卖出 L2 盘口保真度",
-    "sell_fallback_ratio": "卖出回退比例"
+    "sell_fallback_ratio": "卖出回退比例",
+    "calibration_required": "需要校准"
+  },
+  "datasetPurpose": {
+    "training": "训练",
+    "calibration": "校准"
   }
 }

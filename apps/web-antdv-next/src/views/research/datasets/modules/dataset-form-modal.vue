@@ -10,6 +10,7 @@ import { computed, ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { DATASET_PURPOSES } from '@vben/types';
 
 import {
   Alert,
@@ -86,6 +87,7 @@ async function collectBody(): Promise<DatasetFormBody | null> {
   return {
     horizons_secs: horizons,
     model_spec_id: values.model_spec_id as string,
+    purpose: values.purpose as DatasetFormBody['purpose'],
     runtime_config_version_id: values.runtime_config_version_id as string,
     sample_interval_secs: values.sample_interval_secs as number,
     source_delay_secs: values.source_delay_secs as number,
@@ -93,6 +95,17 @@ async function collectBody(): Promise<DatasetFormBody | null> {
     window_start: range[0],
   };
 }
+
+const purposeOptions = [
+  {
+    label: $t('enum.datasetPurpose.training'),
+    value: DATASET_PURPOSES.training,
+  },
+  {
+    label: $t('enum.datasetPurpose.calibration'),
+    value: DATASET_PURPOSES.calibration,
+  },
+];
 
 async function loadOptions() {
   const [specs, versions] = await Promise.all([
@@ -235,6 +248,15 @@ const [Form, formApi] = useVbenForm({
     },
     {
       component: 'Select',
+      componentProps: { options: purposeOptions },
+      defaultValue: DATASET_PURPOSES.training,
+      fieldName: 'purpose',
+      help: $t('page.research.datasets.form.purposeHelp'),
+      label: $t('page.research.datasets.form.purpose'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
       componentProps: {
         optionFilterProp: 'label',
         options: [],
@@ -307,6 +329,7 @@ const [Modal, modalApi] = useVbenModal({
       formApi.resetForm();
       formApi.setValues({
         horizons_secs: '3600',
+        purpose: DATASET_PURPOSES.training,
         sample_interval_secs: 60,
         source_delay_secs: 1,
       });
@@ -376,6 +399,9 @@ const [Modal, modalApi] = useVbenModal({
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.research.datasets.form.modelSpec')">
           {{ planResult.model_spec_id }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.research.datasets.form.purpose')">
+          {{ $t(`enum.datasetPurpose.${pendingBody.purpose ?? 'training'}`) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.datasets.form.runtimeConfigVersion')"

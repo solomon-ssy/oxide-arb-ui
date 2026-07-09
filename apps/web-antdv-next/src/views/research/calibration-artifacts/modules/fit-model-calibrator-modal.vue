@@ -4,7 +4,7 @@ import type {
   ModelCalibrationFitPreflightView,
 } from '@vben/types';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -137,6 +137,13 @@ async function loadOptions() {
   ]);
 }
 
+const preflightOk = computed(
+  () =>
+    preflight.value !== null &&
+    preflight.value.disjoint_ok &&
+    preflight.value.embargo_ok,
+);
+
 async function onSubmit(values: Record<string, unknown>) {
   if (!payload.value) {
     return;
@@ -213,7 +220,12 @@ const [Form, formApi] = useVbenForm({
 });
 
 const [Modal, modalApi] = useVbenModal({
-  onConfirm: () => formApi.validateAndSubmitForm(),
+  onConfirm: () => {
+    if (!preflightOk.value && preflight.value !== null) {
+      return;
+    }
+    void formApi.validateAndSubmitForm();
+  },
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<FitModelCalibratorPayload>();
@@ -241,6 +253,7 @@ const [Modal, modalApi] = useVbenModal({
 
 <template>
   <Modal
+    :confirm-button-props="{ disabled: preflight !== null && !preflightOk }"
     :title="$t('page.research.calibrationArtifacts.fitCalibrator.title')"
     class="w-full max-w-lg"
   >

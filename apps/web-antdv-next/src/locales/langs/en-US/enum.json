@@ -84,7 +84,8 @@
     "model_not_published": "Model not published",
     "report_only_mode": "Report-only mode",
     "risk_envelope_invalid": "Risk envelope invalid",
-    "shadow_not_passed": "Shadow gate not passed"
+    "shadow_not_passed": "Shadow gate not passed",
+    "return_model_uncalibrated": "Return model uncalibrated"
   },
   "rejectionReason": {
     "available_cash_exhausted": "Available cash exhausted",
@@ -97,7 +98,8 @@
     "invalid_edge_inputs": "Invalid edge inputs",
     "liquidity_infeasible": "Liquidity infeasible",
     "market_cap_exhausted": "Market cap exhausted",
-    "no_positive_signal": "No positive signal"
+    "no_positive_signal": "No positive signal",
+    "aggregate_exposure_cap_exhausted": "Aggregate exposure cap exhausted"
   },
   "recommendationAttributionOutcome": {
     "filled_exited": "Filled & Exited",
@@ -468,6 +470,11 @@
     "hit_rate": "Hit Rate",
     "category_concentration": "Category Concentration",
     "sell_l2_book_fidelity": "Sell L2 Book Fidelity",
-    "sell_fallback_ratio": "Sell Fallback Ratio"
+    "sell_fallback_ratio": "Sell Fallback Ratio",
+    "calibration_required": "Calibration Required"
+  },
+  "datasetPurpose": {
+    "training": "Training",
+    "calibration": "Calibration"
   }
 }

@@ -1,6 +1,6 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { TRAINING_DATASET_STATUSES } from '@vben/types';
+import { DATASET_PURPOSES, TRAINING_DATASET_STATUSES } from '@vben/types';
 
 import { $t } from '#/locales';
 
@@ -20,6 +20,18 @@ export function useTrainingDatasetSearchSchema(
       defaultValue: initial.model_spec_id,
       fieldName: 'model_spec_id',
       label: $t('page.research.datasets.filters.modelSpec'),
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        options: Object.values(DATASET_PURPOSES).map((value) => ({
+          label: $t(`enum.datasetPurpose.${value}`),
+          value,
+        })),
+      },
+      fieldName: 'purpose',
+      label: $t('page.research.datasets.filters.purpose'),
     },
     {
       component: 'Select',
