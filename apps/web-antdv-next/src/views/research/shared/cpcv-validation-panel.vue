@@ -271,6 +271,13 @@ const pboMetric = computed(() =>
     ? metricWithGate(formatProbability(props.pathSet.pbo), 'pbo')
     : null,
 );
+const baselineUpliftMetric = computed(() => {
+  const uplift = props.pathSet?.sharpe_distribution?.baseline_uplift;
+  if (uplift === null || uplift === undefined || uplift === '') {
+    return null;
+  }
+  return metricWithGate(formatScore(uplift), 'sell_baseline_uplift');
+});
 </script>
 
 <template>
@@ -389,6 +396,20 @@ const pboMetric = computed(() =>
           <span>{{ pboMetric?.observed }}</span>
           <Tag v-if="pboMetric?.gate" :color="pboMetric.gate.color">
             {{ pboMetric.gate.label }}
+          </Tag>
+        </Space>
+      </DescriptionsItem>
+      <DescriptionsItem
+        v-if="baselineUpliftMetric"
+        :label="$t('page.research.cpcv.baselineUplift')"
+      >
+        <Space>
+          <span>{{ baselineUpliftMetric.observed }}</span>
+          <Tag
+            v-if="baselineUpliftMetric.gate"
+            :color="baselineUpliftMetric.gate.color"
+          >
+            {{ baselineUpliftMetric.gate.label }}
           </Tag>
         </Space>
       </DescriptionsItem>

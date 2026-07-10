@@ -451,7 +451,9 @@
         "incomplete": "请填写数据集、运行配置、家族与标签。",
         "feedback": "CPCV 验证已提交。",
         "action": "运行 CPCV",
-        "dualTrackHint": "发布需要单路径回测（换手 / 尾部损失 / 最大回撤）与 CPCV 路径集（中位 rank IC / DSR / PBO）。"
+        "dualTrackHint": "发布需要单路径回测（换手 / 尾部损失 / 最大回撤）与 CPCV 路径集（中位 rank IC / DSR / PBO）。",
+        "sellDualTrackHint": "Sell 发布需要 lot 级 CPCV 路径集（仅活动观测的 lot-native Sharpe / DSR / PBO / rank IC、最大回撤、尾部损失，以及相对「首决策全平」基线的 uplift）。空日历桶绝不填 0。该家族没有买方式单路径 Backtest。",
+        "sellSummary": "模型家族与标签从 model spec 锁定。Sell CPCV 使用 hold_vs_exit_alpha_bps（horizon=0）、残仓状态机回放（部分退出后路径分叉即停止），以及仅活动观测的 lot-native 收益进 DSR/PBO。"
       },
       "publish": {
         "title": "发布模型",
@@ -1067,6 +1069,7 @@
       "deflatedSharpe": "Deflated Sharpe",
       "dsrBenchmark": "DSR 基准 Sharpe（SR*）",
       "pbo": "PBO",
+      "baselineUplift": "基线上抬（相对首决策全平）",
       "minTrl": "最短跟踪记录",
       "minTrlUnavailable": "不可用",
       "minTrlSeconds": "{n} 秒",
@@ -1081,7 +1084,7 @@
       "window": "窗口",
       "dataset": "训练数据集",
       "runtimeConfig": "运行配置版本",
-      "sharpeUnannualized": "Sharpe 未年化（periods_per_year = 1）。CSCV trial 矩阵使用全窗口（未 purge）收益。DSR N 仅等于 trial 网格数。",
+      "sharpeUnannualized": "Sharpe 未年化（periods_per_year = 1）。Sell 路径集使用仅活动观测的 lot-native 序列（空日历桶绝不填 0）。CSCV trial 矩阵使用全窗口（未 purge）收益。DSR N 仅等于 trial 网格数。",
       "sharpeDistribution": "Sharpe 分布",
       "paths": "φ 路径",
       "pathIndex": "#",

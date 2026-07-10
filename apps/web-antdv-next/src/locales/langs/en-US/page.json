@@ -451,7 +451,9 @@
         "incomplete": "Fill in dataset, runtime config, family, and label.",
         "feedback": "CPCV validation submitted.",
         "action": "Run CPCV",
-        "dualTrackHint": "Publish requires a single-path backtest (turnover / tail loss / max drawdown) and a CPCV path set (median rank IC / DSR / PBO)."
+        "dualTrackHint": "Publish requires a single-path backtest (turnover / tail loss / max drawdown) and a CPCV path set (median rank IC / DSR / PBO).",
+        "sellDualTrackHint": "Sell publish requires a lot-level CPCV path set (activity-only lot-native Sharpe / DSR / PBO / rank IC, max drawdown, tail loss, and baseline uplift vs exit-at-first). Empty calendar buckets are never zero-padded. There is no single-path Buy-style backtest for this family.",
+        "sellSummary": "Model family and label are locked from the model spec. Sell CPCV uses hold_vs_exit_alpha_bps with horizon 0, residual-shares state machine (stops on path divergence after partial exit), and activity-only lot-native returns for DSR/PBO."
       },
       "publish": {
         "title": "Publish model",
@@ -1067,6 +1069,7 @@
       "deflatedSharpe": "Deflated Sharpe",
       "dsrBenchmark": "DSR benchmark Sharpe (SR*)",
       "pbo": "PBO",
+      "baselineUplift": "Baseline uplift (vs exit-at-first)",
       "minTrl": "Min track record",
       "minTrlUnavailable": "N/A",
       "minTrlSeconds": "{n}s",
@@ -1081,7 +1084,7 @@
       "window": "Window",
       "dataset": "Training dataset",
       "runtimeConfig": "Runtime config version",
-      "sharpeUnannualized": "Sharpe values are unannualized (periods_per_year = 1). CSCV trial matrix uses full-window (unpurged) returns. DSR N equals the trial-grid count only.",
+      "sharpeUnannualized": "Sharpe values are unannualized (periods_per_year = 1). Sell path sets use activity-only lot-native observations (empty calendar buckets are never zero-padded). CSCV trial matrix uses full-window (unpurged) returns. DSR N equals the trial-grid count only.",
       "sharpeDistribution": "Sharpe distribution",
       "paths": "φ paths",
       "pathIndex": "#",

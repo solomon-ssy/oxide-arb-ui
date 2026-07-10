@@ -97,7 +97,11 @@ export function useTrainedModelColumns(
           iconOp<TrainedModelView>(
             'backtest',
             $t('page.research.models.actions.backtest'),
-            { show: () => access.canBacktest },
+            {
+              show: (row) =>
+                access.canBacktest &&
+                row.model_family !== 'hold_vs_exit_weighted',
+            },
           ),
           iconOp<TrainedModelView>(
             'cpcv',

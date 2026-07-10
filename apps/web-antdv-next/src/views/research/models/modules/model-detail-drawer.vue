@@ -80,7 +80,22 @@ const canBindCalibration = hasAccessByCodes(['publication:create']);
 const canBindPathSet = hasAccessByCodes(['publication:create']);
 const canReplay = hasAccessByCodes(['replay:create']);
 
+/** Sell family has lot-level CPCV only — no Buy-style single-path backtest. */
+const SELL_MODEL_FAMILY = 'hold_vs_exit_weighted';
+
 const model = ref<null | TrainedModelView>(null);
+const modelFamily = ref<null | string>(null);
+const isSellFamily = computed(
+  () =>
+    modelFamily.value === SELL_MODEL_FAMILY ||
+    model.value?.model_family === SELL_MODEL_FAMILY,
+);
+const showSinglePathBacktest = computed(() => canReplay && !isSellFamily.value);
+const dualTrackHint = computed(() =>
+  isSellFamily.value
+    ? $t('page.research.models.cpcv.sellDualTrackHint')
+    : $t('page.research.models.cpcv.dualTrackHint'),
+);
 const backtests = ref<BacktestReportView[]>([]);
 const pathSets = ref<BacktestPathSetView[]>([]);
 const pathSet = ref<BacktestPathSetView | null>(null);
@@ -117,7 +132,10 @@ const needsCpcvRunCta = computed(() => {
     (out) =>
       out.gate === 'pbo' ||
       out.gate === 'deflated_sharpe' ||
-      out.gate === 'rank_ic',
+      out.gate === 'rank_ic' ||
+      out.gate === 'max_drawdown' ||
+      out.gate === 'tail_loss_budget' ||
+      out.gate === 'sell_baseline_uplift',
   );
   return alphaFail && !!model.value?.publish_path_set_id;
 });
@@ -142,7 +160,15 @@ const needsBindCta = computed(() => {
 });
 
 const cpcvGateOutcomes = computed(() => {
-  const ids = new Set(['cpcv_required', 'deflated_sharpe', 'pbo', 'rank_ic']);
+  const ids = new Set([
+    'cpcv_required',
+    'deflated_sharpe',
+    'pbo',
+    'rank_ic',
+    ...(isSellFamily.value
+      ? (['max_drawdown', 'tail_loss_budget', 'sell_baseline_uplift'] as const)
+      : []),
+  ]);
   return (gate.value?.gates ?? []).filter((row) => ids.has(row.gate));
 });
 
@@ -362,6 +388,9 @@ async function refresh(id: string) {
     ]);
     if (openId.value === id) {
       model.value = fresh ?? null;
+      if (fresh) {
+        modelFamily.value = String(fresh.model_family);
+      }
       backtests.value = reports?.items ?? [];
       pathSets.value = listed?.items ?? [];
       const preferred =
@@ -457,7 +486,11 @@ watch(
         <div class="flex flex-wrap items-center justify-between gap-2">
           <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
           <Space v-if="canReplay">
-            <Button size="small" @click="openBacktest">
+            <Button
+              v-if="showSinglePathBacktest"
+              size="small"
+              @click="openBacktest"
+            >
               {{ $t('page.research.models.actions.backtest') }}
             </Button>
             <Button size="small" type="primary" @click="openCpcv">
@@ -466,11 +499,7 @@ watch(
           </Space>
         </div>
 
-        <Alert
-          :message="$t('page.research.models.cpcv.dualTrackHint')"
-          show-icon
-          type="info"
-        />
+        <Alert :message="dualTrackHint" show-icon type="info" />
 
         <Card
           size="small"

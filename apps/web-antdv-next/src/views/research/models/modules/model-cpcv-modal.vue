@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { RunCpcvBacktestRequest } from '@vben/types';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -32,10 +32,35 @@ interface OptionItem {
   value: string;
 }
 
+/** Phase 11.5.1: Sell's frozen supervised label, mirroring Buy's default of
+ * `settlement_outcome` — the CPCV request must select the label the family
+ * actually trains against, not a Buy-only default. */
+const SELL_MODEL_FAMILY = 'hold_vs_exit_weighted';
+
+function defaultLabelNameForFamily(modelFamily?: string): string {
+  return modelFamily === SELL_MODEL_FAMILY
+    ? 'hold_vs_exit_alpha_bps'
+    : 'settlement_outcome';
+}
+
 const { handleRequest } = useRequestHandler();
 
 const payload = ref<ModelCpcvPayload | null>(null);
 const prefillDatasetId = ref<string | undefined>();
+const currentModelFamily = ref<string | undefined>();
+const isSellFamily = computed(
+  () => currentModelFamily.value === SELL_MODEL_FAMILY,
+);
+const cpcvHint = computed(() =>
+  isSellFamily.value
+    ? $t('page.research.models.cpcv.sellDualTrackHint')
+    : $t('page.research.models.cpcv.dualTrackHint'),
+);
+const cpcvSummary = computed(() =>
+  isSellFamily.value
+    ? $t('page.research.models.cpcv.sellSummary')
+    : $t('page.research.models.cpcv.summary'),
+);
 const {
   datasetOptions,
   loading: datasetLoading,
@@ -79,13 +104,18 @@ async function prefillFromSpecAndDataset() {
     training_dataset_id: trainingDatasetId || undefined,
   };
   if (spec) {
+    currentModelFamily.value = spec.model_family;
     values.model_family = spec.model_family;
     values.prediction_horizon_secs = spec.prediction_horizon_secs;
+    values.label_name = defaultLabelNameForFamily(spec.model_family);
   }
-  if (dataset?.horizons_secs?.length) {
+  if (spec?.model_family === SELL_MODEL_FAMILY) {
+    values.label_horizon_secs = 0;
+  } else if (dataset?.horizons_secs?.length) {
     values.label_horizon_secs = dataset.horizons_secs[0];
   }
   formApi.setValues(values);
+  syncFamilySchema();
 }
 
 function syncDatasetSchema() {
@@ -102,6 +132,27 @@ function syncDatasetSchema() {
   ]);
 }
 
+function syncFamilySchema() {
+  const sell = isSellFamily.value;
+  formApi.updateSchema([
+    {
+      componentProps: { disabled: true, readonly: true },
+      fieldName: 'model_family',
+    },
+    {
+      componentProps: { disabled: true, readonly: true },
+      fieldName: 'label_name',
+    },
+    {
+      componentProps: {
+        disabled: sell,
+        min: 0,
+      },
+      fieldName: 'label_horizon_secs',
+    },
+  ]);
+}
+
 async function onSubmit(values: Record<string, unknown>) {
   if (!payload.value) {
     return;
@@ -109,7 +160,9 @@ async function onSubmit(values: Record<string, unknown>) {
   modalApi.lock();
   try {
     const ok = await payload.value.onSubmit({
-      label_horizon_secs: Number(values.label_horizon_secs ?? 0),
+      label_horizon_secs: isSellFamily.value
+        ? 0
+        : Number(values.label_horizon_secs ?? 0),
       label_name: values.label_name as string,
       model_family: values.model_family as string,
       prediction_horizon_secs: Number(values.prediction_horizon_secs ?? 86_400),
@@ -156,13 +209,14 @@ const [Form, formApi] = useVbenForm({
     },
     {
       component: 'Input',
+      componentProps: { disabled: true, readonly: true },
       fieldName: 'model_family',
       label: $t('page.research.models.cpcv.modelFamily'),
       rules: 'required',
     },
     {
       component: 'Input',
-      defaultValue: 'settlement_outcome',
+      componentProps: { disabled: true, readonly: true },
       fieldName: 'label_name',
       label: $t('page.research.models.cpcv.labelName'),
       rules: 'required',
@@ -193,13 +247,14 @@ const [Modal, modalApi] = useVbenModal({
     if (isOpen) {
       payload.value = modalApi.getData<ModelCpcvPayload>();
       prefillDatasetId.value = payload.value?.trainingDatasetId || undefined;
+      currentModelFamily.value = undefined;
       formApi.resetForm();
       formApi.setValues({
         label_horizon_secs: 0,
-        label_name: 'settlement_outcome',
         prediction_horizon_secs: 86_400,
         training_dataset_id: payload.value?.trainingDatasetId || undefined,
       });
+      syncFamilySchema();
       formApi.updateSchema([
         { componentProps: { loading: true }, fieldName: 'training_dataset_id' },
       ]);
@@ -213,14 +268,9 @@ const [Modal, modalApi] = useVbenModal({
 
 <template>
   <Modal :title="$t('page.research.models.cpcv.title')">
-    <Alert
-      class="mb-4"
-      :message="$t('page.research.models.cpcv.dualTrackHint')"
-      show-icon
-      type="info"
-    />
+    <Alert class="mb-4" :message="cpcvHint" show-icon type="info" />
     <p class="text-muted-foreground mb-4 text-sm">
-      {{ $t('page.research.models.cpcv.summary') }}
+      {{ cpcvSummary }}
     </p>
     <Form />
   </Modal>

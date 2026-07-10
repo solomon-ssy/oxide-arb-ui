@@ -301,6 +301,8 @@ export interface TrainedModelView {
   model_run_id?: UuidString;
   /** Return-model provenance when exposed by the registry projection. */
   return_model?: ReturnModelView;
+  /** Spec family wire label (repository JOIN on owning model spec). */
+  model_family: ModelFamily | string;
 }
 
 /** `POST /research/models/train` governed request body (mirrors Rust `TrainModelRequest`). */
@@ -497,6 +499,12 @@ export interface SharpeDistribution {
   median: DecimalString;
   p75: DecimalString;
   max: DecimalString;
+  /** Sell CPCV: median calendarized max drawdown across φ paths. */
+  median_max_drawdown?: DecimalString | null;
+  /** Sell CPCV: median calendarized tail loss (fractional return). */
+  median_tail_loss?: DecimalString | null;
+  /** Sell CPCV: median model calendar return − exit-at-first baseline. */
+  baseline_uplift?: DecimalString | null;
 }
 
 /** One reconstructed CPCV backtest path. */
@@ -631,6 +639,7 @@ export type GateId =
   | 'pbo'
   | 'rank_ic'
   | 'sample_count'
+  | 'sell_baseline_uplift'
   | 'sell_fallback_ratio'
   | 'sell_l2_book_fidelity'
   | 'shadow_overlap_stability'
