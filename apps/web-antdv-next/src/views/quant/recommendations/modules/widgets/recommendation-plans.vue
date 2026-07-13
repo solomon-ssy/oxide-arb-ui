@@ -8,12 +8,11 @@ import { computed } from 'vue';
 import {
   Alert,
   Card,
-  Collapse,
-  CollapsePanel,
   Descriptions,
   DescriptionsItem,
-  Table,
   Tag,
+  Timeline,
+  TimelineItem,
   Tooltip,
 } from 'antdv-next';
 
@@ -172,67 +171,6 @@ const trailingStopLabel = computed(() => {
   return `${formatBps(stop.trail_bps)}${activation}`;
 });
 
-const partialExitColumns = [
-  {
-    dataIndex: 'node_id',
-    key: 'node_id',
-    title: $t('page.quantRecommendations.exitPlan.partialExit.node'),
-  },
-  {
-    dataIndex: 'trigger_kind',
-    key: 'trigger_kind',
-    title: $t('page.quantRecommendations.exitPlan.partialExit.trigger'),
-    width: 130,
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'trigger_value',
-    key: 'trigger_value',
-    title: $t('page.quantRecommendations.exitPlan.partialExit.triggerValue'),
-    width: 100,
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'sell_pct',
-    key: 'sell_pct',
-    title: $t('page.quantRecommendations.exitPlan.partialExit.sellPct'),
-    width: 90,
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'min_price',
-    key: 'min_price',
-    title: $t('page.quantRecommendations.exitPlan.partialExit.minPrice'),
-    width: 100,
-  },
-  {
-    dataIndex: 'reason',
-    key: 'reason',
-    title: $t('page.quantRecommendations.exitPlan.partialExit.reason'),
-  },
-];
-
-const invalidationColumns = [
-  {
-    dataIndex: 'rule_id',
-    key: 'rule_id',
-    title: $t('page.quantRecommendations.exitPlan.invalidation.rule'),
-    width: 160,
-  },
-  {
-    dataIndex: 'description',
-    key: 'description',
-    title: $t('page.quantRecommendations.exitPlan.invalidation.description'),
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'threshold',
-    key: 'threshold',
-    title: $t('page.quantRecommendations.exitPlan.invalidation.threshold'),
-    width: 120,
-  },
-];
-
 function boolTagColor(value: boolean): 'default' | 'success' {
   return value ? 'success' : 'default';
 }
@@ -253,17 +191,34 @@ function millis(value: number): string {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.trigger')"
         >
-          {{ $t(`enum.entryTriggerKind.${entry.trigger_kind}`) }}
+          <template v-if="entry.trigger.kind === 'price_condition'">
+            {{ $t(`enum.priceComparison.${entry.trigger.comparison}`) }}
+            {{ formatPrice(entry.trigger.threshold) }} ·
+            {{ formatDurationSecs(entry.trigger.confirmation_secs) }}
+          </template>
+          <template v-else>
+            {{ $t('page.quantRecommendations.entryPlan.immediate') }}
+          </template>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.entryPlan.triggerPrice')"
+          :label="$t('page.quantRecommendations.entryPlan.orderPolicy')"
         >
-          {{ formatPrice(entry.trigger_price) }}
+          {{
+            $t(
+              `page.quantRecommendations.entryPlan.orderPolicyKind.${entry.order_policy.kind}`,
+            )
+          }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.limitPrice')"
         >
-          {{ formatPrice(entry.limit_price) }}
+          {{
+            formatPrice(
+              entry.order_policy.kind === 'passive'
+                ? entry.order_policy.limit_price
+                : entry.order_policy.worst_price,
+            )
+          }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.maxSlippage')"
@@ -477,70 +432,41 @@ function millis(value: number): string {
         </DescriptionsItem>
       </Descriptions>
 
-      <Collapse
-        v-if="
-          exit.partial_exit_nodes.length > 0 ||
-          exit.signal_invalidation_rules.length > 0
-        "
-        class="mt-3"
-        ghost
-      >
-        <CollapsePanel
-          v-if="exit.partial_exit_nodes.length > 0"
-          key="partial-exits"
-          :header="`${$t('page.quantRecommendations.exitPlan.partialExits')} (${exit.partial_exit_nodes.length})`"
+      <Timeline v-if="exit.scale_out_targets.length > 0" class="mt-4">
+        <TimelineItem
+          v-for="target in exit.scale_out_targets"
+          :key="target.target_id"
         >
-          <Table
-            :columns="partialExitColumns"
-            :data-source="exit.partial_exit_nodes"
-            :pagination="false"
-            row-key="node_id"
-            size="small"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'trigger_kind'">
-                {{ $t(`enum.exitTriggerKind.${record.trigger_kind}`) }}
-              </template>
-              <template v-else-if="column.key === 'trigger_value'">
-                <span class="font-mono">{{ record.trigger_value }}</span>
-              </template>
-              <template v-else-if="column.key === 'sell_pct'">
-                <span class="font-mono">{{
-                  formatPercent(record.sell_pct)
-                }}</span>
-              </template>
-              <template v-else-if="column.key === 'min_price'">
-                <span class="font-mono">{{
-                  record.min_price === null
-                    ? EMPTY_PLACEHOLDER
-                    : formatPrice(record.min_price)
-                }}</span>
-              </template>
-            </template>
-          </Table>
-        </CollapsePanel>
-        <CollapsePanel
-          v-if="exit.signal_invalidation_rules.length > 0"
-          key="invalidation-rules"
-          :header="`${$t('page.quantRecommendations.exitPlan.invalidationRules')} (${exit.signal_invalidation_rules.length})`"
+          <div class="flex flex-col gap-1">
+            <strong>{{ target.target_id }}</strong>
+            <span class="text-muted-foreground text-xs">
+              {{ formatPrice(target.trigger_price) }} →
+              {{ formatPercent(target.target_cumulative_exit_pct) }} ·
+              {{ formatPrice(target.min_price) }}
+            </span>
+            <span>{{ target.reason }}</span>
+          </div>
+        </TimelineItem>
+      </Timeline>
+      <Descriptions class="mt-3" :column="1" bordered size="small">
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.exitPlan.minScoreRetention')"
         >
-          <Table
-            :columns="invalidationColumns"
-            :data-source="exit.signal_invalidation_rules"
-            :pagination="false"
-            row-key="rule_id"
-            size="small"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'threshold'">
-                <span class="font-mono">{{
-                  record.threshold ?? EMPTY_PLACEHOLDER
-                }}</span>
-              </template>
-            </template>
-          </Table>
-        </CollapsePanel>
-      </Collapse>
+          {{ formatPercent(exit.thesis_invalidation.min_score_retention) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.exitPlan.minExpectedReturn')"
+        >
+          {{ formatBps(exit.thesis_invalidation.min_expected_return_bps) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.exitPlan.requireEligibility')"
+        >
+          {{
+            boolLabel(exit.thesis_invalidation.require_execution_eligibility)
+          }}
+        </DescriptionsItem>
+      </Descriptions>
     </Card>
 
     <Card

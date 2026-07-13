@@ -33,11 +33,18 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
   return [
     {
       label: $t('page.quantRecommendations.createIntent.details.entryTrigger'),
-      value: $t(`enum.entryTriggerKind.${entry_plan.trigger_kind}`),
+      value:
+        entry_plan.trigger.kind === 'immediate'
+          ? $t('page.quantRecommendations.entryPlan.immediate')
+          : `${$t(`enum.priceComparison.${entry_plan.trigger.comparison}`)} ${formatPrice(entry_plan.trigger.threshold)}`,
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.limitPrice'),
-      value: formatPrice(entry_plan.limit_price),
+      value: formatPrice(
+        entry_plan.order_policy.kind === 'passive'
+          ? entry_plan.order_policy.limit_price
+          : entry_plan.order_policy.worst_price,
+      ),
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.suggestedUsd'),

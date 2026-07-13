@@ -5,7 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
-import { intentActions, isIntentSubmittableStatus } from '@vben/types';
+import { intentActions } from '@vben/types';
 
 import {
   Button,
@@ -13,8 +13,9 @@ import {
   Descriptions,
   DescriptionsItem,
   Empty,
-  Table,
   Tag,
+  Timeline,
+  TimelineItem,
   Tooltip,
 } from 'antdv-next';
 
@@ -29,6 +30,7 @@ import {
   formatPercent,
   formatPrice,
   formatShares,
+  formatUsd,
 } from '#/shared/components/format';
 import {
   findTagOption,
@@ -61,72 +63,21 @@ const kindTagOptions = useOrderIntentKindTagOptions();
 const sideTagOptions = useSideTagOptions();
 const executionStateTagOptions = useExecutionOrderStateTagOptions();
 
-const {
-  approve,
-  canApprove,
-  canCancel,
-  canReject,
-  canSubmit,
-  cancel,
-  reject,
-  submit,
-  submitGate,
-} = useIntentActions(() => emit('changed'));
+const { approve, canApprove, canCancel, canReject, cancel, reject } =
+  useIntentActions(() => emit('changed'));
 
 const executionOrders = ref<ExecutionOrderView[]>([]);
 const loadingOrders = ref(false);
 
 const fsm = computed(() => intentActions(props.intent.status));
 const entry = computed(() => props.intent.entry_order);
+const trigger = computed(() => props.intent.entry_trigger);
+const observation = computed(() => props.intent.entry_trigger_observation);
 const exit = computed(() => props.intent.exit_policy);
 
 const showApprove = computed(() => canApprove && fsm.value.canApprove);
 const showReject = computed(() => canReject && fsm.value.canReject);
 const showCancel = computed(() => canCancel && fsm.value.canCancel);
-// Submit is shown for any submittable status the operator may submit; the
-// live fail-closed gate then enables/disables it with an explanatory tooltip.
-const showSubmit = computed(
-  () => canSubmit && isIntentSubmittableStatus(props.intent.status),
-);
-const submitGateResult = computed(() => submitGate(props.intent));
-const submitDisabledReason = computed(() =>
-  submitGateResult.value.enabled || !submitGateResult.value.reason
-    ? undefined
-    : $t(`page.quantIntents.submit.disabled.${submitGateResult.value.reason}`),
-);
-
-const executionColumns = [
-  {
-    dataIndex: 'execution_order_id',
-    key: 'execution_order_id',
-    title: $t('page.quantExecutionOrders.columns.executionOrderId'),
-  },
-  {
-    dataIndex: 'order_phase',
-    key: 'order_phase',
-    title: $t('page.quantExecutionOrders.columns.phase'),
-  },
-  {
-    dataIndex: 'state',
-    key: 'state',
-    title: $t('page.quantExecutionOrders.columns.state'),
-  },
-  {
-    dataIndex: 'price',
-    key: 'price',
-    title: $t('page.quantExecutionOrders.columns.price'),
-  },
-  {
-    dataIndex: 'shares',
-    key: 'shares',
-    title: $t('page.quantExecutionOrders.columns.shares'),
-  },
-  {
-    dataIndex: 'submitted_at',
-    key: 'submitted_at',
-    title: $t('page.quantExecutionOrders.columns.submittedAt'),
-  },
-];
 
 async function loadExecutionOrders() {
   loadingOrders.value = true;
@@ -191,20 +142,6 @@ onMounted(() => void loadExecutionOrders());
             {{ $t('page.quantIntents.actions.approve') }}
           </span>
         </Button>
-        <Tooltip v-if="showSubmit" :title="submitDisabledReason">
-          <span>
-            <Button
-              :disabled="!submitGateResult.enabled"
-              type="primary"
-              @click="submit(intent)"
-            >
-              <span class="inline-flex items-center gap-1.5">
-                <IconifyIcon class="size-4" icon="lucide:send" />
-                {{ $t('page.quantIntents.actions.submit') }}
-              </span>
-            </Button>
-          </span>
-        </Tooltip>
         <Button v-if="showReject" danger @click="reject(intent)">
           <span class="inline-flex items-center gap-1.5">
             <IconifyIcon class="size-4" icon="lucide:x" />
@@ -222,6 +159,7 @@ onMounted(() => void loadExecutionOrders());
 
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
       <Card
+        class="order-3"
         size="small"
         :title="$t('page.quantIntents.detail.sections.identity')"
       >
@@ -282,6 +220,7 @@ onMounted(() => void loadExecutionOrders());
       </Card>
 
       <Card
+        class="order-2"
         size="small"
         :title="$t('page.quantIntents.detail.sections.approval')"
       >
@@ -318,8 +257,98 @@ onMounted(() => void loadExecutionOrders());
         </Descriptions>
       </Card>
 
-      <Card size="small" :title="$t('page.quantIntents.detail.sections.entry')">
+      <Card
+        class="order-1"
+        size="small"
+        :title="$t('page.quantIntents.detail.sections.entry')"
+      >
         <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.triggerState')"
+          >
+            <Tag>
+              {{ $t(`enum.entryTriggerState.${intent.entry_trigger_state}`) }}
+            </Tag>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.trigger')"
+          >
+            <template v-if="trigger.kind === 'price_condition'">
+              <span class="font-mono">
+                {{ $t(`enum.priceComparison.${trigger.comparison}`) }}
+                {{ formatPrice(trigger.threshold) }} ·
+                {{ formatDurationSecs(trigger.confirmation_secs) }}
+              </span>
+            </template>
+            <template v-else>
+              {{ $t('page.quantIntents.detail.entry.immediate') }}
+            </template>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.confirmingSince')"
+          >
+            {{ formatDateTimeLocal(intent.trigger_confirming_since) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.currentPrice')"
+          >
+            <span class="font-mono">
+              {{ formatPrice(observation?.current_price) }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.conditionSatisfied')"
+          >
+            <Tag :color="observation?.condition_satisfied ? 'green' : 'orange'">
+              {{
+                observation?.condition_satisfied
+                  ? $t('common.yes')
+                  : $t('common.no')
+              }}
+            </Tag>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.confirmationRemaining')"
+          >
+            {{
+              observation?.confirmation_remaining_secs == null
+                ? EMPTY_PLACEHOLDER
+                : formatDurationSecs(observation.confirmation_remaining_secs)
+            }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.bookFreshness')"
+          >
+            <Tag :color="observation?.book_fresh ? 'green' : 'red'">
+              {{
+                observation?.book_fresh
+                  ? $t('page.quantIntents.detail.entry.fresh')
+                  : $t('page.quantIntents.detail.entry.stale')
+              }}
+            </Tag>
+            <span class="text-muted-foreground ml-2">
+              {{
+                observation?.book_age_ms == null
+                  ? EMPTY_PLACEHOLDER
+                  : `${observation.book_age_ms} ms`
+              }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.bookObservedAt')"
+          >
+            {{ formatDateTimeLocal(observation?.book_observed_at) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.admissionBlocker')"
+          >
+            {{ observation?.admission_blocker ?? EMPTY_PLACEHOLDER }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.lastObservedAt')"
+          >
+            {{ formatDateTimeLocal(intent.trigger_last_observed_at) }}
+          </DescriptionsItem>
           <DescriptionsItem :label="$t('page.quantIntents.detail.entry.token')">
             <span class="font-mono text-xs break-all">
               {{ entry.token_id }}
@@ -340,14 +369,25 @@ onMounted(() => void loadExecutionOrders());
             }}
           </DescriptionsItem>
           <DescriptionsItem
+            :label="$t('page.quantIntents.detail.entry.postOnly')"
+          >
+            {{ entry.post_only }}
+          </DescriptionsItem>
+          <DescriptionsItem
             :label="$t('page.quantIntents.detail.entry.limitPrice')"
           >
             <span class="font-mono">{{ formatPrice(entry.limit_price) }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.shares')"
+            :label="$t('page.quantIntents.detail.entry.amount')"
           >
-            <span class="font-mono">{{ formatShares(entry.shares) }}</span>
+            <span class="font-mono">
+              {{
+                entry.amount.unit === 'usd'
+                  ? formatUsd(entry.amount.value)
+                  : formatShares(entry.amount.value)
+              }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.entry.maxSlippage')"
@@ -364,7 +404,11 @@ onMounted(() => void loadExecutionOrders());
         </Descriptions>
       </Card>
 
-      <Card size="small" :title="$t('page.quantIntents.detail.sections.exit')">
+      <Card
+        class="order-4"
+        size="small"
+        :title="$t('page.quantIntents.detail.sections.exit')"
+      >
         <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.exit.settlementMode')"
@@ -418,14 +462,14 @@ onMounted(() => void loadExecutionOrders());
             </span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.exit.partialNodes')"
+            :label="$t('page.quantIntents.detail.exit.scaleOutTargets')"
           >
-            {{ exit.partial_exit_nodes.length }}
+            {{ exit.scale_out_targets.length }}
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.exit.invalidationRules')"
+            :label="$t('page.quantIntents.detail.exit.cumulativeExited')"
           >
-            {{ exit.signal_invalidation_rules.length }}
+            {{ formatShares(intent.scale_out_state.cumulative_exited_shares) }}
           </DescriptionsItem>
         </Descriptions>
       </Card>
@@ -441,29 +485,37 @@ onMounted(() => void loadExecutionOrders());
           :to="`/quant/execution-orders?order_intent_id=${intent.order_intent_id}`"
         />
       </template>
-      <Table
+      <Timeline
         v-if="executionOrders.length > 0"
-        :columns="executionColumns"
-        :data-source="executionOrders"
-        :loading="loadingOrders"
-        :pagination="false"
-        row-key="execution_order_id"
-        size="small"
+        :pending="loadingOrders || undefined"
       >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'execution_order_id'">
-            <EntityRouteLink
-              mono
-              :label="record.execution_order_id"
-              :to="`/quant/execution-orders?open=${record.execution_order_id}`"
-            />
-          </template>
-          <template v-else-if="column.key === 'order_phase'">
-            {{ $t(`enum.executionOrderPhase.${record.order_phase}`) }}
-          </template>
-          <template v-else-if="column.key === 'state'">
-            <Tooltip v-if="record.error_message" :title="record.error_message">
+        <TimelineItem
+          v-for="record in executionOrders"
+          :key="record.execution_order_id"
+        >
+          <div class="flex flex-col gap-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <EntityRouteLink
+                mono
+                :label="record.execution_order_id"
+                :to="`/quant/execution-orders?open=${record.execution_order_id}`"
+              />
+              <Tooltip
+                v-if="record.error_message"
+                :title="record.error_message"
+              >
+                <Tag
+                  :color="
+                    findTagOption(executionStateTagOptions, record.state)?.color
+                  "
+                >
+                  {{
+                    findTagOption(executionStateTagOptions, record.state)?.label
+                  }}
+                </Tag>
+              </Tooltip>
               <Tag
+                v-else
                 :color="
                   findTagOption(executionStateTagOptions, record.state)?.color
                 "
@@ -472,27 +524,16 @@ onMounted(() => void loadExecutionOrders());
                   findTagOption(executionStateTagOptions, record.state)?.label
                 }}
               </Tag>
-            </Tooltip>
-            <Tag
-              v-else
-              :color="
-                findTagOption(executionStateTagOptions, record.state)?.color
-              "
-            >
-              {{ findTagOption(executionStateTagOptions, record.state)?.label }}
-            </Tag>
-          </template>
-          <template v-else-if="column.key === 'price'">
-            <span class="font-mono">{{ formatPrice(record.price) }}</span>
-          </template>
-          <template v-else-if="column.key === 'shares'">
-            <span class="font-mono">{{ formatShares(record.shares) }}</span>
-          </template>
-          <template v-else-if="column.key === 'submitted_at'">
-            {{ formatDateTimeLocal(record.submitted_at) }}
-          </template>
-        </template>
-      </Table>
+            </div>
+            <span class="text-muted-foreground text-xs">
+              {{ $t(`enum.executionOrderPhase.${record.order_phase}`) }} ·
+              {{ formatPrice(record.price) }} ·
+              {{ formatShares(record.shares) }} ·
+              {{ formatDateTimeLocal(record.submitted_at) }}
+            </span>
+          </div>
+        </TimelineItem>
+      </Timeline>
       <Empty
         v-else
         :description="$t('page.quantIntents.detail.noExecutionOrders')"

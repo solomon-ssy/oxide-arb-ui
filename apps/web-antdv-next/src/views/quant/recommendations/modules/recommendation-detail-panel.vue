@@ -76,6 +76,15 @@ watch(
 
 const context = computed(() => props.recommendation.market_context);
 const eligibility = computed(() => props.recommendation.execution_eligibility);
+const entry = computed(() => props.recommendation.entry_plan);
+const sizing = computed(() => props.recommendation.sizing_plan);
+const exit = computed(() => props.recommendation.exit_plan);
+
+const entryPrice = computed(() =>
+  entry.value.order_policy.kind === 'passive'
+    ? entry.value.order_policy.limit_price
+    : entry.value.order_policy.worst_price,
+);
 
 const gate = computed(() =>
   evaluateCreateIntentGate({
@@ -137,6 +146,110 @@ function onCreateIntent() {
           {{ $t('page.quantRecommendations.createIntent.button') }}
         </Button>
       </Tooltip>
+    </div>
+
+    <Card
+      class="border-primary/30"
+      size="small"
+      :title="$t('page.quantRecommendations.decisionSummary.title')"
+    >
+      <Descriptions :column="1" bordered size="small">
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.decisionSummary.instrument')"
+        >
+          <div class="flex flex-col gap-1">
+            <span class="font-medium">
+              {{ recommendation.identity.outcome_name }} ·
+              {{ recommendation.identity.question }}
+            </span>
+            <span class="text-muted-foreground font-mono text-xs break-all">
+              {{ recommendation.token_id }}
+            </span>
+          </div>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.decisionSummary.trigger')"
+        >
+          <template v-if="entry.trigger.kind === 'price_condition'">
+            {{ $t(`enum.priceComparison.${entry.trigger.comparison}`) }}
+            {{ formatPrice(entry.trigger.threshold) }} ·
+            {{ formatDurationSecs(entry.trigger.confirmation_secs) }}
+          </template>
+          <template v-else>
+            {{ $t('page.quantRecommendations.entryPlan.immediate') }}
+          </template>
+          <span class="text-muted-foreground ml-2 text-xs">
+            {{ formatDateTimeLocal(entry.valid_from) }} –
+            {{ formatDateTimeLocal(entry.valid_until) }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.decisionSummary.notional')"
+        >
+          <span class="font-mono">{{ formatUsd(sizing.suggested_usd) }}</span>
+          <span class="text-muted-foreground ml-2">
+            {{ sizing.suggested_shares }}
+            {{ $t('page.quantRecommendations.decisionSummary.shares') }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.decisionSummary.worstPrice')"
+        >
+          <span class="font-mono">{{ formatPrice(entryPrice) }}</span>
+          <span class="text-muted-foreground ml-2">
+            {{
+              $t(
+                `page.quantRecommendations.entryPlan.orderPolicyKind.${entry.order_policy.kind}`,
+              )
+            }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.decisionSummary.exit')"
+        >
+          <div class="flex flex-wrap items-center gap-2">
+            <Tag v-if="exit.take_profit_price" color="green">
+              {{ $t('page.quantRecommendations.exitPlan.takeProfitPrice') }}
+              {{ formatPrice(exit.take_profit_price) }}
+            </Tag>
+            <Tag v-if="exit.stop_loss_price" color="red">
+              {{ $t('page.quantRecommendations.exitPlan.stopLossPrice') }}
+              {{ formatPrice(exit.stop_loss_price) }}
+            </Tag>
+            <Tag v-if="exit.scale_out_targets.length > 0" color="blue">
+              {{
+                $t(
+                  'page.quantRecommendations.decisionSummary.scaleOutTargets',
+                  {
+                    count: exit.scale_out_targets.length,
+                  },
+                )
+              }}
+            </Tag>
+            <Tag v-if="exit.trailing_stop" color="orange">
+              {{ $t('page.quantRecommendations.decisionSummary.trailingStop') }}
+              {{ formatBps(exit.trailing_stop.trail_bps) }}
+            </Tag>
+            <span
+              v-if="
+                !exit.take_profit_price &&
+                !exit.stop_loss_price &&
+                exit.scale_out_targets.length === 0 &&
+                !exit.trailing_stop
+              "
+            >
+              {{ EMPTY_PLACEHOLDER }}
+            </span>
+          </div>
+        </DescriptionsItem>
+      </Descriptions>
+    </Card>
+
+    <div>
+      <h4 class="mb-2 text-sm font-medium">
+        {{ $t('page.quantRecommendations.sections.plans') }}
+      </h4>
+      <RecommendationPlans :recommendation="recommendation" />
     </div>
 
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -412,13 +525,6 @@ function onCreateIntent() {
           </DescriptionsItem>
         </Descriptions>
       </Card>
-    </div>
-
-    <div>
-      <h4 class="mb-2 text-sm font-medium">
-        {{ $t('page.quantRecommendations.sections.plans') }}
-      </h4>
-      <RecommendationPlans :recommendation="recommendation" />
     </div>
 
     <Card

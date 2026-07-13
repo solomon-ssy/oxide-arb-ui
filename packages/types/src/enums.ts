@@ -277,17 +277,26 @@ export type AccountSource = WireEnum<typeof ACCOUNT_SOURCES>;
 
 // ── Recommendation scoring / attribution ────────────────────────────────────
 
-/** How a recommendation entry plan becomes executable. */
-export const ENTRY_TRIGGER_KINDS = {
-  breakout: 'breakout',
-  dataEvent: 'data_event',
-  immediate: 'immediate',
-  limitPrice: 'limit_price',
-  pullback: 'pullback',
-  timeWindow: 'time_window',
+export const PRICE_COMPARISONS = {
+  atOrAbove: 'at_or_above',
+  atOrBelow: 'at_or_below',
 } as const;
+export type PriceComparison = WireEnum<typeof PRICE_COMPARISONS>;
 
-export type EntryTriggerKind = WireEnum<typeof ENTRY_TRIGGER_KINDS>;
+export const FILL_REQUIREMENTS = {
+  allOrNothing: 'all_or_nothing',
+  allowPartial: 'allow_partial',
+} as const;
+export type FillRequirement = WireEnum<typeof FILL_REQUIREMENTS>;
+
+export const ENTRY_TRIGGER_STATES = {
+  confirming: 'confirming',
+  expired: 'expired',
+  notRequired: 'not_required',
+  ready: 'ready',
+  waiting: 'waiting',
+} as const;
+export type EntryTriggerState = WireEnum<typeof ENTRY_TRIGGER_STATES>;
 
 /** Signed direction a factor pushed the composite score. */
 export const FACTOR_DIRECTIONS = {
@@ -514,17 +523,22 @@ export const REDEEM_POLICIES = {
 
 export type RedeemPolicy = WireEnum<typeof REDEEM_POLICIES>;
 
-/** Which condition fired an exit-plan / partial-exit node. */
-export const EXIT_TRIGGER_KINDS = {
+export const EXIT_REASONS = {
+  dataStale: 'data_stale',
+  killSwitchEmergency: 'kill_switch_emergency',
   manual: 'manual',
-  signalInvalidation: 'signal_invalidation',
+  marketAbnormal: 'market_abnormal',
+  opportunistic: 'opportunistic',
+  partialExit: 'partial_exit',
+  resolutionRedeem: 'resolution_redeem',
+  riskEnvelopeBreached: 'risk_envelope_breached',
+  settlementHold: 'settlement_hold',
+  signalInvalidated: 'signal_invalidated',
   stopLoss: 'stop_loss',
   takeProfit: 'take_profit',
   timeExit: 'time_exit',
-  trailingStop: 'trailing_stop',
 } as const;
-
-export type ExitTriggerKind = WireEnum<typeof EXIT_TRIGGER_KINDS>;
+export type ExitReason = WireEnum<typeof EXIT_REASONS>;
 
 export const POSITION_LEDGER_STATES = {
   closed: 'closed',
@@ -605,8 +619,12 @@ export type MaterializationRunStatus = WireEnum<
 /** Which materialization job a run-update describes (mirrors Rust `MaterializationRunKind`). */
 export const MATERIALIZATION_RUN_KINDS = {
   backtest: 'backtest',
+  biasTableFit: 'bias_table_fit',
   cpcvBacktest: 'cpcv_backtest',
   dataset: 'dataset',
+  featureParity: 'feature_parity',
+  modelCalibrationFit: 'model_calibration_fit',
+  tradePolicyFit: 'trade_policy_fit',
   training: 'training',
 } as const;
 
@@ -621,6 +639,7 @@ export const RESEARCH_JOB_KINDS = {
   featureParity: 'feature_parity',
   modelCalibrationFit: 'model_calibration_fit',
   modelTrain: 'model_train',
+  tradePolicyFit: 'trade_policy_fit',
 } as const;
 
 /** Calibration artifact family (mirrors Rust `CalibrationKind`). */

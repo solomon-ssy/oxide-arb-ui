@@ -1,51 +1,33 @@
 /**
- * Order-intent governed lifecycle actions (approve / reject / cancel / submit).
+ * Order-intent governed lifecycle actions (approve / reject / cancel).
  *
  * Every action routes through the shared governed-action modal so acting role +
  * reason + fail-closed 403/409/422 details are handled uniformly. `approve`
- * additionally exposes optional downscale/limit overrides; `submit` surfaces the
- * live kill-switch / runtime-mode / recovery gate as read-only pre-submit
- * context. The FSM legality of each action is decided by the caller
+ * additionally exposes optional downscale/limit overrides and makes the
+ * approval-as-automatic-arm authorization explicit. The FSM legality is decided by the caller
  * (`intentActions`) — this composable only owns permission + wire orchestration.
  */
-import type {
-  ExecutionOrderView,
-  LiveAccountView,
-  OrderIntentView,
-  SubmitIntentGate,
-} from '@vben/types';
+import type { OrderIntentView } from '@vben/types';
 
 import type { GovernedField } from '#/shared/composables/governed-field';
 import type { GovernedDetailRow } from '#/shared/composables/use-governed-action';
 
-import { useRouter } from 'vue-router';
-
-import { useRequestHandler } from '@vben/request/qp';
-import { evaluateSubmitIntentGate } from '@vben/types';
-
 import { message } from 'antdv-next';
 
-import { getLiveAccount } from '#/api/account';
 import {
   approveOrderIntent,
   cancelOrderIntent,
   rejectOrderIntent,
-  submitOrderIntent,
 } from '#/api/order-intents';
 import { $t } from '#/locales';
 import {
-  EMPTY_PLACEHOLDER,
-  formatDateTimeLocal,
   formatPrice,
   formatShares,
+  formatUsd,
 } from '#/shared/components/format';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import {
-  executionOrderOpenPath,
-  reconciliationQueuePath,
-} from '#/shared/routes/execution-plane';
-import { useOrderIntentStore, useSystemStore } from '#/store';
+import { useOrderIntentStore } from '#/store';
 
 /** Frozen entry preview so an approver confirms what they are releasing. */
 function intentPreview(intent: OrderIntentView): GovernedDetailRow[] {
@@ -59,8 +41,15 @@ function intentPreview(intent: OrderIntentView): GovernedDetailRow[] {
       value: formatPrice(intent.entry_order.limit_price),
     },
     {
-      label: $t('page.quantIntents.detail.entry.shares'),
-      value: formatShares(intent.entry_order.shares),
+      label: $t('page.quantIntents.detail.entry.amount'),
+      value:
+        intent.entry_order.amount.unit === 'usd'
+          ? formatUsd(intent.entry_order.amount.value)
+          : formatShares(intent.entry_order.amount.value),
+    },
+    {
+      label: $t('page.quantIntents.approve.autoArmLabel'),
+      value: $t('page.quantIntents.approve.autoArmValue'),
     },
     {
       label: $t('page.quantIntents.detail.identity.riskEnvelopeHash'),
@@ -101,82 +90,11 @@ function approveOverrideFields(): GovernedField[] {
 export function useIntentActions(onChanged: () => void) {
   const { governed } = useGovernedAction();
   const { hasAccessByCodes } = useQpAccess();
-  const { handleRequest } = useRequestHandler();
-  const systemStore = useSystemStore();
-  const router = useRouter();
   const orderIntentStore = useOrderIntentStore();
 
   const canApprove = hasAccessByCodes(['order_intent:approve']);
   const canReject = hasAccessByCodes(['order_intent:reject']);
   const canCancel = hasAccessByCodes(['order_intent:cancel']);
-  const canSubmit = hasAccessByCodes(['order_intent:submit']);
-
-  /**
-   * Fail-closed submit gate: mirrors the backend `ensure_submittable` +
-   * `RuntimeModeCheck` + kill-switch / recovery latch against the live system
-   * status, so the Submit button is disabled (with an explanatory tooltip)
-   * rather than surfacing an action the venue will reject.
-   */
-  function submitGate(intent: OrderIntentView): SubmitIntentGate {
-    const status = systemStore.status;
-    return evaluateSubmitIntentGate({
-      autoExecutionBlocked:
-        status?.execution_recovery.auto_execution_blocked ?? false,
-      canSubmit,
-      expiresAt: intent.expires_at,
-      killSwitchState: status?.kill_switch.state ?? null,
-      runtimeMode: status?.quant_runtime_mode ?? null,
-      status: intent.status,
-    });
-  }
-
-  /** Live execution-gate context shown before a manual submission. */
-  function submitContext(account: LiveAccountView | null): GovernedDetailRow[] {
-    const status = systemStore.status;
-    if (!status) {
-      return [];
-    }
-    const recovery = status.execution_recovery;
-    const reconciliationPath = reconciliationQueuePath();
-    return [
-      {
-        label: $t('page.quantIntents.submit.killSwitch'),
-        value: $t(`enum.killSwitchState.${status.kill_switch.state}`),
-      },
-      {
-        label: $t('page.quantIntents.submit.runtimeMode'),
-        value: $t(`enum.quantRuntimeMode.${status.quant_runtime_mode}`),
-      },
-      {
-        label: $t('page.quantIntents.submit.autoBlocked'),
-        routeTo: recovery.auto_execution_blocked
-          ? reconciliationPath
-          : undefined,
-        value: recovery.auto_execution_blocked
-          ? $t('page.quantIntents.submit.viewReconciliationQueueAction')
-          : $t('common.no'),
-      },
-      {
-        label: $t('page.quantIntents.submit.unresolved'),
-        routeTo: recovery.has_unresolvable_reconciliation
-          ? reconciliationPath
-          : undefined,
-        value: recovery.has_unresolvable_reconciliation
-          ? $t('page.quantIntents.submit.viewReconciliationQueue', {
-              count: recovery.unresolvable_count,
-            })
-          : EMPTY_PLACEHOLDER,
-      },
-      // Account freshness: `report_only` is not dry-run — submission sizing is
-      // checked against the real venue account, so its as-of instant matters.
-      {
-        label: $t('page.quantIntents.submit.accountFreshness'),
-        value: account
-          ? formatDateTimeLocal(account.fetched_at)
-          : EMPTY_PLACEHOLDER,
-      },
-    ];
-  }
 
   async function approve(
     intent: OrderIntentView,
@@ -251,47 +169,12 @@ export function useIntentActions(onChanged: () => void) {
     return result;
   }
 
-  async function submit(
-    intent: OrderIntentView,
-  ): Promise<ExecutionOrderView | null> {
-    const id = intent.order_intent_id;
-    // Fetch the real venue account so the confirm modal shows its freshness
-    // before the operator commits money; a failure degrades to a placeholder.
-    const account = await handleRequest(getLiveAccount, { silent: true });
-    const result = await governed(
-      (ctx) => submitOrderIntent(id, { reason: ctx.reason }, ctx),
-      {
-        confirmWord: 'SUBMIT',
-        danger: true,
-        details: submitContext(account),
-        summary: $t('page.quantIntents.submit.summary', { id }),
-        title: $t('page.quantIntents.submit.title'),
-      },
-    );
-    if (result) {
-      orderIntentStore.suppressWsToastForIntent(id);
-      message.success(
-        $t('page.quantIntents.feedback.submitted', {
-          id: result.execution_order_id,
-        }),
-      );
-      onChanged();
-      // Deep-link to the freshly created execution order so the operator lands
-      // on the venue-submission ledger for the order they just placed.
-      void router.push(executionOrderOpenPath(result.execution_order_id));
-    }
-    return result;
-  }
-
   return {
     approve,
     canApprove,
     canCancel,
     canReject,
-    canSubmit,
     cancel,
     reject,
-    submit,
-    submitGate,
   };
 }

@@ -116,13 +116,16 @@
     "expired_unfilled": "Expired (Unfilled)",
     "unknown": "Unknown"
   },
-  "entryTriggerKind": {
-    "breakout": "Breakout",
-    "data_event": "Data Event",
-    "immediate": "Immediate",
-    "limit_price": "Limit Price",
-    "pullback": "Pullback",
-    "time_window": "Time Window"
+  "priceComparison": {
+    "at_or_above": "At or above",
+    "at_or_below": "At or below"
+  },
+  "entryTriggerState": {
+    "not_required": "Immediate",
+    "waiting": "Waiting",
+    "confirming": "Confirming",
+    "ready": "Ready",
+    "expired": "Expired"
   },
   "factorDirection": {
     "positive": "Positive",
@@ -210,13 +213,20 @@
     "auto": "Auto",
     "manual": "Manual"
   },
-  "exitTriggerKind": {
+  "exitReason": {
+    "data_stale": "Data stale",
+    "kill_switch_emergency": "Kill-switch emergency",
     "manual": "Manual",
-    "signal_invalidation": "Signal invalidation",
+    "market_abnormal": "Market abnormal",
+    "opportunistic": "Opportunistic",
+    "partial_exit": "Scale out",
+    "resolution_redeem": "Resolution redeem",
+    "risk_envelope_breached": "Risk envelope breached",
+    "settlement_hold": "Settlement hold",
+    "signal_invalidated": "Signal invalidated",
     "stop_loss": "Stop loss",
     "take_profit": "Take profit",
-    "time_exit": "Time exit",
-    "trailing_stop": "Trailing stop"
+    "time_exit": "Time exit"
   },
   "orderIntentStatus": {
     "draft": "Draft",
@@ -257,6 +267,7 @@
     "exit": "Exit"
   },
   "orderTypeKind": {
+    "fak": "FAK",
     "fok": "FOK",
     "gtc": "GTC",
     "gtd": "GTD"
@@ -343,7 +354,8 @@
     "cpcv_backtest": "CPCV validation",
     "bias_table_fit": "Bias-table fit",
     "feature_parity": "Feature parity",
-    "model_calibration_fit": "Model calibrator fit"
+    "model_calibration_fit": "Model calibrator fit",
+    "trade_policy_fit": "Trade policy fit"
   },
   "featureParityRunKind": {
     "sampled": "Sampled",

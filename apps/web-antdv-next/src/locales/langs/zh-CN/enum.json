@@ -116,13 +116,16 @@
     "expired_unfilled": "过期未成交",
     "unknown": "未知"
   },
-  "entryTriggerKind": {
-    "breakout": "突破",
-    "data_event": "数据事件",
-    "immediate": "立即",
-    "limit_price": "限价",
-    "pullback": "回调",
-    "time_window": "时间窗口"
+  "priceComparison": {
+    "at_or_above": "大于等于",
+    "at_or_below": "小于等于"
+  },
+  "entryTriggerState": {
+    "not_required": "立即",
+    "waiting": "等待条件",
+    "confirming": "连续确认中",
+    "ready": "已就绪",
+    "expired": "已过期"
   },
   "factorDirection": {
     "positive": "正向",
@@ -210,13 +213,20 @@
     "auto": "自动",
     "manual": "手动"
   },
-  "exitTriggerKind": {
+  "exitReason": {
+    "data_stale": "数据陈旧",
+    "kill_switch_emergency": "紧急止动",
     "manual": "手动",
-    "signal_invalidation": "信号失效",
+    "market_abnormal": "市场异常",
+    "opportunistic": "机会退出",
+    "partial_exit": "分批退出",
+    "resolution_redeem": "结算赎回",
+    "risk_envelope_breached": "风险边界突破",
+    "settlement_hold": "持有至结算",
+    "signal_invalidated": "信号失效",
     "stop_loss": "止损",
     "take_profit": "止盈",
-    "time_exit": "时间退出",
-    "trailing_stop": "移动止损"
+    "time_exit": "时间退出"
   },
   "orderIntentStatus": {
     "draft": "草稿",
@@ -257,6 +267,7 @@
     "exit": "离场"
   },
   "orderTypeKind": {
+    "fak": "FAK",
     "fok": "FOK",
     "gtc": "GTC",
     "gtd": "GTD"
@@ -343,7 +354,8 @@
     "cpcv_backtest": "CPCV 验证",
     "bias_table_fit": "偏差表拟合",
     "feature_parity": "特征一致性重放",
-    "model_calibration_fit": "模型校准器拟合"
+    "model_calibration_fit": "模型校准器拟合",
+    "trade_policy_fit": "交易策略拟合"
   },
   "featureParityRunKind": {
     "sampled": "抽样重放",

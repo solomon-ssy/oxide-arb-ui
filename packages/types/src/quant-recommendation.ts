@@ -15,18 +15,19 @@ import type {
 } from './decision-evidence';
 import type {
   BindingConstraint,
-  EntryTriggerKind,
+  ExitReason,
   ExitSettlementMode,
-  ExitTriggerKind,
   FactorDirection,
   FactorFamily,
   FactorIndeterminateReason,
   FactorValueState,
+  FillRequirement,
   IneligibilityReason,
   MarketCategory,
   MarketStatus,
   NormalizationSource,
   OutcomeSide,
+  PriceComparison,
   QuantRuntimeMode,
   RecommendationAttributionOutcome,
   RecommendationOutcome,
@@ -34,11 +35,12 @@ import type {
   RecommendationStatus,
   RedeemPolicy,
   SizingModelKind,
+  TickSize,
 } from './enums';
 import type {
-  PartialExitNode,
-  SignalInvalidationRule,
-  TrailingStop,
+  ScaleOutTarget,
+  ThesisInvalidationPolicy,
+  TrailingStopPolicy,
 } from './exit-plan';
 
 export interface RecommendationIdentity {
@@ -58,13 +60,14 @@ export interface MarketContext {
   time_to_resolution_secs: null | number;
   market_status: MarketStatus;
   neg_risk: boolean;
+  tick_size: TickSize;
   fee_rate: DecimalString | null;
 }
 
 export interface EntryPlan {
-  trigger_kind: EntryTriggerKind;
-  trigger_price: null | PriceString;
-  limit_price: null | PriceString;
+  trade_policy: null | TradePolicyCohortProvenance;
+  trigger: EntryTrigger;
+  order_policy: EntryOrderPolicy;
   max_slippage_bps: BpsString;
   valid_from: IsoDateTime;
   valid_until: IsoDateTime;
@@ -73,6 +76,24 @@ export interface EntryPlan {
   cancel_if_not_triggered: boolean;
   entry_reason: string;
 }
+
+export type EntryTrigger =
+  | {
+      comparison: PriceComparison;
+      confirmation_secs: number;
+      kind: 'price_condition';
+      max_observation_gap_ms: number;
+      threshold: PriceString;
+    }
+  | { kind: 'immediate' };
+
+export type EntryOrderPolicy =
+  | {
+      fill_requirement: FillRequirement;
+      kind: 'aggressive';
+      worst_price: PriceString;
+    }
+  | { kind: 'passive'; limit_price: PriceString; post_only: boolean };
 
 export interface SizingPlan {
   suggested_usd: UsdString;
@@ -106,19 +127,35 @@ export interface SizingPlan {
 }
 
 export interface ExitPlan {
+  trade_policy: null | TradePolicyCohortProvenance;
   take_profit_price: null | PriceString;
   take_profit_pct: DecimalString | null;
   stop_loss_price: null | PriceString;
   stop_loss_pct: DecimalString | null;
   time_exit_at: IsoDateTime | null;
   max_hold_secs: null | number;
-  partial_exit_nodes: PartialExitNode[];
-  trailing_stop: null | TrailingStop;
-  signal_invalidation_rules: SignalInvalidationRule[];
+  scale_out_targets: ScaleOutTarget[];
+  trailing_stop: null | TrailingStopPolicy;
+  thesis_invalidation: ThesisInvalidationPolicy;
   settlement_mode: ExitSettlementMode;
   redeem_policy: RedeemPolicy;
   manual_review_at: IsoDateTime | null;
   exit_reason: string;
+}
+
+export interface TradePolicyCohortProvenance {
+  artifact_id: UuidString;
+  artifact_hash: string;
+  cohort_index: number;
+  cohort_key: {
+    category: MarketCategory;
+    entry_price_max: PriceString;
+    entry_price_min: PriceString;
+    horizon_secs: number;
+    liquidity_tier: string;
+    notional_tier: UsdString;
+    volatility_regime: string;
+  };
 }
 
 export interface RiskEnvelope {
@@ -230,7 +267,7 @@ export interface EntryOutcome {
 export interface ExitOutcome {
   exit_price: null | PriceString;
   exit_shares: null | SharesString;
-  exit_trigger: ExitTriggerKind | null;
+  exit_trigger: ExitReason | null;
   exit_compliance: boolean;
   settlement_outcome: null | RecommendationOutcome;
   exited_at: IsoDateTime | null;

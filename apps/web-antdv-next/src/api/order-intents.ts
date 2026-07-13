@@ -1,7 +1,6 @@
 import type {
   ApproveOrderIntentRequest,
   CreateOrderIntentRequest,
-  ExecutionOrderView,
   IntentActionRequest,
   OrderIntentListQuery,
   OrderIntentView,
@@ -19,7 +18,6 @@ export namespace OrderIntentApi {
   export const approve = (id: string) => `${base}/${id}/approve`;
   export const reject = (id: string) => `${base}/${id}/reject`;
   export const cancel = (id: string) => `${base}/${id}/cancel`;
-  export const submit = (id: string) => `${base}/${id}/submit`;
 }
 
 /** `GET /quant/intents` — paginated, filtered intent list. */
@@ -67,13 +65,4 @@ export async function cancelOrderIntent(
   ctx: GovernedContext,
 ) {
   return governedPost<OrderIntentView>(OrderIntentApi.cancel(id), body, ctx);
-}
-
-/** `POST /quant/intents/{id}/submit` — governed submission (→ execution order). */
-export async function submitOrderIntent(
-  id: string,
-  body: IntentActionRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<ExecutionOrderView>(OrderIntentApi.submit(id), body, ctx);
 }

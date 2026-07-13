@@ -23,9 +23,8 @@ export * from './reconciliation';
 export * from './research';
 export type * from './runtime-config';
 export type * from './settlement-redeem';
-// Pure submit-intent gate predicate (runtime function) mirroring backend guards.
-export * from './submit-intent-gate';
 export type * from './system';
+export type * from './trade-policy';
 export type * from './user';
 export type * from './vertical-alpha';
 // `ws` carries the runtime `WS_CHANNELS` constant, so it is a value export.

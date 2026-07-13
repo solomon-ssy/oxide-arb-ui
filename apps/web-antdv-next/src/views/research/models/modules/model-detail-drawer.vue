@@ -851,6 +851,41 @@ watch(
                 :model-version-id="model.model_version_id"
               />
             </TabPane>
+            <TabPane
+              key="trade-policy"
+              :tab="$t('page.research.models.detail.tradePolicy')"
+            >
+              <Descriptions
+                v-if="model.trade_policy_artifact_id"
+                :column="1"
+                bordered
+                size="small"
+              >
+                <DescriptionsItem
+                  :label="$t('page.research.models.detail.tradePolicyId')"
+                >
+                  <EntityRouteLink
+                    mono
+                    :label="model.trade_policy_artifact_id"
+                    :to="`/research/trade-policies?open=${model.trade_policy_artifact_id}`"
+                  />
+                </DescriptionsItem>
+                <DescriptionsItem
+                  :label="$t('page.research.models.detail.tradePolicyHash')"
+                >
+                  <span class="font-mono text-xs break-all">
+                    {{ field(model.trade_policy_hash) }}
+                  </span>
+                </DescriptionsItem>
+              </Descriptions>
+              <Empty
+                v-else
+                :description="
+                  $t('page.research.models.detail.tradePolicyUnavailable')
+                "
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
+            </TabPane>
           </Tabs>
         </Card>
 

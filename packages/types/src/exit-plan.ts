@@ -4,7 +4,6 @@ import type {
   IsoDateTime,
   PriceString,
 } from './common';
-import type { ExitTriggerKind } from './enums';
 
 /**
  * Exit-plan primitives shared by the recommendation `ExitPlan` (the thesis) and
@@ -13,14 +12,11 @@ import type { ExitTriggerKind } from './enums';
  * a single source of truth here — never duplicated per consumer.
  */
 
-/** One scaled partial-exit node. */
-export interface PartialExitNode {
-  node_id: string;
-  trigger_kind: ExitTriggerKind;
-  /** Price / pct / seconds depending on `trigger_kind`. */
-  trigger_value: DecimalString;
-  /** Fraction of the remaining position to sell at this node. */
-  sell_pct: DecimalString;
+/** One monotonic cumulative scale-out target. */
+export interface ScaleOutTarget {
+  target_id: string;
+  trigger_price: PriceString;
+  target_cumulative_exit_pct: DecimalString;
   min_price: null | PriceString;
   valid_after: IsoDateTime | null;
   valid_until: IsoDateTime | null;
@@ -28,7 +24,7 @@ export interface PartialExitNode {
 }
 
 /** A trailing-stop policy relative to the position's peak mark. */
-export interface TrailingStop {
+export interface TrailingStopPolicy {
   /** Trailing distance in basis points below the peak mark. */
   trail_bps: BpsString;
   /** Price that must be reached before the trailing stop arms. */
@@ -36,8 +32,8 @@ export interface TrailingStop {
 }
 
 /** A condition that invalidates the recommendation thesis and forces an exit. */
-export interface SignalInvalidationRule {
-  rule_id: string;
-  description: string;
-  threshold: DecimalString | null;
+export interface ThesisInvalidationPolicy {
+  min_score_retention: DecimalString;
+  min_expected_return_bps: BpsString;
+  require_execution_eligibility: boolean;
 }

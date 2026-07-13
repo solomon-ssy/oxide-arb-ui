@@ -24,16 +24,8 @@ defineOptions({ name: 'OrderIntentsPage' });
 const { handleRequest } = useRequestHandler();
 const orderIntentStore = useOrderIntentStore();
 
-const {
-  approve,
-  canApprove,
-  canCancel,
-  canReject,
-  cancel,
-  reject,
-  submit,
-  submitGate,
-} = useIntentActions(() => void gridApi.query());
+const { approve, canApprove, canCancel, canReject, cancel, reject } =
+  useIntentActions(() => void gridApi.query());
 
 const emptyPage = {
   has_next: false,
@@ -57,7 +49,6 @@ const [Grid, gridApi] = useVbenVxeGrid<OrderIntentView>({
       canApprove,
       canCancel,
       canReject,
-      submitEnabled: (intent) => submitGate(intent).enabled,
     }),
     proxyConfig: {
       ajax: {
@@ -105,10 +96,6 @@ function onActionClick({ code, row }: OnActionClickParams<OrderIntentView>) {
     }
     case 'reject': {
       void reject(row);
-      break;
-    }
-    case 'submit': {
-      void submit(row);
       break;
     }
     // No default

@@ -491,6 +491,9 @@ export interface TrainedModelView {
   model_spec_id: string;
   version: number;
   artifact_hash: string;
+  /** Immutable trade policy binding carried by artifact format v3. */
+  trade_policy_artifact_id: null | UuidString;
+  trade_policy_hash: null | string;
   training_dataset_id: null | UuidString;
   /** CPCV path set bound for publish gates (`undefined` until bound). */
   publish_path_set_id?: null | UuidString;

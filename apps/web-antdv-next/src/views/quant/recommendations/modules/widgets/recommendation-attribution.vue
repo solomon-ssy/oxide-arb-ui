@@ -174,9 +174,7 @@ watch(
           >
             {{
               attribution.exit_outcome.exit_trigger
-                ? $t(
-                    `enum.exitTriggerKind.${attribution.exit_outcome.exit_trigger}`,
-                  )
+                ? $t(`enum.exitReason.${attribution.exit_outcome.exit_trigger}`)
                 : EMPTY_PLACEHOLDER
             }}
           </DescriptionsItem>

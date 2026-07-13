@@ -1,10 +1,7 @@
 import {
   intentActions,
-  intentSubmitAllowed,
-  isIntentSubmittableStatus,
   isIntentTerminal,
   ORDER_INTENT_STATUSES,
-  QUANT_RUNTIME_MODES,
 } from '@vben/types';
 
 import { describe, expect, it } from 'vitest';
@@ -67,67 +64,5 @@ describe('intentActions FSM predicates', () => {
       ).toBe(true);
       expect(isIntentTerminal(status), `${status} must be terminal`).toBe(true);
     }
-  });
-});
-
-describe('intentSubmitAllowed mode-aware gate', () => {
-  it('report_only never submits (real-account sizing, not dry-run)', () => {
-    expect(
-      intentSubmitAllowed(
-        ORDER_INTENT_STATUSES.approved,
-        QUANT_RUNTIME_MODES.reportOnly,
-      ),
-    ).toBe(false);
-    expect(
-      intentSubmitAllowed(
-        ORDER_INTENT_STATUSES.approvedByPolicy,
-        QUANT_RUNTIME_MODES.reportOnly,
-      ),
-    ).toBe(false);
-  });
-
-  it('semi_auto submits an operator-approved intent only', () => {
-    expect(
-      intentSubmitAllowed(
-        ORDER_INTENT_STATUSES.approved,
-        QUANT_RUNTIME_MODES.semiAuto,
-      ),
-    ).toBe(true);
-    expect(
-      intentSubmitAllowed(
-        ORDER_INTENT_STATUSES.approvedByPolicy,
-        QUANT_RUNTIME_MODES.semiAuto,
-      ),
-    ).toBe(false);
-  });
-
-  it('auto_execution submits a policy-approved intent only', () => {
-    expect(
-      intentSubmitAllowed(
-        ORDER_INTENT_STATUSES.approvedByPolicy,
-        QUANT_RUNTIME_MODES.autoExecution,
-      ),
-    ).toBe(true);
-    expect(
-      intentSubmitAllowed(
-        ORDER_INTENT_STATUSES.approved,
-        QUANT_RUNTIME_MODES.autoExecution,
-      ),
-    ).toBe(false);
-  });
-
-  it('isIntentSubmittableStatus is the mode-agnostic precondition', () => {
-    expect(isIntentSubmittableStatus(ORDER_INTENT_STATUSES.approved)).toBe(
-      true,
-    );
-    expect(
-      isIntentSubmittableStatus(ORDER_INTENT_STATUSES.approvedByPolicy),
-    ).toBe(true);
-    expect(isIntentSubmittableStatus(ORDER_INTENT_STATUSES.submitted)).toBe(
-      false,
-    );
-    expect(
-      isIntentSubmittableStatus(ORDER_INTENT_STATUSES.pendingApproval),
-    ).toBe(false);
   });
 });

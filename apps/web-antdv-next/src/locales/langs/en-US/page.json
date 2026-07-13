@@ -63,6 +63,7 @@
     "researchDatasets": "Training Datasets",
     "researchModelSpecs": "Model Specs",
     "researchModels": "Trained Models",
+    "researchTradePolicies": "Trade Policies",
     "researchBacktests": "Backtests",
     "researchJobs": "Task Center",
     "researchFeatureIntegrity": "Feature Integrity",
@@ -172,6 +173,61 @@
     "common": {
       "timeRangeStart": "From",
       "timeRangeEnd": "To"
+    },
+    "tradePolicies": {
+      "title": "Trade Policies",
+      "fit": {
+        "action": "Fit policy",
+        "title": "Fit trade policy",
+        "summary": "Queue a deterministic trade-policy fit from a frozen executable-trajectory dataset.",
+        "hint": "The source dataset, fit window, embargo, notional tiers, and quality floor are frozen into the content-addressed artifact.",
+        "dataset": "Ready source dataset",
+        "window": "Policy fit window",
+        "embargoSecs": "Post-fit embargo (seconds)",
+        "notionalTiers": "Notional tiers (USD)",
+        "notionalTiersHelp": "Comma-separated positive USD amounts, for example 25,100,500.",
+        "maxScaleOutTargets": "Maximum scale-out targets",
+        "minimumCoverage": "Minimum executable coverage",
+        "incomplete": "Complete the dataset, window, and notional tiers.",
+        "preflight": "Run preflight",
+        "enqueue": "Queue fit",
+        "queued": "Trade-policy fit queued.",
+        "publishable": "The source evidence is eligible for a publishable fit.",
+        "shadowOnly": "The fit can run for ReportOnly shadow analysis, but publication remains blocked.",
+        "contractValid": "Contract valid",
+        "datasetReady": "Dataset Ready",
+        "fullL2": "Complete L2 trajectories",
+        "fees": "Applied venue-fee model"
+      },
+      "columns": {
+        "artifactId": "Artifact",
+        "status": "Status",
+        "dataset": "Source Dataset",
+        "cohorts": "Cohorts",
+        "coverage": "Coverage",
+        "createdAt": "Created"
+      },
+      "detail": {
+        "title": "Trade Policy",
+        "hash": "Content Hash",
+        "fitWindow": "Fit Window",
+        "fillSimulator": "Fill Simulator",
+        "entryBasis": "Executable Entry Basis",
+        "exitBasis": "Executable Exit Basis",
+        "fullL2Coverage": "Full L2 Coverage",
+        "feesIncluded": "Venue Fees Included",
+        "publicationBlocked": "Publication is blocked until complete L2 coverage, venue fees, and CPCV/DSR/PBO gates all pass.",
+        "dsr": "Deflated Sharpe",
+        "pbo": "Probability of Backtest Overfitting"
+      },
+      "governance": {
+        "validate": "Validate",
+        "publish": "Publish",
+        "retire": "Retire",
+        "validateSummary": "Validate the immutable policy against all quality gates.",
+        "publishSummary": "Publish this policy for new datasets and recommendations.",
+        "retireSummary": "Retire this policy. Existing positions keep their frozen exit strategy."
+      }
     },
     "featureIntegrity": {
       "title": "Feature Integrity",
@@ -716,6 +772,10 @@
         "encodedSource": "Raw source",
         "encodedKind": "Encoding role",
         "parity": "Training-serving Parity",
+        "tradePolicy": "Trade Policy Binding",
+        "tradePolicyId": "Trade Policy Artifact",
+        "tradePolicyHash": "Frozen Policy Hash",
+        "tradePolicyUnavailable": "This model does not use a trade-policy-derived label target.",
         "returnModel": "Return Model",
         "returnModelKind": "Kind",
         "returnModelHeuristic": "Heuristic (uncalibrated)",
@@ -732,7 +792,7 @@
         "tailFraction": "Tail Fraction",
         "lambdaTurnover": "λ Turnover",
         "lambdaL2": "λ L2",
-        "ndcgK": "NDCG@k (diagnostic)",
+        "ndcgK": "NDCG{'@'}k (diagnostic)",
         "pseudoTopN": "Pseudo TopN",
         "objectiveNote": "Note",
         "objectiveProxyHint": "Tail/turnover use a TopN score-ranked equal-weight pseudo portfolio (optimization proxy ≠ backtest USD allocations).",
@@ -767,7 +827,7 @@
           "rank_loss_group_count": "Rank-loss Groups",
           "pair_count": "Pairs",
           "mean_rank_ic": "Mean Rank IC",
-          "mean_ndcg_at_k": "Mean NDCG@k",
+          "mean_ndcg_at_k": "Mean NDCG{'@'}k",
           "ndcg_k": "NDCG k",
           "folds": "Block objectives (diagnostic)",
           "featureImportances": "Feature Importances",
@@ -1760,7 +1820,7 @@
     "queue": {
       "all": "All",
       "pendingApproval": "Pending Approval",
-      "awaitingSubmit": "Awaiting Submit",
+      "awaitingSubmit": "Armed",
       "inFlight": "In Flight",
       "terminal": "Terminal"
     },
@@ -1772,6 +1832,7 @@
       "side": "Side",
       "limitPrice": "Limit",
       "shares": "Shares",
+      "amount": "Amount",
       "recommendationId": "Recommendation",
       "createdAt": "Created",
       "expiresAt": "Expires",
@@ -1779,14 +1840,15 @@
     },
     "actions": {
       "detail": "Detail",
-      "approve": "Approve",
-      "submit": "Submit",
+      "approve": "Approve & Arm",
       "reject": "Reject",
       "cancel": "Cancel"
     },
     "approve": {
       "title": "Approve Intent",
-      "summary": "Approve intent {id}. Leave overrides blank to approve the frozen spec verbatim.",
+      "summary": "Approve and arm intent {id}. Once its frozen condition is satisfied, the system may automatically submit a real order after admission.",
+      "autoArmLabel": "Automatic submission authorization",
+      "autoArmValue": "Approval arms this intent; no second Submit confirmation will occur.",
       "overrideShares": "Override Shares",
       "overrideSharesPlaceholder": "Downscale shares (optional)",
       "overrideLimitPrice": "Override Limit Price",
@@ -1802,32 +1864,10 @@
       "title": "Cancel Intent",
       "summary": "Cancel not-yet-submitted intent {id} and release its reserved capital."
     },
-    "submit": {
-      "title": "Submit Intent",
-      "summary": "Submit intent {id} to the venue. This signs and places a real order.",
-      "killSwitch": "Kill-switch",
-      "runtimeMode": "Runtime Mode",
-      "autoBlocked": "Auto-execution Blocked",
-      "unresolved": "Unresolved Reconciliations",
-      "accountFreshness": "Account As Of",
-      "viewReconciliationQueue": "View unresolved queue ({count})",
-      "viewReconciliationQueueAction": "View reconciliation queue",
-      "disabled": {
-        "permission": "You lack the order_intent:submit permission.",
-        "notSubmittable": "The intent is not in a submittable state.",
-        "mode": "report_only never submits (real-account sizing, not dry-run).",
-        "modeApprovalMismatch": "The approval provenance does not match the runtime mode (operator vs policy).",
-        "killSwitch": "The kill-switch is not closed; new entries are blocked.",
-        "recoveryBlocked": "Auto-execution is blocked while reconciliation recovery holds the plane.",
-        "expired": "The intent has passed its expiry deadline.",
-        "systemLoading": "System status is still loading; wait before submitting."
-      }
-    },
     "feedback": {
-      "approved": "Intent approved.",
+      "approved": "Intent approved and armed.",
       "rejected": "Intent rejected.",
-      "cancelled": "Intent cancelled.",
-      "submitted": "Intent submitted — opening execution order {id}."
+      "cancelled": "Intent cancelled."
     },
     "wsToast": {
       "created": "Intent created ({id})",
@@ -1876,9 +1916,24 @@
         "admissionTrace": "Admission Trace Ref"
       },
       "entry": {
+        "amount": "Amount",
+        "triggerState": "Trigger State",
+        "trigger": "Frozen Trigger",
+        "immediate": "Immediate after arm",
+        "confirmingSince": "Confirming Since",
+        "lastObservedAt": "Last Observed At",
+        "currentPrice": "Current Executable Price",
+        "conditionSatisfied": "Condition Satisfied",
+        "confirmationRemaining": "Confirmation Remaining",
+        "bookFreshness": "Book Freshness",
+        "bookObservedAt": "Book Observed At",
+        "admissionBlocker": "Admission Blocker",
+        "fresh": "Fresh",
+        "stale": "Stale / Unavailable",
         "token": "Token",
         "side": "Side",
         "orderType": "Order Type",
+        "postOnly": "Post Only",
         "limitPrice": "Limit Price",
         "shares": "Shares",
         "maxSlippage": "Max Slippage",
@@ -1892,8 +1947,8 @@
         "timeExit": "Time Exit",
         "maxHold": "Max Hold",
         "entryReference": "Entry Reference Price",
-        "partialNodes": "Partial Exit Nodes",
-        "invalidationRules": "Signal Invalidation Rules"
+        "scaleOutTargets": "Scale-Out Targets",
+        "cumulativeExited": "Cumulative Exited"
       }
     }
   },
@@ -2302,6 +2357,17 @@
       "evidence": "Evidence",
       "attribution": "Attribution"
     },
+    "decisionSummary": {
+      "title": "Operator Decision Summary",
+      "instrument": "Buy",
+      "trigger": "Trigger",
+      "notional": "Size",
+      "shares": "shares",
+      "worstPrice": "Worst Fill Price",
+      "exit": "Exit Plan",
+      "scaleOutTargets": "{count} cumulative scale-out targets",
+      "trailingStop": "Trailing stop"
+    },
     "identity": {
       "recommendationId": "Recommendation ID",
       "reportId": "Report ID",
@@ -2345,7 +2411,12 @@
     "entryPlan": {
       "title": "Entry Plan",
       "trigger": "Trigger",
-      "triggerPrice": "Trigger Price",
+      "immediate": "Immediate after arm and admission",
+      "orderPolicy": "Order Policy",
+      "orderPolicyKind": {
+        "passive": "Passive · post-only GTD",
+        "aggressive": "Aggressive · immediate-or-cancel"
+      },
       "limitPrice": "Limit Price",
       "maxSlippage": "Max Slippage",
       "validFrom": "Valid From",
@@ -2400,22 +2471,11 @@
       "redeemPolicy": "Redeem Policy",
       "manualReviewAt": "Manual Review At",
       "trailingStop": "Trailing Stop",
-      "partialExits": "Partial Exit Nodes",
-      "invalidationRules": "Signal Invalidation Rules",
+      "minScoreRetention": "Minimum Score Retention",
+      "minExpectedReturn": "Minimum Expected Return",
+      "requireEligibility": "Require Execution Eligibility",
       "reason": "Exit Reason",
-      "partialExit": {
-        "node": "Node",
-        "trigger": "Trigger",
-        "triggerValue": "Value",
-        "sellPct": "Sell %",
-        "minPrice": "Min Price",
-        "reason": "Reason"
-      },
-      "invalidation": {
-        "rule": "Rule",
-        "description": "Description",
-        "threshold": "Threshold"
-      }
+      "invalidation": "Thesis Invalidation Policy"
     },
     "riskEnvelope": {
       "title": "Risk Envelope",

@@ -23,6 +23,7 @@ const PATH_KEY_ROUTE_NAMES = new Set([
   'research-market-linkages',
   'research-model-specs',
   'research-models',
+  'research-trade-policies',
 ]);
 
 function collectPermissionCode(

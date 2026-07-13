@@ -5,7 +5,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import { intentActions } from '@vben/types';
 
 import { $t } from '#/locales';
-import { formatShares } from '#/shared/components/format';
+import { formatShares, formatUsd } from '#/shared/components/format';
 import {
   useApprovalStatusTagOptions,
   useOrderIntentStatusTagOptions,
@@ -19,12 +19,6 @@ export interface IntentActionPermits {
   canApprove: boolean;
   canCancel: boolean;
   canReject: boolean;
-  /**
-   * Fail-closed submit gate (permission + FSM + mode + kill-switch + recovery
-   * + expiry) evaluated per row against the live system status; a disabled
-   * submit is hidden in the triage list and disabled-with-tooltip in detail.
-   */
-  submitEnabled: (intent: OrderIntentView) => boolean;
 }
 
 export function useIntentColumns(
@@ -79,10 +73,12 @@ export function useIntentColumns(
     },
     {
       align: 'right',
-      field: 'entry_order.shares',
+      field: 'entry_order.amount',
       formatter: ({ row }: { row: OrderIntentView }) =>
-        formatShares(row.entry_order?.shares),
-      title: $t('page.quantIntents.columns.shares'),
+        row.entry_order.amount.unit === 'usd'
+          ? formatUsd(row.entry_order.amount.value)
+          : formatShares(row.entry_order.amount.value),
+      title: $t('page.quantIntents.columns.amount'),
       width: 120,
     },
     {
@@ -129,13 +125,6 @@ export function useIntentColumns(
             {
               show: (row) =>
                 permits.canApprove && intentActions(row.status).canApprove,
-            },
-          ),
-          iconOp<OrderIntentView>(
-            'submit',
-            $t('page.quantIntents.actions.submit'),
-            {
-              show: (row) => permits.submitEnabled(row),
             },
           ),
           iconOp<OrderIntentView>(

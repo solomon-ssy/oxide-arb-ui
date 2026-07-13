@@ -63,6 +63,7 @@
     "researchDatasets": "训练数据集",
     "researchModelSpecs": "模型规格",
     "researchModels": "已训练模型",
+    "researchTradePolicies": "交易策略",
     "researchBacktests": "回测",
     "researchJobs": "任务中心",
     "researchFeatureIntegrity": "特征完整性",
@@ -172,6 +173,61 @@
     "common": {
       "timeRangeStart": "起始",
       "timeRangeEnd": "结束"
+    },
+    "tradePolicies": {
+      "title": "交易策略",
+      "fit": {
+        "action": "拟合策略",
+        "title": "拟合交易策略",
+        "summary": "从冻结的可执行轨迹数据集排队运行确定性交易策略拟合。",
+        "hint": "来源数据集、拟合窗口、embargo、名义金额分层和质量下限会冻结进内容寻址 artifact。",
+        "dataset": "Ready 来源数据集",
+        "window": "策略拟合窗口",
+        "embargoSecs": "拟合后 embargo（秒）",
+        "notionalTiers": "名义金额分层（USD）",
+        "notionalTiersHelp": "使用逗号分隔的正 USD 金额，例如 25,100,500。",
+        "maxScaleOutTargets": "最多分批退出档数",
+        "minimumCoverage": "最低可执行覆盖率",
+        "incomplete": "请完整选择数据集、窗口并填写名义金额分层。",
+        "preflight": "运行预检",
+        "enqueue": "排队拟合",
+        "queued": "交易策略拟合已排队。",
+        "publishable": "来源证据满足可发布拟合的输入要求。",
+        "shadowOnly": "可运行 ReportOnly shadow 拟合，但仍禁止发布。",
+        "contractValid": "契约有效",
+        "datasetReady": "数据集 Ready",
+        "fullL2": "完整 L2 轨迹",
+        "fees": "已应用场所费用模型"
+      },
+      "columns": {
+        "artifactId": "产物",
+        "status": "状态",
+        "dataset": "来源数据集",
+        "cohorts": "Cohort 数",
+        "coverage": "可执行覆盖率",
+        "createdAt": "创建时间"
+      },
+      "detail": {
+        "title": "交易策略详情",
+        "hash": "内容哈希",
+        "fitWindow": "拟合窗口",
+        "fillSimulator": "成交模拟器",
+        "entryBasis": "可执行入场基准",
+        "exitBasis": "可执行退出基准",
+        "fullL2Coverage": "完整 L2 覆盖率",
+        "feesIncluded": "已计入场所费用",
+        "publicationBlocked": "完整 L2 覆盖、场所费用与 CPCV/DSR/PBO 门禁全部通过前禁止发布。",
+        "dsr": "Deflated Sharpe",
+        "pbo": "回测过拟合概率"
+      },
+      "governance": {
+        "validate": "校验",
+        "publish": "发布",
+        "retire": "退休",
+        "validateSummary": "按全部质量门禁校验不可变策略。",
+        "publishSummary": "发布策略，允许新数据集和推荐绑定。",
+        "retireSummary": "退休策略；已有持仓继续执行冻结的退出策略。"
+      }
     },
     "featureIntegrity": {
       "title": "特征完整性",
@@ -716,6 +772,10 @@
         "encodedSource": "原始来源",
         "encodedKind": "编码职责",
         "parity": "训练—服务一致性",
+        "tradePolicy": "交易策略绑定",
+        "tradePolicyId": "交易策略 Artifact",
+        "tradePolicyHash": "冻结策略哈希",
+        "tradePolicyUnavailable": "该模型未使用由交易策略派生的标签目标。",
         "returnModel": "收益模型",
         "returnModelKind": "类型",
         "returnModelHeuristic": "启发式（未校准）",
@@ -732,7 +792,7 @@
         "tailFraction": "尾部分位比例",
         "lambdaTurnover": "λ Turnover",
         "lambdaL2": "λ L2",
-        "ndcgK": "NDCG@k（诊断）",
+        "ndcgK": "NDCG{'@'}k（诊断）",
         "pseudoTopN": "伪组合 TopN",
         "objectiveNote": "说明",
         "objectiveProxyHint": "尾部/换手使用 TopN 按分数排序的等权伪组合（优化代理 ≠ 回测 USD 配置）。",
@@ -767,7 +827,7 @@
           "rank_loss_group_count": "排序损失有效组数",
           "pair_count": "排序对数",
           "mean_rank_ic": "平均 Rank IC",
-          "mean_ndcg_at_k": "平均 NDCG@k",
+          "mean_ndcg_at_k": "平均 NDCG{'@'}k",
           "ndcg_k": "NDCG k",
           "folds": "分块目标值（诊断）",
           "featureImportances": "特征重要度",
@@ -1760,7 +1820,7 @@
     "queue": {
       "all": "全部",
       "pendingApproval": "待审批",
-      "awaitingSubmit": "待提交",
+      "awaitingSubmit": "已 Arm",
       "inFlight": "执行中",
       "terminal": "终态"
     },
@@ -1772,6 +1832,7 @@
       "side": "方向",
       "limitPrice": "限价",
       "shares": "份额",
+      "amount": "金额/份额",
       "recommendationId": "推荐",
       "createdAt": "创建时间",
       "expiresAt": "过期时间",
@@ -1779,14 +1840,15 @@
     },
     "actions": {
       "detail": "详情",
-      "approve": "审批通过",
-      "submit": "提交",
+      "approve": "审批并 Arm",
       "reject": "驳回",
       "cancel": "取消"
     },
     "approve": {
       "title": "审批意图",
-      "summary": "审批意图 {id}。留空覆盖项则按冻结规格原样通过。",
+      "summary": "审批并 Arm 意图 {id}。冻结条件满足且重新准入通过后，系统可自动提交真实订单。",
+      "autoArmLabel": "自动提交授权",
+      "autoArmValue": "本次审批即 Arm，后续不会再出现二次 Submit 确认。",
       "overrideShares": "覆盖份额",
       "overrideSharesPlaceholder": "下调份额（可选）",
       "overrideLimitPrice": "覆盖限价",
@@ -1802,32 +1864,10 @@
       "title": "取消意图",
       "summary": "取消尚未提交的意图 {id} 并释放其预留资金。"
     },
-    "submit": {
-      "title": "提交意图",
-      "summary": "将意图 {id} 提交至交易所。这将签名并下达真实订单。",
-      "killSwitch": "熔断开关",
-      "runtimeMode": "运行模式",
-      "autoBlocked": "自动执行受阻",
-      "unresolved": "未解决对账",
-      "accountFreshness": "账户快照时间",
-      "viewReconciliationQueue": "查看未解决队列（{count}）",
-      "viewReconciliationQueueAction": "查看对账队列",
-      "disabled": {
-        "permission": "你没有 order_intent:submit 权限。",
-        "notSubmittable": "该意图当前状态不可提交。",
-        "mode": "report_only 永不提交（基于真实账户的额度评估，并非 dry-run）。",
-        "modeApprovalMismatch": "审批来源与运行模式不匹配（人工审批 vs 策略审批）。",
-        "killSwitch": "熔断开关未处于 closed，新入场被阻断。",
-        "recoveryBlocked": "对账恢复期间自动执行被阻断。",
-        "expired": "该意图已超过过期时间。",
-        "systemLoading": "系统状态仍在加载，请稍后再提交。"
-      }
-    },
     "feedback": {
-      "approved": "意图已审批通过。",
+      "approved": "意图已审批并 Arm。",
       "rejected": "意图已驳回。",
-      "cancelled": "意图已取消。",
-      "submitted": "意图已提交 —— 正在打开执行订单 {id}。"
+      "cancelled": "意图已取消。"
     },
     "wsToast": {
       "created": "意图已创建（{id}）",
@@ -1876,9 +1916,24 @@
         "admissionTrace": "准入追踪引用"
       },
       "entry": {
+        "amount": "金额/份额",
+        "triggerState": "触发状态",
+        "trigger": "冻结触发条件",
+        "immediate": "Arm 后立即执行",
+        "confirmingSince": "连续确认开始",
+        "lastObservedAt": "最近观察时间",
+        "currentPrice": "当前可执行价格",
+        "conditionSatisfied": "当前满足条件",
+        "confirmationRemaining": "确认剩余时间",
+        "bookFreshness": "盘口新鲜度",
+        "bookObservedAt": "盘口观察时间",
+        "admissionBlocker": "准入阻断原因",
+        "fresh": "新鲜",
+        "stale": "陈旧 / 不可用",
         "token": "Token",
         "side": "方向",
         "orderType": "订单类型",
+        "postOnly": "仅挂单（Post Only）",
         "limitPrice": "限价",
         "shares": "份额",
         "maxSlippage": "最大滑点",
@@ -1892,8 +1947,8 @@
         "timeExit": "时间离场",
         "maxHold": "最长持有",
         "entryReference": "入场参考价",
-        "partialNodes": "分批离场节点",
-        "invalidationRules": "信号失效规则"
+        "scaleOutTargets": "分批退出目标",
+        "cumulativeExited": "累计已退出"
       }
     }
   },
@@ -2302,6 +2357,17 @@
       "evidence": "证据",
       "attribution": "归因"
     },
+    "decisionSummary": {
+      "title": "操作员决策摘要",
+      "instrument": "买什么",
+      "trigger": "何时触发",
+      "notional": "下多少",
+      "shares": "份额",
+      "worstPrice": "最差成交价",
+      "exit": "如何退出",
+      "scaleOutTargets": "{count} 档累计分批退出",
+      "trailingStop": "移动止损"
+    },
     "identity": {
       "recommendationId": "推荐 ID",
       "reportId": "报告 ID",
@@ -2345,7 +2411,12 @@
     "entryPlan": {
       "title": "入场计划",
       "trigger": "触发",
-      "triggerPrice": "触发价",
+      "immediate": "Arm 且准入通过后立即执行",
+      "orderPolicy": "订单策略",
+      "orderPolicyKind": {
+        "passive": "被动 · post-only GTD",
+        "aggressive": "主动 · 立即成交后撤余"
+      },
       "limitPrice": "限价",
       "maxSlippage": "最大滑点",
       "validFrom": "生效自",
@@ -2400,22 +2471,11 @@
       "redeemPolicy": "赎回策略",
       "manualReviewAt": "人工复核",
       "trailingStop": "移动止损",
-      "partialExits": "分批退出节点",
-      "invalidationRules": "信号失效规则",
+      "minScoreRetention": "最低分数保留率",
+      "minExpectedReturn": "最低预期收益",
+      "requireEligibility": "要求执行资格",
       "reason": "退出原因",
-      "partialExit": {
-        "node": "节点",
-        "trigger": "触发",
-        "triggerValue": "值",
-        "sellPct": "卖出 %",
-        "minPrice": "最低价",
-        "reason": "原因"
-      },
-      "invalidation": {
-        "rule": "规则",
-        "description": "说明",
-        "threshold": "阈值"
-      }
+      "invalidation": "论点失效策略"
     },
     "riskEnvelope": {
       "title": "风险边界",

@@ -69,6 +69,9 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
     case RESEARCH_JOB_KINDS.modelTrain: {
       return `/research/models?open=${row.result_ref}`;
     }
+    case RESEARCH_JOB_KINDS.tradePolicyFit: {
+      return `/research/trade-policies?open=${row.result_ref}`;
+    }
     default: {
       return undefined;
     }

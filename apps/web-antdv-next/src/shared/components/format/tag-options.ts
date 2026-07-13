@@ -555,6 +555,7 @@ export function useResearchJobKindTagOptions() {
       [RESEARCH_JOB_KINDS.featureParity]: 'red',
       [RESEARCH_JOB_KINDS.modelCalibrationFit]: 'orange',
       [RESEARCH_JOB_KINDS.modelTrain]: 'purple',
+      [RESEARCH_JOB_KINDS.tradePolicyFit]: 'blue',
     },
   );
 }
