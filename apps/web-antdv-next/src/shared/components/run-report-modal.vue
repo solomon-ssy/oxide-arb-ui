@@ -9,7 +9,7 @@ import { $t } from '#/locales';
 
 export interface RunReportParams {
   top_n?: number;
-  source_delay_secs?: number;
+  knowledge_lag_secs?: number;
 }
 
 export interface RunReportPayload {
@@ -20,7 +20,7 @@ export interface RunReportPayload {
 defineOptions({ name: 'RunReportModal' });
 
 const topN = ref<null | number>(null);
-const sourceDelaySecs = ref<null | number>(null);
+const knowledgeLagSecs = ref<null | number>(null);
 const payload = ref<null | RunReportPayload>(null);
 
 const [Modal, modalApi] = useVbenModal({
@@ -28,9 +28,9 @@ const [Modal, modalApi] = useVbenModal({
   onConfirm() {
     payload.value?.onSubmit({
       ...(topN.value === null ? {} : { top_n: topN.value }),
-      ...(sourceDelaySecs.value === null
+      ...(knowledgeLagSecs.value === null
         ? {}
-        : { source_delay_secs: sourceDelaySecs.value }),
+        : { knowledge_lag_secs: knowledgeLagSecs.value }),
     });
     modalApi.close();
   },
@@ -38,7 +38,7 @@ const [Modal, modalApi] = useVbenModal({
     if (isOpen) {
       payload.value = modalApi.getData<RunReportPayload>();
       topN.value = null;
-      sourceDelaySecs.value = null;
+      knowledgeLagSecs.value = null;
     }
   },
 });
@@ -63,10 +63,10 @@ const [Modal, modalApi] = useVbenModal({
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm font-medium">
-          {{ $t('page.quantReports.run.sourceDelaySecs') }}
+          {{ $t('page.quantReports.run.knowledgeLagSecs') }}
         </span>
         <InputNumber
-          v-model:value="sourceDelaySecs"
+          v-model:value="knowledgeLagSecs"
           :min="0"
           :placeholder="$t('page.quantReports.run.serverDefault')"
           class="w-full"

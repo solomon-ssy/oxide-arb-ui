@@ -1,5 +1,8 @@
 <script lang="ts" setup>
-import type { QuantReportDetailView } from '@vben/types';
+import type {
+  QuantReportDetailView,
+  QuantReportDiagnosticsView,
+} from '@vben/types';
 
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
@@ -16,7 +19,9 @@ import {
 
 import { $t } from '#/locales';
 import DataList from '#/shared/components/data-list.vue';
+import FeatureParityStatusPanel from '#/shared/components/feature-parity-status-panel.vue';
 import {
+  EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
   formatDurationSecs,
   formatPercent,
@@ -25,6 +30,8 @@ import {
 } from '#/shared/components/format';
 import {
   findTagOption,
+  useFeatureCellStateTagOptions,
+  useModelInputStateTagOptions,
   useQuantRuntimeModeTagOptions,
   useRecommendationReportStatusTagOptions,
 } from '#/shared/components/format/tag-options';
@@ -32,6 +39,7 @@ import {
 defineOptions({ name: 'ReportOverview' });
 
 const props = defineProps<{
+  diagnostics: null | QuantReportDiagnosticsView;
   report: QuantReportDetailView;
 }>();
 
@@ -39,8 +47,34 @@ const router = useRouter();
 
 const statusTagOptions = useRecommendationReportStatusTagOptions();
 const modeTagOptions = useQuantRuntimeModeTagOptions();
+const featureCellStateOptions = useFeatureCellStateTagOptions();
+const modelInputStateOptions = useModelInputStateTagOptions();
 
 const summary = computed(() => props.report.summary);
+
+// The backend projects the exact frozen v10 boundary. Re-deriving a cutoff in
+// the browser would hide missing serving evidence and could diverge from
+// source-specific availability lags.
+const knowledgeCutoff = computed(
+  () => props.diagnostics?.decision_boundary?.knowledge_cutoff ?? null,
+);
+
+const sourceCutoffRows = computed(() =>
+  Object.entries(
+    props.diagnostics?.decision_boundary?.per_source_cutoffs ?? {},
+  ).map(([source, cutoff]) => ({ cutoff, source })),
+);
+
+const featureStateRows = computed(() =>
+  Object.entries(props.diagnostics?.feature_state_counts ?? {}).map(
+    ([state, count]) => ({ count, state }),
+  ),
+);
+const modelInputStateRows = computed(() =>
+  Object.entries(props.diagnostics?.model_input_state_counts ?? {}).map(
+    ([state, count]) => ({ count, state }),
+  ),
+);
 
 const isEmpty = computed(
   () =>
@@ -91,6 +125,10 @@ const rejectionRows = computed<RejectionRow[]>(() =>
     label: $t(`enum.rejectionReason.${item.reason}`),
   })),
 );
+
+function displayCount(value: null | number | undefined): number | string {
+  return value === null || value === undefined ? EMPTY_PLACEHOLDER : value;
+}
 
 // Frozen server-side at report-compose time from the exact account +
 // runtime-config this report solved against (Phase 11.3 §10) — never
@@ -171,6 +209,17 @@ function openRuntimeConfig() {
       show-icon
       type="info"
     />
+    <Alert
+      v-if="diagnostics?.subject === 'pre_inference_report'"
+      :description="
+        $t('page.quantReports.detail.servingAudit.preInferenceDescription', {
+          stage: $t(`enum.featureParityStage.${diagnostics.stage_ceiling}`),
+        })
+      "
+      :message="$t('page.quantReports.detail.servingAudit.preInference')"
+      show-icon
+      type="info"
+    />
 
     <Card
       size="small"
@@ -218,13 +267,20 @@ function openRuntimeConfig() {
         >
           {{ formatDateTimeLocal(report.trigger_time) }}
         </DescriptionsItem>
-        <DescriptionsItem :label="$t('page.quantReports.detail.overview.asOf')">
-          {{ formatDateTimeLocal(report.as_of) }}
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.decisionAt')"
+        >
+          {{ formatDateTimeLocal(report.decision_at) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.sourceDelay')"
+          :label="$t('page.quantReports.detail.overview.knowledgeLag')"
         >
-          {{ formatDurationSecs(report.source_delay_secs) }}
+          {{ formatDurationSecs(report.knowledge_lag_secs) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.knowledgeCutoff')"
+        >
+          {{ formatDateTimeLocal(knowledgeCutoff) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.horizon')"
@@ -302,6 +358,161 @@ function openRuntimeConfig() {
           }}</span>
         </DescriptionsItem>
       </Descriptions>
+    </Card>
+
+    <Card
+      size="small"
+      :title="$t('page.quantReports.detail.servingAudit.title')"
+    >
+      <Alert
+        v-if="diagnostics && !diagnostics.evidence_complete"
+        class="mb-3"
+        :message="$t('page.quantReports.detail.servingAudit.incomplete')"
+        show-icon
+        type="error"
+      />
+      <Descriptions :column="2" bordered size="small">
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.subject')"
+        >
+          {{
+            diagnostics
+              ? $t(
+                  `page.quantReports.detail.servingAudit.subjects.${diagnostics.subject}`,
+                )
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.stageCeiling')"
+        >
+          {{
+            diagnostics
+              ? $t(`enum.featureParityStage.${diagnostics.stage_ceiling}`)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.modelRun')"
+          :span="2"
+        >
+          <span class="font-mono text-xs break-all">
+            {{ report.model_run_id ?? EMPTY_PLACEHOLDER }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.modelFamily')"
+        >
+          {{ diagnostics?.model_route?.model_family ?? EMPTY_PLACEHOLDER }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.selectionCount')"
+        >
+          {{ displayCount(diagnostics?.selection_count) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.captureCount')"
+        >
+          {{ displayCount(diagnostics?.decision_capture_count) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.featureVectors')"
+        >
+          {{ displayCount(diagnostics?.feature_vector_count) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.featureCells')"
+        >
+          {{ displayCount(diagnostics?.feature_cell_count) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.modelInputs')"
+        >
+          {{ displayCount(diagnostics?.model_input_count) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.contractHash')"
+          :span="2"
+        >
+          <span class="font-mono text-xs break-all">
+            {{
+              diagnostics?.model_route?.input_contract_hash ?? EMPTY_PLACEHOLDER
+            }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.transformHash')"
+          :span="2"
+        >
+          <span class="font-mono text-xs break-all">
+            {{ diagnostics?.model_route?.transform_hash ?? EMPTY_PLACEHOLDER }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.servingAudit.trainingInputHash')"
+          :span="2"
+        >
+          <span class="font-mono text-xs break-all">
+            {{
+              diagnostics?.model_route?.training_input_hash ?? EMPTY_PLACEHOLDER
+            }}
+          </span>
+        </DescriptionsItem>
+      </Descriptions>
+
+      <div class="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
+        <Descriptions
+          bordered
+          :column="1"
+          size="small"
+          :title="$t('page.quantReports.detail.servingAudit.sourceCutoffs')"
+        >
+          <DescriptionsItem
+            v-for="row in sourceCutoffRows"
+            :key="row.source"
+            :label="row.source"
+          >
+            {{ formatDateTimeLocal(row.cutoff) }}
+          </DescriptionsItem>
+          <DescriptionsItem v-if="sourceCutoffRows.length === 0" label="—">
+            {{ EMPTY_PLACEHOLDER }}
+          </DescriptionsItem>
+        </Descriptions>
+        <Descriptions
+          bordered
+          :column="1"
+          size="small"
+          :title="$t('page.quantReports.detail.servingAudit.featureStates')"
+        >
+          <DescriptionsItem
+            v-for="row in featureStateRows"
+            :key="row.state"
+            :label="
+              findTagOption(featureCellStateOptions, row.state)?.label ??
+              EMPTY_PLACEHOLDER
+            "
+          >
+            {{ row.count }}
+          </DescriptionsItem>
+        </Descriptions>
+        <Descriptions
+          bordered
+          :column="1"
+          size="small"
+          :title="$t('page.quantReports.detail.servingAudit.inputStates')"
+        >
+          <DescriptionsItem
+            v-for="row in modelInputStateRows"
+            :key="row.state"
+            :label="
+              findTagOption(modelInputStateOptions, row.state)?.label ??
+              EMPTY_PLACEHOLDER
+            "
+          >
+            {{ row.count }}
+          </DescriptionsItem>
+        </Descriptions>
+      </div>
     </Card>
 
     <Card
@@ -546,6 +757,10 @@ function openRuntimeConfig() {
         show-icon
         type="warning"
       />
+    </Card>
+
+    <Card size="small" :title="$t('page.quantReports.detail.parity.title')">
+      <FeatureParityStatusPanel :report-id="report.recommendation_report_id" />
     </Card>
   </div>
 </template>

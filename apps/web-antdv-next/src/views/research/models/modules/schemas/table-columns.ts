@@ -6,6 +6,8 @@ import { $t } from '#/locales';
 import { usePublicationStatusTagOptions } from '#/shared/components/format/tag-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
+import { canOfferModelPublish } from '../model-action-state';
+
 /** Row-action permission gates for the model governance controls. */
 export interface ModelActionAccess {
   canBacktest: boolean;
@@ -113,8 +115,7 @@ export function useTrainedModelColumns(
             $t('page.research.models.actions.publish'),
             {
               show: (row) =>
-                access.canPublish &&
-                ['candidate', 'shadow'].includes(row.publication_status),
+                canOfferModelPublish(access.canPublish, row.publication_status),
             },
           ),
           iconOp<TrainedModelView>(

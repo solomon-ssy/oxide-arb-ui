@@ -42,7 +42,7 @@ export interface NegRiskEventDriftView {
   ask_sum: DecimalString | null;
   drift: DecimalString | null;
   legs: NegRiskLegView[];
-  as_of: IsoDateTime;
+  computed_at: IsoDateTime;
 }
 
 export interface MissingReasonCountView {
@@ -64,11 +64,10 @@ export interface TradeTapeSourceHealthView {
 }
 
 export interface TradeTapeCoverageView {
-  as_of: IsoDateTime;
-  pit_as_of: IsoDateTime;
-  pit_cutoff: IsoDateTime;
+  decision_at: IsoDateTime;
+  knowledge_cutoff: IsoDateTime;
   window_secs: number;
-  source_delay_secs: number;
+  knowledge_lag_secs: number;
   active_market_count: number;
   token_cursor_count: number;
   market_cursor_count: number;
@@ -81,8 +80,7 @@ export interface ParticipantConcentrationMarketView {
   market_id: string;
   token_id: string;
   question: string;
-  pit_as_of: IsoDateTime;
-  pit_cutoff: IsoDateTime;
+  knowledge_cutoff: IsoDateTime;
   trade_count: null | number;
   participant_count: null | number;
   notional_usd: DecimalString | null;
@@ -96,11 +94,10 @@ export interface ParticipantConcentrationMarketView {
 }
 
 export interface ParticipantConcentrationSummaryView {
-  as_of: IsoDateTime;
-  pit_as_of: IsoDateTime;
-  pit_cutoff: IsoDateTime;
+  decision_at: IsoDateTime;
+  knowledge_cutoff: IsoDateTime;
   window_secs: number;
-  source_delay_secs: number;
+  knowledge_lag_secs: number;
   min_unique_participants: number;
   min_notional_usd: DecimalString;
   min_coverage_ratio: DecimalString;
@@ -117,9 +114,8 @@ export interface ParticipantConcentrationParticipantView {
 }
 
 export interface ParticipantConcentrationDetailView {
-  as_of: IsoDateTime;
-  pit_as_of: IsoDateTime;
-  pit_cutoff: IsoDateTime;
+  decision_at: IsoDateTime;
+  knowledge_cutoff: IsoDateTime;
   market: ParticipantConcentrationMarketView;
   top_participants: ParticipantConcentrationParticipantView[];
 }

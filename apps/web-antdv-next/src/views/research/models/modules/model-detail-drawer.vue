@@ -29,6 +29,8 @@ import {
   message,
   Space,
   Spin,
+  TabPane,
+  Tabs,
   Tag,
 } from 'antdv-next';
 
@@ -45,8 +47,13 @@ import {
   listResearchJobs,
 } from '#/api/research';
 import { $t } from '#/locales';
+import DataList from '#/shared/components/data-list.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
-import { formatDateTimeLocal } from '#/shared/components/format';
+import FeatureParityStatusPanel from '#/shared/components/feature-parity-status-panel.vue';
+import {
+  EMPTY_PLACEHOLDER,
+  formatDateTimeLocal,
+} from '#/shared/components/format';
 import {
   findTagOption,
   usePublicationStatusTagOptions,
@@ -60,6 +67,7 @@ import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
 import ModelBacktestModal from './model-backtest-modal.vue';
 import ModelBindCalibrationModal from './model-bind-calibration-modal.vue';
 import ModelCpcvModal from './model-cpcv-modal.vue';
+import { formatModelInputStateRates } from './model-input-diagnostics';
 import ModelMetricsPanel from './model-metrics-panel.vue';
 
 defineOptions({ name: 'ModelDetailDrawer' });
@@ -187,6 +195,20 @@ function asRecord(value: unknown): null | Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function recordArray(value: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const records: Array<Record<string, unknown>> = [];
+  for (const item of value) {
+    const record = asRecord(item);
+    if (record) {
+      records.push(record);
+    }
+  }
+  return records;
+}
+
 function field(value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '—';
@@ -197,6 +219,158 @@ function field(value: unknown): string {
 const trainingObjective = computed(() =>
   asRecord(model.value?.training_objective),
 );
+
+const modelMetricsRecord = computed(() => asRecord(model.value?.metrics));
+const artifactDiagnostics = computed(() =>
+  asRecord(modelMetricsRecord.value?.artifact_diagnostics),
+);
+const inputTransform = computed(() =>
+  asRecord(artifactDiagnostics.value?.input_transform),
+);
+const transformInputs = computed(() => {
+  return recordArray(inputTransform.value?.inputs);
+});
+const encodedColumns = computed(() => {
+  return recordArray(inputTransform.value?.encoded_columns);
+});
+const artifactFormatVersion = computed(
+  () => artifactDiagnostics.value?.format_version,
+);
+const serializedModelHash = computed(
+  () => artifactDiagnostics.value?.serialized_model_hash,
+);
+const factorInputs = computed(() => {
+  const inputs = artifactDiagnostics.value?.factor_inputs;
+  return Array.isArray(inputs) ? inputs.map(String) : [];
+});
+const rawContractInputs = computed(() => {
+  const direct = artifactDiagnostics.value?.raw_inputs;
+  const contract = asRecord(artifactDiagnostics.value?.input_contract);
+  const inputs = Array.isArray(direct) ? direct : contract?.inputs;
+  return Array.isArray(inputs) ? inputs : [];
+});
+
+const rawInputColumns = [
+  {
+    dataIndex: 'feature',
+    key: 'feature',
+    title: $t('page.research.models.detail.inputFeature'),
+  },
+  {
+    dataIndex: 'required',
+    key: 'required',
+    title: $t('page.research.models.detail.requiredness'),
+  },
+  {
+    dataIndex: 'unit',
+    key: 'unit',
+    title: $t('page.research.models.detail.inputUnit'),
+  },
+  {
+    dataIndex: 'valueKind',
+    key: 'valueKind',
+    title: $t('page.research.models.detail.valueKind'),
+  },
+  {
+    dataIndex: 'median',
+    key: 'median',
+    title: $t('page.research.models.detail.median'),
+  },
+  {
+    dataIndex: 'mean',
+    key: 'mean',
+    title: $t('page.research.models.detail.mean'),
+  },
+  {
+    dataIndex: 'std',
+    key: 'std',
+    title: $t('page.research.models.detail.std'),
+  },
+  {
+    dataIndex: 'stateRates',
+    key: 'stateRates',
+    title: $t('page.research.models.detail.stateRates'),
+  },
+  {
+    dataIndex: 'vocabulary',
+    key: 'vocabulary',
+    title: $t('page.research.models.detail.vocabulary'),
+  },
+];
+const encodedColumnColumns = [
+  {
+    dataIndex: 'name',
+    key: 'name',
+    title: $t('page.research.models.detail.encodedName'),
+  },
+  {
+    dataIndex: 'source',
+    key: 'source',
+    title: $t('page.research.models.detail.encodedSource'),
+  },
+  {
+    dataIndex: 'kind',
+    key: 'kind',
+    title: $t('page.research.models.detail.encodedKind'),
+  },
+];
+
+const rawInputRows = computed(() => {
+  if (transformInputs.value.length > 0) {
+    return transformInputs.value.map((input) => {
+      return {
+        feature: field(input.feature),
+        key: field(input.feature),
+        mean: field(input.mean),
+        median: field(input.median),
+        required: input.required === true,
+        stateRates: formatModelInputStateRates(
+          input.state_rates,
+          EMPTY_PLACEHOLDER,
+        ),
+        std: field(input.std),
+        unit: field(input.unit),
+        valueKind: field(input.value_kind),
+        vocabulary: Array.isArray(input.category_vocabulary)
+          ? input.category_vocabulary.map(String).join(', ') ||
+            EMPTY_PLACEHOLDER
+          : EMPTY_PLACEHOLDER,
+      };
+    });
+  }
+  return rawContractInputs.value.map((input, index) => {
+    const record = asRecord(input);
+    const feature = record ? field(record.feature_name) : String(input);
+    return {
+      feature,
+      key: `${feature}:${index}`,
+      mean: EMPTY_PLACEHOLDER,
+      median: EMPTY_PLACEHOLDER,
+      required: record?.requiredness === 'required',
+      stateRates: EMPTY_PLACEHOLDER,
+      std: EMPTY_PLACEHOLDER,
+      unit: EMPTY_PLACEHOLDER,
+      valueKind: EMPTY_PLACEHOLDER,
+      vocabulary: EMPTY_PLACEHOLDER,
+    };
+  });
+});
+
+const encodedColumnRows = computed(() =>
+  encodedColumns.value.map((column) => ({
+    key: field(column.name),
+    kind: field(column.kind),
+    name: field(column.name),
+    source: field(column.source_feature),
+  })),
+);
+
+function displayRecordValue(record: object, key: unknown) {
+  if (typeof key !== 'string') {
+    return EMPTY_PLACEHOLDER;
+  }
+  return (record as Record<string, unknown>)[key] ?? EMPTY_PLACEHOLDER;
+}
 
 const isCalibratedReturnModel = computed(
   () => returnModel.value?.calibration === 'calibrated',
@@ -518,6 +692,166 @@ watch(
               {{ $t('page.research.cpcv.bindPublish') }}
             </Button>
           </Space>
+        </Card>
+
+        <Card size="small">
+          <Tabs destroy-inactive-tab-pane>
+            <TabPane
+              key="input-contract"
+              :tab="$t('page.research.models.detail.inputTransform')"
+            >
+              <div v-if="artifactDiagnostics" class="flex flex-col gap-3">
+                <Descriptions :column="2" bordered size="small">
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.artifactFormatVersion')
+                    "
+                  >
+                    {{ field(artifactFormatVersion) }}
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.rawInputCount')"
+                  >
+                    {{ rawInputRows.length }}
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.encodedColumnCount')
+                    "
+                  >
+                    {{ encodedColumns.length }}
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.transformKind')"
+                  >
+                    {{ field(artifactDiagnostics.transform_kind) }}
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.trainingDatasetHash')
+                    "
+                    :span="2"
+                  >
+                    <span class="font-mono text-xs break-all">
+                      {{ field(artifactDiagnostics.training_dataset_hash) }}
+                    </span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.trainingInputHash')"
+                    :span="2"
+                  >
+                    <span class="font-mono text-xs break-all">
+                      {{ field(artifactDiagnostics.training_input_hash) }}
+                    </span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.inputContractHash')"
+                    :span="2"
+                  >
+                    <span class="font-mono text-xs break-all">
+                      {{ field(artifactDiagnostics.input_contract_hash) }}
+                    </span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.inputTransformHash')
+                    "
+                    :span="2"
+                  >
+                    <span class="font-mono text-xs break-all">
+                      {{ field(artifactDiagnostics.input_transform_hash) }}
+                    </span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.serializedModelHash')
+                    "
+                    :span="2"
+                  >
+                    <span class="font-mono text-xs break-all">
+                      {{ field(serializedModelHash) }}
+                    </span>
+                  </DescriptionsItem>
+                </Descriptions>
+
+                <div v-if="rawInputRows.length > 0" class="flex flex-col gap-1">
+                  <span class="text-sm font-medium">
+                    {{ $t('page.research.models.detail.rawInputs') }}
+                  </span>
+                  <DataList
+                    :columns="rawInputColumns"
+                    :data-source="rawInputRows"
+                    row-key="key"
+                    :scroll="{ x: 1180 }"
+                  >
+                    <template #bodyCell="{ column, record }">
+                      <template v-if="column.key === 'required'">
+                        <Tag :color="record.required ? 'red' : 'blue'">
+                          {{
+                            record.required
+                              ? $t('page.research.models.detail.required')
+                              : $t('page.research.models.detail.optional')
+                          }}
+                        </Tag>
+                      </template>
+                      <template v-else>
+                        <span class="font-mono text-xs">{{
+                          displayRecordValue(record, column.key)
+                        }}</span>
+                      </template>
+                    </template>
+                  </DataList>
+                </div>
+
+                <div
+                  v-if="encodedColumnRows.length > 0"
+                  class="flex flex-col gap-1"
+                >
+                  <span class="text-sm font-medium">
+                    {{ $t('page.research.models.detail.encodedColumns') }}
+                  </span>
+                  <DataList
+                    :columns="encodedColumnColumns"
+                    :data-source="encodedColumnRows"
+                    row-key="key"
+                    :scroll="{ x: 640 }"
+                  >
+                    <template #bodyCell="{ column, record }">
+                      <span class="font-mono text-xs">{{
+                        displayRecordValue(record, column.key)
+                      }}</span>
+                    </template>
+                  </DataList>
+                </div>
+
+                <div v-if="factorInputs.length > 0" class="flex flex-col gap-1">
+                  <span class="text-sm font-medium">
+                    {{ $t('page.research.models.detail.factorInputs') }}
+                  </span>
+                  <Space wrap>
+                    <Tag v-for="input in factorInputs" :key="input">
+                      {{ input }}
+                    </Tag>
+                  </Space>
+                </div>
+              </div>
+              <Empty
+                v-else
+                :description="
+                  $t('page.research.models.detail.inputTransformUnavailable')
+                "
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
+            </TabPane>
+            <TabPane
+              key="parity"
+              :tab="$t('page.research.models.detail.parity')"
+            >
+              <FeatureParityStatusPanel
+                :model-version-id="model.model_version_id"
+              />
+            </TabPane>
+          </Tabs>
         </Card>
 
         <Card

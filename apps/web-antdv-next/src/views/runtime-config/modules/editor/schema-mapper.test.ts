@@ -167,7 +167,7 @@ describe('fieldToInputValue', () => {
         cadence: { interval_secs: 300, kind: 'interval' },
         enabled: true,
         schedule_id: 'default_interval',
-        source_delay_secs: 10,
+        knowledge_lag_secs: 10,
         top_n: 20,
       },
     ];

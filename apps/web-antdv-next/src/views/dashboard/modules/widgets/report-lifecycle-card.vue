@@ -54,7 +54,7 @@ const inProgress = computed(() => lastEvent.value?.event === 'started');
         {{ $t(`page.dashboard.reportLifecycle.event.${lastEvent.event}`) }}
       </Tag>
       <span class="text-muted-foreground text-xs tabular-nums">
-        {{ formatDateTimeLocal(lastEvent.as_of) }}
+        {{ formatDateTimeLocal(lastEvent.decision_at) }}
       </span>
       <span class="text-muted-foreground text-xs">
         {{ $t(`enum.quantRuntimeMode.${lastEvent.runtime_mode}`) }}

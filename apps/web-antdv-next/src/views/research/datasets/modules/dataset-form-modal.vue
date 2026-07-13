@@ -90,7 +90,7 @@ async function collectBody(): Promise<DatasetFormBody | null> {
     purpose: values.purpose as DatasetFormBody['purpose'],
     runtime_config_version_id: values.runtime_config_version_id as string,
     sample_interval_secs: values.sample_interval_secs as number,
-    source_delay_secs: values.source_delay_secs as number,
+    knowledge_lag_secs: values.knowledge_lag_secs as number,
     window_end: range[1],
     window_start: range[0],
   };
@@ -290,9 +290,9 @@ const [Form, formApi] = useVbenForm({
       component: 'InputNumber',
       componentProps: { min: 1 },
       defaultValue: 1,
-      fieldName: 'source_delay_secs',
+      fieldName: 'knowledge_lag_secs',
       formItemClass: 'col-span-1',
-      label: $t('page.research.datasets.form.sourceDelaySecs'),
+      label: $t('page.research.datasets.form.knowledgeLagSecs'),
       rules: 'required',
     },
     {
@@ -331,7 +331,7 @@ const [Modal, modalApi] = useVbenModal({
         horizons_secs: '3600',
         purpose: DATASET_PURPOSES.training,
         sample_interval_secs: 60,
-        source_delay_secs: 1,
+        knowledge_lag_secs: 1,
       });
       applyFooter();
       void loadOptions();
@@ -428,9 +428,9 @@ const [Modal, modalApi] = useVbenModal({
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.research.datasets.form.sourceDelaySecs')"
+          :label="$t('page.research.datasets.form.knowledgeLagSecs')"
         >
-          <span class="tabular-nums">{{ pendingBody.source_delay_secs }}</span>
+          <span class="tabular-nums">{{ pendingBody.knowledge_lag_secs }}</span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.datasets.form.horizonsSecs')"

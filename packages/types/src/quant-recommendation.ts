@@ -9,6 +9,11 @@ import type {
   UuidString,
 } from './common';
 import type {
+  DecisionBoundaryEvidenceView,
+  FeatureCellEvidenceView,
+  ModelInputEvidenceView,
+} from './decision-evidence';
+import type {
   BindingConstraint,
   EntryTriggerKind,
   ExitSettlementMode,
@@ -204,6 +209,12 @@ export interface QuantEvidenceView {
   model_version_id: string;
   factor_definition_versions: string[];
   data_quality_snapshot_ref: string;
+  decision_boundary: DecisionBoundaryEvidenceView | null;
+  evidence_complete: boolean;
+  feature_cells: FeatureCellEvidenceView[];
+  feature_hash: null | string;
+  feature_schema_hash: null | string;
+  model_inputs: ModelInputEvidenceView[];
 }
 
 /** Realized entry execution against the venue (`attribution.entry_outcome`). */

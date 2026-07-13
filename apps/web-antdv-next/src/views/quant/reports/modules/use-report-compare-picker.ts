@@ -2,7 +2,7 @@
  * Baseline-report picker for the report diff panel.
  *
  * Loads every *published* report of the same kind (paginated to completion,
- * excluding the report being viewed), sorted newest-first by `as_of`, and picks
+ * excluding the report being viewed), sorted newest-first by `decision_at`, and picks
  * a sensible default baseline: the most recent report strictly older than the
  * current one (the "previous run"), falling back to the newest available.
  *
@@ -29,8 +29,8 @@ const MAX_PAGES = 40;
 
 function toOption(item: QuantReportView): CompareOption {
   return {
-    as_of: item.as_of,
-    label: `${formatDateTimeLocal(item.as_of)} · ${item.recommendation_report_id.slice(0, 8)}`,
+    decision_at: item.decision_at,
+    label: `${formatDateTimeLocal(item.decision_at)} · ${item.recommendation_report_id.slice(0, 8)}`,
     status: item.status,
     value: item.recommendation_report_id,
   };
@@ -75,10 +75,10 @@ export function useReportComparePicker() {
           break;
         }
       }
-      // Newest-first by as_of (ISO strings sort lexicographically).
-      collected.sort((a, b) => b.as_of.localeCompare(a.as_of));
+      // Newest-first by decision_at (ISO strings sort lexicographically).
+      collected.sort((a, b) => b.decision_at.localeCompare(a.decision_at));
       options.value = collected;
-      return defaultBaseline(collected, current.as_of);
+      return defaultBaseline(collected, current.decision_at);
     } finally {
       loading.value = false;
     }

@@ -2,6 +2,7 @@ export type * from './account';
 export type * from './calibration';
 export type * from './common';
 export type * from './data-quality';
+export type * from './decision-evidence';
 // Runtime enum const objects (`QUANT_RUNTIME_MODES`, …) live here alongside types.
 export * from './enums';
 // Pure execution-gate predicates (runtime functions) mirroring backend guards.

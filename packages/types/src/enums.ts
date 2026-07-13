@@ -310,7 +310,7 @@ export type FactorNormalization = WireEnum<typeof FACTOR_NORMALIZATIONS>;
 /** How a factor's normalized score was derived. */
 export const NORMALIZATION_SOURCES = {
   crossSection: 'cross_section',
-  historicalQuantile: 'historical_quantile',
+  frozenReferenceQuantile: 'frozen_reference_quantile',
   perMarket: 'per_market',
 } as const;
 
@@ -320,7 +320,7 @@ export type NormalizationSource = WireEnum<typeof NORMALIZATION_SOURCES>;
 export const FACTOR_INDETERMINATE_REASONS = {
   crossSectionTooSmall: 'cross_section_too_small',
   legBookMissing: 'leg_book_missing',
-  noHistory: 'no_history',
+  noFrozenReference: 'no_frozen_reference',
   zeroVariance: 'zero_variance',
 } as const;
 
@@ -618,6 +618,7 @@ export const RESEARCH_JOB_KINDS = {
   biasTableFit: 'bias_table_fit',
   cpcvBacktest: 'cpcv_backtest',
   datasetBuild: 'dataset_build',
+  featureParity: 'feature_parity',
   modelCalibrationFit: 'model_calibration_fit',
   modelTrain: 'model_train',
 } as const;
@@ -684,7 +685,6 @@ export function isTerminalResearchJobStatus(
 /** Training-dataset build lifecycle (mirrors Rust `TrainingDatasetStatus`). */
 export const TRAINING_DATASET_STATUSES = {
   building: 'building',
-  built: 'built',
   expired: 'expired',
   failed: 'failed',
   insufficientLabels: 'insufficient_labels',
@@ -698,11 +698,65 @@ export type TrainingDatasetStatus = WireEnum<typeof TRAINING_DATASET_STATUSES>;
 export function isTrainableDatasetStatus(
   status: TrainingDatasetStatus,
 ): boolean {
-  return (
-    status === TRAINING_DATASET_STATUSES.built ||
-    status === TRAINING_DATASET_STATUSES.ready
-  );
+  return status === TRAINING_DATASET_STATUSES.ready;
 }
+
+/** Exact-replay parity run scope (mirrors Rust `FeatureParityRunKind`). */
+export const FEATURE_PARITY_RUN_KINDS = {
+  full: 'full',
+  sampled: 'sampled',
+} as const;
+
+export type FeatureParityRunKind = WireEnum<typeof FEATURE_PARITY_RUN_KINDS>;
+
+/** Durable parity-run lifecycle/outcome (mirrors Rust `FeatureParityRunStatus`). */
+export const FEATURE_PARITY_RUN_STATUSES = {
+  failed: 'failed',
+  mismatched: 'mismatched',
+  passed: 'passed',
+  pendingMaterialization: 'pending_materialization',
+  queued: 'queued',
+  running: 'running',
+} as const;
+
+export type FeatureParityRunStatus = WireEnum<
+  typeof FEATURE_PARITY_RUN_STATUSES
+>;
+
+/** Deterministic comparison stage (mirrors Rust `FeatureParityStage`). */
+export const FEATURE_PARITY_STAGES = {
+  capture: 'capture',
+  dataQuality: 'data_quality',
+  factor: 'factor',
+  featureCell: 'feature_cell',
+  modelInput: 'model_input',
+  prediction: 'prediction',
+  selection: 'selection',
+  snapshot: 'snapshot',
+} as const;
+
+export type FeatureParityStage = WireEnum<typeof FEATURE_PARITY_STAGES>;
+
+/** Per-evidence comparison outcome (mirrors Rust `FeatureParityEventStatus`). */
+export const FEATURE_PARITY_EVENT_STATUSES = {
+  matched: 'matched',
+  mismatched: 'mismatched',
+  pendingMaterialization: 'pending_materialization',
+} as const;
+
+export type FeatureParityEventStatus = WireEnum<
+  typeof FEATURE_PARITY_EVENT_STATUSES
+>;
+
+/** Explicit feature-cell state shared by materialization and serving. */
+export const FEATURE_CELL_STATES = {
+  missing: 'missing',
+  notApplicable: 'not_applicable',
+  observed: 'observed',
+  substituted: 'substituted',
+} as const;
+
+export type FeatureCellState = WireEnum<typeof FEATURE_CELL_STATES>;
 
 /** Factor family taxonomy (mirrors Rust `FactorFamily`). */
 export const FACTOR_FAMILIES = {

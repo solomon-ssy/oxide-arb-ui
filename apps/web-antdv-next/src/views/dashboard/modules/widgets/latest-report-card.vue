@@ -108,7 +108,7 @@ function onCardKeydown(event: KeyboardEvent) {
             {{ statusTag?.label ?? report.status }}
           </Tag>
           <span class="text-muted-foreground text-xs tabular-nums">
-            {{ formatDateTimeLocal(report.as_of) }}
+            {{ formatDateTimeLocal(report.decision_at) }}
           </span>
         </div>
         <KeyValueGrid :bordered="false" :items="statItems" />

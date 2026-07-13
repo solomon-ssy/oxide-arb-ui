@@ -1,11 +1,16 @@
 <script lang="ts" setup>
-import type { CreateModelSpecRequest, ModelFamily } from '@vben/types';
+import type {
+  CreateModelSpecRequest,
+  FeatureContractView,
+  ModelFamily,
+  ModelTrainingContract,
+} from '@vben/types';
 
 import { markRaw, ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
-import { EMPTY_FEATURE_REQUIREMENTS, MODEL_FAMILIES } from '@vben/types';
+import { EMPTY_MODEL_INPUT_CONTRACT, MODEL_FAMILIES } from '@vben/types';
 
 import { message } from 'antdv-next';
 
@@ -14,7 +19,12 @@ import { listModelSpecs } from '#/api/research';
 import { $t } from '#/locales';
 import InputNumberWithAddon from '#/shared/components/input-number-with-addon.vue';
 
-import FeatureRequirementsEditor from './feature-requirements-editor.vue';
+import InputContractEditor from './input-contract-editor.vue';
+import {
+  DEFAULT_MODEL_TRAINING_CONTRACT,
+  normalizeModelTrainingContract,
+} from './model-training-contract';
+import TrainingContractEditor from './training-contract-editor.vue';
 
 defineOptions({ name: 'ModelSpecCreateModal' });
 
@@ -55,17 +65,39 @@ async function onSubmit(values: Record<string, unknown>) {
   if (!payload.value) {
     return;
   }
+  const inputContract =
+    values.input_contract as CreateModelSpecBody['input_contract'];
+  const trainingContract = normalizeModelTrainingContract(
+    values.training_contract as ModelTrainingContract | undefined,
+  );
+  if (!trainingContract) {
+    message.error(
+      $t('page.research.modelSpecs.trainingContract.validationError'),
+    );
+    return;
+  }
+  const featureSchemaVersion = Number(values.feature_schema_version);
+  if (!Number.isInteger(featureSchemaVersion) || featureSchemaVersion < 1) {
+    message.error(
+      $t('page.research.modelSpecs.inputContract.catalogRequiredError'),
+    );
+    return;
+  }
+  if (!inputContract?.inputs.length) {
+    message.error($t('page.research.modelSpecs.inputContract.requiredError'));
+    return;
+  }
   modalApi.lock();
   try {
     const ok = await payload.value.onSubmit({
-      feature_schema_version: values.feature_schema_version as number,
-      feature_requirements:
-        values.feature_requirements as CreateModelSpecBody['feature_requirements'],
+      feature_schema_version: featureSchemaVersion,
+      input_contract: inputContract,
       label_schema_version: values.label_schema_version as number,
       model_family: values.model_family as ModelFamily,
       name: trimmed,
       prediction_horizon_secs: values.prediction_horizon_secs as number,
       spec_json: values.spec_json ?? {},
+      training_contract: trainingContract,
     });
     if (ok) {
       modalApi.close();
@@ -109,8 +141,7 @@ const [Form, formApi] = useVbenForm({
     },
     {
       component: 'InputNumber',
-      componentProps: { min: 1 },
-      defaultValue: 5,
+      componentProps: { disabled: true, min: 1 },
       fieldName: 'feature_schema_version',
       formItemClass: 'col-span-1',
       label: $t('page.research.modelSpecs.create.featureSchemaVersion'),
@@ -126,10 +157,26 @@ const [Form, formApi] = useVbenForm({
       rules: 'required',
     },
     {
-      component: markRaw(FeatureRequirementsEditor),
-      defaultValue: { ...EMPTY_FEATURE_REQUIREMENTS, by_category: {} },
-      fieldName: 'feature_requirements',
-      label: $t('page.research.modelSpecs.create.featureRequirements'),
+      component: markRaw(TrainingContractEditor),
+      defaultValue: { ...DEFAULT_MODEL_TRAINING_CONTRACT },
+      fieldName: 'training_contract',
+      formItemClass: 'md:col-span-2',
+      label: $t('page.research.modelSpecs.create.trainingContract'),
+      modelPropName: 'modelValue',
+    },
+    {
+      component: markRaw(InputContractEditor),
+      componentProps: {
+        onCatalogLoaded(contract: FeatureContractView) {
+          void formApi.setFieldValue(
+            'feature_schema_version',
+            contract.feature_schema_version,
+          );
+        },
+      },
+      defaultValue: { ...EMPTY_MODEL_INPUT_CONTRACT, inputs: [] },
+      fieldName: 'input_contract',
+      label: $t('page.research.modelSpecs.create.inputContract'),
       modelPropName: 'modelValue',
     },
     {
@@ -154,15 +201,13 @@ const [Modal, modalApi] = useVbenModal({
       payload.value = modalApi.getData<ModelSpecCreatePayload>();
       formApi.resetForm();
       formApi.setValues({
-        feature_requirements: {
-          ...EMPTY_FEATURE_REQUIREMENTS,
-          by_category: {},
-        },
-        feature_schema_version: 5,
+        input_contract: { ...EMPTY_MODEL_INPUT_CONTRACT, inputs: [] },
+        feature_schema_version: undefined,
         label_schema_version: 1,
         model_family: MODEL_FAMILIES.weightedFactor,
         prediction_horizon_secs: 86_400,
         spec_json: {},
+        training_contract: { ...DEFAULT_MODEL_TRAINING_CONTRACT },
       });
       void loadExistingNames();
     }

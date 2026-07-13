@@ -31,8 +31,8 @@ export function useReportColumns(
     },
     {
       cellRender: { name: 'CellDateTime' },
-      field: 'as_of',
-      title: $t('page.quantReports.columns.asOf'),
+      field: 'decision_at',
+      title: $t('page.quantReports.columns.decisionAt'),
       width: 170,
     },
     {

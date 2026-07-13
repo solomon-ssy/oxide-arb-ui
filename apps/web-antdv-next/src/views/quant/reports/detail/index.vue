@@ -2,6 +2,7 @@
 import type {
   QuantRecommendationView,
   QuantReportDetailView,
+  QuantReportDiagnosticsView,
 } from '@vben/types';
 
 import { computed, onMounted, ref, watch } from 'vue';
@@ -12,7 +13,11 @@ import { useRequestHandler } from '@vben/request/qp';
 
 import { Button, TabPane, Tabs } from 'antdv-next';
 
-import { getQuantReport, listReportRecommendations } from '#/api/quant-reports';
+import {
+  getQuantReport,
+  getQuantReportDiagnostics,
+  listReportRecommendations,
+} from '#/api/quant-reports';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import DetailBackNav from '#/shared/components/detail-back-nav.vue';
@@ -34,6 +39,7 @@ const orderIntentStore = useOrderIntentStore();
 
 const report = ref<null | QuantReportDetailView>(null);
 const recommendations = ref<QuantRecommendationView[]>([]);
+const diagnostics = ref<null | QuantReportDiagnosticsView>(null);
 const loading = ref(false);
 const loadError = ref<null | string>(null);
 const activeTab = ref('overview');
@@ -60,11 +66,12 @@ async function load() {
   try {
     const result = await handleRequest(
       async () => {
-        const [detail, recs] = await Promise.all([
+        const [detail, recs, evidence] = await Promise.all([
           getQuantReport(reportId.value),
           listReportRecommendations(reportId.value),
+          getQuantReportDiagnostics(reportId.value),
         ]);
-        return { detail, recs };
+        return { detail, evidence, recs };
       },
       {
         silent: true,
@@ -77,6 +84,7 @@ async function load() {
     );
     report.value = result?.detail ?? null;
     recommendations.value = result?.recs ?? [];
+    diagnostics.value = result?.evidence ?? null;
   } finally {
     loading.value = false;
   }
@@ -135,7 +143,7 @@ onMounted(() => void load());
           key="overview"
           :tab="$t('page.quantReports.detail.tabs.overview')"
         >
-          <ReportOverview :report="report" />
+          <ReportOverview :diagnostics="diagnostics" :report="report" />
         </TabPane>
         <TabPane
           key="recommendations"

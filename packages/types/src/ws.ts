@@ -84,7 +84,7 @@ export interface ReportLifecycleEvent {
   report_kind: ReportKind;
   runtime_mode: QuantRuntimeMode;
   status: RecommendationReportStatus;
-  as_of: IsoDateTime;
+  decision_at: IsoDateTime;
 }
 
 /** `quant.intent` lifecycle event kinds (discriminated by `event`). */

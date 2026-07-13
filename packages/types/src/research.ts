@@ -14,6 +14,11 @@ import type {
   FactorDirection,
   FactorFamily,
   FactorNormalization,
+  FeatureCellState,
+  FeatureParityEventStatus,
+  FeatureParityRunKind,
+  FeatureParityRunStatus,
+  FeatureParityStage,
   MarketCategory,
   ModelFamily,
   PublicationStatus,
@@ -39,10 +44,11 @@ export interface SelectionExclusionSummary {
   other_count: number;
 }
 
-/** Optional training-matrix probe (build-time diagnostic; does not gate build). */
+/** Training-matrix integrity gate for the model-owned input and target contract. */
 export interface MatrixCoverageProbe {
   accepted_rows: number;
   rejected_rows: number;
+  label_rows: number;
   label_name: string;
   label_horizon_secs: number;
   feature_columns: number;
@@ -70,7 +76,33 @@ export interface DatasetCoverage {
   pit_selection_candidates: number;
   pit_selection_included: number;
   pit_selection_excluded: SelectionExclusionSummary;
+  feature_state_counts: {
+    missing: number;
+    not_applicable: number;
+    observed: number;
+    substituted: number;
+  };
   matrix_probe?: MatrixCoverageProbe | null;
+}
+
+/** Exact v2 manifest embedded in Parquet and persisted in the dataset ledger. */
+export interface DatasetManifestView {
+  factor_schema_hash: string;
+  feature_schema_hash: string;
+  format_version: number;
+  horizons_secs: number[];
+  knowledge_lag_secs: number;
+  label_schema_hash: string;
+  model_spec_id: string;
+  purpose: DatasetPurpose;
+  runtime_config_version_id: UuidString;
+  sample_count: number;
+  sample_interval_secs: number;
+  semantic_dataset_hash: string;
+  source_fingerprint: string;
+  training_dataset_id: UuidString;
+  window_end: IsoDateTime;
+  window_start: IsoDateTime;
 }
 
 /** `POST /research/training-datasets/plan` result. */
@@ -130,20 +162,27 @@ export interface TrainingDatasetView {
   window_end: IsoDateTime;
   status: TrainingDatasetStatus;
   purpose: DatasetPurpose;
-  feature_schema_hash: string;
-  factor_schema_hash: string;
-  label_schema_hash: string;
-  dataset_hash: string;
-  parquet_uri: string;
-  sample_count: number;
-  /** Feature source visibility delay in seconds (PIT cutoff). */
-  source_delay_secs: number;
+  feature_schema_hash: null | string;
+  factor_schema_hash: null | string;
+  label_schema_hash: null | string;
+  dataset_hash: null | string;
+  manifest_hash: null | string;
+  manifest: DatasetManifestView | null;
+  artifact_bytes_hash: null | string;
+  parquet_uri: null | string;
+  sample_count: null | number;
+  /** Global knowledge lag in seconds (PIT cutoff). */
+  knowledge_lag_secs: number;
   /** Deterministic sample grid step in seconds. */
   sample_interval_secs: number;
   /** Forward label horizons frozen into this dataset (seconds). */
   horizons_secs: number[];
-  coverage_json: DatasetCoverage;
+  feature_schema_version: null | number;
+  sample_sources: null | TrainingSampleSource[];
+  coverage_json: DatasetCoverage | null;
   runtime_config_version_id: UuidString;
+  failure_detail: null | string;
+  completed_at: IsoDateTime | null;
   created_at: IsoDateTime;
 }
 
@@ -169,8 +208,8 @@ export interface BuildTrainingDatasetRequest {
   sample_interval_secs: number;
   /** Forward label horizons in seconds (one column per horizon, non-empty). */
   horizons_secs: number[];
-  /** Feature source visibility delay in seconds (PIT cutoff, `>= 1`). */
-  source_delay_secs: number;
+  /** Global knowledge lag in seconds (PIT cutoff, `>= 1`). */
+  knowledge_lag_secs: number;
   /** Feature schema version to materialize (defaults to 1 server-side). */
   feature_schema_version?: number;
   /** Sample sources (defaults to historical PIT + live attribution server-side). */
@@ -184,6 +223,125 @@ export interface TrainingDatasetListQuery extends PageQuery, TimeRangeQuery {
   model_spec_id?: string;
   purpose?: DatasetPurpose;
   status?: TrainingDatasetStatus;
+}
+
+// ── Training-serving feature integrity ─────────────────────────────────────
+
+/** Fail-closed runtime latch opened by an exact parity mismatch. */
+export interface FeatureIntegrityLatchView {
+  blocking_run_id?: null | UuidString;
+  last_acknowledged_at?: IsoDateTime | null;
+  open: boolean;
+  opened_at?: IsoDateTime | null;
+  reason?: null | string;
+}
+
+/** One durable exact-replay parity run. */
+export interface FeatureParityRunView {
+  acting_role: string;
+  compared_count: number;
+  containment_completed_at?: IsoDateTime | null;
+  created_at: IsoDateTime;
+  failure_code?: null | string;
+  failure_detail?: null | string;
+  feature_contract_hash: string;
+  finished_at?: IsoDateTime | null;
+  kind: FeatureParityRunKind;
+  matched_count: number;
+  mismatched_count: number;
+  model_version_id?: null | UuidString;
+  parity_run_id: UuidString;
+  pending_since?: IsoDateTime | null;
+  pending_materialization_count: number;
+  reason: string;
+  report_id?: null | UuidString;
+  requested_by?: null | string;
+  started_at?: IsoDateTime | null;
+  status: FeatureParityRunStatus;
+  total_count: number;
+  transform_hash?: null | string;
+  training_dataset_id?: null | UuidString;
+  triggered_by: string;
+  window_end: IsoDateTime;
+  window_start: IsoDateTime;
+}
+
+/** Integrity-plane summary shown above run/event ledgers. */
+export interface FeatureIntegritySummaryView {
+  catalog_coverage_start?: IsoDateTime | null;
+  catalog_watermark?: IsoDateTime | null;
+  feature_state_counts: Partial<Record<FeatureCellState, number>>;
+  last_full_run?: FeatureParityRunView | null;
+  last_sampled_run?: FeatureParityRunView | null;
+  latch: FeatureIntegrityLatchView;
+  parity_age_secs?: null | number;
+  rejection_reason_counts: Record<string, number>;
+}
+
+/** One side of a deterministic online-vs-replay comparison. */
+export interface FeatureParityEvidenceView {
+  available_at?: IsoDateTime | null;
+  cutoff?: IsoDateTime | null;
+  effective_at?: IsoDateTime | null;
+  fingerprint: string;
+  state?: FeatureCellState | null;
+  value?: null | string;
+}
+
+/** One stage-level evidence comparison within a parity run. */
+export interface FeatureParityEventView {
+  created_at: IsoDateTime;
+  decision_at: IsoDateTime;
+  detail: unknown;
+  feature_contract_hash: string;
+  feature_name?: null | string;
+  market_id?: null | string;
+  model_run_id?: null | UuidString;
+  model_version_id?: null | UuidString;
+  online: FeatureParityEvidenceView;
+  parity_event_id: UuidString;
+  parity_run_id: UuidString;
+  reason?: null | string;
+  replay: FeatureParityEvidenceView;
+  report_id?: null | UuidString;
+  stage: FeatureParityStage;
+  status: FeatureParityEventStatus;
+  training_dataset_id?: null | UuidString;
+  transform_hash?: null | string;
+}
+
+/** Filter + pagination for `GET /research/feature-integrity/runs`. */
+export interface FeatureParityRunListQuery extends PageQuery, TimeRangeQuery {
+  kind?: FeatureParityRunKind;
+  model_version_id?: UuidString;
+  report_id?: UuidString;
+  status?: FeatureParityRunStatus;
+  training_dataset_id?: UuidString;
+}
+
+/** Filter + pagination for `GET /research/feature-integrity/events`. */
+export interface FeatureParityEventListQuery extends PageQuery, TimeRangeQuery {
+  feature_name?: string;
+  model_version_id?: UuidString;
+  parity_run_id?: UuidString;
+  reason?: string;
+  report_id?: UuidString;
+  stage?: FeatureParityStage;
+  status?: FeatureParityEventStatus;
+  training_dataset_id?: UuidString;
+}
+
+/** Governed request to enqueue a full deterministic replay. */
+export interface RunFullFeatureParityRequest {
+  reason: string;
+  window_end?: IsoDateTime;
+  window_start?: IsoDateTime;
+}
+
+/** Governed latch recovery request; the referenced full run must have passed. */
+export interface AcknowledgeFeatureParityLatchRequest {
+  parity_run_id: UuidString;
+  reason: string;
 }
 
 // ── Models ──────────────────────────────────────────────────────────────────
@@ -283,6 +441,50 @@ export type ModelMetrics =
   | Record<string, unknown>
   | WeightedFactorModelMetrics;
 
+export interface FittedInputStateRatesView {
+  missing: DecimalString;
+  not_applicable: DecimalString;
+  observed: DecimalString;
+  substituted: DecimalString;
+}
+
+export interface FittedInputColumnView {
+  category_vocabulary: string[];
+  feature: string;
+  mean: DecimalString | null;
+  median: DecimalString | null;
+  required: boolean;
+  state_rates: FittedInputStateRatesView;
+  std: DecimalString | null;
+  unit: string;
+  value_kind: string;
+}
+
+export interface EncodedModelColumnView {
+  kind: string;
+  name: string;
+  source_feature: string;
+}
+
+export interface ModelArtifactDiagnosticsView {
+  factor_inputs?: string[];
+  format_version: number;
+  input_contract?: ModelInputContract;
+  input_contract_hash?: string;
+  input_transform?: {
+    encoded_columns: EncodedModelColumnView[];
+    inputs: FittedInputColumnView[];
+  };
+  input_transform_hash?: string;
+  raw_inputs?: Array<ModelInputSpec | string>;
+  serialization_format?: string;
+  serialized_model_hash?: string;
+  serialized_model_uri?: string;
+  training_dataset_hash: string;
+  training_input_hash: string;
+  transform_kind: 'factor_native' | 'fitted_feature_matrix';
+}
+
 /** `GET /research/models/{id}` / train result. */
 export interface TrainedModelView {
   model_version_id: UuidString;
@@ -307,43 +509,111 @@ export interface TrainedModelView {
 
 /** `POST /research/models/train` governed request body (mirrors Rust `TrainModelRequest`). */
 export interface TrainModelRequest {
-  model_spec_id: string;
-  /** Frozen training dataset to train on (must be `built` or `ready`). */
+  /** Frozen training dataset to train on (must be `ready`). */
   training_dataset_id: UuidString;
-  runtime_config_version_id: UuidString;
-  /** `"weighted_factor"` or `"classical:<kind>"` (e.g. `"classical:random_forest"`). */
-  model_family: string;
-  /** Supervised target label (e.g. `"settlement_outcome"`). */
-  label_name: string;
-  /** Target label horizon in seconds (`0` for horizon-independent labels). */
-  label_horizon_secs: number;
-  /**
-   * Model-intrinsic prediction horizon frozen into the trained artifact and used
-   * online for horizon score multiplier / suggested_horizon_secs (`>= 1`, default 86400).
-   */
-  prediction_horizon_secs?: number;
-  /** Rolling validation folds (`2..=20`, defaults to 3 server-side). */
-  validation_folds?: number;
   reason: string;
-  /** Pre-assigned by the job engine on async enqueue; omit on direct calls. */
-  model_version_id?: UuidString;
 }
 
 /** Model family taxonomy (canonical wire labels of `qp_model_family`). */
 export type { ModelFamily } from './enums';
 
-/** Governed feature-requirements contract (mirrors `ModelFeatureRequirements`). */
-export interface ModelFeatureRequirements {
-  /** Required for every candidate when no category-specific route applies. */
-  generic: string[];
-  /** Per-category additive requirements when a category pointer is configured. */
-  by_category: Partial<Record<MarketCategory, string[]>>;
+export type ModelInputRequiredness = 'optional' | 'required';
+
+/** One governed raw feature consumed by a model, before fitted transforms. */
+export interface ModelInputSpec {
+  feature_name: string;
+  requiredness: ModelInputRequiredness;
 }
 
-export const EMPTY_FEATURE_REQUIREMENTS: ModelFeatureRequirements = {
-  generic: [],
-  by_category: {},
-};
+/** Ordered source-feature graph owned by one model specification. */
+export interface ModelInputContract {
+  inputs: ModelInputSpec[];
+}
+
+export const EMPTY_MODEL_INPUT_CONTRACT: ModelInputContract = { inputs: [] };
+
+/** Frozen target and fold policy owned by a model spec, never a train override. */
+export interface ModelTrainingContract {
+  target_label_horizon_secs: number;
+  target_label_name: string;
+  validation_folds: number;
+}
+
+export type FeatureContractFamily =
+  | 'domain'
+  | 'market_metadata'
+  | 'microstructure'
+  | 'price_book'
+  | 'structural'
+  | 'time_series';
+
+export type FeatureContractValueKind =
+  | 'bool'
+  | 'bps'
+  | 'category'
+  | 'count'
+  | 'decimal'
+  | 'probability'
+  | 'usd';
+
+export type FeatureContractUnit =
+  | 'bps'
+  | 'count'
+  | 'milliseconds'
+  | 'none'
+  | 'per_second'
+  | 'probability'
+  | 'ratio'
+  | 'seconds'
+  | 'shares'
+  | 'usd';
+
+export type FeatureContractSource =
+  | 'domain_observation_window'
+  | 'gamma_metadata'
+  | 'microstructure_window'
+  | 'neg_risk_sibling_legs'
+  | 'published_l2_book'
+  | 'resolved_linkage'
+  | 'trade_tape_window';
+
+export type FeatureContractPointInTimeRule =
+  | 'book_version_at_or_before_source_cutoff'
+  | 'fact_at_or_before_source_cutoff'
+  | 'linkage_version_at_or_before_source_cutoff'
+  | 'metadata_version_at_or_before_source_cutoff';
+
+export type FeatureContractStalenessPolicy =
+  | 'max_book_age'
+  | 'max_domain_observation_age'
+  | 'max_feature_bucket_age'
+  | 'max_trade_tape_age'
+  | 'none';
+
+export interface FeatureNullPolicyView {
+  policy: 'neutral_value' | 'optional' | 'penalize' | 'reject_market';
+  value?: DecimalString;
+}
+
+/** One raw feature exposed by the active governed FeatureSchema. */
+export interface FeatureContractEntryView {
+  compute_revision: number;
+  family: FeatureContractFamily;
+  name: string;
+  null_policy: FeatureNullPolicyView;
+  point_in_time_rule: FeatureContractPointInTimeRule;
+  source: FeatureContractSource;
+  staleness_policy: FeatureContractStalenessPolicy;
+  unit: FeatureContractUnit;
+  value_kind: FeatureContractValueKind;
+}
+
+/** `GET /research/feature-contract` active feature catalog. */
+export interface FeatureContractView {
+  feature_schema_hash: string;
+  feature_schema_version: number;
+  features: FeatureContractEntryView[];
+}
 
 /** Model-spec catalog projection (the dataset/training selector source). */
 export interface QuantModelSpecView {
@@ -354,7 +624,8 @@ export interface QuantModelSpecView {
   feature_schema_version: number;
   label_schema_version: number;
   spec_json: unknown;
-  feature_requirements: ModelFeatureRequirements;
+  input_contract: ModelInputContract;
+  training_contract: ModelTrainingContract;
   status: PublicationStatus;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
@@ -368,7 +639,8 @@ export interface CreateModelSpecRequest {
   feature_schema_version?: number;
   label_schema_version?: number;
   spec_json?: unknown;
-  feature_requirements?: ModelFeatureRequirements;
+  input_contract: ModelInputContract;
+  training_contract: ModelTrainingContract;
   reason: string;
 }
 
@@ -564,12 +836,10 @@ export interface RunBacktestRequest {
 
 /** `POST /research/models/{id}/cpcv-backtest` governed request body. */
 export interface RunCpcvBacktestRequest {
+  /** The exact frozen dataset linked to the model version. */
   training_dataset_id: UuidString;
+  /** Governed CPCV/trial-grid runtime policy. */
   runtime_config_version_id: UuidString;
-  model_family: string;
-  label_name: string;
-  label_horizon_secs: number;
-  prediction_horizon_secs: number;
   reason: string;
   path_set_id?: UuidString;
 }
@@ -628,11 +898,11 @@ export type GateId =
   | 'calibration_required'
   | 'category_concentration'
   | 'cpcv_required'
-  | 'critical_feature_coverage'
   | 'deflated_sharpe'
   | 'hit_rate'
   | 'label_coverage'
   | 'liquidity_exit_feasible'
+  | 'materialization_coverage'
   | 'max_drawdown'
   | 'min_track_record_length'
   | 'no_pit_leakage'
@@ -732,6 +1002,7 @@ export interface ResearchJobListQuery extends PageQuery, TimeRangeQuery {
   kind?: ResearchJobKind;
   status?: ResearchJobStatus;
   model_spec_id?: string;
+  result_ref?: UuidString;
 }
 
 /** `POST /research/jobs/{id}/cancel` governed request body. */

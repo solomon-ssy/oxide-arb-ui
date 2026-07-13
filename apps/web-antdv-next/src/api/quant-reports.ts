@@ -2,6 +2,7 @@ import type {
   Paginated,
   QuantRecommendationView,
   QuantReportDetailView,
+  QuantReportDiagnosticsView,
   QuantReportListQuery,
   QuantReportView,
   ReportDiffView,
@@ -24,6 +25,7 @@ export namespace QuantReportApi {
   export const detail = (id: string) => `${base}/${id}`;
   export const recommendations = (id: string) =>
     `${base}/${id}/recommendations`;
+  export const diagnostics = (id: string) => `${base}/${id}/diagnostics`;
   export const diff = (id: string, otherId: string) =>
     `${base}/${id}/diff/${otherId}`;
   export const revoke = (id: string) => `${base}/${id}/revoke`;
@@ -68,6 +70,13 @@ export async function getQuantReport(id: string) {
 export async function listReportRecommendations(id: string) {
   return requestClient.get<QuantRecommendationView[]>(
     QuantReportApi.recommendations(id),
+  );
+}
+
+/** `GET /quant/reports/{id}/diagnostics` — durable serving evidence summary. */
+export async function getQuantReportDiagnostics(id: string) {
+  return requestClient.get<QuantReportDiagnosticsView>(
+    QuantReportApi.diagnostics(id),
   );
 }
 

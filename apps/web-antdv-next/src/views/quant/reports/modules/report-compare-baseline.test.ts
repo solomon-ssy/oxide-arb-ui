@@ -6,10 +6,10 @@ import { describe, expect, it } from 'vitest';
 
 import { defaultBaseline } from './report-compare-baseline';
 
-function option(id: string, asOf: string): CompareOption {
+function option(id: string, decisionAt: string): CompareOption {
   return {
-    as_of: asOf,
-    label: `${asOf} · ${id}`,
+    decision_at: decisionAt,
+    label: `${decisionAt} · ${id}`,
     status: RECOMMENDATION_REPORT_STATUSES.published,
     value: id,
   };

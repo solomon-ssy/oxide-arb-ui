@@ -1,6 +1,6 @@
 /**
  * Ad-hoc report run flow (dashboard quick action; reused by the 10.3 reports
- * page): an optional-parameter modal (top N / source delay) chained into the
+ * page): an optional-parameter modal (top N / knowledge lag) chained into the
  * canonical governed-action modal (acting role + reason), then
  * `POST /quant/reports/run` (202 accepted — completion arrives over the
  * `quant.report` WS channel).

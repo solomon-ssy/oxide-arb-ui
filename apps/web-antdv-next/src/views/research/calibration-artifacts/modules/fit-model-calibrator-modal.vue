@@ -80,17 +80,8 @@ const runPreflight = useDebounceFn(async () => {
 }, 400);
 
 async function loadOptions() {
-  const [models, built, ready] = await Promise.all([
+  const [models, ready] = await Promise.all([
     handleRequest(() => listModels({ size: 200 }), { silent: true }),
-    handleRequest(
-      () =>
-        listTrainingDatasets({
-          purpose: DATASET_PURPOSES.calibration,
-          size: 200,
-          status: TRAINING_DATASET_STATUSES.built,
-        }),
-      { silent: true },
-    ),
     handleRequest(
       () =>
         listTrainingDatasets({
@@ -107,7 +98,7 @@ async function loadOptions() {
   }));
   const seen = new Set<string>();
   const datasets: OptionItem[] = [];
-  for (const dataset of [...(built?.items ?? []), ...(ready?.items ?? [])]) {
+  for (const dataset of ready?.items ?? []) {
     if (seen.has(dataset.training_dataset_id)) {
       continue;
     }

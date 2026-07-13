@@ -1,24 +1,31 @@
 <script lang="ts" setup>
-import type { RunCpcvBacktestRequest } from '@vben/types';
+import type {
+  CpcvFrozenContract,
+  CpcvRequestBody,
+} from './model-cpcv-contract';
 
 import { computed, ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert } from 'antdv-next';
+import { Alert, Descriptions, DescriptionsItem, message } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
-import { getModelSpec, getTrainingDataset } from '#/api/research';
+import { getModelSpec } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
+import { formatDurationSecs } from '#/shared/components/format';
 
-import { useTrainableDatasetOptions } from '../../shared/use-trainable-dataset-options';
+import {
+  cpcvFrozenContractFromSpec,
+  cpcvRequestBody,
+} from './model-cpcv-contract';
 
 defineOptions({ name: 'ModelCpcvModal' });
 
 /** Domain body collected by the form (governed `reason` is added by the caller). */
-export type CpcvBody = Omit<RunCpcvBacktestRequest, 'reason'>;
+export type CpcvBody = CpcvRequestBody;
 
 export interface ModelCpcvPayload {
   modelVersionId: string;
@@ -32,24 +39,15 @@ interface OptionItem {
   value: string;
 }
 
-/** Phase 11.5.1: Sell's frozen supervised label, mirroring Buy's default of
- * `settlement_outcome` — the CPCV request must select the label the family
- * actually trains against, not a Buy-only default. */
 const SELL_MODEL_FAMILY = 'hold_vs_exit_weighted';
-
-function defaultLabelNameForFamily(modelFamily?: string): string {
-  return modelFamily === SELL_MODEL_FAMILY
-    ? 'hold_vs_exit_alpha_bps'
-    : 'settlement_outcome';
-}
 
 const { handleRequest } = useRequestHandler();
 
 const payload = ref<ModelCpcvPayload | null>(null);
-const prefillDatasetId = ref<string | undefined>();
-const currentModelFamily = ref<string | undefined>();
+const frozenContract = ref<CpcvFrozenContract | null>(null);
+const contractLoaded = ref(false);
 const isSellFamily = computed(
-  () => currentModelFamily.value === SELL_MODEL_FAMILY,
+  () => frozenContract.value?.modelFamily === SELL_MODEL_FAMILY,
 );
 const cpcvHint = computed(() =>
   isSellFamily.value
@@ -61,11 +59,6 @@ const cpcvSummary = computed(() =>
     ? $t('page.research.models.cpcv.sellSummary')
     : $t('page.research.models.cpcv.summary'),
 );
-const {
-  datasetOptions,
-  loading: datasetLoading,
-  reload: reloadDatasets,
-} = useTrainableDatasetOptions({ prefillId: prefillDatasetId });
 
 async function loadOptions() {
   const versions = await handleRequest(
@@ -84,91 +77,34 @@ async function loadOptions() {
   ]);
 }
 
-async function prefillFromSpecAndDataset() {
+async function loadFrozenContract() {
   const currentPayload = payload.value;
   if (!currentPayload) {
     return;
   }
-  const trainingDatasetId = currentPayload.trainingDatasetId;
-  const [spec, dataset] = await Promise.all([
-    handleRequest(() => getModelSpec(currentPayload.modelSpecId), {
-      silent: true,
-    }),
-    trainingDatasetId
-      ? handleRequest(() => getTrainingDataset(trainingDatasetId), {
-          silent: true,
-        })
-      : Promise.resolve(null),
-  ]);
-  const values: Record<string, unknown> = {
-    training_dataset_id: trainingDatasetId || undefined,
-  };
-  if (spec) {
-    currentModelFamily.value = spec.model_family;
-    values.model_family = spec.model_family;
-    values.prediction_horizon_secs = spec.prediction_horizon_secs;
-    values.label_name = defaultLabelNameForFamily(spec.model_family);
+  const modelSpecId = currentPayload.modelSpecId;
+  contractLoaded.value = false;
+  const spec = await handleRequest(() => getModelSpec(modelSpecId), {
+    silent: true,
+  });
+  if (payload.value?.modelSpecId !== modelSpecId) {
+    return;
   }
-  if (spec?.model_family === SELL_MODEL_FAMILY) {
-    values.label_horizon_secs = 0;
-  } else if (dataset?.horizons_secs?.length) {
-    values.label_horizon_secs = dataset.horizons_secs[0];
-  }
-  formApi.setValues(values);
-  syncFamilySchema();
-}
-
-function syncDatasetSchema() {
-  formApi.updateSchema([
-    {
-      componentProps: {
-        loading: datasetLoading.value,
-        optionFilterProp: 'label',
-        options: datasetOptions.value,
-        placeholder: $t('page.research.datasets.selector.placeholder'),
-      },
-      fieldName: 'training_dataset_id',
-    },
-  ]);
-}
-
-function syncFamilySchema() {
-  const sell = isSellFamily.value;
-  formApi.updateSchema([
-    {
-      componentProps: { disabled: true, readonly: true },
-      fieldName: 'model_family',
-    },
-    {
-      componentProps: { disabled: true, readonly: true },
-      fieldName: 'label_name',
-    },
-    {
-      componentProps: {
-        disabled: sell,
-        min: 0,
-      },
-      fieldName: 'label_horizon_secs',
-    },
-  ]);
+  frozenContract.value = spec ? cpcvFrozenContractFromSpec(spec) : null;
+  contractLoaded.value = true;
 }
 
 async function onSubmit(values: Record<string, unknown>) {
   if (!payload.value) {
     return;
   }
+  if (!frozenContract.value) {
+    message.error($t('page.research.models.cpcv.contractUnavailable'));
+    return;
+  }
   modalApi.lock();
   try {
-    const ok = await payload.value.onSubmit({
-      label_horizon_secs: isSellFamily.value
-        ? 0
-        : Number(values.label_horizon_secs ?? 0),
-      label_name: values.label_name as string,
-      model_family: values.model_family as string,
-      prediction_horizon_secs: Number(values.prediction_horizon_secs ?? 86_400),
-      runtime_config_version_id: values.runtime_config_version_id as string,
-      training_dataset_id: values.training_dataset_id as string,
-    });
+    const ok = await payload.value.onSubmit(cpcvRequestBody(values));
     if (ok) {
       modalApi.close();
     }
@@ -184,17 +120,13 @@ const [Form, formApi] = useVbenForm({
   handleSubmit: onSubmit,
   schema: [
     {
-      component: 'Select',
+      component: 'Input',
       componentProps: {
-        loading: false,
-        optionFilterProp: 'label',
-        options: [],
-        placeholder: $t('page.research.datasets.selector.placeholder'),
-        showSearch: true,
+        readonly: true,
       },
       fieldName: 'training_dataset_id',
       label: $t('page.research.models.cpcv.trainingDataset'),
-      rules: 'selectRequired',
+      rules: 'required',
     },
     {
       component: 'Select',
@@ -207,35 +139,6 @@ const [Form, formApi] = useVbenForm({
       label: $t('page.research.models.cpcv.runtimeConfigVersion'),
       rules: 'selectRequired',
     },
-    {
-      component: 'Input',
-      componentProps: { disabled: true, readonly: true },
-      fieldName: 'model_family',
-      label: $t('page.research.models.cpcv.modelFamily'),
-      rules: 'required',
-    },
-    {
-      component: 'Input',
-      componentProps: { disabled: true, readonly: true },
-      fieldName: 'label_name',
-      label: $t('page.research.models.cpcv.labelName'),
-      rules: 'required',
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { min: 0 },
-      defaultValue: 0,
-      fieldName: 'label_horizon_secs',
-      label: $t('page.research.models.cpcv.labelHorizonSecs'),
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { min: 1 },
-      defaultValue: 86_400,
-      fieldName: 'prediction_horizon_secs',
-      label: $t('page.research.models.cpcv.predictionHorizonSecs'),
-      rules: 'required',
-    },
   ],
   showDefaultActions: false,
 });
@@ -246,21 +149,14 @@ const [Modal, modalApi] = useVbenModal({
   onOpenChange(isOpen) {
     if (isOpen) {
       payload.value = modalApi.getData<ModelCpcvPayload>();
-      prefillDatasetId.value = payload.value?.trainingDatasetId || undefined;
-      currentModelFamily.value = undefined;
+      frozenContract.value = null;
+      contractLoaded.value = false;
       formApi.resetForm();
       formApi.setValues({
-        label_horizon_secs: 0,
-        prediction_horizon_secs: 86_400,
         training_dataset_id: payload.value?.trainingDatasetId || undefined,
       });
-      syncFamilySchema();
-      formApi.updateSchema([
-        { componentProps: { loading: true }, fieldName: 'training_dataset_id' },
-      ]);
-      void reloadDatasets().then(syncDatasetSchema);
       void loadOptions();
-      void prefillFromSpecAndDataset();
+      void loadFrozenContract();
     }
   },
 });
@@ -272,6 +168,52 @@ const [Modal, modalApi] = useVbenModal({
     <p class="text-muted-foreground mb-4 text-sm">
       {{ cpcvSummary }}
     </p>
+    <Alert
+      class="mb-4"
+      :description="$t('page.research.models.cpcv.frozenContractHint')"
+      :message="$t('page.research.models.cpcv.frozenContractTitle')"
+      show-icon
+      type="info"
+    />
+    <Descriptions
+      v-if="frozenContract"
+      class="mb-4"
+      :column="2"
+      bordered
+      size="small"
+    >
+      <DescriptionsItem :label="$t('page.research.models.cpcv.modelFamily')">
+        <code>{{ frozenContract.modelFamily }}</code>
+      </DescriptionsItem>
+      <DescriptionsItem :label="$t('page.research.models.cpcv.labelName')">
+        <code>{{ frozenContract.targetLabelName }}</code>
+      </DescriptionsItem>
+      <DescriptionsItem
+        :label="$t('page.research.models.cpcv.labelHorizonSecs')"
+      >
+        {{ formatDurationSecs(frozenContract.targetLabelHorizonSecs) }}
+      </DescriptionsItem>
+      <DescriptionsItem
+        :label="$t('page.research.models.cpcv.predictionHorizonSecs')"
+      >
+        {{ formatDurationSecs(frozenContract.predictionHorizonSecs) }}
+      </DescriptionsItem>
+      <DescriptionsItem
+        :label="$t('page.research.models.cpcv.validationFolds')"
+      >
+        {{ frozenContract.validationFolds }}
+      </DescriptionsItem>
+      <DescriptionsItem :label="$t('page.research.models.cpcv.rawInputs')">
+        {{ frozenContract.rawInputCount }}
+      </DescriptionsItem>
+    </Descriptions>
+    <Alert
+      v-else-if="contractLoaded"
+      class="mb-4"
+      :message="$t('page.research.models.cpcv.contractUnavailable')"
+      show-icon
+      type="error"
+    />
     <Form />
   </Modal>
 </template>

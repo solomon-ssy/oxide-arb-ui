@@ -136,7 +136,7 @@ describe('dispatchWsEnvelope', () => {
   it('quant.report bumps the report revision and records the last event', () => {
     dispatchWsEnvelope(
       envelope('quant.report', {
-        as_of: '2026-06-11T12:00:00Z',
+        decision_at: '2026-06-11T12:00:00Z',
         event: 'published',
         recommendation_report_id: 'r1',
         report_kind: 'top_n',

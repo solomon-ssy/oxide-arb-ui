@@ -183,7 +183,7 @@ export interface ReportScheduleConfig {
   cadence: ScheduleCadence;
   enabled: boolean;
   schedule_id: string;
-  source_delay_secs: number;
+  knowledge_lag_secs: number;
   top_n: number;
 }
 

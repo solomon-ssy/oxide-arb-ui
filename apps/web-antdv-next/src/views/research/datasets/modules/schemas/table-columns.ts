@@ -2,11 +2,11 @@ import type { TrainingDatasetView } from '@vben/types';
 
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
-import { isTrainableDatasetStatus } from '@vben/types';
-
 import { $t } from '#/locales';
 import { useTrainingDatasetStatusTagOptions } from '#/shared/components/format/tag-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
+
+import { canTrainDataset } from '../dataset-action-state';
 
 export function useTrainingDatasetColumns(
   onActionClick: OnActionClickFn<TrainingDatasetView>,
@@ -101,7 +101,7 @@ export function useTrainingDatasetColumns(
           iconOp<TrainingDatasetView>(
             'train',
             $t('page.research.datasets.actions.train'),
-            { show: (row) => canTrain && isTrainableDatasetStatus(row.status) },
+            { show: (row) => canTrainDataset(canTrain, row) },
           ),
         ],
       },

@@ -68,7 +68,7 @@ export function useReportSearchSchema(): VbenFormSchema[] {
         valueFormat: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
       },
       fieldName: 'range',
-      label: $t('page.quantReports.columns.asOf'),
+      label: $t('page.quantReports.columns.decisionAt'),
     },
   ];
 }

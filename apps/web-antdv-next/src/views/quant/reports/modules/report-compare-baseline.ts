@@ -8,21 +8,23 @@ import type { RecommendationReportStatus } from '@vben/types';
 
 /** One selectable baseline report. */
 export interface CompareOption {
-  as_of: string;
+  decision_at: string;
   label: string;
   status: RecommendationReportStatus;
   value: string;
 }
 
 /**
- * Default baseline value given options sorted newest-first by `as_of`: the most
- * recent option strictly older than `currentAsOf`, else the newest option, else
+ * Default baseline value given options sorted newest-first by `decision_at`: the most
+ * recent option strictly older than `currentDecisionAt`, else the newest option, else
  * `undefined` when there is nothing to compare against.
  */
 export function defaultBaseline(
   options: CompareOption[],
-  currentAsOf: string,
+  currentDecisionAt: string,
 ): string | undefined {
-  const previous = options.find((option) => option.as_of < currentAsOf);
+  const previous = options.find(
+    (option) => option.decision_at < currentDecisionAt,
+  );
   return (previous ?? options[0])?.value;
 }

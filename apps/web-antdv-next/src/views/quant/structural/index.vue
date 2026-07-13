@@ -214,6 +214,10 @@ function formatOptionalCount(value: null | number | undefined): string {
   return String(value);
 }
 
+function formatOptionalSeconds(value: null | number | undefined): string {
+  return value === null || value === undefined ? '—' : `${value}s`;
+}
+
 function formatRatio(value: null | string): string {
   const decimal = parseDecimal(value);
   return decimal === null ? '—' : decimal.toFixed(4);
@@ -448,52 +452,56 @@ watch(topMarkets, () => {
                 :label="$t('page.structuralAlpha.coverage.source')"
               >
                 {{ coverageHealth?.source ?? '—' }}
-                <Tag :color="coverageHealth?.enabled ? 'success' : 'default'">
+                <Tag
+                  v-if="typeof coverageHealth?.enabled === 'boolean'"
+                  :color="coverageHealth.enabled ? 'success' : 'default'"
+                >
                   {{
-                    coverageHealth?.enabled
+                    coverageHealth.enabled
                       ? $t('page.structuralAlpha.coverage.enabled')
                       : $t('page.structuralAlpha.coverage.disabled')
                   }}
                 </Tag>
+                <span v-else>—</span>
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.structuralAlpha.coverage.marketCursors')"
               >
-                {{ coverage?.market_cursor_count ?? 0 }}
+                {{ formatOptionalCount(coverage?.market_cursor_count) }}
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.structuralAlpha.coverage.health')"
               >
                 {{ $t('page.structuralAlpha.coverage.bootstrap') }}:
-                {{ coverageHealth?.bootstrap_count ?? 0 }} ·
+                {{ formatOptionalCount(coverageHealth?.bootstrap_count) }} ·
                 {{ $t('page.structuralAlpha.coverage.catchingUp') }}:
-                {{ coverageHealth?.catching_up_count ?? 0 }} ·
+                {{ formatOptionalCount(coverageHealth?.catching_up_count) }} ·
                 {{ $t('page.structuralAlpha.coverage.live') }}:
-                {{ coverageHealth?.live_count ?? 0 }} ·
+                {{ formatOptionalCount(coverageHealth?.live_count) }} ·
                 {{ $t('page.structuralAlpha.coverage.empty') }}:
-                {{ coverageHealth?.empty_count ?? 0 }} ·
+                {{ formatOptionalCount(coverageHealth?.empty_count) }} ·
                 {{ $t('page.structuralAlpha.coverage.error') }}:
-                {{ coverageHealth?.error_count ?? 0 }}
+                {{ formatOptionalCount(coverageHealth?.error_count) }}
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.structuralAlpha.coverage.window')"
               >
-                {{ coverage?.window_secs ?? 0 }}s
+                {{ formatOptionalSeconds(coverage?.window_secs) }}
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.structuralAlpha.coverage.delay')"
               >
-                {{ coverage?.source_delay_secs ?? 0 }}s
+                {{ formatOptionalSeconds(coverage?.knowledge_lag_secs) }}
               </DescriptionsItem>
               <DescriptionsItem
-                :label="$t('page.structuralAlpha.coverage.pitAsOf')"
+                :label="$t('page.structuralAlpha.coverage.decisionAt')"
               >
-                {{ formatDateTimeLocal(coverage?.pit_as_of) }}
+                {{ formatDateTimeLocal(coverage?.decision_at) }}
               </DescriptionsItem>
               <DescriptionsItem
-                :label="$t('page.structuralAlpha.coverage.pitCutoff')"
+                :label="$t('page.structuralAlpha.coverage.knowledgeCutoff')"
               >
-                {{ formatDateTimeLocal(coverage?.pit_cutoff) }}
+                {{ formatDateTimeLocal(coverage?.knowledge_cutoff) }}
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.structuralAlpha.coverage.updatedAt')"
@@ -537,7 +545,7 @@ watch(topMarkets, () => {
                 <span class="text-muted-foreground text-xs">
                   {{ event.leg_count }}
                   {{ $t('page.structuralAlpha.negrisk.legs') }} ·
-                  {{ formatDateTimeLocal(event.as_of) }}
+                  {{ formatDateTimeLocal(event.computed_at) }}
                 </span>
               </div>
             </template>

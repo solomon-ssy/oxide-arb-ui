@@ -8,6 +8,7 @@ const ACTION_ICONS = {
   cancel: 'lucide:ban',
   cpcv: 'lucide:git-branch',
   detail: 'lucide:eye',
+  events: 'lucide:list-tree',
   override: 'lucide:pen-line',
   publish: 'lucide:badge-check',
   reject: 'lucide:x',

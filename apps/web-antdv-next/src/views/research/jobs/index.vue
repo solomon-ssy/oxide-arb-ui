@@ -3,8 +3,8 @@ import type { ResearchJobView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -34,6 +34,7 @@ import {
 defineOptions({ name: 'ResearchJobsPage' });
 
 const router = useRouter();
+const route = useRoute();
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
@@ -70,6 +71,7 @@ const [Grid, gridApi] = useVbenVxeGrid<ResearchJobView>({
               from: (range[0] as string | undefined) || undefined,
               kind: (formValues.kind as any) || undefined,
               page: page.currentPage,
+              result_ref: (formValues.result_ref as string) || undefined,
               size: page.pageSize,
               status: (formValues.status as any) || undefined,
               to: (range[1] as string | undefined) || undefined,
@@ -91,6 +93,19 @@ watch(
   () => researchStore.revision,
   () => void gridApi.query(),
 );
+
+function applyResultDeepLink() {
+  const raw = route.query.result_ref;
+  const resultRef = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof resultRef !== 'string' || resultRef === '') {
+    return;
+  }
+  void gridApi.formApi.setValues({ result_ref: resultRef });
+  void gridApi.query();
+}
+
+onMounted(applyResultDeepLink);
+watch(() => route.query.result_ref, applyResultDeepLink);
 
 async function cancel(row: ResearchJobView) {
   const ok = await governed((ctx) => cancelResearchJob(row.job_id, ctx), {

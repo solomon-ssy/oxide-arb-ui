@@ -7,8 +7,13 @@ import type {
   UuidString,
 } from './common';
 import type {
+  DecisionBoundaryEvidenceView,
+  ModelRouteEvidenceView,
+} from './decision-evidence';
+import type {
   AccountSource,
   EmptyReportReason,
+  FeatureParityStage,
   MarketCategory,
   OutcomeSide,
   QuantRuntimeMode,
@@ -25,7 +30,7 @@ export interface QuantReportView {
   trigger_kind: ReportTriggerKind;
   status: RecommendationReportStatus;
   runtime_mode: QuantRuntimeMode;
-  as_of: IsoDateTime;
+  decision_at: IsoDateTime;
   top_n: number;
   account_source: AccountSource;
   capital_base_usd: UsdString;
@@ -96,13 +101,33 @@ export interface ReportSummary {
 export interface QuantReportDetailView extends QuantReportView {
   trigger_key: string;
   trigger_time: IsoDateTime;
-  source_delay_secs: number;
+  knowledge_lag_secs: number;
   horizon_secs: number;
   account_snapshot_ref: UuidString;
   runtime_config_version_id: UuidString;
+  /** Exact serving run; absent only when an empty report stopped before inference. */
+  model_run_id: null | UuidString;
   model_version_id: UuidString;
   market_selection_id: UuidString;
   summary: ReportSummary;
+}
+
+/** Durable serving diagnostics for one report. */
+export type ReportDiagnosticsSubject = 'model_run' | 'pre_inference_report';
+
+export interface QuantReportDiagnosticsView {
+  decision_boundary: DecisionBoundaryEvidenceView | null;
+  decision_capture_count: null | number;
+  evidence_complete: boolean;
+  feature_cell_count: null | number;
+  feature_state_counts: null | Record<string, number>;
+  feature_vector_count: null | number;
+  model_input_count: null | number;
+  model_input_state_counts: null | Record<string, number>;
+  model_route: ModelRouteEvidenceView | null;
+  selection_count: number;
+  stage_ceiling: FeatureParityStage;
+  subject: ReportDiagnosticsSubject;
 }
 
 /** One recommendation delta between two reports. */
@@ -146,7 +171,7 @@ export interface RunReportRequest {
   /** Caller idempotency key (`ad_hoc:{request_id}` trigger key on the server). */
   request_id: string;
   top_n?: number;
-  source_delay_secs?: number;
+  knowledge_lag_secs?: number;
 }
 
 /** `POST /quant/reports/run` accepted (202) response. */

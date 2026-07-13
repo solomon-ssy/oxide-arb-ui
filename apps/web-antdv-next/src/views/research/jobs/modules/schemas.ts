@@ -63,6 +63,9 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
     case RESEARCH_JOB_KINDS.datasetBuild: {
       return `/research/datasets?open=${row.result_ref}`;
     }
+    case RESEARCH_JOB_KINDS.featureParity: {
+      return `/research/feature-integrity?run_id=${row.result_ref}`;
+    }
     case RESEARCH_JOB_KINDS.modelTrain: {
       return `/research/models?open=${row.result_ref}`;
     }
@@ -169,6 +172,11 @@ export function useResearchJobColumns(
 
 export function useResearchJobSearchSchema(): VbenFormSchema[] {
   return [
+    {
+      component: 'Input',
+      fieldName: 'result_ref',
+      label: $t('page.research.jobs.filters.resultRef'),
+    },
     {
       component: 'Select',
       componentProps: {

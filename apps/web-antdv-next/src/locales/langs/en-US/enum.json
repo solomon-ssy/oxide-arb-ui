@@ -137,12 +137,12 @@
   "normalizationSource": {
     "cross_section": "Cross-section",
     "per_market": "Per-market",
-    "historical_quantile": "Historical quantile"
+    "frozen_reference_quantile": "Frozen training-reference quantile"
   },
   "factorIndeterminateReason": {
     "cross_section_too_small": "Cross-section too small",
     "zero_variance": "Zero variance",
-    "no_history": "No history",
+    "no_frozen_reference": "No frozen training reference",
     "leg_book_missing": "Neg-risk leg book missing"
   },
   "factorValueState": {
@@ -169,11 +169,15 @@
   "trainingDatasetStatus": {
     "planned": "Planned",
     "building": "Building",
-    "built": "Built",
     "insufficient_labels": "Insufficient Labels",
     "ready": "Ready",
     "expired": "Expired",
     "failed": "Failed"
+  },
+  "trainingSampleSource": {
+    "exit_decision": "Exit decision",
+    "historical_pit": "Historical PIT",
+    "live_attribution": "Live attribution"
   },
   "executionRecoveryStep": {
     "resolve_unresolvable_reconciliations": "Resolve unresolvable reconciliations",
@@ -338,7 +342,41 @@
     "backtest": "Backtest",
     "cpcv_backtest": "CPCV validation",
     "bias_table_fit": "Bias-table fit",
+    "feature_parity": "Feature parity",
     "model_calibration_fit": "Model calibrator fit"
+  },
+  "featureParityRunKind": {
+    "sampled": "Sampled",
+    "full": "Full"
+  },
+  "featureParityRunStatus": {
+    "queued": "Queued",
+    "running": "Running",
+    "passed": "Passed",
+    "mismatched": "Mismatched",
+    "pending_materialization": "Pending materialization",
+    "failed": "Failed"
+  },
+  "featureParityStage": {
+    "selection": "Selection",
+    "snapshot": "Snapshot",
+    "capture": "Decision capture",
+    "feature_cell": "Feature cell",
+    "data_quality": "Data quality admission",
+    "factor": "Factor",
+    "model_input": "Model input",
+    "prediction": "Prediction"
+  },
+  "featureParityEventStatus": {
+    "matched": "Matched",
+    "mismatched": "Mismatched",
+    "pending_materialization": "Pending materialization"
+  },
+  "featureCellState": {
+    "observed": "Observed",
+    "substituted": "Substituted",
+    "missing": "Missing",
+    "not_applicable": "Not applicable"
   },
   "calibrationKind": {
     "model_score": "Model score",
@@ -461,7 +499,7 @@
   "qualityGate": {
     "sample_count": "Sample Count",
     "label_coverage": "Label Coverage",
-    "critical_feature_coverage": "Feature Coverage",
+    "materialization_coverage": "Materialization Coverage",
     "no_pit_leakage": "No PIT Leakage",
     "max_drawdown": "Max Drawdown",
     "liquidity_exit_feasible": "Liquidity Exit Feasibility",

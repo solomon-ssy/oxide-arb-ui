@@ -1,0 +1,98 @@
+import type { TrainingDatasetView } from '@vben/types';
+
+import { describe, expect, it } from 'vitest';
+
+import {
+  datasetManifestBindingIssues,
+  hasUsableDatasetManifest,
+} from './dataset-manifest';
+
+function dataset(): TrainingDatasetView {
+  const datasetHash = `blake3:${'a'.repeat(64)}`;
+  const featureHash = `blake3:${'b'.repeat(64)}`;
+  const factorHash = `blake3:${'c'.repeat(64)}`;
+  const labelHash = `blake3:${'d'.repeat(64)}`;
+  return {
+    artifact_bytes_hash: `blake3:${'e'.repeat(64)}`,
+    completed_at: '2026-07-10T11:00:00.000Z',
+    coverage_json: null,
+    created_at: '2026-07-10T10:00:00.000Z',
+    dataset_hash: datasetHash,
+    factor_schema_hash: factorHash,
+    failure_detail: null,
+    feature_schema_hash: featureHash,
+    feature_schema_version: 6,
+    horizons_secs: [3600, 86_400],
+    knowledge_lag_secs: 10,
+    label_schema_hash: labelHash,
+    manifest: {
+      factor_schema_hash: factorHash,
+      feature_schema_hash: featureHash,
+      format_version: 2,
+      horizons_secs: [3600, 86_400],
+      knowledge_lag_secs: 10,
+      label_schema_hash: labelHash,
+      model_spec_id: 'model-spec',
+      purpose: 'training',
+      runtime_config_version_id: '01900000-0000-7000-8000-000000000002',
+      sample_count: 20,
+      sample_interval_secs: 300,
+      semantic_dataset_hash: datasetHash,
+      source_fingerprint: `blake3:${'f'.repeat(64)}`,
+      training_dataset_id: '01900000-0000-7000-8000-000000000001',
+      window_end: '2026-07-10T10:00:00.000Z',
+      window_start: '2026-07-09T10:00:00.000Z',
+    },
+    manifest_hash: `blake3:${'1'.repeat(64)}`,
+    model_spec_id: 'model-spec',
+    parquet_uri: 's3://datasets/frozen.parquet',
+    purpose: 'training',
+    runtime_config_version_id: '01900000-0000-7000-8000-000000000002',
+    sample_count: 20,
+    sample_interval_secs: 300,
+    sample_sources: ['historical_pit'],
+    status: 'ready',
+    training_dataset_id: '01900000-0000-7000-8000-000000000001',
+    window_end: '2026-07-10T10:00:00.000Z',
+    window_start: '2026-07-09T10:00:00.000Z',
+  };
+}
+
+describe('dataset v2 manifest bindings', () => {
+  it('accepts an exact structured manifest without substituting any field', () => {
+    const value = dataset();
+    expect(datasetManifestBindingIssues(value)).toEqual([]);
+    expect(hasUsableDatasetManifest(value)).toBe(true);
+  });
+
+  it('reports every mismatched binding, including order-sensitive horizons', () => {
+    const value = dataset();
+    const manifest = value.manifest;
+    if (!manifest) {
+      throw new Error('test fixture requires a v2 manifest');
+    }
+    value.manifest = {
+      ...manifest,
+      format_version: 1,
+      horizons_secs: [86_400, 3600],
+      sample_count: 19,
+      semantic_dataset_hash: `blake3:${'9'.repeat(64)}`,
+    };
+    expect(
+      datasetManifestBindingIssues(value).map((issue) => issue.field),
+    ).toEqual([
+      'format_version',
+      'horizons_secs',
+      'semantic_dataset_hash',
+      'sample_count',
+    ]);
+    expect(hasUsableDatasetManifest(value)).toBe(false);
+  });
+
+  it('keeps an absent legacy manifest unavailable instead of synthesizing v2', () => {
+    const value = dataset();
+    value.manifest = null;
+    expect(datasetManifestBindingIssues(value)).toEqual([]);
+    expect(hasUsableDatasetManifest(value)).toBe(false);
+  });
+});

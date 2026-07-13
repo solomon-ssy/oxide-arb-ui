@@ -27,7 +27,7 @@ export interface TrainableDatasetOptionsParams {
 export interface TrainableDatasetOptionsControls {
   datasetOptions: Ref<OptionItem[]>;
   loading: Ref<boolean>;
-  /** Re-fetch built + ready datasets (call on modal open / spec change). */
+  /** Re-fetch integrity-gated Ready datasets (call on modal open / spec change). */
   reload: () => Promise<void>;
 }
 
@@ -41,10 +41,9 @@ function toOption(dataset: TrainingDatasetView): OptionItem {
 }
 
 /**
- * Trainable dataset selector source. The list API filters by a single status,
- * so `built` and `ready` are fetched in parallel and merged (deduped by id,
- * newest-first). An out-of-pool `prefillId` (e.g. an expired dataset on a model
- * row) is injected as a labelled option so the selection is never silently lost.
+ * Trainable dataset selector source. Only integrity-gated `ready` datasets are
+ * eligible. An out-of-pool `prefillId` (e.g. an expired dataset on a model row)
+ * is injected as a labelled option so the selection is never silently lost.
  */
 export function useTrainableDatasetOptions(
   params: TrainableDatasetOptionsParams = {},
@@ -56,30 +55,19 @@ export function useTrainableDatasetOptions(
   async function reload(): Promise<void> {
     loading.value = true;
     const modelSpecId = params.modelSpecId?.value || undefined;
-    const [built, ready] = await Promise.all([
-      handleRequest(
-        () =>
-          listTrainingDatasets({
-            model_spec_id: modelSpecId,
-            size: DATASET_OPTION_SIZE,
-            status: TRAINING_DATASET_STATUSES.built,
-          }),
-        { silent: true },
-      ),
-      handleRequest(
-        () =>
-          listTrainingDatasets({
-            model_spec_id: modelSpecId,
-            size: DATASET_OPTION_SIZE,
-            status: TRAINING_DATASET_STATUSES.ready,
-          }),
-        { silent: true },
-      ),
-    ]);
+    const ready = await handleRequest(
+      () =>
+        listTrainingDatasets({
+          model_spec_id: modelSpecId,
+          size: DATASET_OPTION_SIZE,
+          status: TRAINING_DATASET_STATUSES.ready,
+        }),
+      { silent: true },
+    );
 
     const seen = new Set<string>();
     const options: OptionItem[] = [];
-    for (const dataset of [...(built?.items ?? []), ...(ready?.items ?? [])]) {
+    for (const dataset of ready?.items ?? []) {
       if (seen.has(dataset.training_dataset_id)) {
         continue;
       }

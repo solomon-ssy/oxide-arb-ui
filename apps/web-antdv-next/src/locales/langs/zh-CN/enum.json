@@ -137,12 +137,12 @@
   "normalizationSource": {
     "cross_section": "截面",
     "per_market": "单市场",
-    "historical_quantile": "历史分位"
+    "frozen_reference_quantile": "冻结训练参考分位"
   },
   "factorIndeterminateReason": {
     "cross_section_too_small": "截面样本过少",
     "zero_variance": "零方差",
-    "no_history": "无历史",
+    "no_frozen_reference": "缺少冻结训练参考分布",
     "leg_book_missing": "Neg-risk 腿订单簿缺失"
   },
   "factorValueState": {
@@ -169,11 +169,15 @@
   "trainingDatasetStatus": {
     "planned": "已计划",
     "building": "构建中",
-    "built": "已构建",
     "insufficient_labels": "标签不足",
     "ready": "就绪",
     "expired": "已过期",
     "failed": "失败"
+  },
+  "trainingSampleSource": {
+    "exit_decision": "退出决策点",
+    "historical_pit": "历史 PIT",
+    "live_attribution": "实时归因"
   },
   "executionRecoveryStep": {
     "resolve_unresolvable_reconciliations": "解决无法自动处理的对账",
@@ -338,7 +342,41 @@
     "backtest": "回测",
     "cpcv_backtest": "CPCV 验证",
     "bias_table_fit": "偏差表拟合",
+    "feature_parity": "特征一致性重放",
     "model_calibration_fit": "模型校准器拟合"
+  },
+  "featureParityRunKind": {
+    "sampled": "抽样重放",
+    "full": "全量重放"
+  },
+  "featureParityRunStatus": {
+    "queued": "排队中",
+    "running": "运行中",
+    "passed": "已通过",
+    "mismatched": "不一致",
+    "pending_materialization": "等待物化",
+    "failed": "失败"
+  },
+  "featureParityStage": {
+    "selection": "选池",
+    "snapshot": "决策快照",
+    "capture": "决策证据捕获",
+    "feature_cell": "特征单元",
+    "data_quality": "数据质量准入",
+    "factor": "因子",
+    "model_input": "模型输入",
+    "prediction": "业务预测"
+  },
+  "featureParityEventStatus": {
+    "matched": "一致",
+    "mismatched": "不一致",
+    "pending_materialization": "等待物化"
+  },
+  "featureCellState": {
+    "observed": "已观测",
+    "substituted": "已替代",
+    "missing": "缺失",
+    "not_applicable": "不适用"
   },
   "calibrationKind": {
     "model_score": "模型分数",
@@ -461,7 +499,7 @@
   "qualityGate": {
     "sample_count": "样本数",
     "label_coverage": "标签覆盖率",
-    "critical_feature_coverage": "特征覆盖率",
+    "materialization_coverage": "样本物化覆盖率",
     "no_pit_leakage": "无未来泄漏",
     "max_drawdown": "最大回撤",
     "liquidity_exit_feasible": "流动性退出可行性",

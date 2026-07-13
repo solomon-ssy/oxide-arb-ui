@@ -27,7 +27,7 @@ import {
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
-import FeatureRequirementsEditor from './feature-requirements-editor.vue';
+import InputContractEditor from './input-contract-editor.vue';
 
 defineOptions({ name: 'ModelSpecDetailDrawer' });
 
@@ -164,14 +164,40 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
         <Card
           size="small"
-          :title="$t('page.research.modelSpecs.detail.featureRequirements')"
+          :title="$t('page.research.modelSpecs.detail.inputContract')"
         >
-          <FeatureRequirementsEditor
-            :model-value="
-              spec.feature_requirements ?? { generic: [], by_category: {} }
-            "
-            read-only
-          />
+          <InputContractEditor :model-value="spec.input_contract" read-only />
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.modelSpecs.detail.trainingContract')"
+        >
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="
+                $t('page.research.modelSpecs.trainingContract.targetLabelName')
+              "
+            >
+              <code>{{ spec.training_contract.target_label_name }}</code>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.modelSpecs.trainingContract.targetLabelHorizonSecs',
+                )
+              "
+            >
+              {{ spec.training_contract.target_label_horizon_secs }}s
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.modelSpecs.trainingContract.validationFolds')
+              "
+            >
+              {{ spec.training_contract.validation_folds }}
+            </DescriptionsItem>
+          </Descriptions>
         </Card>
 
         <Card

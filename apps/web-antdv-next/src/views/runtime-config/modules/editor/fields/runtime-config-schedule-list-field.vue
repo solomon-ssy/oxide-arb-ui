@@ -59,18 +59,18 @@ function normalizeRow(value: unknown): ReportScheduleConfig {
       cadence: defaultCadence(),
       enabled: true,
       schedule_id: '',
-      source_delay_secs: 10,
+      knowledge_lag_secs: 10,
       top_n: 20,
     };
   }
   const row = value as Partial<ReportScheduleConfig>;
   const topN = Number(row.top_n);
-  const delay = Number(row.source_delay_secs);
+  const delay = Number(row.knowledge_lag_secs);
   return {
     cadence: normalizeCadence(row.cadence),
     enabled: Boolean(row.enabled),
     schedule_id: String(row.schedule_id ?? ''),
-    source_delay_secs: Number.isFinite(delay) && delay >= 0 ? delay : 10,
+    knowledge_lag_secs: Number.isFinite(delay) && delay >= 0 ? delay : 10,
     top_n: Number.isFinite(topN) && topN > 0 ? topN : 20,
   };
 }
@@ -106,7 +106,7 @@ function addRow() {
     cadence: { interval_secs: 300, kind: 'interval' },
     enabled: true,
     schedule_id: `schedule_${rows.value.length + 1}`,
-    source_delay_secs: 10,
+    knowledge_lag_secs: 10,
     top_n: 20,
   };
   commit([...rows.value, next]);
@@ -175,16 +175,16 @@ function removeRow(index: number) {
           </label>
           <label class="flex items-center gap-2 text-xs">
             <span class="text-muted-foreground">
-              {{ $t('page.runtimeConfig.editor.schedule.sourceDelay') }}
+              {{ $t('page.runtimeConfig.editor.schedule.knowledgeLag') }}
             </span>
             <InputNumberWithAddon
               :disabled="disabled"
               :min="0"
-              :model-value="row.source_delay_secs"
+              :model-value="row.knowledge_lag_secs"
               addon-after="s"
               @update:model-value="
                 (value) =>
-                  patchRow(index, { source_delay_secs: Number(value ?? 0) })
+                  patchRow(index, { knowledge_lag_secs: Number(value ?? 0) })
               "
             />
           </label>

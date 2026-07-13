@@ -5,6 +5,12 @@ import {
   FACTOR_DEFINITION_SCOPES,
   FACTOR_DIRECTIONS,
   FACTOR_FAMILIES,
+  FACTOR_VALUE_STATES,
+  FEATURE_CELL_STATES,
+  FEATURE_PARITY_EVENT_STATUSES,
+  FEATURE_PARITY_RUN_KINDS,
+  FEATURE_PARITY_RUN_STATUSES,
+  FEATURE_PARITY_STAGES,
   KILL_SWITCH_STATES,
   MARKET_CATEGORIES,
   MARKET_STATUSES,
@@ -422,13 +428,53 @@ export function useTrainingDatasetStatusTagOptions() {
     (value) => $t(`enum.trainingDatasetStatus.${value}`),
     {
       [TRAINING_DATASET_STATUSES.building]: 'processing',
-      [TRAINING_DATASET_STATUSES.built]: 'cyan',
       [TRAINING_DATASET_STATUSES.expired]: 'gold',
       [TRAINING_DATASET_STATUSES.failed]: 'error',
       [TRAINING_DATASET_STATUSES.insufficientLabels]: 'warning',
       [TRAINING_DATASET_STATUSES.planned]: 'geekblue',
       [TRAINING_DATASET_STATUSES.ready]: 'success',
     },
+  );
+}
+
+/** Raw FeatureCell state tags shared by serving, parity, and dataset evidence. */
+export function useFeatureCellStateTagOptions() {
+  return buildTagOptions(
+    Object.values(FEATURE_CELL_STATES),
+    (value) => $t(`enum.featureCellState.${value}`),
+    {
+      [FEATURE_CELL_STATES.missing]: 'error',
+      [FEATURE_CELL_STATES.notApplicable]: 'default',
+      [FEATURE_CELL_STATES.observed]: 'success',
+      [FEATURE_CELL_STATES.substituted]: 'warning',
+    },
+  );
+}
+
+/** Weighted-factor input states used alongside FeatureCell states in model audit. */
+export function useFactorValueStateTagOptions() {
+  return buildTagOptions(
+    Object.values(FACTOR_VALUE_STATES),
+    (value) => $t(`enum.factorValueState.${value}`),
+    {
+      [FACTOR_VALUE_STATES.indeterminate]: 'warning',
+      [FACTOR_VALUE_STATES.missingInput]: 'error',
+      [FACTOR_VALUE_STATES.notApplicable]: 'default',
+      [FACTOR_VALUE_STATES.scored]: 'success',
+    },
+  );
+}
+
+/** Every governed raw model-input state, de-duplicated by its wire value. */
+export function useModelInputStateTagOptions() {
+  const options = [
+    ...useFeatureCellStateTagOptions(),
+    ...useFactorValueStateTagOptions(),
+  ];
+  return options.filter(
+    (option, index) =>
+      options.findIndex((candidate) => candidate.value === option.value) ===
+      index,
   );
 }
 
@@ -506,8 +552,68 @@ export function useResearchJobKindTagOptions() {
       [RESEARCH_JOB_KINDS.biasTableFit]: 'gold',
       [RESEARCH_JOB_KINDS.cpcvBacktest]: 'magenta',
       [RESEARCH_JOB_KINDS.datasetBuild]: 'cyan',
+      [RESEARCH_JOB_KINDS.featureParity]: 'red',
       [RESEARCH_JOB_KINDS.modelCalibrationFit]: 'orange',
       [RESEARCH_JOB_KINDS.modelTrain]: 'purple',
+    },
+  );
+}
+
+/** Exact-replay parity scope tags. */
+export function useFeatureParityRunKindTagOptions() {
+  return buildTagOptions(
+    Object.values(FEATURE_PARITY_RUN_KINDS),
+    (value) => $t(`enum.featureParityRunKind.${value}`),
+    {
+      [FEATURE_PARITY_RUN_KINDS.full]: 'purple',
+      [FEATURE_PARITY_RUN_KINDS.sampled]: 'cyan',
+    },
+  );
+}
+
+/** Exact-replay run lifecycle/outcome tags. */
+export function useFeatureParityRunStatusTagOptions() {
+  return buildTagOptions(
+    Object.values(FEATURE_PARITY_RUN_STATUSES),
+    (value) => $t(`enum.featureParityRunStatus.${value}`),
+    {
+      [FEATURE_PARITY_RUN_STATUSES.failed]: 'error',
+      [FEATURE_PARITY_RUN_STATUSES.mismatched]: 'error',
+      [FEATURE_PARITY_RUN_STATUSES.passed]: 'success',
+      [FEATURE_PARITY_RUN_STATUSES.pendingMaterialization]: 'warning',
+      [FEATURE_PARITY_RUN_STATUSES.queued]: 'geekblue',
+      [FEATURE_PARITY_RUN_STATUSES.running]: 'processing',
+    },
+  );
+}
+
+/** Stage-level comparison outcome tags. */
+export function useFeatureParityEventStatusTagOptions() {
+  return buildTagOptions(
+    Object.values(FEATURE_PARITY_EVENT_STATUSES),
+    (value) => $t(`enum.featureParityEventStatus.${value}`),
+    {
+      [FEATURE_PARITY_EVENT_STATUSES.matched]: 'success',
+      [FEATURE_PARITY_EVENT_STATUSES.mismatched]: 'error',
+      [FEATURE_PARITY_EVENT_STATUSES.pendingMaterialization]: 'warning',
+    },
+  );
+}
+
+/** Deterministic comparison stage tags. */
+export function useFeatureParityStageTagOptions() {
+  return buildTagOptions(
+    Object.values(FEATURE_PARITY_STAGES),
+    (value) => $t(`enum.featureParityStage.${value}`),
+    {
+      [FEATURE_PARITY_STAGES.capture]: 'volcano',
+      [FEATURE_PARITY_STAGES.dataQuality]: 'orange',
+      [FEATURE_PARITY_STAGES.factor]: 'gold',
+      [FEATURE_PARITY_STAGES.featureCell]: 'cyan',
+      [FEATURE_PARITY_STAGES.modelInput]: 'purple',
+      [FEATURE_PARITY_STAGES.prediction]: 'magenta',
+      [FEATURE_PARITY_STAGES.selection]: 'geekblue',
+      [FEATURE_PARITY_STAGES.snapshot]: 'blue',
     },
   );
 }

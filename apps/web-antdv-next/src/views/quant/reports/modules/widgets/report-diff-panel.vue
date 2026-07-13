@@ -193,7 +193,7 @@ onMounted(async () => {
               {{ $t('page.quantReports.detail.diff.baselineReport') }}:
               <span class="font-mono">{{
                 baselineOption
-                  ? formatDateTimeLocal(baselineOption.as_of)
+                  ? formatDateTimeLocal(baselineOption.decision_at)
                   : EMPTY_PLACEHOLDER
               }}</span>
               <Tag
@@ -208,7 +208,7 @@ onMounted(async () => {
             <span>
               {{ $t('page.quantReports.detail.diff.thisReport') }}:
               <span class="font-mono">{{
-                formatDateTimeLocal(report.as_of)
+                formatDateTimeLocal(report.decision_at)
               }}</span>
               <Tag
                 v-if="thisStatusTag"

@@ -1,4 +1,5 @@
 import type {
+  AcknowledgeFeatureParityLatchRequest,
   BacktestPathSetListQuery,
   BacktestPathSetView,
   BacktestReportListQuery,
@@ -11,6 +12,13 @@ import type {
   FactorCollinearityView,
   FactorDefinitionListQuery,
   FactorDefinitionView,
+  FeatureContractView,
+  FeatureIntegrityLatchView,
+  FeatureIntegritySummaryView,
+  FeatureParityEventListQuery,
+  FeatureParityEventView,
+  FeatureParityRunListQuery,
+  FeatureParityRunView,
   ModelComparisonReportView,
   ModelPublishedCatalogQuery,
   ModelSpecListQuery,
@@ -31,6 +39,7 @@ import type {
   RollbackModelRequest,
   RunBacktestRequest,
   RunCpcvBacktestRequest,
+  RunFullFeatureParityRequest,
   TrainedModelView,
   TrainingDatasetListQuery,
   TrainingDatasetPlanView,
@@ -52,6 +61,7 @@ export namespace ResearchApi {
   export const models = '/research/models';
   export const publishedModelCatalog = '/research/models/published-catalog';
   export const modelSpecs = '/research/model-specs';
+  export const featureContract = '/research/feature-contract';
   export const modelSpec = (id: string) => `/research/model-specs/${id}`;
   export const trainModel = '/research/models/train';
   export const model = (id: string) => `/research/models/${id}`;
@@ -88,6 +98,68 @@ export namespace ResearchApi {
   export const job = (id: string) => `/research/jobs/${id}`;
   export const cancelJob = (id: string) => `/research/jobs/${id}/cancel`;
   export const retryJob = (id: string) => `/research/jobs/${id}/retry`;
+  export const featureIntegritySummary = '/research/feature-integrity/summary';
+  export const featureParityRuns = '/research/feature-integrity/runs';
+  export const featureParityEvents = '/research/feature-integrity/events';
+  export const runFullFeatureParity = '/research/feature-integrity/runs/full';
+  export const acknowledgeFeatureParityLatch =
+    '/research/feature-integrity/latch/acknowledge';
+}
+
+/** `GET /research/feature-contract` — active hash-bound model-input catalog. */
+export async function getFeatureContract() {
+  return requestClient.get<FeatureContractView>(ResearchApi.featureContract);
+}
+
+/** `GET /research/feature-integrity/summary` — latch, watermarks and latest runs. */
+export async function getFeatureIntegritySummary() {
+  return requestClient.get<FeatureIntegritySummaryView>(
+    ResearchApi.featureIntegritySummary,
+  );
+}
+
+/** `GET /research/feature-integrity/runs` — exact-replay run ledger. */
+export async function listFeatureParityRuns(
+  query: FeatureParityRunListQuery = {},
+) {
+  return requestClient.get<Paginated<FeatureParityRunView>>(
+    ResearchApi.featureParityRuns,
+    { params: query },
+  );
+}
+
+/** `GET /research/feature-integrity/events` — stage-level comparison evidence. */
+export async function listFeatureParityEvents(
+  query: FeatureParityEventListQuery = {},
+) {
+  return requestClient.get<Paginated<FeatureParityEventView>>(
+    ResearchApi.featureParityEvents,
+    { params: query },
+  );
+}
+
+/** `POST /research/feature-integrity/runs/full` — governed full replay enqueue. */
+export async function runFullFeatureParity(
+  body: RunFullFeatureParityRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<ResearchJobView>(
+    ResearchApi.runFullFeatureParity,
+    body,
+    ctx,
+  );
+}
+
+/** `POST /research/feature-integrity/latch/acknowledge` — governed recovery. */
+export async function acknowledgeFeatureParityLatch(
+  body: AcknowledgeFeatureParityLatchRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<FeatureIntegrityLatchView>(
+    ResearchApi.acknowledgeFeatureParityLatch,
+    body,
+    ctx,
+  );
 }
 
 /** `GET /research/training-datasets` — paginated dataset ledger catalog. */
