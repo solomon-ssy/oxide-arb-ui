@@ -34,10 +34,23 @@ defineOptions({ name: 'RecommendationPlans' });
 
 const props = defineProps<{ recommendation: QuantRecommendationView }>();
 
-const entry = computed(() => props.recommendation.entry_plan);
-const sizing = computed(() => props.recommendation.sizing_plan);
-const exit = computed(() => props.recommendation.exit_plan);
-const risk = computed(() => props.recommendation.risk_envelope);
+type FrozenTradePlan = Extract<
+  QuantRecommendationView['trade_plan'],
+  { kind: 'frozen' }
+>;
+
+function requireFrozenPlan(): FrozenTradePlan {
+  const plan = props.recommendation.trade_plan;
+  if (plan.kind !== 'frozen') {
+    throw new Error('frozen trade plan required');
+  }
+  return plan;
+}
+
+const entry = computed(() => requireFrozenPlan().entry);
+const sizing = computed(() => requireFrozenPlan().sizing);
+const exit = computed(() => requireFrozenPlan().exit);
+const risk = computed(() => requireFrozenPlan().risk_envelope);
 
 /**
  * The full f* → ×kelly_fraction → ×confidence → ×drawdown →
@@ -185,7 +198,20 @@ function millis(value: number): string {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+  <Alert
+    v-if="recommendation.trade_plan.kind === 'unavailable'"
+    :description="
+      recommendation.trade_plan.blockers
+        .map((blocker) =>
+          $t(`page.quantRecommendations.tradePlan.blocker.${blocker}`),
+        )
+        .join(' · ')
+    "
+    :message="$t('page.quantRecommendations.tradePlan.unavailable')"
+    show-icon
+    type="warning"
+  />
+  <div v-else class="grid grid-cols-1 gap-4 xl:grid-cols-2">
     <Card size="small" :title="$t('page.quantRecommendations.entryPlan.title')">
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem

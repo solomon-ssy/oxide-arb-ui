@@ -13,7 +13,9 @@ import type {
 import type {
   ApprovalStatus,
   EntryTriggerState,
+  ExitReason,
   ExitSettlementMode,
+  ExitState,
   OrderIntentKind,
   OrderIntentStatus,
   QuantRuntimeMode,
@@ -100,6 +102,13 @@ export interface OrderIntentView {
   trigger_last_observed_at: IsoDateTime | null;
   trigger_ready_at: IsoDateTime | null;
   entry_trigger_observation?: EntryTriggerObservationView | null;
+  exit_state: ExitState;
+  exit_reason: ExitReason | null;
+  next_check_at: IsoDateTime | null;
+  peak_mark_price: null | PriceString;
+  last_signal_recheck_at: IsoDateTime | null;
+  latest_reinference: ExitReinferenceObservation | null;
+  exit_monitor_observation?: ExitMonitorObservationView | null;
   scale_out_state: {
     cumulative_exited_shares: SharesString;
     denominator_shares: null | SharesString;
@@ -111,6 +120,44 @@ export interface OrderIntentView {
   };
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
+}
+
+export interface ExitReinferenceObservation {
+  detail: string;
+  execution_eligible: boolean;
+  expected_return_bps: BpsString;
+  mark: PriceString;
+  model_artifact_hash: string;
+  model_version_id: UuidString;
+  observed_at: IsoDateTime;
+  score: ProbabilityString;
+  score_retention: DecimalString;
+  shadow: boolean;
+  verdict: 'holds' | 'indeterminate' | 'thesis_invalidated';
+}
+
+export interface NextScaleOutProjection {
+  delta_shares: SharesString;
+  target_cumulative_exit_pct: DecimalString;
+  target_id: string;
+  trigger_price: PriceString;
+}
+
+export interface ExitMonitorObservationView {
+  book_age_ms: null | number;
+  book_fresh: boolean;
+  book_observed_at: IsoDateTime | null;
+  cumulative_exit_pct: DecimalString | null;
+  cumulative_exited_shares: SharesString;
+  current_executable_bid: null | PriceString;
+  effective_stop: null | PriceString;
+  last_check_at: IsoDateTime | null;
+  latest_reinference: ExitReinferenceObservation | null;
+  next_check_at: IsoDateTime | null;
+  next_scale_out: NextScaleOutProjection | null;
+  peak_mark: null | PriceString;
+  reason: ExitReason | null;
+  state: ExitState;
 }
 
 /** Ephemeral live-book observation computed when one intent detail is read. */
@@ -147,17 +194,13 @@ export interface CreateOrderIntentRequest {
 /**
  * `POST /quant/intents/{id}/approve` governed request body.
  *
- * The optional overrides let an approver downscale sizing or tighten the limit
- * before releasing the intent for submission; omitting them approves the frozen
- * spec verbatim. `max_allowed_usd` is a defensive ceiling the backend re-checks
- * against the resolved notional.
+ * The tagged amount must preserve the frozen unit and may only decrease it.
+ * The optional price may only tighten the side-aware bound.
  */
 export interface ApproveOrderIntentRequest {
   reason: string;
-  override_shares?: SharesString;
-  override_limit_price?: PriceString;
-  max_allowed_usd?: UsdString;
-  override_note?: string;
+  override_amount?: OrderAmount;
+  override_price?: PriceString;
 }
 
 /** Shared governed request body for reject/cancel actions (reason only). */

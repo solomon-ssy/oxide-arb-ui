@@ -14,6 +14,16 @@ function field(overrides: Partial<GovernedField> = {}): GovernedField {
 }
 
 describe('isGovernedFieldValid', () => {
+  it('requires an explicit checkbox acknowledgement', () => {
+    const field: GovernedField = {
+      kind: 'checkbox',
+      label: 'Authorize automatic submission',
+      name: 'ack',
+      required: true,
+    };
+    expect(isGovernedFieldValid(field, '')).toBe(false);
+    expect(isGovernedFieldValid(field, 'acknowledged')).toBe(true);
+  });
   it('accepts empty optional fields and rejects empty required fields', () => {
     expect(isGovernedFieldValid(field(), '')).toBe(true);
     expect(isGovernedFieldValid(field(), undefined)).toBe(true);

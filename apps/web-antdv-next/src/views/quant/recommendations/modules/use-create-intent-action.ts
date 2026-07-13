@@ -29,37 +29,44 @@ import { useQpAccess } from '#/shared/composables/use-qp-access';
  * recommendation before the intent is created.
  */
 function createIntentDetails(recommendation: QuantRecommendationView) {
-  const { entry_plan, risk_envelope, sizing_plan } = recommendation;
+  if (recommendation.trade_plan.kind !== 'frozen') {
+    return [];
+  }
+  const {
+    entry: entryPlan,
+    risk_envelope: riskEnvelope,
+    sizing: sizingPlan,
+  } = recommendation.trade_plan;
   return [
     {
       label: $t('page.quantRecommendations.createIntent.details.entryTrigger'),
       value:
-        entry_plan.trigger.kind === 'immediate'
+        entryPlan.trigger.kind === 'immediate'
           ? $t('page.quantRecommendations.entryPlan.immediate')
-          : `${$t(`enum.priceComparison.${entry_plan.trigger.comparison}`)} ${formatPrice(entry_plan.trigger.threshold)}`,
+          : `${$t(`enum.priceComparison.${entryPlan.trigger.comparison}`)} ${formatPrice(entryPlan.trigger.threshold)}`,
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.limitPrice'),
       value: formatPrice(
-        entry_plan.order_policy.kind === 'passive'
-          ? entry_plan.order_policy.limit_price
-          : entry_plan.order_policy.worst_price,
+        entryPlan.order_policy.kind === 'passive'
+          ? entryPlan.order_policy.limit_price
+          : entryPlan.order_policy.worst_price,
       ),
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.suggestedUsd'),
-      value: formatUsd(sizing_plan.suggested_usd),
+      value: formatUsd(sizingPlan.suggested_usd),
     },
     {
       label: $t(
         'page.quantRecommendations.createIntent.details.suggestedShares',
       ),
-      value: formatShares(sizing_plan.suggested_shares),
+      value: formatShares(sizingPlan.suggested_shares),
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.envelopeHash'),
       mono: true,
-      value: risk_envelope.envelope_hash,
+      value: riskEnvelope.envelope_hash,
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.validUntil'),
@@ -67,11 +74,11 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.maxLoss'),
-      value: formatUsd(risk_envelope.max_loss_usd),
+      value: formatUsd(riskEnvelope.max_loss_usd),
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.maxPosition'),
-      value: formatUsd(risk_envelope.max_position_usd),
+      value: formatUsd(riskEnvelope.max_position_usd),
     },
   ];
 }
@@ -86,6 +93,9 @@ export function useCreateIntentAction() {
   async function createIntent(
     recommendation: QuantRecommendationView,
   ): Promise<null | OrderIntentView> {
+    if (recommendation.trade_plan.kind !== 'frozen') {
+      return null;
+    }
     const recommendationId = recommendation.recommendation_id;
     const intent = await governed(
       (ctx) =>

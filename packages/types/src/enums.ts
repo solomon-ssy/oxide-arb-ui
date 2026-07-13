@@ -540,6 +540,18 @@ export const EXIT_REASONS = {
 } as const;
 export type ExitReason = WireEnum<typeof EXIT_REASONS>;
 
+export const EXIT_STATES = {
+  exited: 'exited',
+  failed: 'failed',
+  manualRequired: 'manual_required',
+  monitoring: 'monitoring',
+  notStarted: 'not_started',
+  orderSubmitted: 'order_submitted',
+  partiallyExited: 'partially_exited',
+  triggered: 'triggered',
+} as const;
+export type ExitState = WireEnum<typeof EXIT_STATES>;
+
 export const POSITION_LEDGER_STATES = {
   closed: 'closed',
   closing: 'closing',

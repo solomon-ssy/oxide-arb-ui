@@ -42,6 +42,7 @@ import {
   useSideTagOptions,
 } from '#/shared/components/format/tag-options';
 
+import ExitMonitorCard from '../../shared/exit-monitor-card.vue';
 import { useIntentActions } from './use-intent-actions';
 
 defineOptions({ name: 'IntentDetailPanel' });
@@ -104,7 +105,7 @@ onMounted(() => void loadExecutionOrders());
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4" data-testid="intent-detail">
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-1">
         <div class="flex flex-wrap items-center gap-2">
@@ -136,7 +137,12 @@ onMounted(() => void loadExecutionOrders());
         </span>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <Button v-if="showApprove" type="primary" @click="approve(intent)">
+        <Button
+          v-if="showApprove"
+          data-testid="approve-intent"
+          type="primary"
+          @click="approve(intent)"
+        >
           <span class="inline-flex items-center gap-1.5">
             <IconifyIcon class="size-4" icon="lucide:check" />
             {{ $t('page.quantIntents.actions.approve') }}
@@ -148,7 +154,12 @@ onMounted(() => void loadExecutionOrders());
             {{ $t('page.quantIntents.actions.reject') }}
           </span>
         </Button>
-        <Button v-if="showCancel" danger @click="cancel(intent)">
+        <Button
+          v-if="showCancel"
+          danger
+          data-testid="cancel-intent"
+          @click="cancel(intent)"
+        >
           <span class="inline-flex items-center gap-1.5">
             <IconifyIcon class="size-4" icon="lucide:ban" />
             {{ $t('page.quantIntents.actions.cancel') }}
@@ -218,6 +229,12 @@ onMounted(() => void loadExecutionOrders());
           </DescriptionsItem>
         </Descriptions>
       </Card>
+
+      <ExitMonitorCard
+        v-if="intent.exit_monitor_observation"
+        class="order-5"
+        :observation="intent.exit_monitor_observation"
+      />
 
       <Card
         class="order-2"

@@ -29,6 +29,8 @@ import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useOrderIntentStore } from '#/store';
 
+import { buildApproveIntentRequest } from './approval-request';
+
 /** Frozen entry preview so an approver confirms what they are releasing. */
 function intentPreview(intent: OrderIntentView): GovernedDetailRow[] {
   return [
@@ -59,30 +61,32 @@ function intentPreview(intent: OrderIntentView): GovernedDetailRow[] {
   ];
 }
 
-/** Optional approver overrides — omitted inputs approve the frozen spec. */
-function approveOverrideFields(): GovernedField[] {
+/** Unit-safe optional overrides plus the mandatory automatic-arm acknowledgement. */
+function approveOverrideFields(intent: OrderIntentView): GovernedField[] {
+  const amount = intent.entry_order.amount;
   return [
     {
-      kind: 'shares',
-      label: $t('page.quantIntents.approve.overrideShares'),
-      name: 'override_shares',
-      placeholder: $t('page.quantIntents.approve.overrideSharesPlaceholder'),
+      help: $t('page.quantIntents.approve.overrideAmountHelp', {
+        amount:
+          amount.unit === 'usd'
+            ? formatUsd(amount.value)
+            : formatShares(amount.value),
+      }),
+      kind: amount.unit,
+      label: $t(`page.quantIntents.approve.overrideAmount.${amount.unit}`),
+      name: 'override_amount',
     },
     {
       kind: 'price',
-      label: $t('page.quantIntents.approve.overrideLimitPrice'),
-      name: 'override_limit_price',
+      label: $t('page.quantIntents.approve.overridePrice'),
+      name: 'override_price',
     },
     {
-      help: $t('page.quantIntents.approve.maxAllowedUsdHelp'),
-      kind: 'usd',
-      label: $t('page.quantIntents.approve.maxAllowedUsd'),
-      name: 'max_allowed_usd',
-    },
-    {
-      kind: 'text',
-      label: $t('page.quantIntents.approve.overrideNote'),
-      name: 'override_note',
+      help: $t('page.quantIntents.approve.autoArmAcknowledgement'),
+      kind: 'checkbox',
+      label: $t('page.quantIntents.approve.autoArmConfirmLabel'),
+      name: 'auto_arm_acknowledged',
+      required: true,
     },
   ];
 }
@@ -104,18 +108,12 @@ export function useIntentActions(onChanged: () => void) {
       (ctx) =>
         approveOrderIntent(
           id,
-          {
-            max_allowed_usd: ctx.fields.max_allowed_usd,
-            override_limit_price: ctx.fields.override_limit_price,
-            override_note: ctx.fields.override_note,
-            override_shares: ctx.fields.override_shares,
-            reason: ctx.reason,
-          },
+          buildApproveIntentRequest(intent, ctx.fields, ctx.reason),
           ctx,
         ),
       {
         details: intentPreview(intent),
-        fields: approveOverrideFields(),
+        fields: approveOverrideFields(intent),
         summary: $t('page.quantIntents.approve.summary', { id }),
         title: $t('page.quantIntents.approve.title'),
       },

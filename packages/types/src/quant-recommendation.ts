@@ -65,7 +65,6 @@ export interface MarketContext {
 }
 
 export interface EntryPlan {
-  trade_policy: null | TradePolicyCohortProvenance;
   trigger: EntryTrigger;
   order_policy: EntryOrderPolicy;
   max_slippage_bps: BpsString;
@@ -122,12 +121,9 @@ export interface SizingPlan {
   raw_fraction_applied?: DecimalString | null;
   /** The per-position equity cap (`portfolio.sizing.max_position_pct`). */
   position_cap_fraction_applied?: DecimalString | null;
-  /** Bet structure that produced `f_star_applied` (`resolution` | `heuristic_tp_sl`). */
-  bet_structure_applied?: 'heuristic_tp_sl' | 'resolution' | null;
 }
 
 export interface ExitPlan {
-  trade_policy: null | TradePolicyCohortProvenance;
   take_profit_price: null | PriceString;
   take_profit_pct: DecimalString | null;
   stop_loss_price: null | PriceString;
@@ -152,11 +148,42 @@ export interface TradePolicyCohortProvenance {
     entry_price_max: PriceString;
     entry_price_min: PriceString;
     horizon_secs: number;
-    liquidity_tier: string;
+    liquidity: TradePolicyCohortDimension;
     notional_tier: UsdString;
-    volatility_regime: string;
+    volatility: TradePolicyCohortDimension;
   };
 }
+
+export interface TradePolicyCohortDimension {
+  bucket_id: string;
+  methodology_hash: string;
+  methodology_id: string;
+}
+
+export type TradePlanBlocker =
+  | 'artifact_format_unsupported'
+  | 'artifact_hash_mismatch'
+  | 'artifact_not_found'
+  | 'artifact_not_published'
+  | 'cohort_coverage_insufficient'
+  | 'cohort_not_found'
+  | 'liquidity_insufficient'
+  | 'model_policy_binding_missing'
+  | 'notional_tier_unavailable'
+  | 'price_outside_venue_range'
+  | 'return_model_uncalibrated'
+  | 'tick_mismatch';
+
+export type RecommendationTradePlan =
+  | { blockers: TradePlanBlocker[]; kind: 'unavailable' }
+  | {
+      entry: EntryPlan;
+      exit: ExitPlan;
+      kind: 'frozen';
+      policy: TradePolicyCohortProvenance;
+      risk_envelope: RiskEnvelope;
+      sizing: SizingPlan;
+    };
 
 export interface RiskEnvelope {
   max_loss_usd: UsdString;
@@ -196,6 +223,7 @@ export interface ExecutionEligibility {
   ineligibility_reasons: IneligibilityReason[];
   approval_required: boolean;
   auto_policy_id: null | string;
+  uncalibrated_watermark: boolean;
 }
 
 /** `GET /quant/recommendations/{id}` — a single scored recommendation. */
@@ -218,10 +246,7 @@ export interface QuantRecommendationView {
   liquidity_score: ProbabilityString;
   data_quality_score: ProbabilityString;
   model_score_percentile: ProbabilityString;
-  entry_plan: EntryPlan;
-  sizing_plan: SizingPlan;
-  exit_plan: ExitPlan;
-  risk_envelope: RiskEnvelope;
+  trade_plan: RecommendationTradePlan;
   factor_breakdown: FactorBreakdownEntry[];
   execution_eligibility: ExecutionEligibility;
   valid_from: IsoDateTime;

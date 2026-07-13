@@ -4,6 +4,7 @@ import type { QuantRecommendationView } from '@vben/types';
 import { computed, ref, watch } from 'vue';
 
 import {
+  Alert,
   Button,
   Card,
   Descriptions,
@@ -76,9 +77,20 @@ watch(
 
 const context = computed(() => props.recommendation.market_context);
 const eligibility = computed(() => props.recommendation.execution_eligibility);
-const entry = computed(() => props.recommendation.entry_plan);
-const sizing = computed(() => props.recommendation.sizing_plan);
-const exit = computed(() => props.recommendation.exit_plan);
+type FrozenTradePlan = Extract<
+  QuantRecommendationView['trade_plan'],
+  { kind: 'frozen' }
+>;
+function requireFrozenPlan(): FrozenTradePlan {
+  const plan = props.recommendation.trade_plan;
+  if (plan.kind !== 'frozen') {
+    throw new Error('frozen trade plan required');
+  }
+  return plan;
+}
+const entry = computed(() => requireFrozenPlan().entry);
+const sizing = computed(() => requireFrozenPlan().sizing);
+const exit = computed(() => requireFrozenPlan().exit);
 
 const entryPrice = computed(() =>
   entry.value.order_policy.kind === 'passive'
@@ -139,6 +151,7 @@ function onCreateIntent() {
       </div>
       <Tooltip :title="createDisabledReason">
         <Button
+          data-testid="create-intent"
           :disabled="!gate.enabled"
           type="primary"
           @click="onCreateIntent"
@@ -148,7 +161,23 @@ function onCreateIntent() {
       </Tooltip>
     </div>
 
+    <Alert
+      v-if="recommendation.trade_plan.kind === 'unavailable'"
+      data-testid="trade-plan-unavailable"
+      :description="
+        recommendation.trade_plan.blockers
+          .map((blocker) =>
+            $t(`page.quantRecommendations.tradePlan.blocker.${blocker}`),
+          )
+          .join(' · ')
+      "
+      :message="$t('page.quantRecommendations.tradePlan.unavailable')"
+      show-icon
+      type="warning"
+    />
+
     <Card
+      v-else
       class="border-primary/30"
       size="small"
       :title="$t('page.quantRecommendations.decisionSummary.title')"
@@ -245,7 +274,7 @@ function onCreateIntent() {
       </Descriptions>
     </Card>
 
-    <div>
+    <div v-if="recommendation.trade_plan.kind === 'frozen'">
       <h4 class="mb-2 text-sm font-medium">
         {{ $t('page.quantRecommendations.sections.plans') }}
       </h4>

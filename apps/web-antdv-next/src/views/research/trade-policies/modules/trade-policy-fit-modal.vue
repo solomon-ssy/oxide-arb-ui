@@ -58,8 +58,19 @@ async function collectContract(): Promise<null | TradePolicyFitContract> {
     fit_window_end: window[1],
     fit_window_start: window[0],
     maximum_scale_out_targets: Number(values.maximum_scale_out_targets),
-    minimum_executable_coverage: String(values.minimum_executable_coverage),
     notional_tiers: notionalTiers,
+    pit_cutoff: String(values.pit_cutoff),
+    quality_gate: {
+      max_ambiguous_touch_rate: String(values.max_ambiguous_touch_rate),
+      max_depth_failure_rate: String(values.max_depth_failure_rate),
+      max_probability_of_backtest_overfitting: String(values.max_pbo),
+      min_cohort_samples: Number(values.min_cohort_samples),
+      min_cpcv_paths: Number(values.min_cpcv_paths),
+      min_deflated_sharpe_ratio: String(values.min_dsr),
+      min_executable_coverage: String(values.min_executable_coverage),
+      min_full_l2_coverage: String(values.min_full_l2_coverage),
+      min_lower_confidence_utility_bps: String(values.min_utility_bps),
+    },
     runtime_config_version_id: dataset.runtime_config_version_id,
     source_dataset_id: dataset.training_dataset_id,
   };
@@ -116,6 +127,7 @@ async function loadDatasets() {
           if (row) {
             formApi.setValues({
               fit_window: [row.window_start, row.window_end],
+              pit_cutoff: row.window_end,
             });
           }
         },
@@ -134,6 +146,16 @@ async function loadDatasets() {
 const [Form, formApi] = useVbenForm({
   commonConfig: { componentProps: { class: 'w-full' } },
   schema: [
+    {
+      component: 'DatePicker',
+      componentProps: {
+        showTime: true,
+        valueFormat: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
+      },
+      fieldName: 'pit_cutoff',
+      label: $t('page.research.tradePolicies.fit.pitCutoff'),
+      rules: 'required',
+    },
     {
       component: 'Select',
       componentProps: { options: [], showSearch: true },
@@ -179,8 +201,45 @@ const [Form, formApi] = useVbenForm({
       component: 'InputNumber',
       componentProps: { max: 1, min: 0.01, step: 0.01 },
       defaultValue: 0.8,
-      fieldName: 'minimum_executable_coverage',
+      fieldName: 'min_executable_coverage',
       label: $t('page.research.tradePolicies.fit.minimumCoverage'),
+      rules: 'required',
+    },
+    ...[
+      ['min_full_l2_coverage', 0.8],
+      ['max_ambiguous_touch_rate', 0.05],
+      ['max_depth_failure_rate', 0.05],
+      ['min_dsr', 0],
+      ['max_pbo', 0.5],
+    ].map(([fieldName, defaultValue]) => ({
+      component: 'InputNumber' as const,
+      componentProps: { max: 1, min: 0, step: 0.01 },
+      defaultValue,
+      fieldName: String(fieldName),
+      label: $t(`page.research.tradePolicies.fit.${fieldName}`),
+      rules: 'required' as const,
+    })),
+    {
+      component: 'InputNumber',
+      componentProps: { min: 1 },
+      defaultValue: 100,
+      fieldName: 'min_cohort_samples',
+      label: $t('page.research.tradePolicies.fit.min_cohort_samples'),
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: { min: 1 },
+      defaultValue: 10,
+      fieldName: 'min_cpcv_paths',
+      label: $t('page.research.tradePolicies.fit.min_cpcv_paths'),
+      rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      defaultValue: 0,
+      fieldName: 'min_utility_bps',
+      label: $t('page.research.tradePolicies.fit.min_utility_bps'),
       rules: 'required',
     },
   ],
@@ -248,6 +307,14 @@ const [Modal, modalApi] = useVbenModal({
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.research.tradePolicies.fit.fees')">
           {{ checkPassed(preflight.fee_model_present) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.tradePolicies.fit.pitCutoff')"
+        >
+          {{ checkPassed(preflight.pit_cutoff_valid) }} ·
+          {{ preflight.labels_matured_by_cutoff }} / -{{
+            preflight.labels_excluded_after_cutoff
+          }}
         </DescriptionsItem>
       </Descriptions>
       <Alert

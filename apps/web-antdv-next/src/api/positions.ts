@@ -1,4 +1,9 @@
-import type { Paginated, PositionListQuery, PositionView } from '@vben/types';
+import type {
+  Paginated,
+  PositionDetailView,
+  PositionListQuery,
+  PositionView,
+} from '@vben/types';
 
 import { requestClient } from '#/api/request';
 
@@ -16,5 +21,5 @@ export async function listPositions(query: PositionListQuery = {}) {
 
 /** `GET /quant/positions/{id}` — a single position. */
 export async function getPosition(id: string) {
-  return requestClient.get<PositionView>(PositionApi.detail(id));
+  return requestClient.get<PositionDetailView>(PositionApi.detail(id));
 }

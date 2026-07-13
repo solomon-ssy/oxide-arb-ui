@@ -95,7 +95,7 @@ const columns: VxeTableGridOptions<TradePolicySummaryView>['columns'] = [
     },
     field: 'operation',
     fixed: 'right',
-    title: $t('common.action'),
+    title: $t('page.research.tradePolicies.columns.operation'),
     width: 100,
   },
 ];

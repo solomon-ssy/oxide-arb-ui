@@ -8,6 +8,7 @@ import type {
   UuidString,
 } from './common';
 import type { PositionLedgerState, PositionPlane } from './enums';
+import type { ExitMonitorObservationView } from './order-intent';
 
 /** `GET /quant/positions/{id}` — a system-lot position ledger row. */
 export interface PositionView {
@@ -26,6 +27,11 @@ export interface PositionView {
   opened_at: IsoDateTime;
   updated_at: IsoDateTime;
   closed_at: IsoDateTime | null;
+}
+
+export interface PositionDetailView {
+  exit_monitor_observation: ExitMonitorObservationView;
+  position: PositionView;
 }
 
 /** Filter + pagination for `GET /quant/positions`. */

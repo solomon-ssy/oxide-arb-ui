@@ -188,6 +188,15 @@
         "notionalTiersHelp": "Comma-separated positive USD amounts, for example 25,100,500.",
         "maxScaleOutTargets": "Maximum scale-out targets",
         "minimumCoverage": "Minimum executable coverage",
+        "pitCutoff": "PIT cutoff",
+        "min_full_l2_coverage": "Minimum full-L2 coverage",
+        "max_ambiguous_touch_rate": "Maximum ambiguous-touch rate",
+        "max_depth_failure_rate": "Maximum depth-failure rate",
+        "min_dsr": "Minimum DSR",
+        "max_pbo": "Maximum PBO",
+        "min_cohort_samples": "Minimum cohort samples",
+        "min_cpcv_paths": "Minimum CPCV paths",
+        "min_utility_bps": "Minimum utility lower bound (bps)",
         "incomplete": "Complete the dataset, window, and notional tiers.",
         "preflight": "Run preflight",
         "enqueue": "Queue fit",
@@ -205,20 +214,50 @@
         "dataset": "Source Dataset",
         "cohorts": "Cohorts",
         "coverage": "Coverage",
-        "createdAt": "Created"
+        "createdAt": "Created",
+        "operation": "Operation"
       },
       "detail": {
         "title": "Trade Policy",
         "hash": "Content Hash",
         "fitWindow": "Fit Window",
+        "pitCutoff": "PIT Cutoff",
         "fillSimulator": "Fill Simulator",
         "entryBasis": "Executable Entry Basis",
         "exitBasis": "Executable Exit Basis",
         "fullL2Coverage": "Full L2 Coverage",
-        "feesIncluded": "Venue Fees Included",
+        "feeModel": "PIT Fee Model Hash",
+        "audit": "Governance Audit History",
         "publicationBlocked": "Publication is blocked until complete L2 coverage, venue fees, and CPCV/DSR/PBO gates all pass.",
         "dsr": "Deflated Sharpe",
         "pbo": "Probability of Backtest Overfitting"
+      },
+      "blocker": {
+        "unsupported_format": "Unsupported artifact format",
+        "invalid_fit_contract": "Invalid fit contract",
+        "missing_pit_cutoff_evidence": "Missing PIT-cutoff evidence",
+        "empty_cohorts": "No executable cohorts",
+        "missing_full_l2_entry_basis": "Missing full-L2 entry evidence",
+        "missing_full_l2_exit_basis": "Missing full-L2 exit evidence",
+        "missing_full_l2_coverage": "Missing full-L2 coverage",
+        "insufficient_full_l2_coverage": "Insufficient full-L2 coverage",
+        "missing_fee_model": "Missing PIT fee model",
+        "missing_trial_ledger": "Missing complete trial ledger",
+        "missing_cpcv_path_count": "Missing CPCV path evidence",
+        "insufficient_cpcv_paths": "Insufficient CPCV paths",
+        "missing_deflated_sharpe_ratio": "Missing DSR",
+        "deflated_sharpe_ratio_below_gate": "DSR below quality gate",
+        "missing_probability_of_backtest_overfitting": "Missing PBO",
+        "probability_of_backtest_overfitting_above_gate": "PBO above quality gate",
+        "missing_ambiguous_touch_rate": "Missing ambiguous-touch rate",
+        "ambiguous_touch_rate_above_gate": "Ambiguous-touch rate above gate",
+        "missing_depth_failure_rate": "Missing depth-failure rate",
+        "depth_failure_rate_above_gate": "Depth-failure rate above gate",
+        "insufficient_cohort_samples": "Insufficient effective cohort samples",
+        "insufficient_cohort_coverage": "Insufficient executable cohort coverage",
+        "missing_utility_lower_bound": "Missing utility lower bound",
+        "utility_lower_bound_below_gate": "Utility lower bound below gate",
+        "invalid_parent_provenance": "Invalid parent-cohort provenance"
       },
       "governance": {
         "validate": "Validate",
@@ -1849,12 +1888,14 @@
       "summary": "Approve and arm intent {id}. Once its frozen condition is satisfied, the system may automatically submit a real order after admission.",
       "autoArmLabel": "Automatic submission authorization",
       "autoArmValue": "Approval arms this intent; no second Submit confirmation will occur.",
-      "overrideShares": "Override Shares",
-      "overrideSharesPlaceholder": "Downscale shares (optional)",
-      "overrideLimitPrice": "Override Limit Price",
-      "maxAllowedUsd": "Max Allowed USD",
-      "maxAllowedUsdHelp": "Defensive notional ceiling re-checked by the backend.",
-      "overrideNote": "Override Note"
+      "overrideAmount": {
+        "usd": "Reduce USD spend (optional)",
+        "shares": "Reduce shares (optional)"
+      },
+      "overrideAmountHelp": "The frozen amount can only be reduced; current maximum is {amount}.",
+      "overridePrice": "Tighten price bound (optional)",
+      "autoArmConfirmLabel": "Real-order automatic submission authorization",
+      "autoArmAcknowledgement": "I acknowledge that approval starts monitoring the frozen condition and may automatically submit a real order after the condition and admission checks pass."
     },
     "reject": {
       "title": "Reject Intent",
@@ -1868,6 +1909,21 @@
       "approved": "Intent approved and armed.",
       "rejected": "Intent rejected.",
       "cancelled": "Intent cancelled."
+    },
+    "exitMonitor": {
+      "title": "Exit Monitor",
+      "state": "Monitor State / Reason",
+      "book": "Executable Bid / Book Freshness",
+      "trailing": "Peak Mark → Effective Trailing Stop",
+      "nextTarget": "Next Cumulative Scale-Out / Delta",
+      "exited": "Cumulative Exited Shares / Percentage",
+      "reinference": "Latest Reinference",
+      "cadence": "Last Check → Next Check",
+      "verdict": {
+        "holds": "Thesis Holds",
+        "thesis_invalidated": "Thesis Invalidated",
+        "indeterminate": "Reinference Indeterminate"
+      }
     },
     "wsToast": {
       "created": "Intent created ({id})",
@@ -2368,6 +2424,23 @@
       "scaleOutTargets": "{count} cumulative scale-out targets",
       "trailingStop": "Trailing stop"
     },
+    "tradePlan": {
+      "unavailable": "Trade plan unavailable",
+      "blocker": {
+        "model_policy_binding_missing": "Model has no trade-policy binding",
+        "artifact_not_found": "Trade-policy artifact not found",
+        "artifact_not_published": "Trade-policy artifact is not published",
+        "artifact_hash_mismatch": "Trade-policy artifact hash mismatch",
+        "artifact_format_unsupported": "Unsupported trade-policy artifact format",
+        "cohort_not_found": "No matching cohort",
+        "notional_tier_unavailable": "Suggested notional does not exactly match a validated tier",
+        "cohort_coverage_insufficient": "Cohort coverage is insufficient",
+        "liquidity_insufficient": "Live L2 depth is insufficient",
+        "tick_mismatch": "Tick metadata mismatch",
+        "price_outside_venue_range": "Price is outside the venue range",
+        "return_model_uncalibrated": "Return model is uncalibrated"
+      }
+    },
     "identity": {
       "recommendationId": "Recommendation ID",
       "reportId": "Report ID",
@@ -2614,6 +2687,7 @@
         "killSwitch": "The kill-switch is not closed; new entries are blocked.",
         "eligibility": "This recommendation is not eligible for execution in the current runtime mode.",
         "riskEnvelope": "The risk envelope is invalid (max position or max loss is not positive).",
+        "tradePlan": "This recommendation has no trustworthy frozen trade plan; intent creation is blocked.",
         "validity": "Outside the recommendation validity window.",
         "reportStatus": "The parent report is no longer published.",
         "recommendationStatus": "This recommendation can no longer create an intent (revoked / expired / executed).",

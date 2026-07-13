@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PositionView } from '@vben/types';
+import type { PositionDetailView, PositionView } from '@vben/types';
 
 import { computed, ref } from 'vue';
 
@@ -31,15 +31,20 @@ import {
   settlementRedeemsPath,
 } from '#/shared/routes/execution-plane';
 
+import ExitMonitorCard from '../../shared/exit-monitor-card.vue';
+
 defineOptions({ name: 'PositionDetailDrawer' });
 
 interface PositionDrawerData {
-  position: PositionView;
+  position: PositionDetailView | PositionView;
 }
 
 const { handleRequest } = useRequestHandler();
 
 const position = ref<null | PositionView>(null);
+const exitMonitorObservation = ref<
+  null | PositionDetailView['exit_monitor_observation']
+>(null);
 const loading = ref(false);
 const loadError = ref<null | string>(null);
 const openPositionId = ref<null | string>(null);
@@ -100,7 +105,8 @@ async function refreshPosition(id: string) {
       },
     });
     if (openPositionId.value === id) {
-      position.value = fresh ?? null;
+      position.value = fresh?.position ?? null;
+      exitMonitorObservation.value = fresh?.exit_monitor_observation ?? null;
     }
   } finally {
     loading.value = false;
@@ -112,13 +118,20 @@ const [Drawer, drawerApi] = useVbenDrawer({
   onOpenChange(isOpen) {
     if (isOpen) {
       const data = drawerApi.getData<PositionDrawerData>();
-      openPositionId.value = data.position.position_id;
+      const initial =
+        'position' in data.position ? data.position.position : data.position;
+      openPositionId.value = initial.position_id;
       loadError.value = null;
-      position.value = data.position;
-      void refreshPosition(data.position.position_id);
+      position.value = initial;
+      exitMonitorObservation.value =
+        'position' in data.position
+          ? data.position.exit_monitor_observation
+          : null;
+      void refreshPosition(initial.position_id);
     } else {
       openPositionId.value = null;
       position.value = null;
+      exitMonitorObservation.value = null;
       loadError.value = null;
     }
   },
@@ -146,7 +159,11 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
         }
       "
     >
-      <div v-if="position" class="flex flex-col gap-4">
+      <div
+        v-if="position"
+        class="flex flex-col gap-4"
+        data-testid="position-detail"
+      >
         <EntityDetailHeader :id="position.position_id" :tags="headerTags">
           <template #actions>
             <EntityRouteButton
@@ -244,6 +261,10 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
             </DescriptionsItem>
           </Descriptions>
         </Card>
+        <ExitMonitorCard
+          v-if="exitMonitorObservation"
+          :observation="exitMonitorObservation"
+        />
       </div>
     </AsyncState>
   </Drawer>

@@ -10,6 +10,7 @@ import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
 import {
+  Checkbox,
   Descriptions,
   DescriptionsItem,
   Input,
@@ -140,7 +141,7 @@ watch(roleOptions, (options) => {
 
 <template>
   <Modal>
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4" data-testid="governed-action-modal">
       <p
         v-if="payload?.summary"
         class="text-sm text-gray-600 dark:text-gray-300"
@@ -174,14 +175,26 @@ watch(roleOptions, (options) => {
       <div
         v-for="field in payload?.fields ?? []"
         :key="field.name"
+        :data-testid="`governed-field-${field.name}`"
         class="flex flex-col gap-1"
       >
         <span class="text-sm font-medium">
           {{ field.label }}
           <span v-if="field.required" class="text-destructive">*</span>
         </span>
+        <Checkbox
+          v-if="field.kind === 'checkbox'"
+          :checked="fieldValues[field.name] === 'acknowledged'"
+          @update:checked="
+            (checked) => {
+              fieldValues[field.name] = checked ? 'acknowledged' : '';
+            }
+          "
+        >
+          {{ field.help }}
+        </Checkbox>
         <Select
-          v-if="field.kind === 'select'"
+          v-else-if="field.kind === 'select'"
           v-model:value="fieldValues[field.name]"
           allow-clear
           :options="field.options"
@@ -193,7 +206,10 @@ watch(roleOptions, (options) => {
           :inputmode="field.kind === 'text' ? undefined : 'decimal'"
           :placeholder="field.placeholder"
         />
-        <span v-if="field.help" class="text-xs text-gray-500">
+        <span
+          v-if="field.help && field.kind !== 'checkbox'"
+          class="text-xs text-gray-500"
+        >
           {{ field.help }}
         </span>
       </div>
@@ -219,6 +235,7 @@ watch(roleOptions, (options) => {
           $t('governance.modal.reason')
         }}</span>
         <TextArea
+          data-testid="governed-reason"
           v-model:value="reason"
           :maxlength="1024"
           :placeholder="$t('governance.modal.reasonPlaceholder')"

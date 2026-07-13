@@ -6,7 +6,13 @@
 import Decimal from 'decimal.js';
 
 /** Input widget kind for a {@link GovernedField}. */
-export type GovernedFieldKind = 'price' | 'select' | 'shares' | 'text' | 'usd';
+export type GovernedFieldKind =
+  | 'checkbox'
+  | 'price'
+  | 'select'
+  | 'shares'
+  | 'text'
+  | 'usd';
 
 /** Option for a `select`-kind {@link GovernedField}. */
 export interface GovernedFieldOption {

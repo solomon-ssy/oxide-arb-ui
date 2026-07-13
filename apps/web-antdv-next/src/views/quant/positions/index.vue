@@ -91,7 +91,7 @@ function onActionClick({ code, row }: OnActionClickParams<PositionView>) {
 // Deep-link `?open=<id>` reactively opens the detail drawer for that position.
 useQueryOpenDrawer({
   fetch: (id) => getPosition(id),
-  open: (position) => drawerApi.setData({ position }).open(),
+  open: (detail) => drawerApi.setData({ position: detail }).open(),
 });
 
 // Fills / exits / redeems land via `quant.intent`; refresh the ledger on a bump.

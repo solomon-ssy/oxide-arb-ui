@@ -820,6 +820,10 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+    devDependencies:
+      playwright:
+        specifier: 'catalog:'
+        version: 1.60.0
 
   apps/web-ele:
     dependencies:

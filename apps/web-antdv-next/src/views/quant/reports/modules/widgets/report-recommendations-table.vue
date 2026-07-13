@@ -166,9 +166,12 @@ const columns = [
         }}</span>
       </template>
       <template v-else-if="column.key === 'suggested'">
-        <span class="font-mono">{{
-          formatUsd(record.sizing_plan.suggested_usd)
-        }}</span>
+        <span v-if="record.trade_plan.kind === 'frozen'" class="font-mono">
+          {{ formatUsd(record.trade_plan.sizing.suggested_usd) }}
+        </span>
+        <Tag v-else color="warning">
+          {{ $t('page.quantRecommendations.tradePlan.unavailable') }}
+        </Tag>
       </template>
       <template v-else-if="column.key === 'eligibility'">
         <Tag

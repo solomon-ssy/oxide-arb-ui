@@ -228,6 +228,16 @@
     "take_profit": "Take profit",
     "time_exit": "Time exit"
   },
+  "exitState": {
+    "not_started": "Not Started",
+    "monitoring": "Monitoring",
+    "triggered": "Triggered",
+    "order_submitted": "Exit Order Submitted",
+    "partially_exited": "Partially Exited",
+    "exited": "Exited",
+    "failed": "Failed",
+    "manual_required": "Manual Action Required"
+  },
   "orderIntentStatus": {
     "draft": "Draft",
     "pending_approval": "Pending Approval",

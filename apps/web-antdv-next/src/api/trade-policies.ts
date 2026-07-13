@@ -2,9 +2,11 @@ import type {
   FitTradePolicyRequest,
   Paginated,
   ResearchJobView,
+  TradePolicyAuditListQuery,
   TradePolicyDetailView,
   TradePolicyFitPreflightRequest,
   TradePolicyFitPreflightView,
+  TradePolicyGovernanceAuditView,
   TradePolicyGovernanceRequest,
   TradePolicyListQuery,
   TradePolicySummaryView,
@@ -25,6 +27,16 @@ export async function listTradePolicies(query: TradePolicyListQuery = {}) {
 
 export async function getTradePolicy(id: string) {
   return requestClient.get<TradePolicyDetailView>(`${base}/${id}`);
+}
+
+export async function listTradePolicyAudits(
+  id: string,
+  query: TradePolicyAuditListQuery = {},
+) {
+  return requestClient.get<Paginated<TradePolicyGovernanceAuditView>>(
+    `${base}/${id}/audits`,
+    { params: query },
+  );
 }
 
 export async function preflightTradePolicy(

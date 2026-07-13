@@ -695,7 +695,7 @@ watch(
         </Card>
 
         <Card size="small">
-          <Tabs destroy-inactive-tab-pane>
+          <Tabs destroy-on-hidden>
             <TabPane
               key="input-contract"
               :tab="$t('page.research.models.detail.inputTransform')"
@@ -853,10 +853,12 @@ watch(
             </TabPane>
             <TabPane
               key="trade-policy"
+              data-testid="model-trade-policy-tab"
               :tab="$t('page.research.models.detail.tradePolicy')"
             >
               <Descriptions
                 v-if="model.trade_policy_artifact_id"
+                data-testid="model-trade-policy-binding"
                 :column="1"
                 bordered
                 size="small"

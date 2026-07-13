@@ -228,6 +228,16 @@
     "take_profit": "止盈",
     "time_exit": "时间退出"
   },
+  "exitState": {
+    "not_started": "尚未开始",
+    "monitoring": "监控中",
+    "triggered": "已触发",
+    "order_submitted": "退出订单已提交",
+    "partially_exited": "部分退出",
+    "exited": "已退出",
+    "failed": "失败",
+    "manual_required": "需要人工处理"
+  },
   "orderIntentStatus": {
     "draft": "草稿",
     "pending_approval": "待审批",

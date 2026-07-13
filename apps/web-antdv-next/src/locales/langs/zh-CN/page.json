@@ -188,6 +188,15 @@
         "notionalTiersHelp": "使用逗号分隔的正 USD 金额，例如 25,100,500。",
         "maxScaleOutTargets": "最多分批退出档数",
         "minimumCoverage": "最低可执行覆盖率",
+        "pitCutoff": "PIT 截止时间",
+        "min_full_l2_coverage": "最低完整 L2 覆盖率",
+        "max_ambiguous_touch_rate": "最大同桶双穿越率",
+        "max_depth_failure_rate": "最大深度失败率",
+        "min_dsr": "最低 DSR",
+        "max_pbo": "最大 PBO",
+        "min_cohort_samples": "最少 cohort 样本数",
+        "min_cpcv_paths": "最少 CPCV 路径数",
+        "min_utility_bps": "最低效用置信下界（bps）",
         "incomplete": "请完整选择数据集、窗口并填写名义金额分层。",
         "preflight": "运行预检",
         "enqueue": "排队拟合",
@@ -205,20 +214,50 @@
         "dataset": "来源数据集",
         "cohorts": "Cohort 数",
         "coverage": "可执行覆盖率",
-        "createdAt": "创建时间"
+        "createdAt": "创建时间",
+        "operation": "操作"
       },
       "detail": {
         "title": "交易策略详情",
         "hash": "内容哈希",
         "fitWindow": "拟合窗口",
+        "pitCutoff": "PIT 截止时间",
         "fillSimulator": "成交模拟器",
         "entryBasis": "可执行入场基准",
         "exitBasis": "可执行退出基准",
         "fullL2Coverage": "完整 L2 覆盖率",
-        "feesIncluded": "已计入场所费用",
+        "feeModel": "PIT 费用模型哈希",
+        "audit": "治理审计历史",
         "publicationBlocked": "完整 L2 覆盖、场所费用与 CPCV/DSR/PBO 门禁全部通过前禁止发布。",
         "dsr": "Deflated Sharpe",
         "pbo": "回测过拟合概率"
+      },
+      "blocker": {
+        "unsupported_format": "Artifact 格式不受支持",
+        "invalid_fit_contract": "拟合契约无效",
+        "missing_pit_cutoff_evidence": "缺少 PIT cutoff 证据",
+        "empty_cohorts": "没有可执行 cohort",
+        "missing_full_l2_entry_basis": "缺少完整 L2 入场证据",
+        "missing_full_l2_exit_basis": "缺少完整 L2 退出证据",
+        "missing_full_l2_coverage": "缺少完整 L2 覆盖率",
+        "insufficient_full_l2_coverage": "完整 L2 覆盖率不足",
+        "missing_fee_model": "缺少 PIT 费用模型",
+        "missing_trial_ledger": "缺少完整 trial ledger",
+        "missing_cpcv_path_count": "缺少 CPCV 路径证据",
+        "insufficient_cpcv_paths": "CPCV 路径不足",
+        "missing_deflated_sharpe_ratio": "缺少 DSR",
+        "deflated_sharpe_ratio_below_gate": "DSR 低于门禁",
+        "missing_probability_of_backtest_overfitting": "缺少 PBO",
+        "probability_of_backtest_overfitting_above_gate": "PBO 高于门禁",
+        "missing_ambiguous_touch_rate": "缺少同桶双穿越率",
+        "ambiguous_touch_rate_above_gate": "同桶双穿越率高于门禁",
+        "missing_depth_failure_rate": "缺少深度失败率",
+        "depth_failure_rate_above_gate": "深度失败率高于门禁",
+        "insufficient_cohort_samples": "Cohort 有效样本不足",
+        "insufficient_cohort_coverage": "Cohort 可执行覆盖率不足",
+        "missing_utility_lower_bound": "缺少效用置信下界",
+        "utility_lower_bound_below_gate": "效用置信下界未过门禁",
+        "invalid_parent_provenance": "收缩父 cohort 溯源无效"
       },
       "governance": {
         "validate": "校验",
@@ -1849,12 +1888,14 @@
       "summary": "审批并 Arm 意图 {id}。冻结条件满足且重新准入通过后，系统可自动提交真实订单。",
       "autoArmLabel": "自动提交授权",
       "autoArmValue": "本次审批即 Arm，后续不会再出现二次 Submit 确认。",
-      "overrideShares": "覆盖份额",
-      "overrideSharesPlaceholder": "下调份额（可选）",
-      "overrideLimitPrice": "覆盖限价",
-      "maxAllowedUsd": "最大允许 USD",
-      "maxAllowedUsdHelp": "后端会据此二次校验名义金额上限。",
-      "overrideNote": "覆盖备注"
+      "overrideAmount": {
+        "usd": "下调 USD 支出（可选）",
+        "shares": "下调份额（可选）"
+      },
+      "overrideAmountHelp": "只能缩小冻结金额；当前上限为 {amount}。",
+      "overridePrice": "收紧价格上限/下限（可选）",
+      "autoArmConfirmLabel": "真实订单自动提交授权",
+      "autoArmAcknowledgement": "我确认：审批后系统将监听冻结条件，并在条件满足且重新准入通过时自动提交真实订单。"
     },
     "reject": {
       "title": "驳回意图",
@@ -1868,6 +1909,21 @@
       "approved": "意图已审批并 Arm。",
       "rejected": "意图已驳回。",
       "cancelled": "意图已取消。"
+    },
+    "exitMonitor": {
+      "title": "退出监控",
+      "state": "监控状态 / 原因",
+      "book": "当前可执行 Bid / 盘口新鲜度",
+      "trailing": "峰值价格 → 有效移动止损",
+      "nextTarget": "下一累计分批退出目标 / 待退出增量",
+      "exited": "累计已退出份额 / 比例",
+      "reinference": "最新重新推理",
+      "cadence": "最近检查 → 下次检查",
+      "verdict": {
+        "holds": "原交易论点仍成立",
+        "thesis_invalidated": "原交易论点已失效",
+        "indeterminate": "重新推理无法判定"
+      }
     },
     "wsToast": {
       "created": "意图已创建（{id}）",
@@ -2368,6 +2424,23 @@
       "scaleOutTargets": "{count} 档累计分批退出",
       "trailingStop": "移动止损"
     },
+    "tradePlan": {
+      "unavailable": "交易计划不可执行",
+      "blocker": {
+        "model_policy_binding_missing": "模型未绑定交易策略",
+        "artifact_not_found": "策略 Artifact 不存在",
+        "artifact_not_published": "策略 Artifact 未发布",
+        "artifact_hash_mismatch": "策略 Artifact 哈希不一致",
+        "artifact_format_unsupported": "策略 Artifact 格式不受支持",
+        "cohort_not_found": "未找到匹配 cohort",
+        "notional_tier_unavailable": "建议金额没有精确匹配已验证档位",
+        "cohort_coverage_insufficient": "Cohort 覆盖率不足",
+        "liquidity_insufficient": "实时 L2 深度不足",
+        "tick_mismatch": "Tick metadata 不一致",
+        "price_outside_venue_range": "价格超出场所有效范围",
+        "return_model_uncalibrated": "收益模型未校准"
+      }
+    },
     "identity": {
       "recommendationId": "推荐 ID",
       "reportId": "报告 ID",
@@ -2614,6 +2687,7 @@
         "killSwitch": "熔断开关未处于 closed 状态，当前禁止开新仓。",
         "eligibility": "该推荐在当前运行模式下不可执行。",
         "riskEnvelope": "风险边界无效（最大仓位或最大亏损不为正）。",
+        "tradePlan": "该推荐没有可信的冻结交易计划，禁止创建意图。",
         "validity": "已超出推荐的有效时间窗口。",
         "reportStatus": "父报告已不再是已发布状态。",
         "recommendationStatus": "该推荐已不可创建意图（已撤销 / 已过期 / 已执行）。",

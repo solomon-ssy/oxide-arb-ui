@@ -53,5 +53,8 @@
     "vue": "catalog:",
     "vue-router": "catalog:",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "playwright": "catalog:"
   }
 }

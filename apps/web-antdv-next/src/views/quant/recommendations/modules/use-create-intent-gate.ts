@@ -36,6 +36,7 @@ export type CreateIntentBlockReason =
   | 'recommendationStatus'
   | 'reportStatus'
   | 'riskEnvelope'
+  | 'tradePlan'
   | 'validity';
 
 export interface CreateIntentGateInput {
@@ -50,8 +51,8 @@ export interface CreateIntentGateInput {
     | 'active_order_intent_id'
     | 'execution_eligibility'
     | 'report_status'
-    | 'risk_envelope'
     | 'status'
+    | 'trade_plan'
     | 'valid_from'
     | 'valid_until'
   >;
@@ -108,7 +109,11 @@ export function evaluateCreateIntentGate(
     return { enabled: false, reason: 'eligibility' };
   }
 
-  if (!isRiskEnvelopeActionable(recommendation.risk_envelope)) {
+  if (recommendation.trade_plan.kind !== 'frozen') {
+    return { enabled: false, reason: 'tradePlan' };
+  }
+
+  if (!isRiskEnvelopeActionable(recommendation.trade_plan.risk_envelope)) {
     return { enabled: false, reason: 'riskEnvelope' };
   }
 
