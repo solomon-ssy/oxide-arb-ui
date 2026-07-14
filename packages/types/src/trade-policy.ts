@@ -11,7 +11,6 @@ import type {
   ExitSettlementMode,
   FillRequirement,
   MarketCategory,
-  PriceComparison,
   RedeemPolicy,
 } from './enums';
 
@@ -59,15 +58,7 @@ export interface TradePolicyCohortView {
   entry_order:
     | { fill_requirement: FillRequirement; kind: 'aggressive' }
     | { kind: 'passive'; post_only: boolean };
-  entry_trigger:
-    | {
-        comparison: PriceComparison;
-        confirmation_secs: number;
-        kind: 'price_offset';
-        max_observation_gap_ms: number;
-        threshold_offset_bps: BpsString;
-      }
-    | { kind: 'immediate' };
+  entry_condition: TradePolicyEntryConditionTemplate;
   executable_coverage: DecimalString;
   executable_sample_count: number;
   key: TradePolicyCohortKey;
@@ -96,6 +87,83 @@ export interface TradePolicyCohortView {
   };
   upper_barrier_bps: BpsString;
   vertical_barrier_secs: number;
+}
+
+export type TradePolicyEntryConditionTemplate =
+  | {
+      confirmation_ms: number;
+      kind: 'conditional';
+      max_observation_gap_ms: number;
+      root: TradePolicyConditionTemplateNodeV1;
+    }
+  | { kind: 'immediate' };
+
+/** Recommendation-relative research AST. Runtime bindings are materialized by the server. */
+export type TradePolicyConditionTemplateNodeV1 =
+  | {
+      anchor: 'market_end' | 'market_start' | 'recommendation_decision';
+      kind: 'clock';
+      offset_ms: number;
+    }
+  | {
+      children: TradePolicyConditionTemplateNodeV1[];
+      kind: 'all' | 'any';
+    }
+  | {
+      comparison: 'at_or_above' | 'at_or_below';
+      definition_hash: string;
+      definition_id: UuidString;
+      kind: 'factor';
+      max_input_age_ms: number;
+      measure: 'normalized' | 'raw';
+      minimum_confidence: DecimalString;
+      threshold: DecimalString;
+    }
+  | {
+      comparison: 'at_or_above' | 'at_or_below';
+      kind: 'price';
+      max_input_age_ms: number;
+      threshold: PriceString;
+    }
+  | {
+      event:
+        | {
+            kind: 'crypto_subject_predicate_entered';
+            max_input_age_ms: number;
+          }
+        | {
+            kind: 'weather_daily_high_predicate';
+            max_input_age_ms: number;
+          };
+      kind: 'market_event';
+    };
+
+export interface TradePolicyConditionCandidate {
+  candidate_id: string;
+  condition: TradePolicyEntryConditionTemplate;
+}
+
+export type VerticalActivationTarget = 'auto_execution' | 'semi_auto';
+export type VerticalGateKind =
+  | 'crypto_binance_continuity'
+  | 'crypto_chainlink_resolution'
+  | 'weather_noaa_proxy';
+
+export interface VerticalGateEvidence {
+  agreement_wilson_lower_bound: DecimalString;
+  availability: DecimalString;
+  distinct_local_dates: number;
+  distinct_subject_count: number;
+  evidence_window_end: IsoDateTime;
+  evidence_window_start: IsoDateTime;
+  gaps_recovered: boolean;
+  gate: VerticalGateKind;
+  methodology_hash: string;
+  sample_count: number;
+  target: VerticalActivationTarget;
+  target_subject_sample_count: null | number;
+  target_subject_wilson_lower_bound: DecimalString | null;
+  unresolved_mismatch_count: number;
 }
 
 export interface TradePolicyQualityGate {
@@ -133,7 +201,12 @@ export type TradePolicyPublicationBlocker =
         | 'missing_utility_lower_bound'
         | 'utility_lower_bound_below_gate';
     }
+  | { detail: string; kind: 'invalid_condition_candidates' }
   | { detail: string; kind: 'invalid_fit_contract' }
+  | { detail: string; kind: 'invalid_vertical_gate_evidence' }
+  | { gate: VerticalGateKind; kind: 'missing_vertical_gate_evidence' }
+  | { gate: VerticalGateKind; kind: 'vertical_gate_failed' }
+  | { kind: 'condition_candidate_set_hash_mismatch' }
   | {
       kind:
         | 'ambiguous_touch_rate_above_gate'
@@ -162,7 +235,10 @@ export interface TradePolicyDetailView {
   content_hash: string;
   created_at: IsoDateTime;
   payload: {
+    activation_target: VerticalActivationTarget;
     cohorts: TradePolicyCohortView[];
+    condition_candidate_set_hash: string;
+    condition_candidates: TradePolicyConditionCandidate[];
     execution_evidence: {
       degraded_top_of_book_sample_count: number;
       entry_basis: 'full_l2_vwap' | null;
@@ -193,6 +269,7 @@ export interface TradePolicyDetailView {
       probability_of_backtest_overfitting: DecimalString | null;
       trial_ledger_hash: null | string;
     };
+    vertical_gate_evidence: VerticalGateEvidence[];
   };
   publication_blockers: TradePolicyPublicationBlocker[];
   source_dataset_id: UuidString;
@@ -213,17 +290,23 @@ export interface TradePolicyGovernanceAuditView {
 }
 
 export interface FitTradePolicyRequest {
+  activation_target: VerticalActivationTarget;
+  condition_candidates: TradePolicyConditionCandidate[];
   contract: TradePolicyFitContract;
   reason: string;
 }
 
 export interface TradePolicyFitPreflightRequest {
+  activation_target: VerticalActivationTarget;
+  condition_candidates: TradePolicyConditionCandidate[];
   contract: TradePolicyFitContract;
 }
 
 export type TradePolicyPreflightCheckStatus = 'fail' | 'pass';
 
 export interface TradePolicyFitPreflightView {
+  canonical_condition_candidates: null | TradePolicyConditionCandidate[];
+  condition_candidate_set_hash: null | string;
   contract_valid: TradePolicyPreflightCheckStatus;
   fee_model_present: TradePolicyPreflightCheckStatus;
   fit_window_contained: TradePolicyPreflightCheckStatus;

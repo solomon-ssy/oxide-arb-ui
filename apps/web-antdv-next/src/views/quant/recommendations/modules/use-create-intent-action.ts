@@ -41,9 +41,9 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
     {
       label: $t('page.quantRecommendations.createIntent.details.entryTrigger'),
       value:
-        entryPlan.trigger.kind === 'immediate'
+        entryPlan.condition.kind === 'immediate'
           ? $t('page.quantRecommendations.entryPlan.immediate')
-          : `${$t(`enum.priceComparison.${entryPlan.trigger.comparison}`)} ${formatPrice(entryPlan.trigger.threshold)}`,
+          : entryPlan.condition.content_hash,
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.limitPrice'),

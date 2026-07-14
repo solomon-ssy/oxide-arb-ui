@@ -120,12 +120,29 @@
     "at_or_above": "大于等于",
     "at_or_below": "小于等于"
   },
-  "entryTriggerState": {
+  "entryConditionState": {
     "not_required": "立即",
     "waiting": "等待条件",
+    "unavailable": "来源不可用",
     "confirming": "连续确认中",
-    "ready": "已就绪",
-    "expired": "已过期"
+    "qualified": "已满足条件",
+    "consumed": "已原子消费",
+    "expired": "已过期",
+    "invalidated": "已失效"
+  },
+  "conditionTruth": {
+    "satisfied": "满足",
+    "unsatisfied": "不满足",
+    "unavailable": "不可用"
+  },
+  "entryConditionAuditAction": {
+    "created": "创建实例",
+    "evaluated": "完成求值",
+    "lease_taken_over": "Worker 接管",
+    "claimed": "原子 Claim",
+    "reverted": "准入回退",
+    "expired": "过期",
+    "invalidated": "失效"
   },
   "factorDirection": {
     "positive": "正向",
@@ -157,6 +174,8 @@
   "factorFamily": {
     "activity": "活跃度",
     "data_quality": "数据质量",
+    "domain_crypto": "垂直：加密",
+    "domain_weather": "垂直：天气",
     "liquidity": "流动性",
     "mean_reversion": "均值回归",
     "microstructure": "微观结构",
@@ -166,6 +185,8 @@
     "volatility": "波动率"
   },
   "factorScope": {
+    "domain_crypto": "垂直：加密",
+    "domain_weather": "垂直：天气",
     "generic": "通用",
     "structural": "结构性"
   },
@@ -385,6 +406,8 @@
     "capture": "决策证据捕获",
     "feature_cell": "特征单元",
     "data_quality": "数据质量准入",
+    "domain_crypto": "加密域输入",
+    "domain_weather": "天气域输入",
     "factor": "因子",
     "model_input": "模型输入",
     "prediction": "业务预测"
@@ -489,7 +512,8 @@
     "override": "人工覆盖"
   },
   "domainFamily": {
-    "crypto": "加密"
+    "crypto": "加密",
+    "weather": "天气"
   },
   "domainCursorStatus": {
     "bootstrap": "引导",
@@ -505,8 +529,18 @@
   },
   "resolutionOracle": {
     "chainlink_data_streams": "Chainlink Data Streams",
-    "binance_kline": "Binance K 线",
-    "other": "其他（未分类）"
+    "binance_kline": "Binance K 线"
+  },
+  "linkageSourceRole": {
+    "feature": "特征",
+    "live_event": "实时事件",
+    "resolution": "结算",
+    "historical_calibration": "历史校准",
+    "forecast": "预报"
+  },
+  "temperatureUnit": {
+    "celsius": "°C",
+    "fahrenheit": "°F"
   },
   "groundingSource": {
     "slug": "Slug",
@@ -516,7 +550,8 @@
   },
   "groundingKind": {
     "literal_span": "字面片段",
-    "template_entailed": "模板蕴含"
+    "template_entailed": "模板蕴含",
+    "manual_evidence": "人工证据"
   },
   "qualityGate": {
     "sample_count": "样本数",

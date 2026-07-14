@@ -235,12 +235,22 @@ useQueryOpenDrawer({
           {{ $t('page.research.marketLinkages.actions.reResolveAll') }}
         </Button>
       </template>
-      <template #instrument="{ row }">
-        <span class="break-all font-mono text-xs">
-          {{
-            row.instrument_key ??
-            $t('page.research.marketLinkages.emptyInstrument')
-          }}
+      <template #sourceBindings="{ row }">
+        <div
+          v-if="row.source_bindings.length > 0"
+          class="flex flex-col gap-0.5"
+        >
+          <span
+            v-for="source in row.source_bindings"
+            :key="`${source.role}:${source.source_id}:${source.instrument_key}`"
+            class="break-all font-mono text-xs"
+          >
+            {{ source.role }} · {{ source.source_id }} ·
+            {{ source.instrument_key }}
+          </span>
+        </div>
+        <span v-else class="text-muted-foreground">
+          {{ $t('page.research.marketLinkages.emptySourceBindings') }}
         </span>
       </template>
     </Grid>

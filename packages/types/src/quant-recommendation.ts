@@ -13,6 +13,7 @@ import type {
   FeatureCellEvidenceView,
   ModelInputEvidenceView,
 } from './decision-evidence';
+import type { EntryConditionPlan } from './entry-condition';
 import type {
   BindingConstraint,
   ExitReason,
@@ -27,7 +28,6 @@ import type {
   MarketStatus,
   NormalizationSource,
   OutcomeSide,
-  PriceComparison,
   QuantRuntimeMode,
   RecommendationAttributionOutcome,
   RecommendationOutcome,
@@ -65,7 +65,7 @@ export interface MarketContext {
 }
 
 export interface EntryPlan {
-  trigger: EntryTrigger;
+  condition: EntryConditionPlan;
   order_policy: EntryOrderPolicy;
   max_slippage_bps: BpsString;
   valid_from: IsoDateTime;
@@ -75,16 +75,6 @@ export interface EntryPlan {
   cancel_if_not_triggered: boolean;
   entry_reason: string;
 }
-
-export type EntryTrigger =
-  | {
-      comparison: PriceComparison;
-      confirmation_secs: number;
-      kind: 'price_condition';
-      max_observation_gap_ms: number;
-      threshold: PriceString;
-    }
-  | { kind: 'immediate' };
 
 export type EntryOrderPolicy =
   | {

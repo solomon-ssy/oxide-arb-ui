@@ -14,6 +14,7 @@ import { useGovernedAction } from '#/shared/composables/use-governed-action';
 
 import {
   buildCryptoMarketSubject,
+  buildCryptoSourceBindings,
   buildManualEvidence,
   CRYPTO_ASSETS,
   defaultCryptoOverrideForm,
@@ -85,8 +86,8 @@ async function onSubmit(values: Record<string, unknown>) {
         marketId.value,
         {
           evidence,
-          instrument_key: form.instrumentKey.trim(),
           reason: ctx.reason,
+          source_bindings: buildCryptoSourceBindings(form),
           subject,
         },
         ctx,

@@ -1,6 +1,10 @@
 /** Wire values aligned with backend `MarketSubject` / `CryptoSubject` serde. */
 
-import type { GroundingFieldSource, ManualEvidenceInput } from '@vben/types';
+import type {
+  GroundingFieldSource,
+  ManualEvidenceInput,
+  OverrideSourceBindingInput,
+} from '@vben/types';
 
 export const CRYPTO_ASSETS = ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE'] as const;
 
@@ -163,6 +167,51 @@ export function buildCryptoMarketSubject(
     observation_at: synced.observationAt.trim(),
     resolution_oracle: buildResolutionOracle(synced),
   };
+}
+
+/**
+ * Build the complete role set required by the frozen crypto ruleset. The
+ * server recomputes availability and binding hashes and rejects any role,
+ * source, or instrument drift.
+ */
+export function buildCryptoSourceBindings(
+  form: CryptoOverrideFormState,
+): OverrideSourceBindingInput[] {
+  const synced = syncDerivedInstrumentFields(form);
+  const feature: OverrideSourceBindingInput = {
+    instrument_key: synced.instrumentKey,
+    role: 'feature',
+    source_id: 'binance',
+  };
+  if (synced.oracleKind === 'chainlink_data_streams') {
+    const instrument = `CHAINLINK_DATA_STREAMS:${synced.chainlinkFeed.trim().toUpperCase()}`;
+    return [
+      feature,
+      {
+        instrument_key: instrument,
+        role: 'live_event',
+        source_id: 'chainlink_data_streams',
+      },
+      {
+        instrument_key: instrument,
+        role: 'resolution',
+        source_id: 'chainlink_data_streams',
+      },
+    ];
+  }
+  return [
+    feature,
+    {
+      instrument_key: `BINANCE_AGG_TRADE:${synced.binanceSymbol.trim().toUpperCase()}`,
+      role: 'live_event',
+      source_id: 'binance_agg_trade',
+    },
+    {
+      instrument_key: synced.instrumentKey,
+      role: 'resolution',
+      source_id: 'binance',
+    },
+  ];
 }
 
 /** Whether this form's comparator carries a strike (so its evidence citation

@@ -42,6 +42,7 @@ import {
   useSideTagOptions,
 } from '#/shared/components/format/tag-options';
 
+import EntryConditionPanel from '../../shared/entry-condition-panel.vue';
 import ExitMonitorCard from '../../shared/exit-monitor-card.vue';
 import { useIntentActions } from './use-intent-actions';
 
@@ -72,8 +73,6 @@ const loadingOrders = ref(false);
 
 const fsm = computed(() => intentActions(props.intent.status));
 const entry = computed(() => props.intent.entry_order);
-const trigger = computed(() => props.intent.entry_trigger);
-const observation = computed(() => props.intent.entry_trigger_observation);
 const exit = computed(() => props.intent.exit_policy);
 
 const showApprove = computed(() => canApprove && fsm.value.canApprove);
@@ -279,93 +278,8 @@ onMounted(() => void loadExecutionOrders());
         size="small"
         :title="$t('page.quantIntents.detail.sections.entry')"
       >
+        <EntryConditionPanel :recommendation-id="intent.recommendation_id" />
         <Descriptions :column="1" bordered size="small">
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.triggerState')"
-          >
-            <Tag>
-              {{ $t(`enum.entryTriggerState.${intent.entry_trigger_state}`) }}
-            </Tag>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.trigger')"
-          >
-            <template v-if="trigger.kind === 'price_condition'">
-              <span class="font-mono">
-                {{ $t(`enum.priceComparison.${trigger.comparison}`) }}
-                {{ formatPrice(trigger.threshold) }} ·
-                {{ formatDurationSecs(trigger.confirmation_secs) }}
-              </span>
-            </template>
-            <template v-else>
-              {{ $t('page.quantIntents.detail.entry.immediate') }}
-            </template>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.confirmingSince')"
-          >
-            {{ formatDateTimeLocal(intent.trigger_confirming_since) }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.currentPrice')"
-          >
-            <span class="font-mono">
-              {{ formatPrice(observation?.current_price) }}
-            </span>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.conditionSatisfied')"
-          >
-            <Tag :color="observation?.condition_satisfied ? 'green' : 'orange'">
-              {{
-                observation?.condition_satisfied
-                  ? $t('common.yes')
-                  : $t('common.no')
-              }}
-            </Tag>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.confirmationRemaining')"
-          >
-            {{
-              observation?.confirmation_remaining_secs == null
-                ? EMPTY_PLACEHOLDER
-                : formatDurationSecs(observation.confirmation_remaining_secs)
-            }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.bookFreshness')"
-          >
-            <Tag :color="observation?.book_fresh ? 'green' : 'red'">
-              {{
-                observation?.book_fresh
-                  ? $t('page.quantIntents.detail.entry.fresh')
-                  : $t('page.quantIntents.detail.entry.stale')
-              }}
-            </Tag>
-            <span class="text-muted-foreground ml-2">
-              {{
-                observation?.book_age_ms == null
-                  ? EMPTY_PLACEHOLDER
-                  : `${observation.book_age_ms} ms`
-              }}
-            </span>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.bookObservedAt')"
-          >
-            {{ formatDateTimeLocal(observation?.book_observed_at) }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.admissionBlocker')"
-          >
-            {{ observation?.admission_blocker ?? EMPTY_PLACEHOLDER }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.entry.lastObservedAt')"
-          >
-            {{ formatDateTimeLocal(intent.trigger_last_observed_at) }}
-          </DescriptionsItem>
           <DescriptionsItem :label="$t('page.quantIntents.detail.entry.token')">
             <span class="font-mono text-xs break-all">
               {{ entry.token_id }}

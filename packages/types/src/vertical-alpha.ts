@@ -131,7 +131,7 @@ export interface MarketLinkageSummaryView {
   resolver_tier: string;
   resolver_version: number;
   confidence: DecimalString;
-  instrument_key: null | string;
+  source_bindings: ResolvedSourceBindingView[];
   content_hash: string;
   derived_at: IsoDateTime;
   /** Populated only for `resolver_tier = 'override'` rows (11.2.2 remediation R4). */
@@ -149,7 +149,6 @@ export type PriceComparatorView =
 
 /** The settlement oracle a crypto market resolves against. */
 export type ResolutionOracleView =
-  | { descriptor: string; kind: 'other' }
   | { feed: string; kind: 'chainlink_data_streams' }
   | { interval: string; kind: 'binance_kline'; symbol: string };
 
@@ -164,8 +163,49 @@ export interface CryptoSubjectView {
   strike: DecimalString | null;
 }
 
+export interface TemperatureBandView {
+  lower_inclusive: DecimalString | null;
+  upper_inclusive: DecimalString | null;
+}
+
+/** Frozen airport/local-day maximum-temperature market subject. */
+export interface WeatherSubjectView {
+  local_date: string;
+  market_unit: 'celsius' | 'fahrenheit';
+  outcome_band: TemperatureBandView;
+  proxy_methodology_hash: string;
+  settlement_rule_url: string;
+  station: string;
+  station_profile_hash: string;
+  timezone: string;
+}
+
 /** A market's extracted external subject (one variant per domain family). */
-export type MarketSubjectView = CryptoSubjectView & { family: 'crypto' };
+export type MarketSubjectView =
+  | (CryptoSubjectView & { family: 'crypto' })
+  | (WeatherSubjectView & { family: 'weather' });
+
+export type LinkageSourceRole =
+  | 'feature'
+  | 'forecast'
+  | 'historical_calibration'
+  | 'live_event'
+  | 'resolution';
+
+/** Exact role/source/instrument frozen into one linkage revision. */
+export interface ResolvedSourceBindingView {
+  available_at: IsoDateTime;
+  binding_hash: string;
+  instrument_key: string;
+  role: LinkageSourceRole;
+  source_id: string;
+}
+
+/** Operator-proposed source identity; server owns availability and hashes. */
+export type OverrideSourceBindingInput = Pick<
+  ResolvedSourceBindingView,
+  'instrument_key' | 'role' | 'source_id'
+>;
 
 /** Which metadata field a grounding span was located in. */
 export type GroundingFieldSource =
@@ -207,8 +247,8 @@ export interface OverrideContextView {
 /** A validated subject binding (mirrors Rust `ResolvedBinding`). */
 export interface ResolvedBindingView {
   grounding: GroundingProofView;
-  instrument_key: string;
   override_context: null | OverrideContextView;
+  source_bindings: ResolvedSourceBindingView[];
   subject: MarketSubjectView;
 }
 
@@ -227,7 +267,7 @@ export interface MarketLinkageDetailView {
   resolver_version: number;
   confidence: DecimalString;
   outcome: LinkageOutcomeView;
-  instrument_key: null | string;
+  source_bindings: ResolvedSourceBindingView[];
   metadata_hash: string;
   content_hash: string;
   derived_at: IsoDateTime;
@@ -245,7 +285,7 @@ export interface MarketLinkageHistoryEntryView {
   resolver_version: number;
   confidence: DecimalString;
   outcome: LinkageOutcomeView;
-  instrument_key: null | string;
+  source_bindings: ResolvedSourceBindingView[];
   content_hash: string;
   derived_at: IsoDateTime;
   override_reason: null | string;
@@ -291,15 +331,18 @@ export interface ManualEvidenceInput {
 /** `POST /research/market-linkages/{market_id}/override` governed request body. */
 export interface OverrideLinkageRequest {
   evidence: ManualEvidenceInput[];
-  instrument_key: string;
   reason: string;
+  source_bindings: OverrideSourceBindingInput[];
   subject: Record<string, unknown>;
 }
 
 /** Domain ingest cursor health row (`GET /research/domain-sources`). */
 export interface DomainSourceCursorView {
+  family: 'crypto' | 'weather';
   source_id: string;
   instrument_key: string;
+  checkpoint: Record<string, unknown> & { kind: string };
+  checkpoint_hash: string;
   last_event_time: IsoDateTime;
   status: string;
   /** Detail from the most recent failed tick; `null` when the last tick

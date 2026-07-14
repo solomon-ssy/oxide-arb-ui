@@ -57,12 +57,18 @@ const outcome = computed(() => detail.value?.outcome ?? null);
 const binding = computed(() =>
   outcome.value?.status === 'resolved' ? outcome.value : null,
 );
+const cryptoSubject = computed(() =>
+  binding.value?.subject.family === 'crypto' ? binding.value.subject : null,
+);
+const weatherSubject = computed(() =>
+  binding.value?.subject.family === 'weather' ? binding.value.subject : null,
+);
 const unresolvedReason = computed(() =>
   outcome.value?.status === 'unresolved' ? outcome.value.reason : null,
 );
 
 const comparatorLabel = computed(() => {
-  const comparator = binding.value?.subject.comparator;
+  const comparator = cryptoSubject.value?.comparator;
   if (!comparator) {
     return '';
   }
@@ -72,7 +78,7 @@ const comparatorLabel = computed(() => {
 });
 
 const oracleLabel = computed(() => {
-  const oracle = binding.value?.subject.resolution_oracle;
+  const oracle = cryptoSubject.value?.resolution_oracle;
   if (!oracle) {
     return '';
   }
@@ -83,9 +89,6 @@ const oracleLabel = computed(() => {
     case 'chainlink_data_streams': {
       return `${$t('enum.resolutionOracle.chainlink_data_streams')} · ${oracle.feed}`;
     }
-    case 'other': {
-      return `${$t('enum.resolutionOracle.other')} · ${oracle.descriptor}`;
-    }
     default: {
       return '';
     }
@@ -95,8 +98,25 @@ const oracleLabel = computed(() => {
 /** Basis cross-check applies only when settlement oracle is Chainlink. */
 const basisCheckApplicable = computed(
   () =>
-    binding.value?.subject.resolution_oracle.kind === 'chainlink_data_streams',
+    cryptoSubject.value?.resolution_oracle.kind === 'chainlink_data_streams',
 );
+
+const weatherBandLabel = computed(() => {
+  const subject = weatherSubject.value;
+  if (!subject) {
+    return '';
+  }
+  const lower = subject.outcome_band.lower_inclusive;
+  const upper = subject.outcome_band.upper_inclusive;
+  const unit = $t(`enum.temperatureUnit.${subject.market_unit}`);
+  if (lower !== null && upper !== null) {
+    return `${lower}–${upper} ${unit}`;
+  }
+  if (lower !== null) {
+    return `≥ ${lower} ${unit}`;
+  }
+  return `≤ ${upper} ${unit}`;
+});
 
 const basisAlertsPageLink = computed(() =>
   detail.value
@@ -130,6 +150,34 @@ const groundingColumns = [
     dataIndex: 'kind',
     key: 'kind',
     title: $t('page.research.marketLinkages.detail.grounding.kind'),
+  },
+];
+
+const sourceBindingColumns = [
+  {
+    dataIndex: 'role',
+    key: 'role',
+    title: $t('page.research.marketLinkages.detail.sources.role'),
+  },
+  {
+    dataIndex: 'source_id',
+    key: 'source_id',
+    title: $t('page.research.marketLinkages.detail.sources.source'),
+  },
+  {
+    dataIndex: 'instrument_key',
+    key: 'instrument_key',
+    title: $t('page.research.marketLinkages.detail.sources.instrument'),
+  },
+  {
+    dataIndex: 'available_at',
+    key: 'available_at',
+    title: $t('page.research.marketLinkages.detail.sources.availableAt'),
+  },
+  {
+    dataIndex: 'binding_hash',
+    key: 'binding_hash',
+    title: $t('page.research.marketLinkages.detail.sources.bindingHash'),
   },
 ];
 
@@ -262,7 +310,12 @@ const [Drawer, drawerApi] = useVbenDrawer({
     const data = drawerApi.getData<DrawerData>().detail;
     detail.value = data;
     void loadHistory(data.market_id);
-    void loadBasisAlerts(data.market_id);
+    if (
+      data.outcome.status === 'resolved' &&
+      data.outcome.subject.family === 'crypto'
+    ) {
+      void loadBasisAlerts(data.market_id);
+    }
   },
 });
 </script>
@@ -306,14 +359,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
             {{ detail.confidence }}
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.research.marketLinkages.detail.fields.instrument')"
+            :label="$t('page.research.marketLinkages.detail.fields.family')"
           >
-            <span class="break-all font-mono text-xs">
-              {{
-                detail.instrument_key ??
-                $t('page.research.marketLinkages.emptyInstrument')
-              }}
-            </span>
+            {{ $t(`enum.domainFamily.${detail.domain_family}`) }}
           </DescriptionsItem>
           <DescriptionsItem
             :label="
@@ -343,14 +391,51 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
       <Card
         size="small"
+        :title="$t('page.research.marketLinkages.detail.sources.title')"
+      >
+        <Empty
+          v-if="detail.source_bindings.length === 0"
+          :description="$t('page.research.marketLinkages.emptySourceBindings')"
+        />
+        <Table
+          v-else
+          :columns="sourceBindingColumns"
+          :data-source="detail.source_bindings"
+          :pagination="false"
+          :scroll="{ x: 920 }"
+          row-key="binding_hash"
+          size="small"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'role'">
+              <Tag>{{ $t(`enum.linkageSourceRole.${record.role}`) }}</Tag>
+            </template>
+            <template
+              v-else-if="
+                column.key === 'instrument_key' || column.key === 'binding_hash'
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ record[column.key] }}
+              </span>
+            </template>
+            <template v-else-if="column.key === 'available_at'">
+              {{ formatDateTimeLocal(record.available_at) }}
+            </template>
+          </template>
+        </Table>
+      </Card>
+
+      <Card
+        size="small"
         :title="$t('page.research.marketLinkages.detail.outcome')"
       >
         <template v-if="binding">
-          <Descriptions :column="1" bordered size="small">
+          <Descriptions v-if="cryptoSubject" :column="1" bordered size="small">
             <DescriptionsItem
               :label="$t('page.research.marketLinkages.detail.subject.asset')"
             >
-              {{ binding.subject.asset }} / {{ binding.subject.quote }}
+              {{ cryptoSubject.asset }} / {{ cryptoSubject.quote }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="
@@ -360,30 +445,108 @@ const [Drawer, drawerApi] = useVbenDrawer({
               {{ comparatorLabel }}
             </DescriptionsItem>
             <DescriptionsItem
-              v-if="binding.subject.strike"
+              v-if="cryptoSubject.strike"
               :label="$t('page.research.marketLinkages.detail.subject.strike')"
             >
-              {{ binding.subject.strike }}
+              {{ cryptoSubject.strike }}
             </DescriptionsItem>
             <DescriptionsItem
-              v-if="binding.subject.reference_at"
+              v-if="cryptoSubject.reference_at"
               :label="
                 $t('page.research.marketLinkages.detail.subject.referenceAt')
               "
             >
-              {{ formatDateTimeLocal(binding.subject.reference_at) }}
+              {{ formatDateTimeLocal(cryptoSubject.reference_at) }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="
                 $t('page.research.marketLinkages.detail.subject.observationAt')
               "
             >
-              {{ formatDateTimeLocal(binding.subject.observation_at) }}
+              {{ formatDateTimeLocal(cryptoSubject.observation_at) }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.marketLinkages.detail.subject.oracle')"
             >
               {{ oracleLabel }}
+            </DescriptionsItem>
+          </Descriptions>
+
+          <Descriptions
+            v-else-if="weatherSubject"
+            :column="1"
+            bordered
+            size="small"
+          >
+            <DescriptionsItem
+              :label="$t('page.research.marketLinkages.detail.subject.station')"
+            >
+              <span class="font-mono">{{ weatherSubject.station }}</span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.marketLinkages.detail.subject.timezone')
+              "
+            >
+              {{ weatherSubject.timezone }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.marketLinkages.detail.subject.localDate')
+              "
+            >
+              {{ weatherSubject.local_date }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.marketLinkages.detail.subject.outcomeBand')
+              "
+            >
+              {{ weatherBandLabel }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.marketLinkages.detail.subject.settlementRule')
+              "
+            >
+              <a
+                :href="weatherSubject.settlement_rule_url"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {{ weatherSubject.settlement_rule_url }}
+              </a>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.marketLinkages.detail.subject.stationProfileHash',
+                )
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ weatherSubject.station_profile_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.marketLinkages.detail.subject.proxyMethodologyHash',
+                )
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ weatherSubject.proxy_methodology_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.marketLinkages.detail.subject.proxyCaveat')
+              "
+            >
+              {{
+                $t('page.research.marketLinkages.detail.subject.noaaProxyOnly')
+              }}
             </DescriptionsItem>
           </Descriptions>
 
@@ -458,6 +621,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       </Card>
 
       <Card
+        v-if="cryptoSubject"
         size="small"
         :loading="basisAlertsLoading"
         :title="$t('page.research.marketLinkages.detail.basisAlerts.title')"

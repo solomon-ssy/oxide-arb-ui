@@ -46,6 +46,17 @@ const coreRoutes: RouteRecordRaw[] = [
           title: $t('page.auth.profile'),
         },
       },
+      {
+        name: 'TradePolicyFitWorkbench',
+        path: '/research/trade-policy-fits/new',
+        component: () =>
+          import('#/views/research/trade-policy-fits/workbench.vue'),
+        meta: {
+          authority: ['materialization:create'],
+          hideInMenu: true,
+          title: $t('page.research.tradePolicies.workbench.title'),
+        },
+      },
     ],
   },
   {

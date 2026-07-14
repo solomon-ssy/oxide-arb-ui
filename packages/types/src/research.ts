@@ -1023,6 +1023,8 @@ export interface RetryResearchJobRequest {
 /** Factor definition governance projection. */
 export interface FactorDefinitionView {
   factor_definition_id: UuidString;
+  definition_hash: string;
+  feature_contract_hash: string;
   name: string;
   factor_family: FactorFamily;
   scope: FactorDefinitionScope;

@@ -1,4 +1,6 @@
 import type {
+  EntryConditionAuditView,
+  EntryConditionDetailView,
   QuantEvidenceView,
   QuantRecommendationView,
   RecommendationAttributionView,
@@ -12,6 +14,24 @@ export namespace QuantRecommendationApi {
     `/quant/recommendations/${id}/evidence`;
   export const attribution = (id: string) =>
     `/quant/recommendations/${id}/attribution`;
+  export const entryCondition = (id: string) =>
+    `/quant/recommendations/${id}/entry-condition`;
+  export const entryConditionAudits = (id: string) =>
+    `/quant/recommendations/${id}/entry-condition/audits`;
+}
+
+/** Durable recommendation-owned entry condition and immutable artifact. */
+export async function getRecommendationEntryCondition(id: string) {
+  return requestClient.get<EntryConditionDetailView>(
+    QuantRecommendationApi.entryCondition(id),
+  );
+}
+
+/** Append-only lifecycle history for a recommendation entry condition. */
+export async function getRecommendationEntryConditionAudits(id: string) {
+  return requestClient.get<EntryConditionAuditView[]>(
+    QuantRecommendationApi.entryConditionAudits(id),
+  );
 }
 
 /** `GET /quant/recommendations/{id}` — one scored recommendation. */

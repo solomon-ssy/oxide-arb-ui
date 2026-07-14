@@ -23,11 +23,11 @@ const { handleRequest } = useRequestHandler();
 
 const rows = ref<DomainSourceCursorView[]>([]);
 
-const binanceRows = computed(() =>
-  rows.value.filter((row) => row.source_id === 'binance'),
+const cryptoRows = computed(() =>
+  rows.value.filter((row) => row.family === 'crypto'),
 );
-const chainlinkRows = computed(() =>
-  rows.value.filter((row) => row.source_id === 'chainlink'),
+const weatherRows = computed(() =>
+  rows.value.filter((row) => row.family === 'weather'),
 );
 
 const worstLag = computed(() => {
@@ -103,26 +103,26 @@ function lagClass(lag: number) {
     <div class="mb-4 flex flex-wrap gap-4">
       <Card
         size="small"
-        :title="$t('page.research.domainSources.cards.binance')"
+        :title="$t('page.research.domainSources.cards.crypto')"
       >
         <Statistic
           :title="$t('page.research.domainSources.cards.activeCursors')"
-          :value="binanceRows.length"
+          :value="cryptoRows.length"
         />
         <div class="mt-2 text-xs text-muted-foreground">
-          {{ $t('page.research.domainSources.cards.binanceHint') }}
+          {{ $t('page.research.domainSources.cards.cryptoHint') }}
         </div>
       </Card>
       <Card
         size="small"
-        :title="$t('page.research.domainSources.cards.chainlink')"
+        :title="$t('page.research.domainSources.cards.weather')"
       >
         <Statistic
           :title="$t('page.research.domainSources.cards.activeFeeds')"
-          :value="chainlinkRows.length"
+          :value="weatherRows.length"
         />
         <div class="mt-2 text-xs text-muted-foreground">
-          {{ $t('page.research.domainSources.cards.chainlinkHint') }}
+          {{ $t('page.research.domainSources.cards.weatherHint') }}
         </div>
       </Card>
       <Card
@@ -175,6 +175,14 @@ function lagClass(lag: number) {
           {{ row.last_error }}
         </span>
         <span v-else class="text-muted-foreground">—</span>
+      </template>
+      <template #checkpoint="{ row }">
+        <div class="font-mono text-xs">
+          <div>{{ row.checkpoint.kind }}</div>
+          <div class="break-all text-muted-foreground">
+            {{ row.checkpoint_hash }}
+          </div>
+        </div>
       </template>
     </Grid>
   </Page>

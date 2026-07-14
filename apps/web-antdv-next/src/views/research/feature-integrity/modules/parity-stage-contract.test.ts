@@ -8,6 +8,8 @@ import zhCn from '../../../../locales/langs/zh-CN/enum.json';
 const wireStages = [
   'capture',
   'data_quality',
+  'domain_crypto',
+  'domain_weather',
   'factor',
   'feature_cell',
   'model_input',

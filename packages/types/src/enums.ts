@@ -289,15 +289,6 @@ export const FILL_REQUIREMENTS = {
 } as const;
 export type FillRequirement = WireEnum<typeof FILL_REQUIREMENTS>;
 
-export const ENTRY_TRIGGER_STATES = {
-  confirming: 'confirming',
-  expired: 'expired',
-  notRequired: 'not_required',
-  ready: 'ready',
-  waiting: 'waiting',
-} as const;
-export type EntryTriggerState = WireEnum<typeof ENTRY_TRIGGER_STATES>;
-
 /** Signed direction a factor pushed the composite score. */
 export const FACTOR_DIRECTIONS = {
   negative: 'negative',
@@ -758,6 +749,8 @@ export type FeatureParityRunStatus = WireEnum<
 export const FEATURE_PARITY_STAGES = {
   capture: 'capture',
   dataQuality: 'data_quality',
+  domainCrypto: 'domain_crypto',
+  domainWeather: 'domain_weather',
   factor: 'factor',
   featureCell: 'feature_cell',
   modelInput: 'model_input',
@@ -818,8 +811,10 @@ export const MODEL_FAMILIES = {
 
 export type ModelFamily = WireEnum<typeof MODEL_FAMILIES>;
 
-/** Factor definition scope — generic plane or platform-internal structural. */
+/** Factor definition scope, including category-routed external verticals. */
 export const FACTOR_DEFINITION_SCOPES = {
+  domainCrypto: 'domain_crypto',
+  domainWeather: 'domain_weather',
   generic: 'generic',
   structural: 'structural',
 } as const;

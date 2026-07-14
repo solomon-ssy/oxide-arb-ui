@@ -10,9 +10,9 @@ import type {
   UsdString,
   UuidString,
 } from './common';
+import type { EntryConditionInstanceSummaryView } from './entry-condition';
 import type {
   ApprovalStatus,
-  EntryTriggerState,
   ExitReason,
   ExitSettlementMode,
   ExitState,
@@ -27,7 +27,6 @@ import type {
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
 } from './exit-plan';
-import type { EntryTrigger } from './quant-recommendation';
 
 /** CLOB order type — externally tagged (`gtd` carries an expiration epoch). */
 export type OrderTypeSpec =
@@ -92,16 +91,12 @@ export interface OrderIntentView {
   policy_hash: null | string;
   status_reason: null | string;
   admission_trace_ref: null | string;
-  entry_trigger: EntryTrigger;
+  condition_instance_id: UuidString;
+  entry_condition?: EntryConditionInstanceSummaryView | null;
   entry_order: EntryOrderSpec;
   exit_policy: ExitPolicySpec;
   risk_envelope_hash: string;
   expires_at: IsoDateTime;
-  entry_trigger_state: EntryTriggerState;
-  trigger_confirming_since: IsoDateTime | null;
-  trigger_last_observed_at: IsoDateTime | null;
-  trigger_ready_at: IsoDateTime | null;
-  entry_trigger_observation?: EntryTriggerObservationView | null;
   exit_state: ExitState;
   exit_reason: ExitReason | null;
   next_check_at: IsoDateTime | null;
@@ -129,6 +124,7 @@ export interface ExitReinferenceObservation {
   mark: PriceString;
   model_artifact_hash: string;
   model_version_id: UuidString;
+  factor_snapshot_hash: string;
   observed_at: IsoDateTime;
   score: ProbabilityString;
   score_retention: DecimalString;
@@ -158,17 +154,6 @@ export interface ExitMonitorObservationView {
   peak_mark: null | PriceString;
   reason: ExitReason | null;
   state: ExitState;
-}
-
-/** Ephemeral live-book observation computed when one intent detail is read. */
-export interface EntryTriggerObservationView {
-  current_price: null | PriceString;
-  book_observed_at: IsoDateTime | null;
-  book_age_ms: null | number;
-  book_fresh: boolean;
-  condition_satisfied: boolean;
-  confirmation_remaining_secs: null | number;
-  admission_blocker: null | string;
 }
 
 /** Filter + pagination for `GET /quant/intents`. */

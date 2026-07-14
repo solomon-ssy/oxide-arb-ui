@@ -208,6 +208,62 @@
         "fullL2": "Complete L2 trajectories",
         "fees": "Applied venue-fee model"
       },
+      "workbench": {
+        "title": "Trade-policy fit workbench",
+        "frozen": "Frozen fit boundary",
+        "activation": "Activation target",
+        "runtime": "Runtime-config version",
+        "model": "Model specification",
+        "candidates": "Condition candidates",
+        "addCandidate": "Add conditional candidate",
+        "editor": "Typed condition editor",
+        "inspector": "Canonical inspector",
+        "candidateId": "Candidate ID",
+        "confirmation": "Continuous confirmation (ms)",
+        "observationGap": "Maximum observation gap (ms)",
+        "candidateCount": "Candidate count",
+        "nodeCount": "Node count",
+        "naturalLanguage": "Condition meaning",
+        "candidateHash": "Server candidate-set hash",
+        "preflight": "PIT and source preflight",
+        "result": "Asynchronous fit result",
+        "openJob": "Open research job",
+        "immediateFixed": "Immediate is the mandatory baseline and cannot be edited or removed.",
+        "immediateDescription": "Proceed directly to admission using the frozen order policy.",
+        "anchor": {
+          "decision": "Recommendation decision",
+          "marketStart": "Market start",
+          "marketEnd": "Market end"
+        },
+        "event": {
+          "crypto": "Crypto subject predicate entered",
+          "weather": "Weather daily-high predicate"
+        },
+        "node": {
+          "kind": "Node type",
+          "price": "Executable price",
+          "clock": "Clock",
+          "factor": "PIT factor snapshot",
+          "marketEvent": "Typed market event",
+          "all": "ALL",
+          "any": "ANY",
+          "comparison": "Comparison",
+          "threshold": "Threshold",
+          "freshness": "Maximum input age (ms)",
+          "anchor": "Clock anchor",
+          "offset": "Offset (ms)",
+          "factorDefinition": "Published factor definition",
+          "measure": "Measure",
+          "confidence": "Minimum confidence",
+          "event": "Event predicate",
+          "addChild": "Add child"
+        },
+        "blocker": {
+          "candidateLimit": "At most 16 candidates are allowed.",
+          "candidateIds": "Candidate IDs must be non-empty and unique.",
+          "immediate": "Exactly one Immediate baseline is required."
+        }
+      },
       "columns": {
         "artifactId": "Artifact",
         "status": "Status",
@@ -1140,7 +1196,7 @@
         "tier": "Resolver tier",
         "confidence": "Confidence",
         "family": "Family",
-        "instrument": "Instrument",
+        "sourceBindings": "Source bindings",
         "derivedAt": "Derived",
         "operation": "Actions"
       },
@@ -1151,6 +1207,7 @@
         "reResolveOne": "Re-resolve this market",
         "unresolvedQueue": "Unresolved queue"
       },
+      "emptySourceBindings": "No frozen source bindings",
       "resolve": {
         "title": "Resolve market linkages",
         "summary": "Re-run the offline linkage resolver for every category-mapped market whose metadata changed. Appends new ledger rows; never mutates history.",
@@ -1224,7 +1281,7 @@
           "status": "Status",
           "tier": "Tier",
           "confidence": "Confidence",
-          "instrument": "Instrument",
+          "family": "Domain family",
           "metadataHash": "Metadata hash",
           "contentHash": "Content hash",
           "derivedAt": "Derived at"
@@ -1235,7 +1292,24 @@
           "strike": "Strike",
           "referenceAt": "Reference at",
           "observationAt": "Observation at",
-          "oracle": "Resolution oracle"
+          "oracle": "Resolution oracle",
+          "station": "ICAO station",
+          "timezone": "IANA timezone",
+          "localDate": "Local calendar date",
+          "outcomeBand": "Temperature outcome band",
+          "settlementRule": "Frozen settlement-rule reference",
+          "stationProfileHash": "Station profile hash",
+          "proxyMethodologyHash": "NOAA proxy methodology hash",
+          "proxyCaveat": "Truth boundary",
+          "noaaProxyOnly": "NOAA observations are live proxy evidence only. Final label truth remains the Polymarket winning token under the cited Wunderground rule."
+        },
+        "sources": {
+          "title": "Frozen source roles",
+          "role": "Role",
+          "source": "Source",
+          "instrument": "Instrument",
+          "availableAt": "Available at",
+          "bindingHash": "Binding hash"
         },
         "overrideContext": {
           "title": "Operator override audit",
@@ -1272,21 +1346,23 @@
       "listTitle": "Domain ingest cursors",
       "refresh": "Refresh",
       "cards": {
-        "binance": "Binance klines",
-        "chainlink": "Chainlink aggregator",
+        "crypto": "Crypto source plane",
+        "weather": "Weather source plane",
         "health": "Health",
         "activeCursors": "Active cursors",
         "activeFeeds": "Active feeds",
         "worstLag": "Worst lag",
-        "binanceHint": "REST ingest with weight-budget governor",
-        "chainlinkHint": "Polygon on-chain oracle cross-check source",
+        "cryptoHint": "Binance kline/aggTrade and Chainlink Data Streams checkpoints",
+        "weatherHint": "AviationWeather, GHCNh, and GEFS station checkpoints",
         "staleCursors": "{count} cursor(s) > 5m lag",
         "errorCursors": "{count} cursor(s) in error"
       },
       "table": {
         "title": "Ingest cursors",
+        "family": "Family",
         "source": "Source",
         "instrument": "Instrument",
+        "checkpoint": "Typed checkpoint / hash",
         "status": "Status",
         "lag": "Lag (s)",
         "lastError": "Last error",
@@ -2006,6 +2082,34 @@
         "scaleOutTargets": "Scale-Out Targets",
         "cumulativeExited": "Cumulative Exited"
       }
+    }
+  },
+  "entryCondition": {
+    "title": "Entry Condition",
+    "state": "Instance State",
+    "truth": "Current Truth",
+    "revision": "Revision",
+    "confirmation": "Continuous Confirmation",
+    "lastEvaluatedAt": "Last Evaluated",
+    "nextEvaluationAt": "Next Backstop Evaluation",
+    "evaluationHash": "Evaluation Hash",
+    "inputFingerprint": "Input Fingerprint",
+    "artifact": "Frozen Artifact",
+    "canonicalTree": "Canonical Condition Tree",
+    "audits": "Immutable Audit Timeline",
+    "immediate": "No condition is required; the published recommendation proceeds directly to admission eligibility.",
+    "emptyAudits": "No condition audit events yet.",
+    "loadError": "Unable to load entry-condition evidence.",
+    "node": {
+      "all": "All conditions must hold",
+      "any": "Any condition may hold",
+      "price": "Executable price {comparison} {threshold}",
+      "clock": "Clock deadline {deadline}",
+      "factor": "Factor {id} ({measure}) {comparison} {threshold}",
+      "cryptoEvent": "Same-source crypto price entered the recommended outcome",
+      "weatherEnterBand": "NOAA proxy daily high entered the temperature band",
+      "weatherExceedUpper": "NOAA proxy daily high exceeded the band upper bound",
+      "weatherDayClosedOutside": "NOAA observation day closed with the daily high outside the band"
     }
   },
   "quantExecutionOrders": {

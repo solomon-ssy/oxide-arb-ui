@@ -1,4 +1,5 @@
 import type { IsoDateTime, MarketId, UuidString } from './common';
+import type { ConditionTruth, EntryConditionState } from './entry-condition';
 import type {
   AlertCategory,
   AlertLevel,
@@ -17,13 +18,14 @@ import type { SystemStatus } from './system';
 
 /**
  * Subscribable WS channels, mirroring Rust `WsChannel` wire names. This is the
- * closed 10-channel allowlist; no other channel may be subscribed or dispatched.
+ * closed 11-channel allowlist; no other channel may be subscribed or dispatched.
  */
 export const WS_CHANNELS = {
   configActivated: 'config.activated',
   marketBookUpdate: 'market.book_update',
   marketResolved: 'market.resolved',
   materializationRunUpdate: 'materialization.run_update',
+  quantCondition: 'quant.condition',
   quantIntent: 'quant.intent',
   quantReconciliation: 'quant.reconciliation',
   quantReport: 'quant.report',
@@ -115,6 +117,15 @@ export interface IntentLifecycleEvent {
   occurred_at: IsoDateTime;
 }
 
+/** Lean `quant.condition` revision hint; full evidence is fetched over REST. */
+export interface EntryConditionLifecycleEvent {
+  condition_instance_id: UuidString;
+  evaluation_hash: null | string;
+  revision: number;
+  state: EntryConditionState;
+  truth: ConditionTruth | null;
+}
+
 /**
  * WS `materialization.run_update` payload — a lean run-status hint for the
  * research catalog (mirrors Rust `MaterializationRunEvent`). The catalog pages
@@ -177,6 +188,7 @@ export interface WsChannelPayloads {
   'market.book_update': MarketBookView;
   'market.resolved': MarketResolvedEvent;
   'materialization.run_update': MaterializationRunEvent;
+  'quant.condition': EntryConditionLifecycleEvent;
   'quant.intent': IntentLifecycleEvent;
   'quant.reconciliation': ReconciliationLifecycleEvent;
   'quant.report': ReportLifecycleEvent;

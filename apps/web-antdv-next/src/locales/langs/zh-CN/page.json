@@ -208,6 +208,62 @@
         "fullL2": "完整 L2 轨迹",
         "fees": "已应用场所费用模型"
       },
+      "workbench": {
+        "title": "交易策略拟合工作台",
+        "frozen": "冻结拟合边界",
+        "activation": "激活目标",
+        "runtime": "Runtime-config 版本",
+        "model": "模型规格",
+        "candidates": "条件候选集",
+        "addCandidate": "新增条件候选",
+        "editor": "类型化条件编辑器",
+        "inspector": "Canonical 检查器",
+        "candidateId": "候选 ID",
+        "confirmation": "连续确认时长（毫秒）",
+        "observationGap": "最大观测间隔（毫秒）",
+        "candidateCount": "候选数量",
+        "nodeCount": "节点数量",
+        "naturalLanguage": "条件语义",
+        "candidateHash": "服务端候选集哈希",
+        "preflight": "PIT 与来源预检",
+        "result": "异步拟合结果",
+        "openJob": "打开研究任务",
+        "immediateFixed": "Immediate 是不可编辑、不可删除的强制基线。",
+        "immediateDescription": "按冻结的订单策略直接进入 admission。",
+        "anchor": {
+          "decision": "Recommendation 决策时刻",
+          "marketStart": "市场开始时刻",
+          "marketEnd": "市场结束时刻"
+        },
+        "event": {
+          "crypto": "Crypto 标的谓词切入",
+          "weather": "天气单日最高温谓词"
+        },
+        "node": {
+          "kind": "节点类型",
+          "price": "可执行价格",
+          "clock": "时钟",
+          "factor": "PIT 因子快照",
+          "marketEvent": "类型化市场事件",
+          "all": "全部满足",
+          "any": "任一满足",
+          "comparison": "比较方式",
+          "threshold": "阈值",
+          "freshness": "最大输入年龄（毫秒）",
+          "anchor": "时钟锚点",
+          "offset": "偏移（毫秒）",
+          "factorDefinition": "已发布因子定义",
+          "measure": "量值",
+          "confidence": "最低置信度",
+          "event": "事件谓词",
+          "addChild": "新增子节点"
+        },
+        "blocker": {
+          "candidateLimit": "候选数量最多为 16。",
+          "candidateIds": "候选 ID 必须非空且唯一。",
+          "immediate": "必须且只能保留一个 Immediate 基线。"
+        }
+      },
       "columns": {
         "artifactId": "产物",
         "status": "状态",
@@ -1140,7 +1196,7 @@
         "tier": "解析层级",
         "confidence": "置信度",
         "family": "垂直族",
-        "instrument": "标的键",
+        "sourceBindings": "来源绑定",
         "derivedAt": "解析时间",
         "operation": "操作"
       },
@@ -1151,6 +1207,7 @@
         "reResolveOne": "重解析此市场",
         "unresolvedQueue": "未解析队列"
       },
+      "emptySourceBindings": "暂无冻结的来源绑定",
       "resolve": {
         "title": "重解析市场联动",
         "summary": "对 metadata 已变更的、有分类映射的市场重新运行离线联动解析器。仅追加台账行，绝不改写历史。",
@@ -1224,7 +1281,7 @@
           "status": "状态",
           "tier": "层级",
           "confidence": "置信度",
-          "instrument": "标的键",
+          "family": "垂直领域",
           "metadataHash": "Metadata hash",
           "contentHash": "Content hash",
           "derivedAt": "解析于"
@@ -1235,7 +1292,24 @@
           "strike": "行权价",
           "referenceAt": "参考时刻",
           "observationAt": "观测时刻",
-          "oracle": "结算 oracle"
+          "oracle": "结算 oracle",
+          "station": "ICAO 机场站",
+          "timezone": "IANA 时区",
+          "localDate": "当地自然日",
+          "outcomeBand": "温度结果区间",
+          "settlementRule": "冻结的结算规则引用",
+          "stationProfileHash": "站点档案 hash",
+          "proxyMethodologyHash": "NOAA 代理方法 hash",
+          "proxyCaveat": "真值边界",
+          "noaaProxyOnly": "NOAA 观测仅用于实时代理证据；实际标签真值始终是所引用 Wunderground 规则下的 Polymarket 胜出 token。"
+        },
+        "sources": {
+          "title": "冻结的来源角色",
+          "role": "角色",
+          "source": "来源",
+          "instrument": "标的键",
+          "availableAt": "可用时间",
+          "bindingHash": "绑定 hash"
         },
         "overrideContext": {
           "title": "操作员覆盖审计",
@@ -1272,21 +1346,23 @@
       "listTitle": "域摄取 cursor",
       "refresh": "刷新",
       "cards": {
-        "binance": "Binance K 线",
-        "chainlink": "Chainlink 聚合器",
+        "crypto": "Crypto 来源面",
+        "weather": "天气来源面",
         "health": "健康度",
         "activeCursors": "活跃 cursor",
         "activeFeeds": "活跃 feed",
         "worstLag": "最大滞后",
-        "binanceHint": "REST 摄取，带 weight 预算限流",
-        "chainlinkHint": "Polygon 链上预言机交叉核验源",
+        "cryptoHint": "Binance kline/aggTrade 与 Chainlink Data Streams checkpoint",
+        "weatherHint": "AviationWeather、GHCNh 与 GEFS 站点 checkpoint",
         "staleCursors": "{count} 个 cursor 滞后 > 5 分钟",
         "errorCursors": "{count} 个 cursor 处于错误状态"
       },
       "table": {
         "title": "摄取 cursor",
+        "family": "垂直领域",
         "source": "数据源",
         "instrument": "Instrument",
+        "checkpoint": "类型化 checkpoint / 哈希",
         "status": "状态",
         "lag": "滞后 (s)",
         "lastError": "最近错误",
@@ -2006,6 +2082,34 @@
         "scaleOutTargets": "分批退出目标",
         "cumulativeExited": "累计已退出"
       }
+    }
+  },
+  "entryCondition": {
+    "title": "入场条件",
+    "state": "实例状态",
+    "truth": "当前真值",
+    "revision": "修订版本",
+    "confirmation": "连续确认",
+    "lastEvaluatedAt": "最近求值",
+    "nextEvaluationAt": "下次兜底求值",
+    "evaluationHash": "求值哈希",
+    "inputFingerprint": "输入指纹",
+    "artifact": "冻结 Artifact",
+    "canonicalTree": "Canonical 条件树",
+    "audits": "不可变审计时间线",
+    "immediate": "无需条件；Recommendation 发布后直接进入准入候选。",
+    "emptyAudits": "暂无条件审计记录。",
+    "loadError": "无法加载入场条件证据。",
+    "node": {
+      "all": "全部条件同时成立",
+      "any": "任一条件成立",
+      "price": "可执行价格 {comparison} {threshold}",
+      "clock": "时钟截止 {deadline}",
+      "factor": "因子 {id}（{measure}）{comparison} {threshold}",
+      "cryptoEvent": "Crypto 同源价格切入推荐结果",
+      "weatherEnterBand": "NOAA 代理日高进入温度区间",
+      "weatherExceedUpper": "NOAA 代理日高超过区间上界",
+      "weatherDayClosedOutside": "NOAA 观测日关闭且日高位于区间外"
     }
   },
   "quantExecutionOrders": {

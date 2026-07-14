@@ -1,5 +1,6 @@
 import type {
   ConfigActivatedEvent,
+  EntryConditionLifecycleEvent,
   IntentLifecycleEvent,
   MarketBookView,
   MarketResolvedEvent,
@@ -13,6 +14,7 @@ import type {
   WsEnvelope,
 } from '@vben/types';
 
+import { useEntryConditionStore } from '#/store/entry-condition';
 // Direct module imports (not the `#/store` barrel) keep this reducer free of
 // the auth/api dependency chain, so unit tests can drive it with bare Pinia.
 import { useMarketStore } from '#/store/market';
@@ -75,6 +77,12 @@ export function dispatchWsEnvelope(
     }
     case 'pong': {
       useWsStore().markHeartbeat();
+      break;
+    }
+    case 'quant.condition': {
+      useEntryConditionStore().bumpRevision(
+        envelope.data as EntryConditionLifecycleEvent,
+      );
       break;
     }
     case 'quant.intent': {

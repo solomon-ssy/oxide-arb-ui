@@ -94,7 +94,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await attachMetadata(testInfo, fixtures, [unavailableRoute, frozenRoute]);
   });
 
-  test('approval arms automatically, BookStore observations reach Ready, and cancel wins before claim', async ({
+  test('approval arms automatically, BookStore observations reach Qualified, and cancel wins before claim', async ({
     page,
     request,
   }, testInfo) => {
@@ -119,7 +119,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('approve-intent')).toHaveCount(0);
     await expect(page.getByTestId('cancel-intent')).toBeVisible();
     await expect(page.getByTestId('intent-detail')).toContainText(
-      /等待|Waiting/i,
+      /立即|Immediate|Not required/i,
     );
 
     const waitingRoute = `/quant/intents/${fixtures.waiting_intent_id}`;
@@ -136,30 +136,34 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
           },
         },
       );
-      expect(response.ok()).toBeTruthy();
-      return (await response.json()) as { entry_trigger_state: string };
+      const payload = (await response.json()) as {
+        entry_condition_state?: string;
+        error?: string;
+      };
+      expect(response.ok(), payload.error).toBeTruthy();
+      return payload as { entry_condition_state: string };
     };
 
     const confirming = await observe(0);
-    expect(confirming.entry_trigger_state).toBe('confirming');
+    expect(confirming.entry_condition_state).toBe('confirming');
     const reset = await observe(500, true);
-    expect(reset.entry_trigger_state).toBe('waiting');
+    expect(reset.entry_condition_state).toBe('unavailable');
     const reconfirming = await observe(1000);
-    expect(reconfirming.entry_trigger_state).toBe('confirming');
+    expect(reconfirming.entry_condition_state).toBe('confirming');
     const stillConfirming = await observe(2000);
-    expect(stillConfirming.entry_trigger_state).toBe('confirming');
-    const ready = await observe(3000);
-    expect(ready.entry_trigger_state).toBe('ready');
+    expect(stillConfirming.entry_condition_state).toBe('confirming');
+    const qualified = await observe(3000);
+    expect(qualified.entry_condition_state).toBe('qualified');
     await page.reload();
     await expect(page.getByTestId('intent-detail')).toContainText(
-      /就绪|Ready/i,
+      /满足条件|Qualified/i,
     );
     await expect(page.getByTestId('cancel-intent')).toBeVisible();
     await expect(
       page.getByRole('button', { name: /提交|Submit/i }),
     ).toHaveCount(0);
     await expect(page).toHaveScreenshot(
-      'intent-ready-before-claim-desktop.png',
+      'intent-qualified-before-claim-desktop.png',
       {
         fullPage: true,
       },

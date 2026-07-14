@@ -1,8 +1,5 @@
 <script lang="ts" setup>
-import type {
-  TradePolicyFitContract,
-  TradePolicySummaryView,
-} from '@vben/types';
+import type { TradePolicySummaryView } from '@vben/types';
 
 import type {
   OnActionClickParams,
@@ -11,30 +8,23 @@ import type {
 
 import { useRouter } from 'vue-router';
 
-import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
+import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, message } from 'antdv-next';
+import { Button } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import {
-  fitTradePolicy,
-  getTradePolicy,
-  listTradePolicies,
-} from '#/api/trade-policies';
+import { getTradePolicy, listTradePolicies } from '#/api/trade-policies';
 import { $t } from '#/locales';
-import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
 
 import TradePolicyDetailDrawer from './modules/trade-policy-detail-drawer.vue';
-import TradePolicyFitModal from './modules/trade-policy-fit-modal.vue';
 
 defineOptions({ name: 'ResearchTradePoliciesPage' });
 
 const { handleRequest } = useRequestHandler();
 const router = useRouter();
-const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
 const canFit = hasAccessByCodes(['materialization:create']);
 const emptyPage = {
@@ -47,11 +37,6 @@ const emptyPage = {
 
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: TradePolicyDetailDrawer,
-  destroyOnClose: true,
-});
-
-const [FitModal, fitModalApi] = useVbenModal({
-  connectedComponent: TradePolicyFitModal,
   destroyOnClose: true,
 });
 
@@ -136,26 +121,7 @@ useQueryOpenDrawer({
 });
 
 function openFit() {
-  fitModalApi
-    .setData({
-      onSubmit: async (contract: TradePolicyFitContract) => {
-        const job = await governed(
-          (context) =>
-            fitTradePolicy({ contract, reason: context.reason }, context),
-          {
-            summary: $t('page.research.tradePolicies.fit.summary'),
-            title: $t('page.research.tradePolicies.fit.title'),
-          },
-        );
-        if (!job) {
-          return false;
-        }
-        message.success($t('page.research.tradePolicies.fit.queued'));
-        void router.push(`/research/jobs?open=${job.job_id}`);
-        return true;
-      },
-    })
-    .open();
+  void router.push('/research/trade-policy-fits/new');
 }
 </script>
 
@@ -169,6 +135,5 @@ function openFit() {
       </template>
     </Grid>
     <Drawer />
-    <FitModal />
   </Page>
 </template>

@@ -18,6 +18,7 @@ import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
 const base = '/research/trade-policies';
+const fitBase = '/research/trade-policy-fits';
 
 export async function listTradePolicies(query: TradePolicyListQuery = {}) {
   return requestClient.get<Paginated<TradePolicySummaryView>>(base, {
@@ -43,7 +44,7 @@ export async function preflightTradePolicy(
   body: TradePolicyFitPreflightRequest,
 ) {
   return requestClient.post<TradePolicyFitPreflightView>(
-    `${base}/preflight`,
+    `${fitBase}/preflight`,
     body,
   );
 }
@@ -52,7 +53,11 @@ export async function fitTradePolicy(
   body: FitTradePolicyRequest,
   context: GovernedContext,
 ) {
-  return governedPost<ResearchJobView>(`${base}/fit`, body, context);
+  return governedPost<ResearchJobView>(fitBase, body, context);
+}
+
+export async function getTradePolicyFit(id: string) {
+  return requestClient.get<ResearchJobView>(`${fitBase}/${id}`);
 }
 
 export async function governTradePolicy(

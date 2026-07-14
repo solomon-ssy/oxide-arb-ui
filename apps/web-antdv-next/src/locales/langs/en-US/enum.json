@@ -120,12 +120,29 @@
     "at_or_above": "At or above",
     "at_or_below": "At or below"
   },
-  "entryTriggerState": {
+  "entryConditionState": {
     "not_required": "Immediate",
     "waiting": "Waiting",
+    "unavailable": "Source Unavailable",
     "confirming": "Confirming",
-    "ready": "Ready",
-    "expired": "Expired"
+    "qualified": "Qualified",
+    "consumed": "Consumed",
+    "expired": "Expired",
+    "invalidated": "Invalidated"
+  },
+  "conditionTruth": {
+    "satisfied": "Satisfied",
+    "unsatisfied": "Unsatisfied",
+    "unavailable": "Unavailable"
+  },
+  "entryConditionAuditAction": {
+    "created": "Instance created",
+    "evaluated": "Evaluated",
+    "lease_taken_over": "Worker takeover",
+    "claimed": "Atomic claim",
+    "reverted": "Admission reverted",
+    "expired": "Expired",
+    "invalidated": "Invalidated"
   },
   "factorDirection": {
     "positive": "Positive",
@@ -157,6 +174,8 @@
   "factorFamily": {
     "activity": "Activity",
     "data_quality": "Data Quality",
+    "domain_crypto": "Domain: Crypto",
+    "domain_weather": "Domain: Weather",
     "liquidity": "Liquidity",
     "mean_reversion": "Mean Reversion",
     "microstructure": "Microstructure",
@@ -166,6 +185,8 @@
     "volatility": "Volatility"
   },
   "factorScope": {
+    "domain_crypto": "Domain: Crypto",
+    "domain_weather": "Domain: Weather",
     "generic": "Generic",
     "structural": "Structural"
   },
@@ -385,6 +406,8 @@
     "capture": "Decision capture",
     "feature_cell": "Feature cell",
     "data_quality": "Data quality admission",
+    "domain_crypto": "Crypto domain inputs",
+    "domain_weather": "Weather domain inputs",
     "factor": "Factor",
     "model_input": "Model input",
     "prediction": "Prediction"
@@ -489,7 +512,8 @@
     "override": "Override"
   },
   "domainFamily": {
-    "crypto": "Crypto"
+    "crypto": "Crypto",
+    "weather": "Weather"
   },
   "domainCursorStatus": {
     "bootstrap": "Bootstrap",
@@ -505,8 +529,18 @@
   },
   "resolutionOracle": {
     "chainlink_data_streams": "Chainlink Data Streams",
-    "binance_kline": "Binance kline",
-    "other": "Other (unclassified)"
+    "binance_kline": "Binance kline"
+  },
+  "linkageSourceRole": {
+    "feature": "Feature",
+    "live_event": "Live event",
+    "resolution": "Resolution",
+    "historical_calibration": "Historical calibration",
+    "forecast": "Forecast"
+  },
+  "temperatureUnit": {
+    "celsius": "°C",
+    "fahrenheit": "°F"
   },
   "groundingSource": {
     "slug": "Slug",
@@ -516,7 +550,8 @@
   },
   "groundingKind": {
     "literal_span": "Literal span",
-    "template_entailed": "Template-entailed"
+    "template_entailed": "Template-entailed",
+    "manual_evidence": "Manual evidence"
   },
   "qualityGate": {
     "sample_count": "Sample Count",

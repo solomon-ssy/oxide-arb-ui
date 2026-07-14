@@ -8,6 +8,11 @@ import { useDomainCursorStatusTagOptions } from '#/shared/components/format/tag-
 export function useDomainSourceColumns(): VxeTableGridOptions<DomainSourceCursorView>['columns'] {
   return [
     {
+      field: 'family',
+      title: $t('page.research.domainSources.table.family'),
+      width: 100,
+    },
+    {
       field: 'source_id',
       title: $t('page.research.domainSources.table.source'),
       width: 120,
@@ -33,6 +38,12 @@ export function useDomainSourceColumns(): VxeTableGridOptions<DomainSourceCursor
       slots: { default: 'lag' },
       title: $t('page.research.domainSources.table.lag'),
       width: 100,
+    },
+    {
+      field: 'checkpoint_hash',
+      minWidth: 240,
+      slots: { default: 'checkpoint' },
+      title: $t('page.research.domainSources.table.checkpoint'),
     },
     {
       field: 'last_error',

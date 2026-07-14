@@ -217,14 +217,12 @@ function millis(value: number): string {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.trigger')"
         >
-          <template v-if="entry.trigger.kind === 'price_condition'">
-            {{ $t(`enum.priceComparison.${entry.trigger.comparison}`) }}
-            {{ formatPrice(entry.trigger.threshold) }} ·
-            {{ formatDurationSecs(entry.trigger.confirmation_secs) }}
-          </template>
-          <template v-else>
+          <template v-if="entry.condition.kind === 'immediate'">
             {{ $t('page.quantRecommendations.entryPlan.immediate') }}
           </template>
+          <span v-else class="font-mono text-xs break-all">
+            {{ entry.condition.content_hash }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.orderPolicy')"

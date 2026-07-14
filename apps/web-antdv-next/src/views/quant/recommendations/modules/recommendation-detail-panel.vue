@@ -36,6 +36,7 @@ import {
 } from '#/shared/components/format/tag-options';
 import { useSystemStore } from '#/store';
 
+import EntryConditionPanel from '../../shared/entry-condition-panel.vue';
 import { useCreateIntentAction } from './use-create-intent-action';
 import { evaluateCreateIntentGate } from './use-create-intent-gate';
 import RecommendationAttribution from './widgets/recommendation-attribution.vue';
@@ -58,7 +59,7 @@ const sideTagOptions = useOutcomeSideTagOptions();
 const statusTagOptions = useRecommendationStatusTagOptions();
 const modeTagOptions = useQuantRuntimeModeTagOptions();
 
-const DETAIL_TABS = new Set(['attribution', 'evidence']);
+const DETAIL_TABS = new Set(['attribution', 'condition', 'evidence']);
 const detailTab = ref(
   props.initialTab && DETAIL_TABS.has(props.initialTab)
     ? props.initialTab
@@ -199,14 +200,12 @@ function onCreateIntent() {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.decisionSummary.trigger')"
         >
-          <template v-if="entry.trigger.kind === 'price_condition'">
-            {{ $t(`enum.priceComparison.${entry.trigger.comparison}`) }}
-            {{ formatPrice(entry.trigger.threshold) }} ·
-            {{ formatDurationSecs(entry.trigger.confirmation_secs) }}
-          </template>
-          <template v-else>
+          <template v-if="entry.condition.kind === 'immediate'">
             {{ $t('page.quantRecommendations.entryPlan.immediate') }}
           </template>
+          <span v-else class="font-mono text-xs break-all">
+            {{ entry.condition.content_hash }}
+          </span>
           <span class="text-muted-foreground ml-2 text-xs">
             {{ formatDateTimeLocal(entry.valid_from) }} –
             {{ formatDateTimeLocal(entry.valid_until) }}
@@ -564,6 +563,11 @@ function onCreateIntent() {
     </Card>
 
     <Tabs v-model:active-key="detailTab">
+      <TabPane key="condition" :tab="$t('page.entryCondition.title')">
+        <EntryConditionPanel
+          :recommendation-id="recommendation.recommendation_id"
+        />
+      </TabPane>
       <TabPane
         key="evidence"
         :tab="$t('page.quantRecommendations.sections.evidence')"

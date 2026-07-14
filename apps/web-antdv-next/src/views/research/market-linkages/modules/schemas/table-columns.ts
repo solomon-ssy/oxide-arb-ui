@@ -56,11 +56,11 @@ export function useMarketLinkageColumns(
       width: 110,
     },
     {
-      field: 'instrument_key',
-      minWidth: 180,
+      field: 'source_bindings',
+      minWidth: 260,
       showOverflow: 'tooltip',
-      slots: { default: 'instrument' },
-      title: $t('page.research.marketLinkages.columns.instrument'),
+      slots: { default: 'sourceBindings' },
+      title: $t('page.research.marketLinkages.columns.sourceBindings'),
     },
     {
       cellRender: { name: 'CellDateTime' },
@@ -86,7 +86,9 @@ export function useMarketLinkageColumns(
           iconOp<MarketLinkageSummaryView>(
             'override',
             $t('page.research.marketLinkages.actions.override'),
-            { show: () => access.canMutate },
+            {
+              show: (row) => access.canMutate && row.domain_family === 'crypto',
+            },
           ),
         ],
       },
