@@ -10,7 +10,7 @@ import type {
   VerticalActivationTarget,
 } from '@vben/types';
 
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -26,7 +26,6 @@ import {
   Input,
   InputNumber,
   message,
-  Select,
   Space,
   Tag,
 } from 'antdv-next';
@@ -45,17 +44,24 @@ import ConditionTemplateNodeEditor from '../trade-policies/modules/condition-tem
 
 defineOptions({ name: 'TradePolicyFitWorkbenchPage' });
 
+const SHADOW_ONLY_MIN_CPCV_PATHS = 10;
+const SHADOW_ONLY_MIN_FULL_L2_COVERAGE = '0.8';
+const SHADOW_ONLY_MIN_DSR = '0';
+const SHADOW_ONLY_MAX_PBO = '0.5';
+const SHADOW_ONLY_MIN_COHORT_SAMPLES = 100;
+const SHADOW_ONLY_ACTIVATION_TARGET: VerticalActivationTarget = 'semi_auto';
+
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const router = useRouter();
 const datasets = ref(new Map<string, TrainingDatasetView>());
 const factors = ref<FactorDefinitionView[]>([]);
-const activationTarget = ref<VerticalActivationTarget>('semi_auto');
 const selectedDatasetId = ref('');
 const preflight = ref<null | TradePolicyFitPreflightView>(null);
 const pendingContract = ref<null | TradePolicyFitContract>(null);
 const fitJob = ref<null | ResearchJobView>(null);
 const selectedCandidateId = ref('conditional-1');
+const candidateList = ref<HTMLElement | null>(null);
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
 
 function defaultPrice(): TradePolicyConditionTemplateNodeV1 {
@@ -206,12 +212,12 @@ async function collectContract(): Promise<null | TradePolicyFitContract> {
     quality_gate: {
       max_ambiguous_touch_rate: String(values.max_ambiguous_touch_rate),
       max_depth_failure_rate: String(values.max_depth_failure_rate),
-      max_probability_of_backtest_overfitting: String(values.max_pbo),
-      min_cohort_samples: Number(values.min_cohort_samples),
-      min_cpcv_paths: Number(values.min_cpcv_paths),
-      min_deflated_sharpe_ratio: String(values.min_dsr),
+      max_probability_of_backtest_overfitting: SHADOW_ONLY_MAX_PBO,
+      min_cohort_samples: SHADOW_ONLY_MIN_COHORT_SAMPLES,
+      min_cpcv_paths: SHADOW_ONLY_MIN_CPCV_PATHS,
+      min_deflated_sharpe_ratio: SHADOW_ONLY_MIN_DSR,
       min_executable_coverage: String(values.min_executable_coverage),
-      min_full_l2_coverage: String(values.min_full_l2_coverage),
+      min_full_l2_coverage: SHADOW_ONLY_MIN_FULL_L2_COVERAGE,
       min_lower_confidence_utility_bps: String(values.min_utility_bps),
     },
     runtime_config_version_id: dataset.runtime_config_version_id,
@@ -225,7 +231,7 @@ async function runPreflight() {
   if (!contract) return;
   const result = await handleRequest(() =>
     preflightTradePolicy({
-      activation_target: activationTarget.value,
+      activation_target: SHADOW_ONLY_ACTIVATION_TARGET,
       condition_candidates: candidates.value,
       contract,
     }),
@@ -242,7 +248,7 @@ async function enqueueFit() {
     (context) =>
       fitTradePolicy(
         {
-          activation_target: activationTarget.value,
+          activation_target: SHADOW_ONLY_ACTIVATION_TARGET,
           condition_candidates:
             preflight.value?.canonical_condition_candidates ?? candidates.value,
           contract: pendingContract.value as TradePolicyFitContract,
@@ -299,6 +305,65 @@ function addCandidate() {
   selectedCandidateId.value = id;
 }
 
+function selectCandidate(id: string) {
+  selectedCandidateId.value = id;
+}
+
+function renameSelectedCandidate(nextId: string) {
+  const selected = selectedCandidate.value;
+  if (!selected || selected.condition.kind === 'immediate') return;
+  selected.candidate_id = nextId;
+  selectedCandidateId.value = nextId;
+}
+
+function focusCandidate(index: number) {
+  void nextTick(() => {
+    const options =
+      candidateList.value?.querySelectorAll<HTMLElement>('[role="option"]');
+    options?.item(index).focus();
+  });
+}
+
+function selectCandidateAt(index: number) {
+  const candidate = candidates.value[index];
+  if (!candidate) return false;
+  selectCandidate(candidate.candidate_id);
+  return true;
+}
+
+function handleCandidateKeydown(event: KeyboardEvent, index: number) {
+  let target: number;
+  switch (event.key) {
+    case ' ':
+    case 'Enter': {
+      selectCandidateAt(index);
+      event.preventDefault();
+      return;
+    }
+    case 'ArrowDown': {
+      target = Math.min(index + 1, candidates.value.length - 1);
+      break;
+    }
+    case 'ArrowUp': {
+      target = Math.max(index - 1, 0);
+      break;
+    }
+    case 'End': {
+      target = candidates.value.length - 1;
+      break;
+    }
+    case 'Home': {
+      target = 0;
+      break;
+    }
+    default: {
+      return;
+    }
+  }
+  event.preventDefault();
+  if (selectCandidateAt(target)) focusCandidate(target);
+}
+
 function removeCandidate(id: string) {
   candidates.value = candidates.value.filter(
     (candidate) =>
@@ -352,6 +417,10 @@ async function loadCatalogs() {
 
 const [Form, formApi] = useVbenForm({
   commonConfig: { componentProps: { class: 'w-full' } },
+  handleValuesChange: () => {
+    preflight.value = null;
+    pendingContract.value = null;
+  },
   schema: [
     {
       component: 'Select',
@@ -413,11 +482,8 @@ const [Form, formApi] = useVbenForm({
       rules: 'required',
     },
     ...[
-      ['min_full_l2_coverage', 0.8],
       ['max_ambiguous_touch_rate', 0.05],
       ['max_depth_failure_rate', 0.05],
-      ['min_dsr', 0],
-      ['max_pbo', 0.5],
     ].map(([fieldName, defaultValue]) => ({
       component: 'InputNumber' as const,
       componentProps: { max: 1, min: 0, step: 0.01 },
@@ -426,22 +492,6 @@ const [Form, formApi] = useVbenForm({
       label: $t(`page.research.tradePolicies.fit.${fieldName}`),
       rules: 'required' as const,
     })),
-    {
-      component: 'InputNumber',
-      componentProps: { min: 1 },
-      defaultValue: 100,
-      fieldName: 'min_cohort_samples',
-      label: $t('page.research.tradePolicies.fit.min_cohort_samples'),
-      rules: 'required',
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { min: 1 },
-      defaultValue: 10,
-      fieldName: 'min_cpcv_paths',
-      label: $t('page.research.tradePolicies.fit.min_cpcv_paths'),
-      rules: 'required',
-    },
     {
       component: 'InputNumber',
       defaultValue: 0,
@@ -455,7 +505,7 @@ const [Form, formApi] = useVbenForm({
 });
 
 watch(
-  [candidates, activationTarget],
+  candidates,
   () => {
     preflight.value = null;
     pendingContract.value = null;
@@ -482,13 +532,7 @@ void loadCatalogs();
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.workbench.activation')"
           >
-            <Select
-              v-model:value="activationTarget"
-              :options="[
-                { label: 'SemiAuto', value: 'semi_auto' },
-                { label: 'AutoExecution', value: 'auto_execution' },
-              ]"
-            />
+            <Tag color="warning">SemiAuto · shadow_only</Tag>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.workbench.runtime')"
@@ -505,18 +549,30 @@ void loadCatalogs();
 
       <section class="builder-grid">
         <Card :title="$t('page.research.tradePolicies.workbench.candidates')">
-          <div class="candidate-list">
+          <div
+            ref="candidateList"
+            :aria-label="$t('page.research.tradePolicies.workbench.candidates')"
+            class="candidate-list"
+            role="listbox"
+          >
             <div
-              v-for="item in candidates"
+              v-for="(item, index) in candidates"
               :key="item.candidate_id"
               class="candidate-row"
               :class="{ selected: item.candidate_id === selectedCandidateId }"
-              @click="selectedCandidateId = item.candidate_id"
             >
-              <div>
+              <button
+                :aria-selected="item.candidate_id === selectedCandidateId"
+                class="candidate-select"
+                role="option"
+                :tabindex="item.candidate_id === selectedCandidateId ? 0 : -1"
+                type="button"
+                @click="selectCandidate(item.candidate_id)"
+                @keydown="handleCandidateKeydown($event, index)"
+              >
                 <strong>{{ item.candidate_id }}</strong>
                 <Tag class="ml-2">{{ item.condition.kind }}</Tag>
-              </div>
+              </button>
               <Button
                 v-if="item.condition.kind !== 'immediate'"
                 danger
@@ -553,7 +609,10 @@ void loadCatalogs();
                 <span>{{
                   $t('page.research.tradePolicies.workbench.candidateId')
                 }}</span>
-                <Input v-model:value="selectedCandidate.candidate_id" />
+                <Input
+                  :value="selectedCandidate.candidate_id"
+                  @update:value="renameSelectedCandidate"
+                />
               </label>
               <label>
                 <span>{{
@@ -618,23 +677,31 @@ void loadCatalogs();
             show-icon
             type="error"
           />
-          <pre class="canonical-tree">{{ canonicalPreview }}</pre>
+          <pre class="canonical-tree canonical-tree-desktop">{{
+            canonicalPreview
+          }}</pre>
+          <details class="canonical-tree-mobile">
+            <summary>
+              {{ $t('page.research.tradePolicies.workbench.canonicalJson') }}
+            </summary>
+            <pre class="canonical-tree">{{ canonicalPreview }}</pre>
+          </details>
         </Card>
       </section>
 
       <Card :title="$t('page.research.tradePolicies.workbench.preflight')">
         <div aria-live="polite">
           <Alert
-            v-if="preflight"
-            :message="
-              preflight.publishable_input === 'pass'
-                ? $t('page.research.tradePolicies.fit.publishable')
-                : $t('page.research.tradePolicies.fit.shadowOnly')
-            "
+            :message="$t('page.research.tradePolicies.fit.shadowCapability')"
             show-icon
-            :type="
-              preflight.publishable_input === 'pass' ? 'success' : 'warning'
-            "
+            type="warning"
+          />
+          <Alert
+            v-if="preflight"
+            class="mt-2"
+            :message="$t('page.research.tradePolicies.fit.shadowOnly')"
+            show-icon
+            type="warning"
           />
           <div v-if="preflight" class="preflight-checks">
             <Tag
@@ -651,15 +718,8 @@ void loadCatalogs();
               {{ $t('page.research.tradePolicies.fit.datasetReady') }} ·
               {{ preflight.source_dataset_ready }}
             </Tag>
-            <Tag
-              :color="
-                preflight.full_l2_trajectory_present === 'pass'
-                  ? 'success'
-                  : 'error'
-              "
-            >
-              {{ $t('page.research.tradePolicies.fit.fullL2') }} ·
-              {{ preflight.full_l2_trajectory_present }}
+            <Tag color="default">
+              {{ $t('page.research.tradePolicies.fit.fullL2') }} · shadow_only
             </Tag>
             <Tag
               :color="
@@ -679,7 +739,7 @@ void loadCatalogs();
             type="info"
           />
         </div>
-        <Space class="mt-4">
+        <Space class="operation-bar mt-4">
           <Button
             :disabled="candidateBlockers.length > 0"
             @click="runPreflight"
@@ -755,8 +815,23 @@ void loadCatalogs();
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  cursor: pointer;
   border-bottom: 1px solid var(--vben-border-color);
+}
+
+.candidate-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+  background: transparent;
+  border: 0;
+}
+
+.candidate-select:focus-visible {
+  outline: 2px solid var(--vben-primary-color);
+  outline-offset: 3px;
 }
 
 .candidate-list {
@@ -779,6 +854,20 @@ void loadCatalogs();
   white-space: pre-wrap;
   background: var(--vben-bg-color-secondary);
   border-radius: 6px;
+}
+
+.canonical-tree-mobile {
+  display: none;
+}
+
+.operation-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  width: 100%;
+  padding: 12px 0;
+  background: var(--vben-bg-color);
+  border-top: 1px solid var(--vben-border-color);
 }
 
 .preflight-checks {
@@ -812,6 +901,20 @@ void loadCatalogs();
 
   .builder-grid > :last-child {
     grid-column: auto;
+  }
+
+  .canonical-tree-desktop {
+    display: none;
+  }
+
+  .canonical-tree-mobile {
+    display: block;
+  }
+
+  .canonical-tree-mobile > summary {
+    padding: 8px 0;
+    font-weight: 500;
+    cursor: pointer;
   }
 }
 </style>

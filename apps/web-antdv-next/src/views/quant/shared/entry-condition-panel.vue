@@ -2,15 +2,22 @@
 import type {
   EntryConditionAuditView,
   EntryConditionDetailView,
+  EntryConditionLeafEvidenceView,
+  EntryConditionNodeEvaluationView,
   EntryConditionNodeV1,
 } from '@vben/types';
 
 import { computed, onMounted, ref, watch } from 'vue';
 
+import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
+import { useClipboard } from '@vueuse/core';
 import {
   Alert,
+  Button,
+  Collapse,
+  CollapsePanel,
   Descriptions,
   DescriptionsItem,
   Empty,
@@ -18,6 +25,7 @@ import {
   Tag,
   Timeline,
   TimelineItem,
+  Tooltip,
 } from 'antdv-next';
 
 import {
@@ -41,9 +49,12 @@ const detail = ref<EntryConditionDetailView | null>(null);
 const audits = ref<EntryConditionAuditView[]>([]);
 const loading = ref(false);
 const loadFailed = ref(false);
+const { copy } = useClipboard();
 
 interface FlatNode {
   depth: number;
+  evidence: EntryConditionLeafEvidenceView | null;
+  evaluation: EntryConditionNodeEvaluationView | null;
   label: string;
   nodeId: number;
   subtreeHash: string;
@@ -105,11 +116,26 @@ const flatTree = computed<FlatNode[]>(() => {
   const artifact = detail.value?.artifact;
   if (!artifact) return [];
   const rows: FlatNode[] = [];
+  const evidence = new Map(
+    (detail.value?.latest_authoritative_evaluation?.leaf_evidence ?? []).map(
+      (leaf) => [leaf.node_id, leaf],
+    ),
+  );
+  const evaluations = new Map<number, EntryConditionNodeEvaluationView>();
+  const collectEvaluation = (node: EntryConditionNodeEvaluationView) => {
+    evaluations.set(node.node_id, node);
+    for (const child of node.children) collectEvaluation(child);
+  };
+  if (detail.value?.latest_authoritative_evaluation) {
+    collectEvaluation(detail.value.latest_authoritative_evaluation.tree);
+  }
   let index = 0;
   const visit = (node: EntryConditionNodeV1, depth: number) => {
     const identity = artifact.nodes[index];
     rows.push({
       depth,
+      evidence: evidence.get(identity?.node_id ?? index) ?? null,
+      evaluation: evaluations.get(identity?.node_id ?? index) ?? null,
       label: nodeLabel(node),
       nodeId: identity?.node_id ?? index,
       subtreeHash: identity?.subtree_hash ?? '',
@@ -124,6 +150,34 @@ const flatTree = computed<FlatNode[]>(() => {
 });
 
 const truthKind = computed(() => detail.value?.instance.truth?.kind ?? null);
+
+function truthColor(kind: null | string | undefined) {
+  if (kind === 'satisfied') return 'green';
+  if (kind === 'unavailable') return 'red';
+  return 'orange';
+}
+
+function prettyJson(value: unknown) {
+  return JSON.stringify(value, null, 2);
+}
+
+function freshnessLabel(value: null | number) {
+  if (value === null) return EMPTY_PLACEHOLDER;
+  if (value < 1000) return `${value} ms`;
+  return `${(value / 1000).toFixed(1)} s`;
+}
+
+function unavailableReasonLabel(
+  reason: EntryConditionLeafEvidenceView['unavailable_reason'],
+) {
+  if (!reason) return '';
+  const suffix = 'source_id' in reason ? ` · ${reason.source_id}` : '';
+  return `${$t(`page.entryCondition.unavailableReason.${reason.kind}`)}${suffix}`;
+}
+
+function copyHash(value: null | string | undefined) {
+  if (value) void copy(value);
+}
 
 async function load() {
   loading.value = true;
@@ -185,6 +239,35 @@ onMounted(() => void load());
       class="flex flex-col gap-4"
       data-testid="entry-condition-panel"
     >
+      <div
+        v-if="detail.latest_authoritative_evaluation"
+        class="bg-background/95 border-border sticky top-0 z-10 flex items-center justify-between gap-3 border-b py-2 backdrop-blur"
+      >
+        <div class="min-w-0">
+          <div class="text-sm font-medium">
+            {{ $t('page.entryCondition.authoritativeEvaluation') }}
+          </div>
+          <div
+            class="text-muted-foreground truncate font-mono text-xs"
+            data-screenshot-volatile="true"
+          >
+            {{ detail.latest_authoritative_evaluation.evaluation_id }}
+          </div>
+        </div>
+        <Tooltip :title="$t('page.entryCondition.copyHash')">
+          <Button
+            :aria-label="$t('page.entryCondition.copyEvaluationId')"
+            size="small"
+            type="text"
+            @click="
+              copyHash(detail.latest_authoritative_evaluation.evaluation_id)
+            "
+          >
+            <IconifyIcon class="size-4" icon="lucide:copy" />
+          </Button>
+        </Tooltip>
+      </div>
+
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem :label="$t('page.entryCondition.state')">
           <Tag>
@@ -192,16 +275,7 @@ onMounted(() => void load());
           </Tag>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.entryCondition.truth')">
-          <Tag
-            v-if="truthKind"
-            :color="
-              truthKind === 'satisfied'
-                ? 'green'
-                : truthKind === 'unavailable'
-                  ? 'red'
-                  : 'orange'
-            "
-          >
+          <Tag v-if="truthKind" :color="truthColor(truthKind)">
             {{ $t(`enum.conditionTruth.${truthKind}`) }}
           </Tag>
           <template v-else>{{ EMPTY_PLACEHOLDER }}</template>
@@ -210,30 +284,75 @@ onMounted(() => void load());
           {{ detail.instance.revision }}
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.entryCondition.confirmation')">
-          {{ formatDateTimeLocal(detail.instance.confirmation_started_at) }}
+          <span data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(detail.instance.confirmation_started_at) }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.entryCondition.lastEvaluatedAt')">
-          {{ formatDateTimeLocal(detail.instance.last_evaluated_at) }}
+          <span data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(detail.instance.last_evaluated_at) }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.entryCondition.nextEvaluationAt')">
-          {{ formatDateTimeLocal(detail.instance.next_evaluation_at) }}
+          <span data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(detail.instance.next_evaluation_at) }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.entryCondition.evaluationHash')">
-          <span class="font-mono text-xs break-all">
-            {{ detail.instance.evaluation_hash ?? EMPTY_PLACEHOLDER }}
-          </span>
+          <div class="flex items-start gap-2">
+            <span
+              class="min-w-0 flex-1 break-all font-mono text-xs"
+              data-screenshot-volatile="true"
+            >
+              {{ detail.instance.evaluation_hash ?? EMPTY_PLACEHOLDER }}
+            </span>
+            <Button
+              v-if="detail.instance.evaluation_hash"
+              :aria-label="$t('page.entryCondition.copyEvaluationHash')"
+              size="small"
+              type="text"
+              @click="copyHash(detail.instance.evaluation_hash)"
+            >
+              <IconifyIcon class="size-4" icon="lucide:copy" />
+            </Button>
+          </div>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.entryCondition.inputFingerprint')">
-          <span class="font-mono text-xs break-all">
-            {{ detail.instance.input_fingerprint ?? EMPTY_PLACEHOLDER }}
-          </span>
+          <div class="flex items-start gap-2">
+            <span
+              class="min-w-0 flex-1 break-all font-mono text-xs"
+              data-screenshot-volatile="true"
+            >
+              {{ detail.instance.input_fingerprint ?? EMPTY_PLACEHOLDER }}
+            </span>
+            <Button
+              v-if="detail.instance.input_fingerprint"
+              :aria-label="$t('page.entryCondition.copyInputFingerprint')"
+              size="small"
+              type="text"
+              @click="copyHash(detail.instance.input_fingerprint)"
+            >
+              <IconifyIcon class="size-4" icon="lucide:copy" />
+            </Button>
+          </div>
         </DescriptionsItem>
       </Descriptions>
 
       <section>
-        <h4 class="mb-2 font-medium">
-          {{ $t('page.entryCondition.canonicalTree') }}
-        </h4>
+        <div class="mb-2 flex items-center justify-between gap-3">
+          <h4 class="font-medium">
+            {{ $t('page.entryCondition.canonicalTree') }}
+          </h4>
+          <Button
+            v-if="detail.artifact"
+            :aria-label="$t('page.entryCondition.copyArtifactHash')"
+            size="small"
+            type="text"
+            @click="copyHash(detail.artifact.content_hash)"
+          >
+            <IconifyIcon class="size-4" icon="lucide:copy" />
+          </Button>
+        </div>
         <p v-if="!detail.artifact" class="text-muted-foreground text-sm">
           {{ $t('page.entryCondition.immediate') }}
         </p>
@@ -241,16 +360,82 @@ onMounted(() => void load());
           <li
             v-for="node in flatTree"
             :key="`${node.nodeId}:${node.subtreeHash}`"
-            class="border-border rounded-md border px-3 py-2"
+            class="border-border focus-visible:ring-primary rounded-md border px-3 py-2 outline-none focus-visible:ring-2"
             :style="{ marginInlineStart: `${node.depth * 16}px` }"
+            :aria-label="`${node.label}, ${node.evaluation ? $t(`enum.conditionTruth.${node.evaluation.truth.kind}`) : $t('page.entryCondition.notEvaluated')}`"
+            tabindex="0"
           >
             <div class="flex items-start justify-between gap-3">
               <span>{{ node.label }}</span>
               <code class="text-xs opacity-70">#{{ node.nodeId }}</code>
             </div>
-            <div class="text-muted-foreground mt-1 truncate font-mono text-xs">
+            <div
+              v-if="node.evaluation"
+              class="mt-2 flex flex-wrap items-center gap-2"
+            >
+              <Tag :color="truthColor(node.evaluation.truth.kind)">
+                {{ $t(`enum.conditionTruth.${node.evaluation.truth.kind}`) }}
+              </Tag>
+              <Tag v-if="node.evaluation.decisive_child_id !== null">
+                {{ $t('page.entryCondition.decisiveChild') }}
+                #{{ node.evaluation.decisive_child_id }}
+              </Tag>
+              <span v-if="node.evidence" class="text-muted-foreground text-xs">
+                {{ $t('page.entryCondition.freshness') }}:
+                {{ freshnessLabel(node.evidence.freshness_ms) }}
+              </span>
+              <span
+                v-if="node.evidence?.unavailable_reason"
+                class="text-danger text-xs"
+              >
+                {{ unavailableReasonLabel(node.evidence.unavailable_reason) }}
+              </span>
+            </div>
+            <div
+              class="text-muted-foreground mt-1 truncate font-mono text-xs"
+              data-screenshot-volatile="true"
+            >
               {{ node.subtreeHash }}
             </div>
+            <Collapse v-if="node.evidence" class="mt-2" ghost>
+              <CollapsePanel
+                :header="$t('page.entryCondition.leafEvidence')"
+                :key="`evidence-${node.nodeId}`"
+              >
+                <Descriptions :column="1" size="small">
+                  <DescriptionsItem
+                    :label="$t('page.entryCondition.observedAt')"
+                  >
+                    <span data-screenshot-volatile="true">
+                      {{ formatDateTimeLocal(node.evidence.observed_at) }}
+                    </span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.entryCondition.availableAt')"
+                  >
+                    <span data-screenshot-volatile="true">
+                      {{ formatDateTimeLocal(node.evidence.available_at) }}
+                    </span>
+                  </DescriptionsItem>
+                </Descriptions>
+                <div class="text-muted-foreground mt-2 text-xs font-medium">
+                  {{ $t('page.entryCondition.evidencePayload') }}
+                </div>
+                <pre
+                  class="bg-muted mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded p-2 text-xs"
+                ><code data-screenshot-volatile="true">{{ prettyJson(node.evidence.evidence) }}</code></pre>
+                <div
+                  v-if="node.evidence.source_checkpoint"
+                  class="text-muted-foreground mt-2 text-xs font-medium"
+                >
+                  {{ $t('page.entryCondition.sourceCheckpoint') }}
+                </div>
+                <pre
+                  v-if="node.evidence.source_checkpoint"
+                  class="bg-muted mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded p-2 text-xs"
+                ><code data-screenshot-volatile="true">{{ prettyJson(node.evidence.source_checkpoint) }}</code></pre>
+              </CollapsePanel>
+            </Collapse>
           </li>
         </ol>
       </section>
@@ -268,7 +453,10 @@ onMounted(() => void load());
                 {{ $t(`enum.entryConditionAuditAction.${audit.action}`) }} ·
                 {{ $t(`enum.entryConditionState.${audit.to_state}`) }}
               </span>
-              <span class="text-muted-foreground text-xs">
+              <span
+                class="text-muted-foreground text-xs"
+                data-screenshot-volatile="true"
+              >
                 r{{ audit.revision }} ·
                 {{ formatDateTimeLocal(audit.occurred_at) }}
               </span>

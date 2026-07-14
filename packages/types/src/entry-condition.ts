@@ -162,6 +162,40 @@ export interface EntryConditionArtifactView {
 export interface EntryConditionDetailView {
   artifact: EntryConditionArtifactView | null;
   instance: EntryConditionInstanceSummaryView;
+  latest_authoritative_evaluation: EntryConditionEvaluationView | null;
+}
+
+export interface EntryConditionLeafEvidenceView {
+  available_at: IsoDateTime | null;
+  evidence: Record<string, unknown>;
+  freshness_ms: null | number;
+  node_id: number;
+  observed_at: IsoDateTime | null;
+  source_checkpoint: null | Record<string, unknown>;
+  truth: ConditionTruth;
+  unavailable_reason: ConditionUnavailableReason | null;
+}
+
+export interface EntryConditionEvaluationView {
+  applied_revision: number;
+  continuity_hash: string;
+  evaluated_at: IsoDateTime;
+  evaluation_hash: string;
+  evaluation_id: string;
+  evaluator_version: number;
+  input_fingerprint: string;
+  leaf_evidence: EntryConditionLeafEvidenceView[];
+  state: EntryConditionState;
+  tree: EntryConditionNodeEvaluationView;
+  truth: 'satisfied' | 'unavailable' | 'unsatisfied';
+}
+
+export interface EntryConditionNodeEvaluationView {
+  children: EntryConditionNodeEvaluationView[];
+  decisive_child_id: null | number;
+  evidence: null | Record<string, unknown>;
+  node_id: number;
+  truth: ConditionTruth;
 }
 
 export interface EntryConditionAuditView {
