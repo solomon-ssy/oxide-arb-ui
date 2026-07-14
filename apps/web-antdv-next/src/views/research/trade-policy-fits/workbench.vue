@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import type {
+  ExitReason,
   FactorDefinitionView,
   ResearchJobView,
-  TradePolicyConditionCandidate,
+  TradePolicyCandidateSpec,
   TradePolicyConditionTemplateNodeV1,
-  TradePolicyFitContract,
   TradePolicyFitPreflightView,
+  TradePolicyFitSelection,
   TrainingDatasetView,
   VerticalActivationTarget,
 } from '@vben/types';
@@ -22,11 +23,14 @@ import {
   Card,
   Descriptions,
   DescriptionsItem,
+  Divider,
   Empty,
   Input,
   InputNumber,
   message,
+  Select,
   Space,
+  Switch,
   Tag,
 } from 'antdv-next';
 
@@ -44,13 +48,6 @@ import ConditionTemplateNodeEditor from '../trade-policies/modules/condition-tem
 
 defineOptions({ name: 'TradePolicyFitWorkbenchPage' });
 
-const SHADOW_ONLY_MIN_CPCV_PATHS = 10;
-const SHADOW_ONLY_MIN_FULL_L2_COVERAGE = '0.8';
-const SHADOW_ONLY_MIN_DSR = '0';
-const SHADOW_ONLY_MAX_PBO = '0.5';
-const SHADOW_ONLY_MIN_COHORT_SAMPLES = 100;
-const SHADOW_ONLY_ACTIVATION_TARGET: VerticalActivationTarget = 'semi_auto';
-
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const router = useRouter();
@@ -58,8 +55,9 @@ const datasets = ref(new Map<string, TrainingDatasetView>());
 const factors = ref<FactorDefinitionView[]>([]);
 const selectedDatasetId = ref('');
 const preflight = ref<null | TradePolicyFitPreflightView>(null);
-const pendingContract = ref<null | TradePolicyFitContract>(null);
+const pendingSelection = ref<null | TradePolicyFitSelection>(null);
 const fitJob = ref<null | ResearchJobView>(null);
+const activationTarget = ref<VerticalActivationTarget>('semi_auto');
 const selectedCandidateId = ref('conditional-1');
 const candidateList = ref<HTMLElement | null>(null);
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -73,17 +71,77 @@ function defaultPrice(): TradePolicyConditionTemplateNodeV1 {
   };
 }
 
-const candidates = ref<TradePolicyConditionCandidate[]>([
-  { candidate_id: 'immediate', condition: { kind: 'immediate' } },
-  {
-    candidate_id: 'conditional-1',
-    condition: {
-      confirmation_ms: 2000,
-      kind: 'conditional',
-      max_observation_gap_ms: 1000,
-      root: defaultPrice(),
+const EXIT_REASONS: ExitReason[] = [
+  'take_profit',
+  'stop_loss',
+  'time_exit',
+  'partial_exit',
+  'signal_invalidated',
+  'opportunistic',
+  'manual',
+  'settlement_hold',
+  'resolution_redeem',
+  'kill_switch_emergency',
+  'risk_envelope_breached',
+  'market_abnormal',
+  'data_stale',
+];
+
+function defaultExit(): TradePolicyCandidateSpec['exit'] {
+  return {
+    lower_barrier_bps: '-500',
+    min_expected_return_bps: '0',
+    min_score_retention: '0.5',
+    opportunistic_exit: {
+      max_cumulative_exit_pct: '1',
+      min_confidence: '0.65',
+      min_expected_alpha_bps: '50',
+      min_incremental_exit_pct: '0.1',
+      min_p_exit_better: '0.5',
     },
-  },
+    reason_execution: EXIT_REASONS.map((reason) => ({
+      fill_requirement: 'allow_partial',
+      max_attempts: 3,
+      max_slippage_bps: '100',
+      reason,
+      residual_share_policy: 'retry_until_vertical',
+      retry_cadence_ms: 1000,
+    })),
+    redeem_policy: 'manual',
+    require_execution_eligibility: true,
+    scale_out_targets: [],
+    settlement_mode: 'exit_before_resolution',
+    trailing_stop: null,
+    upper_barrier_bps: '500',
+    vertical_barrier_secs: 3600,
+  };
+}
+
+function defaultCandidate(
+  candidateId: string,
+  entryCondition: TradePolicyCandidateSpec['entry_condition'],
+): TradePolicyCandidateSpec {
+  return {
+    candidate_id: candidateId,
+    entry_condition: entryCondition,
+    entry_execution: {
+      fill_requirement: 'all_or_nothing',
+      kind: 'aggressive',
+      max_book_age_ms: 2000,
+      max_slippage_bps: '100',
+    },
+    exit: defaultExit(),
+  };
+}
+
+const candidates = ref<TradePolicyCandidateSpec[]>([
+  defaultCandidate('immediate', { kind: 'immediate' }),
+  defaultCandidate('conditional-1', {
+    confirmation_ms: 2000,
+    kind: 'conditional',
+    max_observation_gap_ms: 1000,
+    root: defaultPrice(),
+  }),
 ]);
 
 const selectedCandidate = computed(() =>
@@ -106,7 +164,7 @@ const factorOptions = computed(() =>
 
 const candidateBlockers = computed(() => {
   const blockers: string[] = [];
-  if (candidates.value.length > 16) {
+  if (candidates.value.length > 32) {
     blockers.push(
       $t('page.research.tradePolicies.workbench.blocker.candidateLimit'),
     );
@@ -121,7 +179,7 @@ const candidateBlockers = computed(() => {
   }
   if (
     candidates.value.filter(
-      (candidate) => candidate.condition.kind === 'immediate',
+      (candidate) => candidate.entry_condition.kind === 'immediate',
     ).length !== 1
   ) {
     blockers.push(
@@ -133,19 +191,19 @@ const candidateBlockers = computed(() => {
 
 const canonicalPreview = computed(() =>
   JSON.stringify(
-    preflight.value?.canonical_condition_candidates ?? candidates.value,
+    preflight.value?.canonical_candidates ?? candidates.value,
     null,
     2,
   ),
 );
 
 const selectedNodeCount = computed(() => {
-  const condition = selectedCandidate.value?.condition;
+  const condition = selectedCandidate.value?.entry_condition;
   return condition?.kind === 'conditional' ? countNodes(condition.root) : 0;
 });
 
 const selectedNaturalLanguage = computed(() => {
-  const condition = selectedCandidate.value?.condition;
+  const condition = selectedCandidate.value?.entry_condition;
   if (!condition) return '';
   if (condition.kind === 'immediate') {
     return $t('page.research.tradePolicies.workbench.immediateDescription');
@@ -191,7 +249,7 @@ function parseNotionalTiers(raw: unknown): string[] {
     .filter(Boolean);
 }
 
-async function collectContract(): Promise<null | TradePolicyFitContract> {
+async function collectSelection(): Promise<null | TradePolicyFitSelection> {
   const validation = await formApi.validate();
   if (Object.keys(validation?.errors ?? {}).length > 0) return null;
   const values = await formApi.getValues();
@@ -203,56 +261,42 @@ async function collectContract(): Promise<null | TradePolicyFitContract> {
     return null;
   }
   return {
-    embargo_secs: Number(values.embargo_secs),
     fit_window_end: window[1],
     fit_window_start: window[0],
-    maximum_scale_out_targets: Number(values.maximum_scale_out_targets),
     notional_tiers: notionalTiers,
     pit_cutoff: String(values.pit_cutoff),
-    quality_gate: {
-      max_ambiguous_touch_rate: String(values.max_ambiguous_touch_rate),
-      max_depth_failure_rate: String(values.max_depth_failure_rate),
-      max_probability_of_backtest_overfitting: SHADOW_ONLY_MAX_PBO,
-      min_cohort_samples: SHADOW_ONLY_MIN_COHORT_SAMPLES,
-      min_cpcv_paths: SHADOW_ONLY_MIN_CPCV_PATHS,
-      min_deflated_sharpe_ratio: SHADOW_ONLY_MIN_DSR,
-      min_executable_coverage: String(values.min_executable_coverage),
-      min_full_l2_coverage: SHADOW_ONLY_MIN_FULL_L2_COVERAGE,
-      min_lower_confidence_utility_bps: String(values.min_utility_bps),
-    },
-    runtime_config_version_id: dataset.runtime_config_version_id,
+    quality_gate: null,
     source_dataset_id: dataset.training_dataset_id,
   };
 }
 
 async function runPreflight() {
   if (candidateBlockers.value.length > 0) return;
-  const contract = await collectContract();
-  if (!contract) return;
+  const selection = await collectSelection();
+  if (!selection) return;
   const result = await handleRequest(() =>
     preflightTradePolicy({
-      activation_target: SHADOW_ONLY_ACTIVATION_TARGET,
-      condition_candidates: candidates.value,
-      contract,
+      activation_target: activationTarget.value,
+      candidates: candidates.value,
+      selection,
     }),
   );
   if (result) {
     preflight.value = result;
-    pendingContract.value = contract;
+    pendingSelection.value = selection;
   }
 }
 
 async function enqueueFit() {
-  if (!pendingContract.value || !preflight.value) return;
+  if (!pendingSelection.value || !preflight.value) return;
   const job = await governed(
     (context) =>
       fitTradePolicy(
         {
-          activation_target: SHADOW_ONLY_ACTIVATION_TARGET,
-          condition_candidates:
-            preflight.value?.canonical_condition_candidates ?? candidates.value,
-          contract: pendingContract.value as TradePolicyFitContract,
+          activation_target: activationTarget.value,
+          candidates: preflight.value?.canonical_candidates ?? candidates.value,
           reason: context.reason,
+          selection: pendingSelection.value as TradePolicyFitSelection,
         },
         context,
       ),
@@ -286,7 +330,7 @@ function schedulePoll() {
 }
 
 function addCandidate() {
-  if (candidates.value.length >= 16) return;
+  if (candidates.value.length >= 32) return;
   let ordinal = candidates.value.length;
   let id = `conditional-${ordinal}`;
   while (candidates.value.some((candidate) => candidate.candidate_id === id)) {
@@ -294,13 +338,12 @@ function addCandidate() {
     id = `conditional-${ordinal}`;
   }
   candidates.value.push({
-    candidate_id: id,
-    condition: {
+    ...defaultCandidate(id, {
       confirmation_ms: 2000,
       kind: 'conditional',
       max_observation_gap_ms: 1000,
       root: defaultPrice(),
-    },
+    }),
   });
   selectedCandidateId.value = id;
 }
@@ -311,7 +354,7 @@ function selectCandidate(id: string) {
 
 function renameSelectedCandidate(nextId: string) {
   const selected = selectedCandidate.value;
-  if (!selected || selected.condition.kind === 'immediate') return;
+  if (!selected || selected.entry_condition.kind === 'immediate') return;
   selected.candidate_id = nextId;
   selectedCandidateId.value = nextId;
 }
@@ -367,7 +410,8 @@ function handleCandidateKeydown(event: KeyboardEvent, index: number) {
 function removeCandidate(id: string) {
   candidates.value = candidates.value.filter(
     (candidate) =>
-      candidate.candidate_id !== id || candidate.condition.kind === 'immediate',
+      candidate.candidate_id !== id ||
+      candidate.entry_condition.kind === 'immediate',
   );
   if (
     !candidates.value.some(
@@ -376,6 +420,58 @@ function removeCandidate(id: string) {
   ) {
     selectedCandidateId.value = 'immediate';
   }
+}
+
+function setEntryExecutionKind(kind: unknown) {
+  if (kind !== 'aggressive' && kind !== 'passive_post_only') return;
+  const candidate = selectedCandidate.value;
+  if (!candidate || candidate.entry_execution.kind === kind) return;
+  candidate.entry_execution =
+    kind === 'aggressive'
+      ? {
+          fill_requirement: 'all_or_nothing',
+          kind,
+          max_book_age_ms: 2000,
+          max_slippage_bps: '100',
+        }
+      : {
+          good_til_secs: 30,
+          kind,
+          max_book_age_ms: 2000,
+          placement: { kind: 'join_best_bid' },
+        };
+}
+
+function setPassivePlacementKind(kind: unknown) {
+  if (kind !== 'improve_best_bid_by_ticks' && kind !== 'join_best_bid') return;
+  const execution = selectedCandidate.value?.entry_execution;
+  if (!execution || execution.kind !== 'passive_post_only') return;
+  execution.placement =
+    kind === 'join_best_bid' ? { kind } : { kind, ticks: 1 };
+}
+
+function addScaleOutTarget() {
+  const targets = selectedCandidate.value?.exit.scale_out_targets;
+  if (!targets || targets.length >= 3) return;
+  const ordinal = targets.length + 1;
+  targets.push({
+    target_cumulative_exit_pct: String(ordinal / 3),
+    target_id: `scale-${ordinal}`,
+    trigger_return_bps: String(ordinal * 200),
+  });
+}
+
+function removeScaleOutTarget(index: number) {
+  selectedCandidate.value?.exit.scale_out_targets.splice(index, 1);
+}
+
+function toggleTrailingStop(enabled: unknown) {
+  if (typeof enabled !== 'boolean') return;
+  const exit = selectedCandidate.value?.exit;
+  if (!exit) return;
+  exit.trailing_stop = enabled
+    ? { activation_return_bps: '300', trail_bps: '100' }
+    : null;
 }
 
 async function loadCatalogs() {
@@ -387,7 +483,9 @@ async function loadCatalogs() {
       silent: true,
     }),
   ]);
-  const rows = datasetPage?.items ?? [];
+  const rows = (datasetPage?.items ?? []).filter(
+    (dataset) => dataset.purpose === 'policy_fit',
+  );
   datasets.value = new Map(rows.map((row) => [row.training_dataset_id, row]));
   factors.value = factorPage?.items ?? [];
   formApi.updateSchema([
@@ -419,7 +517,7 @@ const [Form, formApi] = useVbenForm({
   commonConfig: { componentProps: { class: 'w-full' } },
   handleValuesChange: () => {
     preflight.value = null;
-    pendingContract.value = null;
+    pendingSelection.value = null;
   },
   schema: [
     {
@@ -450,53 +548,11 @@ const [Form, formApi] = useVbenForm({
       rules: 'required',
     },
     {
-      component: 'InputNumber',
-      componentProps: { min: 1 },
-      defaultValue: 86_400,
-      fieldName: 'embargo_secs',
-      label: $t('page.research.tradePolicies.fit.embargoSecs'),
-      rules: 'required',
-    },
-    {
       component: 'Input',
       defaultValue: '25,100,500',
       fieldName: 'notional_tiers',
       help: $t('page.research.tradePolicies.fit.notionalTiersHelp'),
       label: $t('page.research.tradePolicies.fit.notionalTiers'),
-      rules: 'required',
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { max: 3, min: 0 },
-      defaultValue: 3,
-      fieldName: 'maximum_scale_out_targets',
-      label: $t('page.research.tradePolicies.fit.maxScaleOutTargets'),
-      rules: 'required',
-    },
-    {
-      component: 'InputNumber',
-      componentProps: { max: 1, min: 0.01, step: 0.01 },
-      defaultValue: 0.8,
-      fieldName: 'min_executable_coverage',
-      label: $t('page.research.tradePolicies.fit.minimumCoverage'),
-      rules: 'required',
-    },
-    ...[
-      ['max_ambiguous_touch_rate', 0.05],
-      ['max_depth_failure_rate', 0.05],
-    ].map(([fieldName, defaultValue]) => ({
-      component: 'InputNumber' as const,
-      componentProps: { max: 1, min: 0, step: 0.01 },
-      defaultValue,
-      fieldName: String(fieldName),
-      label: $t(`page.research.tradePolicies.fit.${fieldName}`),
-      rules: 'required' as const,
-    })),
-    {
-      component: 'InputNumber',
-      defaultValue: 0,
-      fieldName: 'min_utility_bps',
-      label: $t('page.research.tradePolicies.fit.min_utility_bps'),
       rules: 'required',
     },
   ],
@@ -508,7 +564,7 @@ watch(
   candidates,
   () => {
     preflight.value = null;
-    pendingContract.value = null;
+    pendingSelection.value = null;
   },
   { deep: true },
 );
@@ -532,7 +588,17 @@ void loadCatalogs();
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.workbench.activation')"
           >
-            <Tag color="warning">SemiAuto · shadow_only</Tag>
+            <Select
+              v-model:value="activationTarget"
+              :options="[
+                { label: 'SemiAuto', value: 'semi_auto' },
+                {
+                  disabled: true,
+                  label: 'AutoExecution · blocked in Runtime v13',
+                  value: 'auto_execution',
+                },
+              ]"
+            />
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.workbench.runtime')"
@@ -571,10 +637,11 @@ void loadCatalogs();
                 @keydown="handleCandidateKeydown($event, index)"
               >
                 <strong>{{ item.candidate_id }}</strong>
-                <Tag class="ml-2">{{ item.condition.kind }}</Tag>
+                <Tag class="ml-2">{{ item.entry_condition.kind }}</Tag>
+                <Tag class="ml-2">{{ item.entry_execution.kind }}</Tag>
               </button>
               <Button
-                v-if="item.condition.kind !== 'immediate'"
+                v-if="item.entry_condition.kind !== 'immediate'"
                 danger
                 size="small"
                 @click.stop="removeCandidate(item.candidate_id)"
@@ -586,7 +653,7 @@ void loadCatalogs();
           <Button
             block
             class="mt-3"
-            :disabled="candidates.length >= 16"
+            :disabled="candidates.length >= 32"
             @click="addCandidate"
           >
             {{ $t('page.research.tradePolicies.workbench.addCandidate') }}
@@ -595,50 +662,385 @@ void loadCatalogs();
 
         <Card :title="$t('page.research.tradePolicies.workbench.editor')">
           <Empty v-if="!selectedCandidate" />
-          <Alert
-            v-else-if="selectedCandidate.condition.kind === 'immediate'"
-            :message="
-              $t('page.research.tradePolicies.workbench.immediateFixed')
-            "
-            show-icon
-            type="info"
-          />
           <template v-else>
+            <Alert
+              v-if="selectedCandidate.entry_condition.kind === 'immediate'"
+              :message="
+                $t('page.research.tradePolicies.workbench.immediateFixed')
+              "
+              show-icon
+              type="info"
+            />
+            <template v-else>
+              <div class="condition-meta">
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.candidateId')
+                  }}</span>
+                  <Input
+                    :value="selectedCandidate.candidate_id"
+                    @update:value="renameSelectedCandidate"
+                  />
+                </label>
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.confirmation')
+                  }}</span>
+                  <InputNumber
+                    v-model:value="
+                      selectedCandidate.entry_condition.confirmation_ms
+                    "
+                    :min="0"
+                  />
+                </label>
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.observationGap')
+                  }}</span>
+                  <InputNumber
+                    v-model:value="
+                      selectedCandidate.entry_condition.max_observation_gap_ms
+                    "
+                    :min="0"
+                  />
+                </label>
+              </div>
+              <ConditionTemplateNodeEditor
+                v-model="selectedCandidate.entry_condition.root"
+                :factor-options="factorOptions"
+              />
+            </template>
+
+            <Divider title-placement="start">
+              {{ $t('page.research.tradePolicies.workbench.entryExecution') }}
+            </Divider>
             <div class="condition-meta">
               <label>
                 <span>{{
-                  $t('page.research.tradePolicies.workbench.candidateId')
+                  $t('page.research.tradePolicies.workbench.orderKind')
                 }}</span>
-                <Input
-                  :value="selectedCandidate.candidate_id"
-                  @update:value="renameSelectedCandidate"
+                <Select
+                  :options="[
+                    { label: 'Aggressive FOK/FAK', value: 'aggressive' },
+                    {
+                      label: 'Passive post-only GTD',
+                      value: 'passive_post_only',
+                    },
+                  ]"
+                  :value="selectedCandidate.entry_execution.kind"
+                  @update:value="setEntryExecutionKind"
                 />
               </label>
               <label>
                 <span>{{
-                  $t('page.research.tradePolicies.workbench.confirmation')
-                }}</span>
-                <InputNumber
-                  v-model:value="selectedCandidate.condition.confirmation_ms"
-                  :min="0"
-                />
-              </label>
-              <label>
-                <span>{{
-                  $t('page.research.tradePolicies.workbench.observationGap')
+                  $t('page.research.tradePolicies.workbench.maxBookAge')
                 }}</span>
                 <InputNumber
                   v-model:value="
-                    selectedCandidate.condition.max_observation_gap_ms
+                    selectedCandidate.entry_execution.max_book_age_ms
                   "
-                  :min="0"
+                  :min="1"
+                />
+              </label>
+              <template
+                v-if="selectedCandidate.entry_execution.kind === 'aggressive'"
+              >
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.fillRequirement')
+                  }}</span>
+                  <Select
+                    v-model:value="
+                      selectedCandidate.entry_execution.fill_requirement
+                    "
+                    :options="[
+                      { label: 'FOK', value: 'all_or_nothing' },
+                      { label: 'FAK', value: 'allow_partial' },
+                    ]"
+                  />
+                </label>
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.maxSlippage')
+                  }}</span>
+                  <Input
+                    v-model:value="
+                      selectedCandidate.entry_execution.max_slippage_bps
+                    "
+                  />
+                </label>
+              </template>
+              <template v-else>
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.passivePlacement')
+                  }}</span>
+                  <Select
+                    :options="[
+                      { label: 'Join best bid', value: 'join_best_bid' },
+                      {
+                        label: 'Improve best bid by ticks',
+                        value: 'improve_best_bid_by_ticks',
+                      },
+                    ]"
+                    :value="selectedCandidate.entry_execution.placement.kind"
+                    @update:value="setPassivePlacementKind"
+                  />
+                </label>
+                <label
+                  v-if="
+                    selectedCandidate.entry_execution.placement.kind ===
+                    'improve_best_bid_by_ticks'
+                  "
+                >
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.improveTicks')
+                  }}</span>
+                  <InputNumber
+                    v-model:value="
+                      selectedCandidate.entry_execution.placement.ticks
+                    "
+                    :min="1"
+                  />
+                </label>
+                <label>
+                  <span>{{
+                    $t('page.research.tradePolicies.workbench.goodTil')
+                  }}</span>
+                  <InputNumber
+                    v-model:value="
+                      selectedCandidate.entry_execution.good_til_secs
+                    "
+                    :min="1"
+                  />
+                </label>
+              </template>
+            </div>
+
+            <Divider title-placement="start">
+              {{ $t('page.research.tradePolicies.workbench.exitPolicy') }}
+            </Divider>
+            <div class="condition-meta">
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.upperBarrier')
+                }}</span>
+                <Input
+                  v-model:value="selectedCandidate.exit.upper_barrier_bps"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.lowerBarrier')
+                }}</span>
+                <Input
+                  v-model:value="selectedCandidate.exit.lower_barrier_bps"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.verticalBarrier')
+                }}</span>
+                <InputNumber
+                  v-model:value="selectedCandidate.exit.vertical_barrier_secs"
+                  :min="1"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.scoreRetention')
+                }}</span>
+                <Input
+                  v-model:value="selectedCandidate.exit.min_score_retention"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.expectedReturn')
+                }}</span>
+                <Input
+                  v-model:value="selectedCandidate.exit.min_expected_return_bps"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.sellConfidence')
+                }}</span>
+                <Input
+                  v-model:value="
+                    selectedCandidate.exit.opportunistic_exit.min_confidence
+                  "
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.sellAlpha')
+                }}</span>
+                <Input
+                  v-model:value="
+                    selectedCandidate.exit.opportunistic_exit
+                      .min_expected_alpha_bps
+                  "
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.sellProbability')
+                }}</span>
+                <Input
+                  v-model:value="
+                    selectedCandidate.exit.opportunistic_exit.min_p_exit_better
+                  "
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.sellCap')
+                }}</span>
+                <Input
+                  v-model:value="
+                    selectedCandidate.exit.opportunistic_exit
+                      .max_cumulative_exit_pct
+                  "
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.sellMinClip')
+                }}</span>
+                <Input
+                  v-model:value="
+                    selectedCandidate.exit.opportunistic_exit
+                      .min_incremental_exit_pct
+                  "
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.settlementMode')
+                }}</span>
+                <Select
+                  v-model:value="selectedCandidate.exit.settlement_mode"
+                  :options="[
+                    {
+                      label: 'Exit before resolution',
+                      value: 'exit_before_resolution',
+                    },
+                    {
+                      label: 'Hold to resolution',
+                      value: 'hold_to_resolution',
+                    },
+                  ]"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.redeemPolicy')
+                }}</span>
+                <Select
+                  v-model:value="selectedCandidate.exit.redeem_policy"
+                  :options="[
+                    { label: 'Manual', value: 'manual' },
+                    { label: 'Auto', value: 'auto' },
+                  ]"
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t(
+                    'page.research.tradePolicies.workbench.executionEligibility',
+                  )
+                }}</span>
+                <Switch
+                  v-model:checked="
+                    selectedCandidate.exit.require_execution_eligibility
+                  "
                 />
               </label>
             </div>
-            <ConditionTemplateNodeEditor
-              v-model="selectedCandidate.condition.root"
-              :factor-options="factorOptions"
-            />
+
+            <Divider title-placement="start">
+              {{ $t('page.research.tradePolicies.workbench.scaleOut') }}
+            </Divider>
+            <div
+              v-for="(target, index) in selectedCandidate.exit
+                .scale_out_targets"
+              :key="target.target_id"
+              class="reason-rule"
+            >
+              <Input v-model:value="target.target_id" />
+              <Input v-model:value="target.trigger_return_bps" />
+              <Input v-model:value="target.target_cumulative_exit_pct" />
+              <Button danger @click="removeScaleOutTarget(index)">
+                {{ $t('common.delete') }}
+              </Button>
+            </div>
+            <Button
+              :disabled="selectedCandidate.exit.scale_out_targets.length >= 3"
+              @click="addScaleOutTarget"
+            >
+              {{ $t('page.research.tradePolicies.workbench.addScaleOut') }}
+            </Button>
+            <div class="trailing-toggle">
+              <span>{{
+                $t('page.research.tradePolicies.workbench.trailingStop')
+              }}</span>
+              <Switch
+                :checked="selectedCandidate.exit.trailing_stop !== null"
+                @update:checked="toggleTrailingStop"
+              />
+            </div>
+            <div
+              v-if="selectedCandidate.exit.trailing_stop"
+              class="condition-meta"
+            >
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.trailingActivation')
+                }}</span>
+                <Input
+                  v-model:value="
+                    selectedCandidate.exit.trailing_stop.activation_return_bps
+                  "
+                />
+              </label>
+              <label>
+                <span>{{
+                  $t('page.research.tradePolicies.workbench.trailingDistance')
+                }}</span>
+                <Input
+                  v-model:value="selectedCandidate.exit.trailing_stop.trail_bps"
+                />
+              </label>
+            </div>
+
+            <Divider title-placement="start">
+              {{ $t('page.research.tradePolicies.workbench.exitExecution') }}
+            </Divider>
+            <div
+              v-for="rule in selectedCandidate.exit.reason_execution"
+              :key="rule.reason"
+              class="reason-rule"
+            >
+              <code>{{ rule.reason }}</code>
+              <InputNumber v-model:value="rule.max_attempts" :min="1" />
+              <InputNumber v-model:value="rule.retry_cadence_ms" :min="1" />
+              <Input v-model:value="rule.max_slippage_bps" />
+              <Select
+                v-model:value="rule.residual_share_policy"
+                :options="[
+                  {
+                    label: 'Retry until vertical',
+                    value: 'retry_until_vertical',
+                  },
+                  { label: 'Hold to settlement', value: 'hold_to_settlement' },
+                  {
+                    label: 'Redeem after resolution',
+                    value: 'redeem_after_resolution',
+                  },
+                ]"
+              />
+            </div>
           </template>
         </Card>
 
@@ -654,7 +1056,7 @@ void loadCatalogs();
                 $t('page.research.tradePolicies.workbench.candidateCount')
               "
             >
-              {{ candidates.length }} / 16
+              {{ candidates.length }} / 32
             </DescriptionsItem>
             <DescriptionsItem
               :label="
@@ -666,7 +1068,7 @@ void loadCatalogs();
             <DescriptionsItem
               :label="$t('page.research.tradePolicies.workbench.candidateHash')"
             >
-              {{ preflight?.condition_candidate_set_hash ?? '—' }}
+              {{ preflight?.candidate_set_hash ?? '—' }}
             </DescriptionsItem>
           </Descriptions>
           <Alert
@@ -692,16 +1094,20 @@ void loadCatalogs();
       <Card :title="$t('page.research.tradePolicies.workbench.preflight')">
         <div aria-live="polite">
           <Alert
-            :message="$t('page.research.tradePolicies.fit.shadowCapability')"
+            :message="$t('page.research.tradePolicies.fit.readinessCapability')"
             show-icon
-            type="warning"
+            type="info"
           />
           <Alert
             v-if="preflight"
             class="mt-2"
-            :message="$t('page.research.tradePolicies.fit.shadowOnly')"
+            :message="
+              preflight.publishable_input === 'pass'
+                ? $t('page.research.tradePolicies.fit.publishable')
+                : $t('page.research.tradePolicies.fit.blocked')
+            "
             show-icon
-            type="warning"
+            :type="preflight.publishable_input === 'pass' ? 'success' : 'error'"
           />
           <div v-if="preflight" class="preflight-checks">
             <Tag
@@ -718,8 +1124,25 @@ void loadCatalogs();
               {{ $t('page.research.tradePolicies.fit.datasetReady') }} ·
               {{ preflight.source_dataset_ready }}
             </Tag>
-            <Tag color="default">
-              {{ $t('page.research.tradePolicies.fit.fullL2') }} · shadow_only
+            <Tag
+              :color="
+                preflight.source_dataset_policy_fit === 'pass'
+                  ? 'success'
+                  : 'error'
+              "
+            >
+              {{ $t('page.research.tradePolicies.fit.datasetPurpose') }} ·
+              {{ preflight.source_dataset_policy_fit }}
+            </Tag>
+            <Tag
+              :color="
+                preflight.full_l2_trajectory_present === 'pass'
+                  ? 'success'
+                  : 'error'
+              "
+            >
+              {{ $t('page.research.tradePolicies.fit.fullL2') }} ·
+              {{ preflight.full_l2_trajectory_present }}
             </Tag>
             <Tag
               :color="
@@ -729,7 +1152,46 @@ void loadCatalogs();
               {{ $t('page.research.tradePolicies.fit.fees') }} ·
               {{ preflight.fee_model_present }}
             </Tag>
+            <Tag
+              :color="
+                preflight.latency_profile_present === 'pass'
+                  ? 'success'
+                  : 'error'
+              "
+            >
+              {{ $t('page.research.tradePolicies.fit.latencyProfile') }} ·
+              {{ preflight.latency_profile_present }}
+            </Tag>
+            <Tag
+              :color="
+                preflight.requested_gate_tight_enough === 'pass'
+                  ? 'success'
+                  : 'error'
+              "
+            >
+              {{ $t('page.research.tradePolicies.fit.runtimeFloor') }} ·
+              {{ preflight.requested_gate_tight_enough }}
+            </Tag>
           </div>
+          <Descriptions v-if="preflight" :column="1" class="mt-3" size="small">
+            <DescriptionsItem
+              :label="$t('page.research.tradePolicies.workbench.runtime')"
+            >
+              {{ preflight.runtime_config_version_id ?? '—' }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.tradePolicies.fit.methodologyHash')"
+            >
+              {{ preflight.methodology_hash ?? '—' }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.tradePolicies.fit.effectiveGates')"
+            >
+              <pre class="gate-json">{{
+                JSON.stringify(preflight.runtime_quality_gate, null, 2)
+              }}</pre>
+            </DescriptionsItem>
+          </Descriptions>
           <Alert
             v-for="item in preflight?.messages ?? []"
             :key="item"
@@ -746,7 +1208,11 @@ void loadCatalogs();
           >
             {{ $t('page.research.tradePolicies.fit.preflight') }}
           </Button>
-          <Button :disabled="!preflight" type="primary" @click="enqueueFit">
+          <Button
+            :disabled="preflight?.publishable_input !== 'pass'"
+            type="primary"
+            @click="enqueueFit"
+          >
             {{ $t('page.research.tradePolicies.fit.enqueue') }}
           </Button>
         </Space>
@@ -877,6 +1343,28 @@ void loadCatalogs();
   margin-top: 12px;
 }
 
+.gate-json {
+  max-height: 240px;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.reason-rule {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.4fr) repeat(4, minmax(110px, 1fr));
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.trailing-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+
 :deep(.ant-input-number),
 :deep(.ant-select),
 :deep(.ant-picker) {
@@ -895,7 +1383,8 @@ void loadCatalogs();
 
 @media (max-width: 760px) {
   .builder-grid,
-  .condition-meta {
+  .condition-meta,
+  .reason-rule {
     grid-template-columns: 1fr;
   }
 

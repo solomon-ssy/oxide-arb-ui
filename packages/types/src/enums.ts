@@ -671,6 +671,7 @@ export type DownsideSource = WireEnum<typeof DOWNSIDE_SOURCES>;
 /** Training-dataset purpose (mirrors Rust `DatasetPurpose`). */
 export const DATASET_PURPOSES = {
   calibration: 'calibration',
+  policyFit: 'policy_fit',
   training: 'training',
 } as const;
 

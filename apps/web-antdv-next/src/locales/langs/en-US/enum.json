@@ -577,6 +577,7 @@
   },
   "datasetPurpose": {
     "training": "Training",
-    "calibration": "Calibration"
+    "calibration": "Calibration",
+    "policyFit": "Policy fit"
   }
 }

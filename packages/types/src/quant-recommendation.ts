@@ -38,6 +38,7 @@ import type {
   TickSize,
 } from './enums';
 import type {
+  OpportunisticExitPolicy,
   ScaleOutTarget,
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
@@ -123,6 +124,7 @@ export interface ExitPlan {
   scale_out_targets: ScaleOutTarget[];
   trailing_stop: null | TrailingStopPolicy;
   thesis_invalidation: ThesisInvalidationPolicy;
+  opportunistic_exit: OpportunisticExitPolicy;
   settlement_mode: ExitSettlementMode;
   redeem_policy: RedeemPolicy;
   manual_review_at: IsoDateTime | null;

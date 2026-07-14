@@ -3,6 +3,7 @@ import type {
   DecimalString,
   IsoDateTime,
   PriceString,
+  ProbabilityString,
 } from './common';
 
 /**
@@ -36,4 +37,13 @@ export interface ThesisInvalidationPolicy {
   min_score_retention: DecimalString;
   min_expected_return_bps: BpsString;
   require_execution_eligibility: boolean;
+}
+
+/** Policy-fitted advisory exit thresholds frozen onto recommendations/intents. */
+export interface OpportunisticExitPolicy {
+  max_cumulative_exit_pct: DecimalString;
+  min_confidence: ProbabilityString;
+  min_expected_alpha_bps: BpsString;
+  min_incremental_exit_pct: DecimalString;
+  min_p_exit_better: ProbabilityString;
 }

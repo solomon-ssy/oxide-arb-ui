@@ -577,6 +577,7 @@
   },
   "datasetPurpose": {
     "training": "训练",
-    "calibration": "校准"
+    "calibration": "校准",
+    "policyFit": "策略拟合"
   }
 }

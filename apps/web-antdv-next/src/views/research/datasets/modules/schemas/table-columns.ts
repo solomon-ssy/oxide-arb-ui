@@ -46,6 +46,11 @@ export function useTrainingDatasetColumns(
             label: $t('enum.datasetPurpose.calibration'),
             value: 'calibration',
           },
+          {
+            color: 'cyan',
+            label: $t('enum.datasetPurpose.policyFit'),
+            value: 'policy_fit',
+          },
         ],
       },
       field: 'purpose',

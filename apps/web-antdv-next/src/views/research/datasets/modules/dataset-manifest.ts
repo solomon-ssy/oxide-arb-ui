@@ -1,6 +1,6 @@
 import type { TrainingDatasetView } from '@vben/types';
 
-export const DATASET_ARTIFACT_FORMAT_VERSION = 2;
+export const DATASET_ARTIFACT_FORMAT_VERSION = 4;
 
 export interface DatasetManifestBindingIssue {
   actual: unknown;

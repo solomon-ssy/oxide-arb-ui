@@ -105,6 +105,10 @@ const purposeOptions = [
     label: $t('enum.datasetPurpose.calibration'),
     value: DATASET_PURPOSES.calibration,
   },
+  {
+    label: $t('enum.datasetPurpose.policyFit'),
+    value: DATASET_PURPOSES.policyFit,
+  },
 ];
 
 async function loadOptions() {

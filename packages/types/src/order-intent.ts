@@ -23,6 +23,7 @@ import type {
   Side,
 } from './enums';
 import type {
+  OpportunisticExitPolicy,
   ScaleOutTarget,
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
@@ -66,6 +67,7 @@ export interface ExitPolicySpec {
   max_hold_secs: null | number;
   trailing_stop: null | TrailingStopPolicy;
   thesis_invalidation: ThesisInvalidationPolicy;
+  opportunistic_exit: OpportunisticExitPolicy;
   scale_out_targets: ScaleOutTarget[];
   settlement_mode: ExitSettlementMode;
   redeem_policy: RedeemPolicy;

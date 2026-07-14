@@ -27,7 +27,7 @@ const readyDataset: TrainingDatasetView = {
   manifest: {
     factor_schema_hash: factorHash,
     feature_schema_hash: featureHash,
-    format_version: 2,
+    format_version: 4,
     horizons_secs: [3600],
     knowledge_lag_secs: 10,
     label_schema_hash: labelHash,
