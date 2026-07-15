@@ -57,6 +57,16 @@ const coreRoutes: RouteRecordRaw[] = [
           title: $t('page.research.tradePolicies.workbench.title'),
         },
       },
+      {
+        name: 'TradePolicyDetail',
+        path: '/research/trade-policies/:id',
+        component: () =>
+          import('#/views/research/trade-policies/detail/index.vue'),
+        meta: {
+          hideInMenu: true,
+          title: $t('page.research.tradePolicies.detail.title'),
+        },
+      },
     ],
   },
   {

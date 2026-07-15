@@ -27,17 +27,29 @@ const readyDataset: TrainingDatasetView = {
   manifest: {
     factor_schema_hash: factorHash,
     feature_schema_hash: featureHash,
-    format_version: 4,
+    format_version: 5,
     horizons_secs: [3600],
     knowledge_lag_secs: 10,
     label_schema_hash: labelHash,
     model_spec_id: 'model-spec',
+    profile_ref: {
+      content_hash: `blake3:${'2'.repeat(64)}`,
+      id: 'pooled_1h_control',
+      version: 1,
+    },
     purpose: 'training',
+    research_program_hash: `blake3:${'3'.repeat(64)}`,
     runtime_config_version_id: '01900000-0000-7000-8000-000000000002',
     sample_count: 20,
     sample_interval_secs: 300,
     semantic_dataset_hash: datasetHash,
     source_fingerprint: `blake3:${'f'.repeat(64)}`,
+    source_slice: {
+      manifest_hash: `blake3:${'4'.repeat(64)}`,
+      manifest_uri: 's3://source-slices/control.json',
+    },
+    trade_policy_artifact_id: null,
+    trade_policy_hash: null,
     training_dataset_id: '01900000-0000-7000-8000-000000000001',
     window_end: '2026-07-10T10:00:00.000Z',
     window_start: '2026-07-09T10:00:00.000Z',
@@ -57,7 +69,7 @@ const readyDataset: TrainingDatasetView = {
 };
 
 describe('canTrainDataset', () => {
-  it('offers Train only for an authorized Ready dataset with a bound v2 manifest', () => {
+  it('offers Train only for an authorized Ready dataset with a bound v5 manifest', () => {
     for (const status of Object.values(TRAINING_DATASET_STATUSES)) {
       expect(canTrainDataset(true, { ...readyDataset, status })).toBe(
         status === TRAINING_DATASET_STATUSES.ready,
@@ -69,7 +81,7 @@ describe('canTrainDataset', () => {
   it('fails closed for legacy rows and any manifest-ledger mismatch', () => {
     const manifest = readyDataset.manifest;
     if (!manifest) {
-      throw new Error('test fixture requires a v2 manifest');
+      throw new Error('test fixture requires a v5 manifest');
     }
     expect(canTrainDataset(true, { ...readyDataset, manifest: null })).toBe(
       false,

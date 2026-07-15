@@ -15,6 +15,12 @@ import type {
   RedeemPolicy,
 } from './enums';
 import type { OpportunisticExitPolicy } from './exit-plan';
+import type {
+  ResearchEvaluationTrack,
+  ResearchProfileArtifact,
+  ResearchProfileRef,
+  SourceSliceManifestRef,
+} from './research-profile';
 
 export type TradePolicyStatus = 'draft' | 'published' | 'retired' | 'validated';
 export type TradePolicyGovernanceAction = 'publish' | 'retire' | 'validate';
@@ -30,6 +36,52 @@ export interface TradePolicyListQuery extends PageQuery {
 }
 
 export type TradePolicyAuditListQuery = PageQuery;
+
+export type TradePolicyTrialScope =
+  | 'candidate'
+  | 'fold'
+  | 'latency_stress'
+  | 'path';
+export type TradePolicyTrialStatus = 'cancelled' | 'failed' | 'succeeded';
+
+export interface TradePolicyTrialListQuery extends PageQuery {
+  candidate_id?: string;
+  scope?: TradePolicyTrialScope;
+  status?: TradePolicyTrialStatus;
+}
+
+export interface TradePolicyTrialMetrics {
+  ambiguous_touch_rate: DecimalString;
+  depth_failure_rate: DecimalString;
+  effective_sample_size: DecimalString;
+  executable_coverage: DecimalString;
+  fee_catalog_coverage: DecimalString;
+  full_l2_coverage: DecimalString;
+  latency_stress_multiplier: DecimalString;
+  net_return_bps: DecimalString;
+  sample_count: number;
+  sharpe_ratio: DecimalString | null;
+}
+
+export interface TradePolicyTrialAttemptView {
+  attempt_ordinal: number;
+  candidate_hash: string;
+  candidate_id: string;
+  created_at: IsoDateTime;
+  evidence_hash: null | string;
+  evidence_row_count: null | number;
+  experiment_family_hash: string;
+  failure_detail: null | string;
+  fit_job_id: UuidString;
+  fold_index: null | number;
+  metrics: null | TradePolicyTrialMetrics;
+  path_index: null | number;
+  research_program_hash: string;
+  row_hash: string;
+  scope: TradePolicyTrialScope;
+  status: TradePolicyTrialStatus;
+  trial_attempt_id: UuidString;
+}
 
 export interface TradePolicySummaryView {
   artifact_id: UuidString;
@@ -51,12 +103,13 @@ export interface TradePolicyStructuralDimension {
 }
 
 export interface TradePolicyCohortKey {
+  cash_budget_tier: UsdString;
   category: MarketCategory;
   entry_price_max: PriceString;
   entry_price_min: PriceString;
   horizon_secs: number;
   liquidity: TradePolicyStructuralDimension;
-  notional_tier: UsdString;
+  profile_ref: ResearchProfileRef;
   volatility: TradePolicyStructuralDimension;
 }
 
@@ -249,30 +302,36 @@ export interface TradePolicyQualityGate {
   min_full_l2_coverage: DecimalString;
   min_lower_confidence_utility_bps: BpsString;
   min_passive_reconciled_trade_coverage: DecimalString;
-  min_universe_coverage: DecimalString;
+  min_eligible_market_coverage: DecimalString;
 }
 
 export interface TradePolicyFitContract {
+  cash_budget_tiers: UsdString[];
+  evaluation_track: ResearchEvaluationTrack;
   fit_window_end: IsoDateTime;
   fit_window_start: IsoDateTime;
-  horizon_secs: number;
+  latency_evidence_id: UuidString;
   latency_profile_hash: string;
   methodology_hash: string;
-  notional_tiers: UsdString[];
+  model_version_id: UuidString;
   pit_cutoff: IsoDateTime;
+  profile_ref: ResearchProfileRef;
   quality_gate: TradePolicyQualityGate;
+  research_program_hash: string;
   runtime_config_version_id: UuidString;
   source_dataset_id: UuidString;
+  target_horizon_secs: number;
 }
 
 export interface TradePolicyFitSelection {
-  fit_window_end: IsoDateTime;
-  fit_window_start: IsoDateTime;
-  notional_tiers: UsdString[];
   pit_cutoff: IsoDateTime;
-  quality_gate: null | TradePolicyQualityGate;
-  source_dataset_id: UuidString;
+  profile_ref: ResearchProfileRef;
 }
+
+export type TradePolicyFitReadiness =
+  | 'blocked'
+  | 'ready_to_materialize'
+  | 'reusable';
 
 export type TradePolicyPublicationBlocker =
   | { actual: number; kind: 'unsupported_format' }
@@ -299,6 +358,7 @@ export type TradePolicyPublicationBlocker =
   | { detail: string; kind: 'invalid_vertical_gate_evidence' }
   | { gate: VerticalGateKind; kind: 'missing_vertical_gate_evidence' }
   | { gate: VerticalGateKind; kind: 'vertical_gate_failed' }
+  | { kind: 'research_only_evaluation_track' }
   | {
       kind:
         | 'ambiguous_touch_rate_above_gate'
@@ -309,14 +369,15 @@ export type TradePolicyPublicationBlocker =
         | 'evidence_bundle_identity_mismatch'
         | 'insufficient_common_candidate_support'
         | 'insufficient_cpcv_paths'
+        | 'insufficient_eligible_market_coverage'
         | 'insufficient_fee_catalog_coverage'
         | 'insufficient_full_l2_coverage'
-        | 'insufficient_universe_coverage'
         | 'missing_ambiguous_touch_rate'
         | 'missing_common_candidate_support'
         | 'missing_cpcv_path_count'
         | 'missing_deflated_sharpe_ratio'
         | 'missing_depth_failure_rate'
+        | 'missing_eligible_market_coverage'
         | 'missing_evidence_bundle'
         | 'missing_fee_catalog_coverage'
         | 'missing_fee_model'
@@ -326,7 +387,6 @@ export type TradePolicyPublicationBlocker =
         | 'missing_pit_cutoff_evidence'
         | 'missing_probability_of_backtest_overfitting'
         | 'missing_trial_ledger'
-        | 'missing_universe_coverage'
         | 'probability_of_backtest_overfitting_above_gate';
     };
 
@@ -342,14 +402,16 @@ export interface TradePolicyDetailView {
     cohorts: TradePolicyCohortView[];
     embargo_secs: number;
     evidence_bundle: null | {
-      archive_manifest_set_hash: string;
       catalog_ledger_hash: string;
-      code_hash: string;
+      fit_job_id: UuidString;
+      latency_evidence_id: UuidString;
       latency_profile_hash: string;
       manifest_hash: string;
       manifest_uri: string;
       methodology_hash: string;
+      replay_kernel_hash: string;
       simulator_hash: string;
+      source_slice_manifest_hash: string;
       trial_ledger_hash: string;
     };
     execution_evidence: {
@@ -380,11 +442,11 @@ export interface TradePolicyDetailView {
       deflated_sharpe_ratio: DecimalString | null;
       depth_failure_rate: DecimalString | null;
       effective_sample_size: DecimalString | null;
+      eligible_market_coverage: DecimalString | null;
       fee_catalog_coverage: DecimalString | null;
       probability_of_backtest_overfitting: DecimalString | null;
       trial_ledger_cutoff: IsoDateTime | null;
       trial_ledger_hash: null | string;
-      universe_coverage: DecimalString | null;
     };
     vertical_gate_evidence: VerticalGateEvidence[];
   };
@@ -406,41 +468,211 @@ export interface TradePolicyGovernanceAuditView {
   to_status: TradePolicyStatus;
 }
 
+export type TradePolicyEvidenceObjectKind =
+  | 'candidate_trials'
+  | 'cohort_trials'
+  | 'coverage_gaps'
+  | 'cpcv_paths'
+  | 'fills'
+  | 'observation_eligibility'
+  | 'statistical_summaries';
+
+export interface TradePolicySourceSliceView {
+  artifact_id: UuidString;
+  profile_ref: ResearchProfileRef;
+  source_slice: SourceSliceManifestRef;
+}
+
+export type SourceSliceObjectKind =
+  | 'book_microstructure'
+  | 'calibration_reference'
+  | 'catalog_event'
+  | 'catalog_market'
+  | 'clob_market_info'
+  | 'crypto_price_report'
+  | 'domain_observation'
+  | 'l2_checkpoint'
+  | 'l2_event'
+  | 'l2_gap'
+  | 'l2_session'
+  | 'market_linkage'
+  | 'resolution'
+  | 'trade_tape'
+  | 'weather_forecast'
+  | 'weather_observation';
+
+export interface TradePolicySourceSliceObjectListQuery extends PageQuery {
+  kind?: SourceSliceObjectKind;
+}
+
+export interface TradePolicySourceSliceObjectView {
+  byte_hash: string;
+  kind: SourceSliceObjectKind;
+  max_available_at: IsoDateTime | null;
+  max_event_at: IsoDateTime | null;
+  min_available_at: IsoDateTime | null;
+  min_event_at: IsoDateTime | null;
+  object_version: string;
+  row_count: number;
+  schema_hash: string;
+  uri: string;
+}
+
+export type TradePolicyValidationStatus =
+  | 'cancelled'
+  | 'failed'
+  | 'running'
+  | 'succeeded';
+
+export interface TradePolicyValidationListQuery extends PageQuery {
+  status?: TradePolicyValidationStatus;
+}
+
+export interface TradePolicyValidationRunView {
+  actor_id: UuidString;
+  artifact_hash: string;
+  artifact_id: UuidString;
+  completed_at: IsoDateTime | null;
+  created_at: IsoDateTime;
+  evidence_manifest_hash: string;
+  failed_rows: number;
+  failure_detail: null | string;
+  passed_rows: number;
+  reason: string;
+  source_dataset_hash: string;
+  source_dataset_id: UuidString;
+  source_slice_manifest_hash: string;
+  started_at: IsoDateTime;
+  status: TradePolicyValidationStatus;
+  total_rows: number;
+  validation_hash: null | string;
+  validation_run_id: UuidString;
+}
+
+export interface TradePolicyValidationRowListQuery extends PageQuery {
+  diagnostic_kind?: string;
+  evidence_kind?: TradePolicyEvidenceObjectKind;
+  passed?: boolean;
+}
+
+export interface TradePolicyValidationRowView {
+  actual_row_hash: null | string;
+  created_at: IsoDateTime;
+  decision_at: IsoDateTime | null;
+  detail: null | string;
+  diagnostic_kind: null | string;
+  evidence_kind: TradePolicyEvidenceObjectKind;
+  example_id: null | string;
+  expected_row_hash: null | string;
+  market_id: null | string;
+  passed: boolean;
+  record_key: string;
+  row_hash: string;
+  row_ordinal: number;
+  token_id: null | string;
+  validation_run_id: UuidString;
+}
+
+export interface TradePolicyEvidenceDownloadView {
+  artifact_id: UuidString;
+  byte_hash: string;
+  expires_at: IsoDateTime;
+  kind: TradePolicyEvidenceObjectKind;
+  row_count: number;
+  url: string;
+}
+
 export interface FitTradePolicyRequest {
-  activation_target: VerticalActivationTarget;
   candidates: TradePolicyCandidateSpec[];
+  evaluation_track: ResearchEvaluationTrack;
+  idempotency_key: string;
   reason: string;
   selection: TradePolicyFitSelection;
 }
 
 export interface TradePolicyFitPreflightRequest {
-  activation_target: VerticalActivationTarget;
   candidates: TradePolicyCandidateSpec[];
+  evaluation_track: ResearchEvaluationTrack;
   selection: TradePolicyFitSelection;
 }
 
 export type TradePolicyPreflightCheckStatus = 'fail' | 'pass';
 
+export type TradePolicyPreflightBlockerKind =
+  | 'contract_invalid'
+  | 'dataset_not_ready'
+  | 'dataset_purpose_mismatch'
+  | 'fit_window_not_contained'
+  | 'full_l2_trajectory_missing'
+  | 'pit_cutoff_invalid'
+  | 'pit_fee_facts_missing'
+  | 'production_latency_profile_missing'
+  | 'profile_lineage_mismatch'
+  | 'quality_gate_unavailable'
+  | 'raw_trajectory_labels_missing'
+  | 'retention_runway_unproven'
+  | 'source_slice_unverified';
+
+export interface TradePolicyPreflightBlockerView {
+  actual: unknown;
+  evidence_link: null | string;
+  kind: TradePolicyPreflightBlockerKind;
+  remediation: string;
+  required: unknown;
+}
+
+export type ResearchReadinessEvidenceKind =
+  | 'retention_runway'
+  | 'shadow_latency_profile';
+
+export interface TradePolicyOperationalEvidenceView {
+  artifact_version: string;
+  attestation_key_id: string;
+  evidence_id: UuidString;
+  expires_at: IsoDateTime;
+  kind: ResearchReadinessEvidenceKind;
+  observed_at: IsoDateTime;
+  payload_hash: string;
+}
+
 export interface TradePolicyFitPreflightView {
+  blockers: TradePolicyPreflightBlockerView[];
+  catalog_completeness_proven: TradePolicyPreflightCheckStatus;
   candidate_set_hash: null | string;
   canonical_candidates: null | TradePolicyCandidateSpec[];
   contract_valid: TradePolicyPreflightCheckStatus;
+  estimated_candidate_trials: number;
+  estimated_fold_evaluations: number;
   fee_model_present: TradePolicyPreflightCheckStatus;
   fit_window_contained: TradePolicyPreflightCheckStatus;
+  fit_window_end: IsoDateTime | null;
+  fit_window_start: IsoDateTime | null;
   full_l2_trajectory_present: TradePolicyPreflightCheckStatus;
   labels_excluded_after_cutoff: number;
   labels_matured_by_cutoff: number;
+  latency_evidence: null | TradePolicyOperationalEvidenceView;
   latency_profile_present: TradePolicyPreflightCheckStatus;
-  messages: string[];
   methodology_hash: null | string;
   pit_cutoff_valid: TradePolicyPreflightCheckStatus;
+  profile: null | ResearchProfileArtifact;
+  profile_lineage_valid: TradePolicyPreflightCheckStatus;
   publishable_input: TradePolicyPreflightCheckStatus;
   raw_trajectory_labels_present: TradePolicyPreflightCheckStatus;
-  requested_gate_tight_enough: TradePolicyPreflightCheckStatus;
+  required_raw_retention_days: null | number;
+  research_program_hash: null | string;
+  retention_evidence: null | TradePolicyOperationalEvidenceView;
+  retention_runway_days: null | number;
+  retention_runway_proven: TradePolicyPreflightCheckStatus;
+  profile_quality_gate_available: TradePolicyPreflightCheckStatus;
+  readiness: TradePolicyFitReadiness;
+  reusable_source_dataset_id: null | UuidString;
   runtime_config_version_id: null | UuidString;
-  runtime_quality_gate: null | TradePolicyQualityGate;
   source_dataset_policy_fit: TradePolicyPreflightCheckStatus;
   source_dataset_ready: TradePolicyPreflightCheckStatus;
+  source_completeness_proven: TradePolicyPreflightCheckStatus;
+  source_slice_id: null | UuidString;
+  source_slice_identity_hash: null | string;
+  source_slice_verified: TradePolicyPreflightCheckStatus;
 }
 
 export interface TradePolicyGovernanceRequest {

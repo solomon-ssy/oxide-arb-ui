@@ -37,8 +37,8 @@ export type OrderTypeSpec =
   | { gtd: { expiration: number } };
 
 export type OrderAmount =
-  | { unit: 'shares'; value: SharesString }
-  | { unit: 'usd'; value: UsdString };
+  | { unit: 'cash_budget'; value: UsdString }
+  | { unit: 'shares'; value: SharesString };
 
 /** Entry leg specification frozen onto an order intent. */
 export interface EntryOrderSpec {

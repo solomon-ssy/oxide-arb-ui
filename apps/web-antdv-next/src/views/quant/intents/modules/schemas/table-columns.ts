@@ -75,7 +75,7 @@ export function useIntentColumns(
       align: 'right',
       field: 'entry_order.amount',
       formatter: ({ row }: { row: OrderIntentView }) =>
-        row.entry_order.amount.unit === 'usd'
+        row.entry_order.amount.unit === 'cash_budget'
           ? formatUsd(row.entry_order.amount.value)
           : formatShares(row.entry_order.amount.value),
       title: $t('page.quantIntents.columns.amount'),

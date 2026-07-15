@@ -7,12 +7,12 @@ import Decimal from 'decimal.js';
 
 /** Input widget kind for a {@link GovernedField}. */
 export type GovernedFieldKind =
+  | 'cash_budget'
   | 'checkbox'
   | 'price'
   | 'select'
   | 'shares'
-  | 'text'
-  | 'usd';
+  | 'text';
 
 /** Option for a `select`-kind {@link GovernedField}. */
 export interface GovernedFieldOption {
@@ -22,7 +22,7 @@ export interface GovernedFieldOption {
 
 /**
  * A typed operator input rendered inside the governed modal, above the reason
- * field. Decimal kinds (`shares` / `price` / `usd`) validate through
+ * field. Decimal kinds (`cash_budget` / `shares` / `price`) validate through
  * `decimal.js`; `required` blocks submit until satisfied. Values surface on the
  * governed context's `fields` map keyed by `name`.
  */
@@ -39,16 +39,16 @@ export interface GovernedField {
 
 /** Decimal-input kinds validate through `decimal.js` (never `parseFloat`). */
 const DECIMAL_FIELD_KINDS = new Set<GovernedFieldKind>([
+  'cash_budget',
   'price',
   'shares',
-  'usd',
 ]);
 
 /**
  * Whether a governed field's raw input is acceptable for submission.
  *
  * - An empty value is valid iff the field is not `required`.
- * - Decimal kinds (`shares` / `price` / `usd`) must parse to a finite, strictly
+ * - Decimal kinds (`cash_budget` / `shares` / `price`) must parse to a finite, strictly
  *   positive `Decimal` — no float intermediate.
  * - Other kinds accept any non-empty string.
  */

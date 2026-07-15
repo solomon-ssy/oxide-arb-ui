@@ -314,7 +314,7 @@ onMounted(() => void loadExecutionOrders());
           >
             <span class="font-mono">
               {{
-                entry.amount.unit === 'usd'
+                entry.amount.unit === 'cash_budget'
                   ? formatUsd(entry.amount.value)
                   : formatShares(entry.amount.value)
               }}

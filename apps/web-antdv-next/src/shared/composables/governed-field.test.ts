@@ -40,7 +40,7 @@ describe('isGovernedFieldValid', () => {
   });
 
   it('requires strictly positive finite decimals for money kinds', () => {
-    for (const kind of ['shares', 'price', 'usd'] as const) {
+    for (const kind of ['cash_budget', 'shares', 'price'] as const) {
       expect(isGovernedFieldValid(field({ kind }), '12.5')).toBe(true);
       expect(isGovernedFieldValid(field({ kind }), '0')).toBe(false);
       expect(isGovernedFieldValid(field({ kind }), '-1')).toBe(false);

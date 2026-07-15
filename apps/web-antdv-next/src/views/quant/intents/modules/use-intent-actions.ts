@@ -45,7 +45,7 @@ function intentPreview(intent: OrderIntentView): GovernedDetailRow[] {
     {
       label: $t('page.quantIntents.detail.entry.amount'),
       value:
-        intent.entry_order.amount.unit === 'usd'
+        intent.entry_order.amount.unit === 'cash_budget'
           ? formatUsd(intent.entry_order.amount.value)
           : formatShares(intent.entry_order.amount.value),
     },
@@ -68,7 +68,7 @@ function approveOverrideFields(intent: OrderIntentView): GovernedField[] {
     {
       help: $t('page.quantIntents.approve.overrideAmountHelp', {
         amount:
-          amount.unit === 'usd'
+          amount.unit === 'cash_budget'
             ? formatUsd(amount.value)
             : formatShares(amount.value),
       }),

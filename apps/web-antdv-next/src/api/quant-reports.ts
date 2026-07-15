@@ -3,9 +3,12 @@ import type {
   QuantRecommendationView,
   QuantReportDetailView,
   QuantReportDiagnosticsView,
+  QuantReportFunnelView,
   QuantReportListQuery,
   QuantReportView,
   ReportDiffView,
+  ReportFunnelMarketListQuery,
+  ReportFunnelMarketView,
   RevokeReportRequest,
   RunReportAccepted,
   RunReportRequest,
@@ -28,6 +31,8 @@ export namespace QuantReportApi {
   export const diagnostics = (id: string) => `${base}/${id}/diagnostics`;
   export const diff = (id: string, otherId: string) =>
     `${base}/${id}/diff/${otherId}`;
+  export const funnel = (id: string) => `${base}/${id}/funnel`;
+  export const funnelMarkets = (id: string) => `${base}/${id}/funnel/markets`;
   export const revoke = (id: string) => `${base}/${id}/revoke`;
 }
 
@@ -77,6 +82,22 @@ export async function listReportRecommendations(id: string) {
 export async function getQuantReportDiagnostics(id: string) {
   return requestClient.get<QuantReportDiagnosticsView>(
     QuantReportApi.diagnostics(id),
+  );
+}
+
+/** `GET /quant/reports/{id}/funnel` — row-derived conservation summary. */
+export async function getQuantReportFunnel(id: string) {
+  return requestClient.get<QuantReportFunnelView>(QuantReportApi.funnel(id));
+}
+
+/** `GET /quant/reports/{id}/funnel/markets` — typed terminal market decisions. */
+export async function listQuantReportFunnelMarkets(
+  id: string,
+  query: ReportFunnelMarketListQuery = {},
+) {
+  return requestClient.get<Paginated<ReportFunnelMarketView>>(
+    QuantReportApi.funnelMarkets(id),
+    { params: query },
   );
 }
 

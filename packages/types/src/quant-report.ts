@@ -19,13 +19,16 @@ import type {
   QuantRuntimeMode,
   RecommendationReportStatus,
   RejectionReason,
+  ReportFactDeliveryStatus,
   ReportKind,
   ReportTriggerKind,
 } from './enums';
+import type { ResearchProfileRef } from './research-profile';
 
 /** Report header row (`GET /quant/reports`, `.../latest`). */
 export interface QuantReportView {
   recommendation_report_id: UuidString;
+  profile_ref: ResearchProfileRef;
   report_kind: ReportKind;
   trigger_kind: ReportTriggerKind;
   status: RecommendationReportStatus;
@@ -110,6 +113,21 @@ export interface QuantReportDetailView extends QuantReportView {
   model_version_id: UuidString;
   market_selection_id: UuidString;
   summary: ReportSummary;
+  fact_delivery: null | ReportFactDeliveryView;
+}
+
+export interface ReportFactDeliveryView {
+  status: ReportFactDeliveryStatus;
+  bundle_hash: string;
+  recommendation_row_count: number;
+  recommendation_row_chain_hash: string;
+  funnel_row_count: number;
+  funnel_row_chain_hash: string;
+  attempt_count: number;
+  next_attempt_at: IsoDateTime | null;
+  last_error: null | string;
+  verified_at: IsoDateTime | null;
+  announced_at: IsoDateTime | null;
 }
 
 /** Durable serving diagnostics for one report. */
@@ -128,6 +146,86 @@ export interface QuantReportDiagnosticsView {
   selection_count: number;
   stage_ceiling: FeatureParityStage;
   subject: ReportDiagnosticsSubject;
+}
+
+export type ReportFunnelStage =
+  | 'business_eligible'
+  | 'catalog_visible'
+  | 'executable_data_eligible'
+  | 'feature_ready'
+  | 'model_gate_passed'
+  | 'model_scored'
+  | 'portfolio_funded'
+  | 'published'
+  | 'sizing_eligible';
+
+export type ReportFunnelReason =
+  | 'aggregate_exposure_cap_exhausted'
+  | 'available_cash_exhausted'
+  | 'below_min_size'
+  | 'beyond_top_n'
+  | 'budget_exhausted'
+  | 'category_cap_exhausted'
+  | 'category_disabled'
+  | 'correlation_cap_exhausted'
+  | 'event_cap_exhausted'
+  | 'feature_data_quality_rejected'
+  | 'ingest_lag_exceeded'
+  | 'insufficient_liquidity'
+  | 'invalid_edge_inputs'
+  | 'liquidity_infeasible'
+  | 'low_confidence'
+  | 'manually_blocked'
+  | 'market_cap_exhausted'
+  | 'missing_model_output'
+  | 'model_feature_unavailable'
+  | 'no_positive_signal'
+  | 'not_open'
+  | 'published'
+  | 'resolution_ambiguous'
+  | 'return_model_uncalibrated'
+  | 'score_below_floor'
+  | 'spread_too_wide'
+  | 'stale_book'
+  | 'system_degraded';
+
+export interface ReportFunnelStageView {
+  excluded_count: number;
+  input_count: number;
+  output_count: number;
+  stage: ReportFunnelStage;
+}
+
+export interface QuantReportFunnelView {
+  catalog_visible_count: number;
+  conserved: boolean;
+  published_count: number;
+  recommendation_report_id: UuidString;
+  stages: ReportFunnelStageView[];
+}
+
+export interface ReportFunnelMarketView {
+  event_id: string;
+  feature_vector_id: null | UuidString;
+  market_id: string;
+  market_selection_id: UuidString;
+  model_run_id: null | UuidString;
+  model_version_id: UuidString;
+  primary_reason: ReportFunnelReason;
+  profile_ref: ResearchProfileRef;
+  recommendation_id: null | UuidString;
+  recommendation_report_id: UuidString;
+  row_hash: string;
+  runtime_config_version_id: UuidString;
+  secondary_diagnostics: Record<string, unknown>;
+  signal_candidate_id: null | UuidString;
+  terminal_stage: ReportFunnelStage;
+  token_id: string;
+}
+
+export interface ReportFunnelMarketListQuery extends PageQuery {
+  primary_reason?: ReportFunnelReason;
+  terminal_stage?: ReportFunnelStage;
 }
 
 /** One recommendation delta between two reports. */

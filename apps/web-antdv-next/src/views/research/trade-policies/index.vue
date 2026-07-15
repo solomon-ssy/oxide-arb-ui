@@ -8,18 +8,15 @@ import type {
 
 import { useRouter } from 'vue-router';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { Button } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { getTradePolicy, listTradePolicies } from '#/api/trade-policies';
+import { listTradePolicies } from '#/api/trade-policies';
 import { $t } from '#/locales';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
-
-import TradePolicyDetailDrawer from './modules/trade-policy-detail-drawer.vue';
 
 defineOptions({ name: 'ResearchTradePoliciesPage' });
 
@@ -34,11 +31,6 @@ const emptyPage = {
   size: 0,
   total: 0,
 };
-
-const [Drawer, drawerApi] = useVbenDrawer({
-  connectedComponent: TradePolicyDetailDrawer,
-  destroyOnClose: true,
-});
 
 const columns: VxeTableGridOptions<TradePolicySummaryView>['columns'] = [
   {
@@ -111,14 +103,8 @@ const [Grid] = useVbenVxeGrid<TradePolicySummaryView>({
 async function onActionClick({
   row,
 }: OnActionClickParams<TradePolicySummaryView>) {
-  const detail = await handleRequest(() => getTradePolicy(row.artifact_id));
-  if (detail) drawerApi.setData({ detail }).open();
+  await router.push(`/research/trade-policies/${row.artifact_id}`);
 }
-
-useQueryOpenDrawer({
-  fetch: (id) => getTradePolicy(id),
-  open: (detail) => drawerApi.setData({ detail }).open(),
-});
 
 function openFit() {
   void router.push('/research/trade-policy-fits/new');
@@ -134,6 +120,5 @@ function openFit() {
         </Button>
       </template>
     </Grid>
-    <Drawer />
   </Page>
 </template>

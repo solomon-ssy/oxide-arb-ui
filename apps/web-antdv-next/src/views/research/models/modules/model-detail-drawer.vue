@@ -869,7 +869,7 @@ watch(
                   <EntityRouteLink
                     mono
                     :label="model.trade_policy_artifact_id"
-                    :to="`/research/trade-policies?open=${model.trade_policy_artifact_id}`"
+                    :to="`/research/trade-policies/${model.trade_policy_artifact_id}`"
                   />
                 </DescriptionsItem>
                 <DescriptionsItem

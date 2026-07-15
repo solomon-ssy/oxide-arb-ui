@@ -11,7 +11,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, TabPane, Tabs } from 'antdv-next';
+import { Alert, Button, TabPane, Tabs } from 'antdv-next';
 
 import {
   getQuantReport,
@@ -26,6 +26,7 @@ import RecommendationDetailDrawer from '#/views/quant/recommendations/modules/re
 
 import { useReportActions } from '../modules/use-report-actions';
 import ReportDiffPanel from '../modules/widgets/report-diff-panel.vue';
+import ReportFunnelPanel from '../modules/widgets/report-funnel-panel.vue';
 import ReportOverview from '../modules/widgets/report-overview.vue';
 import ReportRecommendationsTable from '../modules/widgets/report-recommendations-table.vue';
 
@@ -152,6 +153,21 @@ onMounted(() => void load());
           <ReportRecommendationsTable
             :recommendations="recommendations"
             @select="openRecommendation"
+          />
+        </TabPane>
+        <TabPane key="funnel" :tab="$t('page.quantReports.detail.tabs.funnel')">
+          <ReportFunnelPanel
+            v-if="report.fact_delivery?.status === 'verified'"
+            :report-id="report.recommendation_report_id"
+          />
+          <Alert
+            v-else
+            :description="
+              $t('page.quantReports.detail.factDelivery.funnelBlocked')
+            "
+            :message="$t('page.quantReports.detail.factDelivery.notVerified')"
+            show-icon
+            type="warning"
           />
         </TabPane>
         <TabPane key="diff" :tab="$t('page.quantReports.detail.tabs.diff')">

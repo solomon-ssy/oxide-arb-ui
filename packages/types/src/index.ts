@@ -22,6 +22,7 @@ export type * from './quant-report';
 export type * from './rbac';
 export * from './reconciliation';
 export * from './research';
+export type * from './research-profile';
 export type * from './runtime-config';
 export type * from './settlement-redeem';
 export type * from './system';

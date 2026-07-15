@@ -70,7 +70,7 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
       return `/research/models?open=${row.result_ref}`;
     }
     case RESEARCH_JOB_KINDS.tradePolicyFit: {
-      return `/research/trade-policies?open=${row.result_ref}`;
+      return `/research/trade-policies/${row.result_ref}`;
     }
     default: {
       return undefined;

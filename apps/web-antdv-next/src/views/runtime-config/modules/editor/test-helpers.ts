@@ -18,7 +18,7 @@ export function fieldStub(
     description: '',
     help: uiText('help'),
     label: uiText('label'),
-    path: 'selection.max_selection_size',
+    path: 'selection.min_liquidity_usd',
     sensitive: false,
     value_type: 'string',
     ...overrides,

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildApproveIntentRequest } from './approval-request';
 
-function intent(unit: 'shares' | 'usd'): OrderIntentView {
+function intent(unit: 'cash_budget' | 'shares'): OrderIntentView {
   return {
     entry_order: {
       amount: { unit, value: '100' },
@@ -13,15 +13,15 @@ function intent(unit: 'shares' | 'usd'): OrderIntentView {
 }
 
 describe('buildApproveIntentRequest', () => {
-  it('preserves the frozen USD amount tag', () => {
+  it('preserves the frozen cash-budget amount tag', () => {
     expect(
       buildApproveIntentRequest(
-        intent('usd'),
+        intent('cash_budget'),
         { override_amount: '25', override_price: '0.55' },
         'approved after depth review',
       ),
     ).toEqual({
-      override_amount: { unit: 'usd', value: '25' },
+      override_amount: { unit: 'cash_budget', value: '25' },
       override_price: '0.55',
       reason: 'approved after depth review',
     });

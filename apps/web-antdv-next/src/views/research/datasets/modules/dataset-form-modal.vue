@@ -3,6 +3,7 @@ import type { StepItem } from 'antdv-next';
 
 import type {
   BuildTrainingDatasetRequest,
+  ResearchProfileArtifact,
   TrainingDatasetPlanView,
 } from '@vben/types';
 
@@ -23,6 +24,7 @@ import {
 import { useVbenForm } from '#/adapter/form';
 import { listModelSpecs } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
+import { listTradePolicyProfiles } from '#/api/trade-policies';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
@@ -55,6 +57,7 @@ const payload = ref<DatasetFormPayload | null>(null);
 const wizardStep = ref<'form' | 'review'>('form');
 const pendingBody = ref<DatasetFormBody | null>(null);
 const planResult = ref<null | TrainingDatasetPlanView>(null);
+const profiles = ref(new Map<string, ResearchProfileArtifact>());
 
 const isWizard = computed(() => payload.value?.mode === 'plan-wizard');
 const isReview = computed(() => wizardStep.value === 'review');
@@ -73,11 +76,14 @@ function parseHorizons(raw: string): number[] {
 
 async function collectBody(): Promise<DatasetFormBody | null> {
   const values = await formApi.getValues();
+  const profile = profiles.value.get(String(values.profile_hash ?? ''));
   const horizons = parseHorizons(String(values.horizons_secs ?? ''));
   const range = values.window as [string, string] | undefined;
   if (
     !values.model_spec_id ||
     !values.runtime_config_version_id ||
+    !profile ||
+    !values.pit_cutoff ||
     !range ||
     horizons.length === 0
   ) {
@@ -87,7 +93,9 @@ async function collectBody(): Promise<DatasetFormBody | null> {
   return {
     horizons_secs: horizons,
     model_spec_id: values.model_spec_id as string,
+    profile_ref: profile.profile_ref,
     purpose: values.purpose as DatasetFormBody['purpose'],
+    pit_cutoff: String(values.pit_cutoff),
     runtime_config_version_id: values.runtime_config_version_id as string,
     sample_interval_secs: values.sample_interval_secs as number,
     knowledge_lag_secs: values.knowledge_lag_secs as number,
@@ -105,18 +113,15 @@ const purposeOptions = [
     label: $t('enum.datasetPurpose.calibration'),
     value: DATASET_PURPOSES.calibration,
   },
-  {
-    label: $t('enum.datasetPurpose.policyFit'),
-    value: DATASET_PURPOSES.policyFit,
-  },
 ];
 
 async function loadOptions() {
-  const [specs, versions] = await Promise.all([
+  const [specs, versions, profileRows] = await Promise.all([
     handleRequest(() => listModelSpecs({ size: 200 }), { silent: true }),
     handleRequest(() => fetchRuntimeConfigVersions({ limit: 200 }), {
       silent: true,
     }),
+    handleRequest(() => listTradePolicyProfiles(), { silent: true }),
   ]);
   const specOptions: OptionItem[] = (specs?.items ?? []).map((spec) => ({
     label: `${spec.name} · ${spec.model_spec_id}`,
@@ -126,7 +131,24 @@ async function loadOptions() {
     label: version.runtime_config_version_id,
     value: version.runtime_config_version_id,
   }));
+  profiles.value = new Map(
+    (profileRows ?? []).map((profile) => [
+      profile.profile_ref.content_hash,
+      profile,
+    ]),
+  );
+  const profileOptions: OptionItem[] = (profileRows ?? []).map((profile) => ({
+    label: `${profile.profile_ref.id}@${profile.profile_ref.version}`,
+    value: profile.profile_ref.content_hash,
+  }));
   formApi.updateSchema([
+    {
+      componentProps: {
+        optionFilterProp: 'label',
+        options: profileOptions,
+      },
+      fieldName: 'profile_hash',
+    },
     {
       componentProps: {
         optionFilterProp: 'label',
@@ -243,6 +265,17 @@ const [Form, formApi] = useVbenForm({
       componentProps: {
         optionFilterProp: 'label',
         options: [],
+        showSearch: true,
+      },
+      fieldName: 'profile_hash',
+      label: $t('page.research.datasets.form.researchProfile'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'Select',
+      componentProps: {
+        optionFilterProp: 'label',
+        options: [],
         placeholder: $t('page.research.datasets.form.modelSpecPlaceholder'),
         showSearch: true,
       },
@@ -279,6 +312,17 @@ const [Form, formApi] = useVbenForm({
       },
       fieldName: 'window',
       label: $t('page.research.datasets.form.window'),
+      rules: 'selectRequired',
+    },
+    {
+      component: 'DatePicker',
+      componentProps: {
+        showTime: true,
+        valueFormat: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
+      },
+      fieldName: 'pit_cutoff',
+      help: $t('page.research.datasets.form.pitCutoffHelp'),
+      label: $t('page.research.datasets.form.pitCutoff'),
       rules: 'selectRequired',
     },
     {

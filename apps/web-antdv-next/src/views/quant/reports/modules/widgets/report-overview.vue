@@ -51,6 +51,30 @@ const featureCellStateOptions = useFeatureCellStateTagOptions();
 const modelInputStateOptions = useModelInputStateTagOptions();
 
 const summary = computed(() => props.report.summary);
+const factDelivery = computed(() => props.report.fact_delivery);
+const factDeliveryVerified = computed(
+  () => factDelivery.value?.status === 'verified',
+);
+
+function factDeliveryColor(status: string | undefined) {
+  switch (status) {
+    case 'delivering': {
+      return 'processing';
+    }
+    case 'failed': {
+      return 'error';
+    }
+    case 'retrying': {
+      return 'warning';
+    }
+    case 'verified': {
+      return 'success';
+    }
+    default: {
+      return 'default';
+    }
+  }
+}
 
 // The backend projects the exact frozen v10 boundary. Re-deriving a cutoff in
 // the browser would hide missing serving evidence and could diverge from
@@ -193,6 +217,16 @@ function openRuntimeConfig() {
 <template>
   <div class="flex flex-col gap-4">
     <Alert
+      v-if="!factDeliveryVerified"
+      :description="
+        factDelivery?.last_error ??
+        $t('page.quantReports.detail.factDelivery.pendingDescription')
+      "
+      :message="$t('page.quantReports.detail.factDelivery.notVerified')"
+      show-icon
+      :type="factDelivery?.status === 'failed' ? 'error' : 'warning'"
+    />
+    <Alert
       v-if="report.status_reason"
       :message="report.status_reason"
       show-icon
@@ -220,6 +254,95 @@ function openRuntimeConfig() {
       show-icon
       type="info"
     />
+
+    <Card
+      data-testid="report-fact-delivery"
+      size="small"
+      :title="$t('page.quantReports.detail.factDelivery.title')"
+    >
+      <Descriptions :column="2" bordered size="small">
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.status')"
+        >
+          <Tag :color="factDeliveryColor(factDelivery?.status)">
+            {{
+              factDelivery
+                ? $t(
+                    `page.quantReports.detail.factDelivery.statuses.${factDelivery.status}`,
+                  )
+                : $t('page.quantReports.detail.factDelivery.missing')
+            }}
+          </Tag>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.attempts')"
+        >
+          {{ factDelivery?.attempt_count ?? 0 }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.quantReports.detail.factDelivery.recommendationRows')
+          "
+        >
+          {{ factDelivery?.recommendation_row_count ?? EMPTY_PLACEHOLDER }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.funnelRows')"
+        >
+          {{ factDelivery?.funnel_row_count ?? EMPTY_PLACEHOLDER }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.bundleHash')"
+          :span="2"
+        >
+          <span class="break-all font-mono text-xs">
+            {{ factDelivery?.bundle_hash ?? EMPTY_PLACEHOLDER }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.quantReports.detail.factDelivery.recommendationHash')
+          "
+          :span="2"
+        >
+          <span class="break-all font-mono text-xs">
+            {{
+              factDelivery?.recommendation_row_chain_hash ?? EMPTY_PLACEHOLDER
+            }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.funnelHash')"
+          :span="2"
+        >
+          <span class="break-all font-mono text-xs">
+            {{ factDelivery?.funnel_row_chain_hash ?? EMPTY_PLACEHOLDER }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.nextAttemptAt')"
+        >
+          {{ formatDateTimeLocal(factDelivery?.next_attempt_at) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.verifiedAt')"
+        >
+          {{ formatDateTimeLocal(factDelivery?.verified_at) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.announcedAt')"
+        >
+          {{ formatDateTimeLocal(factDelivery?.announced_at) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          v-if="factDelivery?.last_error"
+          :label="$t('page.quantReports.detail.factDelivery.lastError')"
+          :span="2"
+        >
+          <span class="text-red-600">{{ factDelivery.last_error }}</span>
+        </DescriptionsItem>
+      </Descriptions>
+    </Card>
 
     <Card
       size="small"
@@ -251,6 +374,11 @@ function openRuntimeConfig() {
           >
             {{ findTagOption(modeTagOptions, report.runtime_mode)?.label }}
           </Tag>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.researchProfile')"
+        >
+          {{ report.profile_ref.id }}@{{ report.profile_ref.version }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.triggerKind')"

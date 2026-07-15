@@ -26,6 +26,10 @@ import type {
   ResearchJobStatus,
   TrainingDatasetStatus,
 } from './enums';
+import type {
+  ResearchProfileRef,
+  SourceSliceManifestRef,
+} from './research-profile';
 import type { ModelPickerSide } from './runtime-config';
 
 /** Sample source for a training-dataset build (mirrors Rust `TrainingSampleSource`). */
@@ -85,7 +89,7 @@ export interface DatasetCoverage {
   matrix_probe?: MatrixCoverageProbe | null;
 }
 
-/** Exact v2 manifest embedded in Parquet and persisted in the dataset ledger. */
+/** Exact v5 manifest embedded in Parquet and persisted in the dataset ledger. */
 export interface DatasetManifestView {
   factor_schema_hash: string;
   feature_schema_hash: string;
@@ -94,12 +98,17 @@ export interface DatasetManifestView {
   knowledge_lag_secs: number;
   label_schema_hash: string;
   model_spec_id: string;
+  profile_ref: ResearchProfileRef;
   purpose: DatasetPurpose;
+  research_program_hash: string;
   runtime_config_version_id: UuidString;
   sample_count: number;
   sample_interval_secs: number;
   semantic_dataset_hash: string;
   source_fingerprint: string;
+  source_slice: SourceSliceManifestRef;
+  trade_policy_artifact_id: null | UuidString;
+  trade_policy_hash: null | string;
   training_dataset_id: UuidString;
   window_end: IsoDateTime;
   window_start: IsoDateTime;
@@ -193,6 +202,7 @@ export interface TrainingDatasetView {
  */
 export interface BuildTrainingDatasetRequest {
   model_spec_id: string;
+  profile_ref: ResearchProfileRef;
   /**
    * What the materialized examples are used for (Phase 11.3 §4). Defaults to
    * `training` server-side; set `calibration` to build an independent
@@ -204,6 +214,8 @@ export interface BuildTrainingDatasetRequest {
   runtime_config_version_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
+  /** Frozen information cutoff; server derives every source identity and object. */
+  pit_cutoff: IsoDateTime;
   /** Deterministic sample grid step in seconds (`>= 1`). */
   sample_interval_secs: number;
   /** Forward label horizons in seconds (one column per horizon, non-empty). */

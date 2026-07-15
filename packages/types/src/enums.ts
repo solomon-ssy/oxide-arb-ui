@@ -258,6 +258,18 @@ export type RecommendationReportStatus = WireEnum<
   typeof RECOMMENDATION_REPORT_STATUSES
 >;
 
+export const REPORT_FACT_DELIVERY_STATUSES = {
+  delivering: 'delivering',
+  failed: 'failed',
+  pending: 'pending',
+  retrying: 'retrying',
+  verified: 'verified',
+} as const;
+
+export type ReportFactDeliveryStatus = WireEnum<
+  typeof REPORT_FACT_DELIVERY_STATUSES
+>;
+
 export const RECOMMENDATION_STATUSES = {
   attributed: 'attributed',
   executed: 'executed',

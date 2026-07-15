@@ -43,6 +43,7 @@ import type {
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
 } from './exit-plan';
+import type { ResearchProfileRef } from './research-profile';
 
 export interface RecommendationIdentity {
   category: MarketCategory;
@@ -136,12 +137,13 @@ export interface TradePolicyCohortProvenance {
   artifact_hash: string;
   cohort_index: number;
   cohort_key: {
+    cash_budget_tier: UsdString;
     category: MarketCategory;
     entry_price_max: PriceString;
     entry_price_min: PriceString;
     horizon_secs: number;
     liquidity: TradePolicyCohortDimension;
-    notional_tier: UsdString;
+    profile_ref: ResearchProfileRef;
     volatility: TradePolicyCohortDimension;
   };
 }
@@ -157,11 +159,11 @@ export type TradePlanBlocker =
   | 'artifact_hash_mismatch'
   | 'artifact_not_found'
   | 'artifact_not_published'
+  | 'cash_budget_tier_unavailable'
   | 'cohort_coverage_insufficient'
   | 'cohort_not_found'
   | 'liquidity_insufficient'
   | 'model_policy_binding_missing'
-  | 'notional_tier_unavailable'
   | 'price_outside_venue_range'
   | 'return_model_uncalibrated'
   | 'tick_mismatch';

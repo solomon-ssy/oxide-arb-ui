@@ -19,6 +19,24 @@ async function waitForShell(page: Page) {
   await expect(page.getByText(/加载菜单中|Loading menu/i)).toHaveCount(0, {
     timeout: 15_000,
   });
+  if ((page.viewportSize()?.width ?? 0) >= 1000) {
+    await ensureDesktopSidebarExpanded(page);
+  }
+}
+
+async function ensureDesktopSidebarExpanded(page: Page) {
+  const sidebar = page.getByRole('complementary');
+  const boundingBox = await sidebar.boundingBox();
+  const width = boundingBox?.width ?? 0;
+  if (width >= 100) return;
+
+  await sidebar.locator('div.absolute.bottom-2.left-3').click();
+  await expect
+    .poll(async () => {
+      const current = await sidebar.boundingBox();
+      return current?.width ?? 0;
+    })
+    .toBeGreaterThanOrEqual(100);
 }
 
 async function loadFixtures(request: APIRequestContext) {
@@ -242,12 +260,24 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await attachMetadata(testInfo, fixtures, [approvalRoute, waitingRoute]);
   });
 
-  test('trade-policy candidate builder supports keyboard selection and stable rename', async ({
+  test('trade-policy workbench preserves immutable profile semantics and blocks unsafe enqueue', async ({
     page,
   }, testInfo) => {
     const route = '/research/trade-policy-fits/new';
     await page.goto(route);
     await waitForShell(page);
+    const workbench = page.getByTestId('trade-policy-fit-workbench');
+    await expect(workbench).toBeVisible();
+    await expect(workbench).toContainText('weather_forecast_24h@1');
+    await expect(page.getByTestId('profile-cash-budget')).toContainText('25');
+    await expect(workbench).toContainText(/semi_auto_candidate/i);
+
+    await page.getByTestId('workbench-next').click();
+    await page.getByTestId('run-preflight').click();
+    await expect(workbench).toContainText(/source slice/i);
+    await expect(workbench).toContainText(/fail/i);
+
+    await page.getByTestId('workbench-next').click();
     const listbox = page.getByRole('listbox', {
       name: /条件候选|Condition candidates/i,
     });
@@ -265,23 +295,29 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(
       listbox.getByRole('option', { name: /conditional-renamed/ }),
     ).toHaveAttribute('aria-selected', 'true');
-    await expect(
-      page.getByText(/仅支持 shadow|shadow-only/i).first(),
-    ).toBeVisible();
-    await expect(page.getByText(/最低 DSR|Minimum DSR/i)).toHaveCount(0);
-    await expect(page.getByText(/最大 PBO|Maximum PBO/i)).toHaveCount(0);
-    await expect(page.getByText(/最少 cohort|Minimum cohort/i)).toHaveCount(0);
+    await page.getByTestId('workbench-next').click();
+    await expect(page.getByTestId('enqueue-fit')).toBeDisabled();
+    const blockers = page.getByTestId('preflight-blockers');
+    await expect(blockers).toBeVisible();
+    await expect(blockers.getByTestId('preflight-blocker')).toHaveCount(5);
+    await expect(blockers).toContainText(/actual|实际/i);
+    await expect(blockers).toContainText(/required|要求/i);
+    await expect(blockers).toContainText(/Source Slice v2/i);
+    await expect(blockers).toContainText(/24-hour production latency/i);
     await expect(page.getByText('AutoExecution')).toHaveCount(0);
-    await expect(page.getByText('SemiAuto · shadow_only')).toBeVisible();
-    await expect(page).toHaveScreenshot('trade-policy-fit-shadow-desktop.png', {
-      fullPage: true,
-    });
+    await expect(page).toHaveScreenshot(
+      'trade-policy-fit-blocked-desktop.png',
+      {
+        fullPage: true,
+      },
+    );
 
     await page.setViewportSize({ height: 932, width: 430 });
     await expect(
       page.getByText(/Canonical 候选集 JSON|Canonical candidate JSON/i),
     ).toBeVisible();
-    await expect(page).toHaveScreenshot('trade-policy-fit-shadow-narrow.png', {
+    await expect(page.getByTestId('enqueue-fit')).toBeDisabled();
+    await expect(page).toHaveScreenshot('trade-policy-fit-blocked-narrow.png', {
       fullPage: true,
     });
     await attachMetadata(testInfo, fixtures, [route]);
@@ -290,7 +326,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
   test('policy audit, model binding, and server-projected exit monitor render on protected pages', async ({
     page,
   }, testInfo) => {
-    const policyRoute = `/research/trade-policies?open=${fixtures.trade_policy_artifact_id}`;
+    const policyRoute = `/research/trade-policies/${fixtures.trade_policy_artifact_id}`;
     await page.goto(policyRoute);
     await waitForShell(page);
     await expect(page.getByTestId('trade-policy-detail')).toBeVisible();
@@ -298,6 +334,25 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('trade-policy-audit')).toContainText(
       'test-only execution fixture publication',
     );
+    const validationRuns = page.getByTestId('trade-policy-validation-runs');
+    await expect(validationRuns).toContainText(
+      'test-only independent row diagnostic',
+    );
+    await expect(
+      page.getByTestId('trade-policy-validation-rows'),
+    ).toContainText('fee_evidence_mismatch');
+    await expect(
+      page.getByTestId('trade-policy-source-slice-objects'),
+    ).toContainText('l2_event');
+    await expect(page.getByText(/trade policy not found/i)).toHaveCount(0);
+
+    const evidencePagePromise = page.waitForEvent('popup');
+    await page.getByTestId('evidence-download-fills').click();
+    const evidencePage = await evidencePagePromise;
+    await evidencePage.waitForLoadState();
+    await expect(evidencePage).toHaveURL(/expires=.*signature=blake3(?::|%3A)/);
+    await expect(evidencePage.locator('body')).toContainText('"signed":true');
+    await evidencePage.close();
     await expect(page).toHaveScreenshot('trade-policy-audit-desktop.png', {
       fullPage: true,
     });
