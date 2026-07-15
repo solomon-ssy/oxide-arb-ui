@@ -7,6 +7,7 @@ import type {
   MaterializationRunEvent,
   ReconciliationLifecycleEvent,
   ReportLifecycleEvent,
+  ReportRunLifecycleEvent,
   SettlementRedeemLifecycleEvent,
   SyncSnapshot,
   SystemAlertEvent,
@@ -97,6 +98,12 @@ export function dispatchWsEnvelope(
     }
     case 'quant.report': {
       useQuantReportStore().bumpRevision(envelope.data as ReportLifecycleEvent);
+      break;
+    }
+    case 'quant.report_run': {
+      useQuantReportStore().bumpRunRevision(
+        envelope.data as ReportRunLifecycleEvent,
+      );
       break;
     }
     case 'quant.settlement': {

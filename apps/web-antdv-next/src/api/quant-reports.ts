@@ -1,4 +1,5 @@
 import type {
+  OperationLogView,
   Paginated,
   QuantRecommendationView,
   QuantReportDetailView,
@@ -7,24 +8,34 @@ import type {
   QuantReportListQuery,
   QuantReportView,
   ReportDiffView,
+  ReportFactDeliveryView,
   ReportFunnelMarketListQuery,
   ReportFunnelMarketView,
+  ReportKind,
+  ReportRunListQuery,
+  ReportRunView,
+  ReportScheduleGapListQuery,
+  ReportScheduleGapView,
+  ReportScheduleHealthView,
+  RetryReportRequest,
   RevokeReportRequest,
-  RunReportAccepted,
   RunReportRequest,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
-
-import { normalizeApiError } from '@vben/request/qp';
 
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
 export namespace QuantReportApi {
   export const base = '/quant/reports';
-  export const latest = `${base}/latest`;
+  export const current = `${base}/current`;
   export const run = `${base}/run`;
+  export const runs = '/quant/report-runs';
+  export const runDetail = (id: string) => `${runs}/${id}`;
+  export const runRetry = (id: string) => `${runs}/${id}/retry`;
+  export const scheduleHealth = '/quant/report-schedules/health';
+  export const scheduleGaps = '/quant/report-schedule-gaps';
   export const detail = (id: string) => `${base}/${id}`;
   export const recommendations = (id: string) =>
     `${base}/${id}/recommendations`;
@@ -34,6 +45,9 @@ export namespace QuantReportApi {
   export const funnel = (id: string) => `${base}/${id}/funnel`;
   export const funnelMarkets = (id: string) => `${base}/${id}/funnel/markets`;
   export const revoke = (id: string) => `${base}/${id}/revoke`;
+  export const publicationRetry = (id: string) =>
+    `${base}/${id}/publication/retry`;
+  export const timeline = (id: string) => `${base}/${id}/timeline`;
 }
 
 /** `GET /quant/reports` — paginated, filtered report list. */
@@ -43,27 +57,32 @@ export async function listQuantReports(query: QuantReportListQuery = {}) {
   });
 }
 
-/** `GET /quant/reports/latest` — the newest published report detail. */
-export async function getLatestQuantReport() {
-  return requestClient.get<QuantReportDetailView>(QuantReportApi.latest);
+/** `GET /quant/reports/current` — exact profile/kind authority. */
+export async function getCurrentQuantReport(
+  profileId: string,
+  kind: ReportKind,
+) {
+  return requestClient.get<QuantReportDetailView>(QuantReportApi.current, {
+    params: { kind, profile_id: profileId },
+  });
 }
 
 /**
- * Same as {@link getLatestQuantReport} but treats an empty published history
- * as `null` instead of surfacing HTTP 404.
+ * Dashboard projection: select the most recently published row from the set of
+ * current scope authorities, then load its durable detail. This never revives a
+ * superseded report and does not invent a cross-scope entry authority.
  */
-export async function getLatestQuantReportOptional(): Promise<null | QuantReportDetailView> {
-  try {
-    return await requestClient.get<QuantReportDetailView>(
-      QuantReportApi.latest,
-    );
-  } catch (error) {
-    const apiError = normalizeApiError(error);
-    if (apiError.httpStatus === 404 || apiError.code === 404) {
-      return null;
-    }
-    throw error;
+export async function getMostRecentCurrentReportOptional(): Promise<null | QuantReportDetailView> {
+  const page = await listQuantReports({
+    page: 1,
+    size: 1,
+    status: 'published',
+  });
+  const current = page.items[0];
+  if (!current) {
+    return null;
   }
+  return getQuantReport(current.recommendation_report_id);
 }
 
 /** `GET /quant/reports/{id}` — full report detail with summary. */
@@ -111,7 +130,62 @@ export async function runQuantReport(
   body: RunReportRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<RunReportAccepted>(QuantReportApi.run, body, ctx);
+  return governedPost<ReportRunView>(QuantReportApi.run, body, ctx);
+}
+
+export async function listReportRuns(query: ReportRunListQuery = {}) {
+  return requestClient.get<Paginated<ReportRunView>>(QuantReportApi.runs, {
+    params: query,
+  });
+}
+
+export async function getReportRun(id: string) {
+  return requestClient.get<ReportRunView>(QuantReportApi.runDetail(id));
+}
+
+export async function retryReportRun(
+  id: string,
+  body: RetryReportRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<ReportRunView>(QuantReportApi.runRetry(id), body, ctx);
+}
+
+export async function getReportScheduleHealth() {
+  return requestClient.get<ReportScheduleHealthView>(
+    QuantReportApi.scheduleHealth,
+  );
+}
+
+export async function listReportScheduleGaps(
+  query: ReportScheduleGapListQuery = {},
+) {
+  return requestClient.get<Paginated<ReportScheduleGapView>>(
+    QuantReportApi.scheduleGaps,
+    { params: query },
+  );
+}
+
+export async function retryReportPublication(
+  id: string,
+  body: RetryReportRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<ReportFactDeliveryView>(
+    QuantReportApi.publicationRetry(id),
+    body,
+    ctx,
+  );
+}
+
+export async function getReportTimeline(
+  id: string,
+  query: { from?: string; page?: number; size?: number; to?: string } = {},
+) {
+  return requestClient.get<Paginated<OperationLogView>>(
+    QuantReportApi.timeline(id),
+    { params: query },
+  );
 }
 
 /** `POST /quant/reports/{id}/revoke` — governed report revocation. */

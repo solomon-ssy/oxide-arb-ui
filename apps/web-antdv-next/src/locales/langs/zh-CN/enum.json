@@ -53,20 +53,43 @@
     "polymarket": "Polymarket"
   },
   "recommendationReportStatus": {
-    "building": "构建中",
+    "prepared": "已准备",
     "published": "已发布",
-    "published_empty": "已发布（空）",
+    "superseded": "已取代",
+    "obsolete": "未生效作废",
     "revoked": "已撤销",
-    "expired": "已过期",
-    "failed": "失败"
+    "expired": "已过期"
   },
   "recommendationStatus": {
+    "prepared": "已准备",
     "published": "已发布",
     "intent_created": "已建意图",
+    "superseded": "已取代",
+    "obsolete": "未生效作废",
     "executed": "已执行",
     "attributed": "已归因",
     "revoked": "已撤销",
     "expired": "已过期"
+  },
+  "reportRunStatus": {
+    "queued": "排队中",
+    "running": "运行中",
+    "succeeded": "构建成功",
+    "failed": "构建失败",
+    "skipped": "已跳过",
+    "abandoned": "已放弃"
+  },
+  "reportRunTerminalReason": {
+    "build_failed": "构建失败",
+    "coalesced_by_newer_occurrence": "被更新触发合并",
+    "lease_expired": "租约过期",
+    "queue_expired": "队列 TTL 过期",
+    "schedule_reconfigured": "调度已重配置"
+  },
+  "reportScheduleGapReason": {
+    "coalesced_by_newer_occurrence": "被更新触发合并",
+    "restart_coalesced": "重启后合并",
+    "schedule_reconfigured": "调度已重配置"
   },
   "emptyReportReason": {
     "available_cash_exhausted": "可用现金耗尽",

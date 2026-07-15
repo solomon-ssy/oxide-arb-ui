@@ -17,10 +17,14 @@ import {
   getQuantReport,
   getQuantReportDiagnostics,
   listReportRecommendations,
+  retryReportPublication,
 } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import DetailBackNav from '#/shared/components/detail-back-nav.vue';
+import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useOrderIntentStore, useQuantReportStore } from '#/store';
 import RecommendationDetailDrawer from '#/views/quant/recommendations/modules/recommendation-detail-drawer.vue';
 
@@ -29,6 +33,7 @@ import ReportDiffPanel from '../modules/widgets/report-diff-panel.vue';
 import ReportFunnelPanel from '../modules/widgets/report-funnel-panel.vue';
 import ReportOverview from '../modules/widgets/report-overview.vue';
 import ReportRecommendationsTable from '../modules/widgets/report-recommendations-table.vue';
+import ReportTimelinePanel from '../modules/widgets/report-timeline-panel.vue';
 
 defineOptions({ name: 'QuantReportDetailPage' });
 
@@ -37,6 +42,8 @@ const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const quantReportStore = useQuantReportStore();
 const orderIntentStore = useOrderIntentStore();
+const { governed } = useGovernedAction();
+const { hasAccessByCodes } = useQpAccess();
 
 const report = ref<null | QuantReportDetailView>(null);
 const recommendations = ref<QuantRecommendationView[]>([]);
@@ -52,11 +59,34 @@ const [RecDrawer, recDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 
-const REVOCABLE = new Set(['published', 'published_empty']);
+const REVOCABLE = new Set(['published']);
 const { canRevoke, revoke } = useReportActions(() => void load());
 const showRevoke = computed(
   () => canRevoke && !!report.value && REVOCABLE.has(report.value.status),
 );
+const showPublicationRetry = computed(
+  () =>
+    hasAccessByCodes(['quant_report:enqueue']) &&
+    report.value?.status === 'prepared' &&
+    report.value.fact_delivery?.status === 'failed',
+);
+
+const lifecycleType = computed(() => {
+  switch (report.value?.status) {
+    case 'prepared': {
+      return 'warning';
+    }
+    case 'published': {
+      return 'success';
+    }
+    case 'revoked': {
+      return 'error';
+    }
+    default: {
+      return 'info';
+    }
+  }
+});
 
 async function load() {
   if (!reportId.value) {
@@ -105,6 +135,31 @@ function onRevoke() {
   }
 }
 
+function openRun() {
+  const id = report.value?.run?.report_run_id;
+  if (id) void router.push(`/quant/reports?run_id=${id}`);
+}
+
+async function retryPublication() {
+  const current = report.value;
+  if (!current) return;
+  const result = await governed(
+    (ctx) =>
+      retryReportPublication(
+        current.recommendation_report_id,
+        { reason: ctx.reason, request_id: crypto.randomUUID() },
+        ctx,
+      ),
+    {
+      summary: $t('page.quantReports.detail.publicationRetrySummary', {
+        id: current.recommendation_report_id,
+      }),
+      title: $t('page.quantReports.detail.publicationRetry'),
+    },
+  );
+  if (result) await load();
+}
+
 watch(reportId, () => void load());
 watch(
   () => quantReportStore.revision,
@@ -124,9 +179,17 @@ onMounted(() => void load());
         :label="$t('page.quantReports.detail.back')"
         @back="goBack"
       />
-      <Button v-if="showRevoke" danger @click="onRevoke">
-        {{ $t('page.quantReports.actions.revoke') }}
-      </Button>
+      <div class="flex gap-2">
+        <Button v-if="report?.run" @click="openRun">
+          {{ $t('page.quantReports.detail.openRun') }}
+        </Button>
+        <Button v-if="showPublicationRetry" danger @click="retryPublication">
+          {{ $t('page.quantReports.detail.publicationRetry') }}
+        </Button>
+        <Button v-if="showRevoke" danger @click="onRevoke">
+          {{ $t('page.quantReports.actions.revoke') }}
+        </Button>
+      </div>
     </div>
     <AsyncState
       :error-message="loadError"
@@ -135,6 +198,32 @@ onMounted(() => void load());
       :not-found-text="$t('page.quantReports.detail.notFound')"
       @retry="load"
     >
+      <div v-if="report" class="mb-4">
+        <Alert
+          data-testid="report-lifecycle-banner"
+          :description="
+            $t(`page.quantReports.detail.lifecycle.${report.status}`)
+          "
+          :message="$t(`enum.recommendationReportStatus.${report.status}`)"
+          show-icon
+          :type="lifecycleType"
+        >
+          <template #action>
+            <div class="flex gap-2">
+              <EntityRouteLink
+                v-if="report.predecessor_report_id"
+                :label="$t('page.quantReports.detail.predecessor')"
+                :to="`/quant/reports/${report.predecessor_report_id}`"
+              />
+              <EntityRouteLink
+                v-if="report.successor_report_id"
+                :label="$t('page.quantReports.detail.successor')"
+                :to="`/quant/reports/${report.successor_report_id}`"
+              />
+            </div>
+          </template>
+        </Alert>
+      </div>
       <Tabs v-if="report" v-model:active-key="activeTab" destroy-on-hidden>
         <TabPane
           key="overview"
@@ -168,6 +257,12 @@ onMounted(() => void load());
         </TabPane>
         <TabPane key="diff" :tab="$t('page.quantReports.detail.tabs.diff')">
           <ReportDiffPanel :report="report" />
+        </TabPane>
+        <TabPane
+          key="timeline"
+          :tab="$t('page.quantReports.detail.tabs.timeline')"
+        >
+          <ReportTimelinePanel :report-id="report.recommendation_report_id" />
         </TabPane>
       </Tabs>
     </AsyncState>

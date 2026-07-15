@@ -137,18 +137,40 @@ describe('dispatchWsEnvelope', () => {
     dispatchWsEnvelope(
       envelope('quant.report', {
         decision_at: '2026-06-11T12:00:00Z',
+        empty_reason: null,
+        error_code: null,
         event: 'published',
+        profile_id: 'weather_forecast_24h',
+        published_at: '2026-06-11T12:00:01Z',
+        recommendation_count: 2,
         recommendation_report_id: 'r1',
         report_kind: 'top_n',
         runtime_mode: 'report_only',
         status: 'published',
-        trigger_key: 'schedule:2026-06-11T12:00:00Z',
+        status_reason: null,
       }),
       hooks(),
     );
     const store = useQuantReportStore();
     expect(store.revision).toBe(1);
     expect(store.lastEvent?.event).toBe('published');
+  });
+
+  it('quant.report_run bumps the durable run revision independently', () => {
+    dispatchWsEnvelope(
+      envelope('quant.report_run', {
+        occurred_at: '2026-06-11T12:00:01Z',
+        output_report_id: null,
+        report_run_id: 'run-1',
+        status: 'running',
+        terminal_reason: null,
+      }),
+      hooks(),
+    );
+    const store = useQuantReportStore();
+    expect(store.revision).toBe(0);
+    expect(store.runRevision).toBe(1);
+    expect(store.lastRunEvent?.report_run_id).toBe('run-1');
   });
 
   it('quant.intent bumps the intent revision', () => {

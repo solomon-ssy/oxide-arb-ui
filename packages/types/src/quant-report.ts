@@ -1,4 +1,5 @@
 import type {
+  BpsString,
   IsoDateTime,
   PageQuery,
   ProbabilityString,
@@ -21,16 +22,24 @@ import type {
   RejectionReason,
   ReportFactDeliveryStatus,
   ReportKind,
+  ReportRunStatus,
+  ReportRunTerminalReason,
+  ReportScheduleGapReason,
   ReportTriggerKind,
 } from './enums';
+import type {
+  ExecutionEligibility,
+  FactorBreakdownEntry,
+  RecommendationTradePlan,
+} from './quant-recommendation';
 import type { ResearchProfileRef } from './research-profile';
 
-/** Report header row (`GET /quant/reports`, `.../latest`). */
+/** Report header row (`GET /quant/reports`). */
 export interface QuantReportView {
   recommendation_report_id: UuidString;
+  profile_id: string;
   profile_ref: ResearchProfileRef;
   report_kind: ReportKind;
-  trigger_kind: ReportTriggerKind;
   status: RecommendationReportStatus;
   runtime_mode: QuantRuntimeMode;
   decision_at: IsoDateTime;
@@ -41,6 +50,10 @@ export interface QuantReportView {
   total_suggested_usd: UsdString;
   empty_reason: EmptyReportReason | null;
   published_at: IsoDateTime | null;
+  valid_until: IsoDateTime | null;
+  successor_report_id: null | UuidString;
+  superseded_at: IsoDateTime | null;
+  obsoleted_at: IsoDateTime | null;
   revoked_at: IsoDateTime | null;
   expired_at: IsoDateTime | null;
   status_reason: null | string;
@@ -100,11 +113,8 @@ export interface ReportSummary {
   warnings: string[];
 }
 
-/** Report detail (`GET /quant/reports/{id}`, `.../latest`). */
+/** Report detail (`GET /quant/reports/{id}`). */
 export interface QuantReportDetailView extends QuantReportView {
-  trigger_key: string;
-  trigger_time: IsoDateTime;
-  knowledge_lag_secs: number;
   horizon_secs: number;
   account_snapshot_ref: UuidString;
   runtime_config_version_id: UuidString;
@@ -114,6 +124,8 @@ export interface QuantReportDetailView extends QuantReportView {
   market_selection_id: UuidString;
   summary: ReportSummary;
   fact_delivery: null | ReportFactDeliveryView;
+  run: null | ReportRunView;
+  predecessor_report_id: null | UuidString;
 }
 
 export interface ReportFactDeliveryView {
@@ -128,6 +140,84 @@ export interface ReportFactDeliveryView {
   last_error: null | string;
   verified_at: IsoDateTime | null;
   announced_at: IsoDateTime | null;
+}
+
+export interface ReportRunView {
+  report_run_id: UuidString;
+  trigger_kind: ReportTriggerKind;
+  trigger_key: string;
+  schedule_id: null | string;
+  request_id: null | string;
+  retry_of_run_id: null | UuidString;
+  scheduled_for: IsoDateTime | null;
+  requested_at: IsoDateTime;
+  status: ReportRunStatus;
+  started_at: IsoDateTime | null;
+  decision_at: IsoDateTime | null;
+  heartbeat_at: IsoDateTime | null;
+  lease_expires_at: IsoDateTime | null;
+  lease_owner: null | UuidString;
+  finished_at: IsoDateTime | null;
+  runtime_config_version_id: null | UuidString;
+  top_n: null | number;
+  knowledge_lag_secs: null | number;
+  output_report_id: null | UuidString;
+  terminal_reason: null | ReportRunTerminalReason;
+  error_code: null | string;
+  error_summary: null | string;
+}
+
+export interface ReportRunListQuery extends PageQuery, TimeRangeQuery {
+  status?: ReportRunStatus;
+  trigger_kind?: ReportTriggerKind;
+  schedule_id?: string;
+}
+
+export interface ReportScheduleStateView {
+  schedule_id: string;
+  runtime_config_version_id: UuidString;
+  spec_hash: string;
+  next_scheduled_for: IsoDateTime;
+  last_materialized_for: IsoDateTime | null;
+  enabled: boolean;
+  updated_at: IsoDateTime;
+}
+
+export interface ReportScheduleHealthView {
+  observed_at: IsoDateTime;
+  active_run: null | ReportRunView;
+  queued_run_count: number;
+  failed_run_count_24h: number;
+  gap_count_24h: number;
+  missed_occurrence_count_24h: number;
+  prepared_report_count: number;
+  current_reports: ReportCurrentHealthView[];
+  schedules: ReportScheduleStateView[];
+}
+
+export interface ReportCurrentHealthView {
+  recommendation_report_id: UuidString;
+  profile_id: string;
+  report_kind: ReportKind;
+  published_at: IsoDateTime | null;
+  valid_until: IsoDateTime | null;
+}
+
+export interface ReportScheduleGapView {
+  gap_id: UuidString;
+  schedule_id: string;
+  runtime_config_version_id: UuidString;
+  reason: ReportScheduleGapReason;
+  first_scheduled_for: IsoDateTime;
+  last_scheduled_for: IsoDateTime;
+  missed_count: number;
+  detected_at: IsoDateTime;
+  detail: null | string;
+}
+
+export interface ReportScheduleGapListQuery extends PageQuery, TimeRangeQuery {
+  schedule_id?: string;
+  reason?: ReportScheduleGapReason;
 }
 
 /** Durable serving diagnostics for one report. */
@@ -233,13 +323,40 @@ export interface ReportFunnelMarketListQuery extends PageQuery {
 export interface RecommendationDeltaView {
   market_id: string;
   outcome_side: OutcomeSide;
-  base_recommendation_id: null | UuidString;
-  compare_recommendation_id: null | UuidString;
-  base_rank: null | number;
-  compare_rank: null | number;
-  base_suggested_usd: null | UsdString;
-  compare_suggested_usd: null | UsdString;
+  base: null | RecommendationDiffSnapshotView;
+  compare: null | RecommendationDiffSnapshotView;
+  changed_fields: RecommendationChangedField[];
   suggested_usd_delta: UsdString;
+}
+
+export type RecommendationChangedField =
+  | 'composite_score'
+  | 'confidence'
+  | 'downside'
+  | 'eligibility'
+  | 'entry'
+  | 'exit'
+  | 'expected_return'
+  | 'factor_breakdown'
+  | 'rank'
+  | 'risk_adjusted_score'
+  | 'sizing'
+  | 'trade_plan_availability'
+  | 'validity';
+
+export interface RecommendationDiffSnapshotView {
+  recommendation_id: UuidString;
+  rank: number;
+  composite_score: ProbabilityString;
+  risk_adjusted_score: ProbabilityString;
+  confidence: ProbabilityString;
+  expected_return_bps: BpsString;
+  downside_bps: BpsString;
+  valid_from: IsoDateTime;
+  valid_until: IsoDateTime;
+  execution_eligibility: ExecutionEligibility;
+  trade_plan: RecommendationTradePlan;
+  factor_breakdown: FactorBreakdownEntry[];
 }
 
 /** `GET /quant/reports/{id}/diff/{other_id}` response. */
@@ -258,9 +375,9 @@ export interface ReportDiffView {
 
 /** Filter + pagination for `GET /quant/reports`. */
 export interface QuantReportListQuery extends PageQuery, TimeRangeQuery {
+  profile_id?: string;
   kind?: ReportKind;
   status?: RecommendationReportStatus;
-  trigger_kind?: ReportTriggerKind;
   runtime_mode?: QuantRuntimeMode;
 }
 
@@ -273,13 +390,12 @@ export interface RunReportRequest {
   knowledge_lag_secs?: number;
 }
 
-/** `POST /quant/reports/run` accepted (202) response. */
-export interface RunReportAccepted {
-  request_id: string;
-  trigger_key: string;
-}
-
 /** `POST /quant/reports/{id}/revoke` governed request body. */
 export interface RevokeReportRequest {
+  reason: string;
+}
+
+export interface RetryReportRequest {
+  request_id: string;
   reason: string;
 }

@@ -53,20 +53,43 @@
     "polymarket": "Polymarket"
   },
   "recommendationReportStatus": {
-    "building": "Building",
+    "prepared": "Prepared",
     "published": "Published",
-    "published_empty": "Published (Empty)",
+    "superseded": "Superseded",
+    "obsolete": "Obsolete",
     "revoked": "Revoked",
-    "expired": "Expired",
-    "failed": "Failed"
+    "expired": "Expired"
   },
   "recommendationStatus": {
+    "prepared": "Prepared",
     "published": "Published",
     "intent_created": "Intent Created",
+    "superseded": "Superseded",
+    "obsolete": "Obsolete",
     "executed": "Executed",
     "attributed": "Attributed",
     "revoked": "Revoked",
     "expired": "Expired"
+  },
+  "reportRunStatus": {
+    "queued": "Queued",
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "skipped": "Skipped",
+    "abandoned": "Abandoned"
+  },
+  "reportRunTerminalReason": {
+    "build_failed": "Build failed",
+    "coalesced_by_newer_occurrence": "Coalesced by newer occurrence",
+    "lease_expired": "Lease expired",
+    "queue_expired": "Queue TTL expired",
+    "schedule_reconfigured": "Schedule reconfigured"
+  },
+  "reportScheduleGapReason": {
+    "coalesced_by_newer_occurrence": "Coalesced by newer occurrence",
+    "restart_coalesced": "Restart coalesced",
+    "schedule_reconfigured": "Schedule reconfigured"
   },
   "emptyReportReason": {
     "available_cash_exhausted": "Available cash exhausted",

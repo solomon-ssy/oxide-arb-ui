@@ -458,10 +458,32 @@ function onTrain() {
               {{ integrityCoverage?.labels_unavailable ?? '—' }}
             </DescriptionsItem>
             <DescriptionsItem
+              :label="
+                $t('page.research.datasets.detail.liveAttributionCandidates')
+              "
+            >
+              {{ integrityCoverage?.live_attribution_candidates ?? '—' }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.datasets.detail.liveAttributionMaterialized')
+              "
+            >
+              {{ integrityCoverage?.live_attribution_materialized ?? '—' }}
+            </DescriptionsItem>
+            <DescriptionsItem
               :label="$t('page.research.datasets.detail.missingEvidence')"
             >
               {{
                 integrityCoverage?.live_attribution_dropped_missing_evidence ??
+                '—'
+              }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.supersededCensors')"
+            >
+              {{
+                integrityCoverage?.live_attribution_censored_superseded_unfilled ??
                 '—'
               }}
             </DescriptionsItem>

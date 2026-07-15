@@ -3,11 +3,13 @@
  * page): an optional-parameter modal (top N / knowledge lag) chained into the
  * canonical governed-action modal (acting role + reason), then
  * `POST /quant/reports/run` (202 accepted — completion arrives over the
- * `quant.report` WS channel).
+ * durable run drawer; `quant.report_run` only hints that the REST view changed.
  */
-import type { RunReportAccepted } from '@vben/types';
+import type { ReportRunView } from '@vben/types';
 
 import type { RunReportParams } from '#/shared/components/run-report-modal.vue';
+
+import { useRouter } from 'vue-router';
 
 import { useVbenModal } from '@vben/common-ui';
 
@@ -20,6 +22,7 @@ import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 export function useRunReportAction() {
+  const router = useRouter();
   const { governed } = useGovernedAction();
   const { hasAccessByCodes } = useQpAccess();
 
@@ -32,7 +35,7 @@ export function useRunReportAction() {
 
   async function runWithParams(
     params: RunReportParams,
-  ): Promise<null | RunReportAccepted> {
+  ): Promise<null | ReportRunView> {
     // Caller-supplied idempotency key — required by `RunReportRequest` on the wire.
     const request_id = crypto.randomUUID();
     const accepted = await governed(
@@ -46,10 +49,14 @@ export function useRunReportAction() {
     if (accepted) {
       message.success(
         $t('page.quantReports.run.accepted', {
-          id: accepted.request_id,
+          id: accepted.report_run_id,
           key: accepted.trigger_key,
         }),
       );
+      void router.push({
+        path: '/quant/reports',
+        query: { run_id: accepted.report_run_id },
+      });
     }
     return accepted;
   }

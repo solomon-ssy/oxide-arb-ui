@@ -15,7 +15,6 @@ import { iconOp } from '#/shared/table/cell-operation-presets';
 /** Report statuses that support governed revocation. */
 const REVOCABLE_STATUSES = new Set<string>([
   RECOMMENDATION_REPORT_STATUSES.published,
-  RECOMMENDATION_REPORT_STATUSES.publishedEmpty,
 ]);
 
 export function useReportColumns(
@@ -58,11 +57,10 @@ export function useReportColumns(
       width: 120,
     },
     {
-      field: 'trigger_kind',
-      formatter: ({ cellValue }: { cellValue: string }) =>
-        $t(`enum.reportTriggerKind.${cellValue}`),
-      title: $t('page.quantReports.columns.triggerKind'),
-      width: 110,
+      field: 'profile_id',
+      minWidth: 150,
+      showOverflow: 'tooltip',
+      title: $t('page.quantReports.columns.profile'),
     },
     {
       align: 'right',

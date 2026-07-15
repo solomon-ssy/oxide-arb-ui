@@ -16,7 +16,7 @@ import { Button, Empty, Tag, Timeline, TimelineItem } from 'antdv-next';
 
 import { getLatestEquitySnapshotOptional, getLiveAccount } from '#/api/account';
 import { getDataQualitySnapshot } from '#/api/data-quality';
-import { getLatestQuantReportOptional } from '#/api/quant-reports';
+import { getMostRecentCurrentReportOptional } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
@@ -77,7 +77,7 @@ async function loadLatestReport() {
     return;
   }
   reportLoading.value = true;
-  latestReport.value = await handleRequest(getLatestQuantReportOptional, {
+  latestReport.value = await handleRequest(getMostRecentCurrentReportOptional, {
     silent: true,
   });
   reportLoading.value = false;

@@ -3,13 +3,13 @@ import type { QuantReportView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { nextTick, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@vben/common-ui';
+import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, message } from 'antdv-next';
+import { Button, message, TabPane, Tabs } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { listQuantReports } from '#/api/quant-reports';
@@ -19,12 +19,21 @@ import { useQuantReportStore } from '#/store';
 
 import { useReportColumns, useReportSearchSchema } from './modules/schemas';
 import { useReportActions } from './modules/use-report-actions';
+import ReportOperationsWorkspace from './modules/widgets/report-operations-workspace.vue';
+import ReportRunDrawer from './modules/widgets/report-run-drawer.vue';
 
 defineOptions({ name: 'QuantReportsPage' });
 
 const router = useRouter();
+const route = useRoute();
 const { handleRequest } = useRequestHandler();
 const quantReportStore = useQuantReportStore();
+const activeTab = ref('reports');
+
+const [RunDrawer, runDrawerApi] = useVbenDrawer({
+  connectedComponent: ReportRunDrawer,
+  destroyOnClose: true,
+});
 
 const { canRun, openRunReport, RunReportModalHost } = useRunReportAction();
 const { canRevoke, revoke } = useReportActions(() => {
@@ -57,11 +66,11 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantReportView>({
               from: (range[0] as string | undefined) || undefined,
               kind: (formValues.kind as any) || undefined,
               page: page.currentPage,
+              profile_id: (formValues.profile_id as string) || undefined,
               runtime_mode: (formValues.runtime_mode as any) || undefined,
               size: page.pageSize,
               status: (formValues.status as any) || undefined,
               to: (range[1] as string | undefined) || undefined,
-              trigger_kind: (formValues.trigger_kind as any) || undefined,
             }),
           );
           return result ?? emptyPage;
@@ -75,6 +84,14 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantReportView>({
 
 function openDetail(id: string) {
   void router.push(`/quant/reports/${id}`);
+}
+
+function openRun(id: string) {
+  activeTab.value = 'operations';
+  void router.push({
+    path: '/quant/reports',
+    query: { ...route.query, run_id: id },
+  });
 }
 
 function onActionClick({ code, row }: OnActionClickParams<QuantReportView>) {
@@ -91,8 +108,8 @@ function onActionClick({ code, row }: OnActionClickParams<QuantReportView>) {
   }
 }
 
-// WS `quant.report` frames bump the store revision; refetch list + latest and
-// surface a lifecycle toast keyed by the trigger correlation handle.
+// WS `quant.report` frames are revision hints only. Re-fetch the durable list
+// and surface the committed artifact id; no build state is inferred from WS.
 watch(
   () => quantReportStore.revision,
   () => {
@@ -100,24 +117,44 @@ watch(
     if (event) {
       message.info(
         $t(`page.quantReports.wsToast.${event.event}`, {
-          key: event.trigger_key,
+          id: event.recommendation_report_id,
         }),
       );
     }
     void gridApi.query();
   },
 );
+
+watch(
+  () => route.query.run_id,
+  async (id) => {
+    if (typeof id !== 'string' || !id) return;
+    activeTab.value = 'operations';
+    await nextTick();
+    if (route.query.run_id !== id) return;
+    runDrawerApi.setData({ runId: id }).open();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <Page auto-content-height>
-    <Grid :table-title="$t('page.quantReports.listTitle')">
-      <template #toolbar-tools>
-        <Button v-if="canRun" type="primary" @click="openRunReport">
-          {{ $t('page.quantReports.run.title') }}
-        </Button>
-      </template>
-    </Grid>
+  <Page auto-content-height data-testid="reports-workspace">
+    <Tabs v-model:active-key="activeTab" destroy-on-hidden>
+      <TabPane key="reports" :tab="$t('page.quantReports.tabs.reports')">
+        <Grid :table-title="$t('page.quantReports.listTitle')">
+          <template #toolbar-tools>
+            <Button v-if="canRun" type="primary" @click="openRunReport">
+              {{ $t('page.quantReports.run.title') }}
+            </Button>
+          </template>
+        </Grid>
+      </TabPane>
+      <TabPane key="operations" :tab="$t('page.quantReports.tabs.operations')">
+        <ReportOperationsWorkspace @open-run="openRun" />
+      </TabPane>
+    </Tabs>
     <RunReportModalHost />
+    <RunDrawer />
   </Page>
 </template>

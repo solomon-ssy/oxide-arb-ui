@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import type {
   QuantReportDetailView,
+  RecommendationChangedField,
   RecommendationDeltaView,
+  RecommendationDiffSnapshotView,
   ReportDiffView,
 } from '@vben/types';
 
@@ -25,7 +27,9 @@ import { getReportDiff } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import {
   EMPTY_PLACEHOLDER,
+  formatBps,
   formatDateTimeLocal,
+  formatScore,
   formatUsd,
 } from '#/shared/components/format';
 import {
@@ -67,30 +71,30 @@ const deltaColumns = [
   },
   {
     align: 'right' as const,
-    dataIndex: 'base_rank',
+    dataIndex: ['base', 'rank'],
     key: 'base_rank',
     title: $t('page.quantReports.detail.diff.columns.baseRank'),
     width: 110,
   },
   {
     align: 'right' as const,
-    dataIndex: 'compare_rank',
+    dataIndex: ['compare', 'rank'],
     key: 'compare_rank',
     title: $t('page.quantReports.detail.diff.columns.compareRank'),
     width: 120,
   },
   {
     align: 'right' as const,
-    dataIndex: 'base_suggested_usd',
-    key: 'base_suggested_usd',
-    title: $t('page.quantReports.detail.diff.columns.baseSuggested'),
+    dataIndex: ['base', 'risk_adjusted_score'],
+    key: 'base_score',
+    title: $t('page.quantReports.detail.diff.columns.baseScore'),
     width: 120,
   },
   {
     align: 'right' as const,
-    dataIndex: 'compare_suggested_usd',
-    key: 'compare_suggested_usd',
-    title: $t('page.quantReports.detail.diff.columns.compareSuggested'),
+    dataIndex: ['compare', 'risk_adjusted_score'],
+    key: 'compare_score',
+    title: $t('page.quantReports.detail.diff.columns.compareScore'),
     width: 130,
   },
   {
@@ -99,6 +103,12 @@ const deltaColumns = [
     key: 'suggested_usd_delta',
     title: $t('page.quantReports.detail.diff.columns.delta'),
     width: 120,
+  },
+  {
+    dataIndex: 'changed_fields',
+    key: 'changed_fields',
+    title: $t('page.quantReports.detail.diff.columns.changedFields'),
+    width: 280,
   },
 ];
 
@@ -117,6 +127,63 @@ const baselineStatusTag = computed(() =>
 
 function deltaRowKey(row: RecommendationDeltaView): string {
   return `${row.market_id}:${row.outcome_side}`;
+}
+
+function suggestedUsd(
+  snapshot: null | RecommendationDiffSnapshotView,
+): null | string {
+  return snapshot?.trade_plan.kind === 'frozen'
+    ? snapshot.trade_plan.sizing.suggested_usd
+    : null;
+}
+
+function changedFieldLabel(field: RecommendationChangedField): string {
+  return $t(`page.quantReports.detail.diff.fields.${field}`);
+}
+
+function scoreSummary(snapshot: null | RecommendationDiffSnapshotView): string {
+  if (!snapshot) return EMPTY_PLACEHOLDER;
+  return [
+    `composite ${formatScore(snapshot.composite_score)}`,
+    `risk ${formatScore(snapshot.risk_adjusted_score)}`,
+    `confidence ${formatScore(snapshot.confidence)}`,
+    `return ${formatBps(snapshot.expected_return_bps)}`,
+    `downside ${formatBps(snapshot.downside_bps)}`,
+  ].join(' · ');
+}
+
+function validitySummary(
+  snapshot: null | RecommendationDiffSnapshotView,
+): string {
+  return snapshot
+    ? `${formatDateTimeLocal(snapshot.valid_from)} → ${formatDateTimeLocal(snapshot.valid_until)}`
+    : EMPTY_PLACEHOLDER;
+}
+
+function entrySummary(snapshot: null | RecommendationDiffSnapshotView): string {
+  if (!snapshot || snapshot.trade_plan.kind !== 'frozen') {
+    return EMPTY_PLACEHOLDER;
+  }
+  const { entry } = snapshot.trade_plan;
+  return `${entry.order_policy.kind} · ${entry.entry_reason}`;
+}
+
+function exitSummary(snapshot: null | RecommendationDiffSnapshotView): string {
+  if (!snapshot || snapshot.trade_plan.kind !== 'frozen') {
+    return EMPTY_PLACEHOLDER;
+  }
+  const { exit } = snapshot.trade_plan;
+  return `${exit.settlement_mode} · ${exit.exit_reason}`;
+}
+
+function eligibilitySummary(
+  snapshot: null | RecommendationDiffSnapshotView,
+): string {
+  if (!snapshot) return EMPTY_PLACEHOLDER;
+  const eligibility = snapshot.execution_eligibility;
+  const modes = eligibility.eligible_modes.join(', ') || EMPTY_PLACEHOLDER;
+  const reasons = eligibility.ineligibility_reasons.join(', ');
+  return reasons ? `${modes} · ${reasons}` : modes;
 }
 
 async function runDiff() {
@@ -149,7 +216,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4" data-testid="report-diff">
     <div class="flex items-center gap-2">
       <span class="text-muted-foreground text-sm">
         {{ $t('page.quantReports.detail.diff.compareLabel') }}
@@ -286,6 +353,7 @@ onMounted(async () => {
           :data-source="group.rows"
           :pagination="false"
           :row-key="deltaRowKey"
+          :scroll="{ x: 1280 }"
           size="small"
         >
           <template #bodyCell="{ column, record }">
@@ -299,19 +367,23 @@ onMounted(async () => {
               </Tag>
             </template>
             <template v-else-if="column.key === 'base_rank'">
-              {{ record.base_rank ?? EMPTY_PLACEHOLDER }}
+              {{ record.base?.rank ?? EMPTY_PLACEHOLDER }}
             </template>
             <template v-else-if="column.key === 'compare_rank'">
-              {{ record.compare_rank ?? EMPTY_PLACEHOLDER }}
+              {{ record.compare?.rank ?? EMPTY_PLACEHOLDER }}
             </template>
-            <template v-else-if="column.key === 'base_suggested_usd'">
+            <template v-else-if="column.key === 'base_score'">
               <span class="font-mono">{{
-                formatUsd(record.base_suggested_usd)
+                record.base
+                  ? formatScore(record.base.risk_adjusted_score)
+                  : EMPTY_PLACEHOLDER
               }}</span>
             </template>
-            <template v-else-if="column.key === 'compare_suggested_usd'">
+            <template v-else-if="column.key === 'compare_score'">
               <span class="font-mono">{{
-                formatUsd(record.compare_suggested_usd)
+                record.compare
+                  ? formatScore(record.compare.risk_adjusted_score)
+                  : EMPTY_PLACEHOLDER
               }}</span>
             </template>
             <template v-else-if="column.key === 'suggested_usd_delta'">
@@ -319,6 +391,56 @@ onMounted(async () => {
                 formatUsd(record.suggested_usd_delta)
               }}</span>
             </template>
+            <template v-else-if="column.key === 'changed_fields'">
+              <div class="flex flex-wrap gap-1">
+                <Tag v-for="field in record.changed_fields" :key="field">
+                  {{ changedFieldLabel(field) }}
+                </Tag>
+                <span v-if="record.changed_fields.length === 0">
+                  {{ EMPTY_PLACEHOLDER }}
+                </span>
+              </div>
+            </template>
+          </template>
+          <template #expandedRowRender="{ record }">
+            <Descriptions bordered :column="2" size="small">
+              <DescriptionsItem
+                :label="$t('page.quantReports.detail.diff.details.scores')"
+              >
+                <div>{{ scoreSummary(record.base) }}</div>
+                <div>{{ scoreSummary(record.compare) }}</div>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.quantReports.detail.diff.details.sizing')"
+              >
+                {{ formatUsd(suggestedUsd(record.base)) }} →
+                {{ formatUsd(suggestedUsd(record.compare)) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.quantReports.detail.diff.details.validity')"
+              >
+                <div>{{ validitySummary(record.base) }}</div>
+                <div>{{ validitySummary(record.compare) }}</div>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.quantReports.detail.diff.details.eligibility')"
+              >
+                <div>{{ eligibilitySummary(record.base) }}</div>
+                <div>{{ eligibilitySummary(record.compare) }}</div>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.quantReports.detail.diff.details.entry')"
+              >
+                <div>{{ entrySummary(record.base) }}</div>
+                <div>{{ entrySummary(record.compare) }}</div>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.quantReports.detail.diff.details.exit')"
+              >
+                <div>{{ exitSummary(record.base) }}</div>
+                <div>{{ exitSummary(record.compare) }}</div>
+              </DescriptionsItem>
+            </Descriptions>
           </template>
         </Table>
       </Card>

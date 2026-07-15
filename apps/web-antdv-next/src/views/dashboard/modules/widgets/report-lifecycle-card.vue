@@ -3,7 +3,7 @@ import type { ReportLifecycleEventKind } from '@vben/types';
 
 import { computed } from 'vue';
 
-import { Button, Empty, Spin, Tag } from 'antdv-next';
+import { Button, Empty, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
@@ -21,20 +21,20 @@ const quantReportStore = useQuantReportStore();
 const lastEvent = computed(() => quantReportStore.lastEvent);
 
 const EVENT_COLOR: Record<ReportLifecycleEventKind, string> = {
-  empty: 'default',
+  delivery_failed: 'error',
+  delivery_retrying: 'warning',
   expired: 'warning',
-  failed: 'error',
+  obsolete: 'default',
+  prepared: 'processing',
   published: 'success',
   revoked: 'warning',
-  started: 'processing',
+  superseded: 'default',
 };
 
 const eventColor = computed(() => {
   const event = lastEvent.value?.event;
   return event ? EVENT_COLOR[event] : 'default';
 });
-
-const inProgress = computed(() => lastEvent.value?.event === 'started');
 </script>
 
 <template>
@@ -49,7 +49,6 @@ const inProgress = computed(() => lastEvent.value?.event === 'started');
       </Button>
     </template>
     <div v-if="lastEvent" class="flex flex-wrap items-center gap-3">
-      <Spin v-if="inProgress" size="small" />
       <Tag :color="eventColor">
         {{ $t(`page.dashboard.reportLifecycle.event.${lastEvent.event}`) }}
       </Tag>

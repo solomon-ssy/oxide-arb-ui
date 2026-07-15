@@ -4,7 +4,6 @@ import {
   QUANT_RUNTIME_MODES,
   RECOMMENDATION_REPORT_STATUSES,
   REPORT_KINDS,
-  REPORT_TRIGGER_KINDS,
 } from '@vben/types';
 
 import { $t } from '#/locales';
@@ -37,16 +36,9 @@ export function useReportSearchSchema(): VbenFormSchema[] {
       label: $t('page.quantReports.filters.kind'),
     },
     {
-      component: 'Select',
-      componentProps: {
-        allowClear: true,
-        options: Object.values(REPORT_TRIGGER_KINDS).map((value) => ({
-          label: $t(`enum.reportTriggerKind.${value}`),
-          value,
-        })),
-      },
-      fieldName: 'trigger_kind',
-      label: $t('page.quantReports.filters.triggerKind'),
+      component: 'Input',
+      fieldName: 'profile_id',
+      label: $t('page.quantReports.filters.profile'),
     },
     {
       component: 'Select',

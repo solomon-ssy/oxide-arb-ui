@@ -9,14 +9,13 @@
  * The diff is always computed as `baseline (older) -> this report (current)`, so
  * the picker owns only the baseline selection; direction lives in the panel.
  */
-import type { QuantReportView } from '@vben/types';
+import type { QuantReportDetailView, QuantReportView } from '@vben/types';
 
 import type { CompareOption } from './report-compare-baseline';
 
 import { ref } from 'vue';
 
 import { useRequestHandler } from '@vben/request/qp';
-import { RECOMMENDATION_REPORT_STATUSES } from '@vben/types';
 
 import { listQuantReports } from '#/api/quant-reports';
 import { formatDateTimeLocal } from '#/shared/components/format';
@@ -46,7 +45,9 @@ export function useReportComparePicker() {
    * Load all published baseline candidates for `current` and return the default
    * baseline value (or `undefined` when none exist).
    */
-  async function load(current: QuantReportView): Promise<string | undefined> {
+  async function load(
+    current: QuantReportDetailView,
+  ): Promise<string | undefined> {
     loading.value = true;
     try {
       const collected: CompareOption[] = [];
@@ -56,8 +57,8 @@ export function useReportComparePicker() {
             listQuantReports({
               kind: current.report_kind,
               page,
+              profile_id: current.profile_id,
               size: PAGE_SIZE,
-              status: RECOMMENDATION_REPORT_STATUSES.published,
             }),
           { silent: true },
         );
@@ -78,7 +79,11 @@ export function useReportComparePicker() {
       // Newest-first by decision_at (ISO strings sort lexicographically).
       collected.sort((a, b) => b.decision_at.localeCompare(a.decision_at));
       options.value = collected;
-      return defaultBaseline(collected, current.decision_at);
+      return defaultBaseline(
+        collected,
+        current.decision_at,
+        current.predecessor_report_id ?? undefined,
+      );
     } finally {
       loading.value = false;
     }

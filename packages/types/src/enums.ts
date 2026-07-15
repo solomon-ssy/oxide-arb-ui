@@ -246,12 +246,12 @@ export const REPORT_TRIGGER_KINDS = {
 export type ReportTriggerKind = WireEnum<typeof REPORT_TRIGGER_KINDS>;
 
 export const RECOMMENDATION_REPORT_STATUSES = {
-  building: 'building',
   expired: 'expired',
-  failed: 'failed',
+  obsolete: 'obsolete',
+  prepared: 'prepared',
   published: 'published',
-  publishedEmpty: 'published_empty',
   revoked: 'revoked',
+  superseded: 'superseded',
 } as const;
 
 export type RecommendationReportStatus = WireEnum<
@@ -259,6 +259,7 @@ export type RecommendationReportStatus = WireEnum<
 >;
 
 export const REPORT_FACT_DELIVERY_STATUSES = {
+  cancelled: 'cancelled',
   delivering: 'delivering',
   failed: 'failed',
   pending: 'pending',
@@ -275,11 +276,47 @@ export const RECOMMENDATION_STATUSES = {
   executed: 'executed',
   expired: 'expired',
   intentCreated: 'intent_created',
+  obsolete: 'obsolete',
+  prepared: 'prepared',
   published: 'published',
   revoked: 'revoked',
+  superseded: 'superseded',
 } as const;
 
 export type RecommendationStatus = WireEnum<typeof RECOMMENDATION_STATUSES>;
+
+export const REPORT_RUN_STATUSES = {
+  abandoned: 'abandoned',
+  failed: 'failed',
+  queued: 'queued',
+  running: 'running',
+  skipped: 'skipped',
+  succeeded: 'succeeded',
+} as const;
+
+export type ReportRunStatus = WireEnum<typeof REPORT_RUN_STATUSES>;
+
+export const REPORT_RUN_TERMINAL_REASONS = {
+  buildFailed: 'build_failed',
+  coalescedByNewerOccurrence: 'coalesced_by_newer_occurrence',
+  leaseExpired: 'lease_expired',
+  queueExpired: 'queue_expired',
+  scheduleReconfigured: 'schedule_reconfigured',
+} as const;
+
+export type ReportRunTerminalReason = WireEnum<
+  typeof REPORT_RUN_TERMINAL_REASONS
+>;
+
+export const REPORT_SCHEDULE_GAP_REASONS = {
+  coalescedByNewerOccurrence: 'coalesced_by_newer_occurrence',
+  restartCoalesced: 'restart_coalesced',
+  scheduleReconfigured: 'schedule_reconfigured',
+} as const;
+
+export type ReportScheduleGapReason = WireEnum<
+  typeof REPORT_SCHEDULE_GAP_REASONS
+>;
 
 export const ACCOUNT_SOURCES = {
   polymarket: 'polymarket',

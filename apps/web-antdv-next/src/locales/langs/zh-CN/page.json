@@ -203,7 +203,7 @@
         "queued": "交易策略拟合已排队。",
         "publishable": "来源证据满足可发布拟合的输入要求。",
         "blocked": "所有数据与方法论准备度门禁通过前，禁止排队运行拟合。",
-        "readinessCapability": "预检会验证冻结的 Runtime v15 方法论、连续 L2、费用/成交对账以及签名的生产延迟画像，全部通过后才允许排队拟合。",
+        "readinessCapability": "预检会验证冻结的 Runtime v16 方法论、连续 L2、费用/成交对账以及签名的生产延迟画像，全部通过后才允许排队拟合。",
         "contractValid": "契约有效",
         "datasetReady": "数据集 Ready",
         "datasetPurpose": "PolicyFit 用途",
@@ -359,7 +359,7 @@
         "profile_lineage_mismatch": "画像血缘不一致",
         "source_slice_unverified": "Source Slice v2 未验签",
         "fit_window_not_contained": "数据切片未覆盖固定拟合窗口",
-        "quality_gate_unavailable": "Runtime v15 / profile 质量门禁不可用",
+        "quality_gate_unavailable": "Runtime v16 / profile 质量门禁不可用",
         "pit_cutoff_invalid": "PIT cutoff 无效",
         "full_l2_trajectory_missing": "完整 L2 回放事实缺失",
         "pit_fee_facts_missing": "PIT CLOB 费用事实缺失",
@@ -790,7 +790,10 @@
         "builtExamples": "已物化样本",
         "labelsAvailable": "可用标签",
         "labelsUnavailable": "不可用标签",
+        "liveAttributionCandidates": "实时归因候选",
+        "liveAttributionMaterialized": "已物化实时归因",
         "missingEvidence": "因证据缺失丢弃",
+        "supersededCensors": "排除：报告取代删失样本",
         "bookDecodeFailures": "订单簿解码失败",
         "matrixAccepted": "矩阵接受行",
         "matrixRejected": "矩阵拒绝行",
@@ -1824,10 +1827,12 @@
       "title": "报告活动",
       "none": "暂无报告生命周期事件",
       "event": {
-        "started": "构建中",
+        "prepared": "已准备",
         "published": "已发布",
-        "empty": "空运行",
-        "failed": "失败",
+        "superseded": "已取代",
+        "obsolete": "未生效作废",
+        "delivery_retrying": "事实投递重试中",
+        "delivery_failed": "事实投递失败",
         "revoked": "已撤销",
         "expired": "已过期"
       }
@@ -2499,6 +2504,10 @@
   "quantReports": {
     "title": "推荐报告",
     "listTitle": "报告",
+    "tabs": {
+      "reports": "报告",
+      "operations": "运行与调度健康"
+    },
     "run": {
       "title": "运行临时报告",
       "summary": "入队一次临时 TopN 报告运行。留空覆盖项则使用服务端默认值。",
@@ -2509,6 +2518,7 @@
       "accepted": "报告运行已受理（请求 {id}，触发 {key}）"
     },
     "filters": {
+      "profile": "画像 ID",
       "status": "状态",
       "kind": "类型",
       "triggerKind": "触发",
@@ -2517,6 +2527,7 @@
     },
     "columns": {
       "reportId": "报告",
+      "profile": "画像",
       "decisionAt": "决策时间",
       "runtimeMode": "模式",
       "status": "状态",
@@ -2543,12 +2554,70 @@
       "revoked": "报告已撤销"
     },
     "wsToast": {
-      "started": "报告构建开始（{key}）",
-      "published": "报告已发布（{key}）",
-      "empty": "报告发布为空（{key}）",
-      "failed": "报告构建失败（{key}）",
-      "revoked": "报告已撤销（{key}）",
-      "expired": "报告已过期（{key}）"
+      "prepared": "报告已准备（{id}）",
+      "published": "报告已发布（{id}）",
+      "superseded": "报告已被取代（{id}）",
+      "obsolete": "报告未生效作废（{id}）",
+      "delivery_retrying": "报告事实投递重试中（{id}）",
+      "delivery_failed": "报告事实投递失败（{id}）",
+      "revoked": "报告已撤销（{id}）",
+      "expired": "报告已过期（{id}）"
+    },
+    "runs": {
+      "title": "近期运行",
+      "drawerTitle": "报告运行",
+      "runId": "运行 ID",
+      "schedule": "调度",
+      "requestId": "请求 ID",
+      "scheduledFor": "计划时间",
+      "requestedAt": "请求时间",
+      "startedAt": "开始时间",
+      "decisionAt": "实际决策时间",
+      "lateness": "调度延迟",
+      "queueLatency": "排队延迟",
+      "heartbeatAt": "最近心跳",
+      "leaseExpiresAt": "租约到期",
+      "leaseOwner": "租约持有者",
+      "finishedAt": "结束时间",
+      "terminalReason": "终态原因",
+      "topN": "冻结 Top N",
+      "knowledgeLag": "冻结知识延迟",
+      "runtimeConfig": "冻结运行配置",
+      "retryOf": "重试来源",
+      "outputReport": "输出报告",
+      "failure": "运行失败",
+      "retry": "重试运行",
+      "retrySummary": "从终态运行 {id} 创建新的临时尝试；来源账本保持不可变。"
+    },
+    "health": {
+      "activeRun": "活跃构建",
+      "currentAuthority": "各 Scope 当前权威报告",
+      "noCurrent": "暂无当前权威报告",
+      "validUntil": "当前报告有效期",
+      "lastPublished": "最近发布时间",
+      "failuresAndGaps": "失败 / 缺口（24 小时）",
+      "queuedPrepared": "排队运行 / Prepared 积压",
+      "queued": "排队运行",
+      "failures24h": "失败 / 放弃（24 小时）",
+      "missed24h": "错过触发（24 小时）",
+      "schedules": "调度状态",
+      "enabled": "启用",
+      "nextFire": "下次触发",
+      "lastMaterialized": "最近物化",
+      "gaps": "调度缺口",
+      "gapReason": "原因",
+      "missed": "错过数",
+      "firstOccurrence": "首次触发",
+      "lastOccurrence": "末次触发",
+      "detectedAt": "发现时间"
+    },
+    "timeline": {
+      "time": "时间",
+      "action": "动作",
+      "actor": "操作者",
+      "role": "角色",
+      "outcome": "结果",
+      "requestId": "请求 ID"
     },
     "funnel": {
       "conserved": "全市场决策漏斗守恒",
@@ -2576,11 +2645,25 @@
       "title": "报告详情",
       "back": "返回报告列表",
       "notFound": "报告不存在",
+      "openRun": "打开构建运行",
+      "publicationRetry": "重试发布",
+      "publicationRetrySummary": "重新入队已准备报告 {id} 的不可变事实包以完成核验与发布。",
+      "predecessor": "前序报告",
+      "successor": "后继报告",
+      "lifecycle": {
+        "prepared": "不可变报告制品已完整，但事实投递核验前不是 current，也不可执行。",
+        "published": "该报告是其画像与类型 scope 当前唯一的新入场权威。",
+        "superseded": "该报告曾经是 current，现已被取代，不再允许产生新入场。",
+        "obsolete": "该完整制品因已有不旧的权威报告而从未成为 current。",
+        "revoked": "该报告已被治理撤销，不可执行。",
+        "expired": "该报告已超过有效期，不可执行。"
+      },
       "tabs": {
         "overview": "概览",
         "recommendations": "推荐",
         "funnel": "守恒漏斗",
-        "diff": "对比"
+        "diff": "对比",
+        "timeline": "时间线"
       },
       "factDelivery": {
         "bundleHash": "事实包哈希",
@@ -2604,6 +2687,7 @@
           "delivering": "投递中",
           "retrying": "重试中",
           "failed": "失败",
+          "cancelled": "已取消",
           "verified": "已核验"
         }
       },
@@ -2737,9 +2821,33 @@
           "side": "方向",
           "baseRank": "基准排名",
           "compareRank": "本报告排名",
-          "baseSuggested": "基准 USD",
-          "compareSuggested": "本报告 USD",
-          "delta": "差额 USD"
+          "baseScore": "基准风险评分",
+          "compareScore": "本报告风险评分",
+          "delta": "差额 USD",
+          "changedFields": "变化项"
+        },
+        "details": {
+          "scores": "评分（基准 / 本报告）",
+          "sizing": "仓位（基准 → 本报告）",
+          "validity": "有效期（基准 / 本报告）",
+          "eligibility": "执行资格（基准 / 本报告）",
+          "entry": "入场计划（基准 / 本报告）",
+          "exit": "离场计划（基准 / 本报告）"
+        },
+        "fields": {
+          "rank": "排名",
+          "composite_score": "综合评分",
+          "risk_adjusted_score": "风险调整评分",
+          "confidence": "置信度",
+          "expected_return": "预期收益",
+          "downside": "下行风险",
+          "sizing": "仓位",
+          "validity": "有效期",
+          "eligibility": "执行资格",
+          "trade_plan_availability": "计划可用性",
+          "entry": "入场",
+          "exit": "离场",
+          "factor_breakdown": "因子"
         }
       }
     }

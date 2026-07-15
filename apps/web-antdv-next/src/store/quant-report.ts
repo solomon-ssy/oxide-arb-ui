@@ -1,4 +1,7 @@
-import type { ReportLifecycleEvent } from '@vben/types';
+import type {
+  ReportLifecycleEvent,
+  ReportRunLifecycleEvent,
+} from '@vben/types';
 
 import { ref } from 'vue';
 
@@ -10,17 +13,34 @@ import { defineStore } from 'pinia';
  */
 export const useQuantReportStore = defineStore('qp-quant-report', () => {
   const revision = ref(0);
+  const runRevision = ref(0);
   const lastEvent = ref<null | ReportLifecycleEvent>(null);
+  const lastRunEvent = ref<null | ReportRunLifecycleEvent>(null);
 
   function bumpRevision(event: ReportLifecycleEvent) {
     lastEvent.value = event;
     revision.value += 1;
   }
 
+  function bumpRunRevision(event: ReportRunLifecycleEvent) {
+    lastRunEvent.value = event;
+    runRevision.value += 1;
+  }
+
   function $reset() {
     revision.value = 0;
     lastEvent.value = null;
+    lastRunEvent.value = null;
+    runRevision.value = 0;
   }
 
-  return { $reset, bumpRevision, lastEvent, revision };
+  return {
+    $reset,
+    bumpRevision,
+    bumpRunRevision,
+    lastEvent,
+    lastRunEvent,
+    revision,
+    runRevision,
+  };
 });

@@ -101,9 +101,7 @@ const modelInputStateRows = computed(() =>
 );
 
 const isEmpty = computed(
-  () =>
-    props.report.status === 'published_empty' ||
-    summary.value.published_recommendation_count === 0,
+  () => summary.value.published_recommendation_count === 0,
 );
 
 interface AllocationRow {
@@ -378,22 +376,34 @@ function openRuntimeConfig() {
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.researchProfile')"
         >
-          {{ report.profile_ref.id }}@{{ report.profile_ref.version }}
+          {{ report.profile_id }} · {{ report.profile_ref.id }}@{{
+            report.profile_ref.version
+          }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.triggerKind')"
         >
-          {{ $t(`enum.reportTriggerKind.${report.trigger_kind}`) }}
+          {{
+            report.run
+              ? $t(`enum.reportTriggerKind.${report.run.trigger_kind}`)
+              : EMPTY_PLACEHOLDER
+          }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.triggerKey')"
         >
-          <span class="font-mono text-xs">{{ report.trigger_key }}</span>
+          <span class="font-mono text-xs">{{
+            report.run?.trigger_key ?? EMPTY_PLACEHOLDER
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.triggerTime')"
         >
-          {{ formatDateTimeLocal(report.trigger_time) }}
+          {{
+            formatDateTimeLocal(
+              report.run?.scheduled_for ?? report.run?.requested_at,
+            )
+          }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.decisionAt')"
@@ -403,7 +413,7 @@ function openRuntimeConfig() {
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.knowledgeLag')"
         >
-          {{ formatDurationSecs(report.knowledge_lag_secs) }}
+          {{ formatDurationSecs(report.run?.knowledge_lag_secs) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.knowledgeCutoff')"

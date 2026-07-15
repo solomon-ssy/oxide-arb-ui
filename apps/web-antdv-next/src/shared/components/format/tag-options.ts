@@ -216,12 +216,12 @@ export function useRecommendationReportStatusTagOptions() {
     Object.values(RECOMMENDATION_REPORT_STATUSES),
     (value) => $t(`enum.recommendationReportStatus.${value}`),
     {
-      [RECOMMENDATION_REPORT_STATUSES.building]: 'processing',
       [RECOMMENDATION_REPORT_STATUSES.expired]: 'gold',
-      [RECOMMENDATION_REPORT_STATUSES.failed]: 'error',
+      [RECOMMENDATION_REPORT_STATUSES.obsolete]: 'default',
+      [RECOMMENDATION_REPORT_STATUSES.prepared]: 'processing',
       [RECOMMENDATION_REPORT_STATUSES.published]: 'success',
-      [RECOMMENDATION_REPORT_STATUSES.publishedEmpty]: 'cyan',
       [RECOMMENDATION_REPORT_STATUSES.revoked]: 'warning',
+      [RECOMMENDATION_REPORT_STATUSES.superseded]: 'default',
     },
   );
 }
@@ -236,8 +236,11 @@ export function useRecommendationStatusTagOptions() {
       [RECOMMENDATION_STATUSES.executed]: 'success',
       [RECOMMENDATION_STATUSES.expired]: 'gold',
       [RECOMMENDATION_STATUSES.intentCreated]: 'processing',
+      [RECOMMENDATION_STATUSES.obsolete]: 'default',
+      [RECOMMENDATION_STATUSES.prepared]: 'processing',
       [RECOMMENDATION_STATUSES.published]: 'blue',
       [RECOMMENDATION_STATUSES.revoked]: 'warning',
+      [RECOMMENDATION_STATUSES.superseded]: 'default',
     },
   );
 }

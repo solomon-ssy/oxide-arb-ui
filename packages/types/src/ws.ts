@@ -11,6 +11,8 @@ import type {
   RecommendationReportStatus,
   ReconciliationResult,
   ReportKind,
+  ReportRunStatus,
+  ReportRunTerminalReason,
   SettlementRedeemState,
 } from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
@@ -18,7 +20,7 @@ import type { SystemStatus } from './system';
 
 /**
  * Subscribable WS channels, mirroring Rust `WsChannel` wire names. This is the
- * closed 11-channel allowlist; no other channel may be subscribed or dispatched.
+ * closed server allowlist; no other channel may be subscribed or dispatched.
  */
 export const WS_CHANNELS = {
   configActivated: 'config.activated',
@@ -29,6 +31,7 @@ export const WS_CHANNELS = {
   quantIntent: 'quant.intent',
   quantReconciliation: 'quant.reconciliation',
   quantReport: 'quant.report',
+  quantReportRun: 'quant.report_run',
   quantSettlement: 'quant.settlement',
   systemAlert: 'system.alert',
   systemStatus: 'system.status',
@@ -67,26 +70,40 @@ export interface ConfigActivatedEvent {
 
 /** `quant.report` lifecycle event kinds (discriminated by `event`). */
 export type ReportLifecycleEventKind =
-  | 'empty'
+  | 'delivery_failed'
+  | 'delivery_retrying'
   | 'expired'
-  | 'failed'
+  | 'obsolete'
+  | 'prepared'
   | 'published'
   | 'revoked'
-  | 'started';
+  | 'superseded';
 
 /**
- * WS `quant.report` payload — report lifecycle transition (mirrors Rust
- * `ReportLifecycleEvent`). `recommendation_report_id` is `null` for the
- * ephemeral `started` / `failed` signals, which correlate by `trigger_key`.
+ * WS `quant.report` payload — durable artifact/fact lifecycle revision hint.
  */
 export interface ReportLifecycleEvent {
   event: ReportLifecycleEventKind;
-  trigger_key: string;
-  recommendation_report_id: null | UuidString;
+  recommendation_report_id: UuidString;
+  profile_id: string;
   report_kind: ReportKind;
   runtime_mode: QuantRuntimeMode;
   status: RecommendationReportStatus;
   decision_at: IsoDateTime;
+  published_at: IsoDateTime | null;
+  recommendation_count: number;
+  empty_reason: null | string;
+  error_code: null | string;
+  status_reason: null | string;
+}
+
+/** WS `quant.report_run` durable run revision hint. */
+export interface ReportRunLifecycleEvent {
+  report_run_id: UuidString;
+  status: ReportRunStatus;
+  terminal_reason: null | ReportRunTerminalReason;
+  output_report_id: null | UuidString;
+  occurred_at: IsoDateTime;
 }
 
 /** `quant.intent` lifecycle event kinds (discriminated by `event`). */
@@ -192,6 +209,7 @@ export interface WsChannelPayloads {
   'quant.intent': IntentLifecycleEvent;
   'quant.reconciliation': ReconciliationLifecycleEvent;
   'quant.report': ReportLifecycleEvent;
+  'quant.report_run': ReportRunLifecycleEvent;
   'quant.settlement': SettlementRedeemLifecycleEvent;
   'system.alert': SystemAlertEvent;
   'system.status': SystemStatus;

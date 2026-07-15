@@ -71,7 +71,9 @@ export interface DatasetCoverage {
   labels_unavailable: number;
   samples_dropped_insufficient: number;
   live_attribution_candidates: number;
+  live_attribution_materialized: number;
   live_attribution_dropped_missing_evidence: number;
+  live_attribution_censored_superseded_unfilled: number;
   book_decode_failures: number;
   exit_decision_candidates: number;
   exit_decision_built: number;

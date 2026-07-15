@@ -3,6 +3,8 @@ import type { APIRequestContext, Page, TestInfo } from 'playwright/test';
 import { expect, test } from 'playwright/test';
 
 interface E2eFixtures {
+  current_report_id: string;
+  current_report_run_id: string;
   frozen_recommendation_id: string;
   model_version_id: string;
   pending_intent_id: string;
@@ -422,5 +424,47 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       'MarketSelectionId',
     );
     await attachMetadata(testInfo, fixtures, [route]);
+  });
+
+  test('phase_11_8_report_lifecycle_protected_flow', async ({
+    page,
+  }, testInfo) => {
+    const workspaceRoute = '/quant/reports';
+    await page.goto(workspaceRoute);
+    await waitForShell(page);
+    await expect(page.getByTestId('reports-workspace')).toBeVisible();
+    await page
+      .getByRole('tab', { name: /运行与调度健康|Runs & Schedule Health/i })
+      .click();
+
+    const operations = page.getByTestId('report-operations-workspace');
+    await expect(operations).toBeVisible();
+    await expect(page.getByTestId('report-current-authority')).toContainText(
+      fixtures.current_report_id,
+    );
+    await expect(page.getByTestId('report-run-ledger')).toBeVisible();
+    await page.getByTestId('report-run-detail').first().click();
+    await expect(page).toHaveURL(/\/quant\/reports\?run_id=/);
+    const drawer = page.getByTestId('report-run-drawer');
+    await expect(drawer).toBeVisible();
+
+    await page.goto(
+      `${workspaceRoute}?run_id=${fixtures.current_report_run_id}`,
+    );
+    await waitForShell(page);
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toContainText(fixtures.current_report_id);
+
+    const detailRoute = `/quant/reports/${fixtures.current_report_id}`;
+    await page.goto(detailRoute);
+    await waitForShell(page);
+    await expect(page.getByTestId('report-lifecycle-banner')).toContainText(
+      /已发布|Published/i,
+    );
+    await page.getByRole('tab', { name: /时间线|Timeline/i }).click();
+    await expect(page.getByTestId('report-timeline')).toBeVisible();
+    await page.getByRole('tab', { name: /对比|Diff/i }).click();
+    await expect(page.getByTestId('report-diff')).toBeVisible();
+    await attachMetadata(testInfo, fixtures, [workspaceRoute, detailRoute]);
   });
 });

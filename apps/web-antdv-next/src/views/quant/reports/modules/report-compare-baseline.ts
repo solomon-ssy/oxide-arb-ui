@@ -22,7 +22,11 @@ export interface CompareOption {
 export function defaultBaseline(
   options: CompareOption[],
   currentDecisionAt: string,
+  preferred?: string,
 ): string | undefined {
+  if (preferred && options.some((option) => option.value === preferred)) {
+    return preferred;
+  }
   const previous = options.find(
     (option) => option.decision_at < currentDecisionAt,
   );
