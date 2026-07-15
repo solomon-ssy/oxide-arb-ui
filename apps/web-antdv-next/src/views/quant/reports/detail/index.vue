@@ -135,11 +135,7 @@ onMounted(() => void load());
       :not-found-text="$t('page.quantReports.detail.notFound')"
       @retry="load"
     >
-      <Tabs
-        v-if="report"
-        v-model:active-key="activeTab"
-        destroy-inactive-tab-pane
-      >
+      <Tabs v-if="report" v-model:active-key="activeTab" destroy-on-hidden>
         <TabPane
           key="overview"
           :tab="$t('page.quantReports.detail.tabs.overview')"

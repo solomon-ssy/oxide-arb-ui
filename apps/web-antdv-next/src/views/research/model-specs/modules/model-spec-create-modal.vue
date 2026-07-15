@@ -15,7 +15,7 @@ import { EMPTY_MODEL_INPUT_CONTRACT, MODEL_FAMILIES } from '@vben/types';
 import { message } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
-import { listModelSpecs } from '#/api/research';
+import { listAllModelSpecs } from '#/api/research';
 import { $t } from '#/locales';
 import InputNumberWithAddon from '#/shared/components/input-number-with-addon.vue';
 
@@ -46,11 +46,11 @@ const payload = ref<ModelSpecCreatePayload | null>(null);
 const existingNames = ref<Set<string>>(new Set());
 
 async function loadExistingNames() {
-  const page = await handleRequest(() => listModelSpecs({ size: 500 }), {
+  const rows = await handleRequest(() => listAllModelSpecs(), {
     silent: true,
   });
   existingNames.value = new Set(
-    (page?.items ?? []).map((row) => row.name.trim().toLowerCase()),
+    (rows ?? []).map((row) => row.name.trim().toLowerCase()),
   );
 }
 

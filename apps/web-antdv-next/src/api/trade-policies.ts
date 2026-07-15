@@ -7,6 +7,8 @@ import type {
   TradePolicyDetailView,
   TradePolicyEvidenceDownloadView,
   TradePolicyEvidenceObjectKind,
+  TradePolicyEvidenceRowListQuery,
+  TradePolicyEvidenceRowView,
   TradePolicyFitPreflightRequest,
   TradePolicyFitPreflightView,
   TradePolicyGovernanceAuditView,
@@ -75,6 +77,17 @@ export async function getTradePolicyEvidenceDownload(
 ) {
   return requestClient.get<TradePolicyEvidenceDownloadView>(
     `${base}/${id}/evidence/${kind}/download`,
+  );
+}
+
+export async function listTradePolicyEvidenceRows(
+  id: string,
+  kind: TradePolicyEvidenceObjectKind,
+  query: TradePolicyEvidenceRowListQuery = {},
+) {
+  return requestClient.get<Paginated<TradePolicyEvidenceRowView>>(
+    `${base}/${id}/evidence/${kind}`,
+    { params: query },
   );
 }
 

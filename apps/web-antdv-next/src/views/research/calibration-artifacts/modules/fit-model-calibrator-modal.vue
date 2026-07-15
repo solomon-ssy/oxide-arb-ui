@@ -19,7 +19,7 @@ import { Alert, Spin } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
 import { fetchCalibrationFitPreflight } from '#/api/calibration';
-import { listModels, listTrainingDatasets } from '#/api/research';
+import { listAllModels, listAllTrainingDatasets } from '#/api/research';
 import { $t } from '#/locales';
 import BulletList from '#/shared/components/bullet-list.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
@@ -81,24 +81,23 @@ const runPreflight = useDebounceFn(async () => {
 
 async function loadOptions() {
   const [models, ready] = await Promise.all([
-    handleRequest(() => listModels({ size: 200 }), { silent: true }),
+    handleRequest(() => listAllModels(), { silent: true }),
     handleRequest(
       () =>
-        listTrainingDatasets({
+        listAllTrainingDatasets({
           purpose: DATASET_PURPOSES.calibration,
-          size: 200,
           status: TRAINING_DATASET_STATUSES.ready,
         }),
       { silent: true },
     ),
   ]);
-  const modelOptions: OptionItem[] = (models?.items ?? []).map((model) => ({
+  const modelOptions: OptionItem[] = (models ?? []).map((model) => ({
     label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
     value: model.model_version_id,
   }));
   const seen = new Set<string>();
   const datasets: OptionItem[] = [];
-  for (const dataset of ready?.items ?? []) {
+  for (const dataset of ready ?? []) {
     if (seen.has(dataset.training_dataset_id)) {
       continue;
     }

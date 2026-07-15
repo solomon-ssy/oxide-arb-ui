@@ -13,6 +13,7 @@ import { Button, message } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   getFactor,
+  listAllFactors,
   listFactors,
   publishFactor,
   publishFactorsBatch,
@@ -145,11 +146,10 @@ async function publishAllDraft() {
   // Collect every currently-draft definition so a single governed action can
   // clear the bootstrap backlog (the online report path fails closed on any
   // non-published enabled definition).
-  const page = await handleRequest(
-    () => listFactors({ size: 500, status: 'draft' }),
-    { silent: true },
-  );
-  const ids = (page?.items ?? []).map((row) => row.factor_definition_id);
+  const rows = await handleRequest(() => listAllFactors({ status: 'draft' }), {
+    silent: true,
+  });
+  const ids = (rows ?? []).map((row) => row.factor_definition_id);
   if (ids.length === 0) {
     message.info($t('page.research.factors.publishBatch.empty'));
     return;

@@ -27,6 +27,8 @@ export type ResearchDecisionTrigger =
   | 'hourly'
   | 'hourly_latest_complete_gefs_cycle';
 
+export type ResearchPolicyFitter = 'weather_forecast';
+
 export type ResearchProfileDataSource =
   | 'aviation_weather'
   | 'catalog_ledger'
@@ -69,6 +71,7 @@ export interface ResearchProfileArtifact {
     market_selector: ResearchMarketSelector;
     max_feature_lookback_secs: number;
     max_holding_secs: number;
+    policy_fitter: null | ResearchPolicyFitter;
     purge_embargo_secs: number;
     quality_gate: ResearchProfileQualityGate;
     required_sources: ResearchProfileDataSource[];

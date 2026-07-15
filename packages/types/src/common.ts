@@ -14,7 +14,7 @@ export interface Paginated<T> {
   has_next: boolean;
 }
 
-/** Shared page query params (`size` max 200 on the server). */
+/** Shared page query params (`size` max 100 on the server). */
 export interface PageQuery {
   page?: number;
   size?: number;

@@ -52,6 +52,19 @@ import type { GovernedContext } from '#/shared/composables/use-governed-action';
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
+async function readAllPages<T>(
+  fetchPage: (page: number) => Promise<Paginated<T>>,
+  page = 1,
+  accumulated: T[] = [],
+): Promise<T[]> {
+  const result = await fetchPage(page);
+  if (result.items.length === 0 && result.has_next) {
+    throw new Error('catalog pagination returned an empty non-terminal page');
+  }
+  const items = [...accumulated, ...result.items];
+  return result.has_next ? readAllPages(fetchPage, page + 1, items) : items;
+}
+
 export namespace ResearchApi {
   export const trainingDatasets = '/research/training-datasets';
   export const trainingDataset = (id: string) =>
@@ -172,6 +185,15 @@ export async function listTrainingDatasets(
   );
 }
 
+/** Read the complete filtered dataset catalog for bounded selector workflows. */
+export async function listAllTrainingDatasets(
+  query: TrainingDatasetListQuery = {},
+) {
+  return readAllPages((page) =>
+    listTrainingDatasets({ ...query, page, size: 100 }),
+  );
+}
+
 /** `GET /research/training-datasets/{id}` — dataset ledger row. */
 export async function getTrainingDataset(id: string) {
   return requestClient.get<TrainingDatasetView>(
@@ -185,6 +207,11 @@ export async function listModelSpecs(query: ModelSpecListQuery = {}) {
     ResearchApi.modelSpecs,
     { params: query },
   );
+}
+
+/** Read the complete filtered model-spec catalog for selector validation. */
+export async function listAllModelSpecs(query: ModelSpecListQuery = {}) {
+  return readAllPages((page) => listModelSpecs({ ...query, page, size: 100 }));
 }
 
 /** `GET /research/model-specs/{id}` — single model-spec row (detail drawer). */
@@ -205,6 +232,11 @@ export async function listModels(query: ModelVersionListQuery = {}) {
   return requestClient.get<Paginated<TrainedModelView>>(ResearchApi.models, {
     params: query,
   });
+}
+
+/** Read the complete filtered model-version catalog for selector workflows. */
+export async function listAllModels(query: ModelVersionListQuery = {}) {
+  return readAllPages((page) => listModels({ ...query, page, size: 100 }));
 }
 
 /** `GET /research/models/published-catalog` — the `ModelVersionSelect`
@@ -242,6 +274,11 @@ export async function listFactors(query: FactorDefinitionListQuery = {}) {
     ResearchApi.factors,
     { params: query },
   );
+}
+
+/** Read the complete filtered factor catalog without relying on server clamping. */
+export async function listAllFactors(query: FactorDefinitionListQuery = {}) {
+  return readAllPages((page) => listFactors({ ...query, page, size: 100 }));
 }
 
 /** `GET /research/factors/{id}` — single factor definition (detail drawer). */

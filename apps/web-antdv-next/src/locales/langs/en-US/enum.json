@@ -582,6 +582,7 @@
     "feature_ready": "Feature ready",
     "model_scored": "Model scored",
     "model_gate_passed": "Model gate passed",
+    "policy_ready": "Trade policy ready",
     "sizing_eligible": "Sizing eligible",
     "portfolio_funded": "Portfolio funded",
     "published": "Published"
@@ -603,6 +604,7 @@
     "no_positive_signal": "No positive signal",
     "invalid_edge_inputs": "Invalid edge inputs",
     "return_model_uncalibrated": "Return model uncalibrated",
+    "trade_policy_unavailable": "Trade policy unavailable",
     "below_min_size": "Below minimum size",
     "liquidity_infeasible": "Insufficient executable depth",
     "budget_exhausted": "Cash budget exhausted",

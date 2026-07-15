@@ -187,7 +187,8 @@ export type ReportFunnelReason =
   | 'score_below_floor'
   | 'spread_too_wide'
   | 'stale_book'
-  | 'system_degraded';
+  | 'system_degraded'
+  | 'trade_policy_unavailable';
 
 export interface ReportFunnelStageView {
   excluded_count: number;

@@ -24,7 +24,10 @@ import type {
 
 export type TradePolicyStatus = 'draft' | 'published' | 'retired' | 'validated';
 export type TradePolicyGovernanceAction = 'publish' | 'retire' | 'validate';
-export type VerticalActivationTarget = 'auto_execution' | 'semi_auto';
+export type VerticalActivationTarget =
+  | 'auto_execution'
+  | 'research_only'
+  | 'semi_auto';
 export type VerticalGateKind =
   | 'crypto_binance_continuity'
   | 'crypto_chainlink_resolution'
@@ -290,6 +293,20 @@ export interface VerticalGateEvidence {
   unresolved_mismatch_count: number;
 }
 
+export interface StructuralVolatilityOosEvidence {
+  active_update_only: boolean;
+  activity_proxy: string;
+  deadline_volume_weighted_coverage: DecimalString;
+  deadline_vw_interval_score: DecimalString;
+  dr_as_volume_weighted_coverage: DecimalString;
+  dr_as_vw_interval_score: DecimalString;
+  fold_count: number;
+  forecast_count: number;
+  methodology_hash: string;
+  minimum_contract_observations: number;
+  valid: boolean;
+}
+
 export interface TradePolicyQualityGate {
   max_ambiguous_touch_rate: DecimalString;
   max_depth_failure_rate: DecimalString;
@@ -358,6 +375,7 @@ export type TradePolicyPublicationBlocker =
   | { detail: string; kind: 'invalid_vertical_gate_evidence' }
   | { gate: VerticalGateKind; kind: 'missing_vertical_gate_evidence' }
   | { gate: VerticalGateKind; kind: 'vertical_gate_failed' }
+  | { kind: 'invalid_structural_volatility_oos' }
   | { kind: 'research_only_evaluation_track' }
   | {
       kind:
@@ -434,6 +452,7 @@ export interface TradePolicyDetailView {
       labels_matured_by_cutoff: number;
     };
     source_dataset_hash: string;
+    structural_volatility_oos: StructuralVolatilityOosEvidence;
     validation: {
       ambiguous_touch_rate: DecimalString | null;
       attempted_candidate_count: null | number;
@@ -475,7 +494,19 @@ export type TradePolicyEvidenceObjectKind =
   | 'cpcv_paths'
   | 'fills'
   | 'observation_eligibility'
-  | 'statistical_summaries';
+  | 'statistical_summaries'
+  | 'structural_volatility_oos'
+  | 'vertical_gates';
+
+export type TradePolicyEvidenceRowListQuery = PageQuery;
+
+export interface TradePolicyEvidenceRowView {
+  event_at: IsoDateTime | null;
+  kind: TradePolicyEvidenceObjectKind;
+  payload: unknown;
+  record_key: string;
+  row_hash: string;
+}
 
 export interface TradePolicySourceSliceView {
   artifact_id: UuidString;
@@ -607,6 +638,7 @@ export type TradePolicyPreflightBlockerKind =
   | 'pit_cutoff_invalid'
   | 'pit_fee_facts_missing'
   | 'production_latency_profile_missing'
+  | 'profile_fitter_unavailable'
   | 'profile_lineage_mismatch'
   | 'quality_gate_unavailable'
   | 'raw_trajectory_labels_missing'
@@ -641,6 +673,7 @@ export interface TradePolicyFitPreflightView {
   candidate_set_hash: null | string;
   canonical_candidates: null | TradePolicyCandidateSpec[];
   contract_valid: TradePolicyPreflightCheckStatus;
+  profile_fitter_available: TradePolicyPreflightCheckStatus;
   estimated_candidate_trials: number;
   estimated_fold_evaluations: number;
   fee_model_present: TradePolicyPreflightCheckStatus;

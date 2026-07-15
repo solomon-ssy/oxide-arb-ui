@@ -625,7 +625,7 @@ watch(
       </div>
     </div>
 
-    <Tabs v-model:active-key="activeTab" destroy-inactive-tab-pane>
+    <Tabs v-model:active-key="activeTab" destroy-on-hidden>
       <TabPane key="runs" :tab="$t('page.research.featureIntegrity.tabs.runs')">
         <RunGrid
           :table-title="$t('page.research.featureIntegrity.runsTitle')"

@@ -32,6 +32,7 @@ import {
   Input,
   InputNumber,
   message,
+  Pagination,
   Select,
   Space,
   Steps,
@@ -39,7 +40,7 @@ import {
   Tag,
 } from 'antdv-next';
 
-import { cancelResearchJob, listFactors } from '#/api/research';
+import { cancelResearchJob, listAllFactors } from '#/api/research';
 import {
   fitTradePolicy,
   getTradePolicyFit,
@@ -64,6 +65,7 @@ interface ReadinessCheck {
     | 'full_l2_trajectory_present'
     | 'latency_profile_present'
     | 'pit_cutoff_valid'
+    | 'profile_fitter_available'
     | 'profile_lineage_valid'
     | 'profile_quality_gate_available'
     | 'raw_trajectory_labels_present'
@@ -89,6 +91,8 @@ const evaluationTrack = ref<ResearchEvaluationTrack>('semi_auto_candidate');
 const preflight = ref<null | TradePolicyFitPreflightView>(null);
 const fitJob = ref<null | ResearchJobView>(null);
 const trialAttempts = ref<TradePolicyTrialAttemptView[]>([]);
+const trialPage = ref(1);
+const trialTotal = ref(0);
 const candidateList = ref<HTMLElement | null>(null);
 const preflightStale = ref(true);
 const idempotencyKey = ref(crypto.randomUUID());
@@ -174,6 +178,10 @@ const readinessChecks = computed<ReadinessCheck[]>(() => [
   {
     key: 'contract_valid',
     label: $t('page.research.tradePolicies.fit.contractValid'),
+  },
+  {
+    key: 'profile_fitter_available',
+    label: $t('page.research.tradePolicies.fit.profileFitterAvailable'),
   },
   {
     key: 'source_dataset_ready',
@@ -446,15 +454,29 @@ function schedulePoll() {
     if (latest) {
       fitJob.value = latest;
       if (['cancelled', 'failed', 'succeeded'].includes(latest.status)) {
-        const trials = await handleRequest(
-          () => listTradePolicyFitTrials(jobId, { page: 1, size: 100 }),
-          { silent: true },
-        );
-        trialAttempts.value = trials?.items ?? [];
+        await loadTrialAttempts(jobId, 1);
       }
     }
     schedulePoll();
   }, 2000);
+}
+
+async function loadTrialAttempts(
+  jobId = fitJob.value?.job_id,
+  page = trialPage.value,
+) {
+  if (!jobId) {
+    trialAttempts.value = [];
+    trialTotal.value = 0;
+    return;
+  }
+  const trials = await handleRequest(
+    () => listTradePolicyFitTrials(jobId, { page, size: 25 }),
+    { silent: true },
+  );
+  trialPage.value = trials?.page ?? page;
+  trialTotal.value = trials?.total ?? 0;
+  trialAttempts.value = trials?.items ?? [];
 }
 
 async function cancelFit() {
@@ -593,14 +615,14 @@ function statusColor(status: TradePolicyPreflightCheckStatus) {
 }
 
 async function loadCatalogs() {
-  const [profileRows, factorPage] = await Promise.all([
+  const [profileRows, factorRows] = await Promise.all([
     handleRequest(() => listTradePolicyProfiles(), { silent: true }),
-    handleRequest(() => listFactors({ size: 200, status: 'published' }), {
+    handleRequest(() => listAllFactors({ status: 'published' }), {
       silent: true,
     }),
   ]);
   profiles.value = profileRows ?? [];
-  factors.value = factorPage?.items ?? [];
+  factors.value = factorRows ?? [];
   const weather = profiles.value.find(
     (profile) => profile.profile_ref.id === 'weather_forecast_24h',
   );
@@ -1273,7 +1295,7 @@ void loadCatalogs();
                 {{ $t('page.research.tradePolicies.workbench.cancelFit') }}
               </Button>
             </Space>
-            <div v-if="trialAttempts.length > 0" class="mt-4">
+            <div v-if="trialTotal > 0" class="mt-4">
               <h4>
                 {{ $t('page.research.tradePolicies.workbench.trialLedger') }}
               </h4>
@@ -1283,6 +1305,15 @@ void loadCatalogs();
                 :pagination="false"
                 :row-key="(row) => row.trial_attempt_id"
                 size="small"
+              />
+              <Pagination
+                v-if="trialTotal > 25"
+                v-model:current="trialPage"
+                :page-size="25"
+                :show-size-changer="false"
+                :total="trialTotal"
+                class="mt-3"
+                @change="(page) => loadTrialAttempts(fitJob?.job_id, page)"
               />
             </div>
           </Card>

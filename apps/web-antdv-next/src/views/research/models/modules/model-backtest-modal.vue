@@ -7,7 +7,7 @@ import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { useVbenForm } from '#/adapter/form';
-import { listModels } from '#/api/research';
+import { listAllModels } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
 
@@ -54,14 +54,14 @@ async function loadOptions() {
     handleRequest(() => fetchRuntimeConfigVersions({ limit: 200 }), {
       silent: true,
     }),
-    handleRequest(() => listModels({ size: 200 }), { silent: true }),
+    handleRequest(() => listAllModels(), { silent: true }),
   ]);
   const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
     label: version.runtime_config_version_id,
     value: version.runtime_config_version_id,
   }));
   const currentId = payload.value?.modelVersionId;
-  const comparisonOptions: OptionItem[] = (page?.items ?? [])
+  const comparisonOptions: OptionItem[] = (page ?? [])
     .filter((model) => model.model_version_id !== currentId)
     .map((model) => ({
       label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,

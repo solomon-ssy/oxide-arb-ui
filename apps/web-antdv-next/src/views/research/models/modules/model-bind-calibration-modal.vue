@@ -8,7 +8,7 @@ import { useRequestHandler } from '@vben/request/qp';
 import { CALIBRATION_KINDS, DOWNSIDE_SOURCES } from '@vben/types';
 
 import { useVbenForm } from '#/adapter/form';
-import { listCalibrationArtifacts } from '#/api/calibration';
+import { listAllCalibrationArtifacts } from '#/api/calibration';
 import { $t } from '#/locales';
 
 defineOptions({ name: 'ModelBindCalibrationModal' });
@@ -37,15 +37,14 @@ const downsideOptions = [
 ];
 
 async function loadCalibrators() {
-  const page = await handleRequest(
+  const rows = await handleRequest(
     () =>
-      listCalibrationArtifacts({
+      listAllCalibrationArtifacts({
         kind: CALIBRATION_KINDS.modelScore,
-        size: 200,
       }),
     { silent: true },
   );
-  const options: OptionItem[] = (page?.items ?? []).map((row) => ({
+  const options: OptionItem[] = (rows ?? []).map((row) => ({
     label: `${row.artifact_id} · ${row.sample_count} samples`,
     value: row.artifact_id,
   }));

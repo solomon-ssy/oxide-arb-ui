@@ -5,6 +5,7 @@ import type {
   SourceSliceObjectKind,
   TradePolicyDetailView,
   TradePolicyEvidenceObjectKind,
+  TradePolicyEvidenceRowView,
   TradePolicyGovernanceAuditView,
   TradePolicySourceSliceObjectView,
   TradePolicySourceSliceView,
@@ -41,6 +42,7 @@ import {
   getTradePolicySourceSlice,
   governTradePolicy,
   listTradePolicyAudits,
+  listTradePolicyEvidenceRows,
   listTradePolicySourceSliceObjects,
   listTradePolicyValidationRows,
   listTradePolicyValidations,
@@ -65,6 +67,8 @@ const { handleRequest } = useRequestHandler();
 
 const detail = ref<null | TradePolicyDetailView>(null);
 const audits = ref<TradePolicyGovernanceAuditView[]>([]);
+const auditPage = ref(1);
+const auditTotal = ref(0);
 const sourceSlice = ref<null | TradePolicySourceSliceView>(null);
 const sourceObjects = ref<TradePolicySourceSliceObjectView[]>([]);
 const sourceObjectPage = ref(1);
@@ -79,6 +83,10 @@ const validationRowPage = ref(1);
 const validationRowTotal = ref(0);
 const validationRowPassed = ref<boolean>();
 const validationRowEvidenceKind = ref<TradePolicyEvidenceObjectKind>();
+const evidenceRows = ref<TradePolicyEvidenceRowView[]>([]);
+const evidenceRowKind = ref<TradePolicyEvidenceObjectKind>('fills');
+const evidenceRowPage = ref(1);
+const evidenceRowTotal = ref(0);
 const loading = ref(false);
 const artifactId = computed(() => String(route.params.id ?? ''));
 const publicationBlocked = computed(
@@ -97,6 +105,8 @@ const evidenceKinds: TradePolicyEvidenceObjectKind[] = [
   'cpcv_paths',
   'coverage_gaps',
   'statistical_summaries',
+  'vertical_gates',
+  'structural_volatility_oos',
 ];
 const sourceObjectKinds: SourceSliceObjectKind[] = [
   'catalog_market',
@@ -210,6 +220,33 @@ const validationRowColumns = computed<
     title: $t('page.research.tradePolicies.detail.diagnostic'),
   },
 ]);
+const evidenceRowColumns = computed<
+  TableColumnsType<TradePolicyEvidenceRowView>
+>(() => [
+  {
+    dataIndex: 'record_key',
+    key: 'record_key',
+    title: $t('page.research.tradePolicies.detail.recordKey'),
+    width: 300,
+  },
+  {
+    dataIndex: 'event_at',
+    key: 'event_at',
+    title: $t('page.research.tradePolicies.detail.eventAt'),
+    width: 190,
+  },
+  {
+    dataIndex: 'payload',
+    key: 'payload',
+    title: $t('page.research.tradePolicies.detail.evidencePayload'),
+  },
+  {
+    dataIndex: 'row_hash',
+    key: 'row_hash',
+    title: $t('page.research.tradePolicies.detail.rowHash'),
+    width: 300,
+  },
+]);
 
 function statusColor(status: TradePolicyValidationRunView['status']) {
   if (status === 'succeeded') return 'success';
@@ -280,24 +317,48 @@ async function loadValidationRuns(page = validationPage.value) {
   await loadValidationRows();
 }
 
+async function loadEvidenceRows(page = evidenceRowPage.value) {
+  const result = await handleRequest(
+    () =>
+      listTradePolicyEvidenceRows(artifactId.value, evidenceRowKind.value, {
+        page,
+        size: 25,
+      }),
+    { silent: true },
+  );
+  evidenceRowPage.value = result?.page ?? page;
+  evidenceRowTotal.value = result?.total ?? 0;
+  evidenceRows.value = result?.items ?? [];
+}
+
+async function loadAudits(page = auditPage.value) {
+  const result = await handleRequest(
+    () => listTradePolicyAudits(artifactId.value, { page, size: 20 }),
+    { silent: true },
+  );
+  auditPage.value = result?.page ?? page;
+  auditTotal.value = result?.total ?? 0;
+  audits.value = result?.items ?? [];
+}
+
 async function load() {
   if (!artifactId.value) return;
   loading.value = true;
   try {
-    const [policy, auditPage, slice] = await Promise.all([
+    const [policy, slice] = await Promise.all([
       handleRequest(() => getTradePolicy(artifactId.value)),
-      handleRequest(
-        () => listTradePolicyAudits(artifactId.value, { size: 100 }),
-        { silent: true },
-      ),
       handleRequest(() => getTradePolicySourceSlice(artifactId.value), {
         silent: true,
       }),
     ]);
     detail.value = policy ?? null;
-    audits.value = auditPage?.items ?? [];
     sourceSlice.value = slice ?? null;
-    await Promise.all([loadSourceObjects(1), loadValidationRuns(1)]);
+    await Promise.all([
+      loadAudits(1),
+      loadEvidenceRows(1),
+      loadSourceObjects(1),
+      loadValidationRuns(1),
+    ]);
   } finally {
     loading.value = false;
   }
@@ -356,6 +417,11 @@ async function filterSourceObjects() {
 async function filterValidationRows() {
   validationRowPage.value = 1;
   await loadValidationRows(selectedValidationId.value, 1);
+}
+
+async function selectEvidenceKind() {
+  evidenceRowPage.value = 1;
+  await loadEvidenceRows(1);
 }
 
 async function downloadEvidence(kind: TradePolicyEvidenceObjectKind) {
@@ -783,6 +849,59 @@ onMounted(load);
             {{ $t(`page.research.tradePolicies.evidenceKind.${kind}`) }}
           </Button>
         </div>
+        <div class="table-toolbar mt-4">
+          <h3 class="section-title">
+            {{ $t('page.research.tradePolicies.detail.evidenceDrilldown') }}
+          </h3>
+          <Select
+            v-model:value="evidenceRowKind"
+            style="width: 240px"
+            @change="selectEvidenceKind"
+          >
+            <SelectOption
+              v-for="kind in evidenceKinds"
+              :key="kind"
+              :value="kind"
+            >
+              {{ $t(`page.research.tradePolicies.evidenceKind.${kind}`) }}
+            </SelectOption>
+          </Select>
+        </div>
+        <Table
+          :columns="evidenceRowColumns"
+          :data-source="evidenceRows"
+          data-testid="trade-policy-evidence-rows"
+          :pagination="false"
+          :row-key="(row) => `${row.kind}-${row.record_key}`"
+          :scroll="{ x: 1280 }"
+          size="small"
+        >
+          <template #bodyCell="{ column, record }">
+            <span v-if="column.key === 'record_key'" class="mono">
+              {{ record.record_key }}
+            </span>
+            <span v-else-if="column.key === 'event_at'">
+              {{ record.event_at ? formatDateTimeLocal(record.event_at) : '—' }}
+            </span>
+            <pre
+              v-else-if="column.key === 'payload'"
+              class="evidence-payload"
+              v-text="JSON.stringify(record.payload, null, 2)"
+            ></pre>
+            <span v-else-if="column.key === 'row_hash'" class="mono">
+              {{ record.row_hash }}
+            </span>
+          </template>
+        </Table>
+        <Pagination
+          v-if="evidenceRowTotal > 25"
+          v-model:current="evidenceRowPage"
+          :page-size="25"
+          :show-size-changer="false"
+          :total="evidenceRowTotal"
+          class="table-pagination"
+          @change="loadEvidenceRows"
+        />
       </Card>
 
       <Card
@@ -933,6 +1052,15 @@ onMounted(load);
           </TimelineItem>
         </Timeline>
         <Empty v-else />
+        <Pagination
+          v-if="auditTotal > 20"
+          v-model:current="auditPage"
+          :page-size="20"
+          :show-size-changer="false"
+          :total="auditTotal"
+          class="table-pagination"
+          @change="loadAudits"
+        />
       </Card>
     </div>
   </Page>
@@ -969,6 +1097,17 @@ onMounted(load);
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.evidence-payload {
+  max-height: 260px;
+  padding: 8px;
+  margin: 0;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  background: var(--ant-color-fill-quaternary);
+  border-radius: 4px;
 }
 
 .section-title {

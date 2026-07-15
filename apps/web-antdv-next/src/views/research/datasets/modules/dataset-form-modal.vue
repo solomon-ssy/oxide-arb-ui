@@ -22,7 +22,7 @@ import {
 } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
-import { listModelSpecs } from '#/api/research';
+import { listAllModelSpecs } from '#/api/research';
 import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { listTradePolicyProfiles } from '#/api/trade-policies';
 import { $t } from '#/locales';
@@ -117,13 +117,13 @@ const purposeOptions = [
 
 async function loadOptions() {
   const [specs, versions, profileRows] = await Promise.all([
-    handleRequest(() => listModelSpecs({ size: 200 }), { silent: true }),
+    handleRequest(() => listAllModelSpecs(), { silent: true }),
     handleRequest(() => fetchRuntimeConfigVersions({ limit: 200 }), {
       silent: true,
     }),
     handleRequest(() => listTradePolicyProfiles(), { silent: true }),
   ]);
-  const specOptions: OptionItem[] = (specs?.items ?? []).map((spec) => ({
+  const specOptions: OptionItem[] = (specs ?? []).map((spec) => ({
     label: `${spec.name} · ${spec.model_spec_id}`,
     value: spec.model_spec_id,
   }));

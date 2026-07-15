@@ -7,6 +7,7 @@ interface E2eFixtures {
   model_version_id: string;
   pending_intent_id: string;
   position_id: string;
+  report_id: string;
   trade_policy_artifact_id: string;
   unavailable_recommendation_id: string;
   waiting_intent_id: string;
@@ -26,17 +27,14 @@ async function waitForShell(page: Page) {
 
 async function ensureDesktopSidebarExpanded(page: Page) {
   const sidebar = page.getByRole('complementary');
-  const boundingBox = await sidebar.boundingBox();
-  const width = boundingBox?.width ?? 0;
-  if (width >= 100) return;
+  const collapseToggle = sidebar.getByTestId('sidebar-collapse-toggle');
+  const viewport = page.viewportSize();
+  await page.mouse.move((viewport?.width ?? 1440) - 1, 1);
+  await page.waitForTimeout(200);
+  if ((await collapseToggle.getAttribute('data-collapsed')) === 'false') return;
 
-  await sidebar.locator('div.absolute.bottom-2.left-3').click();
-  await expect
-    .poll(async () => {
-      const current = await sidebar.boundingBox();
-      return current?.width ?? 0;
-    })
-    .toBeGreaterThanOrEqual(100);
+  await collapseToggle.click();
+  await expect(collapseToggle).toHaveAttribute('data-collapsed', 'false');
 }
 
 async function loadFixtures(request: APIRequestContext) {
@@ -102,6 +100,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('trade-plan-unavailable')).toContainText(
       /覆盖|Coverage|coverage/,
     );
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot(
       'recommendation-unavailable-desktop.png',
       {
@@ -116,6 +115,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(
       page.getByText(/操作员决策摘要|Decision summary/),
     ).toBeVisible();
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot('recommendation-frozen-desktop.png', {
       fullPage: true,
     });
@@ -224,6 +224,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       mask: [volatileConditionValues],
       maskColor: '#262626',
     };
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot(
       'intent-qualified-before-claim-desktop.png',
       {
@@ -305,6 +306,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(blockers).toContainText(/Source Slice v2/i);
     await expect(blockers).toContainText(/24-hour production latency/i);
     await expect(page.getByText('AutoExecution')).toHaveCount(0);
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot(
       'trade-policy-fit-blocked-desktop.png',
       {
@@ -344,6 +346,9 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(
       page.getByTestId('trade-policy-source-slice-objects'),
     ).toContainText('l2_event');
+    await expect(page.getByTestId('trade-policy-evidence-rows')).toContainText(
+      'verified UI E2E evidence row',
+    );
     await expect(page.getByText(/trade policy not found/i)).toHaveCount(0);
 
     const evidencePagePromise = page.waitForEvent('popup');
@@ -353,6 +358,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(evidencePage).toHaveURL(/expires=.*signature=blake3(?::|%3A)/);
     await expect(evidencePage.locator('body')).toContainText('"signed":true');
     await evidencePage.close();
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot('trade-policy-audit-desktop.png', {
       fullPage: true,
     });
@@ -365,6 +371,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('model-trade-policy-binding')).toContainText(
       fixtures.trade_policy_artifact_id,
     );
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot('model-policy-binding-desktop.png', {
       fullPage: true,
     });
@@ -377,6 +384,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('exit-monitor-card')).toContainText(
       /test-only governed reinference observation/,
     );
+    await ensureDesktopSidebarExpanded(page);
     await expect(page).toHaveScreenshot('position-exit-monitor-desktop.png', {
       fullPage: true,
     });
@@ -391,5 +399,28 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       modelRoute,
       positionRoute,
     ]);
+  });
+
+  test('verified report exposes a conserved, drillable market funnel', async ({
+    page,
+  }, testInfo) => {
+    const route = `/quant/reports/${fixtures.report_id}`;
+    await page.goto(route);
+    await waitForShell(page);
+    await page.getByRole('tab', { name: /漏斗|Funnel/i }).click();
+
+    const funnel = page.getByTestId('report-funnel');
+    await expect(funnel).toBeVisible();
+    await expect(funnel).toContainText(/守恒|Conserved/i);
+    const markets = page.getByTestId('report-funnel-markets');
+    const detailButton = markets
+      .getByRole('button', { name: /详\s*情|Detail/i })
+      .first();
+    await expect(detailButton).toBeVisible();
+    await detailButton.click();
+    await expect(page.getByTestId('report-funnel-lineage')).toContainText(
+      'MarketSelectionId',
+    );
+    await attachMetadata(testInfo, fixtures, [route]);
   });
 });

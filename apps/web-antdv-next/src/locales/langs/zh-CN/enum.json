@@ -582,6 +582,7 @@
     "feature_ready": "特征就绪",
     "model_scored": "模型已评分",
     "model_gate_passed": "模型门禁通过",
+    "policy_ready": "交易策略就绪",
     "sizing_eligible": "Sizing 可行",
     "portfolio_funded": "组合已分配资金",
     "published": "已发布"
@@ -603,6 +604,7 @@
     "no_positive_signal": "无正向信号",
     "invalid_edge_inputs": "Edge 输入无效",
     "return_model_uncalibrated": "收益模型未校准",
+    "trade_policy_unavailable": "交易策略不可用",
     "below_min_size": "低于最小金额",
     "liquidity_infeasible": "深度不可执行",
     "budget_exhausted": "现金预算耗尽",

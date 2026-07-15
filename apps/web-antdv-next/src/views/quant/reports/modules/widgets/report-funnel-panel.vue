@@ -61,6 +61,7 @@ const REASONS: ReportFunnelReason[] = [
   'no_positive_signal',
   'invalid_edge_inputs',
   'return_model_uncalibrated',
+  'trade_policy_unavailable',
   'below_min_size',
   'liquidity_infeasible',
   'budget_exhausted',
@@ -180,7 +181,7 @@ onMounted(() => void Promise.all([loadSummary(), loadRows()]));
 </script>
 
 <template>
-  <div aria-live="polite" class="funnel-panel">
+  <div aria-live="polite" class="funnel-panel" data-testid="report-funnel">
     <Alert
       v-if="summary"
       :description="
@@ -238,6 +239,7 @@ onMounted(() => void Promise.all([loadSummary(), loadRows()]));
         :columns="columns"
         :data-source="rows"
         :loading="loading"
+        data-testid="report-funnel-markets"
         :pagination="{
           current: page,
           pageSize: size,
@@ -269,7 +271,11 @@ onMounted(() => void Promise.all([loadSummary(), loadRows()]));
       </Table>
     </Card>
 
-    <Card v-if="selected" :title="$t('page.quantReports.funnel.lineageTitle')">
+    <Card
+      v-if="selected"
+      :title="$t('page.quantReports.funnel.lineageTitle')"
+      data-testid="report-funnel-lineage"
+    >
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem label="MarketSelectionId">
           <span class="mono">{{ selected.market_selection_id }}</span>
