@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type {
   RuntimeConfigDocument,
+  RuntimeConfigSchemaFieldView,
   SchemaNode,
   SchemaSection,
+  SchemaUnion,
 } from '@vben/types';
 
 import type { RuntimeConfigFieldIndex } from './types';
@@ -11,7 +13,10 @@ import { computed, ref, watch } from 'vue';
 
 import { Collapse, CollapsePanel } from 'antdv-next';
 
-import ConfigNode from './config-node.vue';
+import { getDocumentPath } from './document-path';
+import { isFieldVisible } from './field-when';
+import RuntimeConfigField from './fields/runtime-config-field.vue';
+import RuntimeConfigScheduleListField from './fields/runtime-config-schedule-list-field.vue';
 import RuntimeConfigSectionIcon from './fields/runtime-config-section-icon.vue';
 import {
   nodeGridSpan,
@@ -117,9 +122,33 @@ watch(
 );
 
 function gridStyleFor(node: SchemaNode) {
+  const span = nodeGridSpan(node, props.fields);
   return {
-    gridColumn: `span ${nodeGridSpan(node, props.fields)} / span ${nodeGridSpan(node, props.fields)}`,
+    gridColumn: `span ${span} / span ${span}`,
   };
+}
+
+function nodeKey(node: SchemaNode): string {
+  switch (node.kind) {
+    case 'field': {
+      return `field:${node.path}`;
+    }
+    case 'section': {
+      return `section:${node.id}`;
+    }
+    case 'union': {
+      return `union:${node.discriminator}`;
+    }
+  }
+}
+
+function fieldFor(node: SchemaNode): RuntimeConfigSchemaFieldView | undefined {
+  return node.kind === 'field' ? props.fields.get(node.path) : undefined;
+}
+
+function fieldVisible(node: SchemaNode): boolean {
+  const field = fieldFor(node);
+  return field ? isFieldVisible(field, props.draft, props.config) : false;
 }
 
 function sectionLabel(section: SchemaSection) {
@@ -131,6 +160,21 @@ function sectionDescription(section: SchemaSection) {
     ? resolveUiText(section.description, props.locale)
     : '';
 }
+
+function unionLabel(union: SchemaUnion) {
+  return union.label ? resolveUiText(union.label, props.locale) : '';
+}
+
+function activeUnionChildren(union: SchemaUnion): SchemaNode[] {
+  const actual = Object.hasOwn(props.draft, union.discriminator)
+    ? props.draft[union.discriminator]
+    : getDocumentPath(props.config, union.discriminator);
+  const active = union.cases.find(
+    (unionCase) =>
+      JSON.stringify(unionCase.case_value) === JSON.stringify(actual),
+  );
+  return sortedChildren(active?.children ?? []);
+}
 </script>
 
 <template>
@@ -139,18 +183,70 @@ function sectionDescription(section: SchemaSection) {
       <div v-if="segment.kind === 'grid'" :style="gridStyle">
         <div
           v-for="child in segment.nodes"
-          :key="JSON.stringify(child)"
+          :key="nodeKey(child)"
           :style="gridStyleFor(child)"
         >
-          <ConfigNode
-            :config="config"
-            :disabled="disabled"
-            :draft="draft"
-            :fields="fields"
-            :locale="locale"
-            :node="child"
-            :set-value="setValue"
-          />
+          <template v-if="child.kind === 'field'">
+            <template v-if="fieldFor(child) && fieldVisible(child)">
+              <RuntimeConfigScheduleListField
+                v-if="fieldFor(child)!.widget === 'schedule_list'"
+                :disabled="disabled"
+                :field="fieldFor(child)!"
+                :locale="locale"
+                :model-value="draft[child.path] as unknown[]"
+                @update:model-value="(value) => setValue(child.path, value)"
+              />
+              <RuntimeConfigField
+                v-else
+                :disabled="disabled"
+                :field="fieldFor(child)!"
+                :model-value="draft[child.path]"
+                @update:model-value="(value) => setValue(child.path, value)"
+              />
+            </template>
+          </template>
+
+          <div
+            v-else-if="child.kind === 'section'"
+            class="border-border/60 bg-muted/20 rounded-lg border border-dashed px-3 py-2"
+          >
+            <div class="text-foreground mb-1 text-sm font-medium">
+              {{ sectionLabel(child) }}
+            </div>
+            <p
+              v-if="sectionDescription(child)"
+              class="text-muted-foreground mb-2 text-xs"
+            >
+              {{ sectionDescription(child) }}
+            </p>
+            <ConfigNodeChildren
+              :config="config"
+              :disabled="disabled"
+              :draft="draft"
+              :fields="fields"
+              :locale="locale"
+              :nodes="child.children"
+              :set-value="setValue"
+            />
+          </div>
+
+          <div v-else class="union-block">
+            <p
+              v-if="unionLabel(child)"
+              class="text-muted-foreground mb-2 text-xs font-medium"
+            >
+              {{ unionLabel(child) }}
+            </p>
+            <ConfigNodeChildren
+              :config="config"
+              :disabled="disabled"
+              :draft="draft"
+              :fields="fields"
+              :locale="locale"
+              :nodes="activeUnionChildren(child)"
+              :set-value="setValue"
+            />
+          </div>
         </div>
       </div>
 
@@ -239,5 +335,10 @@ function sectionDescription(section: SchemaSection) {
   display: inline-flex;
   gap: 0.375rem;
   align-items: center;
+}
+
+.union-block {
+  padding-left: 0.75rem;
+  border-left: 2px solid hsl(var(--primary) / 35%);
 }
 </style>

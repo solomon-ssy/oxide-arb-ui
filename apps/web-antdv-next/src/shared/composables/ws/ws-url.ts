@@ -1,14 +1,17 @@
 /**
- * Build the authenticated WebSocket URL from the HTTP API base URL.
- *
- * The backend authenticates the upgrade via a `token` query parameter
- * (browsers cannot set handshake headers). The API base already carries the
- * `/api` prefix, so the socket lives at `<base>/ws`.
+ * Build the WebSocket URL from the HTTP API base URL.
+ * Authentication is carried by a short-lived, single-use subprotocol ticket,
+ * never by the URL.
  */
-export function buildWsUrl(apiURL: string, token: string): string {
+export function buildWsUrl(apiURL: string): string {
   const url = new URL(apiURL, window.location.origin);
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
   url.pathname = `${url.pathname.replace(/\/$/, '')}/ws`;
-  url.search = `?token=${encodeURIComponent(token)}`;
+  url.search = '';
+  url.hash = '';
   return url.toString();
+}
+
+export function buildWsTicketProtocol(ticket: string): string {
+  return `qp-ticket.${ticket}`;
 }

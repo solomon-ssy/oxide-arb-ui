@@ -337,7 +337,7 @@ function openRuntimeConfig() {
           :label="$t('page.quantReports.detail.factDelivery.lastError')"
           :span="2"
         >
-          <span class="text-red-600">{{ factDelivery.last_error }}</span>
+          <span class="text-destructive">{{ factDelivery.last_error }}</span>
         </DescriptionsItem>
       </Descriptions>
     </Card>

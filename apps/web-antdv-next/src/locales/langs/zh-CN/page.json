@@ -3,6 +3,13 @@
     "login": "登录",
     "profile": "个人中心"
   },
+  "systemOffline": {
+    "title": "服务暂时不可用",
+    "description": "控制面尚未就绪，服务恢复后将自动返回原页面。",
+    "retry": "立即检查",
+    "checking": "正在检查控制面状态",
+    "retryCountdown": "{seconds} 秒后自动重试"
+  },
   "common": {
     "underConstruction": "该页面建设中，将在后续 phase 交付",
     "comingInPhase": "将在 Phase {phase} 交付",
@@ -203,7 +210,7 @@
         "queued": "交易策略拟合已排队。",
         "publishable": "来源证据满足可发布拟合的输入要求。",
         "blocked": "所有数据与方法论准备度门禁通过前，禁止排队运行拟合。",
-        "readinessCapability": "预检会验证冻结的 Runtime v16 方法论、连续 L2、费用/成交对账以及签名的生产延迟画像，全部通过后才允许排队拟合。",
+        "readinessCapability": "预检会验证冻结的 Runtime v17 方法论、连续 L2、费用/成交对账以及签名的生产延迟画像，全部通过后才允许排队拟合。",
         "contractValid": "契约有效",
         "datasetReady": "数据集 Ready",
         "datasetPurpose": "PolicyFit 用途",
@@ -243,6 +250,12 @@
         "fitWindowContained": "拟合窗口被切片完整覆盖",
         "retentionRunway": "Raw retention 跑道（实际 / 要求）",
         "retentionRunwayValue": "{actual} / {required} 天",
+        "readiness": {
+          "blocked": "预检阻断",
+          "blocked_insufficient_history": "历史覆盖不足",
+          "ready_to_materialize": "可物化",
+          "reusable": "可安全复用"
+        },
         "estimatedTrials": "预计实验规模",
         "estimatedTrialsValue": "{candidates} 个候选 · {folds} 次 fold 评估",
         "actual": "实际值",
@@ -359,7 +372,7 @@
         "profile_lineage_mismatch": "画像血缘不一致",
         "source_slice_unverified": "Source Slice v2 未验签",
         "fit_window_not_contained": "数据切片未覆盖固定拟合窗口",
-        "quality_gate_unavailable": "Runtime v16 / profile 质量门禁不可用",
+        "quality_gate_unavailable": "Runtime v17 / profile 质量门禁不可用",
         "pit_cutoff_invalid": "PIT cutoff 无效",
         "full_l2_trajectory_missing": "完整 L2 回放事实缺失",
         "pit_fee_facts_missing": "PIT CLOB 费用事实缺失",
@@ -1768,6 +1781,65 @@
     },
     "cards": {
       "ws": "实时"
+    },
+    "loadError": {
+      "report": "最新报告加载失败",
+      "dataQuality": "数据质量加载失败",
+      "account": "实时账户加载失败",
+      "equity": "权益快照加载失败"
+    },
+    "bootstrap": {
+      "title": "系统启用与能力",
+      "phase": "启动阶段",
+      "blockedCount": "阻断项",
+      "nextAction": "下一步",
+      "next": {
+        "activate": "审批并显式启用当前运行配置",
+        "operational": "所有运行能力门槛均已满足"
+      },
+      "group": {
+        "critical": "关键控制",
+        "collecting": "数据与证据",
+        "trading": "报告与交易风险"
+      },
+      "phaseValue": {
+        "initializing": "初始化",
+        "collecting_baseline": "采集基线",
+        "awaiting_activation": "等待启用",
+        "active": "已启用"
+      },
+      "enabled": "可用",
+      "blocked": "阻断",
+      "activate": "启用系统",
+      "activateTitle": "启用冷启动系统",
+      "activateSummary": "批准所选不可变运行配置并进入 active。系统仍保持 ReportOnlyForced，交易风险不会因本操作自动放开。",
+      "activated": "系统已显式启用",
+      "noConfig": "没有可批准的运行配置版本",
+      "configRevision": "运行配置版本",
+      "ackLabel": "ReportOnlyForced 确认",
+      "ackHelp": "我确认启用后系统仍处于 ReportOnlyForced，放开交易需要独立治理操作。",
+      "reportBlocked": "报告生成能力当前被系统状态阻断",
+      "capability": {
+        "control_plane_ready": "控制面",
+        "catalog_baseline_ready": "目录基线",
+        "research_capture_enabled": "研究采集",
+        "report_generation_eligible": "报告生成",
+        "automatic_parity_eligible": "自动一致性重放",
+        "entry_admission_eligible": "入场准入",
+        "order_submission_eligible": "订单提交"
+      },
+      "reason": {
+        "bootstrap_initializing": "启动状态仍在初始化",
+        "control_plane_not_ready": "控制面尚未就绪",
+        "catalog_baseline_missing": "目录基线尚未完成",
+        "bootstrap_not_collecting": "研究采集阶段尚未开始",
+        "bootstrap_not_active": "系统尚未显式启用",
+        "operational_phase_blocks_reports": "当前运行阶段禁止生成报告",
+        "runtime_mode_report_only": "ReportOnly 禁止创建入场意图",
+        "kill_switch_blocks_entries": "熔断状态禁止新入场",
+        "operational_phase_blocks_submission": "当前运行阶段禁止订单提交",
+        "no_serving_evidence": "尚无 serving 证据"
+      }
     },
     "kpi": {
       "netLiq": "净清算价值",

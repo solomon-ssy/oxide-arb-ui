@@ -14,3 +14,4 @@ export * from './research';
 export * from './runtime-config';
 export * from './settlement-redeems';
 export * from './system';
+export * from './ws';

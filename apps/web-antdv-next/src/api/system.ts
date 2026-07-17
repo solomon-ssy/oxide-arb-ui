@@ -1,4 +1,7 @@
 import type {
+  ActionEligibilityView,
+  ActivateBootstrapRequest,
+  BootstrapView,
   DeployConfigView,
   ExecutionRecoveryView,
   HealthReport,
@@ -7,7 +10,7 @@ import type {
   QuantModeView,
   SetKillSwitchRequest,
   SwitchQuantModeRequest,
-  SystemStatus,
+  SystemControlPlaneStatus,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
@@ -18,6 +21,8 @@ import { requestClient } from '#/api/request';
 export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
+  export const actionEligibility = `${base}/action-eligibility`;
+  export const activateBootstrap = `${base}/bootstrap/activate`;
   export const health = `${base}/health`;
   export const quantMode = `${base}/quant-mode`;
   export const killSwitch = `${base}/kill-switch`;
@@ -27,7 +32,20 @@ export namespace SystemApi {
 
 /** `GET /system/status` — the operator system snapshot. */
 export async function getSystemStatus() {
-  return requestClient.get<SystemStatus>(SystemApi.status);
+  return requestClient.get<SystemControlPlaneStatus>(SystemApi.status);
+}
+
+/** User-scoped RBAC and runtime-capability decisions for guarded actions. */
+export async function getActionEligibility() {
+  return requestClient.get<ActionEligibilityView>(SystemApi.actionEligibility);
+}
+
+/** Governed transition from `awaiting_activation` to `active`. */
+export async function activateBootstrap(
+  body: ActivateBootstrapRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<BootstrapView>(SystemApi.activateBootstrap, body, ctx);
 }
 
 /** `GET /system/health` — per-subsystem health report. */

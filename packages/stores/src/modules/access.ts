@@ -39,10 +39,6 @@ interface AccessState {
    * 登录是否过期
    */
   loginExpired: boolean;
-  /**
-   * 登录 accessToken
-   */
-  refreshToken: AccessToken;
 }
 
 /**
@@ -91,23 +87,10 @@ export const useAccessStore = defineStore('core-access', {
     setLoginExpired(loginExpired: boolean) {
       this.loginExpired = loginExpired;
     },
-    setRefreshToken(token: AccessToken) {
-      this.refreshToken = token;
-    },
     unlockScreen() {
       this.isLockScreen = false;
       this.lockScreenPassword = undefined;
     },
-  },
-  persist: {
-    // 持久化
-    pick: [
-      'accessToken',
-      'refreshToken',
-      'accessCodes',
-      'isLockScreen',
-      'lockScreenPassword',
-    ],
   },
   state: (): AccessState => ({
     accessCodes: [],
@@ -118,7 +101,6 @@ export const useAccessStore = defineStore('core-access', {
     isLockScreen: false,
     lockScreenPassword: undefined,
     loginExpired: false,
-    refreshToken: null,
   }),
 });
 

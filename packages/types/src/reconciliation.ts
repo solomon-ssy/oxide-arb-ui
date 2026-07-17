@@ -9,7 +9,7 @@ import type {
 } from './common';
 import type { ReconciliationEvidenceKind, ReconciliationResult } from './enums';
 import type { ExecutionOrderView } from './execution-order';
-import type { ExecutionRecoverySummary } from './system';
+import type { ExecutionRecoverySummary } from './execution-recovery';
 
 import { RECONCILIATION_RESULTS } from './enums';
 

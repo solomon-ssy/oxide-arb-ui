@@ -1,12 +1,11 @@
 import type { RequestClientOptions } from '@vben/request';
+
 /**
  * oxide-arb HTTP client wiring.
  *
  * Error pipeline lives in `@vben/request/qp`:
  * normalize → auto-toast (unless silent) → useRequestHandler fallback
  */
-import type { TokenResponse } from '@vben/types';
-
 import { useAppConfig } from '@vben/hooks';
 import { preferences } from '@vben/preferences';
 import {
@@ -24,6 +23,10 @@ import { useAccessStore } from '@vben/stores';
 import { message } from 'antdv-next';
 
 import { buildApiHeaders } from '#/api/headers';
+import {
+  clearAccessTokenAcrossTabs,
+  refreshAccessToken,
+} from '#/auth/refresh-coordinator';
 import { useAuthStore } from '#/store';
 
 import { refreshTokenApi } from './core';
@@ -36,12 +39,13 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
     baseURL,
+    withCredentials: true,
   });
 
   async function doReAuthenticate() {
     const accessStore = useAccessStore();
     const authStore = useAuthStore();
-    accessStore.setAccessToken(null);
+    clearAccessTokenAcrossTabs();
     if (
       preferences.app.loginExpiredMode === 'modal' &&
       accessStore.isAccessChecked
@@ -52,18 +56,8 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }
   }
 
-  async function doRefreshToken() {
-    const accessStore = useAccessStore();
-    const refreshToken = accessStore.refreshToken;
-    if (!refreshToken) {
-      throw new Error('Refresh token is missing');
-    }
-    const resp: TokenResponse = await refreshTokenApi({
-      refresh_token: refreshToken,
-    });
-    accessStore.setAccessToken(resp.access_token);
-    accessStore.setRefreshToken(resp.refresh_token);
-    return resp.access_token;
+  async function doRefreshToken(failedAuthorization?: null | string) {
+    return refreshAccessToken(refreshTokenApi, failedAuthorization);
   }
 
   function formatToken(token: null | string) {
@@ -118,7 +112,10 @@ export const requestClient = createRequestClient(apiURL, {
   timeout: 30_000,
 });
 
-export const baseRequestClient = new RequestClient({ baseURL: apiURL });
+export const baseRequestClient = new RequestClient({
+  baseURL: apiURL,
+  withCredentials: true,
+});
 
 baseRequestClient.addRequestInterceptor({
   fulfilled: async (config) => {

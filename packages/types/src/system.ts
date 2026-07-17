@@ -1,10 +1,10 @@
-import type { DecimalString, IsoDateTime } from './common';
+import type { DecimalString, IsoDateTime, UuidString } from './common';
 import type {
-  ExecutionRecoveryStep,
   KillSwitchState,
   MarketCategory,
   QuantRuntimeMode,
 } from './enums';
+import type { ExecutionRecoverySummary } from './execution-recovery';
 import type { ReconciliationView } from './reconciliation';
 
 /**
@@ -53,17 +53,6 @@ export interface KillSwitchView {
   changed_at: IsoDateTime;
 }
 
-/** Execution-recovery rollup embedded in {@link SystemStatus}. */
-export interface ExecutionRecoverySummary {
-  has_unresolvable_reconciliation: boolean;
-  unresolvable_count: number;
-  kill_switch_requires_ack: boolean;
-  kill_switch_state: KillSwitchState;
-  quant_runtime_mode: QuantRuntimeMode;
-  auto_execution_blocked: boolean;
-  next_steps: ExecutionRecoveryStep[];
-}
-
 /** `GET /system/execution-recovery` — recovery detail with blocking rows. */
 export interface ExecutionRecoveryView {
   summary: ExecutionRecoverySummary;
@@ -82,6 +71,75 @@ export interface SystemStatus {
   kill_switch: KillSwitchView;
   execution_recovery: ExecutionRecoverySummary;
   checked_at: IsoDateTime;
+}
+
+export type BootstrapPhase =
+  | 'active'
+  | 'awaiting_activation'
+  | 'collecting_baseline'
+  | 'initializing';
+
+export type CapabilityReason =
+  | 'bootstrap_initializing'
+  | 'bootstrap_not_active'
+  | 'bootstrap_not_collecting'
+  | 'catalog_baseline_missing'
+  | 'control_plane_not_ready'
+  | 'kill_switch_blocks_entries'
+  | 'no_serving_evidence'
+  | 'operational_phase_blocks_reports'
+  | 'operational_phase_blocks_submission'
+  | 'runtime_mode_report_only';
+
+export interface BootstrapView {
+  bootstrap_contract_version: number;
+  phase: BootstrapPhase;
+  state_revision: number;
+}
+
+export interface CapabilityView {
+  enabled: boolean;
+  reasons: CapabilityReason[];
+}
+
+export interface SystemCapabilities {
+  revision: number;
+  control_plane_ready: CapabilityView;
+  catalog_baseline_ready: CapabilityView;
+  research_capture_enabled: CapabilityView;
+  report_generation_eligible: CapabilityView;
+  entry_admission_eligible: CapabilityView;
+  order_submission_eligible: CapabilityView;
+  automatic_parity_eligible: CapabilityView;
+}
+
+export interface ActionEligibilityDecision {
+  enabled: boolean;
+  permission_granted: boolean;
+  capability: CapabilityView;
+}
+
+/** User-scoped RBAC and runtime-capability decisions for consequential actions. */
+export interface ActionEligibilityView {
+  capability_revision: number;
+  report_generation: ActionEligibilityDecision;
+  entry_admission: ActionEligibilityDecision;
+  order_submission: ActionEligibilityDecision;
+}
+
+/** Authenticated `GET /system/status` control-plane snapshot. */
+export interface SystemControlPlaneStatus extends SystemStatus {
+  bootstrap: BootstrapView;
+  capabilities: SystemCapabilities;
+}
+
+export interface ActivateBootstrapRequest {
+  bootstrap_contract_version: number;
+  expected_state_revision: number;
+  reason: string;
+  report_only_forced_ack: boolean;
+  runtime_config_approval_id: UuidString;
+  runtime_config_version_id: UuidString;
 }
 
 /** `GET /system/quant-mode` — the current runtime mode. */
@@ -154,7 +212,7 @@ export interface HealthReport {
  * `GET /system/deploy-config` — credential-masked deploy config snapshot.
  *
  * Mirrors the hand-built masked object from `masked_deploy_view()`; secret
- * fields (`password`, `jwt.secret`) arrive as `"***"` (or `""` when unset) and
+ * fields (`password`, JWT private-key path) are masked and
  * credentialed URLs are collapsed to `"***"`. The `quant` and `research`
  * sections are intentionally omitted server-side.
  */
@@ -173,8 +231,8 @@ export interface DeployConfigView {
   market_data: {
     gamma: {
       base_url: string;
-      full_sync_interval_secs: number;
       page_size: number;
+      reconcile_interval_secs: number;
     };
     websocket: {
       max_reconnect_delay_ms: number;
@@ -186,7 +244,9 @@ export interface DeployConfigView {
   db: {
     clickhouse: {
       batch_size: number;
+      cluster_id: string;
       database: string;
+      deployment_id: string;
       flush_interval_secs: number;
       max_concurrent_inserts: number;
       password: string;

@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { computed, nextTick } from 'vue';
 
+import { $t } from '@vben/locales';
+
 import { VbenButton } from '@vben-core/shadcn-ui';
 
 interface Props {
@@ -23,6 +25,8 @@ const isDark = defineModel<boolean>();
 const theme = computed(() => {
   return isDark.value ? 'light' : 'dark';
 });
+
+const themeLabel = computed(() => $t(`preferences.theme.${theme.value}`));
 
 const bindProps = computed(() => {
   const type = props.type;
@@ -84,9 +88,8 @@ function toggleTheme(event: MouseEvent) {
 
 <template>
   <VbenButton
-    :aria-label="theme"
+    :aria-label="themeLabel"
     :class="[`is-${theme}`]"
-    aria-live="polite"
     class="theme-toggle cursor-pointer border-none bg-none hover:animate-[shrink_0.3s_ease-in-out]"
     v-bind="bindProps"
     @click.stop="toggleTheme"

@@ -73,9 +73,10 @@ const PRESETS = [
         <ToggleGroupItem
           v-for="item in PRESETS"
           :key="item.name"
+          :aria-label="item.title"
           :value="item.name"
         >
-          <component :is="item.icon" class="size-5" />
+          <component :is="item.icon" aria-hidden="true" class="size-5" />
         </ToggleGroupItem>
       </ToggleGroup>
     </VbenTooltip>

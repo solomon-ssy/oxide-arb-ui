@@ -11,28 +11,32 @@ import { dateUtil, readPackageJSON } from '@vben/node-utils';
 async function viteLicensePlugin(
   root = process.cwd(),
 ): Promise<PluginOption | undefined> {
+  const packageJson = await readPackageJSON(root);
   const {
     description = '',
     homepage = '',
+    license = 'UNLICENSED',
+    name = '',
     version = '',
-  } = await readPackageJSON(root);
+  } = packageJson;
+  const displayName =
+    typeof packageJson.displayName === 'string' && packageJson.displayName
+      ? packageJson.displayName
+      : name;
 
   return {
     apply: 'build',
     enforce: 'post',
     generateBundle: {
       handler(_options, bundle) {
-        const date = dateUtil().format('YYYY-MM-DD ');
+        const date = dateUtil().format('YYYY-MM-DD');
         const copyrightText = `/*!
-  * Vben Admin
+  * ${displayName}
   * Version: ${version}
-  * Author: vben
-  * Copyright (C) 2024 Vben
-  * License: MIT License
+  * License: ${license}
   * Description: ${description}
   * Date Created: ${date}
   * Homepage: ${homepage}
-  * Contact: ann.vben@gmail.com
 */
               `.trim();
 

@@ -11,7 +11,7 @@ import type {
   SettlementRedeemLifecycleEvent,
   SyncSnapshot,
   SystemAlertEvent,
-  SystemStatus,
+  SystemControlPlaneStatus,
   WsEnvelope,
 } from '@vben/types';
 
@@ -126,8 +126,8 @@ export function dispatchWsEnvelope(
       break;
     }
     case 'system.status': {
-      const status = envelope.data as SystemStatus;
-      useSystemStore().applySystemStatus(status);
+      const status = envelope.data as SystemControlPlaneStatus;
+      useSystemStore().applyControlPlaneStatus(status);
       useWsStore().markSystemStatus(envelope.timestamp);
       break;
     }

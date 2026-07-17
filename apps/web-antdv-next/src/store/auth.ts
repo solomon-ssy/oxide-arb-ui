@@ -16,7 +16,18 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'antdv-next';
 import { defineStore } from 'pinia';
 
-import { getMeApi, loginApi, logoutApi, mapMeToUserInfo } from '#/api';
+import {
+  getMeApi,
+  loginApi,
+  logoutApi,
+  mapMeToUserInfo,
+  refreshTokenApi,
+} from '#/api';
+import {
+  clearAccessTokenAcrossTabs,
+  publishAccessToken,
+  refreshAccessToken,
+} from '#/auth/refresh-coordinator';
 import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -27,6 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loginLoading = ref(false);
   const cachedMenus = ref<MenuTreeNode[] | null>(null);
   const meRoles = ref<RoleView[]>([]);
+  let restorePromise: null | Promise<void> = null;
 
   async function applyMeResponse(me: MeResponse) {
     const userInfo = mapMeToUserInfo(me);
@@ -37,10 +49,33 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function clearSessionCredentials() {
-    accessStore.setAccessToken(null);
-    accessStore.setRefreshToken(null);
+    clearAccessTokenAcrossTabs();
+    accessStore.setAccessCodes([]);
+    accessStore.setAccessMenus([]);
+    accessStore.setAccessRoutes([]);
+    accessStore.setIsAccessChecked(false);
+    userStore.setUserInfo(null);
     cachedMenus.value = null;
     meRoles.value = [];
+  }
+
+  async function restoreSession() {
+    if (accessStore.accessToken) {
+      return;
+    }
+    restorePromise ??= (async () => {
+      try {
+        await refreshAccessToken(refreshTokenApi);
+      } catch (error) {
+        clearSessionCredentials();
+        throw error;
+      }
+    })();
+    try {
+      await restorePromise;
+    } finally {
+      restorePromise = null;
+    }
   }
 
   async function authLogin(
@@ -54,8 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
         username: String(params.username ?? ''),
       });
 
-      accessStore.setAccessToken(tokens.access_token);
-      accessStore.setRefreshToken(tokens.refresh_token);
+      publishAccessToken(tokens.access_token);
 
       let userInfo: UserInfo;
       try {
@@ -91,14 +125,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout(redirect: boolean = true) {
     try {
-      await logoutApi(
-        { refresh_token: accessStore.refreshToken ?? undefined },
-        accessStore.accessToken,
-      );
+      await logoutApi(accessStore.accessToken);
     } catch {
       // Best-effort server revoke; always clear local session.
     }
 
+    clearAccessTokenAcrossTabs();
     cachedMenus.value = null;
     meRoles.value = [];
     resetAllStores();
@@ -134,5 +166,6 @@ export const useAuthStore = defineStore('auth', () => {
     loginLoading,
     logout,
     meRoles,
+    restoreSession,
   };
 });

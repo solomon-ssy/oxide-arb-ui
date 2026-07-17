@@ -17,50 +17,41 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore } from '@vben/stores';
 import { WS_CHANNELS } from '@vben/types';
 
-import { useWebSocket } from '@vueuse/core';
 import { message, notification } from 'antdv-next';
 
+import { issueWsTicketApi } from '#/api';
 import { $t } from '#/locales';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useWsStore } from '#/store';
+import { useSystemStore, useWsStore } from '#/store';
 
 import { authorizedGlobalChannels } from './ws/ws-channel-permissions';
 import { dispatchWsEnvelope } from './ws/ws-dispatch';
-import { buildWsUrl } from './ws/ws-url';
+import { buildWsTicketProtocol, buildWsUrl } from './ws/ws-url';
 
-/** Application heartbeat cadence (mirrors the server's 15s ping). */
 const HEARTBEAT_INTERVAL_MS = 15_000;
-/** Close the socket when no frame arrives within this window after a ping. */
 const HEARTBEAT_PONG_TIMEOUT_MS = 30_000;
-/** Initial reconnect delay (first retry within the ≤5s acceptance budget). */
 const RECONNECT_DELAY_MS = 1000;
-/** Exponential backoff ceiling for sustained outages. */
 const RECONNECT_DELAY_MAX_MS = 30_000;
+const NOTIFICATION_CAP = 50;
 
-/** Backoff: 1s → 2s → 4s … capped at 30s. */
 function reconnectBackoffMs(retried: number): number {
   const exponent = Math.max(0, retried);
   return Math.min(RECONNECT_DELAY_MS * 2 ** exponent, RECONNECT_DELAY_MAX_MS);
 }
-/** Bell notification list capacity. */
-const NOTIFICATION_CAP = 50;
+
+function withJitter(delayMs: number): number {
+  return Math.round(delayMs * (0.8 + Math.random() * 0.4));
+}
 
 export interface QpWsApi {
-  /** Tri-state connection status (drives the header badge). */
   status: ComputedRef<WsConnectionStatus>;
-  /** Bell notification feed (system alerts). */
   notifications: Ref<NotificationItem[]>;
-  /** Open the socket (idempotent); requires an access token. */
   connect: () => void;
-  /** Close the socket and stop reconnecting (logout / teardown). */
   disconnect: () => void;
-  /** Subscribe this caller to a market's book updates (refcounted). */
   subscribeMarket: (marketId: MarketId) => void;
-  /** Release one subscription refcount; unsubscribes at zero. */
   unsubscribeMarket: (marketId: MarketId) => void;
 }
 
-/** antd notification severity per alert level. */
 const ALERT_NOTIFY: Record<AlertLevel, 'error' | 'info' | 'warning'> = {
   critical: 'error',
   emergency: 'error',
@@ -71,31 +62,28 @@ const ALERT_NOTIFY: Record<AlertLevel, 'error' | 'info' | 'warning'> = {
 let instance: null | QpWsApi = null;
 
 function createQpWs(): QpWsApi {
-  // Detached scope: the singleton must survive any component that first
-  // touched it (useWebSocket auto-closes on scope dispose otherwise).
   const scope = effectScope(true);
 
   const api = scope.run(() => {
     const accessStore = useAccessStore();
+    const systemStore = useSystemStore();
     const wsStore = useWsStore();
     const { hasAccessByCodes } = useQpAccess();
     const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
-    /** Whether the app currently wants a live connection. */
     const desired = ref(false);
-    /** Per-market book subscription refcounts (replayed after reconnect). */
+    const socketState = ref<'CLOSED' | 'CONNECTING' | 'OPEN'>('CLOSED');
     const marketRefCounts = new Map<MarketId, number>();
-
     const notifications = ref<NotificationItem[]>([]);
     const alertToastLastSeen = new Map<string, number>();
-    let notificationSeq = 0;
 
-    const url = computed(() => {
-      const token = accessStore.accessToken;
-      // An undefined URL keeps useWebSocket from connecting (fail-closed);
-      // reconnects re-read this computed, so a refreshed token is picked up.
-      return token ? buildWsUrl(apiURL, token) : undefined;
-    });
+    let socket: null | WebSocket = null;
+    let reconnectTimer: null | ReturnType<typeof setTimeout> = null;
+    let heartbeatTimer: null | ReturnType<typeof setInterval> = null;
+    let pongTimeout: null | ReturnType<typeof setTimeout> = null;
+    let generation = 0;
+    let reconnectAttempts = 0;
+    let notificationSeq = 0;
 
     function pushNotification(title: string, msg: string, key?: string) {
       const id = key ? `qp-alert-${key}` : `qp-ws-${notificationSeq + 1}`;
@@ -132,115 +120,225 @@ function createQpWs(): QpWsApi {
       return true;
     }
 
-    const socket = useWebSocket(url, {
-      autoReconnect: {
-        delay: reconnectBackoffMs,
-        retries: Number.POSITIVE_INFINITY,
-      },
-      heartbeat: {
-        interval: HEARTBEAT_INTERVAL_MS,
-        message: JSON.stringify({ action: 'ping' } satisfies WsClientCommand),
-        pongTimeout: HEARTBEAT_PONG_TIMEOUT_MS,
-      },
-      immediate: false,
-      onConnected() {
-        // Re-establish the full session contract on every (re)connect:
-        // authorized global channels → full sync → per-market replays.
-        for (const channel of authorizedGlobalChannels(hasAccessByCodes)) {
-          sendCommand({ action: 'subscribe', channel });
-        }
-        sendCommand({ action: 'sync' });
-        for (const [marketId, count] of marketRefCounts) {
-          if (count > 0) {
-            sendCommand({
-              action: 'subscribe',
-              channel: WS_CHANNELS.marketBookUpdate,
-              market_id: marketId,
-            });
-          }
-        }
-      },
-      onMessage(_ws, event) {
-        let envelope: WsEnvelope;
-        try {
-          envelope = JSON.parse(event.data as string) as WsEnvelope;
-        } catch {
-          console.warn('[qp-ws] non-JSON frame dropped:', event.data);
-          return;
-        }
-        dispatchWsEnvelope(envelope, {
-          onAlert(alert) {
-            wsStore.recordAlert(alert);
-            if (
-              alert.visible_toast &&
-              shouldToastAlert(alert.idempotency_key, alert.dedupe_secs)
-            ) {
-              notification[ALERT_NOTIFY[alert.level]]({
-                description: alert.message,
-                title: alert.title,
-              });
-            }
-            pushNotification(
-              alert.title || $t(`page.ws.alertLevel.${alert.level}`),
-              alert.message,
-              alert.idempotency_key,
-            );
-          },
-          onConfigActivated(event) {
-            message.info(
-              $t('page.ws.configActivated', { version: event.version_id }),
-            );
-          },
-          onMarketResolved() {
-            // Silent: `dispatchWsEnvelope` marks the market resolved in the store.
-          },
-        });
-      },
-    });
+    function clearHeartbeat() {
+      if (heartbeatTimer !== null) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+      if (pongTimeout !== null) {
+        clearTimeout(pongTimeout);
+        pongTimeout = null;
+      }
+    }
+
+    function recordInboundFrame() {
+      if (pongTimeout !== null) {
+        clearTimeout(pongTimeout);
+        pongTimeout = null;
+      }
+    }
 
     function sendCommand(command: WsClientCommand) {
-      socket.send(JSON.stringify(command));
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(command));
+      }
+    }
+
+    function replaySubscriptions() {
+      for (const channel of authorizedGlobalChannels(hasAccessByCodes)) {
+        sendCommand({ action: 'subscribe', channel });
+      }
+      sendCommand({ action: 'sync' });
+      for (const [marketId, count] of marketRefCounts) {
+        if (count > 0) {
+          sendCommand({
+            action: 'subscribe',
+            channel: WS_CHANNELS.marketBookUpdate,
+            market_id: marketId,
+          });
+        }
+      }
+    }
+
+    function handleEnvelope(event: MessageEvent) {
+      recordInboundFrame();
+      if (typeof event.data !== 'string') {
+        console.warn('[qp-ws] non-text frame dropped');
+        return;
+      }
+
+      let envelope: WsEnvelope;
+      try {
+        envelope = JSON.parse(event.data) as WsEnvelope;
+      } catch {
+        console.warn('[qp-ws] non-JSON frame dropped');
+        return;
+      }
+
+      dispatchWsEnvelope(envelope, {
+        onAlert(alert) {
+          wsStore.recordAlert(alert);
+          if (
+            alert.visible_toast &&
+            shouldToastAlert(alert.idempotency_key, alert.dedupe_secs)
+          ) {
+            notification[ALERT_NOTIFY[alert.level]]({
+              description: alert.message,
+              title: alert.title,
+            });
+          }
+          pushNotification(
+            alert.title || $t(`page.ws.alertLevel.${alert.level}`),
+            alert.message,
+            alert.idempotency_key,
+          );
+        },
+        onConfigActivated(event) {
+          message.info(
+            $t('page.ws.configActivated', { version: event.version_id }),
+          );
+        },
+        onMarketResolved() {},
+      });
+    }
+
+    function startHeartbeat(ws: WebSocket) {
+      clearHeartbeat();
+      heartbeatTimer = setInterval(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          return;
+        }
+        ws.send(JSON.stringify({ action: 'ping' } satisfies WsClientCommand));
+        pongTimeout ??= setTimeout(() => {
+          pongTimeout = null;
+          ws.close(4000, 'heartbeat timeout');
+        }, HEARTBEAT_PONG_TIMEOUT_MS);
+      }, HEARTBEAT_INTERVAL_MS);
+    }
+
+    function scheduleReconnect() {
+      if (!desired.value || reconnectTimer !== null) {
+        return;
+      }
+      const delay = withJitter(reconnectBackoffMs(reconnectAttempts));
+      reconnectAttempts += 1;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        void openSocket();
+      }, delay);
+    }
+
+    async function openSocket() {
+      if (
+        !desired.value ||
+        !accessStore.accessToken ||
+        socketState.value !== 'CLOSED'
+      ) {
+        return;
+      }
+
+      const attemptGeneration = ++generation;
+      socketState.value = 'CONNECTING';
+      try {
+        const { ticket } = await issueWsTicketApi();
+        if (!desired.value || attemptGeneration !== generation) {
+          return;
+        }
+
+        const ws = new WebSocket(buildWsUrl(apiURL), [
+          buildWsTicketProtocol(ticket),
+        ]);
+        socket = ws;
+
+        ws.addEventListener('open', () => {
+          if (!desired.value || socket !== ws) {
+            ws.close(1000, 'connection no longer desired');
+            return;
+          }
+          socketState.value = 'OPEN';
+          reconnectAttempts = 0;
+          startHeartbeat(ws);
+          replaySubscriptions();
+        });
+        ws.addEventListener('message', handleEnvelope);
+        ws.addEventListener('error', () => ws.close());
+        ws.addEventListener('close', () => {
+          if (socket !== ws) {
+            return;
+          }
+          socket = null;
+          socketState.value = 'CLOSED';
+          clearHeartbeat();
+          scheduleReconnect();
+        });
+      } catch {
+        if (attemptGeneration !== generation) {
+          return;
+        }
+        socketState.value = 'CLOSED';
+        scheduleReconnect();
+      }
     }
 
     const status = computed<WsConnectionStatus>(() => {
-      switch (socket.status.value) {
-        case 'CONNECTING': {
-          return 'reconnecting';
-        }
-        case 'OPEN': {
-          return 'connected';
-        }
-        default: {
-          // A closed socket the app still wants is mid-reconnect.
-          return desired.value ? 'reconnecting' : 'disconnected';
-        }
+      if (socketState.value === 'OPEN') {
+        return 'connected';
       }
+      return desired.value ? 'reconnecting' : 'disconnected';
     });
 
-    watch(status, (next) => wsStore.setStatus(next), { immediate: true });
+    watch(
+      status,
+      (next) => {
+        wsStore.setStatus(next);
+        if (next !== 'connected') {
+          systemStore.clearActionEligibility();
+        }
+      },
+      { immediate: true },
+    );
+    watch(
+      () => accessStore.accessToken,
+      (token) => {
+        if (!token && desired.value) {
+          disconnect();
+        }
+      },
+    );
 
     function connect() {
       if (!accessStore.accessToken) {
         return;
       }
       desired.value = true;
-      socket.open();
+      void openSocket();
     }
 
     function disconnect() {
       desired.value = false;
+      generation += 1;
+      reconnectAttempts = 0;
+      if (reconnectTimer !== null) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      clearHeartbeat();
       marketRefCounts.clear();
       notifications.value = [];
       alertToastLastSeen.clear();
       notificationSeq = 0;
       wsStore.clearRecentAlert();
-      socket.close();
+
+      const activeSocket = socket;
+      socket = null;
+      socketState.value = 'CLOSED';
+      activeSocket?.close(1000, 'client disconnect');
     }
 
     function subscribeMarket(marketId: MarketId) {
       const count = marketRefCounts.get(marketId) ?? 0;
       marketRefCounts.set(marketId, count + 1);
-      if (count === 0 && socket.status.value === 'OPEN') {
+      if (count === 0 && socketState.value === 'OPEN') {
         sendCommand({
           action: 'subscribe',
           channel: WS_CHANNELS.marketBookUpdate,
@@ -253,7 +351,7 @@ function createQpWs(): QpWsApi {
       const count = marketRefCounts.get(marketId) ?? 0;
       if (count <= 1) {
         marketRefCounts.delete(marketId);
-        if (count === 1 && socket.status.value === 'OPEN') {
+        if (count === 1 && socketState.value === 'OPEN') {
           sendCommand({
             action: 'unsubscribe',
             channel: WS_CHANNELS.marketBookUpdate,
@@ -280,11 +378,7 @@ function createQpWs(): QpWsApi {
   return api;
 }
 
-/**
- * Singleton quant-pivot WebSocket session (one connection shared app-wide).
- * Lifecycle: `connect()` in the basic layout once access is checked,
- * `disconnect()` on logout.
- */
+/** One application-wide WebSocket session, explicitly closed during logout. */
 export function useQpWs(): QpWsApi {
   instance ??= createQpWs();
   return instance;

@@ -3,6 +3,13 @@
     "login": "Login",
     "profile": "Profile"
   },
+  "systemOffline": {
+    "title": "Service temporarily unavailable",
+    "description": "The control plane is not ready. This page will recover automatically when service returns.",
+    "retry": "Check now",
+    "checking": "Checking control-plane readiness",
+    "retryCountdown": "Retrying automatically in {seconds} seconds"
+  },
   "common": {
     "underConstruction": "This page is under construction and will land in a later phase",
     "comingInPhase": "Coming in Phase {phase}",
@@ -203,7 +210,7 @@
         "queued": "Trade-policy fit queued.",
         "publishable": "The source evidence is eligible for a publishable fit.",
         "blocked": "Fit enqueue is blocked until every data and methodology readiness gate passes.",
-        "readinessCapability": "Preflight verifies the frozen Runtime v16 methodology, continuous L2, reconciled fees/trades, and a signed production latency profile before any fit can be queued.",
+        "readinessCapability": "Preflight verifies the frozen Runtime v17 methodology, continuous L2, reconciled fees/trades, and a signed production latency profile before any fit can be queued.",
         "contractValid": "Contract valid",
         "datasetReady": "Dataset Ready",
         "datasetPurpose": "PolicyFit purpose",
@@ -243,6 +250,12 @@
         "fitWindowContained": "Source slice fully contains fit window",
         "retentionRunway": "Raw-retention runway (actual / required)",
         "retentionRunwayValue": "{actual} / {required} days",
+        "readiness": {
+          "blocked": "Preflight blocked",
+          "blocked_insufficient_history": "Insufficient history",
+          "ready_to_materialize": "Ready to materialize",
+          "reusable": "Safely reusable"
+        },
         "estimatedTrials": "Estimated experiment scale",
         "estimatedTrialsValue": "{candidates} candidates · {folds} fold evaluations",
         "actual": "Actual",
@@ -359,7 +372,7 @@
         "profile_lineage_mismatch": "Research-profile lineage does not match",
         "source_slice_unverified": "Source Slice v2 is not verified",
         "fit_window_not_contained": "The source data does not contain the fixed fit window",
-        "quality_gate_unavailable": "Runtime v16 or profile quality gates are unavailable",
+        "quality_gate_unavailable": "Runtime v17 or profile quality gates are unavailable",
         "pit_cutoff_invalid": "PIT cutoff is invalid",
         "full_l2_trajectory_missing": "Complete L2 replay facts are missing",
         "pit_fee_facts_missing": "PIT CLOB fee facts are missing",
@@ -1768,6 +1781,65 @@
     },
     "cards": {
       "ws": "Realtime"
+    },
+    "loadError": {
+      "report": "Latest report failed to load",
+      "dataQuality": "Data quality failed to load",
+      "account": "Live account failed to load",
+      "equity": "Equity snapshot failed to load"
+    },
+    "bootstrap": {
+      "title": "System Activation and Capabilities",
+      "phase": "Bootstrap phase",
+      "blockedCount": "Blocked",
+      "nextAction": "Next action",
+      "next": {
+        "activate": "Approve and explicitly activate the runtime revision",
+        "operational": "All runtime capability gates are satisfied"
+      },
+      "group": {
+        "critical": "Critical control",
+        "collecting": "Data and evidence",
+        "trading": "Reports and trading risk"
+      },
+      "phaseValue": {
+        "initializing": "Initializing",
+        "collecting_baseline": "Collecting baseline",
+        "awaiting_activation": "Awaiting activation",
+        "active": "Active"
+      },
+      "enabled": "Available",
+      "blocked": "Blocked",
+      "activate": "Activate system",
+      "activateTitle": "Activate cold-start system",
+      "activateSummary": "Approve the selected immutable runtime configuration and enter active. The system remains ReportOnlyForced; this action does not release trading risk.",
+      "activated": "System explicitly activated",
+      "noConfig": "No runtime configuration revision is available for approval",
+      "configRevision": "Runtime configuration revision",
+      "ackLabel": "ReportOnlyForced acknowledgement",
+      "ackHelp": "I acknowledge the system remains ReportOnlyForced after activation and trading requires a separate governed action.",
+      "reportBlocked": "Report generation is blocked by the current system state",
+      "capability": {
+        "control_plane_ready": "Control plane",
+        "catalog_baseline_ready": "Catalog baseline",
+        "research_capture_enabled": "Research capture",
+        "report_generation_eligible": "Report generation",
+        "automatic_parity_eligible": "Automatic parity replay",
+        "entry_admission_eligible": "Entry admission",
+        "order_submission_eligible": "Order submission"
+      },
+      "reason": {
+        "bootstrap_initializing": "Bootstrap state is still initializing",
+        "control_plane_not_ready": "Control plane is not ready",
+        "catalog_baseline_missing": "Catalog baseline is incomplete",
+        "bootstrap_not_collecting": "Research capture phase has not started",
+        "bootstrap_not_active": "System has not been explicitly activated",
+        "operational_phase_blocks_reports": "Current operational phase blocks reports",
+        "runtime_mode_report_only": "ReportOnly blocks entry intents",
+        "kill_switch_blocks_entries": "Kill switch blocks new entries",
+        "operational_phase_blocks_submission": "Current operational phase blocks order submission",
+        "no_serving_evidence": "No serving evidence exists yet"
+      }
     },
     "kpi": {
       "netLiq": "Net Liquidation",

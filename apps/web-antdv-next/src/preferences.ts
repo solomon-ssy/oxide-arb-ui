@@ -15,7 +15,7 @@ export const overridesPreferences = defineOverridesPreferences({
     loginExpiredMode: 'modal',
   },
   copyright: {
-    companyName: 'Oxide Arb',
+    companyName: 'Quant Pivot',
     companySiteLink: '',
     date: '2026',
     enable: true,

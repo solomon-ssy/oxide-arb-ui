@@ -12,8 +12,6 @@ import type { ClassType, DeepPartial } from '@vben/types';
 
 import type { BaseFormComponentType, VbenFormProps } from '@vben-core/form-ui';
 
-import type { VxeGridApi } from './api';
-
 import { useVbenForm } from '@vben-core/form-ui';
 
 export interface VxePaginationInfo {
@@ -170,16 +168,6 @@ export interface VxeGridProps<
    */
   viewedRowOptions?: boolean | ViewedRowOptions<T>;
 }
-
-export type ExtendedVxeGridApi<
-  D extends Record<string, any> = any,
-  F extends BaseFormComponentType = BaseFormComponentType,
-  P extends Record<string, any> = Record<never, never>,
-> = VxeGridApi<D, F, P> & {
-  useStore: <S = NoInfer<VxeGridProps<D, F, P>>>(
-    selector?: (state: NoInfer<VxeGridProps<D, F, P>>) => S,
-  ) => Readonly<Ref<S>>;
-};
 
 export interface SetupVxeTable {
   configVxeTable: (ui: VxeUIExport) => void;

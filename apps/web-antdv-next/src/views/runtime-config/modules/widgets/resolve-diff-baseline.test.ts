@@ -42,6 +42,7 @@ const activation: RuntimeConfigActivationInfo = {
   reason: 'test',
   rollback_target_version_id: null,
   runtime_config_activation_id: 'activation-id',
+  runtime_config_approval_id: null,
   runtime_config_version_id: 'active-id',
 };
 

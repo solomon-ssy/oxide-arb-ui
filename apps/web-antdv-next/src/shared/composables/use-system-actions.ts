@@ -99,7 +99,7 @@ function useSystemStatusRefresh() {
   const { handleRequest } = useRequestHandler();
   return async () => {
     await handleRequest(getSystemStatus, (status) => {
-      systemStore.applySystemStatus(status);
+      systemStore.applyControlPlaneStatus(status);
     });
   };
 }

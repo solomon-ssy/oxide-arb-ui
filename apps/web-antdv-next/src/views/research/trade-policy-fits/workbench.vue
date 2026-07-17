@@ -795,7 +795,15 @@ void loadCatalogs();
             <DescriptionsItem
               :label="$t('page.research.tradePolicies.workbench.sourcePlan')"
             >
-              <Tag>{{ preflight?.readiness ?? '—' }}</Tag>
+              <Tag>
+                {{
+                  preflight
+                    ? $t(
+                        `page.research.tradePolicies.workbench.readiness.${preflight.readiness}`,
+                      )
+                    : '—'
+                }}
+              </Tag>
               <span v-if="preflight?.reusable_source_dataset_id" class="mono">
                 {{ preflight.reusable_source_dataset_id }}
               </span>

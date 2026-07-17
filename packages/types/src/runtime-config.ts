@@ -228,6 +228,22 @@ export interface RuntimeConfigActivationInfo {
   reason: string;
   rollback_target_version_id: null | UuidString;
   runtime_config_activation_id: UuidString;
+  runtime_config_approval_id: null | UuidString;
+  runtime_config_version_id: UuidString;
+}
+
+export type RuntimeConfigApprovalDecision = 'approved' | 'rejected';
+
+/** WORM approval bound to one exact runtime-config version and content hash. */
+export interface RuntimeConfigApprovalInfo {
+  config_hash: string;
+  created_at: IsoDateTime;
+  decided_at: IsoDateTime;
+  decided_by: string;
+  decision: RuntimeConfigApprovalDecision;
+  expires_at: IsoDateTime | null;
+  reason: string;
+  runtime_config_approval_id: UuidString;
   runtime_config_version_id: UuidString;
 }
 

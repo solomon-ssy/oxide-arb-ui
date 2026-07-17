@@ -21,12 +21,12 @@ import {
 import JsonDiffList from '#/shared/components/json-diff-list.vue';
 
 import ConfigNodeChildren from './config-node-children.vue';
+import { getDocumentPath } from './document-path';
 import { isFieldVisible } from './field-when';
 import {
   buildDiffs,
   buildPatch,
   fieldToInputValue,
-  getPath,
   hasGovernanceCriticalDiff,
   inputValueToField,
   nodeFieldViews,
@@ -79,7 +79,7 @@ function resetDraft() {
   for (const field of sectionFields.value) {
     draft[field.path] = fieldToInputValue(
       field,
-      getPath(props.config, field.path),
+      getDocumentPath(props.config, field.path),
     );
   }
 }

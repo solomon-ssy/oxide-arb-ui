@@ -347,6 +347,7 @@ export interface TradePolicyFitSelection {
 
 export type TradePolicyFitReadiness =
   | 'blocked'
+  | 'blocked_insufficient_history'
   | 'ready_to_materialize'
   | 'reusable';
 

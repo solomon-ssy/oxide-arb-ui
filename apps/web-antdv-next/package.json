@@ -1,24 +1,16 @@
 {
   "name": "@vben/web-antdv-next",
-  "version": "5.7.0",
-  "homepage": "https://vben.pro",
-  "bugs": "https://github.com/vbenjs/vue-vben-admin/issues",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vbenjs/vue-vben-admin.git",
-    "directory": "apps/web-antdv-next"
-  },
-  "license": "MIT",
-  "author": {
-    "name": "vben",
-    "email": "ann.vben@gmail.com",
-    "url": "https://github.com/anncwb"
-  },
+  "displayName": "Quant Pivot",
+  "version": "0.1.0",
+  "description": "Quant Pivot quantitative operations console",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "Quant Pivot maintainers",
   "type": "module",
   "scripts": {
-    "build": "pnpm vite build --mode production",
-    "build:analyze": "pnpm vite build --mode analyze",
-    "dev": "pnpm vite --mode development",
+    "build": "vite build --mode production",
+    "build:analyze": "vite build --mode analyze",
+    "dev": "vite --mode development",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit --skipLibCheck"
   },

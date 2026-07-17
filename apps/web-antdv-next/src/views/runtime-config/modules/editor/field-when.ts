@@ -4,7 +4,7 @@ import type {
   RuntimeConfigSchemaFieldView,
 } from '@vben/types';
 
-import { getPath } from './schema-mapper';
+import { getDocumentPath } from './document-path';
 
 function readValue(
   path: string,
@@ -14,7 +14,7 @@ function readValue(
   if (Object.hasOwn(draft, path)) {
     return draft[path];
   }
-  return getPath(config, path);
+  return getDocumentPath(config, path);
 }
 
 function looselyEqual(left: unknown, right: unknown): boolean {

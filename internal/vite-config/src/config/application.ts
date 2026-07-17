@@ -43,9 +43,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       nitroMock: !isBuild,
       nitroMockOptions: {},
       print: !isBuild,
-      printInfoMap: {
-        'Vben Admin Docs': 'https://doc.vben.pro',
-      },
+      printInfoMap: {},
       pwa: true,
       pwaOptions: getDefaultPwaOptions(appTitle),
       vxeTableLazyImport: true,

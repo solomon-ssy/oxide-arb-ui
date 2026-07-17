@@ -22,6 +22,36 @@ const fallbackNotFoundRoute: RouteRecordRaw = {
 
 /** 基本路由，这些路由是必须存在的 */
 const coreRoutes: RouteRecordRaw[] = [
+  {
+    name: 'Offline',
+    path: '/offline',
+    component: () => import('#/views/_core/fallback/offline.vue'),
+    meta: {
+      hideInMenu: true,
+      hideInTab: true,
+      title: $t('page.systemOffline.title'),
+    },
+  },
+  {
+    name: 'FallbackForbidden',
+    path: '/forbidden',
+    component: () => import('#/views/_core/fallback/forbidden.vue'),
+    meta: {
+      hideInMenu: true,
+      hideInTab: true,
+      title: '403',
+    },
+  },
+  {
+    name: 'FallbackServerError',
+    path: '/error',
+    component: () => import('#/views/_core/fallback/internal-error.vue'),
+    meta: {
+      hideInMenu: true,
+      hideInTab: true,
+      title: '500',
+    },
+  },
   /**
    * 根路由
    * 使用基础布局，作为所有页面的父级容器，子级就不必配置BasicLayout。

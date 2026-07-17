@@ -1,9 +1,7 @@
 import type { ApiRawResponse } from '@vben/request/qp';
 import type {
   LoginRequest,
-  LogoutRequest,
   MeResponse,
-  RefreshRequest,
   TokenResponse,
   UserInfo,
 } from '@vben/types';
@@ -42,19 +40,16 @@ export async function loginApi(data: AuthApi.LoginParams) {
   return requestClient.post<TokenResponse>(AuthApi.login, data);
 }
 
-export async function refreshTokenApi(data: RefreshRequest) {
+export async function refreshTokenApi() {
   const response = (await baseRequestClient.post(
     AuthApi.refresh,
-    data,
+    undefined,
   )) as ApiRawResponse<TokenResponse>;
   return unwrapApiResponse(response);
 }
 
-export async function logoutApi(
-  data: LogoutRequest,
-  accessToken?: null | string,
-) {
-  const response = (await baseRequestClient.post(AuthApi.logout, data, {
+export async function logoutApi(accessToken?: null | string) {
+  const response = (await baseRequestClient.post(AuthApi.logout, undefined, {
     headers: buildAuthApiHeaders(accessToken),
   })) as ApiRawResponse<null>;
   return unwrapApiResponse(response);

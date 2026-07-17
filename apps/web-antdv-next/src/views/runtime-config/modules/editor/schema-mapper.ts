@@ -13,6 +13,7 @@ import { isProxy, toRaw } from 'vue';
 
 import Decimal from 'decimal.js';
 
+import { getDocumentPath } from './document-path';
 import { isFieldVisible } from './field-when';
 
 /** Enum wire keys for one schema leaf (prefers server `enum_items`). */
@@ -168,7 +169,7 @@ export function structurallyActivePaths(
     case 'union': {
       const actual = Object.hasOwn(draft, node.discriminator)
         ? draft[node.discriminator]
-        : getPath(config, node.discriminator);
+        : getDocumentPath(config, node.discriminator);
       const active = node.cases.find(
         (unionCase) =>
           JSON.stringify(unionCase.case_value) === JSON.stringify(actual),
@@ -180,18 +181,6 @@ export function structurallyActivePaths(
     }
   }
   return out;
-}
-
-/** Read a dotted path from a JSON object. */
-export function getPath(document: unknown, path: string): unknown {
-  let cursor = document;
-  for (const segment of path.split('.')) {
-    if (!cursor || typeof cursor !== 'object') {
-      return undefined;
-    }
-    cursor = (cursor as Record<string, unknown>)[segment];
-  }
-  return cursor;
 }
 
 /** Deep clone a runtime-config JSON document. */
@@ -441,7 +430,7 @@ export function buildDiffs(
 ) {
   const diffs: RuntimeConfigFieldDiff[] = [];
   for (const field of fields) {
-    const previous = getPath(current, field.path);
+    const previous = getDocumentPath(current, field.path);
     const raw = draft[field.path];
     if (field.sensitive && (raw === '' || raw === null || raw === undefined)) {
       continue;

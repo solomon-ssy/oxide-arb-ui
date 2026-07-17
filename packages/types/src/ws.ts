@@ -16,7 +16,7 @@ import type {
   SettlementRedeemState,
 } from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
-import type { SystemStatus } from './system';
+import type { SystemControlPlaneStatus } from './system';
 
 /**
  * Subscribable WS channels, mirroring Rust `WsChannel` wire names. This is the
@@ -196,7 +196,7 @@ export interface WsErrorFrame {
  * carries only `system_status`.
  */
 export interface SyncSnapshot {
-  system_status?: SystemStatus;
+  system_status?: SystemControlPlaneStatus;
 }
 
 /** Per-channel payload map for typed envelope narrowing. */
@@ -212,7 +212,7 @@ export interface WsChannelPayloads {
   'quant.report_run': ReportRunLifecycleEvent;
   'quant.settlement': SettlementRedeemLifecycleEvent;
   'system.alert': SystemAlertEvent;
-  'system.status': SystemStatus;
+  'system.status': SystemControlPlaneStatus;
 }
 
 /** Client-to-server command grammar (`action`-tagged). */

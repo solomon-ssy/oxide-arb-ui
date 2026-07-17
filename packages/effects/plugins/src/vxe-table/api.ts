@@ -1,5 +1,7 @@
 import type { VxeGridInstance } from 'vxe-table';
 
+import type { Ref } from 'vue';
+
 import type {
   BaseFormComponentType,
   ExtendedFormApi,
@@ -182,3 +184,13 @@ export class VxeGridApi<
     this.viewedRowHelper = null;
   }
 }
+
+export type ExtendedVxeGridApi<
+  D extends Record<string, any> = any,
+  F extends BaseFormComponentType = BaseFormComponentType,
+  P extends Record<string, any> = Record<never, never>,
+> = VxeGridApi<D, F, P> & {
+  useStore: <S = NoInfer<VxeGridProps<D, F, P>>>(
+    selector?: (state: NoInfer<VxeGridProps<D, F, P>>) => S,
+  ) => Readonly<Ref<S>>;
+};

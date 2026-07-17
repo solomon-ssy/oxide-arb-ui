@@ -1,5 +1,6 @@
 import type {
   RuntimeConfigActivationInfo,
+  RuntimeConfigApprovalInfo,
   RuntimeConfigCurrentView,
   RuntimeConfigDocument,
   RuntimeConfigPatch,
@@ -20,6 +21,7 @@ export namespace RuntimeConfigApi {
   export const schema = `${base}/schema`;
   export const schedulePreview = `${base}/schedule-preview`;
   export const versions = `${base}/versions`;
+  export const approvals = `${base}/approvals`;
   export const activateVersion = (id: UuidString) =>
     `${versions}/${id}/activate`;
   export const rollbackVersion = (id: UuidString) =>
@@ -42,6 +44,13 @@ export namespace RuntimeConfigApi {
   export type GovernedReasonBody = Record<string, unknown> & {
     reason: string;
   };
+}
+
+/** Valid, approved runtime-config decisions eligible for activation. */
+export async function fetchRuntimeConfigApprovals() {
+  return requestClient.get<RuntimeConfigApprovalInfo[]>(
+    RuntimeConfigApi.approvals,
+  );
 }
 
 /** `GET /runtime-config` — live applied config (credentials masked). */

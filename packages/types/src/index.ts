@@ -9,6 +9,7 @@ export * from './enums';
 // Pure execution-gate predicates (runtime functions) mirroring backend guards.
 export * from './execution-gate';
 export type * from './execution-order';
+export type * from './execution-recovery';
 export type * from './exit-plan';
 // Pure intent-FSM predicates (runtime functions) mirroring backend guards.
 export * from './intent-fsm';

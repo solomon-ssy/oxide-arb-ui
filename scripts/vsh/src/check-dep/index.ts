@@ -28,6 +28,20 @@ const DEFAULT_CONFIG = {
     'tailwindcss',
   ],
   ignoreWorkspaces: ['internal/lint-configs/*', 'scripts/*'],
+  workspaces: {
+    '.': {
+      // Root lint tooling resolves the workspace-local ESLint binary indirectly.
+      ignoreDependencies: ['eslint'],
+    },
+    'internal/tsconfig': {
+      ignoreDependencies: [
+        // Referenced by web-app.json through compilerOptions.types.
+        '@vben/types',
+        // Referenced by web*.json through the vite/client type entry.
+        'vite',
+      ],
+    },
+  },
 };
 
 interface KnipDependency {
@@ -119,6 +133,7 @@ async function runKnipCheck(): Promise<void> {
     if (execaError.exitCode === 1 && execaError.stdout) {
       const result: KnipResult = JSON.parse(execaError.stdout);
       formatResult(result);
+      process.exitCode = 1;
       return;
     }
 

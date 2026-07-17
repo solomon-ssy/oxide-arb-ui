@@ -9,7 +9,13 @@ import type { ComponentPublicInstance } from 'vue';
 
 import type { Recordable } from '@vben-core/typings';
 
-import type { FormActions, FormSchema, VbenFormProps } from './types';
+import type {
+  FormActions,
+  FormApiContract,
+  FormSchema,
+  MergedFormApiContract,
+  VbenFormProps,
+} from './types';
 
 import { isRef, toRaw } from 'vue';
 
@@ -55,7 +61,7 @@ function getDefaultState(): VbenFormProps {
   };
 }
 
-export class FormApi {
+export class FormApi implements FormApiContract {
   // private api: Pick<VbenFormProps, 'handleReset' | 'handleSubmit'>;
   public form = {} as FormActions;
   isMounted = false;
@@ -174,12 +180,12 @@ export class FormApi {
     return form.isFieldValid(fieldName);
   }
 
-  merge(formApi: FormApi) {
+  merge(formApi: FormApiContract): MergedFormApiContract {
     const chain = [this, formApi];
     const proxy = new Proxy(formApi, {
       get(target: any, prop: any) {
         if (prop === 'merge') {
-          return (nextFormApi: FormApi) => {
+          return (nextFormApi: FormApiContract) => {
             chain.push(nextFormApi);
             return proxy;
           };
@@ -211,7 +217,7 @@ export class FormApi {
       },
     });
 
-    return proxy;
+    return proxy as MergedFormApiContract;
   }
 
   mount(formActions: FormActions, componentRefMap?: Map<string, unknown>) {

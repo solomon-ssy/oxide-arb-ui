@@ -103,7 +103,7 @@ const options = computed(() =>
             show-search
             option-filter-prop="label"
           />
-          <span class="text-xs text-gray-500">
+          <span class="text-muted-foreground text-xs">
             {{
               $t('page.research.featureIntegrity.recovery.candidateCount', {
                 count: candidates.length,

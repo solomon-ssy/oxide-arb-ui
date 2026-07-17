@@ -1,7 +1,8 @@
-import type { Router } from 'vue-router';
+import type { RouteLocationRaw, Router } from 'vue-router';
 
 import { LOGIN_PATH } from '@vben/constants';
 import { preferences } from '@vben/preferences';
+import { ApiError, normalizeApiError } from '@vben/request/qp';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { startProgress, stopProgress } from '@vben/utils';
 
@@ -10,126 +11,163 @@ import { useAuthStore } from '#/store';
 
 import { generateAccess } from './access';
 
-/** Core routes reachable without authentication. */
 const PUBLIC_CORE_ROUTE_NAMES = new Set([
   'Authentication',
+  'FallbackForbidden',
   'FallbackNotFound',
+  'FallbackServerError',
   'Login',
+  'Offline',
 ]);
 
-/**
- * 通用守卫配置
- * @param router
- */
+const SERVICE_UNAVAILABLE_STATUSES = new Set([502, 503, 504]);
+
+function loginRoute(target: string): RouteLocationRaw {
+  return {
+    path: LOGIN_PATH,
+    query:
+      target === preferences.app.defaultHomePath
+        ? {}
+        : { redirect: encodeURIComponent(target) },
+    replace: true,
+  };
+}
+
+function isChunkTransportFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Failed to fetch dynamically imported module|Importing a module script failed/u.test(
+    message,
+  );
+}
+
+function failureRoute(
+  error: unknown,
+  target: string,
+): false | RouteLocationRaw {
+  const normalized = normalizeApiError(error);
+  if (normalized.kind === 'cancelled') {
+    return false;
+  }
+  if (
+    normalized.kind === 'network' ||
+    normalized.kind === 'timeout' ||
+    SERVICE_UNAVAILABLE_STATUSES.has(
+      normalized.httpStatus ?? normalized.code,
+    ) ||
+    isChunkTransportFailure(error)
+  ) {
+    return {
+      name: 'Offline',
+      query: { redirect: target },
+      replace: true,
+    };
+  }
+  if (normalized.httpStatus === 401 || normalized.code === 401) {
+    return loginRoute(target);
+  }
+  if (normalized.httpStatus === 403 || normalized.code === 403) {
+    return { name: 'FallbackForbidden', replace: true };
+  }
+  return { name: 'FallbackServerError', replace: true };
+}
+
 function setupCommonGuard(router: Router) {
-  // 记录已经加载的页面
   const loadedPaths = new Set<string>();
 
   router.beforeEach((to) => {
     to.meta.loaded = loadedPaths.has(to.path);
-
-    // 页面加载进度条
     if (!to.meta.loaded && preferences.transition.progress) {
       startProgress();
     }
     return true;
   });
 
-  router.afterEach((to) => {
-    // 记录页面是否加载,如果已经加载，后续的页面切换动画等效果不在重复执行
-
-    loadedPaths.add(to.path);
-
-    // 关闭页面加载进度条
+  router.afterEach((to, _from, failure) => {
+    if (!failure) {
+      loadedPaths.add(to.path);
+    }
     if (preferences.transition.progress) {
       stopProgress();
     }
   });
+
+  router.onError((error, to) => {
+    if (preferences.transition.progress) {
+      stopProgress();
+    }
+    if (
+      to.name === 'Offline' ||
+      to.name === 'FallbackServerError' ||
+      (ApiError.is(error) && error.kind === 'cancelled')
+    ) {
+      return;
+    }
+    const destination = failureRoute(error, to.fullPath);
+    if (destination) {
+      void router.replace(destination);
+    }
+  });
 }
 
-/**
- * 权限访问守卫配置
- * @param router
- */
 function setupAccessGuard(router: Router) {
   router.beforeEach(async (to, from) => {
     const accessStore = useAccessStore();
     const userStore = useUserStore();
     const authStore = useAuthStore();
 
-    // 基本路由，这些路由不需要进入权限拦截
-    if (coreRouteNames.includes(to.name as string)) {
+    if (PUBLIC_CORE_ROUTE_NAMES.has(to.name as string)) {
       if (to.path === LOGIN_PATH && accessStore.accessToken) {
         return decodeURIComponent(
-          (to.query?.redirect as string) ||
+          (to.query.redirect as string) ||
             userStore.userInfo?.homePath ||
             preferences.app.defaultHomePath,
         );
       }
-
-      if (PUBLIC_CORE_ROUTE_NAMES.has(to.name as string)) {
-        return true;
-      }
-
-      if (!accessStore.accessToken) {
-        if (to.fullPath !== LOGIN_PATH) {
-          return {
-            path: LOGIN_PATH,
-            query: { redirect: encodeURIComponent(to.fullPath) },
-            replace: true,
-          };
-        }
-        return to;
-      }
-
       return true;
     }
 
-    // accessToken 检查
-    if (!accessStore.accessToken) {
-      // 明确声明忽略权限访问权限，则可以访问
-      if (to.meta.ignoreAccess) {
-        return true;
+    if (!accessStore.accessToken && !to.meta.ignoreAccess) {
+      try {
+        await authStore.restoreSession();
+      } catch (error) {
+        return failureRoute(error, to.fullPath);
       }
-
-      // 没有访问权限，跳转登录页面
-      if (to.fullPath !== LOGIN_PATH) {
-        return {
-          path: LOGIN_PATH,
-          // 如不需要，直接删除 query
-          query:
-            to.fullPath === preferences.app.defaultHomePath
-              ? {}
-              : { redirect: encodeURIComponent(to.fullPath) },
-          // 携带当前跳转的页面，登录后重新跳转该页面
-          replace: true,
-        };
-      }
-      return to;
     }
 
-    // 是否已经生成过动态路由
+    if (!accessStore.accessToken) {
+      return to.meta.ignoreAccess ? true : loginRoute(to.fullPath);
+    }
+
+    if (coreRouteNames.includes(to.name as string)) {
+      return true;
+    }
+
     if (accessStore.isAccessChecked) {
       return true;
     }
 
-    // 生成路由表
-    // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
+    let userInfo;
+    try {
+      userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
+    } catch (error) {
+      return failureRoute(error, to.fullPath);
+    }
     const userRoles = userInfo.roles ?? [];
 
-    // 生成菜单和路由
-    const { accessibleMenus, accessibleRoutes } = await generateAccess({
-      roles: userRoles,
-      router,
-      // 则会在菜单中显示，但是访问会被重定向到403
-      routes: accessRoutes,
-    });
+    try {
+      const { accessibleMenus, accessibleRoutes } = await generateAccess({
+        roles: userRoles,
+        router,
+        routes: accessRoutes,
+      });
 
-    // 保存菜单信息和路由信息（name 保留 i18n key，由 BasicLayout.wrapperMenus 翻译）
-    accessStore.setAccessMenus(accessibleMenus);
-    accessStore.setAccessRoutes(accessibleRoutes);
-    accessStore.setIsAccessChecked(true);
+      accessStore.setAccessMenus(accessibleMenus);
+      accessStore.setAccessRoutes(accessibleRoutes);
+      accessStore.setIsAccessChecked(true);
+    } catch (error) {
+      return failureRoute(error, to.fullPath);
+    }
+
     const redirectPath = (from.query.redirect ??
       (to.path === preferences.app.defaultHomePath
         ? userInfo.homePath || preferences.app.defaultHomePath
@@ -142,14 +180,8 @@ function setupAccessGuard(router: Router) {
   });
 }
 
-/**
- * 项目守卫配置
- * @param router
- */
 function createRouterGuard(router: Router) {
-  /** 通用 */
   setupCommonGuard(router);
-  /** 权限访问 */
   setupAccessGuard(router);
 }
 

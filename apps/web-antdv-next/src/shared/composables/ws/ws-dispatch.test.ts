@@ -2,6 +2,7 @@ import type {
   MarketBookView,
   SyncSnapshot,
   SystemAlertEvent,
+  SystemControlPlaneStatus,
   SystemStatus,
   WsEnvelope,
 } from '@vben/types';
@@ -93,6 +94,28 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
   };
 }
 
+function controlPlaneStatus(): SystemControlPlaneStatus {
+  const enabled = { enabled: true, reasons: [] };
+  return {
+    ...systemStatus(),
+    bootstrap: {
+      bootstrap_contract_version: 1,
+      phase: 'active',
+      state_revision: 3,
+    },
+    capabilities: {
+      automatic_parity_eligible: enabled,
+      catalog_baseline_ready: enabled,
+      control_plane_ready: enabled,
+      entry_admission_eligible: enabled,
+      order_submission_eligible: enabled,
+      report_generation_eligible: enabled,
+      research_capture_enabled: enabled,
+      revision: 7,
+    },
+  };
+}
+
 function marketBook(): MarketBookView {
   return { market_id: '0xabc', no: null, yes: null };
 }
@@ -103,7 +126,7 @@ describe('dispatchWsEnvelope', () => {
   });
 
   it('system.status overwrites the system store and marks status heartbeat', () => {
-    const status = systemStatus();
+    const status = controlPlaneStatus();
     dispatchWsEnvelope(envelope('system.status', status), hooks());
     expect(useSystemStore().status).toEqual(status);
     expect(useWsStore().lastSystemStatusAt).toBe('2026-06-11T12:00:00.000Z');
@@ -114,12 +137,34 @@ describe('dispatchWsEnvelope', () => {
     ws.recordAlert(
       systemAlert({ idempotency_key: 'kill.emergency', level: 'critical' }),
     );
-    dispatchWsEnvelope(envelope('system.status', systemStatus()), hooks());
+    dispatchWsEnvelope(
+      envelope('system.status', controlPlaneStatus()),
+      hooks(),
+    );
     expect(ws.recentAlertLevel).toBe('critical');
   });
 
+  it('action eligibility can be invalidated when live control-plane status is lost', () => {
+    const system = useSystemStore();
+    const allowed = {
+      capability: { enabled: true, reasons: [] },
+      enabled: true,
+      permission_granted: true,
+    };
+    system.applyActionEligibility({
+      capability_revision: 7,
+      entry_admission: allowed,
+      order_submission: allowed,
+      report_generation: allowed,
+    });
+
+    system.clearActionEligibility();
+
+    expect(system.actionEligibility).toBeNull();
+  });
+
   it('sync snapshot hydrates system status and marks sync', () => {
-    const snapshot: SyncSnapshot = { system_status: systemStatus() };
+    const snapshot: SyncSnapshot = { system_status: controlPlaneStatus() };
     dispatchWsEnvelope(envelope('sync', snapshot), hooks());
     expect(useSystemStore().status?.quant_runtime_mode).toBe('report_only');
     expect(useWsStore().lastSyncAt).not.toBeNull();
