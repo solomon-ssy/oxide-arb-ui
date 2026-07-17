@@ -11,12 +11,16 @@ export default defineConfig(async () => {
       },
       server: {
         proxy: {
+          // Keep the browser Host (e.g. localhost:5999) so backend
+          // same-origin checks for refresh/logout/WS succeed without
+          // cors_allowed_origins. changeOrigin:true would rewrite Host
+          // to :8088 and break Origin matching across the Vite proxy.
           '/ready': {
-            changeOrigin: true,
+            changeOrigin: false,
             target: 'http://localhost:8088',
           },
           '/api': {
-            changeOrigin: true,
+            changeOrigin: false,
             target: 'http://localhost:8088',
             ws: true,
           },

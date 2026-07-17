@@ -72,6 +72,10 @@ const menus = computed(() => [
 const avatar = computed(() => {
   return userStore.userInfo?.avatar || preferences.app.defaultAvatar;
 });
+// Prefer a setup binding for template use: script-setup's returned $setup
+// currently omits the imported `preferences` object, so `preferences.app`
+// in the template throws and the router guard sends users to /error.
+const avatarAlt = computed(() => preferences.app.name);
 
 async function handleLogout() {
   await authStore.logout(false);
@@ -153,7 +157,7 @@ watch(
     <template #user-dropdown>
       <UserDropdown
         :avatar
-        :avatar-alt="preferences.app.name"
+        :avatar-alt="avatarAlt"
         :menus
         :text="userStore.userInfo?.realName"
         :description="userStore.userInfo?.username"
