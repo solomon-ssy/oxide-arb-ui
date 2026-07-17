@@ -17,8 +17,11 @@ export type CatalogState =
 
 /** Why the runtime is in the `degraded` operational phase. */
 export type OperationalDegradeReason =
+  | 'breaker_half_open'
+  | 'breaker_open'
   | 'market_data_coverage_degraded'
   | 'market_data_stale'
+  | { kill_switch_tightened: { state: KillSwitchState } }
   | { subsystem_unhealthy: { name: string } };
 
 /** Authoritative operator lifecycle (header UI + execution gate). */

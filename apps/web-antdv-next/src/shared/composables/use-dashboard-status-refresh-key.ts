@@ -10,6 +10,13 @@ import { useSystemStore } from '#/store';
  * deep-watching the whole (high-frequency) status frame.
  */
 export interface DashboardStatusRefreshKeys {
+  /**
+   * Command-center overview REST re-fetch. Intentionally omits heartbeat
+   * fields (`checked_at`, `uptime_secs`, `last_message_age_ms`, live market
+   * counts) — those change every WS/status frame and would otherwise loop
+   * `loadOverview` → MotionGroup re-enter → visible flicker.
+   */
+  overviewRefreshKey: ComputedRef<string>;
   /** Pipeline counters depend on phase + auto-execution / reconciliation rollup. */
   pipelineRefreshKey: ComputedRef<string>;
   /** Recovery depends on the full recovery rollup + kill-switch + runtime mode. */
@@ -18,6 +25,25 @@ export interface DashboardStatusRefreshKeys {
 
 export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
   const systemStore = useSystemStore();
+
+  const overviewRefreshKey = computed(() => {
+    const status = systemStore.status;
+    if (!status) {
+      return '';
+    }
+    const bootstrap = systemStore.controlPlane?.bootstrap;
+    const killSwitch = status.kill_switch;
+    return [
+      status.quant_runtime_mode,
+      status.operational_phase.phase,
+      killSwitch.state,
+      killSwitch.requires_operator_ack,
+      status.catalog.state,
+      bootstrap?.phase ?? '',
+      bootstrap?.state_revision ?? '',
+      systemStore.controlPlane?.capabilities.revision ?? '',
+    ].join('|');
+  });
 
   const pipelineRefreshKey = computed(() => {
     const status = systemStore.status;
@@ -53,5 +79,5 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
     ].join('|');
   });
 
-  return { pipelineRefreshKey, recoveryRefreshKey };
+  return { overviewRefreshKey, pipelineRefreshKey, recoveryRefreshKey };
 }

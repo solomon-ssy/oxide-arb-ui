@@ -20,7 +20,7 @@ import {
   listTrainingDatasets,
   planTrainingDataset,
 } from '#/api/research';
-import { $t } from '#/locales';
+import { $t as translate } from '#/locales';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQueryOpenDrawer } from '#/shared/composables/use-route-query-sync';
@@ -34,6 +34,9 @@ import {
 } from './modules/schemas';
 
 defineOptions({ name: 'ResearchDatasetsPage' });
+
+// Local alias so template `$t(...)` is present on $setup (same SFC binding gap as layout).
+const $t = translate;
 
 const route = useRoute();
 const router = useRouter();

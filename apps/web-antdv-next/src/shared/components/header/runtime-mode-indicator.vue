@@ -23,10 +23,14 @@ const { hasAccessByCodes } = useQpAccess();
 const quantMode = useQuantModeAction();
 const { show: showPreflight } = usePreflightResult();
 
-const visible = computed(() => hasAccessByCodes(['system:switch_mode']));
-
 const currentMode = computed(
   () => systemStore.status?.quant_runtime_mode ?? null,
+);
+
+// Hide until the first system.status seed — otherwise the picker flashes the
+// "模式" unknown placeholder (问号态) before REST/WS arrive.
+const visible = computed(
+  () => hasAccessByCodes(['system:switch_mode']) && currentMode.value !== null,
 );
 
 const modeTagOptions = useQuantRuntimeModeTagOptions();

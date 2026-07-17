@@ -1724,7 +1724,8 @@
       "degraded": "Degraded",
       "critical": "Halted",
       "unknown": "Unknown",
-      "starting": "Starting"
+      "starting": "Starting",
+      "syncing": "Syncing status…"
     },
     "field": {
       "mode": "Runtime Mode",
@@ -1759,7 +1760,11 @@
     "degradeReason": {
       "market_data_stale": "Market data stale",
       "market_data_coverage_degraded": "Market-data WebSocket shard coverage degraded (disconnected shards)",
-      "subsystem_unhealthy": "Unhealthy subsystem: {name}"
+      "subsystem_unhealthy": "Unhealthy subsystem: {name}",
+      "breaker_open": "Execution breaker open",
+      "breaker_half_open": "Execution breaker half-open",
+      "kill_switch_tightened": "Kill switch tightened ({state})",
+      "unknown": "Unknown degrade reason"
     },
     "readonlyHint": "Use the header state lights to change runtime mode or kill switch."
   },

@@ -1724,7 +1724,8 @@
       "degraded": "降级",
       "critical": "已停机",
       "unknown": "未知",
-      "starting": "启动中"
+      "starting": "启动中",
+      "syncing": "同步状态…"
     },
     "field": {
       "mode": "运行模式",
@@ -1759,7 +1760,11 @@
     "degradeReason": {
       "market_data_stale": "行情数据陈旧",
       "market_data_coverage_degraded": "行情 WebSocket 分片覆盖降级（存在断开分片）",
-      "subsystem_unhealthy": "子系统不健康：{name}"
+      "subsystem_unhealthy": "子系统不健康：{name}",
+      "breaker_open": "执行熔断器已打开",
+      "breaker_half_open": "执行熔断器半开",
+      "kill_switch_tightened": "熔断开关已收紧（{state}）",
+      "unknown": "未知降级原因"
     },
     "readonlyHint": "请使用顶栏状态灯切换运行模式或熔断开关。"
   },

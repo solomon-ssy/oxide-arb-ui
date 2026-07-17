@@ -48,7 +48,13 @@ import {
   parseDecimal,
   toAnimatorNumber,
 } from '#/shared/components/format';
+import {
+  findTagOption,
+  useKillSwitchStateTagOptions,
+  useQuantRuntimeModeTagOptions,
+} from '#/shared/components/format/tag-options';
 import KpiStatCard from '#/shared/components/kpi-stat-card.vue';
+import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
@@ -110,6 +116,19 @@ const account = computed(() => valueOf(overview.value?.account));
 const quality = computed(() => valueOf(overview.value?.data_quality));
 const health = computed(() => valueOf(overview.value?.subsystem_health));
 const latestReport = computed(() => valueOf(overview.value?.latest_report));
+
+const runtimeModeTag = computed(() =>
+  findTagOption(
+    useQuantRuntimeModeTagOptions(),
+    authority.value?.system.quant_runtime_mode,
+  ),
+);
+const killSwitchTag = computed(() =>
+  findTagOption(
+    useKillSwitchStateTagOptions(),
+    authority.value?.system.kill_switch.state,
+  ),
+);
 const actions = computed(() => {
   const values = valueOf(overview.value?.action_inbox) ?? [];
   const order: Record<DashboardActionItemView['severity'], number> = {
@@ -271,15 +290,15 @@ async function loadOverview() {
   }
 }
 
+const { overviewRefreshKey } = useDashboardStatusRefreshKey();
 const reloadForEvent = useDebounceFn(() => void loadOverview(), 300);
 watch(windowValue, () => void loadOverview());
 watch(() => reportStore.revision, reloadForEvent);
-watch(
-  () => systemStore.status?.checked_at,
-  (next, previous) => {
-    if (previous && next !== previous) reloadForEvent();
-  },
-);
+// Never watch `checked_at`: every overview response / WS status frame mints a
+// new timestamp, which re-entered this path and flickered the whole page.
+watch(overviewRefreshKey, (next, previous) => {
+  if (previous && next !== previous) reloadForEvent();
+});
 useIntervalFn(() => {
   if (visibility.value === 'visible') void loadOverview();
 }, 30_000);
@@ -373,6 +392,12 @@ function executePrimaryAction() {
 
 function navigate(path: string) {
   void router.push(path);
+}
+
+function openSelectedRecommendation() {
+  const recommendation = selectedRecommendation.value;
+  if (!recommendation) return;
+  navigate(`/quant/recommendations/${recommendation.recommendation_id}`);
 }
 
 function severityStatus(severity: DashboardActionItemView['severity']) {
@@ -470,7 +495,11 @@ onMounted(() => void loadOverview());
           >
             <div class="status-cell">
               <dt>{{ $t('page.dashboard.status.runtimeMode') }}</dt>
-              <dd>{{ authority.system.quant_runtime_mode }}</dd>
+              <dd>
+                <Tag :color="runtimeModeTag?.color ?? 'default'">
+                  {{ runtimeModeTag?.label ?? '—' }}
+                </Tag>
+              </dd>
             </div>
             <div class="status-cell">
               <dt>{{ $t('page.dashboard.status.bootstrap') }}</dt>
@@ -484,7 +513,11 @@ onMounted(() => void loadOverview());
             </div>
             <div class="status-cell">
               <dt>{{ $t('page.dashboard.status.killSwitch') }}</dt>
-              <dd>{{ authority.system.kill_switch.state }}</dd>
+              <dd>
+                <Tag :color="killSwitchTag?.color ?? 'default'">
+                  {{ killSwitchTag?.label ?? '—' }}
+                </Tag>
+              </dd>
             </div>
             <div class="status-cell">
               <dt>{{ $t('page.dashboard.status.ws') }}</dt>
@@ -826,11 +859,7 @@ onMounted(() => void loadOverview());
           <Button
             class="mt-4 w-full"
             type="primary"
-            @click="
-              navigate(
-                `/quant/recommendations/${selectedRecommendation.recommendation_id}`,
-              )
-            "
+            @click="openSelectedRecommendation"
           >
             {{ $t('page.dashboard.orbit.openDetail') }}
           </Button>

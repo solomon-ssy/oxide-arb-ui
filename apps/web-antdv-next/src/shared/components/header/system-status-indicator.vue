@@ -39,9 +39,14 @@ const { uptimeSecs } = useLiveUptime();
 const visible = computed(() => hasAccessByCodes(['system:read']));
 const status = computed(() => systemStore.status);
 
-const indicator = computed<SystemIndicator>(() =>
-  deriveSystemIndicator(status.value),
-);
+const indicator = computed<SystemIndicator>(() => {
+  // First paint before REST/WS seeds the store: show "starting", not the
+  // fault-looking "unknown" (问号) tag operators confuse with a stuck state.
+  if (!status.value) {
+    return 'starting';
+  }
+  return deriveSystemIndicator(status.value);
+});
 
 const INDICATOR_COLOR: Record<SystemIndicator, string> = {
   critical: 'error',
@@ -54,8 +59,11 @@ const INDICATOR_COLOR: Record<SystemIndicator, string> = {
 const phase = computed(() => status.value?.operational_phase.phase ?? null);
 
 const startingDetail = computed(() => {
-  if (!status.value || indicator.value !== 'starting') {
+  if (indicator.value !== 'starting') {
     return null;
+  }
+  if (!status.value) {
+    return $t('page.system.indicator.syncing');
   }
   if (phase.value === 'catalog_warming') {
     return $t('page.system.phase.catalog_warming');
@@ -99,9 +107,15 @@ const degradedReasons = computed(() => {
 function degradeReasonLabel(reason: OperationalDegradeReason): string {
   const key = degradeReasonKey(reason);
   const params = degradeReasonParams(reason);
-  return params
-    ? $t(`page.system.degradeReason.${key}`, params)
-    : $t(`page.system.degradeReason.${key}`);
+  if (!params) {
+    return $t(`page.system.degradeReason.${key}`);
+  }
+  // Wire enums (e.g. kill-switch state) must be localized before interpolation.
+  const localized = { ...params };
+  if (params.state) {
+    localized.state = $t(`enum.killSwitchState.${params.state}`);
+  }
+  return $t(`page.system.degradeReason.${key}`, localized);
 }
 </script>
 

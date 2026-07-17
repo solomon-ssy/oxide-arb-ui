@@ -28,11 +28,11 @@ import {
 
 import { usePriorityValues } from '@vben/hooks';
 import { EmptyIcon } from '@vben/icons';
-import { $t } from '@vben/locales';
+import { $t as translate } from '@vben/locales';
 import { usePreferences } from '@vben/preferences';
 import {
   cloneDeep,
-  cn,
+  cn as cnUtil,
   isBoolean,
   isEqual,
   mergeWithArrayOverride,
@@ -56,6 +56,11 @@ interface Props extends VxeGridProps {
 }
 
 const props = withDefaults(defineProps<Props>(), {});
+
+// Local aliases: current Vue SFC compile can omit imported bindings from $setup
+// when they are used from the template (`$setup.cn is not a function`).
+const cn = cnUtil;
+const $t = translate;
 
 const FORM_SLOT_PREFIX = 'form-';
 
