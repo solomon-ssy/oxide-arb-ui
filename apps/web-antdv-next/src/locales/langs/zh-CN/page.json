@@ -1776,6 +1776,94 @@
   },
   "dashboard": {
     "viewAll": "查看",
+    "commandCenter": {
+      "title": "量化作战台",
+      "subtitle": "用同一权威快照判断系统安全状态，并执行唯一的下一步操作。",
+      "refreshing": "正在刷新",
+      "partial": "{count} 个区块降级",
+      "revision": "快照 {revision} · 生成于 {time}"
+    },
+    "login": {
+      "title": "Quant Pivot",
+      "subtitle": "登录量化作战台，审阅报告、证据与运行风险。",
+      "pageTitle": "从证据到行动的量化控制面",
+      "pageDescription": "Polymarket 专用的 ReportOnly 优先运营台：账户真值、推荐报告、研究证据与治理操作统一闭环。",
+      "console": "Operator Console",
+      "security": "账户真值与操作权限由服务端校验；访问令牌仅保存在内存中，敏感操作需要角色、理由与审计上下文。"
+    },
+    "primaryAction": {
+      "activate_bootstrap": "启用当前运行配置",
+      "resolve_reconciliation": "处理阻塞对账",
+      "run_report": "运行推荐报告",
+      "view_blockers": "查看能力阻断"
+    },
+    "status": {
+      "runtimeMode": "运行模式",
+      "bootstrap": "启动阶段",
+      "killSwitch": "熔断开关",
+      "ws": "实时连接",
+      "bookFreshness": "盘口新鲜度",
+      "latestReport": "最新报告"
+    },
+    "section": {
+      "ready": "实时可用",
+      "stale": "数据已陈旧",
+      "unavailable": "暂不可用",
+      "forbidden": "无权查看",
+      "blocked": "被能力门禁阻断",
+      "noSamples": "当前窗口尚无真实样本",
+      "noReport": "尚无已发布推荐报告",
+      "noTrend": "当前窗口不足以计算趋势"
+    },
+    "equity": {
+      "title": "权益与回撤",
+      "aria": "所选窗口内净清算价值和回撤的时间序列图。"
+    },
+    "orbit": {
+      "title": "Recommendation Orbit",
+      "aria": "最新报告的 TopN 推荐，按类别、排名、信心和建议金额组织。",
+      "list": "可键盘操作的 TopN 推荐列表",
+      "play": "播放",
+      "pause": "暂停",
+      "drawerTitle": "推荐操作摘要",
+      "rank": "排名",
+      "market": "市场",
+      "outcome": "方向",
+      "confidence": "信心",
+      "expectedReturn": "预期收益",
+      "suggested": "建议金额",
+      "evidence": "主要因子与证据置信度",
+      "openDetail": "打开完整证据与执行资格"
+    },
+    "lifecycle": {
+      "title": "报告到执行生命周期",
+      "aria": "所选窗口内报告生命周期状态与流转规模。"
+    },
+    "exposure": {
+      "title": "风险敞口集中度",
+      "aria": "账户按类别聚合的风险敞口树图。",
+      "none": "当前账户没有真实敞口"
+    },
+    "research": {
+      "title": "研究就绪跑道",
+      "progressAria": "研究样本覆盖进度",
+      "days": "天样本",
+      "evidenceMissing": "尚无可证明 200 天样本、factor gate 和 model gate 的 serving evidence；系统不会伪造进度。",
+      "open": "查看研究就绪证据"
+    },
+    "inbox": {
+      "title": "Action Inbox",
+      "clear": "没有待处理的操作项",
+      "owner": "责任域：{owner}",
+      "reason": {
+        "unresolved_reconciliation": "存在尚未解决的执行对账",
+        "basis_alert_unacknowledged": "存在尚未确认的跨源基差告警",
+        "kill_switch_not_closed": "熔断开关未处于 Closed 状态",
+        "market_data_degraded": "行情数据陈旧或入库滞后",
+        "report_run_failed": "最近一次报告运行失败",
+        "runtime_config_awaiting_activation": "已批准的运行配置等待激活"
+      }
+    },
     "actions": {
       "runReport": "运行报告"
     },
@@ -1783,6 +1871,7 @@
       "ws": "实时"
     },
     "loadError": {
+      "overview": "作战台快照加载失败",
       "report": "最新报告加载失败",
       "dataQuality": "数据质量加载失败",
       "account": "实时账户加载失败",
@@ -1858,7 +1947,12 @@
       "unrealizedPnl": "未实现盈亏",
       "noEquitySnapshot": "尚无持久化 equity snapshot",
       "catalogMarkets": "catalog {count} 个市场",
-      "dataUsable": "{usable}/{total} 可用盘口"
+      "dataUsable": "{usable}/{total} 可用盘口",
+      "windowTrend": "{window} 窗口趋势 {value}",
+      "reservedValue": "已预留 {value}",
+      "highWaterValue": "高水位 {value}",
+      "usableBooks": "{usable}/{total} 个盘口可用",
+      "dataUsableTitle": "数据可用率"
     },
     "latestReport": {
       "title": "最新报告",
@@ -1882,6 +1976,7 @@
     },
     "dataQuality": {
       "title": "数据质量",
+      "progressAria": "可用盘口数据比例",
       "totalTokens": "跟踪 Token",
       "fresh": "新鲜",
       "acceptable": "可接受",
@@ -1906,7 +2001,12 @@
         "delivery_retrying": "事实投递重试中",
         "delivery_failed": "事实投递失败",
         "revoked": "已撤销",
-        "expired": "已过期"
+        "expired": "已过期",
+        "intent_pending_approval": "意图待审批",
+        "execution_submitted": "订单已提交",
+        "execution_partially_filled": "订单部分成交",
+        "execution_ambiguous": "订单状态不明",
+        "reconciliation_unresolved": "对账待消解"
       }
     },
     "pipeline": {
@@ -1923,7 +2023,11 @@
       "byMarket": "按市场"
     },
     "health": {
-      "title": "子系统健康"
+      "title": "子系统健康",
+      "ready": "依赖全部就绪",
+      "degraded": "存在异常依赖",
+      "ok": "健康",
+      "failed": "异常"
     },
     "recovery": {
       "title": "执行恢复",

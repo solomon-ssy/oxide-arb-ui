@@ -38,6 +38,7 @@
     "dayjs": "catalog:",
     "decimal.js": "catalog:",
     "dompurify": "catalog:",
+    "echarts": "catalog:",
     "json-editor-vue": "catalog:",
     "jsondiffpatch": "catalog:",
     "pinia": "catalog:",
@@ -47,6 +48,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
     "playwright": "catalog:"
   }
 }

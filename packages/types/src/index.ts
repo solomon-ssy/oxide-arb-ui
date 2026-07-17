@@ -1,6 +1,7 @@
 export type * from './account';
 export type * from './calibration';
 export type * from './common';
+export type * from './dashboard';
 export type * from './data-quality';
 export type * from './decision-evidence';
 export type * from './entry-condition';

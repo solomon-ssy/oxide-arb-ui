@@ -1776,6 +1776,94 @@
   },
   "dashboard": {
     "viewAll": "View",
+    "commandCenter": {
+      "title": "Quant Command Center",
+      "subtitle": "Assess system safety from one authoritative snapshot and execute the single next action.",
+      "refreshing": "Refreshing",
+      "partial": "{count} degraded sections",
+      "revision": "Snapshot {revision} · generated {time}"
+    },
+    "login": {
+      "title": "Quant Pivot",
+      "subtitle": "Sign in to the command center to review reports, evidence and runtime risk.",
+      "pageTitle": "A quantitative control plane from evidence to action",
+      "pageDescription": "A Polymarket-only, ReportOnly-first operator console unifying account truth, recommendations, research evidence and governed actions.",
+      "console": "Operator Console",
+      "security": "Account truth and authorization are enforced server-side. Access tokens stay in memory; consequential actions require role, reason and audit context."
+    },
+    "primaryAction": {
+      "activate_bootstrap": "Activate Runtime Revision",
+      "resolve_reconciliation": "Resolve Reconciliation",
+      "run_report": "Run Recommendation Report",
+      "view_blockers": "View Capability Blockers"
+    },
+    "status": {
+      "runtimeMode": "Runtime Mode",
+      "bootstrap": "Bootstrap",
+      "killSwitch": "Kill Switch",
+      "ws": "Realtime",
+      "bookFreshness": "Book Freshness",
+      "latestReport": "Latest Report"
+    },
+    "section": {
+      "ready": "Live",
+      "stale": "Stale",
+      "unavailable": "Unavailable",
+      "forbidden": "Forbidden",
+      "blocked": "Blocked by capability gates",
+      "noSamples": "No real samples in this window",
+      "noReport": "No published recommendation report yet",
+      "noTrend": "Not enough data to calculate a window trend"
+    },
+    "equity": {
+      "title": "Equity & Drawdown",
+      "aria": "Time series of net liquidation value and drawdown for the selected window."
+    },
+    "orbit": {
+      "title": "Recommendation Orbit",
+      "aria": "Top recommendations from the latest report, organized by category, rank, confidence and suggested amount.",
+      "list": "Keyboard-operable TopN recommendation list",
+      "play": "Play",
+      "pause": "Pause",
+      "drawerTitle": "Recommendation Action Brief",
+      "rank": "Rank",
+      "market": "Market",
+      "outcome": "Outcome",
+      "confidence": "Confidence",
+      "expectedReturn": "Expected Return",
+      "suggested": "Suggested Amount",
+      "evidence": "Leading factors and evidence confidence",
+      "openDetail": "Open Full Evidence & Eligibility"
+    },
+    "lifecycle": {
+      "title": "Report-to-Execution Lifecycle",
+      "aria": "Report lifecycle states and flow volume in the selected window."
+    },
+    "exposure": {
+      "title": "Exposure Concentration",
+      "aria": "Account risk exposure aggregated by category as a treemap.",
+      "none": "The live account has no real exposure"
+    },
+    "research": {
+      "title": "Research Readiness Runway",
+      "progressAria": "Research history coverage progress",
+      "days": "days of samples",
+      "evidenceMissing": "No serving evidence proves the 200-day sample, factor gate and model gate yet; progress is never fabricated.",
+      "open": "Open Readiness Evidence"
+    },
+    "inbox": {
+      "title": "Action Inbox",
+      "clear": "No operator actions are pending",
+      "owner": "Owner: {owner}",
+      "reason": {
+        "unresolved_reconciliation": "An execution reconciliation remains unresolved",
+        "basis_alert_unacknowledged": "A cross-source basis alert awaits acknowledgement",
+        "kill_switch_not_closed": "Kill switch is not Closed",
+        "market_data_degraded": "Market data is stale or ingest is lagging",
+        "report_run_failed": "The latest report run failed",
+        "runtime_config_awaiting_activation": "An approved runtime revision awaits activation"
+      }
+    },
     "actions": {
       "runReport": "Run Report"
     },
@@ -1783,6 +1871,7 @@
       "ws": "Realtime"
     },
     "loadError": {
+      "overview": "Command center snapshot failed to load",
       "report": "Latest report failed to load",
       "dataQuality": "Data quality failed to load",
       "account": "Live account failed to load",
@@ -1858,7 +1947,12 @@
       "unrealizedPnl": "Unrealized PnL",
       "noEquitySnapshot": "No equity snapshot persisted yet",
       "catalogMarkets": "{count} catalog markets",
-      "dataUsable": "{usable}/{total} usable books"
+      "dataUsable": "{usable}/{total} usable books",
+      "windowTrend": "{window} window trend {value}",
+      "reservedValue": "Reserved {value}",
+      "highWaterValue": "High-water mark {value}",
+      "usableBooks": "{usable}/{total} books usable",
+      "dataUsableTitle": "Data Usable"
     },
     "latestReport": {
       "title": "Latest Report",
@@ -1882,6 +1976,7 @@
     },
     "dataQuality": {
       "title": "Data Quality",
+      "progressAria": "Usable order-book data percentage",
       "totalTokens": "Tracked Tokens",
       "fresh": "Fresh",
       "acceptable": "Acceptable",
@@ -1906,7 +2001,12 @@
         "delivery_retrying": "Delivery retrying",
         "delivery_failed": "Delivery failed",
         "revoked": "Revoked",
-        "expired": "Expired"
+        "expired": "Expired",
+        "intent_pending_approval": "Intent approval",
+        "execution_submitted": "Order submitted",
+        "execution_partially_filled": "Partially filled",
+        "execution_ambiguous": "Ambiguous order",
+        "reconciliation_unresolved": "Reconciliation unresolved"
       }
     },
     "pipeline": {
@@ -1923,7 +2023,11 @@
       "byMarket": "By market"
     },
     "health": {
-      "title": "Subsystem Health"
+      "title": "Subsystem Health",
+      "ready": "All dependencies ready",
+      "degraded": "Dependencies degraded",
+      "ok": "Healthy",
+      "failed": "Failed"
     },
     "recovery": {
       "title": "Execution Recovery",

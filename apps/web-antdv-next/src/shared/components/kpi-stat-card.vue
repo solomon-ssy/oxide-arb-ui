@@ -2,7 +2,7 @@
 import type { KpiAccent } from '#/shared/components/dashboard-accent';
 import type { DecimalSign } from '#/shared/components/format';
 
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 import { VbenCountToAnimator } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
@@ -56,6 +56,32 @@ const valueColorClass = computed(() => {
 const hasValue = computed(
   () => props.endVal !== null && props.endVal !== undefined,
 );
+const animateFirstArrival = ref(false);
+let hasAnimatedRealValue = false;
+let animationTimer: ReturnType<typeof setTimeout> | undefined;
+
+watch(
+  () => props.endVal,
+  (value) => {
+    if (value === null || value === undefined) return;
+    if (hasAnimatedRealValue) {
+      animateFirstArrival.value = false;
+      return;
+    }
+    hasAnimatedRealValue = true;
+    if (props.duration <= 0) return;
+    animateFirstArrival.value = true;
+    animationTimer = setTimeout(() => {
+      animateFirstArrival.value = false;
+      animationTimer = undefined;
+    }, props.duration);
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  if (animationTimer) clearTimeout(animationTimer);
+});
 </script>
 
 <template>
@@ -103,10 +129,10 @@ const hasValue = computed(
           <VbenCountToAnimator
             v-if="hasValue"
             :decimals="decimals"
-            :duration="duration"
+            :duration="animateFirstArrival ? duration : 0"
             :end-val="endVal!"
             :prefix="prefix"
-            :start-val="0"
+            :start-val="animateFirstArrival ? 0 : endVal!"
             :suffix="suffix"
           />
           <span v-else>{{ EMPTY_PLACEHOLDER }}</span>

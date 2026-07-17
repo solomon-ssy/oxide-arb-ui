@@ -212,7 +212,7 @@ export interface HealthReport {
  * `GET /system/deploy-config` — credential-masked deploy config snapshot.
  *
  * Mirrors the hand-built masked object from `masked_deploy_view()`; secret
- * fields (`password`, JWT private-key path) are masked and
+ * fields (`password`, JWT signing key) are masked and
  * credentialed URLs are collapsed to `"***"`. The `quant` and `research`
  * sections are intentionally omitted server-side.
  */
@@ -284,10 +284,12 @@ export interface DeployConfigView {
   web: {
     cors_allowed_origins: string[];
     jwt: {
+      absolute_session_ttl_secs: number;
       access_ttl_secs: number;
+      audience: string;
       issuer: string;
       refresh_ttl_secs: number;
-      secret: string;
+      signing_key: string;
     };
     listen_host: string;
     listen_port: number;

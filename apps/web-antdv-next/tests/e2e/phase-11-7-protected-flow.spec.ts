@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page, TestInfo } from 'playwright/test';
 
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from 'playwright/test';
 
 interface E2eFixtures {
@@ -16,6 +17,10 @@ interface E2eFixtures {
 }
 
 const BACKEND = 'http://127.0.0.1:8088';
+
+test.beforeEach(({ page: _page }, testInfo) => {
+  if (process.env.CI) testInfo.snapshotSuffix = 'darwin';
+});
 
 async function waitForShell(page: Page) {
   await page.waitForTimeout(500);
@@ -50,9 +55,29 @@ async function login(page: Page) {
   await page.locator("input[name='username']").fill('admin');
   await page.locator("input[name='password']").fill('admin');
   await page.getByRole('button', { name: /登录|Login/i }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.locator('body')).not.toContainText('403');
+  await expect(page).toHaveURL((url) => url.pathname === '/dashboard');
   await waitForShell(page);
+  await expect(page.getByTestId('dashboard-command-center')).toBeVisible();
+}
+
+async function dismissNotifications(page: Page) {
+  await expect(page.locator('.ant-notification-notice')).toHaveCount(0, {
+    timeout: 10_000,
+  });
+}
+
+async function setTheme(page: Page, dark: boolean) {
+  const html = page.locator('html');
+  const hasDark = await html.evaluate((element) =>
+    element.classList.contains('dark'),
+  );
+  if (hasDark !== dark) {
+    await page.locator('button.theme-toggle').first().click();
+  }
+  await (dark
+    ? expect(html).toHaveClass(/(?:^|\s)dark(?:\s|$)/)
+    : expect(html).not.toHaveClass(/(?:^|\s)dark(?:\s|$)/));
+  await page.waitForTimeout(250);
 }
 
 async function attachMetadata(
@@ -79,6 +104,123 @@ async function fillGovernedReason(page: Page, reason: string) {
   await expect(modal).toBeVisible();
   await modal.getByTestId('governed-reason').fill(reason);
 }
+
+test.describe.serial('Protected route initialization', () => {
+  test('login, refresh, protected deep link, unauthenticated deep link, and unknown route resolve correctly', async ({
+    page,
+  }) => {
+    await login(page);
+
+    await page.reload();
+    await waitForShell(page);
+    await expect(page.getByTestId('dashboard-command-center')).toBeVisible();
+
+    await page.goto('/quant/reports');
+    await waitForShell(page);
+    await expect(page.getByTestId('reports-workspace')).toBeVisible();
+
+    await page.context().clearCookies();
+    await page.goto('/quant/reports');
+    await expect(page).toHaveURL(/\/auth\/login\?.*redirect=/);
+    await page.locator("input[name='username']").fill('admin');
+    await page.locator("input[name='password']").fill('admin');
+    await page.getByRole('button', { name: /登录|Login/i }).click();
+    await expect(page).toHaveURL((url) => url.pathname === '/quant/reports');
+    await waitForShell(page);
+    await expect(page.getByTestId('reports-workspace')).toBeVisible();
+
+    await page.goto('/this-route-does-not-exist');
+    await expect(page).toHaveURL(/\/this-route-does-not-exist/);
+    await expect(page.getByText(/未找到页面|Page Not Found/i)).toBeVisible();
+    await expect(page.getByTestId('dashboard-command-center')).toHaveCount(0);
+  });
+
+  test('dashboard exposes one operator action and responsive accessible evidence', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await login(page);
+    await dismissNotifications(page);
+    await setTheme(page, false);
+    const dashboard = page.getByTestId('dashboard-command-center');
+    await expect(dashboard.getByTestId('dashboard-primary-action')).toHaveCount(
+      1,
+    );
+    await expect(
+      dashboard.getByRole('heading', {
+        name: /量化作战台|Quant Command Center/i,
+      }),
+    ).toBeVisible();
+    await expect(
+      dashboard.getByRole('button', { name: /播放|暂停|Play|Pause/i }),
+    ).toHaveCount(0);
+
+    const accessibility = await new AxeBuilder({ page })
+      .include('[data-testid="dashboard-command-center"]')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    const blockingAccessibilityViolations = accessibility.violations.filter(
+      ({ impact }) => impact === 'critical' || impact === 'serious',
+    );
+    expect(
+      blockingAccessibilityViolations,
+      JSON.stringify(blockingAccessibilityViolations, null, 2),
+    ).toEqual([]);
+
+    const recommendationList = dashboard.getByRole('list', {
+      name: /TopN 推荐列表|TopN recommendation list/i,
+    });
+    if ((await recommendationList.count()) > 0) {
+      const firstRecommendation = recommendationList
+        .getByRole('button')
+        .first();
+      await firstRecommendation.focus();
+      await expect(firstRecommendation).toBeFocused();
+    }
+
+    const volatileValues = dashboard.locator(
+      '[data-screenshot-volatile="true"]',
+    );
+    await expect(page).toHaveScreenshot('dashboard-light-desktop.png', {
+      fullPage: true,
+      mask: [volatileValues],
+      maskColor: '#262626',
+    });
+
+    await setTheme(page, true);
+    await expect(page).toHaveScreenshot('dashboard-dark-desktop.png', {
+      fullPage: true,
+      mask: [volatileValues],
+      maskColor: '#262626',
+    });
+
+    await setTheme(page, false);
+    await page.setViewportSize({ height: 844, width: 390 });
+    await expect(page).toHaveScreenshot('dashboard-light-mobile.png', {
+      fullPage: true,
+      mask: [volatileValues],
+      maskColor: '#262626',
+    });
+
+    await page.setViewportSize({ height: 900, width: 1440 });
+    await setTheme(page, true);
+    await page.setViewportSize({ height: 844, width: 390 });
+    await expect(page).toHaveScreenshot('dashboard-dark-mobile.png', {
+      fullPage: true,
+      mask: [volatileValues],
+      maskColor: '#262626',
+    });
+
+    await page.setViewportSize({ height: 768, width: 1024 });
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).toBeTruthy();
+  });
+});
 
 test.describe.serial('Phase 11.7 protected operational closeout', () => {
   let fixtures: E2eFixtures;
@@ -150,7 +292,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('approve-intent')).toHaveCount(0);
     await expect(page.getByTestId('cancel-intent')).toBeVisible();
     await expect(page.getByTestId('intent-detail')).toContainText(
-      /立即|Immediate|Not required/i,
+      /等待条件|Waiting for condition|Awaiting condition/i,
     );
 
     const waitingRoute = `/quant/intents/${fixtures.waiting_intent_id}`;

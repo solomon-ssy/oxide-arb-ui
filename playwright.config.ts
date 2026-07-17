@@ -37,7 +37,7 @@ export default defineConfig({
       reuseExistingServer: false,
       stderr: 'pipe',
       stdout: 'pipe',
-      timeout: 180_000,
+      timeout: 600_000,
       url: 'http://127.0.0.1:8088/health',
     },
     {

@@ -4,8 +4,10 @@ import type { VbenFormSchema } from '@vben/common-ui';
 import { computed } from 'vue';
 
 import { AuthenticationLogin, z } from '@vben/common-ui';
-import { $t } from '@vben/locales';
 
+import { Alert, Tag } from 'antdv-next';
+
+import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
 
 defineOptions({ name: 'Login' });
@@ -44,6 +46,22 @@ const formSchema = computed((): VbenFormSchema[] => {
     :show-forget-password="false"
     :show-qrcode-login="false"
     :show-register="false"
+    :sub-title="$t('page.dashboard.login.subtitle')"
+    :title="$t('page.dashboard.login.title')"
     @submit="authStore.authLogin"
-  />
+  >
+    <template #third-party-login>
+      <Alert class="mt-4" show-icon type="info">
+        <template #message>
+          <div class="flex items-center gap-2">
+            <span>{{ $t('page.dashboard.login.console') }}</span>
+            <Tag color="processing">ReportOnly</Tag>
+          </div>
+        </template>
+        <template #description>
+          {{ $t('page.dashboard.login.security') }}
+        </template>
+      </Alert>
+    </template>
+  </AuthenticationLogin>
 </template>

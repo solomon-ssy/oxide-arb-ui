@@ -14,7 +14,6 @@ import { generateAccess } from './access';
 const PUBLIC_CORE_ROUTE_NAMES = new Set([
   'Authentication',
   'FallbackForbidden',
-  'FallbackNotFound',
   'FallbackServerError',
   'Login',
   'Offline',

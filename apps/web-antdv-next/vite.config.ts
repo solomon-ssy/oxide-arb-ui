@@ -5,6 +5,7 @@ export default defineConfig(async () => {
     application: {},
     vite: {
       build: {
+        manifest: true,
         // The operator console requires native BigInt for exact decimal controls.
         target: 'es2022',
       },
