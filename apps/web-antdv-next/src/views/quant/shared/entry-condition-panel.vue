@@ -67,11 +67,11 @@ function eventLabel(
     case 'crypto_subject_predicate_entered': {
       return $t('page.entryCondition.node.cryptoEvent');
     }
-    case 'weather_daily_high_entered_band': {
-      return $t('page.entryCondition.node.weatherEnterBand');
+    case 'weather_daily_temperature_crossed_terminal_bound': {
+      return $t('page.entryCondition.node.weatherCrossTerminal');
     }
-    case 'weather_daily_high_exceeded_band_upper': {
-      return $t('page.entryCondition.node.weatherExceedUpper');
+    case 'weather_daily_temperature_entered_band': {
+      return $t('page.entryCondition.node.weatherEnterBand');
     }
     case 'weather_observation_day_closed_outside_band': {
       return $t('page.entryCondition.node.weatherDayClosedOutside');

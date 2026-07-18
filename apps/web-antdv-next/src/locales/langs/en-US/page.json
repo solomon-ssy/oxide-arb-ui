@@ -337,7 +337,7 @@
         },
         "event": {
           "crypto": "Crypto subject predicate entered",
-          "weather": "Weather daily-high predicate"
+          "weather": "Weather daily-temperature predicate"
         },
         "node": {
           "kind": "Node type",
@@ -2484,9 +2484,9 @@
       "clock": "Clock deadline {deadline}",
       "factor": "Factor {id} ({measure}) {comparison} {threshold}",
       "cryptoEvent": "Same-source crypto price entered the recommended outcome",
-      "weatherEnterBand": "NOAA proxy daily high entered the temperature band",
-      "weatherExceedUpper": "NOAA proxy daily high exceeded the band upper bound",
-      "weatherDayClosedOutside": "NOAA observation day closed with the daily high outside the band"
+      "weatherEnterBand": "NOAA proxy daily extreme entered the temperature band",
+      "weatherCrossTerminal": "NOAA proxy daily extreme crossed the terminal band bound",
+      "weatherDayClosedOutside": "NOAA observation day closed with the daily extreme outside the band"
     }
   },
   "quantExecutionOrders": {

@@ -91,9 +91,11 @@ export type EntryConditionNodeV1 =
 
 export type MarketEventCondition =
   | (Record<string, unknown> & { kind: 'crypto_subject_predicate_entered' })
-  | (Record<string, unknown> & { kind: 'weather_daily_high_entered_band' })
   | (Record<string, unknown> & {
-      kind: 'weather_daily_high_exceeded_band_upper';
+      kind: 'weather_daily_temperature_crossed_terminal_bound';
+    })
+  | (Record<string, unknown> & {
+      kind: 'weather_daily_temperature_entered_band';
     })
   | (Record<string, unknown> & {
       kind: 'weather_observation_day_closed_outside_band';

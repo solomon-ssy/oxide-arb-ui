@@ -2484,9 +2484,9 @@
       "clock": "时钟截止 {deadline}",
       "factor": "因子 {id}（{measure}）{comparison} {threshold}",
       "cryptoEvent": "Crypto 同源价格切入推荐结果",
-      "weatherEnterBand": "NOAA 代理日高进入温度区间",
-      "weatherExceedUpper": "NOAA 代理日高超过区间上界",
-      "weatherDayClosedOutside": "NOAA 观测日关闭且日高位于区间外"
+      "weatherEnterBand": "NOAA 代理日极值进入温度区间",
+      "weatherCrossTerminal": "NOAA 代理日极值越过终止边界",
+      "weatherDayClosedOutside": "NOAA 观测日关闭且日极值位于区间外"
     }
   },
   "quantExecutionOrders": {

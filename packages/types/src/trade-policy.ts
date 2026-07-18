@@ -159,7 +159,7 @@ export type TradePolicyConditionTemplateNodeV1 =
             max_input_age_ms: number;
           }
         | {
-            kind: 'weather_daily_high_predicate';
+            kind: 'weather_daily_temperature_predicate';
             max_input_age_ms: number;
           };
       kind: 'market_event';

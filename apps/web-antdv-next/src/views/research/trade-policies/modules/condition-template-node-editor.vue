@@ -76,7 +76,7 @@ const eventOptions = computed(() => [
   },
   {
     label: $t('page.research.tradePolicies.workbench.event.weather'),
-    value: 'weather_daily_high_predicate',
+    value: 'weather_daily_temperature_predicate',
   },
 ]);
 
@@ -159,7 +159,9 @@ function changeFactor(definitionId: string) {
 }
 
 function changeEvent(
-  kind: 'crypto_subject_predicate_entered' | 'weather_daily_high_predicate',
+  kind:
+    | 'crypto_subject_predicate_entered'
+    | 'weather_daily_temperature_predicate',
 ) {
   if (props.modelValue.kind !== 'market_event') return;
   replace({
