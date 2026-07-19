@@ -9,7 +9,7 @@ import { WS_CHANNELS } from '@vben/types';
  * filters its subscriptions up front.
  */
 export const WS_CHANNEL_PERMISSIONS: Record<WsChannel, string> = {
-  [WS_CHANNELS.configActivated]: 'runtime_config:read',
+  [WS_CHANNELS.configActivated]: 'config:read',
   [WS_CHANNELS.marketBookUpdate]: 'market:read',
   [WS_CHANNELS.marketResolved]: 'market:read',
   [WS_CHANNELS.materializationRunUpdate]: 'materialization:read',

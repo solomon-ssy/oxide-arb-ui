@@ -96,7 +96,7 @@ export interface ReportSummary {
   /**
    * The aggregate-exposure hard cap actually enforced by the LP
    * (`capital_base_usd × portfolio.kelly_safety.max_aggregate_exposure_pct`),
-   * frozen from the exact account + runtime-config this report solved
+   * frozen from the exact account and decision-policy snapshot this report solved
    * against. `null` when the cap is disabled or the capital base is
    * non-positive — never re-derive this client-side.
    */
@@ -117,7 +117,7 @@ export interface ReportSummary {
 export interface QuantReportDetailView extends QuantReportView {
   horizon_secs: number;
   account_snapshot_ref: UuidString;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   /** Exact serving run; absent only when an empty report stopped before inference. */
   model_run_id: null | UuidString;
   model_version_id: UuidString;
@@ -158,7 +158,7 @@ export interface ReportRunView {
   lease_expires_at: IsoDateTime | null;
   lease_owner: null | UuidString;
   finished_at: IsoDateTime | null;
-  runtime_config_version_id: null | UuidString;
+  decision_policy_snapshot_id: null | UuidString;
   top_n: null | number;
   knowledge_lag_secs: null | number;
   output_report_id: null | UuidString;
@@ -175,7 +175,7 @@ export interface ReportRunListQuery extends PageQuery, TimeRangeQuery {
 
 export interface ReportScheduleStateView {
   schedule_id: string;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   spec_hash: string;
   next_scheduled_for: IsoDateTime;
   last_materialized_for: IsoDateTime | null;
@@ -206,7 +206,7 @@ export interface ReportCurrentHealthView {
 export interface ReportScheduleGapView {
   gap_id: UuidString;
   schedule_id: string;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   reason: ReportScheduleGapReason;
   first_scheduled_for: IsoDateTime;
   last_scheduled_for: IsoDateTime;
@@ -307,7 +307,7 @@ export interface ReportFunnelMarketView {
   recommendation_id: null | UuidString;
   recommendation_report_id: UuidString;
   row_hash: string;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   secondary_diagnostics: Record<string, unknown>;
   signal_candidate_id: null | UuidString;
   terminal_stage: ReportFunnelStage;

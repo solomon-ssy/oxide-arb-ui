@@ -15,6 +15,10 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./config-api": {
+      "types": "./src/generated/config-api.ts",
+      "default": "./src/generated/config-api.ts"
+    },
     "./global": {
       "types": "./global.d.ts"
     }

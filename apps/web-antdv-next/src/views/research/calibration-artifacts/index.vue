@@ -44,7 +44,7 @@ const { hasAccessByCodes } = useQpAccess();
 const researchStore = useResearchStore();
 
 const canFit = hasAccessByCodes(['materialization:create']);
-const canActivate = hasAccessByCodes(['runtime_config:create']);
+const canActivate = canFit;
 
 const kindFilter = ref<KindFilter>('all');
 

@@ -24,7 +24,6 @@ import {
   listModels,
   publishModel,
   retireModel,
-  rollbackModel,
   trainModel,
 } from '#/api/research';
 import { $t } from '#/locales';
@@ -57,7 +56,6 @@ const access = {
   canCpcv: hasAccessByCodes(['replay:create']),
   canPublish: hasAccessByCodes(['publication:publish']),
   canRetire: hasAccessByCodes(['publication:retire']),
-  canRollback: hasAccessByCodes(['publication:rollback']),
 };
 
 const initialFilters = {
@@ -306,23 +304,6 @@ async function publish(model: TrainedModelView) {
   }
 }
 
-async function rollback(model: TrainedModelView) {
-  const id = model.model_version_id;
-  const result = await governed(
-    (ctx) => rollbackModel(id, { reason: ctx.reason }, ctx),
-    {
-      confirmWord: 'ROLLBACK',
-      danger: true,
-      summary: $t('page.research.models.rollback.summary', { id }),
-      title: $t('page.research.models.rollback.title'),
-    },
-  );
-  if (result) {
-    message.success($t('page.research.models.rollback.feedback'));
-    void gridApi.query();
-  }
-}
-
 async function retire(model: TrainedModelView) {
   const id = model.model_version_id;
   const result = await governed(
@@ -360,10 +341,6 @@ function onActionClick({ code, row }: OnActionClickParams<TrainedModelView>) {
     }
     case 'retire': {
       void retire(row);
-      break;
-    }
-    case 'rollback': {
-      void rollback(row);
       break;
     }
     // No default

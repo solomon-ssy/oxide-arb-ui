@@ -22,8 +22,8 @@ import {
 } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
+import { fetchDecisionPolicySnapshots } from '#/api/config';
 import { listAllModelSpecs } from '#/api/research';
-import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { listTradePolicyProfiles } from '#/api/trade-policies';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
@@ -81,7 +81,7 @@ async function collectBody(): Promise<DatasetFormBody | null> {
   const range = values.window as [string, string] | undefined;
   if (
     !values.model_spec_id ||
-    !values.runtime_config_version_id ||
+    !values.decision_policy_snapshot_id ||
     !profile ||
     !values.pit_cutoff ||
     !range ||
@@ -96,7 +96,7 @@ async function collectBody(): Promise<DatasetFormBody | null> {
     profile_ref: profile.profile_ref,
     purpose: values.purpose as DatasetFormBody['purpose'],
     pit_cutoff: String(values.pit_cutoff),
-    runtime_config_version_id: values.runtime_config_version_id as string,
+    decision_policy_snapshot_id: values.decision_policy_snapshot_id as string,
     sample_interval_secs: values.sample_interval_secs as number,
     knowledge_lag_secs: values.knowledge_lag_secs as number,
     window_end: range[1],
@@ -118,7 +118,7 @@ const purposeOptions = [
 async function loadOptions() {
   const [specs, versions, profileRows] = await Promise.all([
     handleRequest(() => listAllModelSpecs(), { silent: true }),
-    handleRequest(() => fetchRuntimeConfigVersions({ limit: 200 }), {
+    handleRequest(() => fetchDecisionPolicySnapshots({ limit: 200 }), {
       silent: true,
     }),
     handleRequest(() => listTradePolicyProfiles(), { silent: true }),
@@ -128,8 +128,8 @@ async function loadOptions() {
     value: spec.model_spec_id,
   }));
   const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
-    label: version.runtime_config_version_id,
-    value: version.runtime_config_version_id,
+    label: version.decision_policy_snapshot_id,
+    value: version.decision_policy_snapshot_id,
   }));
   profiles.value = new Map(
     (profileRows ?? []).map((profile) => [
@@ -163,7 +163,7 @@ async function loadOptions() {
         options: versionOptions,
         placeholder: $t('page.research.datasets.form.versionPlaceholder'),
       },
-      fieldName: 'runtime_config_version_id',
+      fieldName: 'decision_policy_snapshot_id',
     },
   ]);
 }
@@ -300,8 +300,8 @@ const [Form, formApi] = useVbenForm({
         placeholder: $t('page.research.datasets.form.versionPlaceholder'),
         showSearch: true,
       },
-      fieldName: 'runtime_config_version_id',
-      label: $t('page.research.datasets.form.runtimeConfigVersion'),
+      fieldName: 'decision_policy_snapshot_id',
+      label: $t('page.research.datasets.form.decisionPolicySnapshot'),
       rules: 'selectRequired',
     },
     {
@@ -452,10 +452,10 @@ const [Modal, modalApi] = useVbenModal({
           {{ $t(`enum.datasetPurpose.${pendingBody.purpose ?? 'training'}`) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.research.datasets.form.runtimeConfigVersion')"
+          :label="$t('page.research.datasets.form.decisionPolicySnapshot')"
         >
           <span class="font-mono text-xs break-all">
-            {{ pendingBody.runtime_config_version_id }}
+            {{ pendingBody.decision_policy_snapshot_id }}
           </span>
         </DescriptionsItem>
         <DescriptionsItem

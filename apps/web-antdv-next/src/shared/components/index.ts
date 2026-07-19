@@ -9,8 +9,6 @@ export { default as EntityDetailHeader } from './entity-detail-header.vue';
 export * from './format';
 export { default as GovernedActionModal } from './governed-action-modal.vue';
 export { default as InlineBar } from './inline-bar.vue';
-export { default as JsonDiffList } from './json-diff-list.vue';
-export type { JsonDiffListItem } from './json-diff-list.vue';
 export { default as KeyValueGrid } from './key-value-grid.vue';
 export type { KeyValueGridItem } from './key-value-grid.vue';
 export { default as ReliabilityChart } from './reliability-chart.vue';

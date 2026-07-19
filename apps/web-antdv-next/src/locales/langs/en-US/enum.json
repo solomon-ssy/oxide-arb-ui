@@ -461,9 +461,12 @@
     "auth": "Auth",
     "rbac": "RBAC",
     "governance": "Governance",
-    "runtime_config": "Runtime Config",
+    "config": "Config",
     "system": "System",
     "market": "Market",
+    "quant_report": "Quant Report",
+    "replay": "Replay",
+    "risk": "Risk",
     "other": "Other"
   },
   "operationOutcome": {
@@ -471,25 +474,11 @@
     "failure": "Failure",
     "denied": "Denied"
   },
-  "runtimeConfigVersionSource": {
-    "bootstrap": "Bootstrap",
-    "operator": "Operator",
-    "import": "Import"
-  },
-  "runtimeConfigActivationKind": {
-    "initial": "Initial",
-    "promote": "Promote",
-    "rollback": "Rollback"
-  },
-  "runtimeConfigDiffType": {
-    "added": "Added",
-    "changed": "Changed",
-    "removed": "Removed"
-  },
   "resourceType": {
     "system": "System",
     "market": "Market",
-    "runtime_config": "Runtime Config",
+    "config": "Config",
+    "config_lifecycle": "Config Lifecycle",
     "publication": "Publication",
     "materialization": "Materialization",
     "replay": "Replay",

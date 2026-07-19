@@ -167,10 +167,12 @@ function onTrain() {
               {{ $t(`enum.datasetPurpose.${dataset.purpose}`) }}
             </DescriptionsItem>
             <DescriptionsItem
-              :label="$t('page.research.datasets.detail.runtimeConfigVersion')"
+              :label="
+                $t('page.research.datasets.detail.decisionPolicySnapshot')
+              "
             >
               <span class="font-mono text-xs break-all">
-                {{ dataset.runtime_config_version_id }}
+                {{ dataset.decision_policy_snapshot_id }}
               </span>
             </DescriptionsItem>
             <DescriptionsItem
@@ -293,12 +295,12 @@ function onTrain() {
               </DescriptionsItem>
               <DescriptionsItem
                 :label="
-                  $t('page.research.datasets.detail.runtimeConfigVersion')
+                  $t('page.research.datasets.detail.decisionPolicySnapshot')
                 "
                 :span="2"
               >
                 <span class="font-mono text-xs break-all">
-                  {{ manifest.runtime_config_version_id }}
+                  {{ manifest.decision_policy_snapshot_id }}
                 </span>
               </DescriptionsItem>
               <DescriptionsItem

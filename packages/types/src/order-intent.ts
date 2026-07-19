@@ -81,7 +81,7 @@ export interface OrderIntentView {
   order_intent_id: UuidString;
   recommendation_id: UuidString;
   runtime_mode: QuantRuntimeMode;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   model_version_id: UuidString;
   intent_kind: OrderIntentKind;
   status: OrderIntentStatus;

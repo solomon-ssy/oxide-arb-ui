@@ -335,7 +335,7 @@ export interface TradePolicyFitContract {
   profile_ref: ResearchProfileRef;
   quality_gate: TradePolicyQualityGate;
   research_program_hash: string;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   source_dataset_id: UuidString;
   target_horizon_secs: number;
 }
@@ -700,7 +700,7 @@ export interface TradePolicyFitPreflightView {
   profile_quality_gate_available: TradePolicyPreflightCheckStatus;
   readiness: TradePolicyFitReadiness;
   reusable_source_dataset_id: null | UuidString;
-  runtime_config_version_id: null | UuidString;
+  decision_policy_snapshot_id: null | UuidString;
   source_dataset_policy_fit: TradePolicyPreflightCheckStatus;
   source_dataset_ready: TradePolicyPreflightCheckStatus;
   source_completeness_proven: TradePolicyPreflightCheckStatus;

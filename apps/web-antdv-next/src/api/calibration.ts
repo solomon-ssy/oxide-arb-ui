@@ -9,7 +9,6 @@ import type {
   ModelCalibrationFitPreflightView,
   Paginated,
   ResearchJobView,
-  RuntimeConfigVersionView,
   TrainedModelView,
 } from '@vben/types';
 
@@ -89,15 +88,15 @@ export async function fitModelCalibrator(
 }
 
 /**
- * `POST /research/calibration-artifacts/{id}/activate` — stage a runtime-config
- * version pinning a `market_price_bias` artifact as the favorite-longshot source.
+ * `POST /research/calibration-artifacts/{id}/activate` — activate the reviewed
+ * calibration artifact. Config routing remains a separate governed workflow.
  */
 export async function activateCalibrationArtifact(
   id: string,
   body: ActivateCalibrationArtifactRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<RuntimeConfigVersionView>(
+  return governedPost<CalibrationArtifactDetailView>(
     CalibrationApi.activateArtifact(id),
     body,
     ctx,

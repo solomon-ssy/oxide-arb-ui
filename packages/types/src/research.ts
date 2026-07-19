@@ -30,7 +30,9 @@ import type {
   ResearchProfileRef,
   SourceSliceManifestRef,
 } from './research-profile';
-import type { ModelPickerSide } from './runtime-config';
+
+/** Buy-side ranker or Sell-side exit model picker scope. */
+export type ModelPickerSide = 'buy' | 'sell';
 
 /** Sample source for a training-dataset build (mirrors Rust `TrainingSampleSource`). */
 export type TrainingSampleSource =
@@ -103,7 +105,7 @@ export interface DatasetManifestView {
   profile_ref: ResearchProfileRef;
   purpose: DatasetPurpose;
   research_program_hash: string;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   sample_count: number;
   sample_interval_secs: number;
   semantic_dataset_hash: string;
@@ -120,7 +122,7 @@ export interface DatasetManifestView {
 export interface TrainingDatasetPlanView {
   training_dataset_id: UuidString;
   model_spec_id: string;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   /**
@@ -191,7 +193,7 @@ export interface TrainingDatasetView {
   feature_schema_version: null | number;
   sample_sources: null | TrainingSampleSource[];
   coverage_json: DatasetCoverage | null;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   failure_detail: null | string;
   completed_at: IsoDateTime | null;
   created_at: IsoDateTime;
@@ -213,7 +215,7 @@ export interface BuildTrainingDatasetRequest {
    * fit time, surfaced live by the Fit Model Calibrator preflight check).
    */
   purpose?: DatasetPurpose;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   /** Frozen information cutoff; server derives every source identity and object. */
@@ -686,7 +688,8 @@ export interface PublishedModelOptionView {
   model_spec_id: string;
   spec_name: string;
   version: number;
-  model_family: string;
+  artifact_hash: string;
+  model_family: ModelFamily;
   /** The artifact's own declared scope (`null` = generic cross-category). */
   category_scope: MarketCategory | null;
   published_at: IsoDateTime | null;
@@ -694,11 +697,6 @@ export interface PublishedModelOptionView {
 
 /** `POST /research/models/{id}/publish` governed request body. */
 export interface PublishModelRequest {
-  reason: string;
-}
-
-/** `POST /research/models/{id}/rollback` governed request body. */
-export interface RollbackModelRequest {
   reason: string;
 }
 
@@ -759,7 +757,7 @@ export interface BacktestReportView {
   backtest_report_id: UuidString;
   model_version_id: UuidString;
   model_run_id: UuidString;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   coverage: DecimalString;
@@ -811,7 +809,7 @@ export interface BacktestPathSetView {
   model_version_id: UuidString;
   model_run_id: UuidString;
   training_dataset_id: UuidString;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   path_count: number;
@@ -841,7 +839,7 @@ export interface BacktestPathSetView {
 export interface RunBacktestRequest {
   /** Frozen, PIT-materialized dataset to replay the model over. */
   training_dataset_id: UuidString;
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   /** Fit a calibrated return curve + register a calibrated child candidate. */
   calibrate?: boolean;
   /** When set, run pair mode: replay this baseline and persist a comparison. */
@@ -856,7 +854,7 @@ export interface RunCpcvBacktestRequest {
   /** The exact frozen dataset linked to the model version. */
   training_dataset_id: UuidString;
   /** Governed CPCV/trial-grid runtime policy. */
-  runtime_config_version_id: UuidString;
+  decision_policy_snapshot_id: UuidString;
   reason: string;
   path_set_id?: UuidString;
 }
@@ -990,7 +988,7 @@ export interface ResearchJobView {
   kind: ResearchJobKind;
   status: ResearchJobStatus;
   model_spec_id?: null | string;
-  runtime_config_version_id?: null | UuidString;
+  decision_policy_snapshot_id?: null | UuidString;
   /** Frozen request body (detail drawer / retry preview). */
   params: Record<string, unknown>;
   progress?: null | ResearchJobProgress;

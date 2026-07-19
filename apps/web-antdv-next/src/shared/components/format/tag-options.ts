@@ -33,8 +33,6 @@ import {
   RESEARCH_JOB_KINDS,
   RESEARCH_JOB_STATUSES,
   RESOURCE_TYPES,
-  RUNTIME_CONFIG_ACTIVATION_KINDS,
-  RUNTIME_CONFIG_VERSION_SOURCES,
   SETTLEMENT_REDEEM_STATES,
   SIDES,
   TRAINING_DATASET_STATUSES,
@@ -94,8 +92,11 @@ export function useOperationCategoryTagOptions() {
       [OPERATION_CATEGORIES.governance]: 'purple',
       [OPERATION_CATEGORIES.market]: 'cyan',
       [OPERATION_CATEGORIES.other]: 'lime',
+      [OPERATION_CATEGORIES.quantReport]: 'success',
       [OPERATION_CATEGORIES.rbac]: 'geekblue',
-      [OPERATION_CATEGORIES.runtimeConfig]: 'orange',
+      [OPERATION_CATEGORIES.replay]: 'blue',
+      [OPERATION_CATEGORIES.risk]: 'red',
+      [OPERATION_CATEGORIES.config]: 'orange',
       [OPERATION_CATEGORIES.system]: 'processing',
     },
   );
@@ -145,36 +146,11 @@ export function useResourceTypeTagOptions() {
       [RESOURCE_TYPES.reconciliation]: 'warning',
       [RESOURCE_TYPES.replay]: 'geekblue',
       [RESOURCE_TYPES.role]: 'purple',
-      [RESOURCE_TYPES.runtimeConfig]: 'orange',
+      [RESOURCE_TYPES.config]: 'orange',
+      [RESOURCE_TYPES.configLifecycle]: 'red',
       [RESOURCE_TYPES.settlementRedeem]: 'gold',
       [RESOURCE_TYPES.system]: 'cyan',
       [RESOURCE_TYPES.user]: 'processing',
-    },
-  );
-}
-
-/** Runtime config activation kind tags. */
-export function useRuntimeConfigActivationKindTagOptions() {
-  return buildTagOptions(
-    Object.values(RUNTIME_CONFIG_ACTIVATION_KINDS),
-    (value) => $t(`enum.runtimeConfigActivationKind.${value}`),
-    {
-      [RUNTIME_CONFIG_ACTIVATION_KINDS.initial]: 'processing',
-      [RUNTIME_CONFIG_ACTIVATION_KINDS.promote]: 'success',
-      [RUNTIME_CONFIG_ACTIVATION_KINDS.rollback]: 'warning',
-    },
-  );
-}
-
-/** Runtime config version source tags. */
-export function useRuntimeConfigVersionSourceTagOptions() {
-  return buildTagOptions(
-    Object.values(RUNTIME_CONFIG_VERSION_SOURCES),
-    (value) => $t(`enum.runtimeConfigVersionSource.${value}`),
-    {
-      [RUNTIME_CONFIG_VERSION_SOURCES.bootstrap]: 'geekblue',
-      [RUNTIME_CONFIG_VERSION_SOURCES.import]: 'cyan',
-      [RUNTIME_CONFIG_VERSION_SOURCES.operator]: 'processing',
     },
   );
 }
@@ -789,17 +765,4 @@ export function resolveMarketFreshnessState(input: {
     return 'unknown';
   }
   return input.fresh ? 'fresh' : 'stale';
-}
-
-/** Runtime-config JSON diff change kind → Tag color. */
-export function useRuntimeConfigDiffTypeTagOptions() {
-  return buildTagOptions(
-    ['added', 'changed', 'removed'],
-    (value) => $t(`enum.runtimeConfigDiffType.${value}`),
-    {
-      added: 'success',
-      changed: 'warning',
-      removed: 'error',
-    },
-  );
 }

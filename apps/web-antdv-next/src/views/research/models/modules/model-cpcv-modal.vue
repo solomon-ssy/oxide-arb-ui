@@ -12,8 +12,8 @@ import { useRequestHandler } from '@vben/request/qp';
 import { Alert, Descriptions, DescriptionsItem, message } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
+import { fetchDecisionPolicySnapshots } from '#/api/config';
 import { getModelSpec } from '#/api/research';
-import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
 import { formatDurationSecs } from '#/shared/components/format';
 
@@ -62,17 +62,17 @@ const cpcvSummary = computed(() =>
 
 async function loadOptions() {
   const versions = await handleRequest(
-    () => fetchRuntimeConfigVersions({ limit: 200 }),
+    () => fetchDecisionPolicySnapshots({ limit: 200 }),
     { silent: true },
   );
   const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
-    label: version.runtime_config_version_id,
-    value: version.runtime_config_version_id,
+    label: version.decision_policy_snapshot_id,
+    value: version.decision_policy_snapshot_id,
   }));
   formApi.updateSchema([
     {
       componentProps: { optionFilterProp: 'label', options: versionOptions },
-      fieldName: 'runtime_config_version_id',
+      fieldName: 'decision_policy_snapshot_id',
     },
   ]);
 }
@@ -135,8 +135,8 @@ const [Form, formApi] = useVbenForm({
         options: [],
         showSearch: true,
       },
-      fieldName: 'runtime_config_version_id',
-      label: $t('page.research.models.cpcv.runtimeConfigVersion'),
+      fieldName: 'decision_policy_snapshot_id',
+      label: $t('page.research.models.cpcv.decisionPolicySnapshot'),
       rules: 'selectRequired',
     },
   ],

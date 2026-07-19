@@ -152,9 +152,9 @@ function displayCount(value: null | number | undefined): number | string {
   return value === null || value === undefined ? EMPTY_PLACEHOLDER : value;
 }
 
-// Frozen server-side at report-compose time from the exact account +
-// runtime-config this report solved against (Phase 11.3 §10) — never
-// re-derived client-side from a separately-fetched runtime-config version,
+// Frozen server-side at report-compose time from the exact account and
+// decision-policy snapshot this report solved against (Phase 11.3 §10). Never
+// re-derived client-side from a separately fetched policy revision,
 // which may not even be the one this report used and may use a different
 // (pre-11.3-fix) bankroll denominator than the LP actually enforced.
 const aggregateExposureCapUsd = computed(() => {
@@ -205,10 +205,8 @@ const aggregateExposureStrokeColor = computed(() => {
   return undefined;
 });
 
-function openRuntimeConfig() {
-  void router.push(
-    `/runtime-config?version_id=${props.report.runtime_config_version_id}`,
-  );
+function openDecisionPolicyActivity() {
+  void router.push('/system/config/activity');
 }
 </script>
 
@@ -468,16 +466,18 @@ function openRuntimeConfig() {
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.runtimeConfigVersion')"
+          :label="
+            $t('page.quantReports.detail.overview.decisionPolicySnapshot')
+          "
         >
           <Button
             class="px-0"
             size="small"
             type="link"
-            @click="openRuntimeConfig"
+            @click="openDecisionPolicyActivity"
           >
             <span class="font-mono text-xs">{{
-              report.runtime_config_version_id
+              report.decision_policy_snapshot_id
             }}</span>
           </Button>
         </DescriptionsItem>

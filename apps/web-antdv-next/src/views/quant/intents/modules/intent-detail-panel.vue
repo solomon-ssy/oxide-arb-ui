@@ -184,10 +184,12 @@ onMounted(() => void loadExecutionOrders());
             />
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.identity.runtimeConfig')"
+            :label="
+              $t('page.quantIntents.detail.identity.decisionPolicySnapshot')
+            "
           >
             <span class="font-mono text-xs break-all">
-              {{ intent.runtime_config_version_id }}
+              {{ intent.decision_policy_snapshot_id }}
             </span>
           </DescriptionsItem>
           <DescriptionsItem

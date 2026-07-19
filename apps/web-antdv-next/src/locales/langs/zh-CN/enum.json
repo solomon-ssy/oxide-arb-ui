@@ -461,9 +461,12 @@
     "auth": "认证",
     "rbac": "权限",
     "governance": "治理",
-    "runtime_config": "运行配置",
+    "config": "配置治理",
     "system": "系统",
     "market": "市场",
+    "quant_report": "推荐报告",
+    "replay": "回放",
+    "risk": "风险",
     "other": "其他"
   },
   "operationOutcome": {
@@ -471,25 +474,11 @@
     "failure": "失败",
     "denied": "拒绝"
   },
-  "runtimeConfigVersionSource": {
-    "bootstrap": "初始化",
-    "operator": "操作员",
-    "import": "导入"
-  },
-  "runtimeConfigActivationKind": {
-    "initial": "初始",
-    "promote": "提升",
-    "rollback": "回滚"
-  },
-  "runtimeConfigDiffType": {
-    "added": "新增",
-    "changed": "变更",
-    "removed": "移除"
-  },
   "resourceType": {
     "system": "系统",
     "market": "市场",
-    "runtime_config": "运行配置",
+    "config": "配置治理",
+    "config_lifecycle": "配置生命周期",
     "publication": "发布",
     "materialization": "物化",
     "replay": "回放",

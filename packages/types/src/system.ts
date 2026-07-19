@@ -1,4 +1,4 @@
-import type { DecimalString, IsoDateTime, UuidString } from './common';
+import type { DecimalString, IsoDateTime } from './common';
 import type {
   KillSwitchState,
   MarketCategory,
@@ -141,8 +141,6 @@ export interface ActivateBootstrapRequest {
   expected_state_revision: number;
   reason: string;
   report_only_forced_ack: boolean;
-  runtime_config_approval_id: UuidString;
-  runtime_config_version_id: UuidString;
 }
 
 /** `GET /system/quant-mode` — the current runtime mode. */

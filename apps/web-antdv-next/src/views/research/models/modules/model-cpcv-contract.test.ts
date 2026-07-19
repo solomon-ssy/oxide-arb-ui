@@ -39,16 +39,16 @@ describe('cpcv frozen contract', () => {
       label_name: 'must_not_escape',
       model_family: 'must_not_escape',
       prediction_horizon_secs: 43_200,
-      runtime_config_version_id: 'runtime-id',
+      decision_policy_snapshot_id: 'runtime-id',
       training_dataset_id: 'dataset-id',
     });
 
     expect(body).toEqual({
-      runtime_config_version_id: 'runtime-id',
+      decision_policy_snapshot_id: 'runtime-id',
       training_dataset_id: 'dataset-id',
     });
     expect(Object.keys(body).toSorted()).toEqual([
-      'runtime_config_version_id',
+      'decision_policy_snapshot_id',
       'training_dataset_id',
     ]);
   });

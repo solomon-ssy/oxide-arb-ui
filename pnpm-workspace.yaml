@@ -92,7 +92,6 @@ catalog:
   '@vite-pwa/vitepress': ^1.1.0
   '@vitejs/plugin-vue': ^6.0.7
   '@vitejs/plugin-vue-jsx': ^5.1.5
-  '@vue-js-cron/core': ^6.3.0
   '@vue/shared': ^3.5.35
   '@vue/test-utils': ^2.4.11
   '@vueuse/core': ^14.3.0
@@ -118,7 +117,6 @@ catalog:
   dayjs: ^1.11.21
   decimal.js: ^10.6.0
   defu: ^6.1.7
-  dompurify: ^3.4.11
   dotenv: ^17.4.2
   echarts: ^6.1.0
   element-plus: ^2.14.1
@@ -143,7 +141,7 @@ catalog:
   is-ci: ^4.1.0
   json-bigint: ^1.0.0
   json-editor-vue: ^0.18.1
-  jsondiffpatch: ^0.7.6
+  json-schema-to-typescript: 15.0.4
   jsonwebtoken: ^9.0.3
   knip: ^6.15.0
   lefthook: ^2.1.9

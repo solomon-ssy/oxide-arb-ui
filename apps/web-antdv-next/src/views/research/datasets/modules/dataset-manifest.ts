@@ -47,9 +47,9 @@ export function datasetManifestBindingIssues(
   );
   compare('model_spec_id', manifest.model_spec_id, dataset.model_spec_id);
   compare(
-    'runtime_config_version_id',
-    manifest.runtime_config_version_id,
-    dataset.runtime_config_version_id,
+    'decision_policy_snapshot_id',
+    manifest.decision_policy_snapshot_id,
+    dataset.decision_policy_snapshot_id,
   );
   compare('window_start', manifest.window_start, dataset.window_start);
   compare('window_end', manifest.window_end, dataset.window_end);

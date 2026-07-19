@@ -59,7 +59,8 @@ export const RESOURCE_TYPES = {
   reconciliation: 'reconciliation',
   replay: 'replay',
   role: 'role',
-  runtimeConfig: 'runtime_config',
+  config: 'config',
+  configLifecycle: 'config_lifecycle',
   settlementRedeem: 'settlement_redeem',
   system: 'system',
   user: 'user',
@@ -878,8 +879,11 @@ export const OPERATION_CATEGORIES = {
   governance: 'governance',
   market: 'market',
   other: 'other',
+  quantReport: 'quant_report',
   rbac: 'rbac',
-  runtimeConfig: 'runtime_config',
+  replay: 'replay',
+  risk: 'risk',
+  config: 'config',
   system: 'system',
 } as const;
 
@@ -894,23 +898,3 @@ export const OPERATION_OUTCOMES = {
 export type OperationOutcome = WireEnum<typeof OPERATION_OUTCOMES>;
 
 // ── Runtime config ──────────────────────────────────────────────────────────
-
-export const RUNTIME_CONFIG_VERSION_SOURCES = {
-  bootstrap: 'bootstrap',
-  import: 'import',
-  operator: 'operator',
-} as const;
-
-export type RuntimeConfigVersionSource = WireEnum<
-  typeof RUNTIME_CONFIG_VERSION_SOURCES
->;
-
-export const RUNTIME_CONFIG_ACTIVATION_KINDS = {
-  initial: 'initial',
-  promote: 'promote',
-  rollback: 'rollback',
-} as const;
-
-export type RuntimeConfigActivationKind = WireEnum<
-  typeof RUNTIME_CONFIG_ACTIVATION_KINDS
->;

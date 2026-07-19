@@ -4,7 +4,7 @@ import type { RoleView } from '@vben/types';
 import type { GovernedField } from '#/shared/composables/governed-field';
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -91,6 +91,19 @@ function collectFields(): Record<string, string | undefined> {
   return result;
 }
 
+function focusModalTitle() {
+  void nextTick(() => {
+    const modalBody = document.querySelector<HTMLElement>(
+      '[data-testid="governed-action-modal"]',
+    );
+    const title = modalBody
+      ?.closest('[role="dialog"]')
+      ?.querySelector<HTMLElement>('h2');
+    title?.setAttribute('tabindex', '-1');
+    title?.focus({ preventScroll: true });
+  });
+}
+
 const [Modal, modalApi] = useVbenModal({
   destroyOnClose: true,
   onCancel() {
@@ -128,6 +141,7 @@ const [Modal, modalApi] = useVbenModal({
       for (const field of payload.value?.fields ?? []) {
         fieldValues[field.name] = '';
       }
+      focusModalTitle();
     }
   },
 });
@@ -137,6 +151,14 @@ watch(roleOptions, (options) => {
     actingRole.value = options[0]?.value ?? '';
   }
 });
+
+watch(
+  canSubmit,
+  (enabled) => {
+    modalApi.setState({ confirmDisabled: !enabled });
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

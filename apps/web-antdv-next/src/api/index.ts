@@ -1,5 +1,6 @@
 export * from './account';
 export * from './calibration';
+export * from './config';
 export * from './core';
 export * from './data-quality';
 export * from './execution-orders';
@@ -11,7 +12,6 @@ export * from './quant-recommendations';
 export * from './quant-reports';
 export * from './reconciliations';
 export * from './research';
-export * from './runtime-config';
 export * from './settlement-redeems';
 export * from './system';
 export * from './ws';

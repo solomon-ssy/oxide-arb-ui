@@ -36,7 +36,6 @@ import {
 } from 'antdv-next';
 
 import { getDashboardOverview } from '#/api/dashboard';
-import { fetchRuntimeConfigApprovals } from '#/api/runtime-config';
 import { activateBootstrap, getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
@@ -310,24 +309,9 @@ async function activateColdStart() {
   }
   activationLoading.value = true;
   try {
-    const approvals = await fetchRuntimeConfigApprovals();
-    if (approvals.length === 0) {
-      message.warning($t('page.dashboard.bootstrap.noConfig'));
-      return;
-    }
     const result = await governed(
-      (context) => {
-        const approval = approvals.find(
-          (candidate) =>
-            candidate.runtime_config_approval_id ===
-            context.fields.runtime_config_approval_id,
-        );
-        if (!approval) {
-          return Promise.reject(
-            new Error('approved runtime revision is required'),
-          );
-        }
-        return activateBootstrap(
+      (context) =>
+        activateBootstrap(
           {
             bootstrap_contract_version:
               controlPlane.bootstrap.bootstrap_contract_version,
@@ -335,26 +319,13 @@ async function activateColdStart() {
             reason: context.reason,
             report_only_forced_ack:
               context.fields.report_only_forced_ack === 'acknowledged',
-            runtime_config_approval_id: approval.runtime_config_approval_id,
-            runtime_config_version_id: approval.runtime_config_version_id,
           },
           context,
-        );
-      },
+        ),
       {
         confirmWord: 'ACTIVATE',
         danger: true,
         fields: [
-          {
-            name: 'runtime_config_approval_id',
-            label: $t('page.dashboard.bootstrap.configRevision'),
-            kind: 'select',
-            options: approvals.map((approval) => ({
-              label: `${approval.runtime_config_version_id} · ${approval.config_hash.slice(0, 18)}…`,
-              value: approval.runtime_config_approval_id,
-            })),
-            required: true,
-          },
           {
             name: 'report_only_forced_ack',
             label: $t('page.dashboard.bootstrap.ackLabel'),

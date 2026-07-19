@@ -83,11 +83,26 @@ export interface DashboardSubsystemHealthView {
 
 export type DashboardActionSeverity = 'critical' | 'info' | 'warning';
 
+export type DashboardActionReasonCode =
+  | 'basis_alert_unacknowledged'
+  | 'kill_switch_not_closed'
+  | 'market_data_degraded'
+  | 'policy_revision_awaiting_activation'
+  | 'report_run_failed'
+  | 'unresolved_reconciliation';
+
+export type DashboardActionOwner =
+  | 'data'
+  | 'governance'
+  | 'operations'
+  | 'research'
+  | 'risk';
+
 export interface DashboardActionItemView {
   id: string;
   severity: DashboardActionSeverity;
-  reason_code: string;
-  owner: string;
+  reason_code: DashboardActionReasonCode;
+  owner: DashboardActionOwner;
   observed_at: IsoDateTime;
   target_route: string;
 }

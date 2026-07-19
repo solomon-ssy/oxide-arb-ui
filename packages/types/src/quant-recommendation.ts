@@ -261,7 +261,7 @@ export interface QuantEvidenceView {
   model_run_id: string;
   market_selection_id: string;
   book_snapshot_ref: string;
-  runtime_config_version_id: string;
+  decision_policy_snapshot_id: string;
   model_version_id: string;
   factor_definition_versions: string[];
   data_quality_snapshot_ref: string;

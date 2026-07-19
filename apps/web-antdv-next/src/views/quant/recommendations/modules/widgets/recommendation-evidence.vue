@@ -76,8 +76,8 @@ const handleRows = computed<Array<{ label: string; value: string }>>(() => {
       value: view.book_snapshot_ref,
     },
     {
-      label: $t('page.quantRecommendations.evidence.runtimeConfig'),
-      value: view.runtime_config_version_id,
+      label: $t('page.quantRecommendations.evidence.decisionPolicySnapshot'),
+      value: view.decision_policy_snapshot_id,
     },
     {
       label: $t('page.quantRecommendations.evidence.modelVersion'),

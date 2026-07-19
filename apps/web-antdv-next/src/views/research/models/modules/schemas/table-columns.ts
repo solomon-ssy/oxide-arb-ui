@@ -13,7 +13,6 @@ export interface ModelActionAccess {
   canBacktest: boolean;
   canCpcv: boolean;
   canPublish: boolean;
-  canRollback: boolean;
   canRetire: boolean;
 }
 
@@ -125,15 +124,6 @@ export function useTrainedModelColumns(
               danger: true,
               show: (row) =>
                 access.canRetire && row.publication_status === 'published',
-            },
-          ),
-          iconOp<TrainedModelView>(
-            'rollback',
-            $t('page.research.models.actions.rollback'),
-            {
-              danger: true,
-              show: (row) =>
-                access.canRollback && row.publication_status === 'published',
             },
           ),
         ],

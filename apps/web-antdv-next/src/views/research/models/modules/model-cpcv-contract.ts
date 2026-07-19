@@ -2,7 +2,7 @@ import type { QuantModelSpecView, RunCpcvBacktestRequest } from '@vben/types';
 
 export type CpcvRequestBody = Pick<
   RunCpcvBacktestRequest,
-  'runtime_config_version_id' | 'training_dataset_id'
+  'decision_policy_snapshot_id' | 'training_dataset_id'
 >;
 
 type CpcvContractSource = Pick<
@@ -42,7 +42,7 @@ export function cpcvRequestBody(
   values: Record<string, unknown>,
 ): CpcvRequestBody {
   return {
-    runtime_config_version_id: values.runtime_config_version_id as string,
+    decision_policy_snapshot_id: values.decision_policy_snapshot_id as string,
     training_dataset_id: values.training_dataset_id as string,
   };
 }

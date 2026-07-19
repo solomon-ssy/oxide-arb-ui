@@ -9,7 +9,7 @@ describe('featureContractOptions', () => {
     const contract: FeatureContractView = {
       feature_schema_hash:
         'blake3:0000000000000000000000000000000000000000000000000000000000000000',
-      feature_schema_version: 6,
+      feature_schema_version: 1,
       features: [
         {
           compute_revision: 3,

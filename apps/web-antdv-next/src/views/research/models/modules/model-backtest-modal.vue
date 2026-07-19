@@ -7,8 +7,8 @@ import { useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { useVbenForm } from '#/adapter/form';
+import { fetchDecisionPolicySnapshots } from '#/api/config';
 import { listAllModels } from '#/api/research';
-import { fetchRuntimeConfigVersions } from '#/api/runtime-config';
 import { $t } from '#/locales';
 
 import { useTrainableDatasetOptions } from '../../shared/use-trainable-dataset-options';
@@ -51,14 +51,14 @@ async function loadOptions() {
     },
   ]);
   const [versions, page] = await Promise.all([
-    handleRequest(() => fetchRuntimeConfigVersions({ limit: 200 }), {
+    handleRequest(() => fetchDecisionPolicySnapshots({ limit: 200 }), {
       silent: true,
     }),
     handleRequest(() => listAllModels(), { silent: true }),
   ]);
   const versionOptions: OptionItem[] = (versions ?? []).map((version) => ({
-    label: version.runtime_config_version_id,
-    value: version.runtime_config_version_id,
+    label: version.decision_policy_snapshot_id,
+    value: version.decision_policy_snapshot_id,
   }));
   const currentId = payload.value?.modelVersionId;
   const comparisonOptions: OptionItem[] = (page ?? [])
@@ -70,7 +70,7 @@ async function loadOptions() {
   formApi.updateSchema([
     {
       componentProps: { optionFilterProp: 'label', options: versionOptions },
-      fieldName: 'runtime_config_version_id',
+      fieldName: 'decision_policy_snapshot_id',
     },
     {
       componentProps: {
@@ -108,7 +108,7 @@ async function onSubmit(values: Record<string, unknown>) {
       calibrate: Boolean(values.calibrate),
       comparison_model_version_id:
         (values.comparison_model_version_id as string | undefined) || undefined,
-      runtime_config_version_id: values.runtime_config_version_id as string,
+      decision_policy_snapshot_id: values.decision_policy_snapshot_id as string,
       training_dataset_id: values.training_dataset_id as string,
     });
     if (ok) {
@@ -145,8 +145,8 @@ const [Form, formApi] = useVbenForm({
         options: [],
         showSearch: true,
       },
-      fieldName: 'runtime_config_version_id',
-      label: $t('page.research.models.backtest.runtimeConfigVersion'),
+      fieldName: 'decision_policy_snapshot_id',
+      label: $t('page.research.models.backtest.decisionPolicySnapshot'),
       rules: 'selectRequired',
     },
     {

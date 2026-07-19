@@ -36,7 +36,6 @@ import type {
   ResearchJobView,
   RetireFactorRequest,
   RetireModelRequest,
-  RollbackModelRequest,
   RunBacktestRequest,
   RunCpcvBacktestRequest,
   RunFullFeatureParityRequest,
@@ -85,8 +84,6 @@ export namespace ResearchApi {
   export const publishModel = (id: string) => `/research/models/${id}/publish`;
   export const bindPublishPathSet = (id: string) =>
     `/research/models/${id}/bind-publish-path-set`;
-  export const rollbackModel = (id: string) =>
-    `/research/models/${id}/rollback`;
   export const retireModel = (id: string) => `/research/models/${id}/retire`;
   export const backtestReports = '/research/backtest-reports';
   export const backtestReport = (id: string) =>
@@ -454,19 +451,6 @@ export async function bindPublishPathSet(
 ) {
   return governedPost<TrainedModelView>(
     ResearchApi.bindPublishPathSet(id),
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/models/{id}/rollback` — governed model rollback. */
-export async function rollbackModel(
-  id: string,
-  body: RollbackModelRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<TrainedModelView>(
-    ResearchApi.rollbackModel(id),
     body,
     ctx,
   );

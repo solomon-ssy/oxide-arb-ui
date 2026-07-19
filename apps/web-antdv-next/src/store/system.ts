@@ -19,7 +19,7 @@ export const useSystemStore = defineStore('qp-system', () => {
   const status = ref<null | SystemStatus>(null);
   const controlPlane = ref<null | SystemControlPlaneStatus>(null);
   const actionEligibility = ref<ActionEligibilityView | null>(null);
-  /** Last runtime-config version activated this session (WS `config.activated`). */
+  /** Last decision-policy snapshot activated this session (`config.activated`). */
   const activeConfigVersion = ref<null | UuidString>(null);
 
   function applySystemStatus(next: SystemStatus) {

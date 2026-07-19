@@ -105,6 +105,7 @@ export interface EntryConditionArtifactV1 {
   binding: {
     catalog_snapshot_hash: string;
     catalog_snapshot_id: UuidString;
+    decision_policy_snapshot_id: UuidString;
     factor_bindings: Array<{
       definition_hash: string;
       definition_id: UuidString;
@@ -115,7 +116,6 @@ export interface EntryConditionArtifactV1 {
     model_version_id: UuidString;
     outcome_side: OutcomeSide;
     recommendation_id: UuidString;
-    runtime_config_version_id: UuidString;
     source_bindings: EntryConditionSourceBinding[];
     token_id: string;
   };

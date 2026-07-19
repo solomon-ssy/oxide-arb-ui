@@ -442,9 +442,11 @@ const baselineUpliftMetric = computed(() => {
           :to="`/research/datasets?open=${pathSet.training_dataset_id}`"
         />
       </DescriptionsItem>
-      <DescriptionsItem :label="$t('page.research.cpcv.runtimeConfig')">
+      <DescriptionsItem
+        :label="$t('page.research.cpcv.decisionPolicySnapshot')"
+      >
         <TypographyText code copyable class="text-xs break-all">
-          {{ pathSet.runtime_config_version_id }}
+          {{ pathSet.decision_policy_snapshot_id }}
         </TypographyText>
       </DescriptionsItem>
     </Descriptions>

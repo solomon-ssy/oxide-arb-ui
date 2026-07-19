@@ -80,7 +80,7 @@
     "researchDomainSources": "Domain Sources",
     "researchBasisAlerts": "Basis Alerts",
     "researchComparisonDetail": "Comparison Report",
-    "runtimeConfig": "Runtime Config",
+    "config": "Config Center",
     "users": "Users",
     "roles": "Roles",
     "menus": "Menus",
@@ -277,7 +277,7 @@
         "next": "Next",
         "frozen": "Frozen fit boundary",
         "activation": "Activation target",
-        "runtime": "Runtime-config version",
+        "runtime": "Decision-policy snapshot",
         "model": "Model specification",
         "candidates": "Condition candidates",
         "addCandidate": "Add conditional candidate",
@@ -768,11 +768,11 @@
         "prefillOrphan": "Dataset {id} is no longer trainable; select another."
       },
       "form": {
-        "summary": "Pick a frozen runtime-config version and a model spec, then bound the PIT window.",
+        "summary": "Pick an immutable decision-policy snapshot and a model spec, then bound the PIT window.",
         "researchProfile": "Immutable research profile",
         "modelSpec": "Model Spec",
         "modelSpecPlaceholder": "Select a model spec",
-        "runtimeConfigVersion": "Runtime Config Version",
+        "decisionPolicySnapshot": "Decision Policy Snapshot",
         "versionPlaceholder": "Select a version",
         "window": "PIT Window",
         "pitCutoff": "PIT information cutoff",
@@ -789,7 +789,7 @@
       "detail": {
         "title": "Training Dataset",
         "summary": "Summary",
-        "runtimeConfigVersion": "Runtime Config Version",
+        "decisionPolicySnapshot": "Decision Policy Snapshot",
         "datasetHash": "Dataset Hash",
         "parquetUri": "Parquet URI",
         "coverage": "Build Coverage",
@@ -959,7 +959,7 @@
         "title": "Run backtest",
         "summary": "Replay the model over a frozen dataset (PIT only).",
         "trainingDataset": "Training Dataset ID",
-        "runtimeConfigVersion": "Runtime Config Version",
+        "decisionPolicySnapshot": "Decision Policy Snapshot",
         "comparisonModel": "Comparison baseline model",
         "comparisonPlaceholder": "Optional — select a baseline for pair mode",
         "calibrate": "Fit a calibrated return curve",
@@ -970,7 +970,7 @@
         "title": "Run CPCV validation",
         "summary": "Combinatorial purged CV + trial grid (DSR/PBO). Family, raw inputs, target, and horizons come only from the immutable model spec; the linked training dataset is read-only.",
         "trainingDataset": "Frozen Training Dataset ID",
-        "runtimeConfigVersion": "Runtime Config Version",
+        "decisionPolicySnapshot": "Decision Policy Snapshot",
         "modelFamily": "Model family",
         "labelName": "Label name",
         "labelHorizonSecs": "Label horizon (s)",
@@ -1307,8 +1307,8 @@
       },
       "activate": {
         "title": "Activate bias table",
-        "summary": "Stage a runtime-config version pinning this market-price bias artifact as the favorite-longshot source. Activate that version from the runtime-config console to make it live.",
-        "feedback": "Config version staged — activate it in runtime config"
+        "summary": "Stage a policy revision that pins this market-price bias artifact as the favorite-longshot source. Activate it from the Config console to make it live.",
+        "feedback": "Policy revision staged — activate it in Config"
       },
       "detail": {
         "title": "Calibration artifact",
@@ -1668,7 +1668,7 @@
       "pathSetHash": "Path set hash",
       "window": "Window",
       "dataset": "Training dataset",
-      "runtimeConfig": "Runtime config version",
+      "decisionPolicySnapshot": "Decision Policy Snapshot",
       "sharpeUnannualized": "Sharpe values are unannualized (periods_per_year = 1). Sell path sets use activity-only lot-native observations (empty calendar buckets are never zero-padded). CSCV trial matrix uses full-window (unpurged) returns. DSR N equals the trial-grid count only.",
       "sharpeDistribution": "Sharpe distribution",
       "paths": "φ paths",
@@ -1866,7 +1866,7 @@
         "kill_switch_not_closed": "Kill switch is not Closed",
         "market_data_degraded": "Market data is stale or ingest is lagging",
         "report_run_failed": "The latest report run failed",
-        "runtime_config_awaiting_activation": "An approved runtime revision awaits activation"
+        "policy_revision_awaiting_activation": "An approved policy revision awaits activation"
       }
     },
     "actions": {
@@ -2382,7 +2382,7 @@
       },
       "identity": {
         "recommendationId": "Recommendation",
-        "runtimeConfig": "Runtime Config Version",
+        "decisionPolicySnapshot": "Decision Policy Snapshot",
         "modelVersion": "Model Version",
         "modelRun": "Model Run",
         "policyId": "Policy ID",
@@ -2763,7 +2763,7 @@
       "terminalReason": "Terminal Reason",
       "topN": "Frozen Top N",
       "knowledgeLag": "Frozen Knowledge Lag",
-      "runtimeConfig": "Frozen Runtime Config",
+      "decisionPolicySnapshot": "Frozen Decision Policy Snapshot",
       "retryOf": "Retry Of",
       "outputReport": "Output Report",
       "failure": "Run failed",
@@ -2894,7 +2894,7 @@
         "capitalBase": "Capital Base",
         "accountSource": "Account Source",
         "accountSnapshotRef": "Account Snapshot Ref",
-        "runtimeConfigVersion": "Runtime Config Version",
+        "decisionPolicySnapshot": "Decision Policy Snapshot",
         "modelVersion": "Model Version",
         "modelRun": "Model Run",
         "marketSelection": "Market Selection",
@@ -3230,7 +3230,7 @@
       "modelRun": "Model Run",
       "marketSelection": "Market Selection",
       "bookSnapshot": "Book Snapshot",
-      "runtimeConfig": "Runtime Config Version",
+      "decisionPolicySnapshot": "Decision Policy Snapshot",
       "modelVersion": "Model Version",
       "factorDefinitions": "Factor Definition Versions",
       "dataQualitySnapshot": "Data Quality Snapshot",
@@ -3329,137 +3329,398 @@
       }
     }
   },
-  "runtimeConfig": {
-    "title": "Runtime Config",
-    "columns": {
-      "version": "Version",
-      "status": "Status",
-      "active": "Active",
-      "inactive": "Inactive",
-      "source": "Source",
-      "schemaVersion": "Schema",
-      "hash": "Config Hash",
-      "createdBy": "Created By",
-      "reason": "Reason",
-      "createdAt": "Created At",
-      "operation": "Actions"
+  "config": {
+    "eyebrow": "CONFIG CONTROL PLANE",
+    "readOnly": "Your role has read-only access. Create, approve, activate, and rollback are independently authorized.",
+    "nav": {
+      "back": "Back to Config Center",
+      "deployment": "Deployment Snapshot",
+      "lifecycle": "Lifecycle"
     },
-    "current": {
-      "title": "Active Version",
-      "version": "Version",
-      "createdBy": "Created By",
-      "createdAt": "Created At",
-      "activatedAt": "Activated At",
-      "activatedBy": "Activated By",
-      "activationKind": "Activation Kind",
-      "viewConfig": "View Config",
-      "empty": "No active version"
+    "overview": {
+      "title": "Config Center",
+      "description": "Six policy resources are independently revised, validated, approved, and atomically applied; every decision freezes the revisions it consumed.",
+      "resourcesTitle": "Runtime Policies",
+      "resourcesDescription": "Only business policies with explicit consumers and hot-apply boundaries live here.",
+      "activityTitle": "Recent Activity",
+      "activityDescription": "Immutable Draft, approval, activation, and rollback records.",
+      "viewAll": "View all"
     },
-    "actions": {
-      "detail": "Detail",
-      "activate": "Activate",
-      "rollback": "Rollback",
-      "activateSummary": "Activate runtime config version {id}.",
-      "rollbackSummary": "Rollback to runtime config version {id}."
+    "status": {
+      "environment": "Environment",
+      "lifecycle": "Lifecycle",
+      "policyBundle": "Active policy bundle",
+      "pendingApproval": "Pending approvals",
+      "restart": "Restart requirement",
+      "lastActivation": "Last activation",
+      "required": "Restart required",
+      "notRequired": "No restart"
     },
-    "detail": {
-      "title": "Version Detail",
-      "versionId": "Version ID",
-      "hash": "Config Hash",
-      "createdBy": "Created By",
-      "createdAt": "Created At",
-      "reason": "Reason",
-      "configTab": "Config JSON",
-      "diffTab": "Diff",
-      "noDiff": "No diff from active config"
-    },
-    "feedback": {
-      "activated": "Version activated",
-      "rolledBack": "Config rolled back"
-    },
-    "editor": {
-      "open": "Edit Config",
-      "title": "Edit Runtime Config",
-      "applyTitle": "Apply Runtime Config",
-      "applyJson": "Apply Full Document",
-      "viewVersion": "View Version",
-      "advancedSummary": "The full runtime-config document will replace the live config as a new version and be activated immediately. Review carefully.",
-      "advancedHint": "Advanced mode replaces the entire document. Prefer the form editor for scoped changes.",
-      "noApplyAccess": "Your role can read config only. Creating and activating versions requires runtime_config:create and runtime_config:activate.",
-      "mode": {
-        "form": "Form",
-        "json": "Advanced JSON"
+    "resources": {
+      "recommendationPolicy": {
+        "label": "Recommendation Policy",
+        "description": "Market selection, data quality, and report output semantics."
       },
-      "feedback": {
-        "applied": "Runtime config version created and activated"
+      "executionRiskPolicy": {
+        "label": "Execution Risk Policy",
+        "description": "Capital, sizing, order, exit, and breaker boundaries."
       },
-      "diff": {
-        "title": "Diff Preview",
-        "before": "Before",
-        "after": "After",
-        "acknowledgeGovernanceCritical": "I have reviewed the governance-critical changes above"
+      "modelRouting": {
+        "label": "Model Routing",
+        "description": "Active, Shadow, and Exit model artifact pointers."
       },
-      "state": {
-        "dirty": "Dirty",
-        "governanceCritical": "Governance Critical",
-        "sensitive": "Sensitive"
+      "reportSchedule": {
+        "label": "Report Schedule",
+        "description": "Calendar, timezone, cadence, and next-fire reconciliation."
       },
-      "switchSection": {
-        "title": "Unsaved changes",
-        "content": "\"{section}\" has unsaved changes. Switch section anyway? Your draft will be kept until you apply or reset.",
-        "continue": "Switch section"
+      "operationalControl": {
+        "label": "Operational Control",
+        "description": "Worker admission, halt behavior, and notification routing."
       },
-      "reloadLiveConfig": {
-        "title": "Live config changed",
-        "content": "The active runtime config was updated elsewhere. Reloading discards unsaved edits in this editor.",
-        "continue": "Reload and discard drafts",
-        "pending": "A newer runtime config is active. Your unsaved edits are based on an older snapshot.",
-        "reloadNow": "Reload now"
+      "executionAuthorization": {
+        "label": "Execution Authorization",
+        "description": "Explicit Semi-auto and Auto-execution capital authorization."
       },
-      "error": {
-        "createdButNotActivated": "The version was created but not activated. Open it below to activate or roll back.",
-        "confirmDiffRequired": "Review and acknowledge governance-critical diffs before applying.",
-        "jsonObjectRequired": "The runtime-config document must be a JSON object."
-      },
-      "field": {
-        "restrictCategories": "Restrict tradeable categories",
-        "genericJsonHint": "Structured JSON editor — table mode for numeric lists, tree mode for nested objects.",
-        "stringListEmpty": "No entries — empty list is valid.",
-        "stringListPlaceholder": "Enter an ID and press Add",
-        "secretPlaceholder": "leave blank to keep current",
-        "modelVersionPlaceholder": "No active model (empty)",
-        "modelVersionEmptyOption": "— none —",
-        "modelVersionLoadError": "Failed to load eligible model versions.",
-        "modelVersionScopeWarning": "This version's category_scope ({scope}) does not match this slot — config apply and model loading fail closed; the route never falls back to generic.",
-        "modelVersionScopeGeneric": "generic (no category)"
-      },
-      "cadence": {
-        "interval": "Fixed interval",
-        "cron": "Cron",
-        "timezoneUtc": "Timezone (defaults to UTC)",
-        "nextRuns": "Next runs",
-        "noPreview": "No upcoming runs for this cadence."
-      },
-      "cron": {
-        "format": "6 fields: second minute hour day-of-month month day-of-week (UTC unless a timezone is set)."
-      },
-      "schedule": {
-        "id": "Schedule ID",
-        "enabled": "On",
-        "disabled": "Off",
-        "topN": "TopN",
-        "knowledgeLag": "Knowledge lag",
-        "add": "Add schedule",
-        "remove": "Remove"
-      },
-      "weightMap": {
-        "sum": "Weight sum"
+      "kind": {
+        "recommendation_policy": "Recommendation Policy",
+        "execution_risk_policy": "Execution Risk Policy",
+        "model_routing": "Model Routing",
+        "report_schedule": "Report Schedule",
+        "operational_control": "Operational Control",
+        "execution_authorization": "Execution Authorization"
       }
     },
-    "deploy": {
-      "open": "Deploy Config",
-      "title": "Deploy Config (read-only)",
-      "restartBound": "Deploy config is restart-bound: changes take effect only after the process restarts. Edit config/quant-pivot.toml on the ops side."
+    "resource": {
+      "title": "Policy Resource",
+      "active": "Active",
+      "open": "Open workspace",
+      "activeRevision": "Active Revision",
+      "effectiveBoundary": "Effective boundary",
+      "pendingCount": "{count} pending",
+      "activePolicy": "Active policy",
+      "activePolicyDescription": "Read-only atomic snapshot. Changes always create a new immutable Draft.",
+      "noActive": "No active policy",
+      "changedFields": "Changed fields",
+      "revision": "Revision",
+      "hash": "Content hash",
+      "expectedActive": "Expected active Revision",
+      "targetRevision": "Target Revision",
+      "none": "None",
+      "status": "Status",
+      "createdBy": "Created by",
+      "createdAt": "Created at"
+    },
+    "workflow": {
+      "label": "Config governance workflow",
+      "edit": "Edit Draft",
+      "review": "Review & Validate",
+      "approve": "Approve",
+      "activate": "Activate",
+      "editDraft": "Edit Draft",
+      "saveDraft": "Save Draft",
+      "saveDraftSummary": "Save a new immutable policy Revision without activating it.",
+      "validate": "Validate & Preflight",
+      "validateSummary": "Run typed validation, semantic validation, and every consumer dependency preflight.",
+      "approveSummary": "Approve this exact Revision and content hash.",
+      "activateSummary": "Atomically switch with CAS. Decisions already in flight retain their old snapshot.",
+      "rollback": "Rollback",
+      "rollbackSummary": "Explicitly activate a historical Revision while preserving the complete rollback audit chain.",
+      "rollbackNotice": "You are preparing an explicit rollback. The historical Revision must be re-preflighted, approved, and CAS-activated.",
+      "backToEdit": "Back to edit",
+      "noAutomaticActivation": "Every step is audited independently; creation never auto-activates.",
+      "stage": {
+        "review": "Draft saved; validation pending",
+        "validated": "Validation passed; approval pending",
+        "approved": "Approved; activation pending"
+      }
+    },
+    "editor": {
+      "variant": "Variant",
+      "addItem": "Add item",
+      "item": "Item {index}",
+      "removeItem": "Remove item",
+      "emptyList": "No items",
+      "changed": "{count} fields changed"
+    },
+    "modelRouting": {
+      "title": "Model artifact routing",
+      "description": "Select only immutable published artifacts with a compatible side and scope. Free-text IDs are not accepted.",
+      "activeBuy": "Active Buy model",
+      "shadowBuy": "Shadow Buy model",
+      "activeExit": "Active exit model",
+      "selectArtifact": "Select published artifact",
+      "loadError": "The published model catalog could not be loaded. Routing remains read-only and unknown IDs are rejected.",
+      "artifactHash": "Artifact hash",
+      "evidence": "Publication evidence",
+      "published": "Published",
+      "categoryTitle": "Category-specific routing",
+      "categoryDescription": "Empty categories inherit the generic Buy model. Overrides require an artifact with an exactly matching category_scope.",
+      "exactScopeOnly": "Exact scope only",
+      "inheritGeneric": "Inherit generic model",
+      "unavailableReference": "Current reference unavailable · {id}",
+      "side": {
+        "buy": "Buy",
+        "sell": "Sell"
+      },
+      "family": {
+        "weighted_factor": "Weighted factor",
+        "classical_random_forest": "Random forest",
+        "classical_extra_trees": "Extra Trees",
+        "classical_logistic_regression": "Logistic regression",
+        "classical_ridge": "Ridge",
+        "classical_lasso": "Lasso",
+        "classical_elastic_net": "Elastic Net",
+        "hold_vs_exit_weighted": "Hold vs exit scorer"
+      }
+    },
+    "reportSchedulePreview": {
+      "title": "Next-run preview",
+      "description": "Calculated by the backend with the production scheduler parser. Times use the operator timezone; hover for UTC.",
+      "operatorTimezone": "Operator timezone · {timezone}",
+      "interval": "Every {seconds} seconds",
+      "cron": "{expression} · {timezone}",
+      "occurrence": "Run {index}",
+      "empty": "There are no schedules to preview.",
+      "failed": "This cadence cannot be previewed. Correct the schedule fields first.",
+      "status": {
+        "ready": "Preview ready",
+        "disabled": "Disabled",
+        "failed": "Needs correction"
+      }
+    },
+    "operationalControl": {
+      "title": "Immediate operational control",
+      "description": "Kill-switch state is separate from immutable policy Revisions. Actions enter governed confirmation immediately and append to the system audit chain.",
+      "unavailable": "Authoritative runtime state is unavailable, so every control action remains disabled.",
+      "restricted": "The system is operating under a restriction",
+      "phase": "Operational phase",
+      "changedBy": "Last operator",
+      "changedAt": "Last changed",
+      "actions": "Runtime state actions",
+      "actionsDescription": "Every action requires an independent reason, role authorization, and backend state-transition check. No easy-to-misclick switches are used.",
+      "phaseValue": {
+        "catalog_warming": "Catalog warming",
+        "degraded": "Degraded",
+        "halted": "Halted",
+        "market_data_connecting": "Market data connecting",
+        "operational": "Operational"
+      },
+      "action": {
+        "closed": "Resume normal operation",
+        "report_only_forced": "Force report only",
+        "exit_only": "Allow exits only",
+        "execution_halted": "Halt execution",
+        "emergency_halted": "Emergency halt"
+      }
+    },
+    "enumValue": {
+      "isotonic": "Isotonic regression",
+      "platt": "Platt scaling"
+    },
+    "review": {
+      "title": "Field-level review",
+      "description": "Confirm values, affected consumers, and the exact effective boundary.",
+      "changeCount": "{count} changes",
+      "before": "Before",
+      "after": "After",
+      "noChanges": "No difference from the active policy"
+    },
+    "validation": {
+      "title": "Validation and dependency preflight",
+      "passed": "All passed",
+      "failed": "Blocking issues",
+      "errorSummary": "Resolve these field or dependency issues"
+    },
+    "preflight": {
+      "typed_schema": "Typed schema",
+      "semantic_validation": "Business semantics",
+      "consumer_preparation": "Consumer preparation",
+      "artifact_compatibility": "Artifact compatibility",
+      "credential_availability": "Credential availability",
+      "schedule_preview": "Schedule preview",
+      "execution_capability": "Execution capability"
+    },
+    "preflightDetail": {
+      "typed_document_decoded": "The request was decoded into this resource's exact typed policy document",
+      "semantic_validation_passed": "All business-semantic invariants passed",
+      "semantic_validation_failed": "One or more business-semantic invariants failed",
+      "consumer_preparation_passed": "All registered consumers prepared successfully",
+      "consumer_preparation_skipped": "Consumer preparation was skipped after semantic validation failed",
+      "consumer_preparation_failed": "Consumer preparation failed"
+    },
+    "impact": {
+      "title": "Impact summary",
+      "consumers": "Affected consumers",
+      "restart": "Process restart"
+    },
+    "boundary": {
+      "report_run_claim": "New ReportRun claim",
+      "order_intent_creation": "New OrderIntent",
+      "model_evaluation_claim": "New model evaluation claim",
+      "future_report_run_reconcile": "Unclaimed future schedules",
+      "operational_admission": "Operational admission gate",
+      "execution_authorization_admission": "Execution authorization admission"
+    },
+    "consumer": {
+      "market_selection": "Market Selection",
+      "report_coordinator": "Report Coordinator",
+      "recommendation_composer": "Recommendation Composer",
+      "data_quality_gate": "Data Quality Gate",
+      "portfolio_optimizer": "Portfolio Optimizer",
+      "order_intent_service": "Order Intent Service",
+      "execution_admission": "Execution Admission",
+      "exit_monitor": "Exit Monitor",
+      "model_runner": "Model Runner",
+      "report_scheduler": "Report Scheduler",
+      "worker_admission": "Worker Admission",
+      "alert_dispatcher": "Alert Dispatcher",
+      "runtime_mode_gate": "Runtime Mode Gate"
+    },
+    "feedback": {
+      "draftSaved": "Draft saved",
+      "validationPassed": "Validation and preflight passed",
+      "validationFailed": "Validation has blockers",
+      "approved": "Revision approved",
+      "activated": "Revision atomically activated",
+      "rolledBack": "Historical Revision explicitly activated"
+    },
+    "success": {
+      "activationTitle": "Policy activated",
+      "rollbackTitle": "Rollback activated",
+      "description": "The new Revision is in the audit chain and takes effect at its declared decision boundary.",
+      "done": "Back to resource"
+    },
+    "revisions": {
+      "title": "Revision history",
+      "description": "Revision content is immutable; rollback is also a new explicit activation.",
+      "empty": "No Revisions",
+      "operation": "Revision actions"
+    },
+    "revisionStatus": { "draft": "Draft", "validated": "Validated" },
+    "activity": {
+      "title": "Config Activity",
+      "description": "Cross-resource Draft, approval, and activation timeline.",
+      "empty": "No config activity",
+      "event": {
+        "revision": "Draft created",
+        "approval": "Approval recorded",
+        "activation": "Revision activated"
+      }
+    },
+    "deployment": {
+      "title": "Deployment Config Snapshot",
+      "description": "Read-only startup-bound endpoints, identity, resource budgets, and credential health; values are redacted.",
+      "restartNotice": "These values change only through deployment artifacts and take effect after restart. Secret material is never returned.",
+      "identity": "Deployment identity",
+      "deploymentId": "Deployment ID",
+      "instanceId": "Instance ID",
+      "endpoints": "Service endpoints",
+      "endpointsDescription": "Only non-secret or redacted addresses are shown.",
+      "credentials": "Credential health",
+      "credentialsDescription": "Secret content is never returned; only credential-reference availability is checked.",
+      "budgets": "Host resource budgets",
+      "budgetsDescription": "Seven startup capacity groups replace contradictory standalone concurrency and timing knobs.",
+      "endpoint": {
+        "web_bind": "Web Bind",
+        "postgres": "PostgreSQL",
+        "clickhouse": "ClickHouse",
+        "redis": "Redis",
+        "gamma_api": "Gamma API",
+        "clob_api": "CLOB API",
+        "data_api": "Data API",
+        "artifact_store": "Artifact Store",
+        "domain_provider": "Domain Provider"
+      },
+      "credential": {
+        "postgres_runtime": "PostgreSQL Runtime",
+        "clickhouse_runtime": "ClickHouse Runtime",
+        "redis_runtime": "Redis Runtime",
+        "jwt_signing": "JWT Signing",
+        "polymarket_private_key": "Polymarket Private Key",
+        "telegram_bot_token": "Telegram Bot Token",
+        "webhook_authorization": "Webhook Authorization",
+        "evidence_attestation": "Evidence Attestation",
+        "polymarket_relayer": "Polymarket Relayer"
+      },
+      "credentialStatus": {
+        "available": "Available",
+        "missing": "Missing",
+        "not_configured": "Not configured"
+      },
+      "budget": {
+        "database": "Database",
+        "clickhouse_writer": "ClickHouse Writer",
+        "market_data_ingest": "Market Data Ingest",
+        "cache": "Cache",
+        "research_jobs": "Research Jobs",
+        "report_execution": "Report & Execution",
+        "web": "Web"
+      },
+      "metric": {
+        "max_concurrency": "Max concurrency",
+        "min_concurrency": "Min concurrency",
+        "queue_capacity": "Queue capacity",
+        "batch_rows": "Batch rows",
+        "operation_timeout": "Operation timeout",
+        "lease_duration": "Lease duration",
+        "heartbeat_interval": "Heartbeat interval",
+        "cache_entries": "Cache entries",
+        "subscription_capacity": "Subscription capacity",
+        "configured_origins": "Allowed origins"
+      },
+      "unit": {
+        "count": "count",
+        "rows": "rows",
+        "milliseconds": "ms",
+        "seconds": "s",
+        "entries": "entries",
+        "tokens": "tokens"
+      }
+    },
+    "lifecycle": {
+      "title": "Project Lifecycle",
+      "description": "Boot resets are allowed before launch; production seal restores strict migration and version discipline.",
+      "preProductionNotice": "This project has not launched. Destructive boot-baseline resets are allowed only after infrastructure is explicitly cleared.",
+      "frozenNotice": "The production baseline is irreversibly sealed. Future schema, data, and version changes require formal migrations and rollback verification.",
+      "currentState": "Current state",
+      "baseline": "Baseline",
+      "state": {
+        "pre_production_resettable": "Pre-production resettable",
+        "production_frozen": "Production frozen"
+      },
+      "checksTitle": "Production evidence checks",
+      "checksDescription": "The backend re-verifies this non-forgeable evidence immediately before sealing.",
+      "check": {
+        "lifecycle_contract": "Lifecycle contract",
+        "postgres_schema_fingerprint": "PostgreSQL Fingerprint",
+        "clickhouse_schema_fingerprint": "ClickHouse Fingerprint",
+        "migration_state": "Migration state",
+        "backup_evidence": "Backup evidence",
+        "config_end_to_end": "Config E2E",
+        "active_policy_bundle": "Active policy bundle"
+      },
+      "outcome": {
+        "passed": "Passed",
+        "failed": "Failed",
+        "not_applicable": "Not applicable"
+      },
+      "detail": {
+        "contractMatched": "Source, deployment, and database lifecycle declarations agree",
+        "migrationsVerified": "PostgreSQL and ClickHouse boot ledgers and semantic manifests were verified",
+        "evidenceMissing": "The deployment has not provided a verifiable evidence hash"
+      },
+      "sealTitle": "Irreversible production seal",
+      "sealSummary": "Seal the environment build, schema fingerprints, policy bundle, and evidence package. It cannot return to pre-production.",
+      "sealDescription": "This is irreversible. After sealing, API, CLI, and startup checks all reject boot resets, migration squashes, and version resets.",
+      "sealAction": "Seal production baseline",
+      "sealed": "Production baseline sealed",
+      "baselineEvidence": "Production baseline evidence",
+      "sealedAt": "Sealed at",
+      "sealedBy": "Sealed by",
+      "buildCommit": "Build Commit"
+    },
+    "error": {
+      "load": "The config resource could not be loaded. Check service health and retry."
     }
   },
   "operationLog": {

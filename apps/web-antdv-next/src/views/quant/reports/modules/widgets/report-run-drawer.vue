@@ -246,10 +246,10 @@ watch(
           }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.runs.runtimeConfig')"
+          :label="$t('page.quantReports.runs.decisionPolicySnapshot')"
           :span="2"
         >
-          {{ display(run.runtime_config_version_id) }}
+          {{ display(run.decision_policy_snapshot_id) }}
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.quantReports.runs.retryOf')">
           <EntityRouteLink
