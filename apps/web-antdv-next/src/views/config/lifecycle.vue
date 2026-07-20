@@ -39,6 +39,13 @@ const checksPassed = computed(
 
 function lifecycleCheckDetail(detail: LifecycleCheckDetail) {
   switch (detail.detail_kind) {
+    case 'compiled_build_identity': {
+      return `${detail.build_commit} · ${$t(
+        detail.clean
+          ? 'page.config.lifecycle.detail.buildClean'
+          : 'page.config.lifecycle.detail.buildDirty',
+      )}`;
+    }
     case 'contract_matched': {
       return $t('page.config.lifecycle.detail.contractMatched');
     }
@@ -51,6 +58,9 @@ function lifecycleCheckDetail(detail: LifecycleCheckDetail) {
     case 'migration_ledgers_verified': {
       return $t('page.config.lifecycle.detail.migrationsVerified');
     }
+    case 'missing_active_policy_bundle': {
+      return $t('page.config.lifecycle.detail.policyBundleMissing');
+    }
     case 'policy_bundle': {
       return detail.policy_bundle_hash;
     }
@@ -62,6 +72,9 @@ function lifecycleCheckDetail(detail: LifecycleCheckDetail) {
 
 function lifecycleCheckDetailIsHash(detail: LifecycleCheckDetail) {
   switch (detail.detail_kind) {
+    case 'compiled_build_identity': {
+      return true;
+    }
     case 'contract_matched': {
       return false;
     }
@@ -71,6 +84,9 @@ function lifecycleCheckDetailIsHash(detail: LifecycleCheckDetail) {
       );
     }
     case 'migration_ledgers_verified': {
+      return false;
+    }
+    case 'missing_active_policy_bundle': {
       return false;
     }
     case 'policy_bundle': {

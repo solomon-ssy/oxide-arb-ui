@@ -38,6 +38,8 @@ export interface GovernedOptions {
   details?: GovernedDetailRow[];
   /** Optional typed operator inputs (overrides, resolution verdict, …). */
   fields?: GovernedField[];
+  /** Decide whether a failed mutation keeps the confirmation modal open. */
+  onError?: (error: ApiError) => 'close' | 'keep_open';
   summary?: string;
   title: string;
 }
@@ -97,12 +99,16 @@ function createGovernedActionApi(): GovernedActionApi {
           title: options.title,
           onCancel: () => resolve(null),
           onSubmit: async (ctx: GovernedContext): Promise<boolean> => {
+            const errorState: { closeModal: boolean } = { closeModal: false };
             const result = await handleRequest(() => execute(ctx), {
-              onError: showGovernedApiError,
+              onError: (error) => {
+                showGovernedApiError(error);
+                errorState.closeModal = options.onError?.(error) === 'close';
+              },
               silent: true,
             });
             resolve(result);
-            return result !== null;
+            return result !== null || errorState.closeModal;
           },
         });
         modalApi.setState({ title: options.title });

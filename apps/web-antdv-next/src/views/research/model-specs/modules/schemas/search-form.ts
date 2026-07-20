@@ -1,6 +1,6 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { MODEL_FAMILIES, PUBLICATION_STATUSES } from '@vben/types';
+import { MODEL_FAMILIES } from '@vben/types';
 
 import { $t } from '#/locales';
 
@@ -18,18 +18,6 @@ export function useModelSpecSearchSchema(): VbenFormSchema[] {
       },
       fieldName: 'model_family',
       label: $t('page.research.modelSpecs.filters.modelFamily'),
-    },
-    {
-      component: 'Select',
-      componentProps: {
-        allowClear: true,
-        options: Object.values(PUBLICATION_STATUSES).map((value) => ({
-          label: $t(`enum.publicationStatus.${value}`),
-          value,
-        })),
-      },
-      fieldName: 'status',
-      label: $t('page.research.modelSpecs.filters.status'),
     },
   ];
 }

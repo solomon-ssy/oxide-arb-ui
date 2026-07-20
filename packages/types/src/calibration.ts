@@ -25,16 +25,26 @@ export interface PriceBiasBinView {
   sample_count: number;
 }
 
-/** A per-category empirical-bias curve (mirrors Rust `CategoryBiasCurveView`). */
-export interface CategoryBiasCurveView {
+/** One time-to-resolution bucket of a category bias curve. */
+export interface TtrBucketCurveView {
+  ttr_lo_secs: number;
+  ttr_hi_secs: null | number;
   bins: PriceBiasBinView[];
   ic: DecimalString;
   ic_significant: boolean;
   sample_count: number;
 }
 
-/** Parsed `market_price_bias` artifact payload (`payload_json.by_category`). */
-export type MarketPriceBiasPayload = Record<string, CategoryBiasCurveView>;
+/** A per-category empirical-bias curve. */
+export interface CategoryBiasCurveView {
+  by_ttr: TtrBucketCurveView[];
+  sample_count: number;
+}
+
+/** Fixed `market_price_bias` artifact payload. */
+export interface MarketPriceBiasPayload {
+  by_category: Record<string, CategoryBiasCurveView>;
+}
 
 // ── Model-score calibrator payload ─────────────────────────────────────────
 
@@ -75,6 +85,35 @@ export interface ModelScoreCalibrationPayload {
   reliability: ReliabilityReportView;
 }
 
+export interface WeatherLeadBiasView {
+  lead_hours: number;
+  sample_count: number;
+  bias_celsius: DecimalString;
+}
+
+export interface WeatherStationBiasView {
+  station: string;
+  temperature_statistic: string;
+  leads: WeatherLeadBiasView[];
+}
+
+export interface WeatherStationLeadBiasPayload {
+  schema_version: number;
+  methodology: string;
+  methodology_hash: string;
+  grid_hashes: string[];
+  source_hashes: string[];
+  stations: WeatherStationBiasView[];
+}
+
+export type CalibrationArtifactPayload =
+  | { kind: 'market_price_bias'; payload: MarketPriceBiasPayload }
+  | { kind: 'model_score'; payload: ModelScoreCalibrationPayload }
+  | {
+      kind: 'weather_station_lead_bias';
+      payload: WeatherStationLeadBiasPayload;
+    };
+
 // ── Calibration artifact catalog ─────────────────────────────────────────────
 
 /** Calibration-artifact summary row (`GET /research/calibration-artifacts`). */
@@ -100,7 +139,7 @@ export interface CalibrationArtifactDetailView {
   sample_count: number;
   active: boolean;
   created_at: IsoDateTime;
-  payload_json: MarketPriceBiasPayload | ModelScoreCalibrationPayload;
+  payload: CalibrationArtifactPayload;
 }
 
 /** Filter + pagination for `GET /research/calibration-artifacts`. */

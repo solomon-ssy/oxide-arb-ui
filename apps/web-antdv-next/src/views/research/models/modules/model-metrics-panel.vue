@@ -1,5 +1,10 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
+import type {
+  ModelVersionMetrics,
+  ObjectiveComponentMetrics,
+  RankingDiagnosticsMetrics,
+} from '@vben/types';
 
 import { computed, ref, watch } from 'vue';
 
@@ -15,29 +20,20 @@ import {
   Empty,
   Tag,
 } from 'antdv-next';
-import { Mode } from 'vanilla-jsoneditor';
 
 import { $t } from '#/locales';
 import { formatScore } from '#/shared/components/format';
-import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 
 defineOptions({ name: 'ModelMetricsPanel' });
 
 const props = defineProps<{
-  metrics?: unknown;
+  metrics?: ModelVersionMetrics;
 }>();
 
 /** Trainer metrics family the panel renders. */
-type MetricsKind = 'classical' | 'unknown' | 'weighted_factor';
+type MetricsKind = 'classical' | 'not_measured' | 'weighted_factor';
 
 const CHART_MAX_FEATURES = 20;
-
-function asRecord(value: unknown): null | Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return null;
-  }
-  return value as Record<string, unknown>;
-}
 
 function asString(value: unknown): string | undefined {
   if (value === null || value === undefined) {
@@ -46,61 +42,68 @@ function asString(value: unknown): string | undefined {
   return String(value);
 }
 
-const record = computed(() => asRecord(props.metrics));
+const definition = computed(() => props.metrics?.definition);
 
 const kind = computed<MetricsKind>(() => {
-  const metrics = record.value;
-  if (!metrics) {
-    return 'unknown';
-  }
-  const inSample = asRecord(metrics.in_sample);
-  if (inSample && ('objective_value' in inSample || 'summary' in inSample)) {
+  if (definition.value?.kind === 'learning_to_rank') {
     return 'weighted_factor';
   }
-  if (
-    Array.isArray(metrics.feature_importances) ||
-    (inSample &&
-      ('validation_objective' in inSample || 'feature_count' in inSample))
-  ) {
+  if (definition.value?.kind === 'classical_pointwise') {
     return 'classical';
   }
-  return 'unknown';
+  return 'not_measured';
 });
 
-const inSample = computed(() => asRecord(record.value?.in_sample));
-const validation = computed(() => asRecord(record.value?.validation));
-const inSampleComponents = computed(() => asRecord(inSample.value?.components));
+const learningToRankMetrics = computed(() =>
+  definition.value?.kind === 'learning_to_rank' ? definition.value : null,
+);
+const classicalMetrics = computed(() =>
+  definition.value?.kind === 'classical_pointwise' ? definition.value : null,
+);
+const notMeasuredRationale = computed(() =>
+  definition.value?.kind === 'not_measured' ? definition.value.rationale : null,
+);
+const validation = computed(() => {
+  const current = definition.value;
+  return current?.kind === 'learning_to_rank' ||
+    current?.kind === 'classical_pointwise'
+    ? current.validation
+    : null;
+});
+const inSampleComponents = computed(() =>
+  definition.value?.kind === 'learning_to_rank'
+    ? definition.value.in_sample.components
+    : null,
+);
 const inSampleDiagnostics = computed(() =>
-  asRecord(inSample.value?.diagnostics),
+  definition.value?.kind === 'learning_to_rank'
+    ? definition.value.in_sample.diagnostics
+    : null,
 );
-const validationComponents = computed(() =>
-  asRecord(validation.value?.held_out_components),
+const validationComponents = computed(
+  () => validation.value?.held_out_components ?? null,
 );
-const validationDiagnostics = computed(() =>
-  asRecord(validation.value?.held_out_diagnostics),
+const validationDiagnostics = computed(
+  () => validation.value?.held_out_diagnostics ?? null,
 );
 
 const folds = computed(() => {
-  const raw = validation.value?.fold_objectives;
-  return Array.isArray(raw) ? raw.map((value) => asString(value) ?? '') : [];
+  return (validation.value?.fold_objectives ?? []).map(
+    (value) => asString(value) ?? '',
+  );
 });
 
-const foldComponents = computed(() => {
-  const raw = validation.value?.fold_components;
-  if (!Array.isArray(raw)) {
-    return [] as Record<string, unknown>[];
-  }
-  return raw
-    .map((item) => asRecord(item))
-    .filter((item): item is Record<string, unknown> => item !== null);
-});
+const foldComponents = computed(() => validation.value?.fold_components ?? []);
 
 const heldOutLabelKey = computed(() => {
   const metric = asString(validation.value?.held_out_metric);
   if (metric === 'mean_rolling_fold_rank_ic') {
     return 'page.research.models.detail.metricsPanel.heldOutMetricClassical';
   }
-  if (metric === 'neg_total_ltr_loss' || kind.value === 'weighted_factor') {
+  if (
+    metric === 'negative_total_learning_to_rank_loss' ||
+    kind.value === 'weighted_factor'
+  ) {
     return 'page.research.models.detail.metricsPanel.heldOutMetricLtr';
   }
   if (kind.value === 'classical') {
@@ -116,7 +119,7 @@ const diagnosticKeys = [
   'group_count',
 ] as const;
 
-function diagnosticRows(diagnostics: null | Record<string, unknown>) {
+function diagnosticRows(diagnostics: null | RankingDiagnosticsMetrics) {
   if (!diagnostics) {
     return [];
   }
@@ -129,21 +132,18 @@ function diagnosticRows(diagnostics: null | Record<string, unknown>) {
 }
 
 const featureImportances = computed(() => {
-  const raw = record.value?.feature_importances;
-  if (!Array.isArray(raw)) {
-    return [] as { feature: string; importance: number }[];
+  const current = definition.value;
+  if (current?.kind !== 'classical_pointwise') {
+    return [];
   }
-  return raw
-    .map((item) => {
-      const entry = asRecord(item);
-      const feature = asString(entry?.feature) ?? '';
-      const importance = Number(asString(entry?.importance) ?? '0');
+  return current.feature_importances
+    .map((entry) => {
+      const importance = Number(entry.importance);
       return {
-        feature,
+        feature: entry.feature,
         importance: Number.isFinite(importance) ? importance : 0,
       };
     })
-    .filter((entry) => entry.feature !== '')
     .toSorted((a, b) => Math.abs(b.importance) - Math.abs(a.importance))
     .slice(0, CHART_MAX_FEATURES);
 });
@@ -159,7 +159,7 @@ const componentKeys = [
   'pair_count',
 ] as const;
 
-function componentRows(components: null | Record<string, unknown>) {
+function componentRows(components: null | ObjectiveComponentMetrics) {
   if (!components) {
     return [];
   }
@@ -222,13 +222,17 @@ watch(featureImportances, () => render(), { immediate: true });
         <DescriptionsItem
           :label="$t('page.research.models.detail.metricsPanel.objectiveValue')"
         >
-          {{ formatScore(asString(inSample?.objective_value)) }}
+          {{
+            formatScore(
+              asString(learningToRankMetrics?.in_sample.objective_value),
+            )
+          }}
         </DescriptionsItem>
         <DescriptionsItem
-          v-if="inSample?.summary"
+          v-if="learningToRankMetrics?.in_sample.summary"
           :label="$t('page.research.models.detail.metricsPanel.summary')"
         >
-          {{ asString(inSample?.summary) }}
+          {{ learningToRankMetrics.in_sample.summary }}
         </DescriptionsItem>
       </Descriptions>
       <Alert
@@ -280,30 +284,30 @@ watch(featureImportances, () => render(), { immediate: true });
     <template v-else-if="kind === 'classical'">
       <Descriptions :column="2" bordered size="small">
         <DescriptionsItem
-          v-if="record?.kind"
           :label="$t('page.research.models.detail.metricsPanel.kind')"
         >
-          {{ asString(record?.kind) }}
+          {{ classicalMetrics?.model_kind }}
         </DescriptionsItem>
         <DescriptionsItem
-          v-if="inSample?.feature_count !== undefined"
           :label="$t('page.research.models.detail.metricsPanel.featureCount')"
         >
-          {{ asString(inSample?.feature_count) }}
+          {{ classicalMetrics?.in_sample.feature_count }}
         </DescriptionsItem>
         <DescriptionsItem
-          v-if="inSample?.train_samples !== undefined"
           :label="$t('page.research.models.detail.metricsPanel.trainSamples')"
         >
-          {{ asString(inSample?.train_samples) }}
+          {{ classicalMetrics?.in_sample.train_samples }}
         </DescriptionsItem>
         <DescriptionsItem
-          v-if="inSample?.validation_objective !== undefined"
           :label="
             $t('page.research.models.detail.metricsPanel.validationObjective')
           "
         >
-          {{ formatScore(asString(inSample?.validation_objective)) }}
+          {{
+            formatScore(
+              asString(classicalMetrics?.in_sample.validation_objective),
+            )
+          }}
         </DescriptionsItem>
       </Descriptions>
     </template>
@@ -423,21 +427,14 @@ watch(featureImportances, () => render(), { immediate: true });
       </div>
     </div>
 
-    <!-- Only truly polymorphic (unknown family) metrics fall back to raw JSON. -->
-    <template v-if="kind === 'unknown'">
+    <template v-if="kind === 'not_measured'">
       <Empty
-        v-if="!record"
-        :description="$t('page.research.models.detail.metricsPanel.empty')"
+        :description="
+          notMeasuredRationale ||
+          $t('page.research.models.detail.metricsPanel.empty')
+        "
         :image="Empty.PRESENTED_IMAGE_SIMPLE"
       />
-      <Collapse v-else ghost>
-        <CollapsePanel
-          key="raw"
-          :header="$t('page.research.models.detail.metricsPanel.raw')"
-        >
-          <JsonEditorShell :model-value="metrics" :mode="Mode.tree" read-only />
-        </CollapsePanel>
-      </Collapse>
     </template>
   </div>
 </template>

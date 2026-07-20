@@ -2,7 +2,6 @@ import type {
   ActionEligibilityView,
   ActivateBootstrapRequest,
   BootstrapView,
-  DeployConfigView,
   ExecutionRecoveryView,
   HealthReport,
   KillSwitchView,
@@ -27,7 +26,6 @@ export namespace SystemApi {
   export const quantMode = `${base}/quant-mode`;
   export const killSwitch = `${base}/kill-switch`;
   export const executionRecovery = `${base}/execution-recovery`;
-  export const deployConfig = `${base}/deploy-config`;
 }
 
 /** `GET /system/status` — the operator system snapshot. */
@@ -66,11 +64,6 @@ export async function getKillSwitch() {
 /** `GET /system/execution-recovery` — recovery detail with blocking rows. */
 export async function getExecutionRecovery() {
   return requestClient.get<ExecutionRecoveryView>(SystemApi.executionRecovery);
-}
-
-/** `GET /system/deploy-config` — credential-masked deploy config. */
-export async function getDeployConfig() {
-  return requestClient.get<DeployConfigView>(SystemApi.deployConfig);
 }
 
 /**

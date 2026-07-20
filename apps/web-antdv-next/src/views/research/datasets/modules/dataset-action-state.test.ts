@@ -10,6 +10,7 @@ const datasetHash = `blake3:${'a'.repeat(64)}`;
 const featureHash = `blake3:${'b'.repeat(64)}`;
 const factorHash = `blake3:${'c'.repeat(64)}`;
 const labelHash = `blake3:${'d'.repeat(64)}`;
+const modelSpecDefinitionHash = `blake3:${'6'.repeat(64)}`;
 
 const readyDataset: TrainingDatasetView = {
   artifact_bytes_hash: `blake3:${'e'.repeat(64)}`,
@@ -27,11 +28,12 @@ const readyDataset: TrainingDatasetView = {
   manifest: {
     factor_schema_hash: factorHash,
     feature_schema_hash: featureHash,
-    format_version: 5,
+    format_version: 1,
     horizons_secs: [3600],
     knowledge_lag_secs: 10,
     label_schema_hash: labelHash,
     model_spec_id: 'model-spec',
+    model_spec_definition_hash: modelSpecDefinitionHash,
     profile_ref: {
       content_hash: `blake3:${'2'.repeat(64)}`,
       id: 'pooled_1h_control',
@@ -56,6 +58,7 @@ const readyDataset: TrainingDatasetView = {
   },
   manifest_hash: `blake3:${'1'.repeat(64)}`,
   model_spec_id: 'model-spec',
+  model_spec_definition_hash: modelSpecDefinitionHash,
   parquet_uri: 's3://datasets/frozen.parquet',
   purpose: 'training',
   decision_policy_snapshot_id: '01900000-0000-7000-8000-000000000002',
@@ -69,7 +72,7 @@ const readyDataset: TrainingDatasetView = {
 };
 
 describe('canTrainDataset', () => {
-  it('offers Train only for an authorized Ready dataset with a bound v5 manifest', () => {
+  it('offers Train only for an authorized Ready dataset with a bound v1 manifest', () => {
     for (const status of Object.values(TRAINING_DATASET_STATUSES)) {
       expect(canTrainDataset(true, { ...readyDataset, status })).toBe(
         status === TRAINING_DATASET_STATUSES.ready,
@@ -81,7 +84,7 @@ describe('canTrainDataset', () => {
   it('fails closed for legacy rows and any manifest-ledger mismatch', () => {
     const manifest = readyDataset.manifest;
     if (!manifest) {
-      throw new Error('test fixture requires a v5 manifest');
+      throw new Error('test fixture requires a v1 manifest');
     }
     expect(canTrainDataset(true, { ...readyDataset, manifest: null })).toBe(
       false,

@@ -3,10 +3,7 @@ import type { QuantModelSpecView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
-import {
-  useModelFamilyTagOptions,
-  usePublicationStatusTagOptions,
-} from '#/shared/components/format/tag-options';
+import { useModelFamilyTagOptions } from '#/shared/components/format/tag-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useModelSpecColumns(
@@ -39,13 +36,11 @@ export function useModelSpecColumns(
       title: $t('page.research.modelSpecs.columns.modelFamily'),
     },
     {
-      cellRender: {
-        name: 'CellTag',
-        options: usePublicationStatusTagOptions(),
-      },
-      field: 'status',
-      title: $t('page.research.modelSpecs.columns.status'),
-      width: 120,
+      field: 'thesis.summary',
+      formatter: ({ row }) => row.thesis.summary,
+      minWidth: 240,
+      showOverflow: 'tooltip',
+      title: $t('page.research.modelSpecs.columns.thesisSummary'),
     },
     {
       field: 'prediction_horizon_secs',

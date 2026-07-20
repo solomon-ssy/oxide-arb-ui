@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type {
   ConfigResourceKind,
+  LifecycleView,
   ModelRouting,
   PolicyActivationResultView,
   PolicyApprovalView,
@@ -10,6 +11,8 @@ import type {
   PolicyValidationView,
   ReportSchedule,
 } from '@vben/types/config-api';
+
+import type { PolicyClientValidationIssue } from './modules/policy-schema';
 
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -28,6 +31,7 @@ import {
   getConfigResourceSchema,
   getConfigRevisions,
   getCurrentConfigResource,
+  getProjectLifecycle,
   rollbackConfigRevision,
   validateConfigDraft,
 } from '#/api/config';
@@ -45,6 +49,7 @@ import {
   formatPolicyValue,
   parsePolicyJsonSchema,
   policyFieldLabel,
+  validatePolicyValue,
 } from './modules/policy-schema';
 import ReportSchedulePreview from './modules/report-schedule-preview.vue';
 import {
@@ -77,11 +82,13 @@ const current = ref<Awaited<
 > | null>(null);
 const schemaView = ref<null | PolicyResourceSchemaView>(null);
 const revisions = ref<PolicyRevisionView[]>([]);
+const lifecycle = ref<LifecycleView | null>(null);
 const workingDocument = ref<null | PolicyPayload>(null);
 const candidateRevision = ref<null | PolicyRevisionView>(null);
 const validation = ref<null | PolicyValidationView>(null);
 const approval = ref<null | PolicyApprovalView>(null);
 const activationResult = ref<null | PolicyActivationResultView>(null);
+const activationConflict = ref<null | string>(null);
 const stage = ref<WorkflowStage>('view');
 const rollbackMode = ref(false);
 
@@ -105,11 +112,23 @@ const diffs = computed(() =>
   collectPolicyDiff(activeDocument.value, workingDocument.value),
 );
 const dirty = computed(() => diffs.value.length > 0);
+const editorValidationIssues = computed(() =>
+  jsonSchema.value && workingDocument.value
+    ? validatePolicyValue(
+        jsonSchema.value,
+        jsonSchema.value,
+        workingDocument.value,
+      )
+    : [],
+);
 const validationIssues = computed(
   () => validation.value?.validation_evidence.issues ?? [],
 );
 const preflightChecks = computed(
   () => validation.value?.validation_evidence.preflight ?? [],
+);
+const validatedSubject = computed(
+  () => validation.value?.validation_evidence.subject ?? null,
 );
 const activeModelRouting = computed<ModelRouting | null>(() =>
   resourceKind.value === 'model_routing' && activeDocument.value
@@ -139,10 +158,28 @@ const MODEL_ROUTING_POINTER_FIELDS = [
   'model.shadow_model_version_id',
 ];
 
-const canCreate = hasAccessByCodes(['config:create']);
-const canApprove = hasAccessByCodes(['config:approve']);
-const canActivate = hasAccessByCodes(['config:activate']);
-const canRollback = hasAccessByCodes(['config:rollback']);
+const hasCreateAccess = hasAccessByCodes(['config:create']);
+const hasApproveAccess = hasAccessByCodes(['config:approve']);
+const hasActivateAccess = hasAccessByCodes(['config:activate']);
+const hasRollbackAccess = hasAccessByCodes(['config:rollback']);
+const productionFrozen = computed(
+  () => lifecycle.value?.state === 'production_frozen',
+);
+const governanceMutationBlocked = computed(
+  () => productionFrozen.value || loadError.value,
+);
+const canCreate = computed(
+  () => hasCreateAccess && !governanceMutationBlocked.value,
+);
+const canApprove = computed(
+  () => hasApproveAccess && !governanceMutationBlocked.value,
+);
+const canActivate = computed(
+  () => hasActivateAccess && !governanceMutationBlocked.value,
+);
+const canRollback = computed(
+  () => hasRollbackAccess && !governanceMutationBlocked.value,
+);
 
 const workflowSteps = computed(() => [
   {
@@ -197,6 +234,12 @@ function shortId(value?: null | string) {
   return value ? `${value.slice(0, 12)}…` : '—';
 }
 
+function editorValidationMessage(issue: PolicyClientValidationIssue) {
+  return $t(`page.config.editor.validation.${issue.code}`, {
+    expected: issue.expected ?? '',
+  });
+}
+
 function resetWorkflow() {
   stage.value = 'view';
   rollbackMode.value = false;
@@ -204,6 +247,7 @@ function resetWorkflow() {
   validation.value = null;
   approval.value = null;
   activationResult.value = null;
+  activationConflict.value = null;
   workingDocument.value = activeDocument.value
     ? clonePolicyValue(activeDocument.value)
     : null;
@@ -223,18 +267,20 @@ async function loadResource() {
         getCurrentConfigResource(kind),
         getConfigResourceSchema(kind),
         getConfigRevisions(kind, 40),
+        getProjectLifecycle(),
       ]),
     { onError: () => (loadError.value = true), silent: true },
   );
   if (result) {
-    [current.value, schemaView.value, revisions.value] = result;
+    [current.value, schemaView.value, revisions.value, lifecycle.value] =
+      result;
     resetWorkflow();
   }
   loading.value = false;
 }
 
 function startEdit() {
-  if (!activeDocument.value) {
+  if (!activeDocument.value || !canCreate.value) {
     return;
   }
   resetWorkflow();
@@ -251,7 +297,13 @@ function updateWorkingDocument(value: unknown) {
 async function saveDraft() {
   const kind = resourceKind.value;
   const document = workingDocument.value;
-  if (!kind || !document || !dirty.value) {
+  if (
+    !kind ||
+    !document ||
+    !dirty.value ||
+    editorValidationIssues.value.length > 0 ||
+    !canCreate.value
+  ) {
     return;
   }
   const revision = await governed(
@@ -288,7 +340,7 @@ async function saveDraft() {
 async function validateRevision() {
   const kind = resourceKind.value;
   const revision = candidateRevision.value;
-  if (!kind || !revision) {
+  if (!kind || !revision || governanceMutationBlocked.value) {
     return;
   }
   const result = await governed(
@@ -315,7 +367,11 @@ async function validateRevision() {
   );
   if (result) {
     validation.value = result;
-    if (result.valid && result.preflight_token) {
+    if (
+      result.valid &&
+      result.preflight_token &&
+      result.validation_evidence.subject
+    ) {
       stage.value = 'validated';
       message.success($t('page.config.feedback.validationPassed'));
     } else {
@@ -327,7 +383,7 @@ async function validateRevision() {
 async function approveRevision() {
   const kind = resourceKind.value;
   const revision = candidateRevision.value;
-  if (!kind || !revision || !validation.value?.valid) {
+  if (!kind || !revision || !validation.value?.valid || !canApprove.value) {
     return;
   }
   const result = await governed(
@@ -361,20 +417,26 @@ async function activateRevision() {
   const kind = resourceKind.value;
   const revision = candidateRevision.value;
   const validationResult = validation.value;
+  const subject = validatedSubject.value;
   const approvalResult = approval.value;
   if (
     !kind ||
     !revision ||
     !validationResult?.preflight_token ||
-    !approvalResult
+    !subject ||
+    !approvalResult ||
+    (rollbackMode.value ? !canRollback.value : !canActivate.value)
   ) {
     return;
   }
+  activationConflict.value = null;
   const result = await governed(
     (ctx) => {
       const body = {
         approval_id: approvalResult.policy_approval_id,
-        expected_active_revision_id: activeRevisionId.value,
+        candidate_bundle_hash: subject.candidate_bundle_hash,
+        expected_active_revision_id: subject.base_revision_vector[kind] ?? null,
+        expected_bundle_generation: subject.base_generation,
         idempotency_key: crypto.randomUUID(),
         preflight_token: validationResult.preflight_token as string,
         reason: ctx.reason,
@@ -387,9 +449,16 @@ async function activateRevision() {
       danger: rollbackMode.value || kind === 'execution_authorization',
       details: [
         {
+          label: $t('page.config.resource.expectedGeneration'),
+          mono: true,
+          value: String(subject.base_generation),
+        },
+        {
           label: $t('page.config.resource.expectedActive'),
           mono: true,
-          value: activeRevisionId.value ?? $t('page.config.resource.none'),
+          value:
+            subject.base_revision_vector[kind] ??
+            $t('page.config.resource.none'),
         },
         {
           label: $t('page.config.resource.targetRevision'),
@@ -397,6 +466,16 @@ async function activateRevision() {
           value: revision.policy_revision_id,
         },
       ],
+      onError: (error) => {
+        if (error.httpStatus !== 409 && error.code !== 409) {
+          return 'keep_open';
+        }
+        activationConflict.value = error.message;
+        validation.value = null;
+        approval.value = null;
+        stage.value = 'review';
+        return 'close';
+      },
       summary: $t(
         rollbackMode.value
           ? 'page.config.workflow.rollbackSummary'
@@ -423,6 +502,7 @@ async function activateRevision() {
 }
 
 function reviewRollback(revision: PolicyRevisionView) {
+  if (!canRollback.value) return;
   rollbackMode.value = true;
   candidateRevision.value = revision;
   workingDocument.value = clonePolicyValue(revision.document.document);
@@ -492,6 +572,7 @@ onMounted(() => void loadResource());
             </Tag>
             <Button
               v-if="stage === 'view' && canCreate"
+              data-testid="edit-config-draft"
               type="primary"
               @click="startEdit"
             >
@@ -521,10 +602,16 @@ onMounted(() => void loadResource());
       </header>
 
       <Alert
-        v-if="!canCreate"
+        v-if="!hasCreateAccess"
         :message="$t('page.config.readOnly')"
         show-icon
         type="info"
+      />
+      <Alert
+        v-if="productionFrozen"
+        :message="$t('page.config.lifecycle.frozenNotice')"
+        show-icon
+        type="warning"
       />
       <Alert
         v-if="rollbackMode"
@@ -540,10 +627,20 @@ onMounted(() => void loadResource());
       >
         <template #action>
           <Button size="small" @click="loadResource">
-            {{ $t('common.retry') }}
+            {{ $t('page.shared.asyncState.retry') }}
           </Button>
         </template>
       </Alert>
+      <Alert
+        v-if="activationConflict"
+        :description="activationConflict"
+        :message="$t('page.config.error.activationConflict')"
+        closable
+        data-testid="config-activation-conflict"
+        show-icon
+        type="error"
+        @close="activationConflict = null"
+      />
 
       <Skeleton v-if="loading" :paragraph="{ rows: 14 }" active />
 
@@ -551,6 +648,7 @@ onMounted(() => void loadResource());
         <section
           v-if="stage === 'success' && activationResult"
           class="activation-success bg-card rounded-xl border p-8 text-center"
+          data-testid="config-activation-success"
           role="status"
         >
           <span class="activation-success-icon">
@@ -586,7 +684,12 @@ onMounted(() => void loadResource());
               </dd>
             </div>
           </dl>
-          <Button class="mt-6" type="primary" @click="finishWorkflow">
+          <Button
+            class="mt-6"
+            data-testid="finish-config-workflow"
+            type="primary"
+            @click="finishWorkflow"
+          >
             {{ $t('page.config.success.done') }}
           </Button>
         </section>
@@ -608,6 +711,7 @@ onMounted(() => void loadResource());
             <section
               v-if="stage === 'view'"
               class="bg-card rounded-xl border p-5"
+              data-testid="config-current-document"
             >
               <div class="mb-4 flex items-start justify-between gap-3">
                 <div>
@@ -634,6 +738,30 @@ onMounted(() => void loadResource());
             </section>
 
             <section v-if="stage === 'edit'" class="min-w-0">
+              <Alert
+                v-if="editorValidationIssues.length > 0"
+                class="mb-4"
+                data-testid="config-editor-error-summary"
+                :message="$t('page.config.validation.errorSummary')"
+                show-icon
+                type="error"
+              >
+                <template #description>
+                  <ul class="mt-2 space-y-2">
+                    <li
+                      v-for="issue in editorValidationIssues"
+                      :key="`${issue.path.join('.')}:${issue.code}`"
+                    >
+                      <strong class="font-mono text-xs">
+                        {{ issue.path.join('.') || 'document' }}
+                      </strong>
+                      <span class="ml-2">{{
+                        editorValidationMessage(issue)
+                      }}</span>
+                    </li>
+                  </ul>
+                </template>
+              </Alert>
               <ModelRoutingPicker
                 v-if="workingModelRouting"
                 class="mb-4"
@@ -648,6 +776,7 @@ onMounted(() => void loadResource());
               <PolicyField
                 v-if="workingDocument"
                 :hidden-fields="MODEL_ROUTING_POINTER_FIELDS"
+                :issues="editorValidationIssues"
                 :model-value="workingDocument"
                 :root-schema="jsonSchema"
                 :schema="jsonSchema"
@@ -658,6 +787,7 @@ onMounted(() => void loadResource());
             <section
               v-if="['review', 'validated', 'approved'].includes(stage)"
               class="bg-card rounded-xl border p-5"
+              data-testid="config-review"
             >
               <div
                 class="mb-4 flex flex-wrap items-start justify-between gap-3"
@@ -709,6 +839,7 @@ onMounted(() => void loadResource());
             <section
               v-if="validation"
               class="bg-card rounded-xl border p-5"
+              data-testid="config-validation-result"
               aria-live="polite"
             >
               <div class="flex items-center justify-between gap-3">
@@ -844,7 +975,8 @@ onMounted(() => void loadResource());
             </Button>
             <Button
               v-if="stage === 'edit'"
-              :disabled="!dirty"
+              :disabled="!dirty || editorValidationIssues.length > 0"
+              data-testid="save-config-draft"
               type="primary"
               @click="saveDraft"
             >
@@ -858,6 +990,7 @@ onMounted(() => void loadResource());
             </Button>
             <Button
               v-if="stage === 'review'"
+              data-testid="validate-config-draft"
               type="primary"
               @click="validateRevision"
             >
@@ -866,6 +999,7 @@ onMounted(() => void loadResource());
             <Button
               v-if="stage === 'validated'"
               :disabled="!canApprove"
+              data-testid="approve-config-draft"
               type="primary"
               @click="approveRevision"
             >
@@ -875,6 +1009,7 @@ onMounted(() => void loadResource());
               v-if="stage === 'approved'"
               :danger="rollbackMode"
               :disabled="rollbackMode ? !canRollback : !canActivate"
+              data-testid="activate-config-draft"
               type="primary"
               @click="activateRevision"
             >
@@ -934,6 +1069,7 @@ onMounted(() => void loadResource());
                     <Button
                       v-if="revision.policy_revision_id !== activeRevisionId"
                       :disabled="!canRollback"
+                      data-testid="review-config-rollback"
                       size="small"
                       type="text"
                       @click="reviewRollback(revision)"

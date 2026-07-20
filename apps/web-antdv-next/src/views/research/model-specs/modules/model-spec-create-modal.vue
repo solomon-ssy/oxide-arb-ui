@@ -87,6 +87,22 @@ async function onSubmit(values: Record<string, unknown>) {
     message.error($t('page.research.modelSpecs.inputContract.requiredError'));
     return;
   }
+  const thesisSummary = String(values.thesis_summary ?? '').trim();
+  const thesisHypothesis = String(values.thesis_hypothesis ?? '').trim();
+  const thesisLimitations = String(values.thesis_limitations ?? '')
+    .split('\n')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (
+    !thesisSummary ||
+    !thesisHypothesis ||
+    thesisLimitations.length === 0 ||
+    thesisLimitations.length > 16 ||
+    new Set(thesisLimitations).size !== thesisLimitations.length
+  ) {
+    message.error($t('page.research.modelSpecs.create.thesisValidationError'));
+    return;
+  }
   modalApi.lock();
   try {
     const ok = await payload.value.onSubmit({
@@ -96,7 +112,11 @@ async function onSubmit(values: Record<string, unknown>) {
       model_family: values.model_family as ModelFamily,
       name: trimmed,
       prediction_horizon_secs: values.prediction_horizon_secs as number,
-      spec_json: values.spec_json ?? {},
+      thesis: {
+        hypothesis: thesisHypothesis,
+        limitations: thesisLimitations,
+        summary: thesisSummary,
+      },
       training_contract: trainingContract,
     });
     if (ok) {
@@ -180,13 +200,31 @@ const [Form, formApi] = useVbenForm({
       modelPropName: 'modelValue',
     },
     {
-      component: 'JsonEditor',
-      componentProps: { variant: 'field' },
-      defaultValue: {},
-      fieldName: 'spec_json',
-      help: $t('page.research.modelSpecs.create.specJsonHelp'),
-      label: $t('page.research.modelSpecs.create.specJson'),
-      modelPropName: 'modelValue',
+      component: 'Textarea',
+      componentProps: { maxlength: 512, rows: 2, showCount: true },
+      fieldName: 'thesis_summary',
+      formItemClass: 'md:col-span-2',
+      help: $t('page.research.modelSpecs.create.thesisSummaryHelp'),
+      label: $t('page.research.modelSpecs.create.thesisSummary'),
+      rules: 'required',
+    },
+    {
+      component: 'Textarea',
+      componentProps: { maxlength: 2048, rows: 3, showCount: true },
+      fieldName: 'thesis_hypothesis',
+      formItemClass: 'md:col-span-2',
+      help: $t('page.research.modelSpecs.create.thesisHypothesisHelp'),
+      label: $t('page.research.modelSpecs.create.thesisHypothesis'),
+      rules: 'required',
+    },
+    {
+      component: 'Textarea',
+      componentProps: { rows: 4 },
+      fieldName: 'thesis_limitations',
+      formItemClass: 'md:col-span-2',
+      help: $t('page.research.modelSpecs.create.thesisLimitationsHelp'),
+      label: $t('page.research.modelSpecs.create.thesisLimitations'),
+      rules: 'required',
     },
   ],
   showDefaultActions: false,
@@ -206,7 +244,9 @@ const [Modal, modalApi] = useVbenModal({
         label_schema_version: 1,
         model_family: MODEL_FAMILIES.weightedFactor,
         prediction_horizon_secs: 86_400,
-        spec_json: {},
+        thesis_hypothesis: undefined,
+        thesis_limitations: undefined,
+        thesis_summary: undefined,
         training_contract: { ...DEFAULT_MODEL_TRAINING_CONTRACT },
       });
       void loadExistingNames();

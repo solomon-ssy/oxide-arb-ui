@@ -103,18 +103,16 @@ const [Drawer, drawerApi] = useVbenDrawer({
             <DescriptionsItem
               :label="$t('page.research.factors.detail.normalization')"
             >
-              <Tag v-if="factor.normalization" color="geekblue">
+              <Tag color="geekblue">
                 {{ $t(`enum.factorNormalization.${factor.normalization}`) }}
               </Tag>
-              <span v-else>—</span>
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.factors.detail.direction')"
             >
-              <Tag v-if="factor.direction" :color="directionTag?.color">
+              <Tag :color="directionTag?.color">
                 {{ directionTag?.label }}
               </Tag>
-              <span v-else>—</span>
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.factors.detail.required')"

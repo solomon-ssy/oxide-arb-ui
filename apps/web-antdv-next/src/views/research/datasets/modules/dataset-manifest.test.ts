@@ -12,6 +12,7 @@ function dataset(): TrainingDatasetView {
   const featureHash = `blake3:${'b'.repeat(64)}`;
   const factorHash = `blake3:${'c'.repeat(64)}`;
   const labelHash = `blake3:${'d'.repeat(64)}`;
+  const modelSpecDefinitionHash = `blake3:${'6'.repeat(64)}`;
   return {
     artifact_bytes_hash: `blake3:${'e'.repeat(64)}`,
     completed_at: '2026-07-10T11:00:00.000Z',
@@ -28,11 +29,12 @@ function dataset(): TrainingDatasetView {
     manifest: {
       factor_schema_hash: factorHash,
       feature_schema_hash: featureHash,
-      format_version: 5,
+      format_version: 1,
       horizons_secs: [3600, 86_400],
       knowledge_lag_secs: 10,
       label_schema_hash: labelHash,
       model_spec_id: 'model-spec',
+      model_spec_definition_hash: modelSpecDefinitionHash,
       profile_ref: {
         content_hash: `blake3:${'2'.repeat(64)}`,
         id: 'pooled_1h_control',
@@ -57,6 +59,7 @@ function dataset(): TrainingDatasetView {
     },
     manifest_hash: `blake3:${'1'.repeat(64)}`,
     model_spec_id: 'model-spec',
+    model_spec_definition_hash: modelSpecDefinitionHash,
     parquet_uri: 's3://datasets/frozen.parquet',
     purpose: 'training',
     decision_policy_snapshot_id: '01900000-0000-7000-8000-000000000002',
@@ -70,7 +73,7 @@ function dataset(): TrainingDatasetView {
   };
 }
 
-describe('dataset v5 manifest bindings', () => {
+describe('dataset v1 manifest bindings', () => {
   it('accepts an exact structured manifest without substituting any field', () => {
     const value = dataset();
     expect(datasetManifestBindingIssues(value)).toEqual([]);
@@ -81,11 +84,11 @@ describe('dataset v5 manifest bindings', () => {
     const value = dataset();
     const manifest = value.manifest;
     if (!manifest) {
-      throw new Error('test fixture requires a v5 manifest');
+      throw new Error('test fixture requires a v1 manifest');
     }
     value.manifest = {
       ...manifest,
-      format_version: 1,
+      format_version: 2,
       horizons_secs: [86_400, 3600],
       sample_count: 19,
       semantic_dataset_hash: `blake3:${'9'.repeat(64)}`,
@@ -101,7 +104,7 @@ describe('dataset v5 manifest bindings', () => {
     expect(hasUsableDatasetManifest(value)).toBe(false);
   });
 
-  it('keeps an absent legacy manifest unavailable instead of synthesizing v2', () => {
+  it('keeps an absent manifest unavailable instead of synthesizing v1', () => {
     const value = dataset();
     value.manifest = null;
     expect(datasetManifestBindingIssues(value)).toEqual([]);

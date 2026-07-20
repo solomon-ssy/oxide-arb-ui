@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import type {
   CalibrationArtifactDetailView,
-  CategoryBiasCurveView,
   MarketPriceBiasPayload,
   ModelScoreCalibrationPayload,
+  TtrBucketCurveView,
+  WeatherStationLeadBiasPayload,
 } from '@vben/types';
 
 import { computed, ref } from 'vue';
@@ -37,20 +38,43 @@ const isMarketPriceBias = computed(
 );
 
 const biasPayload = computed<MarketPriceBiasPayload | null>(() =>
-  detail.value?.kind === 'market_price_bias'
-    ? (detail.value.payload_json as MarketPriceBiasPayload)
+  detail.value?.payload.kind === 'market_price_bias'
+    ? detail.value.payload.payload
     : null,
 );
 
 const modelPayload = computed<ModelScoreCalibrationPayload | null>(() =>
-  detail.value?.kind === 'model_score'
-    ? (detail.value.payload_json as ModelScoreCalibrationPayload)
+  detail.value?.payload.kind === 'model_score'
+    ? detail.value.payload.payload
     : null,
 );
 
-const categories = computed<[string, CategoryBiasCurveView][]>(() =>
-  biasPayload.value ? Object.entries(biasPayload.value) : [],
+const weatherPayload = computed<null | WeatherStationLeadBiasPayload>(() =>
+  detail.value?.payload.kind === 'weather_station_lead_bias'
+    ? detail.value.payload.payload
+    : null,
 );
+
+const categoryCurves = computed<
+  { category: string; curve: TtrBucketCurveView; key: string }[]
+>(() =>
+  biasPayload.value
+    ? Object.entries(biasPayload.value.by_category).flatMap(
+        ([category, categoryCurve]) =>
+          categoryCurve.by_ttr.map((curve) => ({
+            category,
+            curve,
+            key: `${category}:${curve.ttr_lo_secs}:${curve.ttr_hi_secs ?? 'unbounded'}`,
+          })),
+      )
+    : [],
+);
+
+function ttrRange(curve: TtrBucketCurveView) {
+  return curve.ttr_hi_secs === null
+    ? `${curve.ttr_lo_secs}s+`
+    : `${curve.ttr_lo_secs}s–${curve.ttr_hi_secs}s`;
+}
 
 const binColumns = computed(() => [
   {
@@ -199,24 +223,21 @@ const [Drawer, drawerApi] = useVbenDrawer({
       </Card>
 
       <template v-if="isMarketPriceBias">
-        <Card
-          v-for="[category, curve] in categories"
-          :key="category"
-          size="small"
-        >
+        <Card v-for="item in categoryCurves" :key="item.key" size="small">
           <template #title>
             <div class="flex items-center gap-2">
-              <span>{{ category }}</span>
-              <Tag :color="curve.ic_significant ? 'success' : 'default'">
+              <span>{{ item.category }}</span>
+              <Tag>{{ ttrRange(item.curve) }}</Tag>
+              <Tag :color="item.curve.ic_significant ? 'success' : 'default'">
                 {{
-                  curve.ic_significant
+                  item.curve.ic_significant
                     ? $t(
                         'page.research.calibrationArtifacts.detail.icSignificant',
-                        { ic: curve.ic },
+                        { ic: item.curve.ic },
                       )
                     : $t(
                         'page.research.calibrationArtifacts.detail.icGatedOff',
-                        { ic: curve.ic },
+                        { ic: item.curve.ic },
                       )
                 }}
               </Tag>
@@ -224,7 +245,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
                 {{
                   $t(
                     'page.research.calibrationArtifacts.detail.categorySamples',
-                    { count: curve.sample_count },
+                    { count: item.curve.sample_count },
                   )
                 }}
               </span>
@@ -232,14 +253,14 @@ const [Drawer, drawerApi] = useVbenDrawer({
           </template>
           <Table
             :columns="binColumns"
-            :data-source="curve.bins"
+            :data-source="item.curve.bins"
             :pagination="false"
             row-key="price_lo"
             size="small"
           />
         </Card>
         <Empty
-          v-if="categories.length === 0"
+          v-if="categoryCurves.length === 0"
           :description="
             $t('page.research.calibrationArtifacts.detail.emptyCategory')
           "
@@ -347,6 +368,34 @@ const [Drawer, drawerApi] = useVbenDrawer({
               </template>
             </template>
           </Table>
+        </Card>
+      </template>
+
+      <template v-else-if="weatherPayload">
+        <Card
+          size="small"
+          :title="$t('page.research.calibrationArtifacts.detail.weatherTitle')"
+        >
+          <Descriptions :column="1" bordered size="small">
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.calibrationArtifacts.detail.fields.methodology',
+                )
+              "
+            >
+              {{ weatherPayload.methodology }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.calibrationArtifacts.detail.fields.stationCount',
+                )
+              "
+            >
+              {{ weatherPayload.stations.length }}
+            </DescriptionsItem>
+          </Descriptions>
         </Card>
       </template>
     </div>

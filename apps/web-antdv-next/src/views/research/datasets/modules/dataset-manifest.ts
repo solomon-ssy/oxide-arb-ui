@@ -1,6 +1,6 @@
 import type { TrainingDatasetView } from '@vben/types';
 
-export const DATASET_ARTIFACT_FORMAT_VERSION = 5;
+export const DATASET_ARTIFACT_FORMAT_VERSION = 1;
 
 export interface DatasetManifestBindingIssue {
   actual: unknown;
@@ -46,6 +46,11 @@ export function datasetManifestBindingIssues(
     dataset.training_dataset_id,
   );
   compare('model_spec_id', manifest.model_spec_id, dataset.model_spec_id);
+  compare(
+    'model_spec_definition_hash',
+    manifest.model_spec_definition_hash,
+    dataset.model_spec_definition_hash,
+  );
   compare(
     'decision_policy_snapshot_id',
     manifest.decision_policy_snapshot_id,

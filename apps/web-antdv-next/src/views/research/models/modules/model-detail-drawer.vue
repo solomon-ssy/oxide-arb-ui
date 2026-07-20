@@ -47,13 +47,9 @@ import {
   listResearchJobs,
 } from '#/api/research';
 import { $t } from '#/locales';
-import DataList from '#/shared/components/data-list.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import FeatureParityStatusPanel from '#/shared/components/feature-parity-status-panel.vue';
-import {
-  EMPTY_PLACEHOLDER,
-  formatDateTimeLocal,
-} from '#/shared/components/format';
+import { formatDateTimeLocal } from '#/shared/components/format';
 import {
   findTagOption,
   usePublicationStatusTagOptions,
@@ -67,7 +63,6 @@ import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
 import ModelBacktestModal from './model-backtest-modal.vue';
 import ModelBindCalibrationModal from './model-bind-calibration-modal.vue';
 import ModelCpcvModal from './model-cpcv-modal.vue';
-import { formatModelInputStateRates } from './model-input-diagnostics';
 import ModelMetricsPanel from './model-metrics-panel.vue';
 
 defineOptions({ name: 'ModelDetailDrawer' });
@@ -115,7 +110,7 @@ const gateLoading = ref(false);
 const bindPathSetLoading = ref(false);
 const openId = ref<null | string>(null);
 
-const metrics = computed(() => model.value?.metrics ?? {});
+const metrics = computed(() => model.value?.metrics);
 const statusTag = computed(() =>
   findTagOption(statusTagOptions, model.value?.publication_status),
 );
@@ -188,27 +183,6 @@ const returnModel = computed<null | ReturnModelView>(
   () => model.value?.return_model ?? null,
 );
 
-function asRecord(value: unknown): null | Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return null;
-  }
-  return value as Record<string, unknown>;
-}
-
-function recordArray(value: unknown): Array<Record<string, unknown>> {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  const records: Array<Record<string, unknown>> = [];
-  for (const item of value) {
-    const record = asRecord(item);
-    if (record) {
-      records.push(record);
-    }
-  }
-  return records;
-}
-
 function field(value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '—';
@@ -216,161 +190,41 @@ function field(value: unknown): string {
   return String(value);
 }
 
-const trainingObjective = computed(() =>
-  asRecord(model.value?.training_objective),
+const trainingObjective = computed(
+  () => model.value?.training_objective ?? null,
+);
+const trainingObjectiveDefinition = computed(
+  () => trainingObjective.value?.definition ?? null,
+);
+const learningToRankObjective = computed(() =>
+  trainingObjectiveDefinition.value?.kind === 'learning_to_rank'
+    ? trainingObjectiveDefinition.value.spec
+    : null,
 );
 
-const modelMetricsRecord = computed(() => asRecord(model.value?.metrics));
-const artifactDiagnostics = computed(() =>
-  asRecord(modelMetricsRecord.value?.artifact_diagnostics),
-);
-const inputTransform = computed(() =>
-  asRecord(artifactDiagnostics.value?.input_transform),
-);
-const transformInputs = computed(() => {
-  return recordArray(inputTransform.value?.inputs);
+const modelMetricsDefinition = computed(() => metrics.value?.definition);
+const artifactLineage = computed(() => {
+  const definition = modelMetricsDefinition.value;
+  return definition?.kind === 'learning_to_rank' ||
+    definition?.kind === 'classical_pointwise'
+    ? definition.artifact_lineage
+    : null;
 });
-const encodedColumns = computed(() => {
-  return recordArray(inputTransform.value?.encoded_columns);
-});
-const artifactFormatVersion = computed(
-  () => artifactDiagnostics.value?.format_version,
+const serializedModelHash = computed(() =>
+  artifactLineage.value?.kind === 'fitted_feature_matrix'
+    ? artifactLineage.value.serialized_model_hash
+    : null,
 );
-const serializedModelHash = computed(
-  () => artifactDiagnostics.value?.serialized_model_hash,
+const serializationFormat = computed(() =>
+  artifactLineage.value?.kind === 'fitted_feature_matrix'
+    ? artifactLineage.value.serialization_format
+    : null,
 );
-const factorInputs = computed(() => {
-  const inputs = artifactDiagnostics.value?.factor_inputs;
-  return Array.isArray(inputs) ? inputs.map(String) : [];
-});
-const rawContractInputs = computed(() => {
-  const direct = artifactDiagnostics.value?.raw_inputs;
-  const contract = asRecord(artifactDiagnostics.value?.input_contract);
-  const inputs = Array.isArray(direct) ? direct : contract?.inputs;
-  return Array.isArray(inputs) ? inputs : [];
-});
-
-const rawInputColumns = [
-  {
-    dataIndex: 'feature',
-    key: 'feature',
-    title: $t('page.research.models.detail.inputFeature'),
-  },
-  {
-    dataIndex: 'required',
-    key: 'required',
-    title: $t('page.research.models.detail.requiredness'),
-  },
-  {
-    dataIndex: 'unit',
-    key: 'unit',
-    title: $t('page.research.models.detail.inputUnit'),
-  },
-  {
-    dataIndex: 'valueKind',
-    key: 'valueKind',
-    title: $t('page.research.models.detail.valueKind'),
-  },
-  {
-    dataIndex: 'median',
-    key: 'median',
-    title: $t('page.research.models.detail.median'),
-  },
-  {
-    dataIndex: 'mean',
-    key: 'mean',
-    title: $t('page.research.models.detail.mean'),
-  },
-  {
-    dataIndex: 'std',
-    key: 'std',
-    title: $t('page.research.models.detail.std'),
-  },
-  {
-    dataIndex: 'stateRates',
-    key: 'stateRates',
-    title: $t('page.research.models.detail.stateRates'),
-  },
-  {
-    dataIndex: 'vocabulary',
-    key: 'vocabulary',
-    title: $t('page.research.models.detail.vocabulary'),
-  },
-];
-const encodedColumnColumns = [
-  {
-    dataIndex: 'name',
-    key: 'name',
-    title: $t('page.research.models.detail.encodedName'),
-  },
-  {
-    dataIndex: 'source',
-    key: 'source',
-    title: $t('page.research.models.detail.encodedSource'),
-  },
-  {
-    dataIndex: 'kind',
-    key: 'kind',
-    title: $t('page.research.models.detail.encodedKind'),
-  },
-];
-
-const rawInputRows = computed(() => {
-  if (transformInputs.value.length > 0) {
-    return transformInputs.value.map((input) => {
-      return {
-        feature: field(input.feature),
-        key: field(input.feature),
-        mean: field(input.mean),
-        median: field(input.median),
-        required: input.required === true,
-        stateRates: formatModelInputStateRates(
-          input.state_rates,
-          EMPTY_PLACEHOLDER,
-        ),
-        std: field(input.std),
-        unit: field(input.unit),
-        valueKind: field(input.value_kind),
-        vocabulary: Array.isArray(input.category_vocabulary)
-          ? input.category_vocabulary.map(String).join(', ') ||
-            EMPTY_PLACEHOLDER
-          : EMPTY_PLACEHOLDER,
-      };
-    });
-  }
-  return rawContractInputs.value.map((input, index) => {
-    const record = asRecord(input);
-    const feature = record ? field(record.feature_name) : String(input);
-    return {
-      feature,
-      key: `${feature}:${index}`,
-      mean: EMPTY_PLACEHOLDER,
-      median: EMPTY_PLACEHOLDER,
-      required: record?.requiredness === 'required',
-      stateRates: EMPTY_PLACEHOLDER,
-      std: EMPTY_PLACEHOLDER,
-      unit: EMPTY_PLACEHOLDER,
-      valueKind: EMPTY_PLACEHOLDER,
-      vocabulary: EMPTY_PLACEHOLDER,
-    };
-  });
-});
-
-const encodedColumnRows = computed(() =>
-  encodedColumns.value.map((column) => ({
-    key: field(column.name),
-    kind: field(column.kind),
-    name: field(column.name),
-    source: field(column.source_feature),
-  })),
+const factorInputs = computed(() =>
+  artifactLineage.value?.kind === 'factor_native'
+    ? artifactLineage.value.factor_inputs
+    : [],
 );
-
-function displayRecordValue(record: object, key: unknown) {
-  if (typeof key !== 'string') {
-    return EMPTY_PLACEHOLDER;
-  }
-  return (record as Record<string, unknown>)[key] ?? EMPTY_PLACEHOLDER;
-}
 
 const isCalibratedReturnModel = computed(
   () => returnModel.value?.calibration === 'calibrated',
@@ -698,33 +552,22 @@ watch(
           <Tabs destroy-on-hidden>
             <TabPane
               key="input-contract"
-              :tab="$t('page.research.models.detail.inputTransform')"
+              :tab="$t('page.research.models.detail.artifactLineage')"
             >
-              <div v-if="artifactDiagnostics" class="flex flex-col gap-3">
+              <div v-if="artifactLineage" class="flex flex-col gap-3">
                 <Descriptions :column="2" bordered size="small">
                   <DescriptionsItem
+                    :label="$t('page.research.models.detail.lineageKind')"
+                  >
+                    {{ artifactLineage.kind }}
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    v-if="serializationFormat"
                     :label="
-                      $t('page.research.models.detail.artifactFormatVersion')
+                      $t('page.research.models.detail.serializationFormat')
                     "
                   >
-                    {{ field(artifactFormatVersion) }}
-                  </DescriptionsItem>
-                  <DescriptionsItem
-                    :label="$t('page.research.models.detail.rawInputCount')"
-                  >
-                    {{ rawInputRows.length }}
-                  </DescriptionsItem>
-                  <DescriptionsItem
-                    :label="
-                      $t('page.research.models.detail.encodedColumnCount')
-                    "
-                  >
-                    {{ encodedColumns.length }}
-                  </DescriptionsItem>
-                  <DescriptionsItem
-                    :label="$t('page.research.models.detail.transformKind')"
-                  >
-                    {{ field(artifactDiagnostics.transform_kind) }}
+                    {{ serializationFormat }}
                   </DescriptionsItem>
                   <DescriptionsItem
                     :label="
@@ -733,7 +576,7 @@ watch(
                     :span="2"
                   >
                     <span class="font-mono text-xs break-all">
-                      {{ field(artifactDiagnostics.training_dataset_hash) }}
+                      {{ artifactLineage.training_dataset_hash }}
                     </span>
                   </DescriptionsItem>
                   <DescriptionsItem
@@ -741,7 +584,7 @@ watch(
                     :span="2"
                   >
                     <span class="font-mono text-xs break-all">
-                      {{ field(artifactDiagnostics.training_input_hash) }}
+                      {{ artifactLineage.training_input_hash }}
                     </span>
                   </DescriptionsItem>
                   <DescriptionsItem
@@ -749,7 +592,7 @@ watch(
                     :span="2"
                   >
                     <span class="font-mono text-xs break-all">
-                      {{ field(artifactDiagnostics.input_contract_hash) }}
+                      {{ artifactLineage.input_contract_hash }}
                     </span>
                   </DescriptionsItem>
                   <DescriptionsItem
@@ -759,10 +602,11 @@ watch(
                     :span="2"
                   >
                     <span class="font-mono text-xs break-all">
-                      {{ field(artifactDiagnostics.input_transform_hash) }}
+                      {{ artifactLineage.input_transform_hash }}
                     </span>
                   </DescriptionsItem>
                   <DescriptionsItem
+                    v-if="serializedModelHash"
                     :label="
                       $t('page.research.models.detail.serializedModelHash')
                     "
@@ -773,56 +617,6 @@ watch(
                     </span>
                   </DescriptionsItem>
                 </Descriptions>
-
-                <div v-if="rawInputRows.length > 0" class="flex flex-col gap-1">
-                  <span class="text-sm font-medium">
-                    {{ $t('page.research.models.detail.rawInputs') }}
-                  </span>
-                  <DataList
-                    :columns="rawInputColumns"
-                    :data-source="rawInputRows"
-                    row-key="key"
-                    :scroll="{ x: 1180 }"
-                  >
-                    <template #bodyCell="{ column, record }">
-                      <template v-if="column.key === 'required'">
-                        <Tag :color="record.required ? 'red' : 'blue'">
-                          {{
-                            record.required
-                              ? $t('page.research.models.detail.required')
-                              : $t('page.research.models.detail.optional')
-                          }}
-                        </Tag>
-                      </template>
-                      <template v-else>
-                        <span class="font-mono text-xs">{{
-                          displayRecordValue(record, column.key)
-                        }}</span>
-                      </template>
-                    </template>
-                  </DataList>
-                </div>
-
-                <div
-                  v-if="encodedColumnRows.length > 0"
-                  class="flex flex-col gap-1"
-                >
-                  <span class="text-sm font-medium">
-                    {{ $t('page.research.models.detail.encodedColumns') }}
-                  </span>
-                  <DataList
-                    :columns="encodedColumnColumns"
-                    :data-source="encodedColumnRows"
-                    row-key="key"
-                    :scroll="{ x: 640 }"
-                  >
-                    <template #bodyCell="{ column, record }">
-                      <span class="font-mono text-xs">{{
-                        displayRecordValue(record, column.key)
-                      }}</span>
-                    </template>
-                  </DataList>
-                </div>
 
                 <div v-if="factorInputs.length > 0" class="flex flex-col gap-1">
                   <span class="text-sm font-medium">
@@ -838,7 +632,7 @@ watch(
               <Empty
                 v-else
                 :description="
-                  $t('page.research.models.detail.inputTransformUnavailable')
+                  $t('page.research.models.detail.artifactLineageUnavailable')
                 "
                 :image="Empty.PRESENTED_IMAGE_SIMPLE"
               />
@@ -958,69 +752,89 @@ watch(
           <template v-else>
             <Descriptions :column="2" bordered size="small">
               <DescriptionsItem
-                v-if="trainingObjective.kind"
                 :label="$t('page.research.models.detail.objectiveKind')"
               >
-                {{ field(trainingObjective.kind) }}
+                {{ field(trainingObjectiveDefinition?.kind) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.rank_loss"
+                :label="$t('page.research.models.detail.formatVersion')"
+              >
+                {{ trainingObjective.format_version }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.rankLoss')"
               >
-                {{ field(trainingObjective.rank_loss) }}
+                {{ field(learningToRankObjective.rank_loss) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.optimizer"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.optimizer')"
               >
-                {{ field(trainingObjective.optimizer) }}
+                {{ field(learningToRankObjective.optimizer) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.lambda_tail"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.lambdaTail')"
               >
-                {{ field(trainingObjective.lambda_tail) }}
+                {{ field(learningToRankObjective.lambda_tail) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.tail_fraction"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.tailFraction')"
               >
-                {{ field(trainingObjective.tail_fraction) }}
+                {{ field(learningToRankObjective.tail_fraction) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.lambda_turnover"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.lambdaTurnover')"
               >
-                {{ field(trainingObjective.lambda_turnover) }}
+                {{ field(learningToRankObjective.lambda_turnover) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.lambda_l2"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.lambdaL2')"
               >
-                {{ field(trainingObjective.lambda_l2) }}
+                {{ field(learningToRankObjective.lambda_l2) }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.ndcg_k !== undefined"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.ndcgK')"
               >
-                {{ field(trainingObjective.ndcg_k) }}
+                {{ learningToRankObjective.ndcg_k }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.pseudo_top_n !== undefined"
+                v-if="learningToRankObjective"
                 :label="$t('page.research.models.detail.pseudoTopN')"
               >
-                {{ field(trainingObjective.pseudo_top_n) }}
+                {{ learningToRankObjective.pseudo_top_n }}
               </DescriptionsItem>
               <DescriptionsItem
-                v-if="trainingObjective.note"
-                :label="$t('page.research.models.detail.objectiveNote')"
+                v-if="
+                  trainingObjectiveDefinition?.kind === 'classical_pointwise'
+                "
+                :label="$t('page.research.models.detail.modelKind')"
+              >
+                {{ trainingObjectiveDefinition.model_kind }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="
+                  trainingObjectiveDefinition?.kind === 'classical_pointwise'
+                "
+                :label="$t('page.research.models.detail.validationMetric')"
+              >
+                {{ trainingObjectiveDefinition.validation_metric }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                v-if="trainingObjectiveDefinition?.kind === 'hand_authored'"
+                :label="$t('page.research.models.detail.rationale')"
                 :span="2"
               >
-                {{ field(trainingObjective.note) }}
+                {{ trainingObjectiveDefinition.rationale }}
               </DescriptionsItem>
             </Descriptions>
             <p
-              v-if="trainingObjective.rank_loss && !trainingObjective.kind"
+              v-if="learningToRankObjective"
               class="text-muted-foreground mt-2 text-xs"
             >
               {{ $t('page.research.models.detail.objectiveProxyHint') }}
@@ -1040,7 +854,17 @@ watch(
             <DescriptionsItem
               :label="$t('page.research.models.columns.modelSpec')"
             >
-              {{ model.model_spec_id }}
+              <EntityRouteLink
+                :label="model.model_spec_name"
+                :to="`/research/model-specs?open=${model.model_spec_id}`"
+              />
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.models.detail.specDefinitionHash')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ model.model_spec_definition_hash }}
+              </span>
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.models.columns.version')"
@@ -1068,6 +892,36 @@ watch(
               :label="$t('page.research.models.columns.createdAt')"
             >
               {{ formatDateTimeLocal(model.created_at) }}
+            </DescriptionsItem>
+          </Descriptions>
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.models.detail.researchThesis')"
+        >
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="$t('page.research.models.detail.thesisSummary')"
+            >
+              {{ model.model_spec_thesis.summary }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.models.detail.thesisHypothesis')"
+            >
+              {{ model.model_spec_thesis.hypothesis }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.models.detail.thesisLimitations')"
+            >
+              <ul class="list-disc space-y-1 pl-5">
+                <li
+                  v-for="item in model.model_spec_thesis.limitations"
+                  :key="item"
+                >
+                  {{ item }}
+                </li>
+              </ul>
             </DescriptionsItem>
           </Descriptions>
         </Card>

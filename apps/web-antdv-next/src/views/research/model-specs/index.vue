@@ -69,7 +69,6 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantModelSpecView>({
               model_family: (formValues.model_family as any) || undefined,
               page: page.currentPage,
               size: page.pageSize,
-              status: (formValues.status as any) || undefined,
             }),
           );
           return result ?? emptyPage;

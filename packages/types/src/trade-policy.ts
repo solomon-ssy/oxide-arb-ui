@@ -8,15 +8,18 @@ import type {
   UuidString,
 } from './common';
 import type {
+  DatasetPurpose,
   ExitReason,
   ExitSettlementMode,
   FillRequirement,
   MarketCategory,
   RedeemPolicy,
+  TrainingDatasetStatus,
 } from './enums';
 import type { OpportunisticExitPolicy } from './exit-plan';
 import type {
   ResearchEvaluationTrack,
+  ResearchPolicyFitter,
   ResearchProfileArtifact,
   ResearchProfileRef,
   SourceSliceManifestRef,
@@ -646,13 +649,87 @@ export type TradePolicyPreflightBlockerKind =
   | 'retention_runway_unproven'
   | 'source_slice_unverified';
 
-export interface TradePolicyPreflightBlockerView {
-  actual: unknown;
+interface TradePolicyPreflightBlockerCommon {
   evidence_link: null | string;
-  kind: TradePolicyPreflightBlockerKind;
   remediation: string;
-  required: unknown;
 }
+
+export interface ShadowLatencyProfileV1 {
+  book_age_p50_ms: number;
+  book_age_p95_ms: number;
+  book_age_p99_ms: number;
+  book_event_count: number;
+  decision_prepared_count: number;
+  decision_prepared_p95_ms: null | number;
+  endpoint_rtt_count: number;
+  endpoint_rtt_p95_ms: null | number;
+  format_version: number;
+  market_delay_count: number;
+  market_delay_p95_ms: null | number;
+  observed_at: IsoDateTime;
+  window_end: IsoDateTime;
+  window_start: IsoDateTime;
+}
+
+export type TradePolicyPreflightBlockerDetail =
+  | {
+      actual_profile_ref: null | ResearchProfileRef;
+      kind: 'profile_lineage_mismatch';
+      required_profile_ref: ResearchProfileRef;
+    }
+  | {
+      actual_purpose: DatasetPurpose | null;
+      kind: 'dataset_purpose_mismatch';
+    }
+  | {
+      actual_runway_days: null | number;
+      kind: 'retention_runway_unproven';
+      required_minimum_days: null | number;
+    }
+  | {
+      actual_status: null | TrainingDatasetStatus;
+      kind: 'dataset_not_ready';
+    }
+  | {
+      configured_fitter: null | ResearchPolicyFitter;
+      kind: 'profile_fitter_unavailable';
+    }
+  | {
+      dataset_window_end: IsoDateTime | null;
+      dataset_window_start: IsoDateTime | null;
+      kind: 'fit_window_not_contained';
+      required_window_end: IsoDateTime | null;
+      required_window_start: IsoDateTime | null;
+    }
+  | {
+      diagnostics: string[];
+      kind: 'contract_invalid';
+    }
+  | {
+      diagnostics: string[];
+      kind: 'source_slice_unverified';
+    }
+  | {
+      fit_window_end: IsoDateTime | null;
+      kind: 'pit_cutoff_invalid';
+      not_future: boolean;
+      pit_cutoff: IsoDateTime;
+    }
+  | { kind: 'full_l2_trajectory_missing' }
+  | { kind: 'pit_fee_facts_missing' }
+  | {
+      kind: 'production_latency_profile_missing';
+      observed_profile: null | ShadowLatencyProfileV1;
+    }
+  | { kind: 'quality_gate_unavailable' }
+  | {
+      kind: 'raw_trajectory_labels_missing';
+      labels_excluded_after_cutoff: number;
+      labels_matured_by_cutoff: number;
+    };
+
+export type TradePolicyPreflightBlockerView =
+  TradePolicyPreflightBlockerCommon & TradePolicyPreflightBlockerDetail;
 
 export type ResearchReadinessEvidenceKind =
   | 'retention_runway'

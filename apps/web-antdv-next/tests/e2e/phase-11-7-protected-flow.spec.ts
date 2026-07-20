@@ -447,7 +447,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(blockers.getByTestId('preflight-blocker')).toHaveCount(5);
     await expect(blockers).toContainText(/actual|实际/i);
     await expect(blockers).toContainText(/required|要求/i);
-    await expect(blockers).toContainText(/Source Slice v2/i);
+    await expect(blockers).toContainText(/Source Slice v1/i);
     await expect(blockers).toContainText(/24-hour production latency/i);
     await expect(page.getByText('AutoExecution')).toHaveCount(0);
     await ensureDesktopSidebarExpanded(page);

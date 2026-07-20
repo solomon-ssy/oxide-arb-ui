@@ -1,5 +1,8 @@
 <script lang="ts" setup>
-import type { PolicyJsonSchema } from './policy-schema';
+import type {
+  PolicyClientValidationIssue,
+  PolicyJsonSchema,
+} from './policy-schema';
 
 import { computed } from 'vue';
 
@@ -33,6 +36,7 @@ const props = withDefaults(
     fieldName?: string;
     fieldPath?: string[];
     hiddenFields?: string[];
+    issues?: PolicyClientValidationIssue[];
     modelValue: unknown;
     rootSchema: PolicyJsonSchema;
     schema: PolicyJsonSchema;
@@ -43,6 +47,7 @@ const props = withDefaults(
     fieldName: '',
     fieldPath: () => [],
     hiddenFields: () => [],
+    issues: () => [],
   },
 );
 
@@ -64,6 +69,13 @@ const properties = computed(() =>
 const label = computed(() => policyFieldLabel(props.fieldName, resolved.value));
 const description = computed(() =>
   policyFieldDescription(props.fieldName, resolved.value),
+);
+const currentIssues = computed(() =>
+  props.issues.filter(
+    (issue) =>
+      issue.path.length === props.fieldPath.length &&
+      issue.path.every((part, index) => part === props.fieldPath[index]),
+  ),
 );
 const enumOptions = computed(() =>
   (resolved.value.enum ?? []).flatMap((value) =>
@@ -221,6 +233,12 @@ function defaultForSchema(schema: PolicyJsonSchema): unknown {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+
+function validationMessage(issue: PolicyClientValidationIssue) {
+  return $t(`page.config.editor.validation.${issue.code}`, {
+    expected: issue.expected ?? '',
+  });
+}
 </script>
 
 <template>
@@ -265,18 +283,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
       class="w-full"
       @update:value="switchUnion"
     />
-    <PolicyField
-      v-if="selectedUnionSchema"
-      :depth="depth + 1"
-      :disabled="disabled"
-      :field-path="fieldPath"
-      :hidden-fields="hiddenFields"
-      :model-value="modelValue"
-      :root-schema="rootSchema"
-      :schema="selectedUnionSchema"
-      class="mt-3"
-      @update:model-value="$emit('update:modelValue', $event)"
-    />
+    <div v-if="selectedUnionSchema" class="mt-3">
+      <PolicyField
+        :depth="depth + 1"
+        :disabled="disabled"
+        :field-path="fieldPath"
+        :hidden-fields="hiddenFields"
+        :issues="issues"
+        :model-value="modelValue"
+        :root-schema="rootSchema"
+        :schema="selectedUnionSchema"
+        @update:model-value="$emit('update:modelValue', $event)"
+      />
+    </div>
   </div>
 
   <div
@@ -331,6 +350,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
         :field-name="key"
         :field-path="[...fieldPath, key]"
         :hidden-fields="hiddenFields"
+        :issues="issues"
         :model-value="objectValue()[key]"
         :root-schema="rootSchema"
         :schema="childSchema"
@@ -386,6 +406,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
           :disabled="disabled"
           :field-path="[...fieldPath, String(index)]"
           :hidden-fields="hiddenFields"
+          :issues="issues"
           :model-value="item"
           :root-schema="rootSchema"
           :schema="resolved.items ?? {}"
@@ -471,6 +492,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
       {{ description }}
     </p>
   </div>
+
+  <ul
+    v-if="currentIssues.length > 0"
+    :data-field-path="fieldPath.join('.')"
+    data-testid="config-inline-error"
+    class="policy-validation-errors"
+    role="alert"
+  >
+    <li v-for="issue in currentIssues" :key="issue.code">
+      {{ validationMessage(issue) }}
+    </li>
+  </ul>
 </template>
 
 <style scoped>
@@ -522,6 +555,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   font-size: 0.75rem;
   line-height: 1.4;
   color: hsl(var(--muted-foreground));
+}
+
+.policy-validation-errors {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: hsl(var(--destructive));
 }
 
 .policy-empty {

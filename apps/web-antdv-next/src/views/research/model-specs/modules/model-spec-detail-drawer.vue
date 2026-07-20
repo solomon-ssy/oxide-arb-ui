@@ -22,9 +22,7 @@ import { formatDateTimeLocal } from '#/shared/components/format';
 import {
   findTagOption,
   useModelFamilyTagOptions,
-  usePublicationStatusTagOptions,
 } from '#/shared/components/format/tag-options';
-import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import InputContractEditor from './input-contract-editor.vue';
@@ -39,7 +37,6 @@ const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const { hasAccessByCodes } = useQpAccess();
 
-const statusTagOptions = usePublicationStatusTagOptions();
 const familyTagOptions = useModelFamilyTagOptions();
 
 const canCreateDataset = hasAccessByCodes(['materialization:create']);
@@ -48,9 +45,6 @@ const spec = ref<null | QuantModelSpecView>(null);
 const loading = ref(false);
 const openId = ref<null | string>(null);
 
-const statusTag = computed(() =>
-  findTagOption(statusTagOptions, spec.value?.status),
-);
 const familyTag = computed(() =>
   findTagOption(familyTagOptions, spec.value?.model_family),
 );
@@ -111,7 +105,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
     <Spin :spinning="loading">
       <div v-if="spec" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
           <Tag :color="familyTag?.color">{{ familyTag?.label }}</Tag>
         </div>
 
@@ -155,9 +148,42 @@ const [Drawer, drawerApi] = useVbenDrawer({
               {{ formatDateTimeLocal(spec.created_at) }}
             </DescriptionsItem>
             <DescriptionsItem
-              :label="$t('page.research.modelSpecs.detail.updatedAt')"
+              :label="$t('page.research.modelSpecs.detail.definitionHash')"
             >
-              {{ formatDateTimeLocal(spec.updated_at) }}
+              <span class="font-mono text-xs break-all">
+                {{ spec.definition_hash }}
+              </span>
+            </DescriptionsItem>
+          </Descriptions>
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.modelSpecs.detail.governance')"
+        >
+          <Descriptions :column="1" bordered size="small">
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.createdBy')"
+            >
+              {{ spec.created_by_label }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.createdByRole')"
+            >
+              {{ spec.created_by_role || '—' }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.createdByUserId')"
+            >
+              <span v-if="spec.created_by_user_id" class="font-mono text-xs">
+                {{ spec.created_by_user_id }}
+              </span>
+              <span v-else>—</span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.creationReason')"
+            >
+              <p class="whitespace-pre-wrap">{{ spec.reason }}</p>
             </DescriptionsItem>
           </Descriptions>
         </Card>
@@ -202,13 +228,29 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
         <Card
           size="small"
-          :title="$t('page.research.modelSpecs.detail.specJson')"
+          :title="$t('page.research.modelSpecs.detail.thesis')"
         >
-          <JsonEditorShell
-            :model-value="spec.spec_json"
-            read-only
-            variant="field"
-          />
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.thesisSummary')"
+            >
+              <p class="whitespace-pre-wrap">{{ spec.thesis.summary }}</p>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.thesisHypothesis')"
+            >
+              <p class="whitespace-pre-wrap">{{ spec.thesis.hypothesis }}</p>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.modelSpecs.detail.thesisLimitations')"
+            >
+              <ul class="list-disc space-y-1 pl-5">
+                <li v-for="item in spec.thesis.limitations" :key="item">
+                  {{ item }}
+                </li>
+              </ul>
+            </DescriptionsItem>
+          </Descriptions>
         </Card>
 
         <Card

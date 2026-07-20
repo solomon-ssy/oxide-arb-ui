@@ -1,9 +1,5 @@
-import type { DecimalString, IsoDateTime } from './common';
-import type {
-  KillSwitchState,
-  MarketCategory,
-  QuantRuntimeMode,
-} from './enums';
+import type { IsoDateTime } from './common';
+import type { KillSwitchState, QuantRuntimeMode } from './enums';
 import type { ExecutionRecoverySummary } from './execution-recovery';
 import type { ReconciliationView } from './reconciliation';
 
@@ -207,94 +203,4 @@ export interface HealthReport {
   overall_healthy: boolean;
   checks: SubsystemHealth[];
   checked_at: IsoDateTime;
-}
-
-/**
- * `GET /system/deploy-config` — credential-masked deploy config snapshot.
- *
- * Mirrors the hand-built masked object from `masked_deploy_view()`; secret
- * fields (`password`, JWT signing key) are masked and
- * credentialed URLs are collapsed to `"***"`. The `quant` and `research`
- * sections are intentionally omitted server-side.
- */
-export interface DeployConfigView {
-  polymarket: {
-    chain_id: number;
-    clob_base_url: string;
-    clob_ws_url: string;
-    fees: {
-      category_rates: Partial<Record<MarketCategory, DecimalString>>;
-      exponent: number;
-      unknown_category_rate: DecimalString;
-    };
-    onchain: { rpc_timeout_ms: number; rpc_url: string };
-  };
-  market_data: {
-    gamma: {
-      base_url: string;
-      page_size: number;
-      reconcile_interval_secs: number;
-    };
-    websocket: {
-      max_reconnect_delay_ms: number;
-      max_subscriptions_per_connection: number;
-      reconnect_delay_ms: number;
-    };
-  };
-  observability: { log_json: boolean; log_level: string };
-  db: {
-    clickhouse: {
-      batch_size: number;
-      cluster_id: string;
-      database: string;
-      deployment_id: string;
-      flush_interval_secs: number;
-      max_concurrent_inserts: number;
-      password: string;
-      url: string;
-      user: string;
-    };
-    postgres: {
-      database: string;
-      host: string;
-      max_connections: number;
-      min_connections: number;
-      password: string;
-      port: number;
-      schema: string;
-      user: string;
-    };
-  };
-  cache: {
-    disabled: boolean;
-    fail_open: boolean;
-    moka: { max_capacity: number };
-    operation_timeout_ms: number;
-    redis: {
-      database: number;
-      host: string;
-      key_prefix: string;
-      password: string;
-      pool_size: number;
-      port: number;
-      timeout_ms: number;
-      user: string;
-    };
-  };
-  keys: { private_key_present: boolean };
-  web: {
-    cors_allowed_origins: string[];
-    jwt: {
-      absolute_session_ttl_secs: number;
-      access_ttl_secs: number;
-      audience: string;
-      issuer: string;
-      refresh_ttl_secs: number;
-      signing_key: string;
-    };
-    listen_host: string;
-    listen_port: number;
-    serve_static_ui: boolean;
-    static_ui_dir: string;
-  };
 }

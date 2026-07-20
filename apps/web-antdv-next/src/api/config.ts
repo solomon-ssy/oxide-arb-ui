@@ -6,6 +6,7 @@ import type {
   ConfigResourcesView,
   CreatePolicyDraftRequest,
   CurrentPolicyResourceView,
+  DecisionPolicySnapshotOptionView,
   DeploymentConfigView,
   LifecycleView,
   PolicyActivationResultView,
@@ -13,7 +14,6 @@ import type {
   PolicyResourceSchemaView,
   PolicyRevisionView,
   PolicyValidationView,
-  ProductionSealEvidenceView,
   SchedulePreviewRequest,
   SchedulePreviewView,
   SealProductionRequest,
@@ -29,6 +29,7 @@ export namespace ConfigApi {
   export const base = '/config';
   export const resources = `${base}/resources`;
   export const activity = `${base}/activity`;
+  export const snapshotOptions = `${base}/snapshot-options`;
   export const deployment = `${base}/deployment`;
   export const lifecycle = `${base}/lifecycle`;
   export const schedulePreview = `${base}/schedule-preview`;
@@ -135,34 +136,11 @@ export function getConfigActivity(limit = 50) {
   });
 }
 
-export interface DecisionPolicySnapshotOption {
-  activated_at: string;
-  decision_policy_snapshot_id: string;
-}
-
-/**
- * Derive immutable snapshot options from the typed activation activity stream.
- * One bounded backend query replaces the old version-list endpoint and avoids
- * per-resource or per-revision follow-up requests.
- */
-export async function fetchDecisionPolicySnapshots({ limit = 200 } = {}) {
-  const activity = await getConfigActivity(limit);
-  const snapshots = new Map<string, DecisionPolicySnapshotOption>();
-
-  for (const item of activity) {
-    if (item.event_type !== 'activation') {
-      continue;
-    }
-    const snapshotId = item.event.decision_policy_snapshot_id;
-    if (!snapshots.has(snapshotId)) {
-      snapshots.set(snapshotId, {
-        activated_at: item.event.activated_at,
-        decision_policy_snapshot_id: snapshotId,
-      });
-    }
-  }
-
-  return [...snapshots.values()];
+export function fetchDecisionPolicySnapshots({ limit = 200 } = {}) {
+  return requestClient.get<DecisionPolicySnapshotOptionView[]>(
+    ConfigApi.snapshotOptions,
+    { params: { limit } },
+  );
 }
 
 export function getDeploymentConfigSnapshot() {
@@ -177,7 +155,7 @@ export function sealProductionBaseline(
   body: SealProductionRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<ProductionSealEvidenceView>(
+  return governedPost<LifecycleView>(
     `${ConfigApi.lifecycle}/seal-production`,
     body,
     ctx,

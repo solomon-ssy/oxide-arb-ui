@@ -79,7 +79,7 @@ export interface ResearchProfileArtifact {
   };
 }
 
-/** Content-addressed reference to a verified Source Slice v2 manifest. */
+/** Content-addressed reference to a verified Source Slice v1 manifest. */
 export interface SourceSliceManifestRef {
   manifest_hash: string;
   manifest_uri: string;

@@ -7,11 +7,13 @@ import type {
   ResearchEvaluationTrack,
   ResearchJobView,
   ResearchProfileArtifact,
+  ResearchProfileRef,
   TradePolicyCandidateSpec,
   TradePolicyConditionTemplateNodeV1,
   TradePolicyFitPreflightView,
   TradePolicyFitSelection,
   TradePolicyOperationalEvidenceView,
+  TradePolicyPreflightBlockerView,
   TradePolicyPreflightCheckStatus,
   TradePolicyTrialAttemptView,
 } from '@vben/types';
@@ -75,6 +77,105 @@ interface ReadinessCheck {
     | 'source_slice_verified'
   >;
   label: string;
+}
+
+function formatProfileRef(profileRef: null | ResearchProfileRef) {
+  return profileRef
+    ? `${profileRef.id}@v${profileRef.version} · ${profileRef.content_hash}`
+    : '—';
+}
+
+function formatWindow(start: null | string, end: null | string) {
+  return start && end
+    ? `${formatDateTimeLocal(start)} – ${formatDateTimeLocal(end)}`
+    : '—';
+}
+
+function blockerActual(blocker: TradePolicyPreflightBlockerView): string {
+  switch (blocker.kind) {
+    case 'contract_invalid':
+    case 'source_slice_unverified': {
+      return blocker.diagnostics.join('; ') || '—';
+    }
+    case 'dataset_not_ready': {
+      return blocker.actual_status ?? '—';
+    }
+    case 'dataset_purpose_mismatch': {
+      return blocker.actual_purpose ?? '—';
+    }
+    case 'fit_window_not_contained': {
+      return formatWindow(
+        blocker.dataset_window_start,
+        blocker.dataset_window_end,
+      );
+    }
+    case 'full_l2_trajectory_missing':
+    case 'pit_fee_facts_missing':
+    case 'quality_gate_unavailable': {
+      return '—';
+    }
+    case 'pit_cutoff_invalid': {
+      return $t('page.research.tradePolicies.preflightFacts.pitCutoff', {
+        cutoff: formatDateTimeLocal(blocker.pit_cutoff),
+        notFuture: String(blocker.not_future),
+      });
+    }
+    case 'production_latency_profile_missing': {
+      const profile = blocker.observed_profile;
+      return profile
+        ? $t('page.research.tradePolicies.preflightFacts.latencyProfile', {
+            bookEvents: profile.book_event_count,
+            end: formatDateTimeLocal(profile.window_end),
+            start: formatDateTimeLocal(profile.window_start),
+          })
+        : '—';
+    }
+    case 'profile_fitter_unavailable': {
+      return blocker.configured_fitter ?? '—';
+    }
+    case 'profile_lineage_mismatch': {
+      return formatProfileRef(blocker.actual_profile_ref);
+    }
+    case 'raw_trajectory_labels_missing': {
+      return $t('page.research.tradePolicies.preflightFacts.labelCounts', {
+        excluded: blocker.labels_excluded_after_cutoff,
+        matured: blocker.labels_matured_by_cutoff,
+      });
+    }
+    case 'retention_runway_unproven': {
+      return blocker.actual_runway_days === null
+        ? '—'
+        : $t('page.research.tradePolicies.preflightFacts.days', {
+            days: blocker.actual_runway_days,
+          });
+    }
+  }
+}
+
+function blockerRequired(blocker: TradePolicyPreflightBlockerView): string {
+  switch (blocker.kind) {
+    case 'fit_window_not_contained': {
+      return formatWindow(
+        blocker.required_window_start,
+        blocker.required_window_end,
+      );
+    }
+    case 'profile_lineage_mismatch': {
+      return formatProfileRef(blocker.required_profile_ref);
+    }
+    case 'retention_runway_unproven': {
+      return blocker.required_minimum_days === null
+        ? '—'
+        : $t('page.research.tradePolicies.preflightFacts.days', {
+            days: blocker.required_minimum_days,
+          });
+    }
+    default: {
+      return $t(
+        `page.research.tradePolicies.preflightRequirement.${blocker.kind}`,
+      );
+    }
+  }
 }
 
 const { handleRequest } = useRequestHandler();
@@ -1232,7 +1333,7 @@ void loadCatalogs();
                     <strong>
                       {{ $t('page.research.tradePolicies.workbench.actual') }}:
                     </strong>
-                    {{ JSON.stringify(item.actual) }}
+                    {{ blockerActual(item) }}
                   </span>
                   <span>
                     <strong>
@@ -1240,7 +1341,7 @@ void loadCatalogs();
                         $t('page.research.tradePolicies.workbench.required')
                       }}:
                     </strong>
-                    {{ JSON.stringify(item.required) }}
+                    {{ blockerRequired(item) }}
                   </span>
                   <span>{{ item.remediation }}</span>
                   <a v-if="item.evidence_link" :href="item.evidence_link">

@@ -106,6 +106,10 @@ export type PolicyPreflightDetailCode =
   | 'semantic_validation_passed'
   | 'typed_document_decoded';
 export type CheckOutcome = 'failed' | 'not_applicable' | 'passed';
+/**
+ * Outcome of an atomic policy activation transaction.
+ */
+export type PolicyActivationOutcome = 'committed' | 'exact_replay';
 export type ConfigActivityView =
   | {
       event: PolicyActivationView;
@@ -175,6 +179,11 @@ export type LifecycleBaseline = 'boot';
  */
 export type LifecycleCheckDetail =
   | {
+      build_commit: string;
+      clean: boolean;
+      detail_kind: 'compiled_build_identity';
+    }
+  | {
       detail_kind: 'contract_matched';
     }
   | {
@@ -183,6 +192,9 @@ export type LifecycleCheckDetail =
     }
   | {
       detail_kind: 'migration_ledgers_verified';
+    }
+  | {
+      detail_kind: 'missing_active_policy_bundle';
     }
   | {
       detail_kind: 'policy_bundle';
@@ -196,6 +208,7 @@ export type LifecycleCheckKind =
   | 'active_policy_bundle'
   | 'backup_evidence'
   | 'clickhouse_schema_fingerprint'
+  | 'compiled_build_identity'
   | 'config_end_to_end'
   | 'lifecycle_contract'
   | 'migration_state'
@@ -249,6 +262,10 @@ export type ScheduleCadence =
       interval_secs: number;
       kind: 'interval';
     };
+export type DecisionPolicySnapshotSource =
+  | 'activation'
+  | 'bootstrap'
+  | 'rollback';
 
 /**
  * Schema-only envelope used to generate the frontend Config API contract.
@@ -274,13 +291,17 @@ export interface ConfigApiContractSchema {
   schedule_preview_request: SchedulePreviewRequest;
   schedule_preview_response: SchedulePreviewView;
   seal_production_request: SealProductionRequest;
-  seal_production_response: ProductionSealEvidenceView;
+  seal_production_response: LifecycleView;
+  snapshot_options_query: ConfigSnapshotOptionsQuery;
+  snapshot_options_response: DecisionPolicySnapshotOptionView[];
   validate_draft_request: ValidatePolicyDraftRequest;
   validation_response: PolicyValidationView;
 }
 export interface ActivatePolicyDraftRequest {
   approval_id: string;
+  candidate_bundle_hash: string;
   expected_active_revision_id?: null | string;
+  expected_bundle_generation: number;
   idempotency_key: string;
   preflight_token: string;
   reason: string;
@@ -289,6 +310,11 @@ export interface PolicyActivationResultView {
   activation: PolicyActivationView;
   activation_kind: PolicyActivationKind;
   applied_revision: PolicyRevisionView;
+  committed_generation: number;
+  committed_revision_vector: PolicyRevisionBundle;
+  committed_snapshot_hash: string;
+  committed_snapshot_id: string;
+  outcome: PolicyActivationOutcome;
 }
 /**
  * Immutable activation record exposed by the Config API.
@@ -297,10 +323,13 @@ export interface PolicyActivationView {
   activated_at: string;
   activated_by: PolicyActorView;
   activation_kind: PolicyActivationKind;
-  audit_event_id?: null | string;
+  activation_request_hash: string;
+  audit_event_id: string;
+  bundle_generation: number;
   created_at: string;
   decision_policy_snapshot_id: string;
   expected_active_revision_id?: null | string;
+  expected_bundle_generation: number;
   idempotency_key: string;
   policy_activation_id: string;
   policy_approval_id: string;
@@ -1166,6 +1195,10 @@ export interface SemiAutoCanaryConfig {
 export interface PolicyValidationEvidence {
   issues?: PolicyValidationIssue[];
   preflight?: PolicyPreflightResult[];
+  /**
+   * Exact active bundle against which this revision was validated.
+   */
+  subject?: null | PolicyValidationSubject;
 }
 /**
  * One stable, machine-readable validation diagnostic.
@@ -1194,6 +1227,25 @@ export interface PolicyPreflightResult {
   outcome: CheckOutcome;
 }
 /**
+ * Immutable subject bound to typed validation, preflight and approval.
+ */
+export interface PolicyValidationSubject {
+  base_generation: number;
+  base_revision_vector: PolicyRevisionBundle;
+  candidate_bundle_hash: string;
+}
+/**
+ * Revision identities frozen at a decision boundary.
+ */
+export interface PolicyRevisionBundle {
+  execution_authorization?: null | string;
+  execution_risk_policy?: null | string;
+  model_routing?: null | string;
+  operational_control?: null | string;
+  recommendation_policy?: null | string;
+  report_schedule?: null | string;
+}
+/**
  * Immutable approval record exposed by the Config API.
  */
 export interface PolicyApprovalView {
@@ -1207,6 +1259,7 @@ export interface PolicyApprovalView {
   reason: string;
   resource_kind: ConfigResourceKind;
   revision_hash: string;
+  validation_subject?: null | PolicyValidationSubject;
 }
 export interface ApprovePolicyDraftRequest {
   decision: PolicyApprovalDecision;
@@ -1281,9 +1334,11 @@ export interface ProductionBaselineView {
   build_commit: string;
   clickhouse_schema_fingerprint: string;
   created_at: string;
+  decision_policy_snapshot_id: string;
   environment: string;
   evidence: ProductionSealEvidence;
   lifecycle_policy_hash: string;
+  policy_bundle_generation: number;
   policy_bundle_hash: string;
   postgres_schema_fingerprint: string;
   production_baseline_id: string;
@@ -1317,7 +1372,9 @@ export interface PolicyResourceSchemaView {
   schema_version: SchemaVersion;
 }
 export interface ConfigResourcesView {
+  active_bundle_generation: number;
   active_policy_bundle_hash?: null | string;
+  active_snapshot_id?: null | string;
   resources: ConfigResourceSummaryView[];
 }
 export interface ConfigResourceSummaryView {
@@ -1342,8 +1399,16 @@ export interface SealProductionRequest {
   environment: string;
   reason: string;
 }
-export interface ProductionSealEvidenceView {
-  evidence: ProductionSealEvidence;
+export interface ConfigSnapshotOptionsQuery {
+  limit?: null | number;
+}
+export interface DecisionPolicySnapshotOptionView {
+  bundle_generation: number;
+  created_at: string;
+  decision_policy_snapshot_id: string;
+  revision_vector: PolicyRevisionBundle;
+  snapshot_hash: string;
+  source: DecisionPolicySnapshotSource;
 }
 export interface ValidatePolicyDraftRequest {
   reason: string;

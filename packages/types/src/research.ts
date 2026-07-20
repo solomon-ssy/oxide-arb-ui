@@ -102,6 +102,7 @@ export interface DatasetManifestView {
   knowledge_lag_secs: number;
   label_schema_hash: string;
   model_spec_id: string;
+  model_spec_definition_hash: string;
   profile_ref: ResearchProfileRef;
   purpose: DatasetPurpose;
   research_program_hash: string;
@@ -122,6 +123,7 @@ export interface DatasetManifestView {
 export interface TrainingDatasetPlanView {
   training_dataset_id: UuidString;
   model_spec_id: string;
+  model_spec_definition_hash: string;
   decision_policy_snapshot_id: UuidString;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
@@ -171,6 +173,7 @@ export type ReturnModelView =
 export interface TrainingDatasetView {
   training_dataset_id: UuidString;
   model_spec_id: string;
+  model_spec_definition_hash: string;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   status: TrainingDatasetStatus;
@@ -373,20 +376,20 @@ export interface RankingDiagnosticsMetrics {
 /** Discriminates the physical meaning of `held_out_objective` across families. */
 export type HeldOutMetricKind =
   | 'mean_rolling_fold_rank_ic'
-  | 'neg_total_ltr_loss';
+  | 'negative_total_learning_to_rank_loss';
 
 /** Out-of-sample / held-out validation objective shared by trainer families. */
 export interface ModelValidationMetrics {
   held_out_objective: DecimalString;
-  /** Weighted LTR: `-total_loss`; classical: mean rolling fold Rank IC. */
-  held_out_metric?: HeldOutMetricKind;
-  held_out_components?: null | ObjectiveComponentMetrics;
-  held_out_diagnostics?: null | RankingDiagnosticsMetrics;
+  held_out_components: null | ObjectiveComponentMetrics;
+  held_out_diagnostics: null | RankingDiagnosticsMetrics;
   fold_objectives: DecimalString[];
-  fold_components?: ObjectiveComponentMetrics[];
+  fold_components: ObjectiveComponentMetrics[];
   sample_count: number;
-  dropped_singleton_groups?: number;
-  dropped_singleton_rows?: number;
+  dropped_singleton_groups: number;
+  dropped_singleton_rows: number;
+  coordinate_search_effective_trials: number;
+  held_out_metric: HeldOutMetricKind;
 }
 
 /** Rank loss optimized by the governed weighted trainer (simplex surrogates). */
@@ -395,8 +398,8 @@ export type RankLossKind = 'pairwise_ranknet' | 'rank_ic_weighted_ranknet';
 /** Optimizer policy for weighted-model simplex training. */
 export type TrainingOptimizerKind = 'argmin' | 'coordinate_search';
 
-/** Frozen training-objective provenance on a model version. */
-export interface TrainingObjectiveView {
+/** Frozen LTR objective definition. */
+export interface TrainingObjectiveSpec {
   rank_loss: RankLossKind;
   optimizer: TrainingOptimizerKind;
   lambda_tail: DecimalString;
@@ -405,8 +408,29 @@ export interface TrainingObjectiveView {
   lambda_l2: DecimalString;
   ndcg_k: number;
   pseudo_top_n: number;
-  kind?: string;
-  note?: string;
+}
+
+export type ClassicalKind =
+  | 'elastic_net'
+  | 'extra_trees'
+  | 'lasso'
+  | 'logistic_regression'
+  | 'random_forest'
+  | 'ridge';
+
+export type ModelTrainingObjectiveDefinition =
+  | {
+      kind: 'classical_pointwise';
+      model_kind: ClassicalKind;
+      validation_metric: 'mean_rolling_fold_rank_ic';
+    }
+  | { kind: 'hand_authored'; rationale: string }
+  | { kind: 'learning_to_rank'; spec: TrainingObjectiveSpec };
+
+/** Versioned, closed training-provenance document persisted on a model version. */
+export interface ModelTrainingObjective {
+  format_version: 1;
+  definition: ModelTrainingObjectiveDefinition;
 }
 
 /** Component-level objective breakdown emitted by LTR trainers. */
@@ -421,90 +445,74 @@ export interface ObjectiveComponentMetrics {
   pair_count: number;
 }
 
-/** Weighted-factor / sell-scorer trainer metrics. */
-export interface WeightedFactorModelMetrics {
-  objective?: Record<string, unknown> | TrainingObjectiveView;
-  in_sample: {
-    components?: ObjectiveComponentMetrics;
-    diagnostics?: RankingDiagnosticsMetrics;
-    objective_value: DecimalString;
-    summary: string;
-  };
-  validation: ModelValidationMetrics;
+export interface LearningToRankInSampleMetrics {
+  objective_value: DecimalString;
+  components: ObjectiveComponentMetrics;
+  diagnostics: null | RankingDiagnosticsMetrics;
+  summary: string;
 }
 
-/** Classical (feature-matrix) trainer metrics (`ml-classical` feature). */
-export interface ClassicalModelMetrics {
-  kind: string;
-  objective?: Record<string, unknown>;
-  in_sample: {
-    feature_count: number;
-    train_samples: number;
-    validation_objective: DecimalString;
-  };
-  validation: ModelValidationMetrics;
-  feature_importances: { feature: string; importance: DecimalString }[];
+export interface ClassicalInSampleMetrics {
+  validation_objective: DecimalString;
+  train_samples: number;
+  feature_count: number;
 }
 
-/**
- * `TrainedModelView.metrics` — the backend emits a family-shaped JSON object
- * with no shared discriminant tag (weighted-factor omits `kind`, classical
- * carries it), and exit-scorer paths emit `{}`. Consumers feature-detect; the
- * `Record` arm keeps forward-compat with future trainer families.
- */
-export type ModelMetrics =
-  | ClassicalModelMetrics
-  | Record<string, unknown>
-  | WeightedFactorModelMetrics;
-
-export interface FittedInputStateRatesView {
-  missing: DecimalString;
-  not_applicable: DecimalString;
-  observed: DecimalString;
-  substituted: DecimalString;
-}
-
-export interface FittedInputColumnView {
-  category_vocabulary: string[];
+export interface ModelFeatureImportance {
   feature: string;
-  mean: DecimalString | null;
-  median: DecimalString | null;
-  required: boolean;
-  state_rates: FittedInputStateRatesView;
-  std: DecimalString | null;
-  unit: string;
-  value_kind: string;
+  importance: DecimalString;
 }
 
-export interface EncodedModelColumnView {
-  kind: string;
-  name: string;
-  source_feature: string;
-}
+export type ModelArtifactTrainingLineage =
+  | {
+      factor_inputs: string[];
+      input_contract_hash: string;
+      input_transform_hash: string;
+      kind: 'factor_native';
+      training_dataset_hash: string;
+      training_input_hash: string;
+    }
+  | {
+      input_contract_hash: string;
+      input_transform_hash: string;
+      kind: 'fitted_feature_matrix';
+      model_kind: ClassicalKind;
+      serialization_format: 'bincode' | 'json';
+      serialized_model_hash: string;
+      training_dataset_hash: string;
+      training_input_hash: string;
+    };
 
-export interface ModelArtifactDiagnosticsView {
-  factor_inputs?: string[];
-  format_version: number;
-  input_contract?: ModelInputContract;
-  input_contract_hash?: string;
-  input_transform?: {
-    encoded_columns: EncodedModelColumnView[];
-    inputs: FittedInputColumnView[];
-  };
-  input_transform_hash?: string;
-  raw_inputs?: Array<ModelInputSpec | string>;
-  serialization_format?: string;
-  serialized_model_hash?: string;
-  serialized_model_uri?: string;
-  training_dataset_hash: string;
-  training_input_hash: string;
-  transform_kind: 'factor_native' | 'fitted_feature_matrix';
+export type ModelVersionMetricsDefinition =
+  | {
+      artifact_lineage: ModelArtifactTrainingLineage;
+      feature_importances: ModelFeatureImportance[];
+      in_sample: ClassicalInSampleMetrics;
+      kind: 'classical_pointwise';
+      model_kind: ClassicalKind;
+      validation: ModelValidationMetrics;
+    }
+  | {
+      artifact_lineage: ModelArtifactTrainingLineage;
+      in_sample: LearningToRankInSampleMetrics;
+      kind: 'learning_to_rank';
+      validation: ModelValidationMetrics;
+    }
+  | { kind: 'not_measured'; rationale: string };
+
+/** Closed, versioned model metrics document; no untyped forward-compat arm. */
+export interface ModelVersionMetrics {
+  format_version: 1;
+  definition: ModelVersionMetricsDefinition;
 }
 
 /** `GET /research/models/{id}` / train result. */
 export interface TrainedModelView {
   model_version_id: UuidString;
   model_spec_id: string;
+  model_spec_name: string;
+  model_spec_thesis: ModelSpecThesis;
+  model_spec_definition_hash: string;
   version: number;
   artifact_hash: string;
   /** Immutable trade policy binding carried by artifact format v3. */
@@ -514,9 +522,9 @@ export interface TrainedModelView {
   /** CPCV path set bound for publish gates (`undefined` until bound). */
   publish_path_set_id?: null | UuidString;
   publication_status: PublicationStatus;
-  metrics: ModelMetrics;
+  metrics: ModelVersionMetrics;
   /** Frozen objective provenance; classical/imported models use explicit non-LTR records. */
-  training_objective: Record<string, unknown> | TrainingObjectiveView;
+  training_objective: ModelTrainingObjective;
   created_at: IsoDateTime;
   /** Present on `POST .../train` only — materialization run id for WS hints. */
   model_run_id?: UuidString;
@@ -634,20 +642,30 @@ export interface FeatureContractView {
   features: FeatureContractEntryView[];
 }
 
+/** Closed human-authored thesis carried by one immutable model specification. */
+export interface ModelSpecThesis {
+  summary: string;
+  hypothesis: string;
+  limitations: string[];
+}
+
 /** Model-spec catalog projection (the dataset/training selector source). */
 export interface QuantModelSpecView {
   model_spec_id: string;
   name: string;
-  model_family: string;
+  model_family: ModelFamily;
   prediction_horizon_secs: number;
   feature_schema_version: number;
   label_schema_version: number;
-  spec_json: unknown;
+  thesis: ModelSpecThesis;
   input_contract: ModelInputContract;
   training_contract: ModelTrainingContract;
-  status: PublicationStatus;
+  definition_hash: string;
+  created_by_user_id: null | string;
+  created_by_label: string;
+  created_by_role: null | string;
+  reason: string;
   created_at: IsoDateTime;
-  updated_at: IsoDateTime;
 }
 
 /** `POST /research/model-specs` governed request body (mirrors Rust `CreateModelSpecRequest`). */
@@ -657,7 +675,7 @@ export interface CreateModelSpecRequest {
   prediction_horizon_secs: number;
   feature_schema_version?: number;
   label_schema_version?: number;
-  spec_json?: unknown;
+  thesis: ModelSpecThesis;
   input_contract: ModelInputContract;
   training_contract: ModelTrainingContract;
   reason: string;
@@ -666,7 +684,6 @@ export interface CreateModelSpecRequest {
 /** Filter + pagination for `GET /research/model-specs`. */
 export interface ModelSpecListQuery extends PageQuery {
   model_family?: ModelFamily;
-  status?: PublicationStatus;
 }
 
 /** Filter + pagination for `GET /research/models`. */
@@ -1044,9 +1061,9 @@ export interface FactorDefinitionView {
   output_schema_version: string;
   status: PublicationStatus;
   /** Normalization method projected from the governed definition. */
-  normalization: FactorNormalization | null;
+  normalization: FactorNormalization;
   /** Default contribution direction. */
-  direction: FactorDirection | null;
+  direction: FactorDirection;
   /** Stable feature names this factor consumes. */
   input_features: string[];
   /** Whether the factor is required (declares at least one quality gate). */

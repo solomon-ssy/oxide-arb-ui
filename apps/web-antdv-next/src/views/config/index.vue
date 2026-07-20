@@ -153,7 +153,9 @@ onMounted(() => void loadOverview());
                 <IconifyIcon icon="lucide:sliders-horizontal" />
               </span>
               <div>
-                <p class="text-primary text-xs font-semibold tracking-wide">
+                <p
+                  class="config-accent-text text-xs font-semibold tracking-wide"
+                >
                   {{ $t('page.config.eyebrow') }}
                 </p>
                 <h1 id="config-overview-title" class="text-xl font-semibold">
@@ -190,6 +192,12 @@ onMounted(() => void loadOverview());
             <dt>{{ $t('page.config.status.lifecycle') }}</dt>
             <dd>
               <Tag
+                :class="{
+                  'config-success-tag':
+                    lifecycle?.state === 'production_frozen',
+                  'config-warning-tag':
+                    lifecycle?.state !== 'production_frozen',
+                }"
                 :color="
                   lifecycle?.state === 'production_frozen'
                     ? 'success'
@@ -217,7 +225,13 @@ onMounted(() => void loadOverview());
           <div class="config-status-cell">
             <dt>{{ $t('page.config.status.restart') }}</dt>
             <dd>
-              <Tag :color="restartRequired ? 'warning' : 'success'">
+              <Tag
+                :class="{
+                  'config-success-tag': !restartRequired,
+                  'config-warning-tag': restartRequired,
+                }"
+                :color="restartRequired ? 'warning' : 'success'"
+              >
                 {{
                   $t(
                     restartRequired
@@ -267,6 +281,7 @@ onMounted(() => void loadOverview());
               { 'config-motion': reducedMotion !== 'reduce' },
             ]"
             :style="{ '--enter-index': index }"
+            :data-testid="`config-resource-${resource.kind}`"
             type="button"
             @click="openResource(resource.kind)"
           >
@@ -309,17 +324,21 @@ onMounted(() => void loadOverview());
               </div>
             </dl>
             <div class="mt-3 flex items-center justify-between">
-              <Tag v-if="resource.pending_approval_count > 0" color="warning">
+              <Tag
+                v-if="resource.pending_approval_count > 0"
+                class="config-warning-tag"
+                color="warning"
+              >
                 {{
                   $t('page.config.resource.pendingCount', {
                     count: resource.pending_approval_count,
                   })
                 }}
               </Tag>
-              <Tag v-else color="success">
+              <Tag v-else class="config-success-tag" color="success">
                 {{ $t('page.config.resource.active') }}
               </Tag>
-              <span class="text-primary text-xs font-medium">
+              <span class="config-accent-text text-xs font-medium">
                 {{ $t('page.config.resource.open') }}
               </span>
             </div>
@@ -351,7 +370,7 @@ onMounted(() => void loadOverview());
             class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2 py-2.5"
           >
             <span
-              class="bg-primary/10 text-primary grid size-8 place-items-center rounded-full"
+              class="config-accent-icon grid size-8 place-items-center rounded-full"
             >
               <IconifyIcon
                 :icon="
@@ -416,6 +435,31 @@ onMounted(() => void loadOverview());
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.config-accent-text {
+  color: hsl(var(--foreground));
+}
+
+.config-accent-icon {
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted));
+}
+
+.text-muted-foreground {
+  color: hsl(var(--foreground));
+}
+
+.config-success-tag {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--success)) !important;
+}
+
+.config-warning-tag {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--warning)) !important;
 }
 
 .config-icon {
