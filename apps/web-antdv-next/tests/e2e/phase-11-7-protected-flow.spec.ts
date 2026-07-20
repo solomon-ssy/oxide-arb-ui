@@ -10,17 +10,18 @@ interface E2eFixtures {
   model_version_id: string;
   pending_intent_id: string;
   position_id: string;
+  research_profile_ref: {
+    content_hash: string;
+    id: string;
+    version: number;
+  };
   report_id: string;
   trade_policy_artifact_id: string;
   unavailable_recommendation_id: string;
   waiting_intent_id: string;
 }
 
-const BACKEND = 'http://127.0.0.1:8088';
-
-test.beforeEach(({ page: _page }, testInfo) => {
-  if (process.env.CI) testInfo.snapshotSuffix = 'darwin';
-});
+const BACKEND = process.env.PLAYWRIGHT_BACKEND_URL ?? 'http://127.0.0.1:8088';
 
 async function waitForShell(page: Page) {
   await page.waitForTimeout(500);
@@ -38,10 +39,13 @@ async function ensureDesktopSidebarExpanded(page: Page) {
   const viewport = page.viewportSize();
   await page.mouse.move((viewport?.width ?? 1440) - 1, 1);
   await page.waitForTimeout(200);
-  if ((await collapseToggle.getAttribute('data-collapsed')) === 'false') return;
-
-  await collapseToggle.click();
-  await expect(collapseToggle).toHaveAttribute('data-collapsed', 'false');
+  if ((await collapseToggle.getAttribute('data-collapsed')) !== 'false') {
+    await collapseToggle.click();
+    await expect(collapseToggle).toHaveAttribute('data-collapsed', 'false');
+  }
+  // The layout content has a 300ms width transition independent of the toggle
+  // state attribute. Screenshots must observe the completed geometry.
+  await page.waitForTimeout(350);
 }
 
 async function loadFixtures(request: APIRequestContext) {
@@ -61,9 +65,22 @@ async function login(page: Page) {
 }
 
 async function dismissNotifications(page: Page) {
+  await page.waitForTimeout(200);
+  await expect(page.locator('.ant-message-notice')).toHaveCount(0, {
+    timeout: 10_000,
+  });
   await expect(page.locator('.ant-notification-notice')).toHaveCount(0, {
     timeout: 10_000,
   });
+}
+
+function volatileMask(page: Page) {
+  return [page.locator('[data-screenshot-volatile="true"]')];
+}
+
+async function resetMainScroll(page: Page) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.locator('main').evaluate((element) => element.scrollTo(0, 0));
 }
 
 async function setTheme(page: Page, dark: boolean) {
@@ -245,10 +262,12 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       /覆盖|Coverage|coverage/,
     );
     await ensureDesktopSidebarExpanded(page);
+    await dismissNotifications(page);
     await expect(page).toHaveScreenshot(
       'recommendation-unavailable-desktop.png',
       {
         fullPage: true,
+        mask: volatileMask(page),
       },
     );
 
@@ -260,8 +279,10 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       page.getByText(/操作员决策摘要|Decision summary/),
     ).toBeVisible();
     await ensureDesktopSidebarExpanded(page);
+    await dismissNotifications(page);
     await expect(page).toHaveScreenshot('recommendation-frozen-desktop.png', {
       fullPage: true,
+      mask: volatileMask(page),
     });
     await attachMetadata(testInfo, fixtures, [unavailableRoute, frozenRoute]);
   });
@@ -369,6 +390,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       maskColor: '#262626',
     };
     await ensureDesktopSidebarExpanded(page);
+    await resetMainScroll(page);
     await expect(page).toHaveScreenshot(
       'intent-qualified-before-claim-desktop.png',
       {
@@ -413,7 +435,9 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await waitForShell(page);
     const workbench = page.getByTestId('trade-policy-fit-workbench');
     await expect(workbench).toBeVisible();
-    await expect(workbench).toContainText('weather_forecast_24h@1');
+    await expect(workbench).toContainText(
+      `${fixtures.research_profile_ref.id}@${fixtures.research_profile_ref.version}`,
+    );
     await expect(page.getByTestId('profile-cash-budget')).toContainText('25');
     await expect(workbench).toContainText(/semi_auto_candidate/i);
 
@@ -455,6 +479,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
       'trade-policy-fit-blocked-desktop.png',
       {
         fullPage: true,
+        mask: volatileMask(page),
       },
     );
 
@@ -465,6 +490,7 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(page.getByTestId('enqueue-fit')).toBeDisabled();
     await expect(page).toHaveScreenshot('trade-policy-fit-blocked-narrow.png', {
       fullPage: true,
+      mask: volatileMask(page),
     });
     await attachMetadata(testInfo, fixtures, [route]);
   });
@@ -503,8 +529,9 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await expect(evidencePage.locator('body')).toContainText('"signed":true');
     await evidencePage.close();
     await ensureDesktopSidebarExpanded(page);
+    await resetMainScroll(page);
     await expect(page).toHaveScreenshot('trade-policy-audit-desktop.png', {
-      fullPage: true,
+      mask: volatileMask(page),
     });
 
     const modelRoute = `/research/models?open=${fixtures.model_version_id}`;
@@ -512,32 +539,39 @@ test.describe.serial('Phase 11.7 protected operational closeout', () => {
     await waitForShell(page);
     await expect(page.getByText(/交易策略绑定|Trade policy/i)).toBeVisible();
     await page.getByText(/交易策略绑定|Trade policy/i).click();
-    await expect(page.getByTestId('model-trade-policy-binding')).toContainText(
-      fixtures.trade_policy_artifact_id,
+    const modelBinding = page.getByTestId('model-trade-policy-binding');
+    await expect(modelBinding).toContainText(fixtures.trade_policy_artifact_id);
+    await expect(modelBinding).toHaveScreenshot(
+      'model-policy-binding-desktop.png',
+      {
+        mask: [modelBinding.locator('[data-screenshot-volatile="true"]')],
+      },
     );
-    await ensureDesktopSidebarExpanded(page);
-    await expect(page).toHaveScreenshot('model-policy-binding-desktop.png', {
-      fullPage: true,
-    });
 
     const positionRoute = `/quant/positions?open=${fixtures.position_id}`;
     await page.goto(positionRoute);
     await waitForShell(page);
     await expect(page.getByTestId('position-detail')).toBeVisible();
-    await expect(page.getByTestId('exit-monitor-card')).toBeVisible();
-    await expect(page.getByTestId('exit-monitor-card')).toContainText(
+    const exitMonitor = page.getByTestId('exit-monitor-card');
+    await expect(exitMonitor).toBeVisible();
+    await expect(exitMonitor).toContainText(
       /test-only governed reinference observation/,
     );
-    await ensureDesktopSidebarExpanded(page);
-    await expect(page).toHaveScreenshot('position-exit-monitor-desktop.png', {
-      fullPage: true,
-    });
+    await expect(exitMonitor).toHaveScreenshot(
+      'position-exit-monitor-desktop.png',
+      {
+        mask: [exitMonitor.locator('[data-screenshot-volatile="true"]')],
+      },
+    );
 
     await page.setViewportSize({ height: 932, width: 430 });
     await expect(page.getByTestId('position-detail')).toBeVisible();
-    await expect(page).toHaveScreenshot('position-exit-monitor-narrow.png', {
-      fullPage: true,
-    });
+    await expect(exitMonitor).toHaveScreenshot(
+      'position-exit-monitor-narrow.png',
+      {
+        mask: [exitMonitor.locator('[data-screenshot-volatile="true"]')],
+      },
+    );
     await attachMetadata(testInfo, fixtures, [
       policyRoute,
       modelRoute,

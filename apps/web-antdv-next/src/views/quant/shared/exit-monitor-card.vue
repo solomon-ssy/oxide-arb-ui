@@ -45,7 +45,10 @@ defineProps<{
         <span class="ml-2 font-mono">
           {{ formatPrice(observation.current_executable_bid) }}
         </span>
-        <span class="text-muted-foreground ml-2 text-xs">
+        <span
+          class="text-muted-foreground ml-2 inline-block w-[14rem] max-w-full text-xs"
+          data-screenshot-volatile="true"
+        >
           {{ observation.book_age_ms ?? EMPTY_PLACEHOLDER }} ms ·
           {{ formatDateTimeLocal(observation.book_observed_at) }}
         </span>
@@ -97,7 +100,10 @@ defineProps<{
                 formatBps(observation.latest_reinference.expected_return_bps)
               }}
             </span>
-            <span class="text-muted-foreground text-xs">
+            <span
+              class="text-muted-foreground text-xs"
+              data-screenshot-volatile="true"
+            >
               {{
                 formatDateTimeLocal(observation.latest_reinference.observed_at)
               }}
@@ -108,8 +114,10 @@ defineProps<{
         <template v-else>{{ EMPTY_PLACEHOLDER }}</template>
       </DescriptionsItem>
       <DescriptionsItem :label="$t('page.quantIntents.exitMonitor.cadence')">
-        {{ formatDateTimeLocal(observation.last_check_at) }} →
-        {{ formatDateTimeLocal(observation.next_check_at) }}
+        <span data-screenshot-volatile="true">
+          {{ formatDateTimeLocal(observation.last_check_at) }} →
+          {{ formatDateTimeLocal(observation.next_check_at) }}
+        </span>
       </DescriptionsItem>
     </Descriptions>
   </Card>

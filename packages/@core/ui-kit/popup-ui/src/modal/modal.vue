@@ -323,6 +323,7 @@ function handleClosed() {
       <VbenLoading v-if="showLoading || submitting" spinning />
       <VbenIconButton
         v-if="fullscreenButton"
+        :aria-label="fullscreen ? $t('collapse') : $t('expand')"
         class="absolute top-3 right-10 flex-center size-6 rounded-full px-1 text-lg text-foreground/80 opacity-70 transition-opacity hover:bg-accent hover:text-accent-foreground hover:opacity-100 focus:outline-hidden disabled:pointer-events-none"
         @click="handleFullscreen"
       >

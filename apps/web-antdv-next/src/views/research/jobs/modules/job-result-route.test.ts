@@ -23,7 +23,12 @@ describe('jobResultRoute', () => {
   it('deep-links a FeatureParity result to its durable run evidence', () => {
     expect(
       jobResultRoute(
-        job({ result_ref: '01900000-0000-7000-8000-000000000099' }),
+        job({
+          result: {
+            id: '01900000-0000-7000-8000-000000000099',
+            kind: 'feature_parity_run',
+          },
+        }),
       ),
     ).toBe(
       '/research/feature-integrity?run_id=01900000-0000-7000-8000-000000000099',
@@ -31,6 +36,22 @@ describe('jobResultRoute', () => {
   });
 
   it('does not invent a destination when the terminal result is absent', () => {
-    expect(jobResultRoute(job({ result_ref: null }))).toBeUndefined();
+    expect(jobResultRoute(job({ result: null }))).toBeUndefined();
+  });
+
+  it('routes by the persisted result namespace instead of inferring from job kind', () => {
+    expect(
+      jobResultRoute(
+        job({
+          kind: 'model_calibration_fit',
+          result: {
+            id: '01900000-0000-7000-8000-000000000099',
+            kind: 'calibration_artifact',
+          },
+        }),
+      ),
+    ).toBe(
+      '/research/calibration-artifacts?open=01900000-0000-7000-8000-000000000099',
+    );
   });
 });

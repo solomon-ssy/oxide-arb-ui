@@ -660,16 +660,21 @@ watch(
                 <DescriptionsItem
                   :label="$t('page.research.models.detail.tradePolicyId')"
                 >
-                  <EntityRouteLink
-                    mono
-                    :label="model.trade_policy_artifact_id"
-                    :to="`/research/trade-policies/${model.trade_policy_artifact_id}`"
-                  />
+                  <span data-screenshot-volatile="true">
+                    <EntityRouteLink
+                      mono
+                      :label="model.trade_policy_artifact_id"
+                      :to="`/research/trade-policies/${model.trade_policy_artifact_id}`"
+                    />
+                  </span>
                 </DescriptionsItem>
                 <DescriptionsItem
                   :label="$t('page.research.models.detail.tradePolicyHash')"
                 >
-                  <span class="font-mono text-xs break-all">
+                  <span
+                    class="font-mono text-xs break-all"
+                    data-screenshot-volatile="true"
+                  >
                     {{ field(model.trade_policy_hash) }}
                   </span>
                 </DescriptionsItem>

@@ -131,7 +131,10 @@ onMounted(() => void loadExecutionOrders());
             {{ findTagOption(kindTagOptions, intent.intent_kind)?.label }}
           </Tag>
         </div>
-        <span class="font-mono text-xs break-all">
+        <span
+          class="font-mono text-xs break-all"
+          data-screenshot-volatile="true"
+        >
           {{ intent.order_intent_id }}
         </span>
       </div>
@@ -177,25 +180,33 @@ onMounted(() => void loadExecutionOrders());
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.identity.recommendationId')"
           >
-            <EntityRouteLink
-              mono
-              :label="intent.recommendation_id"
-              :to="`/quant/recommendations/${intent.recommendation_id}`"
-            />
+            <span data-screenshot-volatile="true">
+              <EntityRouteLink
+                mono
+                :label="intent.recommendation_id"
+                :to="`/quant/recommendations/${intent.recommendation_id}`"
+              />
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="
               $t('page.quantIntents.detail.identity.decisionPolicySnapshot')
             "
           >
-            <span class="font-mono text-xs break-all">
+            <span
+              class="font-mono text-xs break-all"
+              data-screenshot-volatile="true"
+            >
               {{ intent.decision_policy_snapshot_id }}
             </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.identity.modelVersion')"
           >
-            <span class="font-mono text-xs break-all">
+            <span
+              class="font-mono text-xs break-all"
+              data-screenshot-volatile="true"
+            >
               {{ intent.model_version_id }}
             </span>
           </DescriptionsItem>
@@ -221,12 +232,16 @@ onMounted(() => void loadExecutionOrders());
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.identity.createdAt')"
           >
-            {{ formatDateTimeLocal(intent.created_at) }}
+            <span data-screenshot-volatile="true">
+              {{ formatDateTimeLocal(intent.created_at) }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.identity.expiresAt')"
           >
-            {{ formatDateTimeLocal(intent.expires_at) }}
+            <span data-screenshot-volatile="true">
+              {{ formatDateTimeLocal(intent.expires_at) }}
+            </span>
           </DescriptionsItem>
         </Descriptions>
       </Card>
@@ -246,14 +261,19 @@ onMounted(() => void loadExecutionOrders());
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.approval.approvedBy')"
           >
-            <span class="font-mono text-xs break-all">
+            <span
+              class="font-mono text-xs break-all"
+              data-screenshot-volatile="true"
+            >
               {{ intent.approved_by ?? EMPTY_PLACEHOLDER }}
             </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.approval.approvedAt')"
           >
-            {{ formatDateTimeLocal(intent.approved_at) }}
+            <span data-screenshot-volatile="true">
+              {{ formatDateTimeLocal(intent.approved_at) }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.approval.approvalReason')"

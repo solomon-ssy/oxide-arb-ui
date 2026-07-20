@@ -14,7 +14,7 @@ import type {
 
 import type { PolicyClientValidationIssue } from './modules/policy-schema';
 
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -124,6 +124,20 @@ const editorValidationIssues = computed(() =>
 const validationIssues = computed(
   () => validation.value?.validation_evidence.issues ?? [],
 );
+
+async function focusInvalidField(path: string[]) {
+  await nextTick();
+  const fieldPath = path.join('.');
+  const inlineError = [
+    ...document.querySelectorAll<HTMLElement>('[data-field-path]'),
+  ].find((element) => element.dataset.fieldPath === fieldPath);
+  const control =
+    inlineError?.previousElementSibling?.querySelector<HTMLElement>(
+      'input:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+  control?.focus({ preventScroll: false });
+  control?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 const preflightChecks = computed(
   () => validation.value?.validation_evidence.preflight ?? [],
 );
@@ -552,7 +566,7 @@ onMounted(() => void loadResource());
               <IconifyIcon :icon="meta.icon" />
             </span>
             <div class="min-w-0">
-              <p class="text-primary text-xs font-semibold tracking-wide">
+              <p class="config-eyebrow text-xs font-semibold tracking-wide">
                 {{ $t('page.config.eyebrow') }}
               </p>
               <h1 class="truncate text-xl font-semibold">
@@ -566,7 +580,12 @@ onMounted(() => void loadResource());
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <Tag v-if="current?.revision" color="processing">
+            <Tag
+              v-if="current?.revision"
+              class="config-active-tag"
+              color="processing"
+              data-screenshot-volatile="true"
+            >
               {{ $t('page.config.resource.active') }} ·
               {{ shortId(current.revision.policy_revision_id) }}
             </Tag>
@@ -633,14 +652,17 @@ onMounted(() => void loadResource());
       </Alert>
       <Alert
         v-if="activationConflict"
-        :description="activationConflict"
         :message="$t('page.config.error.activationConflict')"
         closable
         data-testid="config-activation-conflict"
         show-icon
         type="error"
         @close="activationConflict = null"
-      />
+      >
+        <template #description>
+          <span data-screenshot-volatile="true">{{ activationConflict }}</span>
+        </template>
+      </Alert>
 
       <Skeleton v-if="loading" :paragraph="{ rows: 14 }" active />
 
@@ -752,12 +774,18 @@ onMounted(() => void loadResource());
                       v-for="issue in editorValidationIssues"
                       :key="`${issue.path.join('.')}:${issue.code}`"
                     >
-                      <strong class="font-mono text-xs">
-                        {{ issue.path.join('.') || 'document' }}
-                      </strong>
-                      <span class="ml-2">{{
-                        editorValidationMessage(issue)
-                      }}</span>
+                      <button
+                        class="focus-visible:ring-primary rounded-sm text-left focus-visible:ring-2 focus-visible:outline-none"
+                        type="button"
+                        @click="focusInvalidField(issue.path)"
+                      >
+                        <strong class="font-mono text-xs">
+                          {{ issue.path.join('.') || 'document' }}
+                        </strong>
+                        <span class="ml-2">{{
+                          editorValidationMessage(issue)
+                        }}</span>
+                      </button>
                     </li>
                   </ul>
                 </template>
@@ -824,11 +852,15 @@ onMounted(() => void loadResource());
                   <dl class="mt-2 grid gap-3 sm:grid-cols-2">
                     <div>
                       <dt>{{ $t('page.config.review.before') }}</dt>
-                      <dd>{{ formatPolicyValue(diff.before) }}</dd>
+                      <dd data-screenshot-volatile="true">
+                        {{ formatPolicyValue(diff.before) }}
+                      </dd>
                     </div>
                     <div>
                       <dt>{{ $t('page.config.review.after') }}</dt>
-                      <dd>{{ formatPolicyValue(diff.after) }}</dd>
+                      <dd data-screenshot-volatile="true">
+                        {{ formatPolicyValue(diff.after) }}
+                      </dd>
                     </div>
                   </dl>
                 </article>
@@ -1092,6 +1124,16 @@ onMounted(() => void loadResource());
 </template>
 
 <style scoped>
+.config-eyebrow,
+.config-active-tag {
+  color: hsl(var(--foreground)) !important;
+}
+
+.config-active-tag {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
 .resource-icon {
   display: inline-grid;
   flex: 0 0 auto;

@@ -220,7 +220,11 @@ function millis(value: number): string {
           <template v-if="entry.condition.kind === 'immediate'">
             {{ $t('page.quantRecommendations.entryPlan.immediate') }}
           </template>
-          <span v-else class="font-mono text-xs break-all">
+          <span
+            v-else
+            class="font-mono text-xs break-all"
+            data-screenshot-volatile="true"
+          >
             {{ entry.condition.content_hash }}
           </span>
         </DescriptionsItem>
@@ -262,12 +266,16 @@ function millis(value: number): string {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.validFrom')"
         >
-          {{ formatDateTimeLocal(entry.valid_from) }}
+          <span data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(entry.valid_from) }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.entryPlan.validUntil')"
         >
-          {{ formatDateTimeLocal(entry.valid_until) }}
+          <span data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(entry.valid_until) }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="

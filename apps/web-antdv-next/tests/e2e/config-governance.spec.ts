@@ -1,36 +1,15 @@
-import type { Page, Route } from 'playwright/test';
+import type { Locator, Page, Route } from 'playwright/test';
 
 import type { LifecycleView } from '@vben/types/config-api';
 
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from 'playwright/test';
 
-const CONFIG_STATE_MANIFEST = [
-  'overview_healthy',
-  'overview_pending_approval_restart_required',
-  'recommendation_default',
-  'draft_dirty',
-  'inline_validation_error',
-  'review_diff',
-  'approval_pending',
-  'activation_preflight',
-  'activation_success',
-  'stale_generation_conflict',
-  'rollback_review',
-  'rollback_result',
-  'model_routing_picker',
-  'report_schedule_preview',
-  'operational_control_halted',
-  'deployment_redacted',
-  'lifecycle_preproduction',
-  'production_seal_confirmation',
-  'production_frozen',
-  'no_permission_read_only',
-  'backend_error_recovery',
-  'execution_authorization',
-  'viewport_1024_overflow',
-  'reduced_motion',
-] as const;
+const CONFIG_RESOURCE_PATH = '/system/config/recommendation_policy';
+const DRAFT_MUTATION_STRIDE = 100;
+const VIEWER_USERNAME = 'config-viewer';
+const VIEWER_PASSWORD = 'config-viewer-password';
+let draftMutationSequence = 0;
 
 const PRINCIPAL_ROUTES = [
   ['/system/config', 'config-overview'],
@@ -45,10 +24,6 @@ const PRINCIPAL_ROUTES = [
   ['/system/config/activity', 'config-activity'],
 ] as const;
 
-test.beforeEach(({ page: _page }, testInfo) => {
-  if (process.env.CI) testInfo.snapshotSuffix = 'darwin';
-});
-
 async function waitForShell(page: Page) {
   await expect(page.getByText(/加载菜单中|Loading menu/i)).toHaveCount(0, {
     timeout: 15_000,
@@ -58,13 +33,37 @@ async function waitForShell(page: Page) {
   });
 }
 
-async function login(page: Page) {
+async function login(page: Page, username = 'admin', password = 'admin') {
   await page.goto('/auth/login');
-  await page.locator("input[name='username']").fill('admin');
-  await page.locator("input[name='password']").fill('admin');
+  await page.locator("input[name='username']").fill(username);
+  await page.locator("input[name='password']").fill(password);
   await page.getByRole('button', { name: /登录|Login/i }).click();
   await expect(page).toHaveURL((url) => url.pathname === '/dashboard');
   await waitForShell(page);
+}
+
+async function openConfigResource(
+  page: Page,
+  resource = 'recommendation_policy',
+) {
+  await page.goto(`/system/config/${resource}`);
+  await waitForShell(page);
+  const workspace = page.getByTestId('config-resource-workspace');
+  await expect(workspace).toBeVisible();
+  return workspace;
+}
+
+async function settleAnimations(page: Page) {
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    await Promise.allSettled(
+      document
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished),
+    );
+  });
 }
 
 async function setTheme(page: Page, dark: boolean) {
@@ -72,11 +71,13 @@ async function setTheme(page: Page, dark: boolean) {
   const current = await html.evaluate((element) =>
     element.classList.contains('dark'),
   );
-  if (current !== dark)
+  if (current !== dark) {
     await page.locator('button.theme-toggle').first().click();
+  }
   await (dark
     ? expect(html).toHaveClass(/(?:^|\s)dark(?:\s|$)/)
     : expect(html).not.toHaveClass(/(?:^|\s)dark(?:\s|$)/));
+  await settleAnimations(page);
 }
 
 async function expectNoHorizontalOverflow(page: Page) {
@@ -89,9 +90,10 @@ async function expectNoHorizontalOverflow(page: Page) {
   ).toBeTruthy();
 }
 
-async function expectConfigOverviewAccessible(page: Page) {
+async function expectAccessible(page: Page, selector: string) {
+  await settleAnimations(page);
   const accessibility = await new AxeBuilder({ page })
-    .include('[data-testid="config-overview"]')
+    .include(selector)
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(
@@ -101,21 +103,112 @@ async function expectConfigOverviewAccessible(page: Page) {
   ).toEqual([]);
 }
 
+async function expectDialogFocus(page: Page) {
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  expect(
+    await dialog.evaluate((element) =>
+      element.contains(document.activeElement),
+    ),
+  ).toBeTruthy();
+}
+
 async function confirmGovernedAction(page: Page, reason: string) {
   const modal = page.getByTestId('governed-action-modal');
   await expect(modal).toBeVisible();
+  await expectDialogFocus(page);
   await modal.getByTestId('governed-reason').fill(reason);
   await page
     .getByRole('dialog')
     .getByRole('button', { name: /确\s*认|Confirm/i })
     .click();
+  await expect(modal).toHaveCount(0);
+  await page.waitForTimeout(200);
+  await expect(page.locator('.ant-message-notice')).toHaveCount(0, {
+    timeout: 10_000,
+  });
+  await expect(page.locator('.ant-notification-notice')).toHaveCount(0, {
+    timeout: 10_000,
+  });
 }
 
 function volatileMask(page: Page) {
-  return [
-    page.locator('[data-screenshot-volatile="true"]'),
-    page.locator('.ant-notification'),
-  ];
+  return [page.locator('[data-screenshot-volatile="true"]')];
+}
+
+async function beginChangedDraft(page: Page) {
+  const workspace = await openConfigResource(page);
+  const edit = workspace.getByTestId('edit-config-draft');
+  await edit.focus();
+  await expect(edit).toBeFocused();
+  await page.keyboard.press('Enter');
+  const numericInput = workspace
+    .locator('.ant-input-number-input:not([disabled])')
+    .first();
+  await expect(numericInput).toBeVisible();
+  const original = Number(await numericInput.inputValue());
+  expect(Number.isFinite(original)).toBeTruthy();
+  draftMutationSequence += 1;
+  await numericInput.fill(
+    String(original + DRAFT_MUTATION_STRIDE + draftMutationSequence),
+  );
+  await page.keyboard.press('Tab');
+  await expect(workspace.getByTestId('save-config-draft')).toBeEnabled();
+  return workspace;
+}
+
+async function saveChangedDraft(page: Page) {
+  const workspace = await beginChangedDraft(page);
+  await workspace.getByTestId('save-config-draft').click();
+  await confirmGovernedAction(page, 'e2e create immutable Config draft');
+  await expect(workspace.getByTestId('config-review')).toBeVisible();
+  return workspace;
+}
+
+async function validateDraft(page: Page, workspace: Locator) {
+  await workspace.getByTestId('validate-config-draft').click();
+  await confirmGovernedAction(page, 'e2e validate exact Config candidate');
+  const validation = workspace.getByTestId('config-validation-result');
+  await expect(validation).toBeVisible();
+  await expect(validation).toContainText(/通过|Passed/i);
+  await expect(workspace.getByTestId('approve-config-draft')).toBeEnabled();
+}
+
+async function approveDraft(page: Page, workspace: Locator) {
+  await workspace.getByTestId('approve-config-draft').click();
+  await confirmGovernedAction(page, 'e2e approve exact Config revision');
+  await expect(workspace.getByTestId('activate-config-draft')).toBeEnabled();
+}
+
+async function prepareApprovedDraft(page: Page) {
+  const workspace = await saveChangedDraft(page);
+  await validateDraft(page, workspace);
+  await approveDraft(page, workspace);
+  return workspace;
+}
+
+async function activateDraft(page: Page, workspace: Locator) {
+  await workspace.getByTestId('activate-config-draft').click();
+  await confirmGovernedAction(page, 'e2e CAS activate Config revision');
+  await expect(
+    workspace.getByTestId('config-activation-success'),
+  ).toBeVisible();
+}
+
+async function activateFreshRevision(page: Page) {
+  const workspace = await prepareApprovedDraft(page);
+  await activateDraft(page, workspace);
+  return workspace;
+}
+
+async function startRollback(page: Page, workspace: Locator) {
+  await workspace.getByTestId('finish-config-workflow').click();
+  await waitForShell(page);
+  const rollback = workspace.getByTestId('review-config-rollback').first();
+  await expect(rollback).toBeEnabled();
+  await rollback.click();
+  await expect(workspace.getByTestId('config-review')).toBeVisible();
+  await expect(workspace).toContainText(/回滚|Rollback/i);
 }
 
 async function fulfillLifecycle(
@@ -124,9 +217,7 @@ async function fulfillLifecycle(
   checksPass: boolean,
 ) {
   const response = await route.fetch();
-  const body = (await response.json()) as {
-    data: LifecycleView;
-  };
+  const body = (await response.json()) as { data: LifecycleView };
   body.data.state = state;
   body.data.required_confirmation_phrase =
     state === 'production_frozen' ? null : 'SEAL PRODUCTION';
@@ -171,83 +262,28 @@ async function fulfillLifecycle(
   await route.fulfill({ response, json: body });
 }
 
-async function fulfillReadOnlyMe(route: Route) {
-  const response = await route.fetch();
-  const body = (await response.json()) as {
-    data: {
-      menus: MenuNode[];
-      roles: unknown[];
-    };
-  };
-  const denied = new Set([
-    'config:activate',
-    'config:approve',
-    'config:create',
-    'config:rollback',
-    'config_lifecycle:seal',
-  ]);
-  type MenuNode = {
-    children?: MenuNode[];
-    permission_code?: null | string;
-  };
-  const retainReadOnlyNodes = (nodes: MenuNode[]): MenuNode[] =>
-    nodes
-      .filter((node) => !denied.has(node.permission_code ?? ''))
-      .map((node) => ({
-        ...node,
-        children: node.children
-          ? retainReadOnlyNodes(node.children)
-          : node.children,
-      }));
-  body.data.roles = [];
-  body.data.menus = retainReadOnlyNodes(body.data.menus);
-  await route.fulfill({ response, json: body });
-}
-
-test.describe.serial('Config governance state matrix', () => {
-  test('the canonical state manifest retains every required acceptance state', () => {
-    expect(new Set(CONFIG_STATE_MANIFEST).size).toBe(24);
-    expect(CONFIG_STATE_MANIFEST).toEqual(
-      expect.arrayContaining([
-        'inline_validation_error',
-        'stale_generation_conflict',
-        'rollback_result',
-        'production_frozen',
-        'no_permission_read_only',
-        'backend_error_recovery',
-        'execution_authorization',
-        'viewport_1024_overflow',
-      ]),
-    );
-  });
-
-  test('overview and every principal Config page are accessible and do not overflow at 1024px', async ({
+test.describe
+  .serial('Config governance executable acceptance scenarios', () => {
+  test('[CFG-01] overview healthy is real, accessible, and theme-stable', async ({
     page,
   }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
     await login(page);
-    await page.setViewportSize({ height: 768, width: 1024 });
-    for (const [route, testId] of PRINCIPAL_ROUTES) {
-      await page.goto(route);
-      await waitForShell(page);
-      await expect(page.getByTestId(testId)).toBeVisible();
-      await expectNoHorizontalOverflow(page);
-    }
-
-    await page.setViewportSize({ height: 900, width: 1440 });
     await page.goto('/system/config');
     await waitForShell(page);
+    const overview = page.getByTestId('config-overview');
+    await expect(overview).toBeVisible();
     await expect(page.locator('[data-testid^="config-resource-"]')).toHaveCount(
       6,
     );
+    await expect(page.getByTestId('config-pending-approvals')).toHaveText('0');
     await setTheme(page, false);
-    await expectConfigOverviewAccessible(page);
+    await expectAccessible(page, '[data-testid="config-overview"]');
     await expect(page).toHaveScreenshot('config-overview-light-desktop.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
     await setTheme(page, true);
-    await expectConfigOverviewAccessible(page);
+    await expectAccessible(page, '[data-testid="config-overview"]');
     await expect(page).toHaveScreenshot('config-overview-dark-desktop.png', {
       fullPage: true,
       mask: volatileMask(page),
@@ -260,111 +296,133 @@ test.describe.serial('Config governance state matrix', () => {
     });
   });
 
-  test('keyboard workflow closes Draft, validation, approval, activation, and rollback', async ({
+  test('[CFG-02] overview reports a real approved candidate and deployment restart boundary', async ({
     page,
   }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
     await login(page);
-    await page.goto('/system/config/recommendation_policy');
+    await prepareApprovedDraft(page);
+    await page.goto('/system/config');
     await waitForShell(page);
-    const workspace = page.getByTestId('config-resource-workspace');
-    await workspace.getByTestId('edit-config-draft').focus();
-    await expect(workspace.getByTestId('edit-config-draft')).toBeFocused();
-    await page.keyboard.press('Enter');
+    const pending = page.getByTestId('config-pending-approvals');
+    await expect(pending).not.toHaveText('0');
+    await expect(page.getByTestId('config-restart-required')).toContainText(
+      /需要|Required/i,
+    );
+    await expect(
+      page.getByTestId('config-resource-recommendation_policy'),
+    ).toContainText(/待审批|pending/i);
+  });
 
-    const numericInput = workspace
-      .locator('.ant-input-number-input:not([disabled])')
-      .first();
-    await expect(numericInput).toBeVisible();
-    const original = Number(await numericInput.inputValue());
-    await numericInput.fill('');
+  test('[CFG-03] recommendation policy opens the active typed document by default', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await openConfigResource(page);
     await expect(
-      workspace.getByTestId('config-editor-error-summary'),
+      workspace.getByTestId('config-current-document'),
     ).toBeVisible();
-    await expect(
-      workspace.getByTestId('config-inline-error').first(),
-    ).toBeVisible();
-    await expect(page).toHaveScreenshot('config-inline-validation-error.png', {
+    await expect(workspace.getByTestId('edit-config-draft')).toBeVisible();
+    await expectAccessible(page, '[data-testid="config-resource-workspace"]');
+    await expect(page).toHaveScreenshot('config-recommendation-default.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
+  });
 
-    await numericInput.fill(String(original + 1));
-    await page.keyboard.press('Tab');
-    await expect(
-      workspace.getByTestId('config-editor-error-summary'),
-    ).toHaveCount(0);
+  test('[CFG-04] keyboard editing exposes a dirty draft without persisting it', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await beginChangedDraft(page);
+    await expect(workspace).toContainText(/已修改|changed/i);
     await expect(workspace.getByTestId('save-config-draft')).toBeEnabled();
     await expect(page).toHaveScreenshot('config-draft-dirty.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
+  });
 
-    await workspace.getByTestId('save-config-draft').click();
-    await confirmGovernedAction(page, 'e2e create immutable Config draft');
-    await expect(workspace.getByTestId('config-review')).toBeVisible();
-    await expect(page).toHaveScreenshot('config-review-diff.png', {
+  test('[CFG-05] invalid inline input focuses the explicit error contract', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await openConfigResource(page);
+    await workspace.getByTestId('edit-config-draft').click();
+    const numericInput = workspace
+      .locator('.ant-input-number-input:not([disabled])')
+      .first();
+    await numericInput.fill('');
+    const summary = workspace.getByTestId('config-editor-error-summary');
+    await expect(summary).toBeVisible();
+    await expect(
+      workspace.getByTestId('config-inline-error').first(),
+    ).toBeVisible();
+    await summary.getByRole('button').first().click();
+    await expect(numericInput).toBeFocused();
+    await expect(page).toHaveScreenshot('config-inline-validation-error.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
+  });
 
-    await workspace.getByTestId('validate-config-draft').click();
-    await confirmGovernedAction(page, 'e2e validate exact Config candidate');
-    const validation = workspace.getByTestId('config-validation-result');
-    await expect(validation).toBeVisible();
-    await expect(validation).toContainText(/通过|Passed/i);
+  test('[CFG-06] immutable draft review renders a real before/after diff', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await saveChangedDraft(page);
+    const review = workspace.getByTestId('config-review');
+    await expect(review).toBeVisible();
+    await expect(review.locator('.diff-row')).not.toHaveCount(0);
+    const firstDiffValues = await review
+      .locator('.diff-row')
+      .first()
+      .locator('dd')
+      .allTextContents();
+    expect(firstDiffValues).toHaveLength(2);
+    expect(firstDiffValues[0]).not.toBe(firstDiffValues[1]);
+    await page.setViewportSize({ height: 844, width: 390 });
+    await expectNoHorizontalOverflow(page);
+    await expect(page).toHaveScreenshot('config-review-diff-mobile.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
+  });
+
+  test('[CFG-07] validated revision remains approval-pending until an authorized decision', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await saveChangedDraft(page);
+    await validateDraft(page, workspace);
     await expect(workspace.getByTestId('approve-config-draft')).toBeEnabled();
+    await expect(workspace.getByTestId('activate-config-draft')).toHaveCount(0);
+    await expect(page).toHaveScreenshot('config-approval-pending.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
+  });
 
-    await workspace.getByTestId('approve-config-draft').click();
-    await confirmGovernedAction(page, 'e2e approve exact Config revision');
+  test('[CFG-08] approved revision exposes consumer preflight evidence before activation', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await prepareApprovedDraft(page);
+    await expect(
+      workspace.getByTestId('config-validation-result'),
+    ).toContainText(/通过|Passed/i);
+    await expect(workspace.locator('.preflight-row')).not.toHaveCount(0);
     await expect(workspace.getByTestId('activate-config-draft')).toBeEnabled();
     await expect(page).toHaveScreenshot('config-activation-preflight.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
+  });
 
-    let injectStaleGeneration = true;
-    await page.route(
-      '**/api/config/recommendation_policy/drafts/*/activate',
-      async (route) => {
-        await (injectStaleGeneration
-          ? route.fulfill({
-              contentType: 'application/json',
-              json: {
-                code: 409,
-                data: null,
-                message: 'stale policy bundle generation',
-              },
-              status: 409,
-            })
-          : route.continue());
-      },
-    );
-    await workspace.getByTestId('activate-config-draft').click();
-    await confirmGovernedAction(page, 'e2e CAS activate Config revision');
-    const conflict = workspace.getByTestId('config-activation-conflict');
-    await expect(conflict).toContainText(/stale policy bundle generation/i);
-    await expect(page.getByTestId('governed-action-modal')).toHaveCount(0);
-    await expect(
-      workspace.getByTestId('config-activation-success'),
-    ).toHaveCount(0);
-    await expect(workspace.getByTestId('activate-config-draft')).toHaveCount(0);
-    await expect(workspace.getByTestId('validate-config-draft')).toBeEnabled();
-    await expect(page).toHaveScreenshot(
-      'config-stale-generation-conflict.png',
-      {
-        fullPage: true,
-        mask: [page.locator('[data-screenshot-volatile="true"]')],
-      },
-    );
-
-    injectStaleGeneration = false;
-    await workspace.getByTestId('validate-config-draft').click();
-    await confirmGovernedAction(page, 'e2e revalidate after stale CAS');
-    await workspace.getByTestId('approve-config-draft').click();
-    await confirmGovernedAction(page, 'e2e reapprove after stale CAS');
-    await workspace.getByTestId('activate-config-draft').click();
-    await confirmGovernedAction(page, 'e2e CAS activate Config revision retry');
+  test('[CFG-09] CAS activation commits and renders exact lineage success', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await activateFreshRevision(page);
     await expect(
       workspace.getByTestId('config-activation-success'),
     ).toBeVisible();
@@ -372,22 +430,67 @@ test.describe.serial('Config governance state matrix', () => {
       fullPage: true,
       mask: volatileMask(page),
     });
+  });
 
-    await workspace.getByTestId('finish-config-workflow').click();
-    await waitForShell(page);
-    const rollback = workspace.getByTestId('review-config-rollback').first();
-    await expect(rollback).toBeEnabled();
-    await rollback.click();
-    await expect(workspace.getByTestId('config-review')).toBeVisible();
-    await expect(workspace).toContainText(/回滚|Rollback/i);
+  test('[CFG-10] two real browser contexts produce a stale generation conflict', async ({
+    browser,
+  }) => {
+    const firstContext = await browser.newContext();
+    const secondContext = await browser.newContext();
+    try {
+      const first = await firstContext.newPage();
+      const second = await secondContext.newPage();
+      await Promise.all([login(first), login(second)]);
+      const [firstWorkspace, secondWorkspace] = await Promise.all([
+        prepareApprovedDraft(first),
+        prepareApprovedDraft(second),
+      ]);
+      await activateDraft(first, firstWorkspace);
+      await secondWorkspace.getByTestId('activate-config-draft').click();
+      await confirmGovernedAction(
+        second,
+        'e2e stale CAS from concurrent browser context',
+      );
+      const conflict = secondWorkspace.getByTestId(
+        'config-activation-conflict',
+      );
+      await expect(conflict).toBeVisible();
+      await expect(conflict).toContainText(/generation|版本|代次/i);
+      await expect(
+        secondWorkspace.getByTestId('config-activation-success'),
+      ).toHaveCount(0);
+      await expect(second).toHaveScreenshot(
+        'config-stale-generation-conflict.png',
+        {
+          fullPage: true,
+          mask: volatileMask(second),
+        },
+      );
+    } finally {
+      await Promise.all([firstContext.close(), secondContext.close()]);
+    }
+  });
+
+  test('[CFG-11] rollback review binds an actual historical revision', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await activateFreshRevision(page);
+    await startRollback(page, workspace);
     await expect(page).toHaveScreenshot('config-rollback-review.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
-    await workspace.getByTestId('validate-config-draft').click();
-    await confirmGovernedAction(page, 'e2e revalidate rollback target');
-    await workspace.getByTestId('approve-config-draft').click();
-    await confirmGovernedAction(page, 'e2e approve rollback target');
+  });
+
+  test('[CFG-12] rollback revalidates, reapproves, and CAS-activates the target', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await activateFreshRevision(page);
+    await startRollback(page, workspace);
+    await validateDraft(page, workspace);
+    await approveDraft(page, workspace);
     await workspace.getByTestId('activate-config-draft').click();
     await confirmGovernedAction(page, 'e2e activate explicit rollback');
     await expect(
@@ -399,32 +502,119 @@ test.describe.serial('Config governance state matrix', () => {
     });
   });
 
-  test('specialized resources expose typed controls instead of free-form JSON', async ({
+  test('[CFG-13] model routing uses published-artifact pickers, never free-text IDs', async ({
     page,
   }) => {
     await login(page);
-    await page.setViewportSize({ height: 800, width: 1280 });
-    const resources = [
-      ['model_routing', /模型产物路由|Model artifact routing/i],
-      ['report_schedule', /下一次运行预览|Next-run preview/i],
-      ['operational_control', /Operational|运行控制|操作控制/i],
-      ['execution_authorization', /Execution Authorization|执行授权/i],
-    ] as const;
-    for (const [kind, text] of resources) {
-      await page.goto(`/system/config/${kind}`);
-      await waitForShell(page);
-      await expect(page.getByTestId('config-resource-workspace')).toContainText(
-        text,
-      );
-      await expectNoHorizontalOverflow(page);
-      await expect(page).toHaveScreenshot(`config-${kind}.png`, {
-        fullPage: true,
-        mask: volatileMask(page),
-      });
-    }
+    const workspace = await openConfigResource(page, 'model_routing');
+    const picker = workspace.getByTestId('model-routing-artifact-picker');
+    await expect(picker).toBeVisible();
+    await expect(picker.locator('.ant-select')).not.toHaveCount(0);
+    expect(
+      await picker
+        .locator('input')
+        .evaluateAll((inputs) =>
+          inputs.every((input) => input.closest('.ant-select') !== null),
+        ),
+    ).toBeTruthy();
+    await expect(page).toHaveScreenshot('config-model-routing.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
   });
 
-  test('lifecycle proves seal review and frozen mutation lockout without sealing the local database', async ({
+  test('[CFG-14] report schedule preview resolves real next-fire times', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await openConfigResource(page, 'report_schedule');
+    const preview = workspace.getByTestId('config-report-schedule-preview');
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('article')).not.toHaveCount(0);
+    await expect(preview).toContainText(/UTC|时区|timezone/i);
+    const occurrences = preview.locator('time');
+    await expect(occurrences).toHaveCount(5);
+    const fireTimes = await occurrences.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute('datetime') ?? ''),
+    );
+    expect(fireTimes.every((value) => Number.isFinite(Date.parse(value)))).toBe(
+      true,
+    );
+    expect(
+      fireTimes.every((value, index) => {
+        if (index === 0) {
+          return true;
+        }
+        const previous = fireTimes[index - 1] ?? '';
+        return Date.parse(value) > Date.parse(previous);
+      }),
+    ).toBe(true);
+    await expect(page).toHaveScreenshot('config-report-schedule.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
+  });
+
+  test('[CFG-15] operational control performs and recovers a real halted transition', async ({
+    page,
+  }) => {
+    await login(page);
+    const workspace = await openConfigResource(page, 'operational_control');
+    const panel = workspace.getByTestId('config-operational-control');
+    await panel
+      .getByRole('button', { name: /停止执行|Stop execution/i })
+      .click();
+    await confirmGovernedAction(page, 'e2e halt execution control plane');
+    await expect(panel).toContainText(/受限|restricted/i);
+    await expect(page).toHaveScreenshot('config-operational-control.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
+    await panel
+      .getByRole('button', { name: /恢复正常运行|Restore normal/i })
+      .click();
+    await confirmGovernedAction(page, 'e2e restore execution control plane');
+    await expect(panel).not.toContainText(/受限|restricted/i);
+  });
+
+  test('[CFG-16] deployment exposes health and budgets while redacting secret values', async ({
+    page,
+  }) => {
+    await login(page);
+    await page.goto('/system/config/deployment');
+    await waitForShell(page);
+    const deployment = page.getByTestId('config-deployment');
+    await expect(
+      deployment.getByTestId('config-credential-health'),
+    ).not.toHaveCount(0);
+    await expect(deployment).not.toContainText('harness-redis-secret');
+    await expect(deployment).not.toContainText(
+      'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc',
+    );
+    await expectAccessible(page, '[data-testid="config-deployment"]');
+    await expect(page).toHaveScreenshot('config-deployment-redacted.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
+  });
+
+  test('[CFG-17] lifecycle reports the real preproduction resettable boundary', async ({
+    page,
+  }) => {
+    await login(page);
+    await page.goto('/system/config/lifecycle');
+    await waitForShell(page);
+    const lifecycle = page.getByTestId('config-lifecycle');
+    await expect(lifecycle).toContainText(
+      /投产前可重置|Pre-production.*resettable/i,
+    );
+    await expect(lifecycle).not.toContainText(
+      /已不可逆封存|production.*frozen/i,
+    );
+    await expectAccessible(page, '[data-testid="config-lifecycle"]');
+  });
+
+  test('[CFG-18] seal confirmation is keyboard-safe and never seals the local database', async ({
     page,
   }) => {
     await login(page);
@@ -433,32 +623,40 @@ test.describe.serial('Config governance state matrix', () => {
     );
     await page.goto('/system/config/lifecycle');
     await waitForShell(page);
-    const lifecycle = page.getByTestId('config-lifecycle');
-    const seal = lifecycle.getByRole('button', {
+    const seal = page.getByRole('button', {
       name: /封存生产基线|Seal Production Baseline/i,
     });
     await expect(seal).toBeEnabled();
-    await seal.click();
-    await expect(page.getByTestId('governed-action-modal')).toBeVisible();
+    await seal.focus();
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog');
+    await expectDialogFocus(page);
+    await expectAccessible(page, '[role="dialog"]');
+    await dialog
+      .locator('input:not([disabled])')
+      .last()
+      .fill('SEAL PRODUCTION');
+    await dialog.getByTestId('governed-reason').fill('e2e seal review only');
+    await expect(
+      dialog.getByRole('button', { name: /确\s*认|Confirm/i }),
+    ).toBeEnabled();
     await expect(page).toHaveScreenshot(
       'config-production-seal-confirmation.png',
-      {
-        fullPage: true,
-        mask: volatileMask(page),
-      },
+      { fullPage: true, mask: volatileMask(page) },
     );
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: /取\s*消|Cancel/i })
-      .click();
+    await dialog.getByRole('button', { name: /取\s*消|Cancel/i }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(seal).toBeFocused();
+  });
 
-    await page.unroute('**/api/config/lifecycle');
+  test('[CFG-19] frozen projection removes every mutation affordance', async ({
+    page,
+  }) => {
+    await login(page);
     await page.route('**/api/config/lifecycle', (route) =>
       fulfillLifecycle(route, 'production_frozen', true),
     );
-    await page.goto('/system/config/recommendation_policy');
-    await waitForShell(page);
-    const workspace = page.getByTestId('config-resource-workspace');
+    const workspace = await openConfigResource(page);
     await expect(workspace).toContainText(
       /生产基线已不可逆封存|production.*frozen/i,
     );
@@ -476,7 +674,31 @@ test.describe.serial('Config governance state matrix', () => {
     });
   });
 
-  test('a transient backend failure recovers through the explicit retry action', async ({
+  test('[CFG-20] a seeded viewer reads Config through real RBAC and cannot mutate', async ({
+    page,
+  }) => {
+    await login(page, VIEWER_USERNAME, VIEWER_PASSWORD);
+    const workspace = await openConfigResource(page);
+    await expect(workspace).toContainText(/只读|read.only/i);
+    await expect(workspace.getByTestId('edit-config-draft')).toHaveCount(0);
+    await expect(
+      workspace.getByTestId('config-current-document'),
+    ).toBeVisible();
+    expect(
+      await workspace
+        .getByTestId('review-config-rollback')
+        .evaluateAll((buttons) =>
+          buttons.every((button) => (button as HTMLButtonElement).disabled),
+        ),
+    ).toBeTruthy();
+    await expectAccessible(page, '[data-testid="config-resource-workspace"]');
+    await expect(page).toHaveScreenshot('config-no-permission-read-only.png', {
+      fullPage: true,
+      mask: volatileMask(page),
+    });
+  });
+
+  test('[CFG-21] an injected transient outage recovers through the real retry request', async ({
     page,
   }) => {
     await login(page);
@@ -493,7 +715,7 @@ test.describe.serial('Config governance state matrix', () => {
           : route.continue());
       },
     );
-    await page.goto('/system/config/recommendation_policy');
+    await page.goto(CONFIG_RESOURCE_PATH);
     await waitForShell(page);
     const workspace = page.getByTestId('config-resource-workspace');
     await expect(workspace).toContainText(/配置资源加载失败|Failed to load/i);
@@ -506,29 +728,63 @@ test.describe.serial('Config governance state matrix', () => {
     await expect(workspace.getByTestId('edit-config-draft')).toBeVisible();
   });
 
-  test('a read-only principal can inspect Config but cannot start governed mutations', async ({
+  test('[CFG-22] execution authorization renders typed canary and budget controls', async ({
     page,
   }) => {
-    await page.route('**/api/auth/me', fulfillReadOnlyMe);
     await login(page);
-    await page.goto('/system/config/recommendation_policy');
-    await waitForShell(page);
-    const workspace = page.getByTestId('config-resource-workspace');
-    await expect(workspace).toContainText(/只读|read.only/i);
-    await expect(workspace.getByTestId('edit-config-draft')).toHaveCount(0);
-    expect(
-      await workspace
-        .getByTestId('review-config-rollback')
-        .evaluateAll((buttons) =>
-          buttons.every((button) => (button as HTMLButtonElement).disabled),
-        ),
-    ).toBeTruthy();
-    await expect(
-      workspace.getByTestId('config-current-document'),
-    ).toBeVisible();
-    await expect(page).toHaveScreenshot('config-no-permission-read-only.png', {
+    const workspace = await openConfigResource(page, 'execution_authorization');
+    await expect(workspace).toContainText(/执行授权|Execution Authorization/i);
+    await expect(workspace.locator('.ant-input-number-input')).not.toHaveCount(
+      0,
+    );
+    await expect(workspace.locator('textarea')).toHaveCount(0);
+    await expect(page).toHaveScreenshot('config-execution-authorization.png', {
       fullPage: true,
       mask: volatileMask(page),
     });
+  });
+
+  test('[X-01] every principal page stays within the 1024px viewport', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await login(page);
+    await page.setViewportSize({ height: 768, width: 1024 });
+    for (const [route, testId] of PRINCIPAL_ROUTES) {
+      await page.goto(route);
+      await waitForShell(page);
+      await expect(page.getByTestId(testId)).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    }
+  });
+
+  test('[X-02] reduced motion removes Config entry animation and long transitions', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await login(page);
+    await page.goto('/system/config');
+    await waitForShell(page);
+    await expect(page.locator('.config-motion')).toHaveCount(0);
+    const motion = await page
+      .locator('.config-resource-card')
+      .first()
+      .evaluate((element) => {
+        const style = getComputedStyle(element);
+        const durationMs = (duration: string) => {
+          const value = Number.parseFloat(duration);
+          return duration.endsWith('ms') ? value : value * 1000;
+        };
+        return {
+          animationName: style.animationName,
+          maxTransitionDurationMs: Math.max(
+            ...style.transitionDuration
+              .split(',')
+              .map((duration) => durationMs(duration)),
+          ),
+        };
+      });
+    expect(motion.animationName).toBe('none');
+    expect(motion.maxTransitionDurationMs).toBeLessThanOrEqual(1);
   });
 });

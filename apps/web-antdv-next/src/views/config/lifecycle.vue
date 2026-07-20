@@ -163,7 +163,7 @@ onMounted(() => void loadLifecycle());
             <IconifyIcon icon="lucide:shield-check" />
           </span>
           <div>
-            <p class="text-primary text-xs font-semibold tracking-wide">
+            <p class="config-eyebrow text-xs font-semibold tracking-wide">
               {{ $t('page.config.eyebrow') }}
             </p>
             <h1 class="text-xl font-semibold">
@@ -343,6 +343,10 @@ onMounted(() => void loadLifecycle());
 </template>
 
 <style scoped>
+.config-eyebrow {
+  color: hsl(var(--foreground));
+}
+
 .section-icon {
   display: inline-grid;
   flex: 0 0 auto;

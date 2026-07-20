@@ -4,7 +4,7 @@ import type {
   PolicyJsonSchema,
 } from './policy-schema';
 
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 
 import { IconifyIcon } from '@vben/icons';
 
@@ -55,6 +55,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: unknown];
 }>();
 
+const controlId = useId();
 const resolved = computed(() =>
   resolvePolicySchema(props.rootSchema, props.schema),
 );
@@ -244,7 +245,7 @@ function validationMessage(issue: PolicyClientValidationIssue) {
 <template>
   <div v-if="resolved.oneOf && isScalarUnion" class="policy-field">
     <div class="policy-label-row">
-      <label class="policy-label">{{ label }}</label>
+      <label :for="controlId" class="policy-label">{{ label }}</label>
       <Tooltip v-if="description" :title="description">
         <IconifyIcon
           icon="lucide:circle-help"
@@ -253,7 +254,9 @@ function validationMessage(issue: PolicyClientValidationIssue) {
       </Tooltip>
     </div>
     <Select
+      :aria-label="label"
       :disabled="disabled"
+      :id="controlId"
       :options="scalarUnionOptions"
       :value="modelValue"
       class="w-full"
@@ -263,7 +266,7 @@ function validationMessage(issue: PolicyClientValidationIssue) {
 
   <div v-else-if="resolved.oneOf" class="policy-field">
     <div class="policy-label-row">
-      <label class="policy-label">{{ label }}</label>
+      <label :for="controlId" class="policy-label">{{ label }}</label>
       <Tooltip v-if="description" :title="description">
         <IconifyIcon
           icon="lucide:circle-help"
@@ -272,7 +275,9 @@ function validationMessage(issue: PolicyClientValidationIssue) {
       </Tooltip>
     </div>
     <Select
+      :aria-label="label"
       :disabled="disabled"
+      :id="controlId"
       :options="
         unionVariants.map((variant) => ({
           label: variant.label,
@@ -419,7 +424,7 @@ function validationMessage(issue: PolicyClientValidationIssue) {
 
   <div v-else-if="resolved.enum" class="policy-field">
     <div class="policy-label-row">
-      <label class="policy-label">{{ label }}</label>
+      <label :for="controlId" class="policy-label">{{ label }}</label>
       <Tooltip v-if="description" :title="description">
         <IconifyIcon
           icon="lucide:circle-help"
@@ -428,7 +433,9 @@ function validationMessage(issue: PolicyClientValidationIssue) {
       </Tooltip>
     </div>
     <Select
+      :aria-label="label"
       :disabled="disabled"
+      :id="controlId"
       :options="enumOptions"
       :value="modelValue"
       class="w-full"
@@ -451,7 +458,7 @@ function validationMessage(issue: PolicyClientValidationIssue) {
 
   <div v-else-if="type === 'integer' || type === 'number'" class="policy-field">
     <div class="policy-label-row">
-      <label class="policy-label">{{ label }}</label>
+      <label :for="controlId" class="policy-label">{{ label }}</label>
       <Tooltip v-if="description" :title="description">
         <IconifyIcon
           icon="lucide:circle-help"
@@ -460,7 +467,9 @@ function validationMessage(issue: PolicyClientValidationIssue) {
       </Tooltip>
     </div>
     <InputNumber
+      :aria-label="label"
       :disabled="disabled"
+      :id="controlId"
       :max="resolved.maximum"
       :min="resolved.minimum"
       :precision="type === 'integer' ? 0 : undefined"
@@ -475,7 +484,7 @@ function validationMessage(issue: PolicyClientValidationIssue) {
 
   <div v-else class="policy-field">
     <div class="policy-label-row">
-      <label class="policy-label">{{ label }}</label>
+      <label :for="controlId" class="policy-label">{{ label }}</label>
       <Tooltip v-if="description" :title="description">
         <IconifyIcon
           icon="lucide:circle-help"
@@ -484,7 +493,9 @@ function validationMessage(issue: PolicyClientValidationIssue) {
       </Tooltip>
     </div>
     <Input
+      :aria-label="label"
       :disabled="disabled"
+      :id="controlId"
       :value="typeof modelValue === 'string' ? modelValue : ''"
       @update:value="$emit('update:modelValue', $event)"
     />

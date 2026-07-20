@@ -50,7 +50,6 @@
       "execution": "执行",
       "research": "研究",
       "governance": "治理",
-      "accessControl": "访问控制",
       "audit": "审计"
     },
     "dashboard": "总览",
@@ -81,9 +80,6 @@
     "researchBasisAlerts": "基差告警",
     "researchComparisonDetail": "对比报告",
     "config": "配置中心",
-    "users": "用户",
-    "roles": "角色",
-    "menus": "菜单",
     "operationLog": "操作日志"
   },
   "structuralAlpha": {

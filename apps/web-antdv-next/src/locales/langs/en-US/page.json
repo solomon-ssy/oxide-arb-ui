@@ -50,7 +50,6 @@
       "execution": "Execution",
       "research": "Research",
       "governance": "Governance",
-      "accessControl": "Access Control",
       "audit": "Audit"
     },
     "dashboard": "Dashboard",
@@ -81,9 +80,6 @@
     "researchBasisAlerts": "Basis Alerts",
     "researchComparisonDetail": "Comparison Report",
     "config": "Config Center",
-    "users": "Users",
-    "roles": "Roles",
-    "menus": "Menus",
     "operationLog": "Operation Log"
   },
   "structuralAlpha": {

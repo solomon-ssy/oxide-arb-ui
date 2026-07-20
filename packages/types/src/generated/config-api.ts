@@ -469,7 +469,8 @@ export interface ReportsConfig {
    */
   hard_candidate_ceiling?: number;
   /**
-   * Maximum `TopN` size (hard upper bound for every schedule and ad-hoc run).
+   * Maximum `TopN` size (hard upper bound for every schedule and ad-hoc run,
+   * capped by [`MAX_REPORT_TOP_N`]).
    */
   max_top_n?: number;
 }

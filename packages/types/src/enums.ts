@@ -729,6 +729,19 @@ export type DatasetPurpose = WireEnum<typeof DATASET_PURPOSES>;
 
 export type ResearchJobKind = WireEnum<typeof RESEARCH_JOB_KINDS>;
 
+export const RESEARCH_JOB_RESULT_KINDS = {
+  backtestPathSet: 'backtest_path_set',
+  backtestReport: 'backtest_report',
+  calibrationArtifact: 'calibration_artifact',
+  featureParityRun: 'feature_parity_run',
+  modelVersion: 'model_version',
+  tradePolicyArtifact: 'trade_policy_artifact',
+  tradePolicyValidationRun: 'trade_policy_validation_run',
+  trainingDataset: 'training_dataset',
+} as const;
+
+export type ResearchJobResultKind = WireEnum<typeof RESEARCH_JOB_RESULT_KINDS>;
+
 /** Durable research-job lifecycle state (mirrors Rust `ResearchJobStatus`). */
 export const RESEARCH_JOB_STATUSES = {
   cancelled: 'cancelled',

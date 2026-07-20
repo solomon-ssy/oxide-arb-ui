@@ -203,10 +203,17 @@ function onCreateIntent() {
           <template v-if="entry.condition.kind === 'immediate'">
             {{ $t('page.quantRecommendations.entryPlan.immediate') }}
           </template>
-          <span v-else class="font-mono text-xs break-all">
+          <span
+            v-else
+            class="font-mono text-xs break-all"
+            data-screenshot-volatile="true"
+          >
             {{ entry.condition.content_hash }}
           </span>
-          <span class="text-muted-foreground ml-2 text-xs">
+          <span
+            class="text-muted-foreground ml-2 text-xs"
+            data-screenshot-volatile="true"
+          >
             {{ formatDateTimeLocal(entry.valid_from) }} –
             {{ formatDateTimeLocal(entry.valid_until) }}
           </span>
@@ -289,18 +296,20 @@ function onCreateIntent() {
           <DescriptionsItem
             :label="$t('page.quantRecommendations.identity.recommendationId')"
           >
-            <span class="font-mono text-xs">{{
-              recommendation.recommendation_id
-            }}</span>
+            <span class="font-mono text-xs" data-screenshot-volatile="true">
+              {{ recommendation.recommendation_id }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantRecommendations.identity.reportId')"
           >
-            <EntityRouteLink
-              mono
-              :label="recommendation.recommendation_report_id"
-              :to="`/quant/reports/${recommendation.recommendation_report_id}`"
-            />
+            <span data-screenshot-volatile="true">
+              <EntityRouteLink
+                mono
+                :label="recommendation.recommendation_report_id"
+                :to="`/quant/reports/${recommendation.recommendation_report_id}`"
+              />
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantRecommendations.identity.category')"
@@ -338,12 +347,16 @@ function onCreateIntent() {
           <DescriptionsItem
             :label="$t('page.quantRecommendations.identity.validFrom')"
           >
-            {{ formatDateTimeLocal(recommendation.valid_from) }}
+            <span data-screenshot-volatile="true">
+              {{ formatDateTimeLocal(recommendation.valid_from) }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantRecommendations.identity.validUntil')"
           >
-            {{ formatDateTimeLocal(recommendation.valid_until) }}
+            <span data-screenshot-volatile="true">
+              {{ formatDateTimeLocal(recommendation.valid_until) }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantRecommendations.identity.activeIntent')"

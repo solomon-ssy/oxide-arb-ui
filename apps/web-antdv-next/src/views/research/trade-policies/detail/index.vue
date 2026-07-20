@@ -502,7 +502,13 @@ onMounted(load);
           show-icon
           type="success"
         />
-        <Descriptions :column="1" bordered class="mt-4" size="small">
+        <Descriptions
+          :column="1"
+          :label-style="{ width: '38%' }"
+          bordered
+          class="overview-descriptions mt-4"
+          size="small"
+        >
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.columns.status')"
           >
@@ -523,13 +529,17 @@ onMounted(load);
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.detail.fitWindow')"
           >
-            {{
-              formatDateTimeLocal(detail.payload.fit_contract.fit_window_start)
-            }}
-            →
-            {{
-              formatDateTimeLocal(detail.payload.fit_contract.fit_window_end)
-            }}
+            <span data-screenshot-volatile="true">
+              {{
+                formatDateTimeLocal(
+                  detail.payload.fit_contract.fit_window_start,
+                )
+              }}
+              →
+              {{
+                formatDateTimeLocal(detail.payload.fit_contract.fit_window_end)
+              }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.tradePolicies.workbench.cashBudget')"
@@ -1071,6 +1081,10 @@ onMounted(load);
   display: grid;
   gap: 20px;
   min-width: 0;
+}
+
+.overview-descriptions :deep(table) {
+  table-layout: fixed;
 }
 
 .blocker-grid,

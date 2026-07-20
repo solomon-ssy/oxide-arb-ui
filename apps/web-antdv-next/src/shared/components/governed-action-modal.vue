@@ -4,7 +4,7 @@ import type { RoleView } from '@vben/types';
 import type { GovernedField } from '#/shared/composables/governed-field';
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
-import { computed, nextTick, reactive, ref, watch } from 'vue';
+import { computed, nextTick, reactive, ref, useId, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -43,6 +43,7 @@ export interface GovernedActionPayload {
 
 const authStore = useAuthStore();
 
+const modalControlPrefix = useId();
 const actingRole = ref<string>('');
 const reason = ref('');
 const confirmWordInput = ref('');
@@ -59,6 +60,10 @@ const roleOptions = computed(() =>
 const payload = ref<GovernedActionPayload | null>(null);
 
 const isSingleRole = computed(() => roleOptions.value.length <= 1);
+
+function fieldControlId(name: string) {
+  return `${modalControlPrefix}-field-${name}`;
+}
 
 const fieldsValid = computed(
   () =>
@@ -200,12 +205,13 @@ watch(
         :data-testid="`governed-field-${field.name}`"
         class="flex flex-col gap-1"
       >
-        <span class="text-sm font-medium">
+        <label :for="fieldControlId(field.name)" class="text-sm font-medium">
           {{ field.label }}
           <span v-if="field.required" class="text-destructive">*</span>
-        </span>
+        </label>
         <Checkbox
           v-if="field.kind === 'checkbox'"
+          :id="fieldControlId(field.name)"
           :checked="fieldValues[field.name] === 'acknowledged'"
           @update:checked="
             (checked) => {
@@ -219,46 +225,61 @@ watch(
           v-else-if="field.kind === 'select'"
           v-model:value="fieldValues[field.name]"
           allow-clear
+          :id="fieldControlId(field.name)"
           :options="field.options"
           :placeholder="field.placeholder"
         />
         <Input
           v-else
           v-model:value="fieldValues[field.name]"
+          :id="fieldControlId(field.name)"
           :inputmode="field.kind === 'text' ? undefined : 'decimal'"
           :placeholder="field.placeholder"
         />
         <span
           v-if="field.help && field.kind !== 'checkbox'"
-          class="text-xs text-gray-500"
+          class="governed-hint text-xs"
         >
           {{ field.help }}
         </span>
       </div>
 
       <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">{{
-          $t('governance.modal.actingRole')
-        }}</span>
+        <label
+          :for="`${modalControlPrefix}-acting-role`"
+          class="text-sm font-medium"
+        >
+          {{ $t('governance.modal.actingRole') }}
+        </label>
         <Select
           v-if="!isSingleRole"
           v-model:value="actingRole"
+          :id="`${modalControlPrefix}-acting-role`"
           :options="roleOptions"
           class="w-full"
         />
-        <Input v-else :value="roleOptions[0]?.label" disabled />
-        <span class="text-xs text-gray-500">
+        <Input
+          v-else
+          :id="`${modalControlPrefix}-acting-role`"
+          :value="roleOptions[0]?.label"
+          disabled
+        />
+        <span class="governed-hint text-xs">
           {{ $t('governance.modal.actingRoleTip') }}
         </span>
       </div>
 
       <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">{{
-          $t('governance.modal.reason')
-        }}</span>
+        <label
+          :for="`${modalControlPrefix}-reason`"
+          class="text-sm font-medium"
+        >
+          {{ $t('governance.modal.reason') }}
+        </label>
         <TextArea
           data-testid="governed-reason"
           v-model:value="reason"
+          :id="`${modalControlPrefix}-reason`"
           :maxlength="1024"
           :placeholder="$t('governance.modal.reasonPlaceholder')"
           :rows="4"
@@ -270,14 +291,18 @@ watch(
         v-if="payload?.danger && payload.confirmWord"
         class="flex flex-col gap-1"
       >
-        <span class="text-sm font-medium">{{
-          $t('governance.modal.confirmWord')
-        }}</span>
+        <label
+          :for="`${modalControlPrefix}-confirm-word`"
+          class="text-sm font-medium"
+        >
+          {{ $t('governance.modal.confirmWord') }}
+        </label>
         <Input
           v-model:value="confirmWordInput"
+          :id="`${modalControlPrefix}-confirm-word`"
           :placeholder="$t('governance.modal.confirmWordPlaceholder')"
         />
-        <span class="text-xs text-gray-500">
+        <span class="governed-hint text-xs">
           {{
             $t('governance.modal.confirmWordTip', {
               word: payload.confirmWord,
@@ -288,3 +313,10 @@ watch(
     </div>
   </Modal>
 </template>
+
+<style scoped>
+.governed-hint,
+:deep(.ant-input-data-count) {
+  color: hsl(var(--foreground));
+}
+</style>

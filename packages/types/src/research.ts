@@ -23,6 +23,7 @@ import type {
   ModelFamily,
   PublicationStatus,
   ResearchJobKind,
+  ResearchJobResultKind,
   ResearchJobStatus,
   TrainingDatasetStatus,
 } from './enums';
@@ -999,6 +1000,12 @@ export interface ResearchJobError {
   message: string;
 }
 
+/** Namespace-tagged terminal artifact reference produced by a research job. */
+export interface ResearchJobResultRef {
+  id: UuidString;
+  kind: ResearchJobResultKind;
+}
+
 /** `GET /research/jobs/{id}` / enqueue result — one durable research job. */
 export interface ResearchJobView {
   job_id: UuidString;
@@ -1011,8 +1018,8 @@ export interface ResearchJobView {
   progress?: null | ResearchJobProgress;
   /** Completion fraction in `[0, 1]` when a positive total is known. */
   progress_pct?: null | number;
-  /** Terminal result id (dataset / model version / backtest report). */
-  result_ref?: null | UuidString;
+  /** Namespace-tagged terminal artifact reference. */
+  result?: null | ResearchJobResultRef;
   error?: null | ResearchJobError;
   coverage_json?: DatasetCoverage | null;
   requested_by?: null | string;
@@ -1034,6 +1041,7 @@ export interface ResearchJobListQuery extends PageQuery, TimeRangeQuery {
   kind?: ResearchJobKind;
   status?: ResearchJobStatus;
   model_spec_id?: string;
+  result_kind?: ResearchJobResultKind;
   result_ref?: UuidString;
 }
 

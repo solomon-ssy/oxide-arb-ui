@@ -97,7 +97,11 @@ onMounted(() => void loadStatus());
 </script>
 
 <template>
-  <section class="bg-card rounded-xl border p-5" aria-live="polite">
+  <section
+    class="bg-card rounded-xl border p-5"
+    aria-live="polite"
+    data-testid="config-operational-control"
+  >
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
         <div class="flex items-center gap-2">

@@ -80,7 +80,7 @@ onMounted(() => void loadActivity());
             <IconifyIcon icon="lucide:history" />
           </span>
           <div>
-            <p class="text-primary text-xs font-semibold tracking-wide">
+            <p class="config-eyebrow text-xs font-semibold tracking-wide">
               {{ $t('page.config.eyebrow') }}
             </p>
             <h1 class="text-xl font-semibold">
@@ -139,6 +139,10 @@ onMounted(() => void loadActivity());
 </template>
 
 <style scoped>
+.config-eyebrow {
+  color: hsl(var(--foreground));
+}
+
 .section-icon,
 .activity-icon {
   display: inline-grid;

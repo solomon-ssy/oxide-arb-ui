@@ -127,7 +127,11 @@ onScopeDispose(() => {
 </script>
 
 <template>
-  <section class="bg-card rounded-xl border p-5" aria-live="polite">
+  <section
+    class="bg-card rounded-xl border p-5"
+    aria-live="polite"
+    data-testid="config-report-schedule-preview"
+  >
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
         <div class="flex items-center gap-2">
@@ -203,6 +207,7 @@ onScopeDispose(() => {
             </span>
             <time
               class="mt-0.5 block text-xs font-medium"
+              data-screenshot-volatile="true"
               :datetime="fireTime"
               :title="formatDateTimeUtc(fireTime)"
             >

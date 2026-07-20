@@ -3,6 +3,7 @@ export type Locale = 'en-US' | 'zh-CN';
 export const messages: Record<Locale, Record<string, string>> = {
   'en-US': {
     cancel: 'Cancel',
+    close: 'Close',
     collapse: 'Collapse',
     confirm: 'Confirm',
     expand: 'Expand',
@@ -13,6 +14,7 @@ export const messages: Record<Locale, Record<string, string>> = {
   },
   'zh-CN': {
     cancel: '取消',
+    close: '关闭',
     collapse: '收起',
     confirm: '确认',
     expand: '展开',

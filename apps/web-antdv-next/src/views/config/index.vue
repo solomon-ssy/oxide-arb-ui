@@ -220,12 +220,15 @@ onMounted(() => void loadOverview());
           </div>
           <div class="config-status-cell">
             <dt>{{ $t('page.config.status.pendingApproval') }}</dt>
-            <dd>{{ pendingApprovals }}</dd>
+            <dd data-testid="config-pending-approvals">
+              {{ pendingApprovals }}
+            </dd>
           </div>
           <div class="config-status-cell">
             <dt>{{ $t('page.config.status.restart') }}</dt>
             <dd>
               <Tag
+                data-testid="config-restart-required"
                 :class="{
                   'config-success-tag': !restartRequired,
                   'config-warning-tag': restartRequired,
@@ -560,12 +563,10 @@ onMounted(() => void loadOverview());
 
 @keyframes config-enter {
   from {
-    opacity: 0;
     transform: translateY(8px);
   }
 
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }

@@ -1277,9 +1277,9 @@ void loadCatalogs();
             <DescriptionsItem
               :label="$t('page.research.tradePolicies.workbench.programHash')"
             >
-              <span class="mono">{{
-                preflight?.research_program_hash ?? '—'
-              }}</span>
+              <span class="mono" data-screenshot-volatile="true">
+                {{ preflight?.research_program_hash ?? '—' }}
+              </span>
             </DescriptionsItem>
             <DescriptionsItem
               :label="

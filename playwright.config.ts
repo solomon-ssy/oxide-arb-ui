@@ -1,11 +1,13 @@
 import { defineConfig, devices } from 'playwright/test';
 
+const externalServers = process.env.PLAYWRIGHT_EXTERNAL_SERVERS === 'true';
+
 export default defineConfig({
   expect: {
     toHaveScreenshot: {
       animations: 'disabled',
       caret: 'hide',
-      maxDiffPixelRatio: 0.01,
+      maxDiffPixelRatio: 0.001,
     },
   },
   forbidOnly: true,
@@ -24,31 +26,33 @@ export default defineConfig({
   testDir: './apps/web-antdv-next/tests/e2e',
   timeout: 60_000,
   use: {
-    baseURL: 'http://127.0.0.1:6099',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:6099',
     colorScheme: 'light',
     locale: 'zh-CN',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
-  webServer: [
-    {
-      command:
-        'cargo test --manifest-path ../Cargo.toml -p quant-pivot-web --test web serve_protected_ui_e2e -- --ignored --nocapture',
-      reuseExistingServer: false,
-      stderr: 'pipe',
-      stdout: 'pipe',
-      timeout: 600_000,
-      url: 'http://127.0.0.1:8088/health',
-    },
-    {
-      command:
-        'VITE_NITRO_MOCK=false pnpm -F @vben/web-antdv-next dev --host 127.0.0.1 --port 6099',
-      reuseExistingServer: false,
-      stderr: 'pipe',
-      stdout: 'pipe',
-      timeout: 120_000,
-      url: 'http://127.0.0.1:6099',
-    },
-  ],
+  webServer: externalServers
+    ? undefined
+    : [
+        {
+          command:
+            'cargo test --manifest-path ../Cargo.toml -p quant-pivot-web --test web serve_protected_ui_e2e -- --ignored --nocapture',
+          reuseExistingServer: false,
+          stderr: 'pipe',
+          stdout: 'pipe',
+          timeout: 600_000,
+          url: 'http://127.0.0.1:8088/health',
+        },
+        {
+          command:
+            'VITE_NITRO_MOCK=false pnpm -F @vben/web-antdv-next dev --host 127.0.0.1 --port 6099',
+          reuseExistingServer: false,
+          stderr: 'pipe',
+          stdout: 'pipe',
+          timeout: 120_000,
+          url: 'http://127.0.0.1:6099',
+        },
+      ],
   workers: 1,
 });

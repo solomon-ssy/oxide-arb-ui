@@ -7,6 +7,7 @@ import {
   isActiveResearchJobStatus,
   isTerminalResearchJobStatus,
   RESEARCH_JOB_KINDS,
+  RESEARCH_JOB_RESULT_KINDS,
   RESEARCH_JOB_STATUSES,
 } from '@vben/types';
 
@@ -35,19 +36,11 @@ function formatProgress(row: ResearchJobView): string {
 
 /** Deep-link route to a terminal job's result artifact, by kind. */
 export function jobResultRoute(row: ResearchJobView): string | undefined {
-  if (!row.result_ref) {
+  if (!row.result) {
     return undefined;
   }
-  switch (row.kind) {
-    case RESEARCH_JOB_KINDS.backtest: {
-      return `/research/backtests?open=${row.result_ref}`;
-    }
-    case RESEARCH_JOB_KINDS.biasTableFit:
-    case RESEARCH_JOB_KINDS.modelCalibrationFit: {
-      return `/research/calibration-artifacts?open=${row.result_ref}`;
-    }
-    case RESEARCH_JOB_KINDS.cpcvBacktest: {
-      // result_ref is path_set_id; open the model drawer on that path set.
+  switch (row.result.kind) {
+    case RESEARCH_JOB_RESULT_KINDS.backtestPathSet: {
       const modelVersionId =
         typeof row.params?.model_version_id === 'string'
           ? row.params.model_version_id
@@ -55,22 +48,25 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
       if (!modelVersionId) {
         return undefined;
       }
-      const pathSetId = row.result_ref;
-      return pathSetId
-        ? `/research/models?open=${modelVersionId}&path_set_id=${pathSetId}`
-        : `/research/models?open=${modelVersionId}`;
+      return `/research/models?open=${modelVersionId}&path_set_id=${row.result.id}`;
     }
-    case RESEARCH_JOB_KINDS.datasetBuild: {
-      return `/research/datasets?open=${row.result_ref}`;
+    case RESEARCH_JOB_RESULT_KINDS.backtestReport: {
+      return `/research/backtests?open=${row.result.id}`;
     }
-    case RESEARCH_JOB_KINDS.featureParity: {
-      return `/research/feature-integrity?run_id=${row.result_ref}`;
+    case RESEARCH_JOB_RESULT_KINDS.calibrationArtifact: {
+      return `/research/calibration-artifacts?open=${row.result.id}`;
     }
-    case RESEARCH_JOB_KINDS.modelTrain: {
-      return `/research/models?open=${row.result_ref}`;
+    case RESEARCH_JOB_RESULT_KINDS.featureParityRun: {
+      return `/research/feature-integrity?run_id=${row.result.id}`;
     }
-    case RESEARCH_JOB_KINDS.tradePolicyFit: {
-      return `/research/trade-policies/${row.result_ref}`;
+    case RESEARCH_JOB_RESULT_KINDS.modelVersion: {
+      return `/research/models?open=${row.result.id}`;
+    }
+    case RESEARCH_JOB_RESULT_KINDS.tradePolicyArtifact: {
+      return `/research/trade-policies/${row.result.id}`;
+    }
+    case RESEARCH_JOB_RESULT_KINDS.trainingDataset: {
+      return `/research/datasets?open=${row.result.id}`;
     }
     default: {
       return undefined;
