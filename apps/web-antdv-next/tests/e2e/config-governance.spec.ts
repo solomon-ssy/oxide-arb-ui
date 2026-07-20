@@ -59,9 +59,7 @@ async function settleAnimations(page: Page) {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
     await Promise.allSettled(
-      document
-        .getAnimations({ subtree: true })
-        .map((animation) => animation.finished),
+      document.getAnimations().map((animation) => animation.finished),
     );
   });
 }
