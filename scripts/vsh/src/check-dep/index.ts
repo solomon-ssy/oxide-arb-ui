@@ -27,9 +27,11 @@ const DEFAULT_CONFIG = {
     'rimraf',
     'tailwindcss',
   ],
-  ignoreWorkspaces: ['internal/lint-configs/*', 'scripts/*'],
+  ignoreWorkspaces: ['internal/lint-configs/*'],
   workspaces: {
     '.': {
+      entry: ['scripts/**/*.mjs'],
+      project: ['scripts/**/*.mjs'],
       // Root lint tooling resolves the workspace-local ESLint binary indirectly.
       ignoreDependencies: ['eslint'],
     },

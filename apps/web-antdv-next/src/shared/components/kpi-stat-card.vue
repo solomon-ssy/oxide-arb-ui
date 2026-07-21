@@ -45,10 +45,10 @@ const accentClass = computed(() => kpiAccentStyle(props.accent));
 
 const valueColorClass = computed(() => {
   if (props.sign === 1) {
-    return 'text-emerald-600 dark:text-emerald-400';
+    return 'text-success';
   }
   if (props.sign === -1) {
-    return 'text-rose-600 dark:text-rose-400';
+    return 'text-destructive';
   }
   return accentClass.value.valueText;
 });

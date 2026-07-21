@@ -23,9 +23,9 @@ const timer = setInterval(() => {
 onScopeDispose(() => clearInterval(timer));
 
 const ICON_CLASS = {
-  connected: 'text-green-500',
-  disconnected: 'text-red-500',
-  reconnecting: 'animate-spin text-amber-500',
+  connected: 'text-success',
+  disconnected: 'text-destructive',
+  reconnecting: 'text-warning animate-spin',
 } as const;
 
 const ICON_NAME = {
@@ -71,7 +71,7 @@ const tooltip = computed(() => {
       />
       <span
         v-if="isStatusStale"
-        class="absolute right-1 top-1 size-1.5 rounded-full bg-amber-500"
+        class="bg-warning absolute right-1 top-1 size-1.5 rounded-full"
       ></span>
     </button>
   </Tooltip>

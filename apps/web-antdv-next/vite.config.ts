@@ -1,5 +1,7 @@
 import { defineConfig } from '@vben/vite-config';
 
+import { productionBundlePolicyPlugin } from './build/production-bundle-policy';
+
 export default defineConfig(async () => {
   return {
     application: {},
@@ -9,6 +11,7 @@ export default defineConfig(async () => {
         // The operator console requires native BigInt for exact decimal controls.
         target: 'es2022',
       },
+      plugins: [productionBundlePolicyPlugin()],
       server: {
         proxy: {
           // Keep the browser Host (e.g. localhost:5999) so backend

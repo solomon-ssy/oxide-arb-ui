@@ -5,18 +5,21 @@ import type { SharpeDistribution } from '@vben/types';
 import { computed, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+import { usePreferences } from '@vben/preferences';
 
 import { useDebounceFn, useResizeObserver } from '@vueuse/core';
 import { Empty } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { formatScore } from '#/shared/components/format';
+import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'SharpeDistributionChart' });
 
 const props = defineProps<{
   distribution?: null | SharpeDistribution;
 }>();
+const { isDark } = usePreferences();
 
 const chartRef = ref<EchartsUIType>();
 const chartAreaRef = ref<HTMLElement | null>(null);
@@ -64,7 +67,7 @@ function renderChart() {
       {
         type: 'bar',
         data,
-        itemStyle: { color: '#1677ff' },
+        itemStyle: { color: themeColors.primary },
       },
     ],
   });
@@ -72,7 +75,7 @@ function renderChart() {
 
 const debouncedRender = useDebounceFn(renderChart, 120);
 
-watch(() => props.distribution, debouncedRender, {
+watch([() => props.distribution, isDark], debouncedRender, {
   deep: true,
   immediate: true,
 });

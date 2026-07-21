@@ -54,7 +54,7 @@ const risk = computed(() => requireFrozenPlan().risk_envelope);
 
 /**
  * The full f* → ×kelly_fraction → ×confidence → ×drawdown →
- * ×edge_uncertainty → ×correlation → raw → cap waterfall (Phase 11.3 §10).
+ * ×edge_uncertainty → ×correlation → raw → cap sizing waterfall.
  * `null` when the recommendation's return model is uncalibrated / edge-free
  * (no Kelly provenance was recorded for it).
  */

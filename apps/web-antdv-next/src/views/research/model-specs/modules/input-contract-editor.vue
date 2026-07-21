@@ -115,6 +115,9 @@ onMounted(() => {
     <Spin v-if="!props.readOnly" :spinning="loading">
       <Select
         v-model:value="selectedFeatures"
+        :aria-label="
+          $t('page.research.modelSpecs.inputContract.selectFeatures')
+        "
         :disabled="props.readOnly || loading || loadError"
         :options="featureOptions"
         mode="multiple"
@@ -143,18 +146,44 @@ onMounted(() => {
       <code class="min-w-0 flex-1 truncate text-xs">{{
         input.feature_name
       }}</code>
+      <span v-if="props.readOnly" class="text-muted-foreground w-36 text-sm">
+        {{
+          input.requiredness === 'required'
+            ? $t('page.research.modelSpecs.inputContract.required')
+            : $t('page.research.modelSpecs.inputContract.optional')
+        }}
+      </span>
       <Select
-        :disabled="props.readOnly"
+        v-else
+        :aria-label="
+          $t('page.research.modelSpecs.inputContract.requirednessFor', {
+            feature: input.feature_name,
+          })
+        "
         :options="requirednessOptions"
         :value="input.requiredness"
         class="w-36"
         @update:value="setRequiredness(index, $event as ModelInputRequiredness)"
       />
       <template v-if="!props.readOnly">
-        <Button :disabled="index === 0" size="small" @click="move(index, -1)">
+        <Button
+          :aria-label="
+            $t('page.research.modelSpecs.inputContract.moveUp', {
+              feature: input.feature_name,
+            })
+          "
+          :disabled="index === 0"
+          size="small"
+          @click="move(index, -1)"
+        >
           ↑
         </Button>
         <Button
+          :aria-label="
+            $t('page.research.modelSpecs.inputContract.moveDown', {
+              feature: input.feature_name,
+            })
+          "
           :disabled="index === model.inputs.length - 1"
           size="small"
           @click="move(index, 1)"

@@ -362,7 +362,7 @@ onMounted(() => void loadLifecycle());
 .lifecycle-hero {
   background-image: radial-gradient(
     circle at 95% 0%,
-    rgb(217 119 6 / 12%),
+    hsl(var(--warning) / 12%),
     transparent 35%
   );
 }
@@ -370,7 +370,7 @@ onMounted(() => void loadLifecycle());
 .lifecycle-hero.frozen {
   background-image: radial-gradient(
     circle at 95% 0%,
-    rgb(5 150 105 / 12%),
+    hsl(var(--success) / 12%),
     transparent 35%
   );
 }
@@ -386,11 +386,11 @@ onMounted(() => void loadLifecycle());
 }
 
 .check-row .passed {
-  color: #059669;
+  color: hsl(var(--success));
 }
 
 .check-row .failed {
-  color: #dc2626;
+  color: hsl(var(--destructive));
 }
 
 .check-row .not-applicable {
@@ -429,8 +429,8 @@ onMounted(() => void loadLifecycle());
 }
 
 .seal-panel {
-  background: rgb(220 38 38 / 4%);
-  border-color: rgb(220 38 38 / 35%);
+  background: hsl(var(--destructive) / 4%);
+  border-color: hsl(var(--destructive) / 35%);
 }
 
 @media (max-width: 640px) {

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import Vue from '@vitejs/plugin-vue';
@@ -34,5 +35,18 @@ export default defineConfig({
       '**/{stylelint,eslint}.config.*',
       '**/{oxfmt,oxlint}.config.*',
     ],
+    reporters:
+      process.env.CI === 'true'
+        ? [
+            'default',
+            [
+              'junit',
+              {
+                outputFile: './test-results/vitest-junit.xml',
+                suiteName: 'quant-pivot-ui-unit-contract',
+              },
+            ],
+          ]
+        : ['default'],
   },
 });

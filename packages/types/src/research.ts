@@ -28,6 +28,11 @@ import type {
   TrainingDatasetStatus,
 } from './enums';
 import type {
+  ModelInputContract,
+  ModelInputSpec,
+  ModelSpecThesis,
+} from './generated/research-model-api';
+import type {
   ResearchProfileRef,
   SourceSliceManifestRef,
 } from './research-profile';
@@ -212,8 +217,8 @@ export interface BuildTrainingDatasetRequest {
   model_spec_id: string;
   profile_ref: ResearchProfileRef;
   /**
-   * What the materialized examples are used for (Phase 11.3 §4). Defaults to
-   * `training` server-side; set `calibration` to build an independent
+   * What the materialized examples are used for. Defaults to `training`
+   * server-side; set `calibration` to build an independent
    * held-out split for `ProbabilityCalibrator` fitting (must be disjoint +
    * embargoed from the target model's own training dataset — enforced at
    * fit time, surfaced live by the Fit Model Calibrator preflight check).
@@ -545,142 +550,22 @@ export interface TrainModelRequest {
 /** Model family taxonomy (canonical wire labels of `qp_model_family`). */
 export type { ModelFamily } from './enums';
 
-export type ModelInputRequiredness = 'optional' | 'required';
+export type {
+  CreateModelSpecRequest,
+  FeatureContractEntryView,
+  FeatureContractView,
+  FeatureNullPolicyView,
+  ModelInputContract,
+  ModelInputSpec,
+  ModelSpecThesis,
+  ModelTrainingContract,
+  QuantModelSpecView,
+  RunCpcvBacktestRequest,
+} from './generated/research-model-api';
 
-/** One governed raw feature consumed by a model, before fitted transforms. */
-export interface ModelInputSpec {
-  feature_name: string;
-  requiredness: ModelInputRequiredness;
-}
-
-/** Ordered source-feature graph owned by one model specification. */
-export interface ModelInputContract {
-  inputs: ModelInputSpec[];
-}
+export type ModelInputRequiredness = ModelInputSpec['requiredness'];
 
 export const EMPTY_MODEL_INPUT_CONTRACT: ModelInputContract = { inputs: [] };
-
-/** Frozen target and fold policy owned by a model spec, never a train override. */
-export interface ModelTrainingContract {
-  target_label_horizon_secs: number;
-  target_label_name: string;
-  validation_folds: number;
-}
-
-export type FeatureContractFamily =
-  | 'domain'
-  | 'market_metadata'
-  | 'microstructure'
-  | 'price_book'
-  | 'structural'
-  | 'time_series';
-
-export type FeatureContractValueKind =
-  | 'bool'
-  | 'bps'
-  | 'category'
-  | 'count'
-  | 'decimal'
-  | 'probability'
-  | 'usd';
-
-export type FeatureContractUnit =
-  | 'bps'
-  | 'count'
-  | 'milliseconds'
-  | 'none'
-  | 'per_second'
-  | 'probability'
-  | 'ratio'
-  | 'seconds'
-  | 'shares'
-  | 'usd';
-
-export type FeatureContractSource =
-  | 'domain_observation_window'
-  | 'gamma_metadata'
-  | 'microstructure_window'
-  | 'neg_risk_sibling_legs'
-  | 'published_l2_book'
-  | 'resolved_linkage'
-  | 'trade_tape_window';
-
-export type FeatureContractPointInTimeRule =
-  | 'book_version_at_or_before_source_cutoff'
-  | 'fact_at_or_before_source_cutoff'
-  | 'linkage_version_at_or_before_source_cutoff'
-  | 'metadata_version_at_or_before_source_cutoff';
-
-export type FeatureContractStalenessPolicy =
-  | 'max_book_age'
-  | 'max_domain_observation_age'
-  | 'max_feature_bucket_age'
-  | 'max_trade_tape_age'
-  | 'none';
-
-export interface FeatureNullPolicyView {
-  policy: 'neutral_value' | 'optional' | 'penalize' | 'reject_market';
-  value?: DecimalString;
-}
-
-/** One raw feature exposed by the active governed FeatureSchema. */
-export interface FeatureContractEntryView {
-  compute_revision: number;
-  family: FeatureContractFamily;
-  name: string;
-  null_policy: FeatureNullPolicyView;
-  point_in_time_rule: FeatureContractPointInTimeRule;
-  source: FeatureContractSource;
-  staleness_policy: FeatureContractStalenessPolicy;
-  unit: FeatureContractUnit;
-  value_kind: FeatureContractValueKind;
-}
-
-/** `GET /research/feature-contract` active feature catalog. */
-export interface FeatureContractView {
-  feature_schema_hash: string;
-  feature_schema_version: number;
-  features: FeatureContractEntryView[];
-}
-
-/** Closed human-authored thesis carried by one immutable model specification. */
-export interface ModelSpecThesis {
-  summary: string;
-  hypothesis: string;
-  limitations: string[];
-}
-
-/** Model-spec catalog projection (the dataset/training selector source). */
-export interface QuantModelSpecView {
-  model_spec_id: string;
-  name: string;
-  model_family: ModelFamily;
-  prediction_horizon_secs: number;
-  feature_schema_version: number;
-  label_schema_version: number;
-  thesis: ModelSpecThesis;
-  input_contract: ModelInputContract;
-  training_contract: ModelTrainingContract;
-  definition_hash: string;
-  created_by_user_id: null | string;
-  created_by_label: string;
-  created_by_role: null | string;
-  reason: string;
-  created_at: IsoDateTime;
-}
-
-/** `POST /research/model-specs` governed request body (mirrors Rust `CreateModelSpecRequest`). */
-export interface CreateModelSpecRequest {
-  name: string;
-  model_family: ModelFamily;
-  prediction_horizon_secs: number;
-  feature_schema_version?: number;
-  label_schema_version?: number;
-  thesis: ModelSpecThesis;
-  input_contract: ModelInputContract;
-  training_contract: ModelTrainingContract;
-  reason: string;
-}
 
 /** Filter + pagination for `GET /research/model-specs`. */
 export interface ModelSpecListQuery extends PageQuery {
@@ -865,16 +750,6 @@ export interface RunBacktestRequest {
   reason: string;
   /** Pre-assigned candidate report id on async enqueue; omit on direct calls. */
   backtest_report_id?: UuidString;
-}
-
-/** `POST /research/models/{id}/cpcv-backtest` governed request body. */
-export interface RunCpcvBacktestRequest {
-  /** The exact frozen dataset linked to the model version. */
-  training_dataset_id: UuidString;
-  /** Governed CPCV/trial-grid runtime policy. */
-  decision_policy_snapshot_id: UuidString;
-  reason: string;
-  path_set_id?: UuidString;
 }
 
 /** Filter + pagination for `GET /research/backtest-reports`. */

@@ -42,8 +42,8 @@ export interface WsDispatchHooks {
 }
 
 /**
- * Route one server envelope into the domain stores (the 10.0 §3.3 channel →
- * store dispatch table). Lists always re-fetch over REST; WS only bumps
+ * Route one server envelope through the canonical channel-to-store dispatch
+ * table. Lists always re-fetch over REST; WS only bumps
  * revisions or updates the market book cache. Unknown types are logged and
  * dropped; `error` frames are logged without toasting (no error storms).
  */

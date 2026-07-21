@@ -1,25 +1,50 @@
-/**
- * Resolve a shadcn/Tailwind HSL design token (e.g. `--destructive`) to a CSS
- * color string usable by canvas-based renderers (ECharts) that cannot read
- * CSS custom properties directly.
- *
- * Falls back to a neutral gray when running outside a browser (SSR/tests) or
- * when the token is not defined on `:root`.
- */
-export function resolveThemeColor(cssVariable: string): string {
+const THEME_COLOR_VARIABLES = [
+  '--background',
+  '--border',
+  '--destructive',
+  '--foreground',
+  '--muted',
+  '--muted-foreground',
+  '--primary',
+  '--success',
+  '--visual-1',
+  '--visual-2',
+  '--visual-3',
+  '--visual-4',
+  '--visual-5',
+  '--visual-6',
+  '--warning',
+] as const;
+
+export type ThemeColorVariable = (typeof THEME_COLOR_VARIABLES)[number];
+
+/** Resolve a governed HSL design token for renderers that cannot consume CSS variables. */
+export function resolveThemeColor(
+  cssVariable: ThemeColorVariable,
+  alpha?: `${number}%`,
+): string {
   if (typeof document === 'undefined') {
-    return '#94a3b8';
+    return 'currentColor';
   }
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue(cssVariable)
     .trim();
-  return value ? `hsl(${value})` : '#94a3b8';
+  return value ? `hsl(${value}${alpha ? ` / ${alpha}` : ''})` : 'currentColor';
 }
 
-/** Convenience accessors for the semantic tokens used across chart components. */
+/** Semantic and categorical token accessors for canvas/SVG renderers. */
 export const themeColors = {
+  get background() {
+    return resolveThemeColor('--background');
+  },
+  get border() {
+    return resolveThemeColor('--border');
+  },
   get destructive() {
     return resolveThemeColor('--destructive');
+  },
+  get foreground() {
+    return resolveThemeColor('--foreground');
   },
   get muted() {
     return resolveThemeColor('--muted-foreground');
@@ -32,5 +57,15 @@ export const themeColors = {
   },
   get warning() {
     return resolveThemeColor('--warning');
+  },
+  get visual() {
+    return [
+      resolveThemeColor('--visual-1'),
+      resolveThemeColor('--visual-2'),
+      resolveThemeColor('--visual-3'),
+      resolveThemeColor('--visual-4'),
+      resolveThemeColor('--visual-5'),
+      resolveThemeColor('--visual-6'),
+    ] as const;
   },
 };

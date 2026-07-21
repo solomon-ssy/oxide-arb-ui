@@ -9,6 +9,7 @@ import { computed, ref, watch } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+import { usePreferences } from '@vben/preferences';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { useDebounceFn, useResizeObserver } from '@vueuse/core';
@@ -25,12 +26,14 @@ import {
 import { getFactorCollinearity } from '#/api/research';
 import { $t } from '#/locales';
 import { parseDecimal } from '#/shared/components/format';
+import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'FactorCollinearityDrawer' });
 
 const CHART_HEIGHT = '420px';
 
 const { handleRequest } = useRequestHandler();
+const { isDark } = usePreferences();
 const report = ref<FactorCollinearityView | null>(null);
 const loading = ref(false);
 // Raw (pre-normalization) is the methodologically correct plane for detecting
@@ -116,7 +119,13 @@ function render() {
     visualMap: {
       bottom: 10,
       calculable: true,
-      inRange: { color: ['#2f6fed', '#f5f5f5', '#e0533d'] },
+      inRange: {
+        color: [
+          themeColors.primary,
+          themeColors.background,
+          themeColors.destructive,
+        ],
+      },
       left: 'center',
       max: 1,
       min: -1,
@@ -137,7 +146,7 @@ function render() {
   });
 }
 
-watch(report, () => render());
+watch([report, isDark], () => render());
 
 // Re-query when the operator switches the correlation plane.
 watch(source, () => {

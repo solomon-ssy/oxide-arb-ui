@@ -12,7 +12,6 @@ import type {
   FactorCollinearityView,
   FactorDefinitionListQuery,
   FactorDefinitionView,
-  FeatureContractView,
   FeatureIntegrityLatchView,
   FeatureIntegritySummaryView,
   FeatureParityEventListQuery,
@@ -30,7 +29,6 @@ import type {
   PublishModelRequest,
   QualityGatePreviewQuery,
   QualityGateReportView,
-  QuantModelSpecView,
   RegisterFactorDefinitionsRequest,
   ResearchJobListQuery,
   ResearchJobView,
@@ -50,6 +48,13 @@ import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
+
+import {
+  decodeCreateModelSpecRequest,
+  decodeFeatureContract,
+  decodeModelSpec,
+  decodeRunCpcvBacktestRequest,
+} from './research-model-contract';
 
 async function readAllPages<T>(
   fetchPage: (page: number) => Promise<Paginated<T>>,
@@ -118,7 +123,10 @@ export namespace ResearchApi {
 
 /** `GET /research/feature-contract` — active hash-bound model-input catalog. */
 export async function getFeatureContract() {
-  return requestClient.get<FeatureContractView>(ResearchApi.featureContract);
+  const response = await requestClient.get<unknown>(
+    ResearchApi.featureContract,
+  );
+  return decodeFeatureContract(response);
 }
 
 /** `GET /research/feature-integrity/summary` — latch, watermarks and latest runs. */
@@ -200,10 +208,14 @@ export async function getTrainingDataset(id: string) {
 
 /** `GET /research/model-specs` — paginated model-spec catalog (selector source). */
 export async function listModelSpecs(query: ModelSpecListQuery = {}) {
-  return requestClient.get<Paginated<QuantModelSpecView>>(
+  const response = await requestClient.get<Paginated<unknown>>(
     ResearchApi.modelSpecs,
     { params: query },
   );
+  return {
+    ...response,
+    items: response.items.map((item) => decodeModelSpec(item)),
+  };
 }
 
 /** Read the complete filtered model-spec catalog for selector validation. */
@@ -213,7 +225,8 @@ export async function listAllModelSpecs(query: ModelSpecListQuery = {}) {
 
 /** `GET /research/model-specs/{id}` — single model-spec row (detail drawer). */
 export async function getModelSpec(id: string) {
-  return requestClient.get<QuantModelSpecView>(ResearchApi.modelSpec(id));
+  const response = await requestClient.get<unknown>(ResearchApi.modelSpec(id));
+  return decodeModelSpec(response);
 }
 
 /** `POST /research/model-specs` — governed model-spec authoring. */
@@ -221,7 +234,13 @@ export async function createModelSpec(
   body: CreateModelSpecRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<QuantModelSpecView>(ResearchApi.modelSpecs, body, ctx);
+  const request = decodeCreateModelSpecRequest(body);
+  const response = await governedPost<unknown>(
+    ResearchApi.modelSpecs,
+    request,
+    ctx,
+  );
+  return decodeModelSpec(response);
 }
 
 /** `GET /research/models` — paginated trained-model registry catalog. */
@@ -364,9 +383,10 @@ export async function cpcvBacktestModel(
   body: RunCpcvBacktestRequest,
   ctx: GovernedContext,
 ) {
+  const request = decodeRunCpcvBacktestRequest(body);
   return governedPost<ResearchJobView>(
     ResearchApi.cpcvBacktestModel(id),
-    body,
+    request,
     ctx,
   );
 }

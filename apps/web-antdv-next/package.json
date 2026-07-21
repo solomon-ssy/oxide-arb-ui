@@ -33,6 +33,7 @@
     "@vben/types": "workspace:*",
     "@vben/utils": "workspace:*",
     "@vueuse/core": "catalog:",
+    "ajv": "catalog:",
     "antdv-next": "catalog:",
     "dayjs": "catalog:",
     "decimal.js": "catalog:",

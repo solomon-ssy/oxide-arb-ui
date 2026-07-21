@@ -103,7 +103,7 @@ export interface SizingPlan {
   sizing_reason: string;
   sizing_model: SizingModelKind;
   edge_bps: BpsString | null;
-  /** Sizing waterfall provenance (Phase 11.3 §10) — the raw full-Kelly fraction. */
+  /** Sizing-waterfall provenance: the raw full-Kelly fraction. */
   f_star_applied?: DecimalString | null;
   /** The governed static fractional-Kelly constant (e.g. 0.5 for half-Kelly). */
   kelly_fraction_config_applied?: DecimalString | null;

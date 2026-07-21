@@ -40,9 +40,19 @@ export function cpcvFrozenContractFromSpec(
 /** Build the only CPCV bindings emitted by the UI; training semantics are absent. */
 export function cpcvRequestBody(
   values: Record<string, unknown>,
-): CpcvRequestBody {
+): CpcvRequestBody | null {
+  const decisionPolicySnapshotId = values.decision_policy_snapshot_id;
+  const trainingDatasetId = values.training_dataset_id;
+  if (
+    typeof decisionPolicySnapshotId !== 'string' ||
+    decisionPolicySnapshotId.trim() === '' ||
+    typeof trainingDatasetId !== 'string' ||
+    trainingDatasetId.trim() === ''
+  ) {
+    return null;
+  }
   return {
-    decision_policy_snapshot_id: values.decision_policy_snapshot_id as string,
-    training_dataset_id: values.training_dataset_id as string,
+    decision_policy_snapshot_id: decisionPolicySnapshotId,
+    training_dataset_id: trainingDatasetId,
   };
 }

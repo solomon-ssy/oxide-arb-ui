@@ -36,6 +36,8 @@ overrides:
   pinia: 'catalog:'
   vue: 'catalog:'
 
+patchedDependencies:
+  antdv-next@1.4.1: patches/antdv-next@1.4.1.patch
 catalog:
   '@ast-grep/napi': ^0.43.0
   '@axe-core/playwright': 4.12.1
@@ -97,6 +99,8 @@ catalog:
   '@vueuse/core': ^14.3.0
   '@vueuse/integrations': ^14.3.0
   '@vueuse/motion': ^3.0.3
+  ajv: 8.20.0
+  ajv-formats: 3.0.1
   ant-design-vue: ^4.2.6
   antdv-next: ^1.4.0
   archiver: ^7.0.1

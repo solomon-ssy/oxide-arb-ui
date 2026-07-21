@@ -891,7 +891,7 @@ onMounted(() => void loadOverview());
     ),
     radial-gradient(
       circle at 92% 100%,
-      hsl(270deg 80% 60% / 10%),
+      hsl(var(--visual-3) / 10%),
       transparent 30%
     );
 }

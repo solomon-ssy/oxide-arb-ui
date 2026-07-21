@@ -17,6 +17,7 @@ import { Button, Empty, Tag } from 'antdv-next';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import { formatUsd } from '#/shared/components/format';
+import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'DashboardRecommendationOrbit' });
 
@@ -39,7 +40,6 @@ const reducedMotion = usePreferredReducedMotion();
 const { isDark } = usePreferences();
 const { getChartInstance, renderEcharts, updateData } = useEcharts(chartRef);
 let timer: ReturnType<typeof setInterval> | undefined;
-const orbitPalette = ['#7c3aed', '#0284c7', '#059669', '#d97706', '#e11d48'];
 
 const shouldRotate = computed(
   () =>
@@ -53,6 +53,8 @@ const shouldRotate = computed(
 );
 
 const chartData = computed(() => {
+  void isDark.value;
+  const orbitPalette = themeColors.visual;
   return props.recommendations.map((recommendation) => ({
     category: recommendation.identity.category,
     confidence: recommendation.confidence,
@@ -73,13 +75,13 @@ async function render() {
   const instance = await renderEcharts({
     angleAxis: {
       axisLabel: {
-        color: isDark.value ? '#e5e7eb' : '#334155',
+        color: themeColors.foreground,
         fontWeight: 600,
         formatter: (_value: string, index: number) =>
           `#${props.recommendations[index]?.rank ?? index + 1}`,
         interval: 0,
       },
-      axisLine: { lineStyle: { color: isDark.value ? '#475569' : '#cbd5e1' } },
+      axisLine: { lineStyle: { color: themeColors.border } },
       axisTick: { show: false },
       data: props.recommendations.map(
         (recommendation) => recommendation.identity.outcome_name,
@@ -102,7 +104,7 @@ async function render() {
       min: 0,
       splitLine: {
         lineStyle: {
-          color: isDark.value ? ['#27272a', '#3f3f46'] : ['#e2e8f0', '#cbd5e1'],
+          color: [themeColors.muted, themeColors.border],
           type: 'dashed',
         },
       },

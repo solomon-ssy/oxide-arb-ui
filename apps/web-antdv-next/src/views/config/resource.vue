@@ -1185,7 +1185,7 @@ onMounted(() => void loadResource());
 
 .workflow-steps li.active {
   font-weight: 600;
-  color: hsl(var(--primary));
+  color: hsl(var(--foreground));
 }
 
 .workflow-steps li.active .workflow-index,
@@ -1243,11 +1243,11 @@ onMounted(() => void loadResource());
 }
 
 .preflight-row .passed {
-  color: #059669;
+  color: hsl(var(--success));
 }
 
 .preflight-row .failed {
-  color: #dc2626;
+  color: hsl(var(--destructive));
 }
 
 .preflight-row .not-applicable {
@@ -1265,14 +1265,14 @@ onMounted(() => void loadResource());
   padding: 0.75rem 1rem;
   border: 1px solid hsl(var(--border));
   border-radius: 0.75rem;
-  box-shadow: 0 16px 40px -24px rgb(15 23 42 / 45%);
+  box-shadow: 0 16px 40px -24px hsl(var(--foreground) / 45%);
   backdrop-filter: blur(12px);
 }
 
 .activation-success {
   background-image: radial-gradient(
     circle at 50% 0%,
-    rgb(5 150 105 / 12%),
+    hsl(var(--success) / 12%),
     transparent 40%
   );
 }
@@ -1283,8 +1283,8 @@ onMounted(() => void loadResource());
   width: 3.5rem;
   height: 3.5rem;
   font-size: 1.75rem;
-  color: #047857;
-  background: rgb(5 150 105 / 12%);
+  color: hsl(var(--success));
+  background: hsl(var(--success) / 12%);
   border-radius: 999px;
   animation: success-enter 280ms ease-out both;
 }

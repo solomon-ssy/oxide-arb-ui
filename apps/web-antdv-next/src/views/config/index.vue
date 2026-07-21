@@ -475,33 +475,33 @@ onMounted(() => void loadOverview());
 }
 
 .config-icon--blue {
-  color: #2563eb;
-  background: rgb(37 99 235 / 10%);
+  color: hsl(var(--visual-1));
+  background: hsl(var(--visual-1) / 10%);
 }
 
 .config-icon--rose {
-  color: #e11d48;
-  background: rgb(225 29 72 / 10%);
+  color: hsl(var(--visual-2));
+  background: hsl(var(--visual-2) / 10%);
 }
 
 .config-icon--purple {
-  color: #7c3aed;
-  background: rgb(124 58 237 / 10%);
+  color: hsl(var(--visual-3));
+  background: hsl(var(--visual-3) / 10%);
 }
 
 .config-icon--cyan {
-  color: #0891b2;
-  background: rgb(8 145 178 / 10%);
+  color: hsl(var(--visual-4));
+  background: hsl(var(--visual-4) / 10%);
 }
 
 .config-icon--amber {
-  color: #d97706;
-  background: rgb(217 119 6 / 10%);
+  color: hsl(var(--visual-5));
+  background: hsl(var(--visual-5) / 10%);
 }
 
 .config-icon--green {
-  color: #059669;
-  background: rgb(5 150 105 / 10%);
+  color: hsl(var(--visual-6));
+  background: hsl(var(--visual-6) / 10%);
 }
 
 .config-resource-card {
@@ -518,14 +518,14 @@ onMounted(() => void loadOverview());
   inset: 0 auto 0 0;
   width: 2px;
   content: '';
-  background: var(--resource-accent, #2563eb);
+  background: var(--resource-accent, hsl(var(--visual-1)));
   opacity: 0;
   transition: opacity 120ms ease;
 }
 
 .config-resource-card:hover {
   border-color: hsl(var(--primary) / 35%);
-  box-shadow: 0 10px 30px -20px rgb(15 23 42 / 35%);
+  box-shadow: 0 10px 30px -20px hsl(var(--foreground) / 35%);
 }
 
 .config-resource-card:hover::before {
@@ -533,27 +533,27 @@ onMounted(() => void loadOverview());
 }
 
 .config-resource-card--blue {
-  --resource-accent: #2563eb;
+  --resource-accent: hsl(var(--visual-1));
 }
 
 .config-resource-card--rose {
-  --resource-accent: #e11d48;
+  --resource-accent: hsl(var(--visual-2));
 }
 
 .config-resource-card--purple {
-  --resource-accent: #7c3aed;
+  --resource-accent: hsl(var(--visual-3));
 }
 
 .config-resource-card--cyan {
-  --resource-accent: #0891b2;
+  --resource-accent: hsl(var(--visual-4));
 }
 
 .config-resource-card--amber {
-  --resource-accent: #d97706;
+  --resource-accent: hsl(var(--visual-5));
 }
 
 .config-resource-card--green {
-  --resource-accent: #059669;
+  --resource-accent: hsl(var(--visual-6));
 }
 
 .config-motion {

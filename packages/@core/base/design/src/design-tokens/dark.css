@@ -56,6 +56,14 @@
   --warning: 42 84% 61%;
   --warning-foreground: 0 0% 98%;
 
+  /* Product data-visualization colors. */
+  --visual-1: 217 91% 68%;
+  --visual-2: 347 77% 68%;
+  --visual-3: 263 70% 70%;
+  --visual-4: 189 94% 62%;
+  --visual-5: 38 92% 60%;
+  --visual-6: 160 72% 55%;
+
   /* 颜色次要 */
   --secondary: 240 5% 17%;
   --secondary-foreground: 0 0% 98%;

@@ -165,6 +165,12 @@
   --color-warning-text: hsl(var(--warning-500));
   --color-warning-text-active: hsl(var(--warning-700));
   --color-warning-text-hover: hsl(var(--warning-600));
+  --color-visual-1: hsl(var(--visual-1));
+  --color-visual-2: hsl(var(--visual-2));
+  --color-visual-3: hsl(var(--visual-3));
+  --color-visual-4: hsl(var(--visual-4));
+  --color-visual-5: hsl(var(--visual-5));
+  --color-visual-6: hsl(var(--visual-6));
 
   /* ===== Green Palette (alias for success shades) ===== */
 

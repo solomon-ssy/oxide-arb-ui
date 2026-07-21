@@ -1,15 +1,22 @@
+import process from 'node:process';
+
 import { defineConfig, devices } from 'playwright/test';
 
 const externalServers = process.env.PLAYWRIGHT_EXTERNAL_SERVERS === 'true';
+const evidenceRun = process.env.PLAYWRIGHT_EVIDENCE_RUN;
+
+if (evidenceRun && !/^[a-z0-9-]+$/.test(evidenceRun)) {
+  throw new Error('PLAYWRIGHT_EVIDENCE_RUN must contain only a-z, 0-9, and -');
+}
+
+const outputDir = evidenceRun ? `test-results/${evidenceRun}` : 'test-results';
+const reportDir = evidenceRun
+  ? `playwright-report/${evidenceRun}`
+  : 'playwright-report';
+const retainBackendArtifacts =
+  process.env.CI === 'true' ? ' --retain-artifacts' : '';
 
 export default defineConfig({
-  expect: {
-    toHaveScreenshot: {
-      animations: 'disabled',
-      caret: 'hide',
-      maxDiffPixelRatio: 0.001,
-    },
-  },
   forbidOnly: true,
   fullyParallel: false,
   projects: [
@@ -21,7 +28,19 @@ export default defineConfig({
       },
     },
   ],
-  reporter: [['list'], ['html', { open: 'never' }]],
+  outputDir,
+  reporter: [
+    ['list'],
+    ['html', { open: 'never', outputFolder: reportDir }],
+    [
+      'junit',
+      {
+        includeProjectInTestName: true,
+        outputFile: `${outputDir}/junit.xml`,
+        stripANSIControlSequences: true,
+      },
+    ],
+  ],
   retries: 0,
   testDir: './apps/web-antdv-next/tests/e2e',
   timeout: 60_000,
@@ -36,8 +55,8 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command:
-            'cargo test --manifest-path ../Cargo.toml -p quant-pivot-web --test web serve_protected_ui_e2e -- --ignored --nocapture',
+          command: `cargo build -p quant-pivot-xtask -p quant-pivot-bin && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port 8088 --browser-fixture${retainBackendArtifacts}`,
+          gracefulShutdown: { signal: 'SIGTERM', timeout: 60_000 },
           reuseExistingServer: false,
           stderr: 'pipe',
           stdout: 'pipe',

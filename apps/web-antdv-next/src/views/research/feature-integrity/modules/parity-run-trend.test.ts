@@ -1,6 +1,13 @@
 import type { FeatureParityRunView } from '@vben/types';
 
+import { FEATURE_PARITY_STAGES } from '@vben/types';
+
 import { describe, expect, it } from 'vitest';
+
+import {
+  findTagOption,
+  useFeatureParityStageTagOptions,
+} from '#/shared/components/format/tag-options';
 
 import { buildParityRunTrend } from './parity-run-trend';
 
@@ -92,5 +99,23 @@ describe('buildParityRunTrend', () => {
         rejectedCount: 2,
       },
     );
+  });
+
+  it.each(Object.values(FEATURE_PARITY_STAGES))(
+    'keeps stage %s visible in drill-down from a trend point',
+    (stage) => {
+      const option = findTagOption(useFeatureParityStageTagOptions(), stage);
+      expect(option).toBeDefined();
+      expect(option?.label).toBeTruthy();
+    },
+  );
+
+  it('keeps an unsupported stage visible as contract drift', () => {
+    expect(
+      findTagOption(useFeatureParityStageTagOptions(), 'unsupported_stage'),
+    ).toMatchObject({
+      color: 'error',
+      value: 'unsupported_stage',
+    });
   });
 });

@@ -5,7 +5,7 @@ import type {
   UuidString,
 } from './common';
 
-// Calibration artifact types moved to `./calibration` (Phase 11.3 §3.4).
+// Canonical calibration artifact types are owned by `./calibration`.
 export type {
   ActivateCalibrationArtifactRequest,
   BindCalibrationRequest,
@@ -24,7 +24,7 @@ export type {
   ReliabilityReportView,
 } from './calibration';
 
-// ── Structural Alpha monitor (Phase 11.2.1+) ────────────────────────────────
+// ── Structural alpha monitoring ────────────────────────────────────────────
 
 /** One YES leg of a neg-risk event with its live best ask. */
 export interface NegRiskLegView {
@@ -120,7 +120,7 @@ export interface ParticipantConcentrationDetailView {
   top_participants: ParticipantConcentrationParticipantView[];
 }
 
-// ── Crypto domain linkage + ingest (Phase 11.2.2) ───────────────────────────
+// ── Crypto domain linkage and ingest ───────────────────────────────────────
 
 /** Linkage ledger summary row (`GET /research/market-linkages`). */
 export interface MarketLinkageSummaryView {
@@ -134,7 +134,7 @@ export interface MarketLinkageSummaryView {
   source_bindings: ResolvedSourceBindingView[];
   content_hash: string;
   derived_at: IsoDateTime;
-  /** Populated only for `resolver_tier = 'override'` rows (11.2.2 remediation R4). */
+  /** Populated only for `resolver_tier = 'override'` rows. */
   override_reason: null | string;
   override_actor: null | string;
   created_at: IsoDateTime;
@@ -253,9 +253,59 @@ export interface ResolvedBindingView {
 }
 
 /** The resolver's outcome for one linkage record (mirrors Rust `LinkageOutcome`). */
+export type LinkageValidationFailureView =
+  | {
+      actual: string;
+      asset: string;
+      code: 'chainlink_feed_ruleset_mismatch';
+      expected: string;
+    }
+  | {
+      actual: string;
+      code: 'instrument_ruleset_mismatch' | 'weather_instrument_mismatch';
+      expected: string;
+    }
+  | {
+      actual_market: string;
+      actual_symbol: string;
+      asset: string;
+      code: 'binance_oracle_ruleset_mismatch';
+      expected_market: string;
+      expected_symbol: string;
+    }
+  | { asset: string; code: 'asset_not_in_ruleset' }
+  | { code: 'fractional_weather_outcome_band' }
+  | {
+      code: 'grounding_source_absent';
+      source: string;
+      subject_field: string;
+    }
+  | {
+      code: 'grounding_span_out_of_bounds';
+      end: number;
+      source_length: number;
+      start: number;
+      subject_field: string;
+    }
+  | { code: 'grounding_text_mismatch'; subject_field: string }
+  | { code: 'invalid_weather_decision_group_id' }
+  | { code: 'invalid_weather_outcome_band' }
+  | { code: 'invalid_weather_timezone'; timezone: string }
+  | { code: 'missing_grounding'; subject_field: string }
+  | { code: 'missing_literal_grounding'; subject_field: string }
+  | { code: 'unsupported_subject' };
+
+export type LinkageUnresolvedReasonView =
+  | {
+      code: 'candidate_rejected';
+      failure: LinkageValidationFailureView;
+      tier: string;
+    }
+  | { code: 'no_deterministic_template' };
+
 export type LinkageOutcomeView =
   | (ResolvedBindingView & { status: 'resolved' })
-  | { reason: string; status: 'unresolved' };
+  | { reason: LinkageUnresolvedReasonView; status: 'unresolved' };
 
 /** Full linkage detail (`GET /research/market-linkages/{market_id}`). */
 export interface MarketLinkageDetailView {

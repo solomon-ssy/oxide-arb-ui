@@ -169,10 +169,7 @@ watch(
 <template>
   <Modal>
     <div class="flex flex-col gap-4" data-testid="governed-action-modal">
-      <p
-        v-if="payload?.summary"
-        class="text-sm text-gray-600 dark:text-gray-300"
-      >
+      <p v-if="payload?.summary" class="text-muted-foreground text-sm">
         {{ payload.summary }}
       </p>
 

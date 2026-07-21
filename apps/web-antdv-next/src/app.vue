@@ -23,8 +23,19 @@ const tokenTheme = computed(() => {
     algorithm.push(theme.compactAlgorithm);
   }
 
+  const components = isDark.value
+    ? {
+        Tabs: {
+          itemActiveColor: tokens.colorTextBase,
+          itemHoverColor: tokens.colorTextBase,
+          itemSelectedColor: tokens.colorTextBase,
+        },
+      }
+    : undefined;
+
   return {
     algorithm,
+    components,
     token: tokens,
   };
 });
@@ -45,3 +56,13 @@ watch(
     </App>
   </ConfigProvider>
 </template>
+
+<style>
+.dark .ant-btn-link {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .ant-tag-filled:not(.ant-tag-default) {
+  color: hsl(var(--foreground)) !important;
+}
+</style>

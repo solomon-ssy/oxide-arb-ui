@@ -936,6 +936,10 @@
         "catalogLoadError": "无法加载当前受治理特征目录。为防止训练与服务契约漂移，已禁止编辑输入契约。",
         "catalogRequiredError": "当前特征目录尚未成功加载，无法创建模型规格。",
         "catalogBinding": "绑定 FeatureSchema v{version} · {hash}",
+        "selectFeatures": "模型输入特征",
+        "requirednessFor": "{feature} 的必需性",
+        "moveUp": "上移 {feature}",
+        "moveDown": "下移 {feature}",
         "retry": "重试"
       },
       "trainingContract": {

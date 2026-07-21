@@ -19,6 +19,7 @@ import RuntimeModeIndicator from '#/shared/components/header/runtime-mode-indica
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
 import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
 import PreflightResultDrawer from '#/shared/components/preflight-result-drawer.vue';
+import { resolveThemeColor } from '#/shared/components/theme-color';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useSystemStatusBootstrap } from '#/shared/composables/use-system-status';
@@ -106,11 +107,9 @@ watch(
     content: preferences.app.watermarkContent,
     isDark: isDark.value,
   }),
-  async ({ enable, content, isDark: isDarkValue }) => {
+  async ({ enable, content }) => {
     if (enable) {
-      const watermarkColor = isDarkValue
-        ? 'rgba(255, 255, 255, 0.12)'
-        : 'rgba(0, 0, 0, 0.12)';
+      const watermarkColor = resolveThemeColor('--foreground', '12%');
 
       await updateWatermark({
         advancedStyle: {

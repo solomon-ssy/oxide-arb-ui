@@ -191,6 +191,9 @@ const columns = [
           :title="$t('page.quantReports.detail.recommendations.columns.open')"
         >
           <Button
+            :aria-label="
+              $t('page.quantReports.detail.recommendations.columns.open')
+            "
             size="small"
             type="link"
             @click.stop="openFullPage(record.recommendation_id)"

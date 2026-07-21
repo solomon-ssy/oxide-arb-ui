@@ -240,8 +240,8 @@ export type PolicyApplyBoundary =
 /**
  * How often a report schedule fires.
  *
- * Tagged on `kind`. The cron variant is parsed/scheduled by the 04.3 runner;
- * 04.0 validation only checks structural validity.
+ * Tagged on `kind`. The cron variant is parsed/scheduled by the runner;
+ * validation only checks structural validity.
  */
 export type ScheduleCadence =
   | {
@@ -529,9 +529,9 @@ export interface ExecutionRiskPolicy {
   settlement_redeem?: SettlementRedeemPolicy;
 }
 /**
- * Venue-dimension execution-breaker thresholds (Phase 05.4 §6.5).
+ * Venue-dimension execution-breaker thresholds.
  *
- * Drives the stateful [`ExecutionBreaker`] that watches venue submit/cancel
+ * Drives the stateful execution breaker that watches venue submit/cancel
  * outcomes and publishes a `VenueHealth` seam for admission `#18` while
  * auto-tripping the operational kill-switch on sustained failure. Transient
  * degradation defers (admission retries); sustained failure halts and latches
@@ -630,7 +630,7 @@ export interface ExitMonitorPolicy {
   signal_reinference?: ExitSignalReinferencePolicy;
 }
 /**
- * Opportunistic-Sell advisory scale-out (Phase 06.1).
+ * Opportunistic-Sell advisory scale-out.
  */
 export interface OpportunisticSellPolicy {
   /**
@@ -644,7 +644,7 @@ export interface OpportunisticSellPolicy {
   shadow_mode?: boolean;
 }
 /**
- * Model-backed thesis-invalidation re-inference (Phase 06.0).
+ * Model-backed thesis-invalidation re-inference.
  */
 export interface ExitSignalReinferencePolicy {
   /**
@@ -660,8 +660,8 @@ export interface ExitSignalReinferencePolicy {
 /**
  * Portfolio policy: budget governance, exposure constraints, and sizing model.
  *
- * Policy (limits) only — never account state. Real equity / positions come
- * from the account snapshot, never from here (see 04.0 §6).
+ * Policy limits only — never account state. Real equity and positions come
+ * from the account snapshot, never from this configuration.
  */
 export interface PortfolioConfig {
   budget?: PortfolioBudget;
@@ -877,7 +877,7 @@ export interface ModelRouting {
  */
 export interface ModelConfig {
   /**
-   * Active published Sell-side hold-vs-exit scorer version (Phase 06.1). The
+   * Active published Sell-side hold-vs-exit scorer version. The
    * opportunistic-Sell exit evaluator loads this; a distinct pointer from
    * `active_model_version_id` so Buy and Sell models are governed separately.
    */
@@ -892,7 +892,7 @@ export interface ModelConfig {
    */
   candidate_score_floor?: string;
   /**
-   * Category-specific Buy-side model pointers (Phase 11.2.2 `ModelRouting`).
+   * Category-specific Buy-side model pointers (`ModelRouting`).
    *
    * A market whose category has a pointer here scores through that artifact
    * (which may consume the category's domain slice); only categories without
@@ -918,8 +918,8 @@ export interface ModelConfig {
   min_model_confidence?: string;
   /**
    * Maximum age of a quality-gate report before model load is denied.
-   * Consumed by Phase 3.7 governance (`ModelQualityGate` / load-time deny), not by
-   * the 3.4 `ModelRunner` inference path.
+   * Consumed by governance (`ModelQualityGate` / load-time deny), not by
+   * the `ModelRunner` inference path.
    */
   min_quality_gate_age_secs?: number;
   /**
@@ -932,7 +932,7 @@ export interface ModelConfig {
   shadow_model_version_id?: ModelVersionRef | null;
 }
 /**
- * Model-score probability-calibrator fit policy (Phase 11.3).
+ * Model-score probability-calibrator fit policy.
  */
 export interface ModelCalibrationConfig {
   /**

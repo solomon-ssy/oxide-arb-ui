@@ -383,7 +383,7 @@ setupVbenVxeTable({
           if (danger !== undefined && decimal.gte(danger)) {
             colorClass = 'text-destructive';
           } else if (warn !== undefined && decimal.gte(warn)) {
-            colorClass = 'text-yellow-500';
+            colorClass = 'text-warning';
           }
         }
         return h(

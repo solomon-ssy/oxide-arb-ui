@@ -1,4 +1,5 @@
 {
+  "unknownValue": "Unknown: {value}",
   "quantRuntimeMode": {
     "report_only": "Report Only",
     "semi_auto": "Semi Auto",
@@ -517,6 +518,27 @@
     "resolved": "Resolved",
     "unresolved": "Unresolved",
     "overridden": "Overridden"
+  },
+  "linkageUnresolvedReason": {
+    "no_deterministic_template": "No deterministic template recognized this market",
+    "candidate_rejected": "Resolver candidate rejected"
+  },
+  "linkageValidationFailure": {
+    "grounding_source_absent": "Grounding source is absent",
+    "grounding_span_out_of_bounds": "Grounding span is out of bounds",
+    "grounding_text_mismatch": "Grounding text does not match source metadata",
+    "missing_literal_grounding": "Required literal grounding is missing",
+    "missing_grounding": "Required grounding is missing",
+    "unsupported_subject": "Subject family is unsupported",
+    "invalid_weather_decision_group_id": "Weather decision-group identity is invalid",
+    "invalid_weather_outcome_band": "Weather outcome band is invalid",
+    "fractional_weather_outcome_band": "Weather outcome band requires whole-degree bounds",
+    "invalid_weather_timezone": "Weather timezone is invalid",
+    "weather_instrument_mismatch": "Weather instrument does not match the station",
+    "asset_not_in_ruleset": "Asset is not in the resolver ruleset",
+    "instrument_ruleset_mismatch": "Instrument does not match the resolver ruleset",
+    "chainlink_feed_ruleset_mismatch": "Chainlink feed does not match the resolver ruleset",
+    "binance_oracle_ruleset_mismatch": "Binance oracle does not match the resolver ruleset"
   },
   "resolverTier": {
     "tier0_slug": "Tier 0 (slug)",

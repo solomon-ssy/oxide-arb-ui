@@ -54,6 +54,15 @@
   --warning: 42 84% 61%;
   --warning-foreground: 0 0% 98%;
 
+  /* Product data-visualization colors. Business state still uses the semantic
+     primary/success/warning/destructive tokens above. */
+  --visual-1: 217 91% 60%;
+  --visual-2: 347 77% 50%;
+  --visual-3: 263 70% 50%;
+  --visual-4: 189 94% 37%;
+  --visual-5: 32 95% 44%;
+  --visual-6: 160 84% 39%;
+
   /* Secondary colors for <Button /> */
 
   --secondary: 240 5% 96%;

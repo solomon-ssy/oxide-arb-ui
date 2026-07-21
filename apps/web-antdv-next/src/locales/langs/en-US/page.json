@@ -936,6 +936,10 @@
         "catalogLoadError": "The active governed feature catalog could not be loaded. Input editing is blocked to prevent a training-serving contract drift.",
         "catalogRequiredError": "The active feature catalog has not loaded successfully, so the model spec cannot be created.",
         "catalogBinding": "Bound to FeatureSchema v{version} · {hash}",
+        "selectFeatures": "Model input features",
+        "requirednessFor": "Requiredness for {feature}",
+        "moveUp": "Move {feature} up",
+        "moveDown": "Move {feature} down",
         "retry": "Retry"
       },
       "trainingContract": {

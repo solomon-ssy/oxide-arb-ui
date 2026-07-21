@@ -19,7 +19,7 @@ const emit = defineEmits<{ back: [] }>();
 
 <template>
   <div class="mb-4">
-    <Button type="link" @click="emit('back')">
+    <Button class="detail-back-nav" type="link" @click="emit('back')">
       <IconifyIcon class="mr-1 size-4" icon="lucide:arrow-left" />
       {{ label ?? $t('page.shared.detailBack') }}
     </Button>

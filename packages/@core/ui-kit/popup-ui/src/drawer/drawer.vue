@@ -228,6 +228,7 @@ const getForceMount = computed(() => {
           <SheetClose
             v-if="closable && closeIconPlacement === 'left'"
             as-child
+            :aria-label="$t('close')"
             :disabled="submitting"
             class="ml-0.5 cursor-pointer rounded-full opacity-80 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary"
           >
@@ -269,6 +270,7 @@ const getForceMount = computed(() => {
           <SheetClose
             v-if="closable && closeIconPlacement === 'right'"
             as-child
+            :aria-label="$t('close')"
             :disabled="submitting"
             class="ml-0.5 cursor-pointer rounded-full opacity-80 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary"
           >

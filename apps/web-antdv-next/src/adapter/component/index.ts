@@ -373,7 +373,7 @@ function cropImage(file: File, aspectRatio: string | undefined) {
                 h(
                   'span',
                   {
-                    class: `${aspectRatio ? '' : 'hidden'} ml-2 text-sm text-gray-400 font-normal`,
+                    class: `${aspectRatio ? '' : 'hidden'} ml-2 text-sm text-muted-foreground font-normal`,
                   },
                   $t('ui.crop.titleTip', [aspectRatio]),
                 ),
@@ -521,7 +521,7 @@ function withPreviewUpload() {
           style.id = styleId;
           style.textContent = `
             [data-upload-id="${uploadId}"] .ant-upload-list-item { cursor: move; }
-            [data-upload-id="${uploadId}"] .ant-upload-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+            [data-upload-id="${uploadId}"] .ant-upload-list-item:hover { box-shadow: 0 2px 8px hsl(var(--foreground) / 15%); }
           `;
           document.head.append(style);
         }

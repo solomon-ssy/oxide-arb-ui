@@ -7,6 +7,8 @@ import type {
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { usePreferences } from '@vben/preferences';
+
 import {
   Alert,
   Button,
@@ -35,6 +37,7 @@ import {
   useQuantRuntimeModeTagOptions,
   useRecommendationReportStatusTagOptions,
 } from '#/shared/components/format/tag-options';
+import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'ReportOverview' });
 
@@ -44,6 +47,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const { isDark } = usePreferences();
 
 const statusTagOptions = useRecommendationReportStatusTagOptions();
 const modeTagOptions = useQuantRuntimeModeTagOptions();
@@ -153,10 +157,10 @@ function displayCount(value: null | number | undefined): number | string {
 }
 
 // Frozen server-side at report-compose time from the exact account and
-// decision-policy snapshot this report solved against (Phase 11.3 §10). Never
-// re-derived client-side from a separately fetched policy revision,
-// which may not even be the one this report used and may use a different
-// (pre-11.3-fix) bankroll denominator than the LP actually enforced.
+// decision-policy snapshot this report solved against. Never re-derived
+// client-side from a separately fetched policy revision, which may not be the
+// one used by this report and can encode a different bankroll denominator from
+// the one enforced by the portfolio optimizer.
 const aggregateExposureCapUsd = computed(() => {
   const raw = summary.value.aggregate_exposure_cap_usd;
   const parsed = raw === null || raw === undefined ? null : Number(raw);
@@ -195,12 +199,13 @@ const aggregateExposureProgressStatus = computed(() => {
 });
 
 const aggregateExposureStrokeColor = computed(() => {
+  void isDark.value;
   const pct = aggregateExposureProgress.value;
   if (pct >= 90) {
-    return { from: '#ff4d4f', to: '#cf1322' };
+    return { from: themeColors.destructive, to: themeColors.destructive };
   }
   if (pct >= 80) {
-    return { from: '#faad14', to: '#ff4d4f' };
+    return { from: themeColors.warning, to: themeColors.destructive };
   }
   return undefined;
 });

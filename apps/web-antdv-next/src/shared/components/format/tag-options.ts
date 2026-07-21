@@ -66,7 +66,13 @@ export function findTagOption(
   if (!value) {
     return undefined;
   }
-  return options.find((item) => item.value === value);
+  return (
+    options.find((item) => item.value === value) ?? {
+      color: 'error',
+      label: $t('enum.unknownValue', { value }),
+      value,
+    }
+  );
 }
 
 /** Operation log outcome tags with semantic colors. */
@@ -689,7 +695,7 @@ export function useSideTagOptions() {
   );
 }
 
-/** Market-linkage ledger status tags (Phase 11.2.2). */
+/** Market-linkage ledger status tags. */
 export function useLinkageStatusTagOptions() {
   return buildTagOptions(
     ['resolved', 'unresolved', 'overridden'],

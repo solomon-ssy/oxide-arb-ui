@@ -19,12 +19,18 @@
       "types": "./src/generated/config-api.ts",
       "default": "./src/generated/config-api.ts"
     },
+    "./research-model-api-validators": {
+      "types": "./src/generated/research-model-api-validators.ts",
+      "default": "./src/generated/research-model-api-validators.ts"
+    },
     "./global": {
       "types": "./global.d.ts"
     }
   },
   "dependencies": {
     "@vben-core/typings": "workspace:*",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
     "decimal.js": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"

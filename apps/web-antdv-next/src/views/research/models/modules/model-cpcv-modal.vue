@@ -102,9 +102,14 @@ async function onSubmit(values: Record<string, unknown>) {
     message.error($t('page.research.models.cpcv.contractUnavailable'));
     return;
   }
+  const request = cpcvRequestBody(values);
+  if (!request) {
+    message.error($t('page.research.models.cpcv.contractUnavailable'));
+    return;
+  }
   modalApi.lock();
   try {
-    const ok = await payload.value.onSubmit(cpcvRequestBody(values));
+    const ok = await payload.value.onSubmit(request);
     if (ok) {
       modalApi.close();
     }

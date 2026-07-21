@@ -11,6 +11,7 @@ import type { ParityRunTrendPoint } from './parity-run-trend';
 import { computed, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+import { usePreferences } from '@vben/preferences';
 import {
   FEATURE_PARITY_RUN_KINDS,
   FEATURE_PARITY_RUN_STATUSES,
@@ -25,6 +26,7 @@ import {
   useFeatureParityRunKindTagOptions,
   useFeatureParityRunStatusTagOptions,
 } from '#/shared/components/format/tag-options';
+import { themeColors } from '#/shared/components/theme-color';
 
 import { buildParityRunTrend } from './parity-run-trend';
 
@@ -37,25 +39,13 @@ const props = defineProps<{
 }>();
 
 const CHART_HEIGHT = '320px';
-const METRIC_COLORS = {
-  comparedCount: '#1677ff',
-  mismatchedCount: '#ff4d4f',
-  pendingCount: '#faad14',
-} as const;
-const STATUS_COLORS: Record<FeatureParityRunStatus, string> = {
-  failed: '#ff4d4f',
-  mismatched: '#cf1322',
-  passed: '#52c41a',
-  pending_materialization: '#faad14',
-  queued: '#8c8c8c',
-  running: '#1677ff',
-};
 const kinds = Object.values(FEATURE_PARITY_RUN_KINDS);
 const statuses = Object.values(FEATURE_PARITY_RUN_STATUSES);
 
 const chartRef = ref<EchartsUIType>();
 const chartAreaRef = ref<HTMLElement | null>(null);
 const { renderEcharts, resize } = useEcharts(chartRef);
+const { isDark } = usePreferences();
 const trend = computed(() => buildParityRunTrend(props.runs));
 const hasData = computed(() => trend.value.points.length > 0);
 const kindTagOptions = useFeatureParityRunKindTagOptions();
@@ -78,6 +68,41 @@ useResizeObserver(
 
 type MetricKey = 'comparedCount' | 'mismatchedCount' | 'pendingCount';
 
+function metricColor(metric: MetricKey): string {
+  switch (metric) {
+    case 'comparedCount': {
+      return themeColors.primary;
+    }
+    case 'mismatchedCount': {
+      return themeColors.destructive;
+    }
+    case 'pendingCount': {
+      return themeColors.warning;
+    }
+  }
+}
+
+function statusColor(status: FeatureParityRunStatus): string {
+  switch (status) {
+    case 'failed':
+    case 'mismatched': {
+      return themeColors.destructive;
+    }
+    case 'passed': {
+      return themeColors.success;
+    }
+    case 'pending_materialization': {
+      return themeColors.warning;
+    }
+    case 'queued': {
+      return themeColors.muted;
+    }
+    case 'running': {
+      return themeColors.primary;
+    }
+  }
+}
+
 function metricLabel(key: MetricKey): string {
   return $t(`page.research.featureIntegrity.trend.${key}`);
 }
@@ -97,9 +122,9 @@ function seriesData(
       ...(metric === 'comparedCount'
         ? {
             itemStyle: {
-              borderColor: '#ffffff',
+              borderColor: themeColors.background,
               borderWidth: 1,
-              color: STATUS_COLORS[point.status],
+              color: statusColor(point.status),
             },
           }
         : {}),
@@ -127,7 +152,7 @@ function render() {
         data: seriesData(points, kind, metric),
         emphasis: { focus: 'series' },
         lineStyle: {
-          color: METRIC_COLORS[metric],
+          color: metricColor(metric),
           type: kind === FEATURE_PARITY_RUN_KINDS.full ? 'solid' : 'dashed',
           width: metric === 'comparedCount' ? 2 : 1.5,
         },
@@ -150,7 +175,7 @@ function render() {
 }
 
 watch(
-  [trend, () => props.loading],
+  [trend, () => props.loading, isDark],
   () => {
     if (!props.loading) {
       render();

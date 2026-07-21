@@ -180,6 +180,12 @@ catalogs:
     '@vueuse/motion':
       specifier: ^3.0.3
       version: 3.0.3
+    ajv:
+      specifier: 8.20.0
+      version: 8.20.0
+    ajv-formats:
+      specifier: 3.0.1
+      version: 3.0.1
     ant-design-vue:
       specifier: ^4.2.6
       version: 4.2.6
@@ -527,6 +533,9 @@ overrides:
   pinia: ^3.0.4
   vue: ^3.5.35
 
+patchedDependencies:
+  antdv-next@1.4.1: a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa
+
 importers:
 
   .:
@@ -543,6 +552,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.2
+      '@typescript-eslint/parser':
+        specifier: 'catalog:'
+        version: 8.60.1(eslint@10.4.1(jiti@2.7.0))(typescript@6.0.3)
       '@vben/commitlint-config':
         specifier: workspace:*
         version: link:internal/lint-configs/commitlint-config
@@ -579,6 +591,12 @@ importers:
       '@vitejs/plugin-vue-jsx':
         specifier: 'catalog:'
         version: 5.1.5(vite@8.0.10(@types/node@25.9.2)(esbuild@0.28.0)(jiti@2.7.0)(less@4.6.4)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(vue@3.5.35(typescript@6.0.3))
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
+      ajv-formats:
+        specifier: 'catalog:'
+        version: 3.0.1(ajv@8.20.0)
       cross-env:
         specifier: 'catalog:'
         version: 10.1.0
@@ -615,6 +633,9 @@ importers:
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
+      stylelint:
+        specifier: 'catalog:'
+        version: 17.12.0(typescript@6.0.3)
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
@@ -636,6 +657,9 @@ importers:
       vue:
         specifier: ^3.5.35
         version: 3.5.35(typescript@6.0.3)
+      vue-eslint-parser:
+        specifier: 'catalog:'
+        version: 10.4.1(eslint@10.4.1(jiti@2.7.0))
       vue-tsc:
         specifier: 'catalog:'
         version: 3.3.3(typescript@6.0.3)
@@ -769,9 +793,12 @@ importers:
       '@vueuse/core':
         specifier: 'catalog:'
         version: 14.3.0(vue@3.5.35(typescript@6.0.3))
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
       antdv-next:
         specifier: 'catalog:'
-        version: 1.4.1(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
+        version: 1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
       dayjs:
         specifier: 'catalog:'
         version: 1.11.21
@@ -1019,7 +1046,7 @@ importers:
         version: link:../packages/styles
       antdv-next:
         specifier: 'catalog:'
-        version: 1.4.1(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
+        version: 1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
       medium-zoom:
         specifier: 'catalog:'
         version: 1.1.0
@@ -1980,6 +2007,12 @@ importers:
       '@vben-core/typings':
         specifier: workspace:*
         version: link:../@core/base/typings
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
+      ajv-formats:
+        specifier: 'catalog:'
+        version: 3.0.1(ajv@8.20.0)
       decimal.js:
         specifier: 'catalog:'
         version: 10.6.0
@@ -2060,7 +2093,7 @@ importers:
         version: 14.3.0(vue@3.5.35(typescript@6.0.3))
       antdv-next:
         specifier: 'catalog:'
-        version: 1.4.1(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
+        version: 1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
       dayjs:
         specifier: 'catalog:'
         version: 1.11.21
@@ -6640,6 +6673,14 @@ packages:
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
+
+  ajv-formats@3.0.1:
+    resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
@@ -16094,6 +16135,10 @@ snapshots:
 
   agent-base@7.1.4: {}
 
+  ajv-formats@3.0.1(ajv@8.20.0):
+    optionalDependencies:
+      ajv: 8.20.0
+
   ajv@6.15.0:
     dependencies:
       fast-deep-equal: 3.1.3
@@ -16158,7 +16203,7 @@ snapshots:
       vue-types: 3.0.2(vue@3.5.35(typescript@6.0.3))
       warning: 4.0.3
 
-  antdv-next@1.4.1(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3)):
+  antdv-next@1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3)):
     dependencies:
       '@ant-design/colors': 8.0.1
       '@ant-design/fast-color': 3.0.1

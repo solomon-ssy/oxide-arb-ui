@@ -2,6 +2,7 @@
 import type {
   BasisAlertView,
   GroundingSpanView,
+  LinkageUnresolvedReasonView,
   MarketLinkageDetailView,
   MarketLinkageHistoryEntryView,
 } from '@vben/types';
@@ -63,8 +64,23 @@ const cryptoSubject = computed(() =>
 const weatherSubject = computed(() =>
   binding.value?.subject.family === 'weather' ? binding.value.subject : null,
 );
+function formatUnresolvedReason(reason: LinkageUnresolvedReasonView): string {
+  if (reason.code === 'no_deterministic_template') {
+    return $t(`enum.linkageUnresolvedReason.${reason.code}`);
+  }
+  const field =
+    'subject_field' in reason.failure
+      ? ` · ${reason.failure.subject_field}`
+      : '';
+  return `${$t(`enum.linkageUnresolvedReason.${reason.code}`)} · ${$t(
+    `enum.resolverTier.${reason.tier}`,
+  )} · ${$t(`enum.linkageValidationFailure.${reason.failure.code}`)}${field}`;
+}
+
 const unresolvedReason = computed(() =>
-  outcome.value?.status === 'unresolved' ? outcome.value.reason : null,
+  outcome.value?.status === 'unresolved'
+    ? formatUnresolvedReason(outcome.value.reason)
+    : null,
 );
 
 const comparatorLabel = computed(() => {
@@ -216,7 +232,9 @@ const historyRows = computed(() =>
     key: row.linkage_id,
     reason:
       row.override_reason ??
-      (row.outcome.status === 'unresolved' ? row.outcome.reason : '—'),
+      (row.outcome.status === 'unresolved'
+        ? formatUnresolvedReason(row.outcome.reason)
+        : '—'),
     resolver_tier: row.resolver_tier,
     status: row.status,
   })),

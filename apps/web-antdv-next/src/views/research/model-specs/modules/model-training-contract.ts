@@ -3,6 +3,7 @@ import type { ModelTrainingContract } from '@vben/types';
 export const DEFAULT_MODEL_TRAINING_CONTRACT: ModelTrainingContract = {
   target_label_horizon_secs: 0,
   target_label_name: 'settlement_outcome',
+  trade_policy_artifact_id: null,
   validation_folds: 3,
 };
 
@@ -34,6 +35,7 @@ export function normalizeModelTrainingContract(
   return {
     target_label_horizon_secs: contract.target_label_horizon_secs,
     target_label_name: targetLabelName,
+    trade_policy_artifact_id: contract.trade_policy_artifact_id ?? null,
     validation_folds: contract.validation_folds,
   };
 }

@@ -1,6 +1,14 @@
 import type { FeatureParityRunView } from '@vben/types';
 
+import { FACTOR_VALUE_STATES, FEATURE_CELL_STATES } from '@vben/types';
+
 import { describe, expect, it } from 'vitest';
+
+import {
+  findTagOption,
+  useFeatureCellStateTagOptions,
+  useModelInputStateTagOptions,
+} from '#/shared/components/format/tag-options';
 
 import {
   canClearFeatureParityLatch,
@@ -112,5 +120,38 @@ describe('feature-integrity governed action state', () => {
         status: 'mismatched',
       }),
     ).toBe(false);
+  });
+});
+
+describe('feature-integrity evidence presentation', () => {
+  it.each([
+    [FEATURE_CELL_STATES.missing, 'error'],
+    [FEATURE_CELL_STATES.notApplicable, 'default'],
+    [FEATURE_CELL_STATES.observed, 'success'],
+    [FEATURE_CELL_STATES.substituted, 'warning'],
+  ] as const)('presents FeatureCell %s with %s severity', (state, color) => {
+    expect(findTagOption(useFeatureCellStateTagOptions(), state)?.color).toBe(
+      color,
+    );
+  });
+
+  it.each([
+    [FACTOR_VALUE_STATES.indeterminate, 'warning'],
+    [FACTOR_VALUE_STATES.missingInput, 'error'],
+    [FACTOR_VALUE_STATES.notApplicable, 'default'],
+    [FACTOR_VALUE_STATES.scored, 'success'],
+  ] as const)('presents factor input %s with %s severity', (state, color) => {
+    expect(findTagOption(useModelInputStateTagOptions(), state)?.color).toBe(
+      color,
+    );
+  });
+
+  it('keeps an unsupported evidence state visible as contract drift', () => {
+    expect(
+      findTagOption(useModelInputStateTagOptions(), 'unsupported_state'),
+    ).toMatchObject({
+      color: 'error',
+      value: 'unsupported_state',
+    });
   });
 });

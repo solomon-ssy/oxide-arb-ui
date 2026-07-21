@@ -1,6 +1,14 @@
 import type { ModelInputEvidenceView } from '@vben/types';
 
+import {
+  FACTOR_INDETERMINATE_REASONS,
+  NORMALIZATION_SOURCES,
+} from '@vben/types';
+
 import { describe, expect, it } from 'vitest';
+
+import enUS from '#/locales/langs/en-US/enum.json';
+import zhCN from '#/locales/langs/zh-CN/enum.json';
 
 import { summarizeModelInputAudit } from './model-input-audit';
 
@@ -46,4 +54,16 @@ describe('summarizeModelInputAudit', () => {
         ?.consistent,
     ).toBe(false);
   });
+
+  it.each([enUS, zhCN])(
+    'can present every governed factor audit outcome in the recommendation audit surface',
+    (locale) => {
+      for (const source of Object.values(NORMALIZATION_SOURCES)) {
+        expect(locale.normalizationSource[source]).toBeTruthy();
+      }
+      for (const reason of Object.values(FACTOR_INDETERMINATE_REASONS)) {
+        expect(locale.factorIndeterminateReason[reason]).toBeTruthy();
+      }
+    },
+  );
 });

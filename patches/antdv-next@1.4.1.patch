@@ -1,0 +1,21 @@
+diff --git a/dist/steps/index.js b/dist/steps/index.js
+index a67811e42130612c653d90438fa99f8fef8fdcc5..e19b42293861deac7ac493c7c873ea075084e6f3 100644
+--- a/dist/steps/index.js
++++ b/dist/steps/index.js
+@@ -180,13 +180,13 @@ const Steps = /* @__PURE__ */ defineComponent((props, { slots, attrs, emit }) =>
+ 			"initial": 0,
+ 			"current": mappedDisplayCurrent.value,
+ 			"items": displayItems.value,
+-			"onChange": (displayCurrent) => {
++			"onChange": onChange ? (displayCurrent) => {
+ 				const target = displaySteps.value[displayCurrent];
+ 				const originIndex = target && target.originIndex >= 0 ? target.originIndex : displayCurrent;
+ 				const next = mergedInitial.value + originIndex;
+-				onChange?.(next);
++				onChange(next);
+ 				emit("update:current", next);
+-			},
++			} : void 0,
+ 			"iconRender": internalIconRender,
+ 			"itemRender": itemRender,
+ 			"itemWrapperRender": itemWrapperRender

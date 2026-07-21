@@ -1,4 +1,5 @@
 {
+  "unknownValue": "未知值：{value}",
   "quantRuntimeMode": {
     "report_only": "仅报告",
     "semi_auto": "半自动",
@@ -517,6 +518,27 @@
     "resolved": "已解析",
     "unresolved": "未解析",
     "overridden": "已覆盖"
+  },
+  "linkageUnresolvedReason": {
+    "no_deterministic_template": "没有确定性模板能够识别该市场",
+    "candidate_rejected": "解析候选未通过校验"
+  },
+  "linkageValidationFailure": {
+    "grounding_source_absent": "引用的元数据来源不存在",
+    "grounding_span_out_of_bounds": "证据文本范围越界",
+    "grounding_text_mismatch": "证据文本与来源元数据不一致",
+    "missing_literal_grounding": "缺少必需的字面证据",
+    "missing_grounding": "缺少必需证据",
+    "unsupported_subject": "不支持该主题领域",
+    "invalid_weather_decision_group_id": "天气决策组标识无效",
+    "invalid_weather_outcome_band": "天气结果区间无效",
+    "fractional_weather_outcome_band": "天气结果区间必须使用整度边界",
+    "invalid_weather_timezone": "天气时区无效",
+    "weather_instrument_mismatch": "天气数据标的与站点不一致",
+    "asset_not_in_ruleset": "资产不在解析规则集中",
+    "instrument_ruleset_mismatch": "数据标的与解析规则集不一致",
+    "chainlink_feed_ruleset_mismatch": "Chainlink feed 与解析规则集不一致",
+    "binance_oracle_ruleset_mismatch": "Binance oracle 与解析规则集不一致"
   },
   "resolverTier": {
     "tier0_slug": "Tier 0（slug）",
