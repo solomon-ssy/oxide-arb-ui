@@ -93,10 +93,10 @@ test('settlement readiness renders typed truth while every money apply stays blo
     ),
   ).toBeVisible();
   await expect(
-    authenticatedPage.getByText('standard_v2', { exact: true }),
+    authenticatedPage.getByTestId('settlement-route-standard_v2'),
   ).toBeVisible();
   await expect(
-    authenticatedPage.getByText('neg_risk_v2', { exact: true }),
+    authenticatedPage.getByTestId('settlement-route-neg_risk_v2'),
   ).toBeVisible();
   await expect
     .poll(

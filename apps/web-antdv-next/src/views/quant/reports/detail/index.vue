@@ -212,11 +212,13 @@ onMounted(() => void load());
             <div class="flex gap-2">
               <EntityRouteLink
                 v-if="report.predecessor_report_id"
+                class="!text-inherit underline"
                 :label="$t('page.quantReports.detail.predecessor')"
                 :to="`/quant/reports/${report.predecessor_report_id}`"
               />
               <EntityRouteLink
                 v-if="report.successor_report_id"
+                class="!text-inherit underline"
                 :label="$t('page.quantReports.detail.successor')"
                 :to="`/quant/reports/${report.successor_report_id}`"
               />

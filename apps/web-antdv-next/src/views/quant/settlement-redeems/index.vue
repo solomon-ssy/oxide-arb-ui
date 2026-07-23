@@ -396,6 +396,7 @@ watch(
               <Card
                 v-for="routeReadiness in readiness.routes"
                 :key="routeReadiness.route"
+                :data-testid="`settlement-route-${routeReadiness.route}`"
                 size="small"
                 :title="routeReadiness.route"
               >
