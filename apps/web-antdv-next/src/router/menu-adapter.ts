@@ -13,6 +13,9 @@ const ENABLED = 'enabled';
  * remount the page (which would tear down connected modals mid-open).
  */
 const PATH_KEY_ROUTE_NAMES = new Set([
+  'execution-orders',
+  'positions',
+  'reconciliations',
   'research-backtests',
   'research-calibration-artifacts',
   'research-datasets',
@@ -24,6 +27,7 @@ const PATH_KEY_ROUTE_NAMES = new Set([
   'research-model-specs',
   'research-models',
   'research-trade-policies',
+  'settlement-redeems',
 ]);
 
 function collectPermissionCode(

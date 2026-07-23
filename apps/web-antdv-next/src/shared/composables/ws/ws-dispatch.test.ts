@@ -75,6 +75,7 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
       changed_by: 'system',
       last_reason: 'bootstrap',
       requires_operator_ack: false,
+      revision: 0,
       state: 'closed',
     },
     market_data: {
@@ -98,11 +99,6 @@ function controlPlaneStatus(): SystemControlPlaneStatus {
   const enabled = { enabled: true, reasons: [] };
   return {
     ...systemStatus(),
-    bootstrap: {
-      bootstrap_contract_version: 1,
-      phase: 'active',
-      state_revision: 3,
-    },
     capabilities: {
       automatic_parity_eligible: enabled,
       catalog_baseline_ready: enabled,

@@ -7,10 +7,20 @@
   },
   "killSwitchState": {
     "closed": "关闭",
-    "report_only_forced": "强制仅报告",
     "execution_halted": "执行停机",
     "exit_only": "仅退出",
     "emergency_halted": "紧急停机"
+  },
+  "settlementWritePolicy": {
+    "disabled": "禁用资金写入",
+    "governed_canary": "受控 Canary",
+    "semi_auto": "逐批授权",
+    "auto": "自动结算"
+  },
+  "settlementSubmissionKind": {
+    "direct_eoa": "直连 EOA",
+    "relayer": "Relayer",
+    "externally_observed": "外部观测"
   },
   "side": {
     "BUY": "买入",
@@ -363,12 +373,18 @@
     "book_context": "盘口上下文",
     "operator_note": "操作员备注"
   },
-  "settlementRedeemState": {
-    "pending": "待处理",
+  "settlementCaseState": {
+    "discovered": "已发现",
+    "prepared": "已准备",
     "submitted": "已提交",
     "confirmed": "已确认",
-    "failed": "失败",
+    "retry_scheduled": "等待重试",
+    "reconciliation_required": "需要对账",
     "manual_required": "需人工处理"
+  },
+  "settlementEffectivePolicy": {
+    "automatic_eligible": "允许自动赎回",
+    "manual_only": "仅人工处理"
   },
   "modelFamily": {
     "weighted_factor": "加权因子（Buy 排序）",

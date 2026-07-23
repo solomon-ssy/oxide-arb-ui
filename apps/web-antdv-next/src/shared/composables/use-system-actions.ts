@@ -6,20 +6,37 @@
  * danger confirm words for emergency-grade transitions) and refresh the shared
  * `SystemStatus` store after a successful mutation so the header indicator,
  * dashboard, and system page converge without waiting for the next WS push.
+ *
+ * CAS revision is always the revision the operator saw when they opened the
+ * action. Callers must pass that displayed revision; this module never rebinds
+ * to a freshly fetched revision inside the submit closure.
  */
+import type { ApiError } from '@vben/request/qp';
 import type {
   KillSwitchState,
   KillSwitchView,
   QuantModeTransitionReport,
   QuantRuntimeMode,
+  RuntimeControlSnapshot,
+  SettlementWritePolicy,
 } from '@vben/types';
 
 import { useRequestHandler } from '@vben/request/qp';
-import { KILL_SWITCH_STATES, QUANT_RUNTIME_MODES } from '@vben/types';
+import {
+  KILL_SWITCH_STATES,
+  QUANT_RUNTIME_MODES,
+  SETTLEMENT_WRITE_POLICIES,
+} from '@vben/types';
 
 import { message } from 'antdv-next';
 
-import { getSystemStatus, setKillSwitch, switchQuantMode } from '#/api/system';
+import {
+  getRuntimeControls,
+  getSystemStatus,
+  setKillSwitch,
+  switchQuantMode,
+  switchSettlementWritePolicy,
+} from '#/api/system';
 import { $t } from '#/locales';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
@@ -34,7 +51,6 @@ const KILL_SWITCH_RESTRICTION_RANK: Record<KillSwitchState, number> = {
   [KILL_SWITCH_STATES.emergencyHalted]: 3,
   [KILL_SWITCH_STATES.executionHalted]: 2,
   [KILL_SWITCH_STATES.exitOnly]: 1,
-  [KILL_SWITCH_STATES.reportOnlyForced]: 1,
 };
 
 /**
@@ -66,6 +82,7 @@ export interface QuantModeActionApi {
   switchTo: (
     current: null | QuantRuntimeMode,
     target: QuantRuntimeMode,
+    expectedRevision: number,
   ) => Promise<null | QuantModeTransitionReport>;
 }
 
@@ -79,7 +96,17 @@ export interface KillSwitchActionApi {
   setTo: (
     current: KillSwitchView | null,
     target: KillSwitchState,
+    expectedRevision: number,
   ) => Promise<KillSwitchView | null>;
+}
+
+export interface SettlementWritePolicyActionApi {
+  canSwitch: boolean;
+  switchTo: (
+    current: null | SettlementWritePolicy,
+    target: SettlementWritePolicy,
+    expectedRevision: number,
+  ) => Promise<null | RuntimeControlSnapshot>;
 }
 
 /** Danger confirm word for a kill-switch transition (emergency > ack clear). */
@@ -94,34 +121,58 @@ function killSwitchConfirmWord(
 }
 
 /** Refresh the shared system status after a governed control-plane mutation. */
-function useSystemStatusRefresh() {
+function useSystemTruthRefresh() {
   const systemStore = useSystemStore();
   const { handleRequest } = useRequestHandler();
   return async () => {
-    await handleRequest(getSystemStatus, (status) => {
-      systemStore.applyControlPlaneStatus(status);
-    });
+    await Promise.all([
+      handleRequest(getSystemStatus, (status) => {
+        systemStore.applyControlPlaneStatus(status);
+      }),
+      handleRequest(getRuntimeControls, (controls) => {
+        systemStore.applyRuntimeControls(controls);
+      }),
+    ]);
   };
+}
+
+function refreshOnCasConflict(
+  error: ApiError,
+  refresh: () => Promise<void>,
+): 'keep_open' {
+  if (error.httpStatus === 409 || error.code === 409) {
+    void refresh();
+  }
+  return 'keep_open';
 }
 
 /** Governed quant runtime mode switch (header indicator + dashboard). */
 export function useQuantModeAction(): QuantModeActionApi {
   const { governed } = useGovernedAction();
   const { hasAccessByCodes } = useQpAccess();
-  const refreshStatus = useSystemStatusRefresh();
+  const refresh = useSystemTruthRefresh();
 
   const canSwitch = hasAccessByCodes(['system:switch_mode']);
 
   async function switchTo(
     current: null | QuantRuntimeMode,
     target: QuantRuntimeMode,
+    expectedRevision: number,
   ): Promise<null | QuantModeTransitionReport> {
     const modeLabel = (mode: null | QuantRuntimeMode) =>
       mode ? $t(`enum.quantRuntimeMode.${mode}`) : '—';
     // Enabling unattended execution is the highest-consequence upgrade.
     const danger = target === QUANT_RUNTIME_MODES.autoExecution;
     const result = await governed(
-      (ctx) => switchQuantMode({ mode: target, reason: ctx.reason }, ctx),
+      async (ctx) =>
+        switchQuantMode(
+          {
+            expected_revision: expectedRevision,
+            mode: target,
+            reason: ctx.reason,
+          },
+          ctx,
+        ),
       {
         confirmWord: danger ? 'AUTO' : undefined,
         danger,
@@ -130,6 +181,7 @@ export function useQuantModeAction(): QuantModeActionApi {
           to: modeLabel(target),
         }),
         title: $t('page.systemAdmin.mode.switchTitle'),
+        onError: (error) => refreshOnCasConflict(error, refresh),
       },
     );
     if (result) {
@@ -139,7 +191,7 @@ export function useQuantModeAction(): QuantModeActionApi {
           to: modeLabel(result.to),
         }),
       );
-      await refreshStatus();
+      await refresh();
     }
     return result;
   }
@@ -151,7 +203,7 @@ export function useQuantModeAction(): QuantModeActionApi {
 export function useKillSwitchAction(): KillSwitchActionApi {
   const { governed } = useGovernedAction();
   const { hasAccessByCodes } = useQpAccess();
-  const refreshStatus = useSystemStatusRefresh();
+  const refresh = useSystemTruthRefresh();
 
   function canTransition(
     current: KillSwitchState | null | undefined,
@@ -166,6 +218,7 @@ export function useKillSwitchAction(): KillSwitchActionApi {
   async function setTo(
     current: KillSwitchView | null,
     target: KillSwitchState,
+    expectedRevision: number,
   ): Promise<KillSwitchView | null> {
     const stateLabel = (state: KillSwitchState) =>
       $t(`enum.killSwitchState.${state}`);
@@ -184,9 +237,10 @@ export function useKillSwitchAction(): KillSwitchActionApi {
     }
 
     const result = await governed(
-      (ctx) =>
+      async (ctx) =>
         setKillSwitch(
           {
+            expected_revision: expectedRevision,
             reason: ctx.reason,
             state: target,
             ...(needsAck ? { ack: true } : {}),
@@ -198,6 +252,7 @@ export function useKillSwitchAction(): KillSwitchActionApi {
         danger: enteringEmergency || needsAck,
         summary,
         title: $t('page.systemAdmin.killSwitch.setTitle'),
+        onError: (error) => refreshOnCasConflict(error, refresh),
       },
     );
     if (result) {
@@ -206,10 +261,60 @@ export function useKillSwitchAction(): KillSwitchActionApi {
           state: stateLabel(result.state),
         }),
       );
-      await refreshStatus();
+      await refresh();
     }
     return result;
   }
 
   return { canTransition, setTo };
+}
+
+export function useSettlementWritePolicyAction(): SettlementWritePolicyActionApi {
+  const { governed } = useGovernedAction();
+  const { hasAccessByCodes } = useQpAccess();
+  const refresh = useSystemTruthRefresh();
+  const canSwitch = hasAccessByCodes(['system:switch_mode']);
+
+  async function switchTo(
+    current: null | SettlementWritePolicy,
+    target: SettlementWritePolicy,
+    expectedRevision: number,
+  ): Promise<null | RuntimeControlSnapshot> {
+    const policyLabel = (policy: null | SettlementWritePolicy) =>
+      policy ? $t(`enum.settlementWritePolicy.${policy}`) : '—';
+    const danger = target === SETTLEMENT_WRITE_POLICIES.auto;
+    const result = await governed(
+      async (ctx) =>
+        switchSettlementWritePolicy(
+          {
+            expected_revision: expectedRevision,
+            policy: target,
+            reason: ctx.reason,
+          },
+          ctx,
+        ),
+      {
+        confirmWord: danger ? 'SETTLEMENT AUTO' : undefined,
+        danger,
+        onError: (error) => refreshOnCasConflict(error, refresh),
+        summary: $t('page.systemAdmin.settlementWritePolicy.summary', {
+          from: policyLabel(current),
+          to: policyLabel(target),
+        }),
+        title: $t('page.systemAdmin.settlementWritePolicy.switchTitle'),
+      },
+    );
+    if (result) {
+      useSystemStore().applyRuntimeControls(result);
+      message.success(
+        $t('page.systemAdmin.settlementWritePolicy.switched', {
+          policy: policyLabel(result.settlement_write_policy),
+        }),
+      );
+      await refresh();
+    }
+    return result;
+  }
+
+  return { canSwitch, switchTo };
 }

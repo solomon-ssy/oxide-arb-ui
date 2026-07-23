@@ -7,10 +7,20 @@
   },
   "killSwitchState": {
     "closed": "Closed",
-    "report_only_forced": "Report Only Forced",
     "execution_halted": "Execution Halted",
     "exit_only": "Exit Only",
     "emergency_halted": "Emergency Halted"
+  },
+  "settlementWritePolicy": {
+    "disabled": "Writes Disabled",
+    "governed_canary": "Governed Canary",
+    "semi_auto": "Per-batch Authorization",
+    "auto": "Automatic Settlement"
+  },
+  "settlementSubmissionKind": {
+    "direct_eoa": "Direct EOA",
+    "relayer": "Relayer",
+    "externally_observed": "Externally Observed"
   },
   "side": {
     "BUY": "Buy",
@@ -363,12 +373,18 @@
     "book_context": "Book Context",
     "operator_note": "Operator Note"
   },
-  "settlementRedeemState": {
-    "pending": "Pending",
+  "settlementCaseState": {
+    "discovered": "Discovered",
+    "prepared": "Prepared",
     "submitted": "Submitted",
     "confirmed": "Confirmed",
-    "failed": "Failed",
+    "retry_scheduled": "Retry Scheduled",
+    "reconciliation_required": "Reconciliation Required",
     "manual_required": "Manual Required"
+  },
+  "settlementEffectivePolicy": {
+    "automatic_eligible": "Automatic Eligible",
+    "manual_only": "Manual Only"
   },
   "modelFamily": {
     "weighted_factor": "Weighted factor (Buy ranker)",

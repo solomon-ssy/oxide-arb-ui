@@ -60,13 +60,21 @@ export const RESOURCE_TYPES = {
   replay: 'replay',
   role: 'role',
   config: 'config',
-  configLifecycle: 'config_lifecycle',
   settlementRedeem: 'settlement_redeem',
   system: 'system',
   user: 'user',
 } as const;
 
 export type ResourceType = WireEnum<typeof RESOURCE_TYPES>;
+
+export const EXECUTION_WALLET_KINDS = {
+  depositWallet: 'deposit_wallet',
+  eoa: 'eoa',
+  gnosisSafe: 'gnosis_safe',
+  proxy: 'proxy',
+} as const;
+
+export type ExecutionWalletKind = WireEnum<typeof EXECUTION_WALLET_KINDS>;
 
 /** Authoritative RBAC operation verbs (mirrors Rust `Operation`). */
 export const OPERATIONS = {
@@ -117,10 +125,19 @@ export const KILL_SWITCH_STATES = {
   emergencyHalted: 'emergency_halted',
   executionHalted: 'execution_halted',
   exitOnly: 'exit_only',
-  reportOnlyForced: 'report_only_forced',
 } as const;
 
 export type KillSwitchState = WireEnum<typeof KILL_SWITCH_STATES>;
+
+/** Runtime authority for creating new settlement writes. */
+export const SETTLEMENT_WRITE_POLICIES = {
+  auto: 'auto',
+  disabled: 'disabled',
+  governedCanary: 'governed_canary',
+  semiAuto: 'semi_auto',
+} as const;
+
+export type SettlementWritePolicy = WireEnum<typeof SETTLEMENT_WRITE_POLICIES>;
 
 /** Ordered operator recovery step (mirrors Rust `ExecutionRecoveryStep`). */
 export const EXECUTION_RECOVERY_STEPS = {
@@ -633,15 +650,126 @@ export type ReconciliationEvidenceKind = WireEnum<
   typeof RECONCILIATION_EVIDENCE_KINDS
 >;
 
-export const SETTLEMENT_REDEEM_STATES = {
+export const SETTLEMENT_CASE_STATES = {
   confirmed: 'confirmed',
-  failed: 'failed',
+  discovered: 'discovered',
   manualRequired: 'manual_required',
-  pending: 'pending',
+  prepared: 'prepared',
+  reconciliationRequired: 'reconciliation_required',
+  retryScheduled: 'retry_scheduled',
   submitted: 'submitted',
 } as const;
 
-export type SettlementRedeemState = WireEnum<typeof SETTLEMENT_REDEEM_STATES>;
+export type SettlementCaseState = WireEnum<typeof SETTLEMENT_CASE_STATES>;
+
+export const SETTLEMENT_EFFECTIVE_POLICIES = {
+  automaticEligible: 'automatic_eligible',
+  manualOnly: 'manual_only',
+} as const;
+
+export type SettlementEffectivePolicy = WireEnum<
+  typeof SETTLEMENT_EFFECTIVE_POLICIES
+>;
+
+export const SETTLEMENT_ROUTES = {
+  negRiskV2: 'neg_risk_v2',
+  standardV2: 'standard_v2',
+} as const;
+
+export type SettlementRoute = WireEnum<typeof SETTLEMENT_ROUTES>;
+
+export const SETTLEMENT_READINESS_STATUSES = {
+  blocked: 'blocked',
+  ready: 'ready',
+  unchecked: 'unchecked',
+} as const;
+
+export type SettlementReadinessStatus = WireEnum<
+  typeof SETTLEMENT_READINESS_STATUSES
+>;
+
+export const SETTLEMENT_AUTHORIZATION_STATES = {
+  approved: 'approved',
+  consumed: 'consumed',
+  expired: 'expired',
+  notRequired: 'not_required',
+  pending: 'pending',
+  revoked: 'revoked',
+} as const;
+
+export type SettlementAuthorizationState = WireEnum<
+  typeof SETTLEMENT_AUTHORIZATION_STATES
+>;
+
+export const SETTLEMENT_GOVERNED_ACTION_KINDS = {
+  canaryGrant: 'canary_grant',
+  outcomeTokenApproval: 'outcome_token_approval',
+  outcomeTokenRevocation: 'outcome_token_revocation',
+} as const;
+
+export type SettlementGovernedActionKind = WireEnum<
+  typeof SETTLEMENT_GOVERNED_ACTION_KINDS
+>;
+
+export const SETTLEMENT_GOVERNED_ACTION_STATES = {
+  authorized: 'authorized',
+  consumed: 'consumed',
+  expired: 'expired',
+  failed: 'failed',
+  reconciliationRequired: 'reconciliation_required',
+  retryScheduled: 'retry_scheduled',
+  revoked: 'revoked',
+} as const;
+
+export type SettlementGovernedActionState = WireEnum<
+  typeof SETTLEMENT_GOVERNED_ACTION_STATES
+>;
+
+export const SETTLEMENT_SUBMISSION_KINDS = {
+  directEoa: 'direct_eoa',
+  externallyObserved: 'externally_observed',
+  relayer: 'relayer',
+} as const;
+
+export type SettlementSubmissionKind = WireEnum<
+  typeof SETTLEMENT_SUBMISSION_KINDS
+>;
+
+export const SETTLEMENT_SUBMISSION_PURPOSES = {
+  outcomeTokenApproval: 'outcome_token_approval',
+  outcomeTokenRevocation: 'outcome_token_revocation',
+  redeem: 'redeem',
+} as const;
+
+export type SettlementSubmissionPurpose = WireEnum<
+  typeof SETTLEMENT_SUBMISSION_PURPOSES
+>;
+
+export const SETTLEMENT_SUBMISSION_STATES = {
+  awaitingChainHash: 'awaiting_chain_hash',
+  awaitingFinality: 'awaiting_finality',
+  confirmed: 'confirmed',
+  dispatching: 'dispatching',
+  failed: 'failed',
+  prepared: 'prepared',
+} as const;
+
+export type SettlementSubmissionState = WireEnum<
+  typeof SETTLEMENT_SUBMISSION_STATES
+>;
+
+export const SETTLEMENT_RECONCILIATION_STATES = {
+  awaitingReceipt: 'awaiting_receipt',
+  awaitingRelayerHash: 'awaiting_relayer_hash',
+  evidenceMismatch: 'evidence_mismatch',
+  notRequired: 'not_required',
+  operatorReviewRequired: 'operator_review_required',
+  reconciled: 'reconciled',
+} as const;
+
+export type SettlementReconciliationState = WireEnum<
+  typeof SETTLEMENT_RECONCILIATION_STATES
+>;
 
 // ── Research / governance ───────────────────────────────────────────────────
 

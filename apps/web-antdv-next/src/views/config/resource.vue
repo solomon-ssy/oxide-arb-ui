@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type {
   ConfigResourceKind,
-  LifecycleView,
   ModelRouting,
   PolicyActivationResultView,
   PolicyApprovalView,
@@ -31,17 +30,16 @@ import {
   getConfigResourceSchema,
   getConfigRevisions,
   getCurrentConfigResource,
-  getProjectLifecycle,
   rollbackConfigRevision,
   validateConfigDraft,
 } from '#/api/config';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import ModelRoutingPicker from './modules/model-routing-picker.vue';
-import OperationalControlPanel from './modules/operational-control-panel.vue';
 import PolicyField from './modules/policy-field.vue';
 import {
   clonePolicyValue,
@@ -82,7 +80,6 @@ const current = ref<Awaited<
 > | null>(null);
 const schemaView = ref<null | PolicyResourceSchemaView>(null);
 const revisions = ref<PolicyRevisionView[]>([]);
-const lifecycle = ref<LifecycleView | null>(null);
 const workingDocument = ref<null | PolicyPayload>(null);
 const candidateRevision = ref<null | PolicyRevisionView>(null);
 const validation = ref<null | PolicyValidationView>(null);
@@ -176,12 +173,7 @@ const hasCreateAccess = hasAccessByCodes(['config:create']);
 const hasApproveAccess = hasAccessByCodes(['config:approve']);
 const hasActivateAccess = hasAccessByCodes(['config:activate']);
 const hasRollbackAccess = hasAccessByCodes(['config:rollback']);
-const productionFrozen = computed(
-  () => lifecycle.value?.state === 'production_frozen',
-);
-const governanceMutationBlocked = computed(
-  () => productionFrozen.value || loadError.value,
-);
+const governanceMutationBlocked = computed(() => loadError.value);
 const canCreate = computed(
   () => hasCreateAccess && !governanceMutationBlocked.value,
 );
@@ -281,13 +273,11 @@ async function loadResource() {
         getCurrentConfigResource(kind),
         getConfigResourceSchema(kind),
         getConfigRevisions(kind, 40),
-        getProjectLifecycle(),
       ]),
     { onError: () => (loadError.value = true), silent: true },
   );
   if (result) {
-    [current.value, schemaView.value, revisions.value, lifecycle.value] =
-      result;
+    [current.value, schemaView.value, revisions.value] = result;
     resetWorkflow();
   }
   loading.value = false;
@@ -627,12 +617,6 @@ onMounted(() => void loadResource());
         type="info"
       />
       <Alert
-        v-if="productionFrozen"
-        :message="$t('page.config.lifecycle.frozenNotice')"
-        show-icon
-        type="warning"
-      />
-      <Alert
         v-if="rollbackMode"
         :message="$t('page.config.workflow.rollbackNotice')"
         show-icon
@@ -723,7 +707,7 @@ onMounted(() => void loadResource());
               disabled
               :model-value="activeModelRouting"
             />
-            <OperationalControlPanel
+            <RuntimeControlPanel
               v-if="stage === 'view' && resourceKind === 'operational_control'"
             />
             <ReportSchedulePreview

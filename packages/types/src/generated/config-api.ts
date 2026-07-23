@@ -64,10 +64,6 @@ export type MarketCategory =
  */
 export type ModelVersionRef = string;
 /**
- * Validated decimal value serialized as a JSON string without losing precision.
- */
-export type DecimalValue = string;
-/**
  * A monotonic schema version for feature / factor / label / config schemas.
  *
  * Wrapping the version prevents accidentally mixing it with unrelated integers
@@ -173,49 +169,6 @@ export type ResourceBudgetUnit =
   | 'rows'
   | 'seconds'
   | 'tokens';
-export type LifecycleBaseline = 'boot';
-/**
- * Closed, strongly typed detail vocabulary for production-seal checks.
- */
-export type LifecycleCheckDetail =
-  | {
-      build_commit: string;
-      clean: boolean;
-      detail_kind: 'compiled_build_identity';
-    }
-  | {
-      detail_kind: 'contract_matched';
-    }
-  | {
-      detail_kind: 'external_evidence';
-      evidence_hash?: null | string;
-    }
-  | {
-      detail_kind: 'migration_ledgers_verified';
-    }
-  | {
-      detail_kind: 'missing_active_policy_bundle';
-    }
-  | {
-      detail_kind: 'policy_bundle';
-      policy_bundle_hash: string;
-    }
-  | {
-      detail_kind: 'schema_fingerprint';
-      fingerprint: string;
-    };
-export type LifecycleCheckKind =
-  | 'active_policy_bundle'
-  | 'backup_evidence'
-  | 'clickhouse_schema_fingerprint'
-  | 'compiled_build_identity'
-  | 'config_end_to_end'
-  | 'lifecycle_contract'
-  | 'migration_state'
-  | 'postgres_schema_fingerprint';
-export type ProjectLifecycleState =
-  | 'pre_production_resettable'
-  | 'production_frozen';
 export type PolicyConsumer =
   | 'alert_dispatcher'
   | 'data_quality_gate'
@@ -284,14 +237,11 @@ export interface ConfigApiContractSchema {
   create_draft_response: PolicyRevisionView;
   current_response: CurrentPolicyResourceView;
   deployment_response: DeploymentConfigView;
-  lifecycle_response: LifecycleView;
   resource_schema_response: PolicyResourceSchemaView;
   resources_response: ConfigResourcesView;
   revisions_response: PolicyRevisionView[];
   schedule_preview_request: SchedulePreviewRequest;
   schedule_preview_response: SchedulePreviewView;
-  seal_production_request: SealProductionRequest;
-  seal_production_response: LifecycleView;
   snapshot_options_query: ConfigSnapshotOptionsQuery;
   snapshot_options_response: DecisionPolicySnapshotOptionView[];
   validate_draft_request: ValidatePolicyDraftRequest;
@@ -526,7 +476,6 @@ export interface ExecutionRiskPolicy {
    * values are validated through [`SchemaVersion::try_new`].
    */
   schema_version?: number;
-  settlement_redeem?: SettlementRedeemPolicy;
 }
 /**
  * Venue-dimension execution-breaker thresholds.
@@ -825,39 +774,6 @@ export interface ReconciliationPolicy {
   stale_open_secs?: number;
 }
 /**
- * On-chain settlement redemption worker policy.
- */
-export interface SettlementRedeemPolicy {
-  /**
-   * Whether automatic redeem may sign new transactions in emergency halt.
-   */
-  allow_during_emergency?: boolean;
-  /**
-   * Maximum condition-level redeem batches processed per sweep.
-   */
-  batch_size?: number;
-  /**
-   * Polygon confirmations required before closing the strategy lots.
-   */
-  confirmation_blocks?: number;
-  /**
-   * Whether the worker may submit standard CTF redeem transactions.
-   */
-  enabled?: boolean;
-  /**
-   * Sweep interval in seconds.
-   */
-  interval_secs?: number;
-  /**
-   * Maximum failed submit/confirm attempts before manual escalation.
-   */
-  max_attempts?: number;
-  /**
-   * Base retry backoff in seconds.
-   */
-  retry_backoff_secs?: number;
-}
-/**
  * Active, shadow, and exit artifact routing.
  */
 export interface ModelRouting {
@@ -1078,7 +994,7 @@ export interface EntryConditionWorkerConfig {
 /**
  * Execution kill-switch default policy.
  *
- * Operational state lives in the `system_kill_switch` singleton. Runtime
+ * Operational state lives in the `system_runtime_control` singleton. Runtime
  * config only carries the policy to apply when that state escalates.
  */
 export interface KillSwitchPolicy {
@@ -1127,10 +1043,6 @@ export interface ExecutionAuthorization {
  */
 export interface AutoExecutionConfig {
   /**
-   * Whether auto-execution policy may approve intents.
-   */
-  enabled?: boolean;
-  /**
    * Maximum orders auto-created per report.
    */
   max_orders_per_report?: number;
@@ -1155,40 +1067,6 @@ export interface SemiAutoConfig {
    * Approval time-to-live in seconds.
    */
   approval_ttl_secs?: number;
-  canary?: SemiAutoCanaryConfig;
-}
-/**
- * Policy-bound, fail-closed production canary limits.
- */
-export interface SemiAutoCanaryConfig {
-  /**
-   * Exact validated total cash-budget tiers admitted by this canary (v14: only `$25`).
-   */
-  allowed_cash_budget_tiers_usd?: DecimalValue[];
-  /**
-   * Whether this exact policy-bound authorization admits new `SemiAuto` intents.
-   */
-  enabled?: boolean;
-  /**
-   * RFC3339 authorization deadline; intents may not outlive this instant.
-   */
-  expires_at?: null | string;
-  /**
-   * Transactional global cap on capital-holding or in-flight intents.
-   */
-  max_open_intents?: number;
-  /**
-   * Validated decimal value serialized as a JSON string without losing precision.
-   */
-  max_total_cash_per_report?: string;
-  /**
-   * Content-addressed Published trade-policy artifact id authorized to run.
-   */
-  policy_artifact_id?: null | string;
-  /**
-   * Canonical content hash that must match the authorized policy artifact.
-   */
-  policy_content_hash?: null | string;
 }
 /**
  * Typed validation evidence persisted with a validated policy revision.
@@ -1311,60 +1189,6 @@ export interface DeploymentResourceLimitView {
   unit: ResourceBudgetUnit;
   value: number;
 }
-export interface LifecycleView {
-  active_policy_bundle_hash?: null | string;
-  baseline: LifecycleBaseline;
-  build_commit?: null | string;
-  checks: LifecycleCheckView[];
-  clickhouse_schema_fingerprint?: null | string;
-  environment: string;
-  postgres_schema_fingerprint?: null | string;
-  production_baseline?: null | ProductionBaselineView;
-  required_confirmation_phrase?: null | string;
-  state: ProjectLifecycleState;
-}
-export interface LifecycleCheckView {
-  detail: LifecycleCheckDetail;
-  kind: LifecycleCheckKind;
-  outcome: CheckOutcome;
-}
-/**
- * Append-only production baseline exposed by the lifecycle endpoint.
- */
-export interface ProductionBaselineView {
-  build_commit: string;
-  clickhouse_schema_fingerprint: string;
-  created_at: string;
-  decision_policy_snapshot_id: string;
-  environment: string;
-  evidence: ProductionSealEvidence;
-  lifecycle_policy_hash: string;
-  policy_bundle_generation: number;
-  policy_bundle_hash: string;
-  postgres_schema_fingerprint: string;
-  production_baseline_id: string;
-  sealed_at: string;
-  sealed_by: PolicyActorView;
-}
-/**
- * Evidence persisted with the production baseline. The physical column is
- * JSONB because this is an immutable aggregate, while `SeaORM` exposes the
- * strongly typed structure end to end.
- */
-export interface ProductionSealEvidence {
-  backup_evidence_hash?: null | string;
-  checks?: ProductionSealCheck[];
-  config_e2e_evidence_hash?: null | string;
-}
-/**
- * One typed item in the irreversible production-seal evidence bundle.
- */
-export interface ProductionSealCheck {
-  checked_at: string;
-  detail: LifecycleCheckDetail;
-  kind: LifecycleCheckKind;
-  outcome: CheckOutcome;
-}
 export interface PolicyResourceSchemaView {
   consumers: PolicyConsumer[];
   effective_boundary: PolicyApplyBoundary;
@@ -1394,11 +1218,6 @@ export interface SchedulePreviewRequest {
 }
 export interface SchedulePreviewView {
   next_fire_times: string[];
-}
-export interface SealProductionRequest {
-  confirmation_phrase: string;
-  environment: string;
-  reason: string;
 }
 export interface ConfigSnapshotOptionsQuery {
   limit?: null | number;

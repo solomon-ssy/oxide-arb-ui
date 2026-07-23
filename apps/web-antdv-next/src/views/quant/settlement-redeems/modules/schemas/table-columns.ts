@@ -3,7 +3,11 @@ import type { SettlementRedeemView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
-import { useSettlementRedeemStateTagOptions } from '#/shared/components/format/tag-options';
+import { formatUsd } from '#/shared/components/format';
+import {
+  useSettlementCaseStateTagOptions,
+  useSettlementEffectivePolicyTagOptions,
+} from '#/shared/components/format/tag-options';
 import { settlementRedeemOpenPath } from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
@@ -33,23 +37,34 @@ export function useSettlementRedeemColumns(
     {
       cellRender: {
         name: 'CellTag',
-        options: useSettlementRedeemStateTagOptions(),
+        options: useSettlementCaseStateTagOptions(),
       },
       field: 'state',
       title: $t('page.quantSettlementRedeems.columns.state'),
       width: 140,
     },
     {
+      cellRender: {
+        name: 'CellTag',
+        options: useSettlementEffectivePolicyTagOptions(),
+      },
+      field: 'effective_policy',
+      title: $t('page.quantSettlementRedeems.columns.effectivePolicy'),
+      width: 150,
+    },
+    {
       align: 'right',
-      field: 'lot_count',
-      title: $t('page.quantSettlementRedeems.columns.lotCount'),
+      field: 'inventory_lot_count',
+      title: $t('page.quantSettlementRedeems.columns.inventoryLotCount'),
       width: 100,
     },
     {
-      cellRender: { name: 'CellUsd' },
-      field: 'payout_usd',
+      align: 'right',
+      field: 'actual_payout_usd',
+      formatter: ({ row }) =>
+        `${formatUsd(row.actual_payout_usd)} / ${formatUsd(row.expected_payout_usd)}`,
+      minWidth: 160,
       title: $t('page.quantSettlementRedeems.columns.payout'),
-      width: 130,
     },
     {
       align: 'right',
@@ -59,9 +74,9 @@ export function useSettlementRedeemColumns(
     },
     {
       cellRender: { name: 'CellCopy' },
-      field: 'tx_hash',
+      field: 'deployment_digest',
       minWidth: 130,
-      title: $t('page.quantSettlementRedeems.columns.txHash'),
+      title: $t('page.quantSettlementRedeems.columns.deploymentDigest'),
     },
     {
       cellRender: { name: 'CellDateTime' },

@@ -28,7 +28,6 @@ import {
   DescriptionsItem,
   Drawer,
   Empty,
-  message,
   Progress,
   Segmented,
   Skeleton,
@@ -36,7 +35,6 @@ import {
 } from 'antdv-next';
 
 import { getDashboardOverview } from '#/api/dashboard';
-import { activateBootstrap, getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import {
@@ -54,7 +52,6 @@ import {
 } from '#/shared/components/format/tag-options';
 import KpiStatCard from '#/shared/components/kpi-stat-card.vue';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
-import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
 import { useQuantReportStore, useSystemStore } from '#/store';
@@ -72,7 +69,6 @@ const router = useRouter();
 const systemStore = useSystemStore();
 const reportStore = useQuantReportStore();
 const qpWs = useQpWs();
-const { governed } = useGovernedAction();
 const {
   canRun: canRunReport,
   openRunReport,
@@ -87,7 +83,6 @@ const initialLoading = ref(true);
 const refreshing = ref(false);
 const loadError = ref<null | string>(null);
 const selectedRecommendation = ref<null | QuantRecommendationView>(null);
-const activationLoading = ref(false);
 const blockersOpen = ref(false);
 
 const motionVariants = computed(() =>
@@ -302,57 +297,9 @@ useIntervalFn(() => {
   if (visibility.value === 'visible') void loadOverview();
 }, 30_000);
 
-async function activateColdStart() {
-  const controlPlane = authority.value?.system;
-  if (!controlPlane || controlPlane.bootstrap.phase !== 'awaiting_activation') {
-    return;
-  }
-  activationLoading.value = true;
-  try {
-    const result = await governed(
-      (context) =>
-        activateBootstrap(
-          {
-            bootstrap_contract_version:
-              controlPlane.bootstrap.bootstrap_contract_version,
-            expected_state_revision: controlPlane.bootstrap.state_revision,
-            reason: context.reason,
-            report_only_forced_ack:
-              context.fields.report_only_forced_ack === 'acknowledged',
-          },
-          context,
-        ),
-      {
-        confirmWord: 'ACTIVATE',
-        danger: true,
-        fields: [
-          {
-            name: 'report_only_forced_ack',
-            label: $t('page.dashboard.bootstrap.ackLabel'),
-            kind: 'checkbox',
-            help: $t('page.dashboard.bootstrap.ackHelp'),
-            required: true,
-          },
-        ],
-        summary: $t('page.dashboard.bootstrap.activateSummary'),
-        title: $t('page.dashboard.bootstrap.activateTitle'),
-      },
-    );
-    if (!result) return;
-    const status = await getSystemStatus();
-    systemStore.applyControlPlaneStatus(status);
-    await loadOverview();
-    message.success($t('page.dashboard.bootstrap.activated'));
-  } finally {
-    activationLoading.value = false;
-  }
-}
-
 function executePrimaryAction() {
   const action = authority.value?.primary_action;
-  if (action === 'activate_bootstrap') {
-    void activateColdStart();
-  } else if (action === 'resolve_reconciliation') {
+  if (action === 'resolve_reconciliation') {
     void router.push('/quant/reconciliations');
   } else if (action === 'run_report' && canRunReport) {
     openRunReport();
@@ -451,7 +398,7 @@ onMounted(() => void loadOverview());
               <Button
                 data-testid="dashboard-primary-action"
                 :disabled="!authority?.primary_action_enabled"
-                :loading="activationLoading"
+                :loading="refreshing"
                 type="primary"
                 @click="executePrimaryAction"
               >
@@ -470,16 +417,6 @@ onMounted(() => void loadOverview());
                 <Tag :color="runtimeModeTag?.color ?? 'default'">
                   {{ runtimeModeTag?.label ?? '—' }}
                 </Tag>
-              </dd>
-            </div>
-            <div class="status-cell">
-              <dt>{{ $t('page.dashboard.status.bootstrap') }}</dt>
-              <dd>
-                {{
-                  $t(
-                    `page.dashboard.bootstrap.phaseValue.${authority.system.bootstrap.phase}`,
-                  )
-                }}
               </dd>
             </div>
             <div class="status-cell">

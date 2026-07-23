@@ -60,7 +60,17 @@ const pickerOptions = computed(() =>
 );
 
 async function onSelect(raw: string) {
-  await killSwitchAction.setTo(killSwitch.value, raw as KillSwitchState);
+  const current = killSwitch.value;
+  const expectedRevision =
+    current?.revision ?? systemStore.runtimeControls?.revision;
+  if (expectedRevision === undefined) {
+    return;
+  }
+  await killSwitchAction.setTo(
+    current,
+    raw as KillSwitchState,
+    expectedRevision,
+  );
 }
 </script>
 

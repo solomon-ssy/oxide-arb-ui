@@ -52,7 +52,18 @@ const pickerOptions = computed(() =>
 
 async function onSelect(raw: string) {
   const target = raw as QuantRuntimeMode;
-  const result = await quantMode.switchTo(currentMode.value, target);
+  // Mode / kill / settlement policy share one revisioned singleton.
+  const expectedRevision =
+    systemStore.runtimeControls?.revision ??
+    systemStore.status?.kill_switch.revision;
+  if (expectedRevision === undefined) {
+    return;
+  }
+  const result = await quantMode.switchTo(
+    currentMode.value,
+    target,
+    expectedRevision,
+  );
   if (result?.preflight) {
     showPreflight(result.preflight);
   }

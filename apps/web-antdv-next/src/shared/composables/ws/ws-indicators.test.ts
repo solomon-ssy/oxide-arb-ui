@@ -28,6 +28,7 @@ function baseStatus(
       changed_by: 'system',
       last_reason: 'bootstrap',
       requires_operator_ack: false,
+      revision: 0,
       state: 'closed',
     },
     market_data: {

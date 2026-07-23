@@ -17,7 +17,7 @@ describe('degradeReasonKey', () => {
     ).toBe('subsystem_unhealthy');
     expect(
       degradeReasonKey({
-        kill_switch_tightened: { state: 'report_only_forced' },
+        kill_switch_tightened: { state: 'exit_only' },
       }),
     ).toBe('kill_switch_tightened');
   });

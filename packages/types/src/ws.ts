@@ -13,7 +13,7 @@ import type {
   ReportKind,
   ReportRunStatus,
   ReportRunTerminalReason,
-  SettlementRedeemState,
+  SettlementCaseState,
 } from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { SystemControlPlaneStatus } from './system';
@@ -180,7 +180,7 @@ export interface ReconciliationLifecycleEvent {
 export interface SettlementRedeemLifecycleEvent {
   settlement_redeem_id: UuidString;
   market_id: MarketId;
-  state: SettlementRedeemState;
+  state: SettlementCaseState;
 }
 
 /** WS `error` reply payload (invalid command / forbidden channel). */

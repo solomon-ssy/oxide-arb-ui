@@ -60,4 +60,25 @@ describe('feature-integrity backend menu adaptation', () => {
       path: '/research/feature-integrity',
     });
   });
+
+  it.each([
+    ['execution-orders', '/quant/execution-orders'],
+    ['positions', '/quant/positions'],
+    ['reconciliations', '/quant/reconciliations'],
+    ['settlement-redeems', '/quant/settlement-redeems'],
+  ])('keeps the %s query drawer in one path-keyed tab', (name, path) => {
+    const page = node({
+      component: `quant/${name}/index`,
+      kind: 'menu',
+      name,
+      path,
+      permission_code: `${name}:read`,
+    });
+
+    expect(adaptMenuTree([page]).routes[0]).toMatchObject({
+      meta: { fullPathKey: false },
+      name,
+      path,
+    });
+  });
 });

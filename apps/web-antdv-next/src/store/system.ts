@@ -1,5 +1,6 @@
 import type {
   ActionEligibilityView,
+  RuntimeControlSnapshot,
   SyncSnapshot,
   SystemControlPlaneStatus,
   SystemStatus,
@@ -19,6 +20,7 @@ export const useSystemStore = defineStore('qp-system', () => {
   const status = ref<null | SystemStatus>(null);
   const controlPlane = ref<null | SystemControlPlaneStatus>(null);
   const actionEligibility = ref<ActionEligibilityView | null>(null);
+  const runtimeControls = ref<null | RuntimeControlSnapshot>(null);
   /** Last decision-policy snapshot activated this session (`config.activated`). */
   const activeConfigVersion = ref<null | UuidString>(null);
 
@@ -51,6 +53,15 @@ export const useSystemStore = defineStore('qp-system', () => {
     actionEligibility.value = null;
   }
 
+  function applyRuntimeControls(next: RuntimeControlSnapshot) {
+    if (
+      runtimeControls.value === null ||
+      next.revision >= runtimeControls.value.revision
+    ) {
+      runtimeControls.value = next;
+    }
+  }
+
   function setActiveConfigVersion(versionId: UuidString) {
     activeConfigVersion.value = versionId;
   }
@@ -65,6 +76,7 @@ export const useSystemStore = defineStore('qp-system', () => {
     status.value = null;
     controlPlane.value = null;
     actionEligibility.value = null;
+    runtimeControls.value = null;
     activeConfigVersion.value = null;
   }
 
@@ -74,10 +86,12 @@ export const useSystemStore = defineStore('qp-system', () => {
     actionEligibility,
     applyActionEligibility,
     applyControlPlaneStatus,
+    applyRuntimeControls,
     applySyncSnapshot,
     applySystemStatus,
     clearActionEligibility,
     controlPlane,
+    runtimeControls,
     setActiveConfigVersion,
     status,
   };

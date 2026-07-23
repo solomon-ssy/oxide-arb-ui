@@ -31,7 +31,6 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
     if (!status) {
       return '';
     }
-    const bootstrap = systemStore.controlPlane?.bootstrap;
     const killSwitch = status.kill_switch;
     return [
       status.quant_runtime_mode,
@@ -39,8 +38,6 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
       killSwitch.state,
       killSwitch.requires_operator_ack,
       status.catalog.state,
-      bootstrap?.phase ?? '',
-      bootstrap?.state_revision ?? '',
       systemStore.controlPlane?.capabilities.revision ?? '',
     ].join('|');
   });

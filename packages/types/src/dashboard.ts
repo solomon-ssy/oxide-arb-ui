@@ -32,7 +32,6 @@ export type DashboardSection<T> =
   | { state: 'forbidden' };
 
 export type DashboardPrimaryAction =
-  | 'activate_bootstrap'
   | 'resolve_reconciliation'
   | 'run_report'
   | 'view_blockers';

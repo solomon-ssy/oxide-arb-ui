@@ -33,7 +33,9 @@ import {
   RESEARCH_JOB_KINDS,
   RESEARCH_JOB_STATUSES,
   RESOURCE_TYPES,
-  SETTLEMENT_REDEEM_STATES,
+  SETTLEMENT_CASE_STATES,
+  SETTLEMENT_EFFECTIVE_POLICIES,
+  SETTLEMENT_SUBMISSION_KINDS,
   SIDES,
   TRAINING_DATASET_STATUSES,
 } from '@vben/types';
@@ -153,7 +155,6 @@ export function useResourceTypeTagOptions() {
       [RESOURCE_TYPES.replay]: 'geekblue',
       [RESOURCE_TYPES.role]: 'purple',
       [RESOURCE_TYPES.config]: 'orange',
-      [RESOURCE_TYPES.configLifecycle]: 'red',
       [RESOURCE_TYPES.settlementRedeem]: 'gold',
       [RESOURCE_TYPES.system]: 'cyan',
       [RESOURCE_TYPES.user]: 'processing',
@@ -187,7 +188,6 @@ export function useKillSwitchStateTagOptions() {
       [KILL_SWITCH_STATES.emergencyHalted]: 'magenta',
       [KILL_SWITCH_STATES.executionHalted]: 'error',
       [KILL_SWITCH_STATES.exitOnly]: 'warning',
-      [KILL_SWITCH_STATES.reportOnlyForced]: 'gold',
     },
   );
 }
@@ -339,16 +339,42 @@ export function useReconciliationResultTagOptions() {
 }
 
 /** Settlement-redeem batch state tags. */
-export function useSettlementRedeemStateTagOptions() {
+export function useSettlementCaseStateTagOptions() {
   return buildTagOptions(
-    Object.values(SETTLEMENT_REDEEM_STATES),
-    (value) => $t(`enum.settlementRedeemState.${value}`),
+    Object.values(SETTLEMENT_CASE_STATES),
+    (value) => $t(`enum.settlementCaseState.${value}`),
     {
-      [SETTLEMENT_REDEEM_STATES.confirmed]: 'success',
-      [SETTLEMENT_REDEEM_STATES.failed]: 'error',
-      [SETTLEMENT_REDEEM_STATES.manualRequired]: 'magenta',
-      [SETTLEMENT_REDEEM_STATES.pending]: 'warning',
-      [SETTLEMENT_REDEEM_STATES.submitted]: 'processing',
+      [SETTLEMENT_CASE_STATES.confirmed]: 'success',
+      [SETTLEMENT_CASE_STATES.discovered]: 'default',
+      [SETTLEMENT_CASE_STATES.manualRequired]: 'magenta',
+      [SETTLEMENT_CASE_STATES.prepared]: 'cyan',
+      [SETTLEMENT_CASE_STATES.reconciliationRequired]: 'error',
+      [SETTLEMENT_CASE_STATES.retryScheduled]: 'warning',
+      [SETTLEMENT_CASE_STATES.submitted]: 'processing',
+    },
+  );
+}
+
+/** Account-wide policy for full-balance settlement redemption. */
+export function useSettlementEffectivePolicyTagOptions() {
+  return buildTagOptions(
+    Object.values(SETTLEMENT_EFFECTIVE_POLICIES),
+    (value) => $t(`enum.settlementEffectivePolicy.${value}`),
+    {
+      [SETTLEMENT_EFFECTIVE_POLICIES.automaticEligible]: 'success',
+      [SETTLEMENT_EFFECTIVE_POLICIES.manualOnly]: 'error',
+    },
+  );
+}
+
+export function useSettlementSubmissionKindTagOptions() {
+  return buildTagOptions(
+    Object.values(SETTLEMENT_SUBMISSION_KINDS),
+    (value) => $t(`enum.settlementSubmissionKind.${value}`),
+    {
+      [SETTLEMENT_SUBMISSION_KINDS.directEoa]: 'cyan',
+      [SETTLEMENT_SUBMISSION_KINDS.externallyObserved]: 'default',
+      [SETTLEMENT_SUBMISSION_KINDS.relayer]: 'processing',
     },
   );
 }

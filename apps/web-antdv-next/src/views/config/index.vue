@@ -3,7 +3,6 @@ import type {
   ConfigActivityView,
   ConfigResourcesView,
   DeploymentConfigView,
-  LifecycleView,
 } from '@vben/types/config-api';
 
 import { computed, onMounted, ref } from 'vue';
@@ -14,16 +13,16 @@ import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { usePreferredReducedMotion } from '@vueuse/core';
-import { Alert, Button, Skeleton, Tag } from 'antdv-next';
+import { Button, Skeleton, Tag } from 'antdv-next';
 
 import {
   getConfigActivity,
   getConfigResources,
   getDeploymentConfigSnapshot,
-  getProjectLifecycle,
 } from '#/api/config';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
 
 import {
   CONFIG_RESOURCE_KINDS,
@@ -38,7 +37,6 @@ const reducedMotion = usePreferredReducedMotion();
 
 const loading = ref(true);
 const resources = ref<ConfigResourcesView | null>(null);
-const lifecycle = ref<LifecycleView | null>(null);
 const deployment = ref<DeploymentConfigView | null>(null);
 const activity = ref<ConfigActivityView[]>([]);
 
@@ -113,14 +111,12 @@ async function loadOverview() {
   const result = await handleRequest(() =>
     Promise.all([
       getConfigResources(),
-      getProjectLifecycle(),
       getDeploymentConfigSnapshot(),
       getConfigActivity(8),
     ]),
   );
   if (result) {
-    [resources.value, lifecycle.value, deployment.value, activity.value] =
-      result;
+    [resources.value, deployment.value, activity.value] = result;
   }
   loading.value = false;
 }
@@ -129,7 +125,7 @@ function openResource(kind: string) {
   void router.push(`/system/config/${kind}`);
 }
 
-function openSection(section: 'activity' | 'deployment' | 'lifecycle') {
+function openSection(section: 'activity' | 'deployment') {
   void router.push(`/system/config/${section}`);
 }
 
@@ -172,10 +168,6 @@ onMounted(() => void loadOverview());
               <IconifyIcon icon="lucide:server-cog" />
               {{ $t('page.config.nav.deployment') }}
             </Button>
-            <Button @click="openSection('lifecycle')">
-              <IconifyIcon icon="lucide:shield-check" />
-              {{ $t('page.config.nav.lifecycle') }}
-            </Button>
           </div>
         </div>
 
@@ -186,30 +178,12 @@ onMounted(() => void loadOverview());
         >
           <div class="config-status-cell">
             <dt>{{ $t('page.config.status.environment') }}</dt>
-            <dd>{{ lifecycle?.environment ?? '—' }}</dd>
+            <dd>{{ deployment?.environment ?? '—' }}</dd>
           </div>
           <div class="config-status-cell">
-            <dt>{{ $t('page.config.status.lifecycle') }}</dt>
-            <dd>
-              <Tag
-                :class="{
-                  'config-success-tag':
-                    lifecycle?.state === 'production_frozen',
-                  'config-warning-tag':
-                    lifecycle?.state !== 'production_frozen',
-                }"
-                :color="
-                  lifecycle?.state === 'production_frozen'
-                    ? 'success'
-                    : 'warning'
-                "
-              >
-                {{
-                  lifecycle
-                    ? $t(`page.config.lifecycle.state.${lifecycle.state}`)
-                    : '—'
-                }}
-              </Tag>
+            <dt>{{ $t('page.config.status.deploymentId') }}</dt>
+            <dd class="font-mono text-xs" data-screenshot-volatile="true">
+              {{ deployment?.snapshot.identity.deployment_id ?? '—' }}
             </dd>
           </div>
           <div class="config-status-cell">
@@ -254,12 +228,7 @@ onMounted(() => void loadOverview());
         </dl>
       </section>
 
-      <Alert
-        v-if="lifecycle?.state === 'pre_production_resettable'"
-        :message="$t('page.config.lifecycle.preProductionNotice')"
-        show-icon
-        type="warning"
-      />
+      <RuntimeControlPanel />
 
       <Skeleton v-if="loading" :paragraph="{ rows: 12 }" active />
 

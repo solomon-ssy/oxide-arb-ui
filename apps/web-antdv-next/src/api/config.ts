@@ -8,7 +8,6 @@ import type {
   CurrentPolicyResourceView,
   DecisionPolicySnapshotOptionView,
   DeploymentConfigView,
-  LifecycleView,
   PolicyActivationResultView,
   PolicyApprovalView,
   PolicyResourceSchemaView,
@@ -16,7 +15,6 @@ import type {
   PolicyValidationView,
   SchedulePreviewRequest,
   SchedulePreviewView,
-  SealProductionRequest,
   ValidatePolicyDraftRequest,
 } from '@vben/types/config-api';
 
@@ -31,7 +29,6 @@ export namespace ConfigApi {
   export const activity = `${base}/activity`;
   export const snapshotOptions = `${base}/snapshot-options`;
   export const deployment = `${base}/deployment`;
-  export const lifecycle = `${base}/lifecycle`;
   export const schedulePreview = `${base}/schedule-preview`;
 
   export const current = (kind: ConfigResourceKind) =>
@@ -145,21 +142,6 @@ export function fetchDecisionPolicySnapshots({ limit = 200 } = {}) {
 
 export function getDeploymentConfigSnapshot() {
   return requestClient.get<DeploymentConfigView>(ConfigApi.deployment);
-}
-
-export function getProjectLifecycle() {
-  return requestClient.get<LifecycleView>(ConfigApi.lifecycle);
-}
-
-export function sealProductionBaseline(
-  body: SealProductionRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<LifecycleView>(
-    `${ConfigApi.lifecycle}/seal-production`,
-    body,
-    ctx,
-  );
 }
 
 export function previewConfigSchedule(body: SchedulePreviewRequest) {

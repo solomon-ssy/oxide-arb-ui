@@ -1,14 +1,13 @@
 import type {
   ActionEligibilityView,
-  ActivateBootstrapRequest,
-  BootstrapView,
   ExecutionRecoveryView,
   HealthReport,
   KillSwitchView,
   QuantModeTransitionReport,
-  QuantModeView,
+  RuntimeControlSnapshot,
   SetKillSwitchRequest,
   SwitchQuantModeRequest,
+  SwitchSettlementWritePolicyRequest,
   SystemControlPlaneStatus,
 } from '@vben/types';
 
@@ -21,10 +20,11 @@ export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
   export const actionEligibility = `${base}/action-eligibility`;
-  export const activateBootstrap = `${base}/bootstrap/activate`;
   export const health = `${base}/health`;
-  export const quantMode = `${base}/quant-mode`;
-  export const killSwitch = `${base}/kill-switch`;
+  export const runtimeControls = `${base}/runtime-controls`;
+  export const quantMode = `${runtimeControls}/quant-mode`;
+  export const settlementWritePolicy = `${runtimeControls}/settlement-write-policy`;
+  export const killSwitch = `${runtimeControls}/kill-switch`;
   export const executionRecovery = `${base}/execution-recovery`;
 }
 
@@ -38,27 +38,14 @@ export async function getActionEligibility() {
   return requestClient.get<ActionEligibilityView>(SystemApi.actionEligibility);
 }
 
-/** Governed transition from `awaiting_activation` to `active`. */
-export async function activateBootstrap(
-  body: ActivateBootstrapRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<BootstrapView>(SystemApi.activateBootstrap, body, ctx);
-}
-
 /** `GET /system/health` — per-subsystem health report. */
 export async function getSystemHealth() {
   return requestClient.get<HealthReport>(SystemApi.health);
 }
 
-/** `GET /system/quant-mode` — the current runtime mode. */
-export async function getQuantMode() {
-  return requestClient.get<QuantModeView>(SystemApi.quantMode);
-}
-
-/** `GET /system/kill-switch` — the current kill-switch state. */
-export async function getKillSwitch() {
-  return requestClient.get<KillSwitchView>(SystemApi.killSwitch);
+/** Atomic operational controls and their shared CAS revision. */
+export async function getRuntimeControls() {
+  return requestClient.get<RuntimeControlSnapshot>(SystemApi.runtimeControls);
 }
 
 /** `GET /system/execution-recovery` — recovery detail with blocking rows. */
@@ -76,6 +63,17 @@ export async function switchQuantMode(
 ) {
   return governedPost<QuantModeTransitionReport>(
     SystemApi.quantMode,
+    body,
+    ctx,
+  );
+}
+
+export async function switchSettlementWritePolicy(
+  body: SwitchSettlementWritePolicyRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<RuntimeControlSnapshot>(
+    SystemApi.settlementWritePolicy,
     body,
     ctx,
   );

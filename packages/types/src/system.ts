@@ -1,5 +1,9 @@
 import type { IsoDateTime } from './common';
-import type { KillSwitchState, QuantRuntimeMode } from './enums';
+import type {
+  KillSwitchState,
+  QuantRuntimeMode,
+  SettlementWritePolicy,
+} from './enums';
 import type { ExecutionRecoverySummary } from './execution-recovery';
 import type { ReconciliationView } from './reconciliation';
 
@@ -47,6 +51,7 @@ export interface MarketDataConnectivity {
 export interface KillSwitchView {
   state: KillSwitchState;
   requires_operator_ack: boolean;
+  revision: number;
   last_reason: string;
   changed_by: string;
   changed_at: IsoDateTime;
@@ -72,16 +77,7 @@ export interface SystemStatus {
   checked_at: IsoDateTime;
 }
 
-export type BootstrapPhase =
-  | 'active'
-  | 'awaiting_activation'
-  | 'collecting_baseline'
-  | 'initializing';
-
 export type CapabilityReason =
-  | 'bootstrap_initializing'
-  | 'bootstrap_not_active'
-  | 'bootstrap_not_collecting'
   | 'catalog_baseline_missing'
   | 'control_plane_not_ready'
   | 'kill_switch_blocks_entries'
@@ -89,12 +85,6 @@ export type CapabilityReason =
   | 'operational_phase_blocks_reports'
   | 'operational_phase_blocks_submission'
   | 'runtime_mode_report_only';
-
-export interface BootstrapView {
-  bootstrap_contract_version: number;
-  phase: BootstrapPhase;
-  state_revision: number;
-}
 
 export interface CapabilityView {
   enabled: boolean;
@@ -128,20 +118,19 @@ export interface ActionEligibilityView {
 
 /** Authenticated `GET /system/status` control-plane snapshot. */
 export interface SystemControlPlaneStatus extends SystemStatus {
-  bootstrap: BootstrapView;
   capabilities: SystemCapabilities;
 }
 
-export interface ActivateBootstrapRequest {
-  bootstrap_contract_version: number;
-  expected_state_revision: number;
+/** Coherent singleton returned by `GET /system/runtime-controls`. */
+export interface RuntimeControlSnapshot {
+  quant_runtime_mode: QuantRuntimeMode;
+  settlement_write_policy: SettlementWritePolicy;
+  kill_switch_state: KillSwitchState;
+  kill_switch_requires_ack: boolean;
+  revision: number;
+  changed_by: string;
   reason: string;
-  report_only_forced_ack: boolean;
-}
-
-/** `GET /system/quant-mode` — the current runtime mode. */
-export interface QuantModeView {
-  mode: QuantRuntimeMode;
+  changed_at: IsoDateTime;
 }
 
 /** One preflight check outcome (mirrors Rust `PreflightCheck`). */
@@ -175,12 +164,20 @@ export interface QuantModeTransitionReport {
 
 /** `POST /system/quant-mode` request body. */
 export interface SwitchQuantModeRequest {
+  expected_revision: number;
   mode: QuantRuntimeMode;
   reason: string;
 }
 
-/** `POST /system/kill-switch` request body (`ack` clears `emergency_halted`). */
+export interface SwitchSettlementWritePolicyRequest {
+  expected_revision: number;
+  policy: SettlementWritePolicy;
+  reason: string;
+}
+
+/** Kill-switch request body (`ack` clears a latched state). */
 export interface SetKillSwitchRequest {
+  expected_revision: number;
   state: KillSwitchState;
   reason: string;
   ack?: boolean;

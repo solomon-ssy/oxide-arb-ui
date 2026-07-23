@@ -1,6 +1,6 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { SETTLEMENT_REDEEM_STATES } from '@vben/types';
+import { SETTLEMENT_CASE_STATES } from '@vben/types';
 
 import { $t } from '#/locales';
 
@@ -20,8 +20,8 @@ export function useSettlementRedeemSearchSchema(
       component: 'Select',
       componentProps: {
         allowClear: true,
-        options: Object.values(SETTLEMENT_REDEEM_STATES).map((value) => ({
-          label: $t(`enum.settlementRedeemState.${value}`),
+        options: Object.values(SETTLEMENT_CASE_STATES).map((value) => ({
+          label: $t(`enum.settlementCaseState.${value}`),
           value,
         })),
       },
