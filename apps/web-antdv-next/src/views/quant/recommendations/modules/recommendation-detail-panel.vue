@@ -39,7 +39,6 @@ import { useSystemStore } from '#/store';
 import EntryConditionPanel from '../../shared/entry-condition-panel.vue';
 import { useCreateIntentAction } from './use-create-intent-action';
 import { evaluateCreateIntentGate } from './use-create-intent-gate';
-import RecommendationAttribution from './widgets/recommendation-attribution.vue';
 import RecommendationEvidence from './widgets/recommendation-evidence.vue';
 import RecommendationFactors from './widgets/recommendation-factors.vue';
 import RecommendationPlans from './widgets/recommendation-plans.vue';
@@ -47,7 +46,7 @@ import RecommendationPlans from './widgets/recommendation-plans.vue';
 defineOptions({ name: 'RecommendationDetailPanel' });
 
 const props = defineProps<{
-  /** Preselected detail tab (e.g. `attribution` from a position deep link). */
+  /** Preselected detail tab from an entity deep link. */
   initialTab?: string;
   recommendation: QuantRecommendationView;
 }>();
@@ -59,7 +58,7 @@ const sideTagOptions = useOutcomeSideTagOptions();
 const statusTagOptions = useRecommendationStatusTagOptions();
 const modeTagOptions = useQuantRuntimeModeTagOptions();
 
-const DETAIL_TABS = new Set(['attribution', 'condition', 'evidence']);
+const DETAIL_TABS = new Set(['condition', 'evidence']);
 const detailTab = ref(
   props.initialTab && DETAIL_TABS.has(props.initialTab)
     ? props.initialTab
@@ -587,15 +586,6 @@ function onCreateIntent() {
       >
         <RecommendationEvidence
           :active="detailTab === 'evidence'"
-          :recommendation-id="recommendation.recommendation_id"
-        />
-      </TabPane>
-      <TabPane
-        key="attribution"
-        :tab="$t('page.quantRecommendations.sections.attribution')"
-      >
-        <RecommendationAttribution
-          :active="detailTab === 'attribution'"
           :recommendation-id="recommendation.recommendation_id"
         />
       </TabPane>

@@ -3,7 +3,6 @@ import type {
   EntryConditionDetailView,
   QuantEvidenceView,
   QuantRecommendationView,
-  RecommendationAttributionView,
 } from '@vben/types';
 
 import { requestClient } from '#/api/request';
@@ -12,8 +11,6 @@ export namespace QuantRecommendationApi {
   export const detail = (id: string) => `/quant/recommendations/${id}`;
   export const evidence = (id: string) =>
     `/quant/recommendations/${id}/evidence`;
-  export const attribution = (id: string) =>
-    `/quant/recommendations/${id}/attribution`;
   export const entryCondition = (id: string) =>
     `/quant/recommendations/${id}/entry-condition`;
   export const entryConditionAudits = (id: string) =>
@@ -45,12 +42,5 @@ export async function getRecommendation(id: string) {
 export async function getRecommendationEvidence(id: string) {
   return requestClient.get<QuantEvidenceView>(
     QuantRecommendationApi.evidence(id),
-  );
-}
-
-/** `GET /quant/recommendations/{id}/attribution` — realized outcome. */
-export async function getRecommendationAttribution(id: string) {
-  return requestClient.get<RecommendationAttributionView>(
-    QuantRecommendationApi.attribution(id),
   );
 }

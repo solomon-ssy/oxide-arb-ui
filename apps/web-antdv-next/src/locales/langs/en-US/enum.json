@@ -78,7 +78,6 @@
     "superseded": "Superseded",
     "obsolete": "Obsolete",
     "executed": "Executed",
-    "attributed": "Attributed",
     "revoked": "Revoked",
     "expired": "Expired"
   },
@@ -134,13 +133,6 @@
     "market_cap_exhausted": "Market cap exhausted",
     "no_positive_signal": "No positive signal",
     "aggregate_exposure_cap_exhausted": "Aggregate exposure cap exhausted"
-  },
-  "recommendationAttributionOutcome": {
-    "filled_exited": "Filled & Exited",
-    "filled_settled": "Filled & Settled",
-    "expired_unfilled": "Expired (Unfilled)",
-    "cancelled_unfilled": "Cancelled (Unfilled)",
-    "failed_unfilled": "Failed (Unfilled)"
   },
   "recommendationOutcome": {
     "won": "Won",
@@ -234,8 +226,7 @@
   },
   "trainingSampleSource": {
     "exit_decision": "Exit decision",
-    "historical_pit": "Historical PIT",
-    "live_attribution": "Live attribution"
+    "historical_pit": "Historical PIT"
   },
   "executionRecoveryStep": {
     "resolve_unresolvable_reconciliations": "Resolve unresolvable reconciliations",
@@ -505,7 +496,6 @@
     "order_intent": "Order Intent",
     "execution_order": "Execution Order",
     "position": "Position",
-    "recommendation_attribution": "Recommendation Attribution",
     "reconciliation": "Reconciliation",
     "settlement_redeem": "Settlement Redeem",
     "factor_definition": "Factor Definition",

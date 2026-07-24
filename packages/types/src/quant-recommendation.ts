@@ -16,7 +16,6 @@ import type {
 import type { EntryConditionPlan } from './entry-condition';
 import type {
   BindingConstraint,
-  ExitReason,
   ExitSettlementMode,
   FactorDirection,
   FactorFamily,
@@ -29,8 +28,6 @@ import type {
   NormalizationSource,
   OutcomeSide,
   QuantRuntimeMode,
-  RecommendationAttributionOutcome,
-  RecommendationOutcome,
   RecommendationReportStatus,
   RecommendationStatus,
   RedeemPolicy,
@@ -271,45 +268,4 @@ export interface QuantEvidenceView {
   feature_hash: null | string;
   feature_schema_hash: null | string;
   model_inputs: ModelInputEvidenceView[];
-}
-
-/** Realized entry execution against the venue (`attribution.entry_outcome`). */
-export interface EntryOutcome {
-  entry_filled: boolean;
-  fill_price: null | PriceString;
-  fill_shares: null | SharesString;
-  entry_slippage_bps: BpsString | null;
-  filled_at: IsoDateTime | null;
-}
-
-/** Realized exit / settlement resolution (`attribution.exit_outcome`). */
-export interface ExitOutcome {
-  exit_price: null | PriceString;
-  exit_shares: null | SharesString;
-  exit_trigger: ExitReason | null;
-  exit_compliance: boolean;
-  settlement_outcome: null | RecommendationOutcome;
-  exited_at: IsoDateTime | null;
-}
-
-/** Post-hoc attribution comparing realized behaviour to the thesis. */
-export interface AttributionDetail {
-  hit_stop_loss: boolean;
-  hit_take_profit: boolean;
-  liquidity_exit_possible: boolean;
-  notes: string[];
-}
-
-/** `GET /quant/recommendations/{id}/attribution` — realized outcome. */
-export interface RecommendationAttributionView {
-  recommendation_id: UuidString;
-  outcome: RecommendationAttributionOutcome;
-  realized_pnl_usd: null | UsdString;
-  max_adverse_excursion_bps: DecimalString | null;
-  max_favorable_excursion_bps: DecimalString | null;
-  label_available_at: IsoDateTime | null;
-  entry_outcome: EntryOutcome;
-  exit_outcome: ExitOutcome;
-  attribution: AttributionDetail;
-  created_at: IsoDateTime;
 }

@@ -931,10 +931,10 @@ export interface ReportScheduleConfig {
  * Immediate operational admission controls and notification routing.
  */
 export interface OperationalControl {
-  attribution?: AttributionPolicy;
   entry_condition?: EntryConditionWorkerConfig;
   kill_switch?: KillSwitchPolicy;
   notifications?: NotificationPolicies;
+  outcome_reconciliation?: OutcomeReconciliationPolicy;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -944,20 +944,6 @@ export interface OperationalControl {
    * values are validated through [`SchemaVersion::try_new`].
    */
   schema_version?: number;
-}
-export interface AttributionPolicy {
-  /**
-   * Maximum terminal recommendation/intent candidates processed per sweep.
-   */
-  batch_size?: number;
-  /**
-   * Whether the final recommendation-attribution worker is enabled.
-   */
-  enabled?: boolean;
-  /**
-   * Attribution sweep interval in seconds.
-   */
-  sweep_secs?: number;
 }
 /**
  * Durable condition evaluator cadence, lease, and bounded-pass policy.
@@ -1021,6 +1007,27 @@ export interface NotificationPolicies {
    * Notify operators when a recommendation report is published.
    */
   report_published?: boolean;
+}
+/**
+ * Runtime cadence and bounded work budget for outcome reconciliation.
+ */
+export interface OutcomeReconciliationPolicy {
+  /**
+   * Maximum recommendations or intents processed by each lane per pass.
+   */
+  candidate_batch_size?: number;
+  /**
+   * Whether the outcome reconciliation worker is enabled.
+   */
+  enabled?: boolean;
+  /**
+   * Maximum finalized source blocks scanned per resolution pass.
+   */
+  source_block_span?: number;
+  /**
+   * Delay between reconciliation passes in seconds.
+   */
+  sweep_secs?: number;
 }
 /**
  * Explicit authorization for semi-automatic and automatic execution.

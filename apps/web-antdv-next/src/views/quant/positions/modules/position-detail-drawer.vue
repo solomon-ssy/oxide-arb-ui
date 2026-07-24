@@ -173,8 +173,8 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
             />
             <EntityRouteButton
               icon="lucide:git-branch"
-              :label="$t('page.quantPositions.detail.viewAttribution')"
-              :to="`/quant/recommendations/${position.recommendation_id}?tab=attribution`"
+              :label="$t('page.quantPositions.detail.viewRecommendation')"
+              :to="`/quant/recommendations/${position.recommendation_id}`"
             />
             <EntityRouteButton
               v-if="showLifecycleLinks"

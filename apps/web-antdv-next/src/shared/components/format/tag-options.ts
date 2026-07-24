@@ -26,7 +26,6 @@ import {
   POSITION_PLANES,
   PUBLICATION_STATUSES,
   QUANT_RUNTIME_MODES,
-  RECOMMENDATION_ATTRIBUTION_OUTCOMES,
   RECOMMENDATION_REPORT_STATUSES,
   RECOMMENDATION_STATUSES,
   RECONCILIATION_RESULTS,
@@ -150,7 +149,6 @@ export function useResourceTypeTagOptions() {
       [RESOURCE_TYPES.position]: 'blue',
       [RESOURCE_TYPES.publication]: 'purple',
       [RESOURCE_TYPES.quantReport]: 'success',
-      [RESOURCE_TYPES.recommendationAttribution]: 'cyan',
       [RESOURCE_TYPES.reconciliation]: 'warning',
       [RESOURCE_TYPES.replay]: 'geekblue',
       [RESOURCE_TYPES.role]: 'purple',
@@ -214,7 +212,6 @@ export function useRecommendationStatusTagOptions() {
     Object.values(RECOMMENDATION_STATUSES),
     (value) => $t(`enum.recommendationStatus.${value}`),
     {
-      [RECOMMENDATION_STATUSES.attributed]: 'cyan',
       [RECOMMENDATION_STATUSES.executed]: 'success',
       [RECOMMENDATION_STATUSES.expired]: 'gold',
       [RECOMMENDATION_STATUSES.intentCreated]: 'processing',
@@ -690,21 +687,6 @@ export function useFactorDirectionTagOptions() {
       [FACTOR_DIRECTIONS.negative]: 'error',
       [FACTOR_DIRECTIONS.neutral]: 'geekblue',
       [FACTOR_DIRECTIONS.positive]: 'success',
-    },
-  );
-}
-
-/** Recommendation attribution terminal-outcome tags. */
-export function useRecommendationAttributionOutcomeTagOptions() {
-  return buildTagOptions(
-    Object.values(RECOMMENDATION_ATTRIBUTION_OUTCOMES),
-    (value) => $t(`enum.recommendationAttributionOutcome.${value}`),
-    {
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.cancelledUnfilled]: 'volcano',
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.expiredUnfilled]: 'gold',
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.failedUnfilled]: 'error',
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.filledExited]: 'success',
-      [RECOMMENDATION_ATTRIBUTION_OUTCOMES.filledSettled]: 'cyan',
     },
   );
 }

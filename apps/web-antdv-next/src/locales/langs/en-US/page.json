@@ -819,10 +819,6 @@
         "builtExamples": "Materialized examples",
         "labelsAvailable": "Labels available",
         "labelsUnavailable": "Labels unavailable",
-        "liveAttributionCandidates": "Live attribution candidates",
-        "liveAttributionMaterialized": "Live attributions materialized",
-        "missingEvidence": "Dropped: missing evidence",
-        "supersededCensors": "Excluded: superseded censors",
         "bookDecodeFailures": "Book decode failures",
         "matrixAccepted": "Matrix rows accepted",
         "matrixRejected": "Matrix rows rejected",
@@ -2597,7 +2593,7 @@
       "token": "Token",
       "updatedAt": "Updated",
       "viewOrders": "View execution orders",
-      "viewAttribution": "View recommendation attribution",
+      "viewRecommendation": "View recommendation",
       "viewReconciliation": "View reconciliation queue",
       "viewSettlement": "View settlement redeems",
       "sections": {
@@ -3236,8 +3232,7 @@
       "eligibility": "Execution Eligibility",
       "plans": "Plans",
       "factors": "Factor Breakdown",
-      "evidence": "Evidence",
-      "attribution": "Attribution"
+      "evidence": "Evidence"
     },
     "decisionSummary": {
       "title": "Operator Decision Summary",
@@ -3457,40 +3452,6 @@
       "modelInputFingerprint": "Model-input audit fingerprint",
       "inconsistentInputs": "Model-input rows disagree on the contract, transform, or training-input hash. Treat this evidence as invalid.",
       "raw": "Raw evidence JSON"
-    },
-    "attribution": {
-      "title": "Attribution",
-      "outcome": "Outcome",
-      "realizedPnl": "Realized PnL",
-      "mae": "Max Adverse Excursion",
-      "mfe": "Max Favorable Excursion",
-      "labelAvailableAt": "Label Available At",
-      "entry": {
-        "title": "Entry Outcome",
-        "filled": "Entry Filled",
-        "fillPrice": "Fill Price",
-        "fillShares": "Fill Shares",
-        "slippage": "Entry Slippage",
-        "filledAt": "Filled At"
-      },
-      "exit": {
-        "title": "Exit Outcome",
-        "price": "Exit Price",
-        "shares": "Exit Shares",
-        "trigger": "Exit Trigger",
-        "compliance": "Exit Compliance",
-        "settlementOutcome": "Settlement Outcome",
-        "exitedAt": "Exited At"
-      },
-      "detail": {
-        "title": "Detail",
-        "hitStopLoss": "Hit Stop Loss",
-        "hitTakeProfit": "Hit Take Profit",
-        "liquidityExitPossible": "Liquidity Exit Possible",
-        "notes": "Notes"
-      },
-      "empty": "No attribution yet",
-      "pending": "Attribution is written after the position is settled (post-trade labeling). It is read-only and appears here once available."
     },
     "createIntent": {
       "button": "Create Intent",

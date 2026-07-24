@@ -41,10 +41,7 @@ import type {
 export type ModelPickerSide = 'buy' | 'sell';
 
 /** Sample source for a training-dataset build (mirrors Rust `TrainingSampleSource`). */
-export type TrainingSampleSource =
-  | 'exit_decision'
-  | 'historical_pit'
-  | 'live_attribution';
+export type TrainingSampleSource = 'exit_decision' | 'historical_pit';
 
 // ── Training datasets ───────────────────────────────────────────────────────
 
@@ -78,10 +75,6 @@ export interface DatasetCoverage {
   labels_not_mature: number;
   labels_unavailable: number;
   samples_dropped_insufficient: number;
-  live_attribution_candidates: number;
-  live_attribution_materialized: number;
-  live_attribution_dropped_missing_evidence: number;
-  live_attribution_censored_superseded_unfilled: number;
   book_decode_failures: number;
   exit_decision_candidates: number;
   exit_decision_built: number;
@@ -134,7 +127,7 @@ export interface TrainingDatasetPlanView {
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   /**
-   * Upper-bound total samples (spine + live attribution + exit decision). The
+   * Upper-bound total samples (spine + exit decision). The
    * exact eligible count only emerges from the build's coverage.
    */
   planned_samples: number;
@@ -237,7 +230,7 @@ export interface BuildTrainingDatasetRequest {
   knowledge_lag_secs: number;
   /** Feature schema version to materialize (defaults to 1 server-side). */
   feature_schema_version?: number;
-  /** Sample sources (defaults to historical PIT + live attribution server-side). */
+  /** Sample sources frozen by the server-side dataset plan. */
   sample_sources?: TrainingSampleSource[];
   reason: string;
   training_dataset_id?: UuidString;

@@ -819,10 +819,6 @@
         "builtExamples": "已物化样本",
         "labelsAvailable": "可用标签",
         "labelsUnavailable": "不可用标签",
-        "liveAttributionCandidates": "实时归因候选",
-        "liveAttributionMaterialized": "已物化实时归因",
-        "missingEvidence": "因证据缺失丢弃",
-        "supersededCensors": "排除：报告取代删失样本",
         "bookDecodeFailures": "订单簿解码失败",
         "matrixAccepted": "矩阵接受行",
         "matrixRejected": "矩阵拒绝行",
@@ -2597,7 +2593,7 @@
       "token": "Token",
       "updatedAt": "更新时间",
       "viewOrders": "查看执行订单",
-      "viewAttribution": "查看推荐归因",
+      "viewRecommendation": "查看推荐详情",
       "viewReconciliation": "查看对账队列",
       "viewSettlement": "查看结算赎回",
       "sections": {
@@ -3236,8 +3232,7 @@
       "eligibility": "执行资格",
       "plans": "计划",
       "factors": "因子拆解",
-      "evidence": "证据",
-      "attribution": "归因"
+      "evidence": "证据"
     },
     "decisionSummary": {
       "title": "操作员决策摘要",
@@ -3457,40 +3452,6 @@
       "modelInputFingerprint": "模型输入审计指纹",
       "inconsistentInputs": "模型输入行的契约、转换或训练输入哈希不一致；该证据无效。",
       "raw": "原始证据 JSON"
-    },
-    "attribution": {
-      "title": "归因",
-      "outcome": "结果",
-      "realizedPnl": "已实现盈亏",
-      "mae": "最大不利偏移",
-      "mfe": "最大有利偏移",
-      "labelAvailableAt": "标签可用时间",
-      "entry": {
-        "title": "入场结果",
-        "filled": "入场成交",
-        "fillPrice": "成交价",
-        "fillShares": "成交份额",
-        "slippage": "入场滑点",
-        "filledAt": "成交时间"
-      },
-      "exit": {
-        "title": "退出结果",
-        "price": "退出价",
-        "shares": "退出份额",
-        "trigger": "退出触发",
-        "compliance": "退出合规",
-        "settlementOutcome": "结算结果",
-        "exitedAt": "退出时间"
-      },
-      "detail": {
-        "title": "明细",
-        "hitStopLoss": "触发止损",
-        "hitTakeProfit": "触发止盈",
-        "liquidityExitPossible": "流动性可退出",
-        "notes": "备注"
-      },
-      "empty": "尚无归因",
-      "pending": "归因在仓位结算后（盘后标注）写入。它是只读的，可用后会显示在此。"
     },
     "createIntent": {
       "button": "创建意图",
@@ -3751,7 +3712,6 @@
       },
       "allowed_cash_budget_tiers_usd": { "label": "允许的现金预算档位（USD）" },
       "approval_ttl_secs": { "label": "审批有效期（秒）" },
-      "attribution": { "label": "归因任务" },
       "auto_execution": { "label": "自动执行" },
       "backstop_interval_ms": { "label": "兜底扫描间隔（毫秒）" },
       "batch_size": { "label": "单批处理上限" },

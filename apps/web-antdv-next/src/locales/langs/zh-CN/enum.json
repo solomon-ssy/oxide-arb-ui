@@ -78,7 +78,6 @@
     "superseded": "已取代",
     "obsolete": "未生效作废",
     "executed": "已执行",
-    "attributed": "已归因",
     "revoked": "已撤销",
     "expired": "已过期"
   },
@@ -134,13 +133,6 @@
     "market_cap_exhausted": "单市场上限耗尽",
     "no_positive_signal": "无正向信号",
     "aggregate_exposure_cap_exhausted": "总敞口上限耗尽"
-  },
-  "recommendationAttributionOutcome": {
-    "filled_exited": "成交并退出",
-    "filled_settled": "成交并结算",
-    "expired_unfilled": "过期未成交",
-    "cancelled_unfilled": "取消未成交",
-    "failed_unfilled": "失败未成交"
   },
   "recommendationOutcome": {
     "won": "获胜",
@@ -234,8 +226,7 @@
   },
   "trainingSampleSource": {
     "exit_decision": "退出决策点",
-    "historical_pit": "历史 PIT",
-    "live_attribution": "实时归因"
+    "historical_pit": "历史 PIT"
   },
   "executionRecoveryStep": {
     "resolve_unresolvable_reconciliations": "解决无法自动处理的对账",
@@ -505,7 +496,6 @@
     "order_intent": "订单意图",
     "execution_order": "执行订单",
     "position": "持仓",
-    "recommendation_attribution": "推荐归因",
     "reconciliation": "对账",
     "settlement_redeem": "结算赎回",
     "factor_definition": "因子定义",

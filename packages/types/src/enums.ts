@@ -55,7 +55,6 @@ export const RESOURCE_TYPES = {
   position: 'position',
   publication: 'publication',
   quantReport: 'quant_report',
-  recommendationAttribution: 'recommendation_attribution',
   reconciliation: 'reconciliation',
   replay: 'replay',
   role: 'role',
@@ -290,7 +289,6 @@ export type ReportFactDeliveryStatus = WireEnum<
 >;
 
 export const RECOMMENDATION_STATUSES = {
-  attributed: 'attributed',
   executed: 'executed',
   expired: 'expired',
   intentCreated: 'intent_created',
@@ -342,7 +340,7 @@ export const ACCOUNT_SOURCES = {
 
 export type AccountSource = WireEnum<typeof ACCOUNT_SOURCES>;
 
-// ── Recommendation scoring / attribution ────────────────────────────────────
+// ── Recommendation scoring ──────────────────────────────────────────────────
 
 export const PRICE_COMPARISONS = {
   atOrAbove: 'at_or_above',
@@ -473,19 +471,6 @@ export const REJECTION_REASONS = {
 } as const;
 
 export type RejectionReason = WireEnum<typeof REJECTION_REASONS>;
-
-/** Terminal attribution classification of a recommendation. */
-export const RECOMMENDATION_ATTRIBUTION_OUTCOMES = {
-  cancelledUnfilled: 'cancelled_unfilled',
-  expiredUnfilled: 'expired_unfilled',
-  failedUnfilled: 'failed_unfilled',
-  filledExited: 'filled_exited',
-  filledSettled: 'filled_settled',
-} as const;
-
-export type RecommendationAttributionOutcome = WireEnum<
-  typeof RECOMMENDATION_ATTRIBUTION_OUTCOMES
->;
 
 /** Terminal settlement outcome of a position lot. */
 export const RECOMMENDATION_OUTCOMES = {
