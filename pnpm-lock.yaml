@@ -534,7 +534,7 @@ overrides:
   vue: ^3.5.35
 
 patchedDependencies:
-  antdv-next@1.4.1: a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa
+  antdv-next@1.4.1: 54ca64f69449aacc573028b26a99969eb02b8d299279a4521f0c0e91fe4754ff
 
 importers:
 
@@ -798,7 +798,7 @@ importers:
         version: 8.20.0
       antdv-next:
         specifier: 'catalog:'
-        version: 1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
+        version: 1.4.1(patch_hash=54ca64f69449aacc573028b26a99969eb02b8d299279a4521f0c0e91fe4754ff)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
       dayjs:
         specifier: 'catalog:'
         version: 1.11.21
@@ -1046,7 +1046,7 @@ importers:
         version: link:../packages/styles
       antdv-next:
         specifier: 'catalog:'
-        version: 1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
+        version: 1.4.1(patch_hash=54ca64f69449aacc573028b26a99969eb02b8d299279a4521f0c0e91fe4754ff)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
       medium-zoom:
         specifier: 'catalog:'
         version: 1.1.0
@@ -2093,7 +2093,7 @@ importers:
         version: 14.3.0(vue@3.5.35(typescript@6.0.3))
       antdv-next:
         specifier: 'catalog:'
-        version: 1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
+        version: 1.4.1(patch_hash=54ca64f69449aacc573028b26a99969eb02b8d299279a4521f0c0e91fe4754ff)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3))
       dayjs:
         specifier: 'catalog:'
         version: 1.11.21
@@ -16203,7 +16203,7 @@ snapshots:
       vue-types: 3.0.2(vue@3.5.35(typescript@6.0.3))
       warning: 4.0.3
 
-  antdv-next@1.4.1(patch_hash=a3748844aa79b51fbe90eb09027a30370a864f59593156cdcf3c5d6f996325fa)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3)):
+  antdv-next@1.4.1(patch_hash=54ca64f69449aacc573028b26a99969eb02b8d299279a4521f0c0e91fe4754ff)(date-fns@4.4.0)(vue@3.5.35(typescript@6.0.3)):
     dependencies:
       '@ant-design/colors': 8.0.1
       '@ant-design/fast-color': 3.0.1

@@ -9,6 +9,7 @@ import { watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
+import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { Button, message, Tooltip } from 'antdv-next';
@@ -172,15 +173,38 @@ watch(
   <Page auto-content-height>
     <Grid :table-title="$t('page.research.datasets.listTitle')">
       <template #toolbar-tools>
-        <div v-if="canCreate" class="flex gap-2">
+        <div v-if="canCreate" class="flex shrink-0 gap-2">
           <Tooltip :title="$t('page.research.datasets.actions.planHelp')">
-            <Button @click="openForm('plan-wizard')">
-              {{ $t('page.research.datasets.actions.plan') }}
+            <Button
+              :aria-label="$t('page.research.datasets.actions.plan')"
+              class="max-sm:!size-10 max-sm:!p-0"
+              @click="openForm('plan-wizard')"
+            >
+              <IconifyIcon
+                aria-hidden="true"
+                class="size-4 sm:hidden"
+                icon="lucide:clipboard-check"
+              />
+              <span class="max-sm:sr-only">
+                {{ $t('page.research.datasets.actions.plan') }}
+              </span>
             </Button>
           </Tooltip>
           <Tooltip :title="$t('page.research.datasets.actions.buildHelp')">
-            <Button type="primary" @click="openForm('build-direct')">
-              {{ $t('page.research.datasets.actions.build') }}
+            <Button
+              :aria-label="$t('page.research.datasets.actions.build')"
+              class="max-sm:!size-10 max-sm:!p-0"
+              type="primary"
+              @click="openForm('build-direct')"
+            >
+              <IconifyIcon
+                aria-hidden="true"
+                class="size-4 sm:hidden"
+                icon="lucide:database-zap"
+              />
+              <span class="max-sm:sr-only">
+                {{ $t('page.research.datasets.actions.build') }}
+              </span>
             </Button>
           </Tooltip>
         </div>

@@ -1,8 +1,8 @@
 import type { TrainingDatasetView } from '@vben/types';
 
-import { isTrainableDatasetStatus } from '@vben/types';
+import { DATASET_PURPOSES, isTrainableDatasetStatus } from '@vben/types';
 
-import { hasUsableDatasetManifest } from './dataset-manifest';
+import { hasUsableDatasetManifest } from '../../shared/dataset-manifest';
 
 /** UI affordance for training; the server remains authoritative at submission. */
 export function canTrainDataset(
@@ -12,6 +12,7 @@ export function canTrainDataset(
   return (
     hasPermission &&
     isTrainableDatasetStatus(dataset.status) &&
+    dataset.purpose === DATASET_PURPOSES.training &&
     hasUsableDatasetManifest(dataset)
   );
 }

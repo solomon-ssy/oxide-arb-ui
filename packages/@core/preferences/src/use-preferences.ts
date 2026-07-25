@@ -231,12 +231,20 @@ function usePreferences() {
       };
     }
 
+    // A viewport-fixed secondary action obscures primary content on narrow
+    // screens. The existing user menu keeps preferences discoverable without
+    // competing with the page action layer.
+    if (isMobile.value) {
+      return {
+        fixed: false,
+        header: false,
+        userDropdown: true,
+      };
+    }
+
     // 如果是全屏模式或者没有固定在顶部，
     const fixed =
-      contentIsMaximize ||
-      isFullContent.value ||
-      isMobile.value ||
-      !isShowHeaderNav.value;
+      contentIsMaximize || isFullContent.value || !isShowHeaderNav.value;
 
     return {
       fixed,

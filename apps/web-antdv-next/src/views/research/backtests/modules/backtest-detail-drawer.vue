@@ -108,8 +108,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
     class="w-full max-w-3xl"
   >
     <Spin :spinning="loading">
-      <div v-if="report" class="flex flex-col gap-4">
+      <div v-if="report" class="flex min-w-0 flex-col gap-4">
         <Card
+          class="min-w-0"
           size="small"
           :title="$t('page.research.backtests.detail.gateContribution')"
         >
@@ -117,6 +118,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
 
         <Card
+          class="min-w-0"
           size="small"
           :title="$t('page.research.backtests.detail.summary')"
         >
@@ -136,6 +138,16 @@ const [Drawer, drawerApi] = useVbenDrawer({
               <span class="font-mono text-xs break-all">
                 {{ report.model_run_id }}
               </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.backtests.detail.evaluationDataset')"
+              :span="2"
+            >
+              <EntityRouteLink
+                mono
+                :label="report.evaluation_dataset_id"
+                :to="`/research/datasets?open=${report.evaluation_dataset_id}`"
+              />
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.backtests.columns.rankIc')"
@@ -191,6 +203,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
 
         <Card
+          class="min-w-0"
           size="small"
           :title="$t('page.research.backtests.detail.expectedVsRealized')"
         >
@@ -198,6 +211,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
 
         <Card
+          class="min-w-0"
           size="small"
           :title="$t('page.research.backtests.detail.categoryBreakdown')"
         >
@@ -205,6 +219,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
 
         <Card
+          class="min-w-0"
           size="small"
           :title="$t('page.research.backtests.detail.pnlSimulation')"
         >

@@ -109,6 +109,7 @@ const columns = computed(() => [
     :columns="columns"
     :data-source="rows"
     :pagination="false"
+    :scroll="{ x: 680 }"
     row-key="category"
     size="small"
   >

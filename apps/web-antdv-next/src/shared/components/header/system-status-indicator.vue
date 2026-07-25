@@ -5,6 +5,8 @@ import type { SystemIndicator } from '#/shared/composables/ws/ws-indicators';
 
 import { computed } from 'vue';
 
+import { IconifyIcon } from '@vben/icons';
+
 import { Popover, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
@@ -54,6 +56,14 @@ const INDICATOR_COLOR: Record<SystemIndicator, string> = {
   running: 'success',
   starting: 'processing',
   unknown: 'default',
+};
+
+const INDICATOR_ICON: Record<SystemIndicator, string> = {
+  critical: 'lucide:circle-x',
+  degraded: 'lucide:triangle-alert',
+  running: 'lucide:circle-check',
+  starting: 'lucide:loader-circle',
+  unknown: 'lucide:circle-help',
 };
 
 const phase = computed(() => status.value?.operational_phase.phase ?? null);
@@ -120,9 +130,23 @@ function degradeReasonLabel(reason: OperationalDegradeReason): string {
 </script>
 
 <template>
-  <div v-if="visible" class="flex h-8 items-center px-2">
+  <div v-if="visible" class="flex h-8 items-center px-0 sm:px-2">
     <Popover placement="bottomRight" trigger="click">
-      <Tag :color="tagColor" class="cursor-pointer">{{ label }}</Tag>
+      <button
+        :aria-label="label"
+        class="focus-visible:ring-ring flex size-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none sm:size-auto"
+        type="button"
+      >
+        <Tag :color="tagColor" class="!m-0 cursor-pointer max-sm:!p-1">
+          <IconifyIcon
+            aria-hidden="true"
+            :class="{ 'animate-spin': indicator === 'starting' }"
+            :icon="INDICATOR_ICON[indicator]"
+            class="size-4 sm:hidden"
+          />
+          <span class="max-sm:sr-only">{{ label }}</span>
+        </Tag>
+      </button>
       <template #content>
         <div
           class="flex max-h-[70vh] w-80 flex-col gap-3 overflow-y-auto text-sm"

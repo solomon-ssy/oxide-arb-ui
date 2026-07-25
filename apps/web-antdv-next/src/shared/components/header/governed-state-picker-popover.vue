@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
+import { IconifyIcon } from '@vben/icons';
+
 import { Popover, Tag } from 'antdv-next';
 
 defineOptions({ name: 'GovernedStatePickerPopover' });
 
 const props = defineProps<{
   currentValue: null | string;
+  icon: string;
   options: StatePickerOption[];
   tagColor: string;
   tagLabel: string;
@@ -39,9 +42,22 @@ function onSelect(option: StatePickerOption) {
 </script>
 
 <template>
-  <div class="flex h-8 items-center px-1">
+  <div class="flex h-8 items-center px-0 sm:px-1">
     <Popover placement="bottomRight" trigger="click">
-      <Tag :color="tagColor" class="cursor-pointer">{{ tagLabel }}</Tag>
+      <button
+        :aria-label="`${title}: ${tagLabel}`"
+        class="focus-visible:ring-ring flex size-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none sm:size-auto"
+        type="button"
+      >
+        <Tag :color="tagColor" class="!m-0 cursor-pointer max-sm:!p-1">
+          <IconifyIcon
+            aria-hidden="true"
+            :icon="icon"
+            class="size-4 sm:hidden"
+          />
+          <span class="max-sm:sr-only">{{ tagLabel }}</span>
+        </Tag>
+      </button>
       <template #content>
         <div class="flex w-56 flex-col gap-2">
           <span class="text-muted-foreground text-xs font-medium">

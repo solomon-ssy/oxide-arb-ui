@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
+import { DATASET_PURPOSES } from '@vben/types';
 
 import {
   Alert,
@@ -35,8 +36,8 @@ import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.v
 import { usePolling } from '#/shared/composables/use-polling';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
+import { datasetManifestBindingIssues } from '../../shared/dataset-manifest';
 import { canTrainDataset } from './dataset-action-state';
-import { datasetManifestBindingIssues } from './dataset-manifest';
 
 defineOptions({ name: 'DatasetDetailDrawer' });
 
@@ -58,8 +59,8 @@ const dataset = ref<null | TrainingDatasetView>(null);
 const loading = ref(false);
 const openId = ref<null | string>(null);
 
-const coverage = computed(() => dataset.value?.coverage_json ?? {});
-const integrityCoverage = computed(() => dataset.value?.coverage_json ?? null);
+const coverage = computed(() => dataset.value?.coverage ?? {});
+const integrityCoverage = computed(() => dataset.value?.coverage ?? null);
 const statusTag = computed(() =>
   findTagOption(statusTagOptions, dataset.value?.status),
 );
@@ -77,6 +78,42 @@ const pitExclusions = computed(
   () => integrityCoverage.value?.pit_selection_excluded,
 );
 const manifest = computed(() => dataset.value?.manifest ?? null);
+const cohort = computed(() => dataset.value?.cohort_manifest ?? null);
+const evaluationCohortMissing = computed(
+  () =>
+    dataset.value?.purpose === DATASET_PURPOSES.evaluation &&
+    cohort.value === null,
+);
+const cohortExcluded = computed(
+  () =>
+    cohort.value?.counts.exclusion_counts.reduce(
+      (total, entry) => total + entry.count,
+      0,
+    ) ?? 0,
+);
+const cohortCensored = computed(
+  () =>
+    cohort.value?.counts.censor_counts.reduce(
+      (total, entry) => total + entry.count,
+      0,
+    ) ?? 0,
+);
+const cohortExclusionText = computed(() =>
+  (cohort.value?.counts.exclusion_counts ?? [])
+    .map(
+      (entry) =>
+        `${$t(`enum.cohortExclusionReason.${entry.reason}`)}: ${entry.count}`,
+    )
+    .join(' · '),
+);
+const cohortCensorText = computed(() =>
+  (cohort.value?.counts.censor_counts ?? [])
+    .map(
+      (entry) =>
+        `${$t(`enum.cohortCensorReason.${entry.reason}`)}: ${entry.count}`,
+    )
+    .join(' · '),
+);
 const manifestIssues = computed(() =>
   dataset.value ? datasetManifestBindingIssues(dataset.value) : [],
 );
@@ -139,7 +176,7 @@ function onTrain() {
     class="w-full max-w-3xl"
   >
     <Spin :spinning="loading">
-      <div v-if="dataset" class="flex flex-col gap-4">
+      <div v-if="dataset" class="flex min-w-0 flex-col gap-4">
         <div class="flex items-center justify-between gap-2">
           <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
           <Button v-if="canTrain" type="primary" @click="onTrain">
@@ -165,6 +202,36 @@ function onTrain() {
               :label="$t('page.research.datasets.form.purpose')"
             >
               {{ $t(`enum.datasetPurpose.${dataset.purpose}`) }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.datasets.detail.researchProfileArtifact')
+              "
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.research_profile_artifact_id }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.sourceSliceId')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.source_slice_id }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.pitCutoff')"
+            >
+              {{ formatDateTimeLocal(dataset.pit_cutoff) }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.feedbackCohort')"
+            >
+              {{
+                dataset.feedback_cohort
+                  ? $t(`enum.feedbackCohort.${dataset.feedback_cohort}`)
+                  : EMPTY_PLACEHOLDER
+              }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="
@@ -300,7 +367,7 @@ function onTrain() {
                 :span="2"
               >
                 <span class="font-mono text-xs break-all">
-                  {{ manifest.decision_policy_snapshot_id }}
+                  {{ manifest.source_lineage.decision_policy_snapshot_id }}
                 </span>
               </DescriptionsItem>
               <DescriptionsItem
@@ -375,6 +442,174 @@ function onTrain() {
               </DescriptionsItem>
             </Descriptions>
           </template>
+        </Card>
+
+        <Card
+          size="small"
+          :title="$t('page.research.datasets.detail.sourceLineage')"
+        >
+          <Descriptions :column="1" bordered size="small">
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.researchProgramHash')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.source_lineage.research_program_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.runtimeConfigHash')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.source_lineage.runtime_config_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.readerContract')"
+            >
+              {{ dataset.source_lineage.reader_contract_version }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.schemaContract')"
+            >
+              {{ dataset.source_lineage.schema_contract_version }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.sourceSchemaHash')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.source_lineage.source_schema_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.sourceManifestHash')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.source_lineage.source_slice.manifest_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.sourceManifestUri')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ dataset.source_lineage.source_slice.manifest_uri }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.capabilityHashes')"
+            >
+              <div class="flex flex-col gap-1">
+                <span
+                  v-for="hash in dataset.source_lineage
+                    .capability_registry_hashes"
+                  :key="hash"
+                  class="font-mono text-xs break-all"
+                >
+                  {{ hash }}
+                </span>
+                <span
+                  v-if="
+                    dataset.source_lineage.capability_registry_hashes.length ===
+                    0
+                  "
+                >
+                  {{ EMPTY_PLACEHOLDER }}
+                </span>
+              </div>
+            </DescriptionsItem>
+          </Descriptions>
+        </Card>
+
+        <Card
+          v-if="cohort || evaluationCohortMissing"
+          size="small"
+          :title="$t('page.research.datasets.detail.cohortEvidence')"
+        >
+          <Alert
+            v-if="evaluationCohortMissing"
+            :message="$t('page.research.datasets.detail.cohortUnavailable')"
+            show-icon
+            type="error"
+          />
+          <Descriptions v-else-if="cohort" :column="2" bordered size="small">
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.feedbackCohort')"
+              :span="2"
+            >
+              {{ $t(`enum.feedbackCohort.${cohort.cohort}`) }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortCandidates')"
+            >
+              {{ cohort.counts.candidate_count }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortEligible')"
+            >
+              {{ cohort.counts.eligible_count }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortIncluded')"
+            >
+              {{ cohort.counts.included_count }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortExcluded')"
+            >
+              {{ cohortExcluded }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortCensored')"
+              :span="2"
+            >
+              {{ cohortCensored }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortArtifactUri')"
+              :span="2"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ cohort.artifact.uri }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortArtifactHash')"
+              :span="2"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ cohort.artifact.bytes_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortSourceHash')"
+              :span="2"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ cohort.artifact.source_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.research.datasets.detail.cohortSchemaHash')"
+              :span="2"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ cohort.artifact.schema_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              v-if="cohortExclusionText"
+              :label="$t('page.research.datasets.detail.cohortExcluded')"
+              :span="2"
+            >
+              {{ cohortExclusionText }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              v-if="cohortCensorText"
+              :label="$t('page.research.datasets.detail.cohortCensored')"
+              :span="2"
+            >
+              {{ cohortCensorText }}
+            </DescriptionsItem>
+          </Descriptions>
         </Card>
 
         <Card
@@ -461,6 +696,7 @@ function onTrain() {
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.datasets.detail.bookDecodeFailures')"
+              :span="2"
             >
               {{ integrityCoverage?.book_decode_failures ?? '—' }}
             </DescriptionsItem>
@@ -554,10 +790,11 @@ function onTrain() {
         </Card>
 
         <Card
+          class="min-w-0"
           size="small"
           :title="$t('page.research.datasets.detail.featureStates')"
         >
-          <Descriptions :column="4" bordered size="small">
+          <Descriptions :column="{ xs: 2, sm: 4 }" bordered size="small">
             <DescriptionsItem
               :label="$t('page.research.datasets.detail.stateObserved')"
             >

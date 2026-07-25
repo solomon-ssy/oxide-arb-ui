@@ -117,20 +117,22 @@ const notApplicableRows = computed<NotApplicableRow[]>(() =>
 );
 
 const evaluatedColumns = computed(() => [
-  { dataIndex: 'gate', key: 'gate' },
+  { dataIndex: 'gate', key: 'gate', width: '42%' },
   {
     align: 'right' as const,
     dataIndex: 'metrics',
     key: 'metrics',
+    width: '58%',
   },
 ]);
 
 const notApplicableColumns = computed(() => [
-  { dataIndex: 'gate', key: 'gate' },
+  { dataIndex: 'gate', key: 'gate', width: '42%' },
   {
     align: 'right' as const,
     dataIndex: 'detail',
     key: 'detail',
+    width: '58%',
   },
 ]);
 
@@ -164,7 +166,7 @@ function showDetail(outcome: GateOutcome): boolean {
     :description="$t('page.research.qualityGate.empty')"
     :image="Empty.PRESENTED_IMAGE_SIMPLE"
   />
-  <div v-else class="flex flex-col gap-3">
+  <div v-else class="flex min-w-0 flex-col gap-3">
     <Alert
       v-if="verdict"
       :message="verdict.message"
@@ -185,10 +187,11 @@ function showDetail(outcome: GateOutcome): boolean {
       :columns="evaluatedColumns"
       :data-source="evaluatedRows"
       row-key="key"
+      table-layout="fixed"
     >
       <template #bodyCell="slotProps">
         <template v-if="asEvaluatedBodyCell(slotProps).column.key === 'gate'">
-          <div class="flex min-w-0 items-center gap-2 text-xs">
+          <div class="flex min-w-0 flex-wrap items-center gap-2 text-xs">
             <span class="truncate font-medium">{{
               gateLabel(asEvaluatedBodyCell(slotProps).record.gate)
             }}</span>
@@ -208,9 +211,11 @@ function showDetail(outcome: GateOutcome): boolean {
           v-else-if="asEvaluatedBodyCell(slotProps).column.key === 'metrics'"
         >
           <div
-            class="flex flex-shrink-0 items-center justify-end gap-2 text-xs"
+            class="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1 text-xs"
           >
-            <span class="text-muted-foreground font-mono">
+            <span
+              class="text-muted-foreground min-w-0 break-all text-right font-mono"
+            >
               {{ asEvaluatedBodyCell(slotProps).record.observed }}
               <span class="opacity-60">
                 / {{ asEvaluatedBodyCell(slotProps).record.threshold }}
@@ -250,6 +255,7 @@ function showDetail(outcome: GateOutcome): boolean {
           :columns="notApplicableColumns"
           :data-source="notApplicableRows"
           row-key="key"
+          table-layout="fixed"
         >
           <template #bodyCell="slotProps">
             <template
@@ -264,7 +270,7 @@ function showDetail(outcome: GateOutcome): boolean {
                 asNotApplicableBodyCell(slotProps).column.key === 'detail'
               "
             >
-              <span class="text-muted-foreground truncate text-xs">{{
+              <span class="text-muted-foreground block truncate text-xs">{{
                 asNotApplicableBodyCell(slotProps).record.detail
               }}</span>
             </template>

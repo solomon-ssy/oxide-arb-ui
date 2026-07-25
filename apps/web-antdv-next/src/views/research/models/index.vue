@@ -180,10 +180,10 @@ async function submitTrain(body: TrainModelBody): Promise<boolean> {
 function openBacktest(model: TrainedModelView) {
   backtestModalApi
     .setData({
+      modelSpecId: model.model_spec_id,
       modelVersionId: model.model_version_id,
       onSubmit: (body: BacktestBody) =>
         submitBacktest(model.model_version_id, body),
-      trainingDatasetId: model.training_dataset_id ?? undefined,
     })
     .open();
 }

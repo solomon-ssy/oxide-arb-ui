@@ -78,6 +78,7 @@ async function onSelect(raw: string) {
   <GovernedStatePickerPopover
     v-if="visible"
     :current-value="currentState"
+    icon="lucide:shield-alert"
     :options="pickerOptions"
     :tag-color="currentTag?.color ?? 'default'"
     :tag-label="currentTag?.label ?? $t('page.header.killSwitchPicker.unknown')"

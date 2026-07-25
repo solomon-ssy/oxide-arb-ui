@@ -261,10 +261,10 @@ function openBacktest() {
   }
   backtestModalApi
     .setData({
+      modelSpecId: current.model_spec_id,
       modelVersionId: current.model_version_id,
       onSubmit: (body: BacktestBody) =>
         submitBacktest(current.model_version_id, body),
-      trainingDatasetId: current.training_dataset_id ?? undefined,
     })
     .open();
 }

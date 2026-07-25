@@ -24,6 +24,8 @@ import { $t } from '#/locales';
 import BulletList from '#/shared/components/bullet-list.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
+import { isDatasetSelectable } from '../../shared/dataset-selection';
+
 defineOptions({ name: 'FitModelCalibratorModal' });
 
 export type FitModelCalibratorBody = Omit<FitModelCalibratorRequest, 'reason'>;
@@ -98,7 +100,10 @@ async function loadOptions() {
   const seen = new Set<string>();
   const datasets: OptionItem[] = [];
   for (const dataset of ready ?? []) {
-    if (seen.has(dataset.training_dataset_id)) {
+    if (
+      seen.has(dataset.training_dataset_id) ||
+      !isDatasetSelectable(dataset, DATASET_PURPOSES.calibration)
+    ) {
       continue;
     }
     seen.add(dataset.training_dataset_id);

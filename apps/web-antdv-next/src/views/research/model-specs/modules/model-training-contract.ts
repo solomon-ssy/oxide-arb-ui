@@ -2,7 +2,7 @@ import type { ModelTrainingContract } from '@vben/types';
 
 export const DEFAULT_MODEL_TRAINING_CONTRACT: ModelTrainingContract = {
   target_label_horizon_secs: 0,
-  target_label_name: 'settlement_outcome',
+  target_label_name: 'token_payout_ratio',
   trade_policy_artifact_id: null,
   validation_folds: 3,
 };

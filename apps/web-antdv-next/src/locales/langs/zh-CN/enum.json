@@ -661,6 +661,23 @@
   "datasetPurpose": {
     "training": "训练",
     "calibration": "校准",
-    "policyFit": "策略拟合"
+    "evaluation": "评估",
+    "policy_fit": "策略拟合"
+  },
+  "feedbackCohort": {
+    "model_learning": "模型学习",
+    "execution_learning": "执行学习",
+    "policy_evaluation": "策略评估"
+  },
+  "cohortExclusionReason": {
+    "recommendation_not_published": "推荐未发布",
+    "non_primary_report": "非主报告",
+    "outside_frozen_window": "不在冻结窗口内",
+    "report_only_no_execution_authority": "仅报告模式：无执行权限",
+    "execution_not_attempted": "未尝试执行"
+  },
+  "cohortCensorReason": {
+    "resolution_unavailable_at_cutoff": "截止时尚无结算事实",
+    "execution_outcome_unavailable_at_cutoff": "截止时尚无执行结果"
   }
 }

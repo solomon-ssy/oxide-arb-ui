@@ -84,6 +84,7 @@ function createQpWs(): QpWsApi {
     let generation = 0;
     let reconnectAttempts = 0;
     let notificationSeq = 0;
+    let networkListenersRegistered = false;
 
     function pushNotification(title: string, msg: string, key?: string) {
       const id = key ? `qp-alert-${key}` : `qp-ws-${notificationSeq + 1}`;
@@ -128,6 +129,13 @@ function createQpWs(): QpWsApi {
       if (pongTimeout !== null) {
         clearTimeout(pongTimeout);
         pongTimeout = null;
+      }
+    }
+
+    function clearReconnectTimer() {
+      if (reconnectTimer !== null) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
       }
     }
 
@@ -217,7 +225,7 @@ function createQpWs(): QpWsApi {
     }
 
     function scheduleReconnect() {
-      if (!desired.value || reconnectTimer !== null) {
+      if (!desired.value || !navigator.onLine || reconnectTimer !== null) {
         return;
       }
       const delay = withJitter(reconnectBackoffMs(reconnectAttempts));
@@ -232,6 +240,7 @@ function createQpWs(): QpWsApi {
       if (
         !desired.value ||
         !accessStore.accessToken ||
+        !navigator.onLine ||
         socketState.value !== 'CLOSED'
       ) {
         return;
@@ -280,6 +289,48 @@ function createQpWs(): QpWsApi {
       }
     }
 
+    function suspendWhileOffline() {
+      if (!desired.value) {
+        return;
+      }
+      generation += 1;
+      reconnectAttempts = 0;
+      clearReconnectTimer();
+      clearHeartbeat();
+
+      const activeSocket = socket;
+      socket = null;
+      socketState.value = 'CLOSED';
+      activeSocket?.close(4001, 'browser offline');
+    }
+
+    function reconnectWhenOnline() {
+      if (!desired.value || !navigator.onLine) {
+        return;
+      }
+      reconnectAttempts = 0;
+      clearReconnectTimer();
+      void openSocket();
+    }
+
+    function registerNetworkListeners() {
+      if (networkListenersRegistered) {
+        return;
+      }
+      window.addEventListener('offline', suspendWhileOffline);
+      window.addEventListener('online', reconnectWhenOnline);
+      networkListenersRegistered = true;
+    }
+
+    function unregisterNetworkListeners() {
+      if (!networkListenersRegistered) {
+        return;
+      }
+      window.removeEventListener('offline', suspendWhileOffline);
+      window.removeEventListener('online', reconnectWhenOnline);
+      networkListenersRegistered = false;
+    }
+
     const status = computed<WsConnectionStatus>(() => {
       if (socketState.value === 'OPEN') {
         return 'connected';
@@ -311,6 +362,7 @@ function createQpWs(): QpWsApi {
         return;
       }
       desired.value = true;
+      registerNetworkListeners();
       void openSocket();
     }
 
@@ -318,11 +370,9 @@ function createQpWs(): QpWsApi {
       desired.value = false;
       generation += 1;
       reconnectAttempts = 0;
-      if (reconnectTimer !== null) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-      }
+      clearReconnectTimer();
       clearHeartbeat();
+      unregisterNetworkListeners();
       marketRefCounts.clear();
       notifications.value = [];
       alertToastLastSeen.clear();

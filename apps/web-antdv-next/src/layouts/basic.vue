@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
 import { useWatermark } from '@vben/hooks';
+import { UserRoundPen } from '@vben/icons';
 import {
   BasicLayout,
   LockScreen,
@@ -65,7 +66,7 @@ const menus = computed(() => [
     handler: () => {
       router.push({ name: 'Profile' });
     },
-    icon: 'lucide:user',
+    icon: UserRoundPen,
     text: $t('page.auth.profile'),
   },
 ]);

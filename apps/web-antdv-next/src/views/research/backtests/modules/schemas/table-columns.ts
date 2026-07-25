@@ -36,6 +36,19 @@ export function useBacktestReportColumns(
       title: $t('page.research.backtests.columns.modelVersionId'),
     },
     {
+      cellRender: {
+        name: 'CellEntityRoute',
+        props: {
+          mono: true,
+          to: (row: BacktestReportView) =>
+            `/research/datasets?open=${row.evaluation_dataset_id}`,
+        },
+      },
+      field: 'evaluation_dataset_id',
+      minWidth: 150,
+      title: $t('page.research.backtests.columns.evaluationDataset'),
+    },
+    {
       align: 'right',
       field: 'rank_ic',
       title: $t('page.research.backtests.columns.rankIc'),

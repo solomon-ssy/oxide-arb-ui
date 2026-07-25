@@ -4,13 +4,14 @@ import type { TrainModelRequest } from '@vben/types';
 import { ref } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
+import { DATASET_PURPOSES } from '@vben/types';
 
 import { Alert } from 'antdv-next';
 
 import { useVbenForm } from '#/adapter/form';
 import { $t } from '#/locales';
 
-import { useTrainableDatasetOptions } from '../../shared/use-trainable-dataset-options';
+import { useDatasetOptions } from '../../shared/use-dataset-options';
 
 defineOptions({ name: 'ModelTrainModal' });
 
@@ -28,7 +29,11 @@ const {
   datasetOptions,
   loading: datasetLoading,
   reload: reloadDatasets,
-} = useTrainableDatasetOptions({ prefillId: prefillDatasetId });
+  datasetFor,
+} = useDatasetOptions({
+  prefillId: prefillDatasetId,
+  purpose: DATASET_PURPOSES.training,
+});
 
 function syncDatasetSchema() {
   formApi.updateSchema([
@@ -100,7 +105,13 @@ const [Modal, modalApi] = useVbenModal({
     formApi.updateSchema([
       { componentProps: { loading: true }, fieldName: 'training_dataset_id' },
     ]);
-    void reloadDatasets().then(syncDatasetSchema);
+    void reloadDatasets().then(() => {
+      syncDatasetSchema();
+      const prefillId = prefillDatasetId.value;
+      if (prefillId && !datasetFor(prefillId)) {
+        void formApi.setFieldValue('training_dataset_id', undefined);
+      }
+    });
   },
 });
 </script>

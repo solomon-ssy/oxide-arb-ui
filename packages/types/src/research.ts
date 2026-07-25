@@ -8,6 +8,8 @@ import type {
   UuidString,
 } from './common';
 import type {
+  CohortCensorReason,
+  CohortExclusionReason,
   DatasetPurpose,
   DownsideSource,
   FactorDefinitionScope,
@@ -19,6 +21,7 @@ import type {
   FeatureParityRunKind,
   FeatureParityRunStatus,
   FeatureParityStage,
+  FeedbackCohort,
   MarketCategory,
   ModelFamily,
   PublicationStatus,
@@ -64,7 +67,7 @@ export interface MatrixCoverageProbe {
 }
 
 /**
- * `TrainingDatasetView.coverage_json` / research-job coverage mirror — per-sample
+ * `TrainingDatasetView.coverage` / research-job coverage mirror — per-sample
  * build accounting (mirrors Rust `DatasetCoverage`).
  */
 export interface DatasetCoverage {
@@ -92,8 +95,75 @@ export interface DatasetCoverage {
   matrix_probe?: MatrixCoverageProbe | null;
 }
 
-/** Exact v5 manifest embedded in Parquet and persisted in the dataset ledger. */
+/** Exact server-derived Source Slice lineage frozen before materialization. */
+export interface DatasetSourceLineage {
+  capability_registry_hashes: string[];
+  decision_policy_snapshot_id: UuidString;
+  format_version: number;
+  pit_cutoff: IsoDateTime;
+  reader_contract_version: string;
+  research_profile_artifact_id: string;
+  research_program_hash: string;
+  runtime_config_hash: string;
+  schema_contract_version: string;
+  source_schema_hash: string;
+  source_slice: SourceSliceManifestRef;
+  source_slice_id: UuidString;
+  source_slice_identity_hash: string;
+  source_window_end: IsoDateTime;
+  source_window_start: IsoDateTime;
+}
+
+/** Exact profile and time bounds frozen before a feedback scan. */
+export interface DatasetCohortWindow {
+  cutoff: IsoDateTime;
+  profile_ref: ResearchProfileRef;
+  window_start: IsoDateTime;
+}
+
+/** One canonical non-zero exclusion bucket. */
+export interface DatasetCohortExclusionCount {
+  count: number;
+  reason: CohortExclusionReason;
+}
+
+/** One canonical non-zero censor bucket. */
+export interface DatasetCohortCensorCount {
+  count: number;
+  reason: CohortCensorReason;
+}
+
+/** Reconciled candidate-classification counts for a frozen cohort. */
+export interface DatasetCohortCounts {
+  candidate_count: number;
+  censor_counts: DatasetCohortCensorCount[];
+  eligible_count: number;
+  exclusion_counts: DatasetCohortExclusionCount[];
+  included_count: number;
+}
+
+/** Content-addressed sealed cohort rows consumed by one dataset. */
+export interface DatasetCohortArtifactRef {
+  bytes_hash: string;
+  row_count: number;
+  schema_hash: string;
+  source_hash: string;
+  uri: string;
+}
+
+/** Immutable cohort definition and reconciliation evidence. */
+export interface DatasetCohortManifest {
+  artifact: DatasetCohortArtifactRef;
+  capability_registry_hashes: string[];
+  cohort: FeedbackCohort;
+  counts: DatasetCohortCounts;
+  format_version: number;
+  window: DatasetCohortWindow;
+}
+
+/** Exact v2 manifest embedded in Parquet and persisted in the dataset ledger. */
 export interface DatasetManifestView {
+  cohort_manifest: DatasetCohortManifest | null;
   factor_schema_hash: string;
   feature_schema_hash: string;
   format_version: number;
@@ -102,15 +172,12 @@ export interface DatasetManifestView {
   label_schema_hash: string;
   model_spec_id: string;
   model_spec_definition_hash: string;
-  profile_ref: ResearchProfileRef;
   purpose: DatasetPurpose;
-  research_program_hash: string;
-  decision_policy_snapshot_id: UuidString;
   sample_count: number;
   sample_interval_secs: number;
   semantic_dataset_hash: string;
+  source_lineage: DatasetSourceLineage;
   source_fingerprint: string;
-  source_slice: SourceSliceManifestRef;
   trade_policy_artifact_id: null | UuidString;
   trade_policy_hash: null | string;
   training_dataset_id: UuidString;
@@ -173,6 +240,12 @@ export interface TrainingDatasetView {
   training_dataset_id: UuidString;
   model_spec_id: string;
   model_spec_definition_hash: string;
+  research_profile_artifact_id: string;
+  source_slice_id: UuidString;
+  pit_cutoff: IsoDateTime;
+  source_lineage: DatasetSourceLineage;
+  feedback_cohort: FeedbackCohort | null;
+  cohort_manifest: DatasetCohortManifest | null;
   window_start: IsoDateTime;
   window_end: IsoDateTime;
   status: TrainingDatasetStatus;
@@ -194,7 +267,7 @@ export interface TrainingDatasetView {
   horizons_secs: number[];
   feature_schema_version: null | number;
   sample_sources: null | TrainingSampleSource[];
-  coverage_json: DatasetCoverage | null;
+  coverage: DatasetCoverage | null;
   decision_policy_snapshot_id: UuidString;
   failure_detail: null | string;
   completed_at: IsoDateTime | null;
@@ -652,6 +725,7 @@ export interface CategoryRankIcDelta {
 export interface BacktestReportView {
   backtest_report_id: UuidString;
   model_version_id: UuidString;
+  evaluation_dataset_id: UuidString;
   model_run_id: UuidString;
   decision_policy_snapshot_id: UuidString;
   window_start: IsoDateTime;
@@ -729,15 +803,13 @@ export interface BacktestPathSetView {
 
 /**
  * `POST /research/models/{id}/backtest` governed request body (mirrors Rust
- * `RunBacktestRequest`). The replay window is defined by the frozen dataset, so
- * the request selects the dataset + config (not a window).
+ * `RunBacktestRequest`). The replay window is defined by the frozen Evaluation
+ * dataset, so the request selects the holdout + config (not a window).
  */
 export interface RunBacktestRequest {
-  /** Frozen, PIT-materialized dataset to replay the model over. */
-  training_dataset_id: UuidString;
+  /** Frozen, reusable Evaluation holdout to replay the model over. */
+  evaluation_dataset_id: UuidString;
   decision_policy_snapshot_id: UuidString;
-  /** Fit a calibrated return curve + register a calibrated child candidate. */
-  calibrate?: boolean;
   /** When set, run pair mode: replay this baseline and persist a comparison. */
   comparison_model_version_id?: UuidString;
   reason: string;

@@ -472,18 +472,6 @@ export const REJECTION_REASONS = {
 
 export type RejectionReason = WireEnum<typeof REJECTION_REASONS>;
 
-/** Terminal settlement outcome of a position lot. */
-export const RECOMMENDATION_OUTCOMES = {
-  cancelled: 'cancelled',
-  expiredUnfilled: 'expired_unfilled',
-  lost: 'lost',
-  pending: 'pending',
-  unknown: 'unknown',
-  won: 'won',
-} as const;
-
-export type RecommendationOutcome = WireEnum<typeof RECOMMENDATION_OUTCOMES>;
-
 // ── Execution plane ─────────────────────────────────────────────────────────
 
 export const ORDER_INTENT_STATUSES = {
@@ -834,11 +822,41 @@ export type DownsideSource = WireEnum<typeof DOWNSIDE_SOURCES>;
 /** Training-dataset purpose (mirrors Rust `DatasetPurpose`). */
 export const DATASET_PURPOSES = {
   calibration: 'calibration',
+  evaluation: 'evaluation',
   policyFit: 'policy_fit',
   training: 'training',
 } as const;
 
 export type DatasetPurpose = WireEnum<typeof DATASET_PURPOSES>;
+
+/** Orthogonal point-in-time cohort frozen into an Evaluation dataset. */
+export const FEEDBACK_COHORTS = {
+  executionLearning: 'execution_learning',
+  modelLearning: 'model_learning',
+  policyEvaluation: 'policy_evaluation',
+} as const;
+
+export type FeedbackCohort = WireEnum<typeof FEEDBACK_COHORTS>;
+
+/** Stable exclusion taxonomy for one frozen feedback cohort. */
+export const COHORT_EXCLUSION_REASONS = {
+  executionNotAttempted: 'execution_not_attempted',
+  nonPrimaryReport: 'non_primary_report',
+  outsideFrozenWindow: 'outside_frozen_window',
+  recommendationNotPublished: 'recommendation_not_published',
+  reportOnlyNoExecutionAuthority: 'report_only_no_execution_authority',
+} as const;
+
+export type CohortExclusionReason = WireEnum<typeof COHORT_EXCLUSION_REASONS>;
+
+/** Stable censor taxonomy for otherwise eligible but immature samples. */
+export const COHORT_CENSOR_REASONS = {
+  executionOutcomeUnavailableAtCutoff:
+    'execution_outcome_unavailable_at_cutoff',
+  resolutionUnavailableAtCutoff: 'resolution_unavailable_at_cutoff',
+} as const;
+
+export type CohortCensorReason = WireEnum<typeof COHORT_CENSOR_REASONS>;
 
 export type ResearchJobKind = WireEnum<typeof RESEARCH_JOB_KINDS>;
 

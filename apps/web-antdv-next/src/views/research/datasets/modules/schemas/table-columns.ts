@@ -3,7 +3,10 @@ import type { TrainingDatasetView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
-import { useTrainingDatasetStatusTagOptions } from '#/shared/components/format/tag-options';
+import {
+  useDatasetPurposeTagOptions,
+  useTrainingDatasetStatusTagOptions,
+} from '#/shared/components/format/tag-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 import { canTrainDataset } from '../dataset-action-state';
@@ -35,23 +38,7 @@ export function useTrainingDatasetColumns(
     {
       cellRender: {
         name: 'CellTag',
-        options: [
-          {
-            color: 'processing',
-            label: $t('enum.datasetPurpose.training'),
-            value: 'training',
-          },
-          {
-            color: 'purple',
-            label: $t('enum.datasetPurpose.calibration'),
-            value: 'calibration',
-          },
-          {
-            color: 'cyan',
-            label: $t('enum.datasetPurpose.policyFit'),
-            value: 'policy_fit',
-          },
-        ],
+        options: useDatasetPurposeTagOptions(),
       },
       field: 'purpose',
       title: $t('page.research.datasets.columns.purpose'),

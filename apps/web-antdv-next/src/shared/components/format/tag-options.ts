@@ -1,5 +1,6 @@
 import {
   APPROVAL_STATUSES,
+  DATASET_PURPOSES,
   EXECUTION_ORDER_PHASES,
   EXECUTION_ORDER_STATES,
   FACTOR_DEFINITION_SCOPES,
@@ -425,6 +426,20 @@ export function usePublicationStatusTagOptions() {
       [PUBLICATION_STATUSES.rejected]: 'error',
       [PUBLICATION_STATUSES.retired]: 'gold',
       [PUBLICATION_STATUSES.shadow]: 'purple',
+    },
+  );
+}
+
+/** Closed dataset-purpose tags shared by every catalog renderer. */
+export function useDatasetPurposeTagOptions() {
+  return buildTagOptions(
+    Object.values(DATASET_PURPOSES),
+    (value) => $t(`enum.datasetPurpose.${value}`),
+    {
+      [DATASET_PURPOSES.calibration]: 'purple',
+      [DATASET_PURPOSES.evaluation]: 'blue',
+      [DATASET_PURPOSES.policyFit]: 'cyan',
+      [DATASET_PURPOSES.training]: 'processing',
     },
   );
 }

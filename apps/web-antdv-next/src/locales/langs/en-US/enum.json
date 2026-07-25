@@ -661,6 +661,23 @@
   "datasetPurpose": {
     "training": "Training",
     "calibration": "Calibration",
-    "policyFit": "Policy fit"
+    "evaluation": "Evaluation",
+    "policy_fit": "Policy fit"
+  },
+  "feedbackCohort": {
+    "model_learning": "Model learning",
+    "execution_learning": "Execution learning",
+    "policy_evaluation": "Policy evaluation"
+  },
+  "cohortExclusionReason": {
+    "recommendation_not_published": "Recommendation not published",
+    "non_primary_report": "Non-primary report",
+    "outside_frozen_window": "Outside frozen window",
+    "report_only_no_execution_authority": "Report-only: no execution authority",
+    "execution_not_attempted": "Execution not attempted"
+  },
+  "cohortCensorReason": {
+    "resolution_unavailable_at_cutoff": "Resolution unavailable at cutoff",
+    "execution_outcome_unavailable_at_cutoff": "Execution outcome unavailable at cutoff"
   }
 }

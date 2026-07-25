@@ -4,7 +4,11 @@ import quantPivotDesignTokens from './scripts/eslint-rules/quant-pivot-design-to
 
 export default defineConfig([
   {
-    ignores: ['packages/types/src/generated/research-model-api-validators.ts'],
+    ignores: [
+      'packages/types/src/generated/research-model-api-validators.ts',
+      'playwright-report/**',
+      'test-results/**',
+    ],
   },
   {
     files: ['apps/web-antdv-next/src/**/*.{js,jsx,ts,tsx,vue}'],

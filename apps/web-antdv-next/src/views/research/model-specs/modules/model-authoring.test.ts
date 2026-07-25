@@ -56,7 +56,7 @@ describe('model-spec authoring', () => {
     expect(
       normalizeModelTrainingContract({
         ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        target_label_name: ' settlement_outcome ',
+        target_label_name: ' token_payout_ratio ',
       }),
     ).toEqual(DEFAULT_MODEL_TRAINING_CONTRACT);
 

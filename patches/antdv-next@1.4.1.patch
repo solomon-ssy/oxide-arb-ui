@@ -19,3 +19,12 @@ index a67811e42130612c653d90438fa99f8fef8fdcc5..e19b42293861deac7ac493c7c873ea07
  			"iconRender": internalIconRender,
  			"itemRender": itemRender,
  			"itemWrapperRender": itemWrapperRender
+diff --git a/dist/progress/progress.js b/dist/progress/progress.js
+index 22eb019c0c76fdb05b6bbc4ed9a1bd9b68cecce1..59033dbd900980cf72f6dad7fa77c11c845d33fe 100644
+--- a/dist/progress/progress.js
++++ b/dist/progress/progress.js
+@@ -152,2 +152,2 @@ const Progress = /* @__PURE__ */ defineComponent((props, { attrs }) => {
+-		if (props["aria-label"] !== void 0) ariaProps["aria-label"] = props["aria-label"];
+-		if (props["aria-labelledby"] !== void 0) ariaProps["aria-labelledby"] = props["aria-labelledby"];
++		if (props.ariaLabel !== void 0) ariaProps["aria-label"] = props.ariaLabel;
++		if (props.ariaLabelledby !== void 0) ariaProps["aria-labelledby"] = props.ariaLabelledby;

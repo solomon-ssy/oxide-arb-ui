@@ -74,6 +74,7 @@ async function onSelect(raw: string) {
   <GovernedStatePickerPopover
     v-if="visible"
     :current-value="currentMode"
+    icon="lucide:gauge"
     :options="pickerOptions"
     :tag-color="currentTag?.color ?? 'default'"
     :tag-label="currentTag?.label ?? $t('page.header.modePicker.unknown')"
