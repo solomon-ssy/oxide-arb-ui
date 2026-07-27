@@ -348,7 +348,7 @@
           "freshness": "Maximum input age (ms)",
           "anchor": "Clock anchor",
           "offset": "Offset (ms)",
-          "factorDefinition": "Published factor definition",
+          "factorDefinition": "Factor definition",
           "measure": "Measure",
           "confidence": "Minimum confidence",
           "event": "Event predicate",
@@ -1223,53 +1223,24 @@
         "name": "Name",
         "family": "Family",
         "scope": "Scope",
-        "status": "Status",
-        "updatedAt": "Updated",
         "operation": "Actions"
       },
       "filters": {
         "family": "Family",
-        "scope": "Scope",
-        "status": "Status"
+        "scope": "Scope"
       },
       "actions": {
-        "detail": "Details",
-        "publish": "Publish",
-        "retire": "Retire"
-      },
-      "publish": {
-        "title": "Publish factor",
-        "summary": "Publish factor definition {name}.",
-        "feedback": "Factor published."
-      },
-      "retire": {
-        "title": "Retire factor",
-        "summary": "Retire factor definition {name}.",
-        "feedback": "Factor retired."
-      },
-      "register": {
-        "action": "Register enabled factors",
-        "title": "Register enabled factors",
-        "summary": "Idempotently register the enabled factor set (from the active runtime config) as Draft, preserving the status of already-registered definitions. This is the first bootstrap step toward a working live report.",
-        "feedback": "Registered {count} factor definitions."
-      },
-      "publishBatch": {
-        "action": "Publish all drafts",
-        "title": "Publish factors",
-        "summary": "Publish {count} draft factor definitions in one action.",
-        "empty": "No draft factor definitions to publish.",
-        "feedback": "Published {count} factor definitions."
+        "detail": "Details"
       },
       "detail": {
         "title": "Factor Definition",
         "summary": "Summary",
         "normalization": "Normalization",
-        "direction": "Direction",
+        "outputSemantics": "Output Semantics",
         "required": "Required",
         "requiredYes": "Required",
         "requiredNo": "Optional",
         "inputFeatures": "Input Features",
-        "qualityGates": "Quality Gates",
         "inputSchemaVersion": "Input Schema Version",
         "outputSchemaVersion": "Output Schema Version",
         "createdAt": "Created"

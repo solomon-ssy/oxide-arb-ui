@@ -175,6 +175,13 @@
     "neutral": "Neutral",
     "negative": "Negative"
   },
+  "factorOutput": {
+    "feature_token": "Outcome alpha · feature token",
+    "canonical_yes": "Outcome alpha · canonical YES",
+    "higher_is_supportive": "Context · higher is supportive",
+    "lower_is_supportive": "Context · lower is supportive",
+    "diagnostic": "Diagnostic only"
+  },
   "factorNormalization": {
     "winsorized_zscore": "Winsorized z-score",
     "rank": "Cross-sectional rank",
@@ -388,12 +395,10 @@
     "classical_elastic_net": "Classical: elastic net"
   },
   "publicationStatus": {
-    "draft": "Draft",
     "candidate": "Candidate",
     "shadow": "Shadow",
     "published": "Published",
-    "retired": "Retired",
-    "rejected": "Rejected"
+    "retired": "Retired"
   },
   "materializationRunStatus": {
     "queued": "Queued",

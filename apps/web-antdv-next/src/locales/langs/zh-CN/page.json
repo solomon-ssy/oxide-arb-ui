@@ -348,7 +348,7 @@
           "freshness": "最大输入年龄（毫秒）",
           "anchor": "时钟锚点",
           "offset": "偏移（毫秒）",
-          "factorDefinition": "已发布因子定义",
+          "factorDefinition": "因子定义",
           "measure": "量值",
           "confidence": "最低置信度",
           "event": "事件谓词",
@@ -1223,53 +1223,24 @@
         "name": "名称",
         "family": "族",
         "scope": "范围",
-        "status": "状态",
-        "updatedAt": "更新时间",
         "operation": "操作"
       },
       "filters": {
         "family": "族",
-        "scope": "范围",
-        "status": "状态"
+        "scope": "范围"
       },
       "actions": {
-        "detail": "详情",
-        "publish": "发布",
-        "retire": "下线"
-      },
-      "publish": {
-        "title": "发布因子",
-        "summary": "发布因子定义 {name}。",
-        "feedback": "因子已发布。"
-      },
-      "retire": {
-        "title": "下线因子",
-        "summary": "下线因子定义 {name}。",
-        "feedback": "因子已下线。"
-      },
-      "register": {
-        "action": "注册启用因子",
-        "title": "注册启用因子",
-        "summary": "把当前运行配置启用的因子集幂等登记为草稿（保留已注册因子的发布状态）。这是让线上报告可用的引导第一步。",
-        "feedback": "已注册 {count} 个因子定义。"
-      },
-      "publishBatch": {
-        "action": "发布全部草稿",
-        "title": "批量发布因子",
-        "summary": "把 {count} 个草稿因子定义一并发布。",
-        "empty": "没有待发布的草稿因子定义。",
-        "feedback": "已发布 {count} 个因子定义。"
+        "detail": "详情"
       },
       "detail": {
         "title": "因子定义",
         "summary": "概要",
         "normalization": "归一化",
-        "direction": "方向",
+        "outputSemantics": "输出语义",
         "required": "是否必需",
         "requiredYes": "必需",
         "requiredNo": "可选",
         "inputFeatures": "输入特征",
-        "qualityGates": "质量门",
         "inputSchemaVersion": "输入 Schema 版本",
         "outputSchemaVersion": "输出 Schema 版本",
         "createdAt": "创建时间"

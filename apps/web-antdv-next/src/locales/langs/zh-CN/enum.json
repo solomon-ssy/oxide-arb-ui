@@ -175,6 +175,13 @@
     "neutral": "中性",
     "negative": "负向"
   },
+  "factorOutput": {
+    "feature_token": "结果 Alpha · 特征 Token",
+    "canonical_yes": "结果 Alpha · 标准 YES",
+    "higher_is_supportive": "上下文 · 越高越有利",
+    "lower_is_supportive": "上下文 · 越低越有利",
+    "diagnostic": "仅诊断"
+  },
   "factorNormalization": {
     "winsorized_zscore": "Winsorize z-score",
     "rank": "截面排名",
@@ -388,12 +395,10 @@
     "classical_elastic_net": "经典：Elastic Net"
   },
   "publicationStatus": {
-    "draft": "草稿",
     "candidate": "候选",
     "shadow": "影子",
     "published": "已发布",
-    "retired": "已退役",
-    "rejected": "已拒绝"
+    "retired": "已退役"
   },
   "materializationRunStatus": {
     "queued": "排队中",

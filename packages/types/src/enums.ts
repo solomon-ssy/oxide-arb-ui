@@ -746,12 +746,10 @@ export type SettlementReconciliationState = WireEnum<
 
 // ── Research / governance ───────────────────────────────────────────────────
 
-/** Model / factor publication lifecycle (mirrors Rust `PublicationStatus`). */
+/** Immutable model-version publication lifecycle (mirrors Rust `PublicationStatus`). */
 export const PUBLICATION_STATUSES = {
   candidate: 'candidate',
-  draft: 'draft',
   published: 'published',
-  rejected: 'rejected',
   retired: 'retired',
   shadow: 'shadow',
 } as const;

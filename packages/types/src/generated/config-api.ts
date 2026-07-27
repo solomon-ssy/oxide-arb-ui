@@ -1230,7 +1230,6 @@ export interface ConfigSnapshotOptionsQuery {
   limit?: null | number;
 }
 export interface DecisionPolicySnapshotOptionView {
-  bundle_generation: number;
   created_at: string;
   decision_policy_snapshot_id: string;
   revision_vector: PolicyRevisionBundle;

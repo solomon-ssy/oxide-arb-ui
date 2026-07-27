@@ -13,10 +13,8 @@ import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import {
   findTagOption,
-  useFactorDirectionTagOptions,
   useFactorFamilyTagOptions,
   useFactorScopeTagOptions,
-  usePublicationStatusTagOptions,
 } from '#/shared/components/format/tag-options';
 
 defineOptions({ name: 'FactorDetailDrawer' });
@@ -26,27 +24,30 @@ interface FactorDrawerData {
 }
 
 const { handleRequest } = useRequestHandler();
-const statusTagOptions = usePublicationStatusTagOptions();
 const familyTagOptions = useFactorFamilyTagOptions();
 const scopeTagOptions = useFactorScopeTagOptions();
-const directionTagOptions = useFactorDirectionTagOptions();
 
 const factor = ref<FactorDefinitionView | null>(null);
 const loading = ref(false);
 const openId = ref<null | string>(null);
 
-const statusTag = computed(() =>
-  findTagOption(statusTagOptions, factor.value?.status),
-);
 const familyTag = computed(() =>
   findTagOption(familyTagOptions, factor.value?.factor_family),
 );
 const scopeTag = computed(() =>
   findTagOption(scopeTagOptions, factor.value?.scope),
 );
-const directionTag = computed(() =>
-  findTagOption(directionTagOptions, factor.value?.direction ?? undefined),
-);
+const outputLabel = computed(() => {
+  const output = factor.value?.output;
+  if (!output) return '—';
+  if (output.output_kind === 'diagnostic') {
+    return $t('enum.factorOutput.diagnostic');
+  }
+  if (output.output_kind === 'outcome_alpha') {
+    return $t(`enum.factorOutput.${output.orientation}`);
+  }
+  return $t(`enum.factorOutput.${output.effect}`);
+});
 
 async function refresh(id: string) {
   loading.value = true;
@@ -84,7 +85,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
     <Spin :spinning="loading">
       <div v-if="factor" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
           <Tag :color="familyTag?.color">{{ familyTag?.label }}</Tag>
           <Tag :color="scopeTag?.color">{{ scopeTag?.label }}</Tag>
         </div>
@@ -108,11 +108,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
               </Tag>
             </DescriptionsItem>
             <DescriptionsItem
-              :label="$t('page.research.factors.detail.direction')"
+              :label="$t('page.research.factors.detail.outputSemantics')"
             >
-              <Tag :color="directionTag?.color">
-                {{ directionTag?.label }}
-              </Tag>
+              <Tag color="geekblue">{{ outputLabel }}</Tag>
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.factors.detail.required')"
@@ -140,20 +138,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
               </div>
             </DescriptionsItem>
             <DescriptionsItem
-              v-if="factor.quality_gates.length > 0"
-              :label="$t('page.research.factors.detail.qualityGates')"
-            >
-              <div class="flex flex-wrap gap-1">
-                <Tag
-                  v-for="gate in factor.quality_gates"
-                  :key="gate"
-                  color="purple"
-                >
-                  {{ gate }}
-                </Tag>
-              </div>
-            </DescriptionsItem>
-            <DescriptionsItem
               :label="$t('page.research.factors.detail.inputSchemaVersion')"
             >
               {{ factor.input_schema_version }}
@@ -167,11 +151,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
               :label="$t('page.research.factors.detail.createdAt')"
             >
               {{ formatDateTimeLocal(factor.created_at) }}
-            </DescriptionsItem>
-            <DescriptionsItem
-              :label="$t('page.research.factors.columns.updatedAt')"
-            >
-              {{ formatDateTimeLocal(factor.updated_at) }}
             </DescriptionsItem>
           </Descriptions>
         </Card>

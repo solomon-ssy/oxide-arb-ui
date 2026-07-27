@@ -1,10 +1,6 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import {
-  FACTOR_DEFINITION_SCOPES,
-  FACTOR_FAMILIES,
-  PUBLICATION_STATUSES,
-} from '@vben/types';
+import { FACTOR_DEFINITION_SCOPES, FACTOR_FAMILIES } from '@vben/types';
 
 import { $t } from '#/locales';
 
@@ -34,18 +30,6 @@ export function useFactorDefinitionSearchSchema(): VbenFormSchema[] {
       },
       fieldName: 'scope',
       label: $t('page.research.factors.filters.scope'),
-    },
-    {
-      component: 'Select',
-      componentProps: {
-        allowClear: true,
-        options: Object.values(PUBLICATION_STATUSES).map((value) => ({
-          label: $t(`enum.publicationStatus.${value}`),
-          value,
-        })),
-      },
-      fieldName: 'status',
-      label: $t('page.research.factors.filters.status'),
     },
   ];
 }

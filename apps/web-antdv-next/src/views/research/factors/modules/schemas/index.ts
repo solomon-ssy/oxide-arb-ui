@@ -1,5 +1,2 @@
 export { useFactorDefinitionSearchSchema } from './search-form';
-export {
-  type FactorActionAccess,
-  useFactorDefinitionColumns,
-} from './table-columns';
+export { useFactorDefinitionColumns } from './table-columns';

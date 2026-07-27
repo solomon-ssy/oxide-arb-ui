@@ -6,19 +6,11 @@ import { $t } from '#/locales';
 import {
   useFactorFamilyTagOptions,
   useFactorScopeTagOptions,
-  usePublicationStatusTagOptions,
 } from '#/shared/components/format/tag-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
-/** Row-action permission gates for factor governance. */
-export interface FactorActionAccess {
-  canPublish: boolean;
-  canRetire: boolean;
-}
-
 export function useFactorDefinitionColumns(
   onActionClick: OnActionClickFn<FactorDefinitionView>,
-  access: FactorActionAccess,
 ): VxeTableGridOptions<FactorDefinitionView>['columns'] {
   return [
     {
@@ -53,21 +45,6 @@ export function useFactorDefinitionColumns(
       width: 150,
     },
     {
-      cellRender: {
-        name: 'CellTag',
-        options: usePublicationStatusTagOptions(),
-      },
-      field: 'status',
-      title: $t('page.research.factors.columns.status'),
-      width: 120,
-    },
-    {
-      cellRender: { name: 'CellDateTime' },
-      field: 'updated_at',
-      title: $t('page.research.factors.columns.updatedAt'),
-      width: 170,
-    },
-    {
       align: 'right',
       cellRender: {
         attrs: {
@@ -79,22 +56,6 @@ export function useFactorDefinitionColumns(
           iconOp<FactorDefinitionView>(
             'detail',
             $t('page.research.factors.actions.detail'),
-          ),
-          iconOp<FactorDefinitionView>(
-            'publish',
-            $t('page.research.factors.actions.publish'),
-            {
-              show: (row) =>
-                access.canPublish && ['draft', 'retired'].includes(row.status),
-            },
-          ),
-          iconOp<FactorDefinitionView>(
-            'retire',
-            $t('page.research.factors.actions.retire'),
-            {
-              danger: true,
-              show: (row) => access.canRetire && row.status === 'published',
-            },
           ),
         ],
       },

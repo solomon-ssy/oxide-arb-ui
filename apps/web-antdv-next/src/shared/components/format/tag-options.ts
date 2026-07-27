@@ -414,16 +414,14 @@ export function useMarketCategoryTagOptions() {
   );
 }
 
-/** Model / factor publication status tags. */
+/** Immutable model-version publication status tags. */
 export function usePublicationStatusTagOptions() {
   return buildTagOptions(
     Object.values(PUBLICATION_STATUSES),
     (value) => $t(`enum.publicationStatus.${value}`),
     {
       [PUBLICATION_STATUSES.candidate]: 'processing',
-      [PUBLICATION_STATUSES.draft]: 'geekblue',
       [PUBLICATION_STATUSES.published]: 'success',
-      [PUBLICATION_STATUSES.rejected]: 'error',
       [PUBLICATION_STATUSES.retired]: 'gold',
       [PUBLICATION_STATUSES.shadow]: 'purple',
     },

@@ -24,15 +24,11 @@ import type {
   ModelVersionListQuery,
   Paginated,
   PublishedModelOptionView,
-  PublishFactorRequest,
-  PublishFactorsBatchRequest,
   PublishModelRequest,
   QualityGatePreviewQuery,
   QualityGateReportView,
-  RegisterFactorDefinitionsRequest,
   ResearchJobListQuery,
   ResearchJobView,
-  RetireFactorRequest,
   RetireModelRequest,
   RunBacktestRequest,
   RunCpcvBacktestRequest,
@@ -102,13 +98,8 @@ export namespace ResearchApi {
   export const comparisonReport = (id: string) =>
     `/research/comparison-reports/${id}`;
   export const factors = '/research/factors';
-  export const registerFactors = '/research/factors/register';
-  export const publishFactorsBatch = '/research/factors/publish-batch';
   export const factorCollinearity = '/research/factors/collinearity';
   export const factor = (id: string) => `/research/factors/${id}`;
-  export const publishFactor = (id: string) =>
-    `/research/factors/${id}/publish`;
-  export const retireFactor = (id: string) => `/research/factors/${id}/retire`;
   export const jobs = '/research/jobs';
   export const job = (id: string) => `/research/jobs/${id}`;
   export const cancelJob = (id: string) => `/research/jobs/${id}/cancel`;
@@ -483,54 +474,4 @@ export async function retireModel(
   ctx: GovernedContext,
 ) {
   return governedPost<TrainedModelView>(ResearchApi.retireModel(id), body, ctx);
-}
-
-/** `POST /research/factors/{id}/publish` — governed factor publish. */
-export async function publishFactor(
-  id: string,
-  body: PublishFactorRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<FactorDefinitionView>(
-    ResearchApi.publishFactor(id),
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/factors/{id}/retire` — governed factor retire. */
-export async function retireFactor(
-  id: string,
-  body: RetireFactorRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<FactorDefinitionView>(
-    ResearchApi.retireFactor(id),
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/factors/register` — governed register of enabled definitions. */
-export async function registerFactorDefinitions(
-  body: RegisterFactorDefinitionsRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<FactorDefinitionView[]>(
-    ResearchApi.registerFactors,
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/factors/publish-batch` — governed batch publish. */
-export async function publishFactorsBatch(
-  body: PublishFactorsBatchRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<FactorDefinitionView[]>(
-    ResearchApi.publishFactorsBatch,
-    body,
-    ctx,
-  );
 }

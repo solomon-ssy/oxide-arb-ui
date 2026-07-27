@@ -718,9 +718,7 @@ function statusColor(status: TradePolicyPreflightCheckStatus) {
 async function loadCatalogs() {
   const [profileRows, factorRows] = await Promise.all([
     handleRequest(() => listTradePolicyProfiles(), { silent: true }),
-    handleRequest(() => listAllFactors({ status: 'published' }), {
-      silent: true,
-    }),
+    handleRequest(() => listAllFactors(), { silent: true }),
   ]);
   profiles.value = profileRows ?? [];
   factors.value = factorRows ?? [];

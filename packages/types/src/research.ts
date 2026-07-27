@@ -13,7 +13,6 @@ import type {
   DatasetPurpose,
   DownsideSource,
   FactorDefinitionScope,
-  FactorDirection,
   FactorFamily,
   FactorNormalization,
   FeatureCellState,
@@ -997,7 +996,20 @@ export interface RetryResearchJobRequest {
 
 // ── Factor definitions ──────────────────────────────────────────────────────
 
-/** Factor definition governance projection. */
+export type FactorOutputSemantics =
+  | {
+      effect: 'higher_is_supportive' | 'lower_is_supportive';
+      output_kind: 'context';
+    }
+  | {
+      orientation: 'canonical_yes' | 'feature_token';
+      output_kind: 'outcome_alpha';
+    }
+  | {
+      output_kind: 'diagnostic';
+    };
+
+/** Immutable factor definition catalog projection. */
 export interface FactorDefinitionView {
   factor_definition_id: UuidString;
   definition_hash: string;
@@ -1007,26 +1019,21 @@ export interface FactorDefinitionView {
   scope: FactorDefinitionScope;
   input_schema_version: string;
   output_schema_version: string;
-  status: PublicationStatus;
   /** Normalization method projected from the governed definition. */
   normalization: FactorNormalization;
-  /** Default contribution direction. */
-  direction: FactorDirection;
+  /** Executable outcome-alpha or side-neutral context projection. */
+  output: FactorOutputSemantics;
   /** Stable feature names this factor consumes. */
   input_features: string[];
-  /** Whether the factor is required (declares at least one quality gate). */
+  /** Whether missing/indeterminate output rejects the market. */
   required: boolean;
-  /** Names of the quality gates governing this factor. */
-  quality_gates: string[];
   created_at: IsoDateTime;
-  updated_at: IsoDateTime;
 }
 
 /** Filter + pagination for `GET /research/factors`. */
 export interface FactorDefinitionListQuery extends PageQuery {
   factor_family?: FactorFamily;
   scope?: FactorDefinitionScope;
-  status?: PublicationStatus;
 }
 
 /** One collinear factor pair from the collinearity report. */
@@ -1059,25 +1066,4 @@ export interface FactorCollinearityQuery {
   lookback_secs?: number;
   threshold?: string;
   source?: FactorCollinearitySource;
-}
-
-/** `POST /research/factors/{id}/publish` governed request body. */
-export interface PublishFactorRequest {
-  reason: string;
-}
-
-/** `POST /research/factors/{id}/retire` governed request body. */
-export interface RetireFactorRequest {
-  reason: string;
-}
-
-/** `POST /research/factors/register` governed request body. */
-export interface RegisterFactorDefinitionsRequest {
-  reason: string;
-}
-
-/** `POST /research/factors/publish-batch` governed request body. */
-export interface PublishFactorsBatchRequest {
-  factor_definition_ids: UuidString[];
-  reason: string;
 }
