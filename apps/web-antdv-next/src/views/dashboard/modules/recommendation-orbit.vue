@@ -7,11 +7,6 @@ import { computed, onUnmounted, ref, watch } from 'vue';
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { usePreferences } from '@vben/preferences';
 
-import {
-  useDocumentVisibility,
-  useIdle,
-  usePreferredReducedMotion,
-} from '@vueuse/core';
 import { Button, Empty, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
@@ -22,35 +17,16 @@ import { themeColors } from '#/shared/components/theme-color';
 defineOptions({ name: 'DashboardRecommendationOrbit' });
 
 const props = defineProps<{
-  paused?: boolean;
   recommendations: QuantRecommendationView[];
 }>();
 const emit = defineEmits<{
+  openReports: [];
   select: [recommendation: QuantRecommendationView];
 }>();
 
 const chartRef = ref<EchartsUIType>();
-const focused = ref(false);
-const hovered = ref(false);
-const manuallyPaused = ref(false);
-const angle = ref(90);
-const visibility = useDocumentVisibility();
-const { idle } = useIdle(5000);
-const reducedMotion = usePreferredReducedMotion();
 const { isDark } = usePreferences();
-const { getChartInstance, renderEcharts, updateData } = useEcharts(chartRef);
-let timer: ReturnType<typeof setInterval> | undefined;
-
-const shouldRotate = computed(
-  () =>
-    reducedMotion.value !== 'reduce' &&
-    visibility.value === 'visible' &&
-    idle.value &&
-    !hovered.value &&
-    !focused.value &&
-    !props.paused &&
-    !manuallyPaused.value,
-);
+const { getChartInstance, renderEcharts } = useEcharts(chartRef);
 
 const chartData = computed(() => {
   void isDark.value;
@@ -73,6 +49,7 @@ const chartData = computed(() => {
 async function render() {
   if (props.recommendations.length === 0) return;
   const instance = await renderEcharts({
+    animation: false,
     angleAxis: {
       axisLabel: {
         color: themeColors.foreground,
@@ -86,10 +63,9 @@ async function render() {
       data: props.recommendations.map(
         (recommendation) => recommendation.identity.outcome_name,
       ),
-      startAngle: angle.value,
+      startAngle: 90,
       type: 'category',
     },
-    animationDuration: reducedMotion.value === 'reduce' ? 0 : 220,
     aria: {
       decal: { show: true },
       description: $t('page.dashboard.orbit.aria'),
@@ -156,32 +132,15 @@ async function render() {
   });
 }
 
-function syncTimer() {
-  if (timer) clearInterval(timer);
-  timer = undefined;
-  if (!shouldRotate.value) return;
-  timer = setInterval(() => {
-    angle.value = (angle.value + 15) % 360;
-    void updateData({
-      angleAxis: { startAngle: angle.value },
-      animationDurationUpdate: 1000,
-      animationEasingUpdate: 'linear',
-    });
-  }, 1000);
-}
-
 function select(recommendation: QuantRecommendationView) {
   emit('select', recommendation);
 }
 
-watch(
-  [() => props.recommendations, chartData, reducedMotion, isDark],
-  () => void render(),
-  { deep: true, immediate: true },
-);
-watch(shouldRotate, syncTimer, { immediate: true });
+watch([() => props.recommendations, chartData, isDark], () => void render(), {
+  deep: true,
+  immediate: true,
+});
 onUnmounted(() => {
-  if (timer) clearInterval(timer);
   getChartInstance()?.off('click');
 });
 </script>
@@ -192,32 +151,7 @@ onUnmounted(() => {
     icon="lucide:orbit"
     tone="violet"
   >
-    <template #extra>
-      <Button
-        v-if="recommendations.length > 0 && reducedMotion !== 'reduce'"
-        :aria-label="
-          manuallyPaused
-            ? $t('page.dashboard.orbit.play')
-            : $t('page.dashboard.orbit.pause')
-        "
-        size="small"
-        type="text"
-        @click="manuallyPaused = !manuallyPaused"
-      >
-        {{
-          manuallyPaused
-            ? $t('page.dashboard.orbit.play')
-            : $t('page.dashboard.orbit.pause')
-        }}
-      </Button>
-    </template>
-    <div
-      v-if="recommendations.length > 0"
-      @focusin="focused = true"
-      @focusout="focused = false"
-      @mouseenter="hovered = true"
-      @mouseleave="hovered = false"
-    >
+    <div v-if="recommendations.length > 0">
       <EchartsUI ref="chartRef" class="hidden md:block" height="330px" />
       <ol class="mt-2 grid gap-2" :aria-label="$t('page.dashboard.orbit.list')">
         <li
@@ -225,7 +159,9 @@ onUnmounted(() => {
           :key="recommendation.recommendation_id"
         >
           <button
-            class="hover:bg-accent focus-visible:ring-primary flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs focus-visible:ring-2 focus-visible:outline-none"
+            class="hover:bg-accent focus-visible:ring-primary flex min-h-11 w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs focus-visible:ring-2 focus-visible:outline-none"
+            data-orbit-kind="recommendation"
+            data-testid="dashboard-orbit-action"
             type="button"
             @click="select(recommendation)"
           >
@@ -250,6 +186,15 @@ onUnmounted(() => {
       v-else
       :description="$t('page.dashboard.section.noReport')"
       :image="Empty.PRESENTED_IMAGE_SIMPLE"
-    />
+    >
+      <Button
+        class="min-h-11 min-w-11"
+        data-orbit-kind="empty"
+        data-testid="dashboard-orbit-action"
+        @click="emit('openReports')"
+      >
+        {{ $t('page.dashboard.orbit.openReports') }}
+      </Button>
+    </Empty>
   </DashboardPanel>
 </template>

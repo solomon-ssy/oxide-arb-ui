@@ -566,6 +566,14 @@
     "live": "实时",
     "error": "错误"
   },
+  "domainSourceExpectationStatus": {
+    "not_started": "未启动",
+    "live": "实时",
+    "stale": "陈旧",
+    "credential_blocked": "凭据阻断",
+    "error": "错误",
+    "unsupported": "不支持"
+  },
   "priceComparator": {
     "up_vs_reference": "相对参考价 Up/Down",
     "above": "高于行权价",

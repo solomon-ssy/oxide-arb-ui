@@ -1,6 +1,8 @@
 import type { Buffer } from 'node:buffer';
 import type { Page, WebSocket } from 'playwright/test';
 
+import type { BrowserFailureAudit } from './browser-failure-audit';
+
 import {
   expect,
   expectAccessible,
@@ -61,10 +63,8 @@ interface WsFrame {
 }
 
 interface BrowserAudit {
-  failures: string[];
   received: WsFrame[];
   sent: WsFrame[];
-  setReconnectExercise: (value: boolean) => void;
   sockets: WebSocket[];
 }
 
@@ -77,40 +77,10 @@ function parseFrame(payload: Buffer | string): null | WsFrame {
 }
 
 function installBrowserAudit(page: Page): BrowserAudit {
-  const failures: string[] = [];
   const received: WsFrame[] = [];
   const sent: WsFrame[] = [];
   const sockets: WebSocket[] = [];
-  let reconnectExercise = false;
 
-  page.on('console', (message) => {
-    const type = message.type();
-    if (type === 'error' || type === 'warning') {
-      failures.push(`console.${type}: ${message.text()}`);
-    }
-  });
-  page.on('pageerror', (error) => {
-    failures.push(`pageerror: ${error.message}`);
-  });
-  page.on('requestfailed', (request) => {
-    const failure = request.failure()?.errorText ?? 'unknown request failure';
-    const expectedReconnectFailure =
-      reconnectExercise &&
-      request.resourceType() === 'websocket' &&
-      /ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|aborted/i.test(failure);
-    if (!expectedReconnectFailure) {
-      failures.push(
-        `requestfailed ${request.method()} ${request.url()}: ${failure}`,
-      );
-    }
-  });
-  page.on('response', (response) => {
-    if (response.status() >= 400) {
-      failures.push(
-        `response ${response.status()} ${response.request().method()} ${response.url()}`,
-      );
-    }
-  });
   page.on('websocket', (socket) => {
     sockets.push(socket);
     socket.on('framesent', ({ payload }) => {
@@ -124,19 +94,21 @@ function installBrowserAudit(page: Page): BrowserAudit {
   });
 
   return {
-    failures,
     received,
     sent,
     sockets,
-    setReconnectExercise(value: boolean) {
-      reconnectExercise = value;
-    },
   };
+}
+
+async function navigate(page: Page, audit: BrowserFailureAudit, url: string) {
+  await audit.drainHttp(page);
+  await page.goto(url);
 }
 
 test('W2-A production Dataset and Evaluation backtest close over REST and WS', async ({
   adminApi,
   authenticatedPage,
+  browserAudit,
 }) => {
   test.setTimeout(180_000);
   const audit = installBrowserAudit(authenticatedPage);
@@ -150,8 +122,10 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
     }
   });
 
+  await browserAudit.drainHttp(authenticatedPage);
   await authenticatedPage.reload();
   await waitForShell(authenticatedPage);
+  await browserAudit.drainHttp(authenticatedPage);
   await expect
     .poll(
       () =>
@@ -196,7 +170,9 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   expect(backtest.hit_rate).toBe('0.625');
   expect(backtest.rank_ic).toBe('0.143');
 
-  await authenticatedPage.goto(
+  await navigate(
+    authenticatedPage,
+    browserAudit,
     `/research/datasets?open=${dataset.training_dataset_id}`,
   );
   await waitForShell(authenticatedPage);
@@ -208,7 +184,9 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   await expect(datasetDrawer).toContainText(/bound consistently|绑定一致/i);
   await expectAccessible(authenticatedPage, '[role="dialog"]');
 
-  await authenticatedPage.goto(
+  await navigate(
+    authenticatedPage,
+    browserAudit,
     `/research/backtests?open=${backtest.backtest_report_id}`,
   );
   await waitForShell(authenticatedPage);
@@ -219,6 +197,7 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   await expect(backtestDrawer).toContainText(/quality|质量|门禁/i);
   await expectAccessible(authenticatedPage, '[role="dialog"]');
 
+  await browserAudit.drainHttp(authenticatedPage);
   await backtestDrawer
     .getByRole('link', { name: dataset.training_dataset_id })
     .click();
@@ -228,6 +207,7 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
       url.searchParams.get('open') === dataset.training_dataset_id
     );
   });
+  await browserAudit.drainHttp(authenticatedPage);
   await expect(authenticatedPage.getByRole('dialog').last()).toContainText(
     dataset.training_dataset_id,
   );
@@ -241,7 +221,7 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   const syncCountBeforeBacktests = audit.received.filter(
     (frame) => frame.type === 'sync',
   ).length;
-  await authenticatedPage.goto('/research/backtests');
+  await navigate(authenticatedPage, browserAudit, '/research/backtests');
   await waitForShell(authenticatedPage);
   await expect
     .poll(
@@ -329,32 +309,33 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
     .toBeGreaterThan(queryCountBeforeJob);
 
   const socketCountBeforeReconnect = audit.sockets.length;
-  audit.setReconnectExercise(true);
-  await authenticatedPage.context().setOffline(true);
-  await expect
-    .poll(() => audit.sockets.filter((socket) => socket.isClosed()).length)
-    .toBeGreaterThan(0);
-  await authenticatedPage.context().setOffline(false);
-  await expect
-    .poll(() => audit.sockets.length, {
-      message: 'WS client did not reconnect after the network recovered',
-      timeout: 20_000,
-    })
-    .toBeGreaterThan(socketCountBeforeReconnect);
-  await expect
-    .poll(
-      () =>
-        audit.sent.filter(
-          (frame) =>
-            frame.action === 'subscribe' &&
-            frame.channel === 'materialization.run_update',
-        ).length,
-      { message: 'reconnected WS did not replay the research subscription' },
-    )
-    .toBeGreaterThan(1);
+  await browserAudit.allowWebSocketReconnect(async () => {
+    await authenticatedPage.context().setOffline(true);
+    await expect
+      .poll(() => audit.sockets.filter((socket) => socket.isClosed()).length)
+      .toBeGreaterThan(0);
+    await authenticatedPage.context().setOffline(false);
+    await expect
+      .poll(() => audit.sockets.length, {
+        message: 'WS client did not reconnect after the network recovered',
+        timeout: 20_000,
+      })
+      .toBeGreaterThan(socketCountBeforeReconnect);
+    await expect
+      .poll(
+        () =>
+          audit.sent.filter(
+            (frame) =>
+              frame.action === 'subscribe' &&
+              frame.channel === 'materialization.run_update',
+          ).length,
+        { message: 'reconnected WS did not replay the research subscription' },
+      )
+      .toBeGreaterThan(1);
+  });
 
   await authenticatedPage.setViewportSize({ height: 812, width: 375 });
-  await authenticatedPage.goto('/research/datasets');
+  await navigate(authenticatedPage, browserAudit, '/research/datasets');
   await waitForShell(authenticatedPage);
 
   const userMenu = authenticatedPage.getByRole('button', {
@@ -400,7 +381,9 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   ).toBeVisible();
   await authenticatedPage.keyboard.press('Escape');
 
-  await authenticatedPage.goto(
+  await navigate(
+    authenticatedPage,
+    browserAudit,
     `/research/datasets?open=${dataset.training_dataset_id}`,
   );
   await waitForShell(authenticatedPage);
@@ -413,7 +396,9 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   ).toBe(0);
   await expectAccessible(authenticatedPage, '[role="dialog"]');
 
-  await authenticatedPage.goto(
+  await navigate(
+    authenticatedPage,
+    browserAudit,
     `/research/backtests?open=${backtest.backtest_report_id}`,
   );
   await waitForShell(authenticatedPage);
@@ -425,6 +410,4 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
     ),
   ).toBe(0);
   await expectAccessible(authenticatedPage, '[role="dialog"]');
-
-  expect(audit.failures, audit.failures.join('\n')).toEqual([]);
 });

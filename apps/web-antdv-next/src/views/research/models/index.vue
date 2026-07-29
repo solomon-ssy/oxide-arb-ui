@@ -374,10 +374,15 @@ watch(
 </script>
 
 <template>
-  <Page auto-content-height>
+  <Page auto-content-height data-testid="models-page">
     <Grid :table-title="$t('page.research.models.listTitle')">
       <template #toolbar-tools>
-        <Button v-if="canTrain" type="primary" @click="openTrain()">
+        <Button
+          v-if="canTrain"
+          class="min-h-11"
+          type="primary"
+          @click="openTrain()"
+        >
           {{ $t('page.research.models.actions.train') }}
         </Button>
       </template>

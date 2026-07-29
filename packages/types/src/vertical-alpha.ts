@@ -386,20 +386,40 @@ export interface OverrideLinkageRequest {
   subject: Record<string, unknown>;
 }
 
-/** Domain ingest cursor health row (`GET /research/domain-sources`). */
-export interface DomainSourceCursorView {
+export type DomainSourceExpectationStatus =
+  | 'credential_blocked'
+  | 'error'
+  | 'live'
+  | 'not_started'
+  | 'stale'
+  | 'unsupported';
+
+export type DomainCursorStatus = 'backfilling' | 'bootstrap' | 'error' | 'live';
+
+/** Expected binding plus nullable observed cursor (`GET /research/domain-sources`). */
+export interface DomainSourceExpectationView {
+  expectation_id: string;
   family: 'crypto' | 'weather';
   source_id: string;
   instrument_key: string;
-  checkpoint: Record<string, unknown> & { kind: string };
-  checkpoint_hash: string;
-  last_event_time: IsoDateTime;
-  status: string;
-  /** Detail from the most recent failed tick; `null` when the last tick
-   * succeeded (R10 ingest hardening). */
-  last_error: null | string;
-  lag_secs: number;
-  updated_at: IsoDateTime;
+  capability_registry_hash: string;
+  binding_hash: string;
+  required: boolean;
+  credential_required: boolean;
+  freshness_secs: number;
+  affected_market_ids: string[];
+  affected_profile_ids: string[];
+  status: DomainSourceExpectationStatus;
+  status_reason: null | string;
+  cursor_status: DomainCursorStatus | null;
+  checkpoint: null | (Record<string, unknown> & { kind: string });
+  checkpoint_hash: null | string;
+  last_event_time: IsoDateTime | null;
+  freshness_observed_at: IsoDateTime | null;
+  /** `null` means no observed cursor and must never be rendered as zero. */
+  lag_secs: null | number;
+  cursor_updated_at: IsoDateTime | null;
+  observed_at: IsoDateTime;
 }
 
 // ── Basis cross-check alerts (11.2.2 remediation R6) ────────────────────────

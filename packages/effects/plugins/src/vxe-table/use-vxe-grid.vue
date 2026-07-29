@@ -69,6 +69,9 @@ const TOOLBAR_TOOLS = 'toolbar-tools';
 const TABLE_TITLE = 'table-title';
 
 const gridRef = useTemplateRef<VxeGridInstance>('gridRef');
+const gridRootRef = useTemplateRef<HTMLElement>('gridRootRef');
+let accessibilityObserver: MutationObserver | null = null;
+let accessibilityResizeObserver: null | ResizeObserver = null;
 
 const state = props.api?.useStore?.();
 
@@ -287,6 +290,42 @@ function onSearchBtnClick() {
   props.api?.toggleSearchForm?.();
 }
 
+function syncScrollableRegions() {
+  const root = gridRootRef.value;
+  if (!root) {
+    return;
+  }
+  const regions = root.querySelectorAll<HTMLElement>(
+    '.vxe-table--header-inner-wrapper, .vxe-table--body-inner-wrapper',
+  );
+  for (const region of regions) {
+    const scrollable =
+      region.scrollWidth > region.clientWidth ||
+      region.scrollHeight > region.clientHeight;
+    if (!scrollable) {
+      region.removeAttribute('aria-label');
+      region.removeAttribute('tabindex');
+      continue;
+    }
+    const isHeader = region.classList.contains(
+      'vxe-table--header-inner-wrapper',
+    );
+    region.setAttribute(
+      'aria-label',
+      $t(
+        isHeader
+          ? 'common.scrollableTableHeader'
+          : 'common.scrollableTableBody',
+      ),
+    );
+    region.tabIndex = 0;
+  }
+}
+
+function scheduleScrollableRegionSync() {
+  void nextTick(syncScrollableRegions);
+}
+
 const events = computed(() => {
   return {
     ...gridEvents.value,
@@ -392,16 +431,28 @@ const isCompactForm = computed(() => {
 onMounted(() => {
   props.api?.mount?.(gridRef.value, formApi);
   init();
+  scheduleScrollableRegionSync();
+  const root = gridRootRef.value;
+  if (root) {
+    accessibilityObserver = new MutationObserver(scheduleScrollableRegionSync);
+    accessibilityObserver.observe(root, { childList: true, subtree: true });
+    accessibilityResizeObserver = new ResizeObserver(
+      scheduleScrollableRegionSync,
+    );
+    accessibilityResizeObserver.observe(root);
+  }
 });
 
 onUnmounted(() => {
+  accessibilityObserver?.disconnect();
+  accessibilityResizeObserver?.disconnect();
   formApi?.unmount?.();
   props.api?.unmount?.();
 });
 </script>
 
 <template>
-  <div :class="cn('h-full rounded-md bg-card', className)">
+  <div ref="gridRootRef" :class="cn('h-full rounded-md bg-card', className)">
     <VxeGrid
       ref="gridRef"
       :class="

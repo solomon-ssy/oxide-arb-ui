@@ -6,7 +6,7 @@ import { canTrainDataset } from './dataset-action-state';
 import { datasetFixture } from './dataset-test-fixture';
 
 describe('canTrainDataset', () => {
-  it('offers Train only for an authorized Ready Training dataset with v2 evidence', () => {
+  it('offers Train only for an authorized Ready Training dataset with v3 evidence', () => {
     const readyDataset = datasetFixture();
     for (const status of Object.values(TRAINING_DATASET_STATUSES)) {
       expect(canTrainDataset(true, { ...readyDataset, status })).toBe(
@@ -26,7 +26,7 @@ describe('canTrainDataset', () => {
     const readyDataset = datasetFixture();
     const manifest = readyDataset.manifest;
     if (!manifest) {
-      throw new Error('test fixture requires a v2 manifest');
+      throw new Error('test fixture requires a v3 manifest');
     }
     expect(canTrainDataset(true, { ...readyDataset, manifest: null })).toBe(
       false,

@@ -413,7 +413,7 @@ function onTrain() {
                 :span="2"
               >
                 <span class="font-mono text-xs break-all">
-                  {{ manifest.factor_schema_hash }}
+                  {{ manifest.factor_serving_plane.factor_schema_hash }}
                 </span>
               </DescriptionsItem>
               <DescriptionsItem

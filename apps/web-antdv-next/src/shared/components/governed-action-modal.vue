@@ -2,7 +2,10 @@
 import type { RoleView } from '@vben/types';
 
 import type { GovernedField } from '#/shared/composables/governed-field';
-import type { GovernedContext } from '#/shared/composables/use-governed-action';
+import type {
+  GovernedContext,
+  GovernedReasonRule,
+} from '#/shared/composables/use-governed-action';
 
 import { computed, nextTick, reactive, ref, useId, watch } from 'vue';
 
@@ -37,6 +40,7 @@ export interface GovernedActionPayload {
   onCancel?: () => void;
   /** Return `true` when the governed mutation succeeded. */
   onSubmit: (ctx: GovernedContext) => Promise<boolean>;
+  reasonRule?: GovernedReasonRule;
   summary?: string;
   title: string;
 }
@@ -75,6 +79,9 @@ const fieldsValid = computed(
 const canSubmit = computed(() => {
   const trimmedReason = reason.value.trim();
   if (trimmedReason.length < 4 || !actingRole.value) {
+    return false;
+  }
+  if (payload.value?.reasonRule?.validate(trimmedReason) === false) {
     return false;
   }
   if (!fieldsValid.value) {
@@ -276,12 +283,28 @@ watch(
         <TextArea
           data-testid="governed-reason"
           v-model:value="reason"
+          :aria-describedby="
+            payload?.reasonRule
+              ? `${modalControlPrefix}-reason-contract`
+              : undefined
+          "
+          :aria-invalid="
+            reason.trim().length >= 4 &&
+            payload?.reasonRule?.validate(reason.trim()) === false
+          "
           :id="`${modalControlPrefix}-reason`"
-          :maxlength="1024"
+          :maxlength="payload?.reasonRule?.maxLength ?? 1024"
           :placeholder="$t('governance.modal.reasonPlaceholder')"
           :rows="4"
           show-count
         />
+        <span
+          v-if="payload?.reasonRule"
+          :id="`${modalControlPrefix}-reason-contract`"
+          class="governed-hint text-xs"
+        >
+          {{ payload.reasonRule.help }}
+        </span>
       </div>
 
       <div

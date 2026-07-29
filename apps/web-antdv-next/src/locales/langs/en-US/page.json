@@ -73,6 +73,7 @@
     "researchBacktests": "Backtests",
     "researchJobs": "Task Center",
     "researchFeatureIntegrity": "Feature Integrity",
+    "researchFeedback": "Feedback & Retraining",
     "researchFactors": "Factors",
     "researchCalibrationArtifacts": "Calibration Artifacts",
     "researchMarketLinkages": "Market Linkages",
@@ -176,6 +177,331 @@
     "common": {
       "timeRangeStart": "From",
       "timeRangeEnd": "To"
+    },
+    "copyValue": "Copy {label}",
+    "copiedValue": "Copied {label}",
+    "feedback": {
+      "title": "Feedback & Retraining",
+      "description": "Inspect durable feedback-cycle truth, retraining readiness, and governed decisions. WebSocket events only invalidate these authoritative REST views.",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "loadError": "Feedback data could not be loaded",
+      "loadErrorDescription": "No authoritative feedback snapshot is available. Retry after the service recovers.",
+      "staleDescription": "The last verified snapshot remains visible while refresh is retried.",
+      "blockedTitle": "Readiness evidence is unavailable",
+      "blockedDescription": "History and queue facts remain auditable, but retraining readiness is blocked until the backend can provide verified retention and latency evidence.",
+      "state": {
+        "permission": "Feedback workbench access denied",
+        "loading": "Loading feedback workbench",
+        "error": "Feedback workbench load failed",
+        "empty": "No feedback cycles",
+        "blocked": "Feedback readiness blocked",
+        "ready": "Feedback workbench ready"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "cycles": "Cycles"
+      },
+      "queue": {
+        "queued": "Queued cycles",
+        "running": "Running cycles",
+        "pendingOutbox": "Pending outbox events"
+      },
+      "overview": {
+        "profileCount": "Built-in profiles",
+        "revision": "Durable revision",
+        "generatedAt": "Snapshot generated"
+      },
+      "profile": {
+        "sectionTitle": "Built-in profile evidence",
+        "sectionDescription": "Verified readiness is shared by this snapshot. Coverage, latest cycle, and champion identity remain profile-specific server facts.",
+        "empty": "The authoritative snapshot contains no built-in profiles.",
+        "version": "Version {version}",
+        "category": {
+          "control": "Control"
+        },
+        "activationTrack": "Activation track",
+        "policyHash": "Feedback policy hash",
+        "profileHash": "Profile content hash",
+        "evaluationWindow": "Evaluation window",
+        "days": "{days} days",
+        "cadence": "Feedback cadence",
+        "cooldown": "Retraining cooldown",
+        "notObserved": "Not observed",
+        "gate": {
+          "passed": "Passed",
+          "blocked": "Blocked",
+          "notObserved": "Not observed"
+        },
+        "track": {
+          "research_only": "Research only",
+          "semi_auto_candidate": "Semi-auto candidate"
+        },
+        "readiness": {
+          "title": "Verified readiness",
+          "ready": "Ready",
+          "blocked": "Blocked",
+          "not_observed": "Not observed",
+          "history": "Observed history",
+          "historyValue": "{observed} / {required} days",
+          "retention": "Retention gate",
+          "latency": "Latency gate",
+          "observedAt": "Evidence observed"
+        },
+        "coverage": {
+          "title": "Latest coverage",
+          "decision": "Server decision",
+          "state": {
+            "advance": "Advance",
+            "no_action": "No action",
+            "not_observed": "Not observed"
+          },
+          "observed": "Coverage ratio",
+          "minimum": "Minimum coverage",
+          "matureLabels": "Mature labels",
+          "newMatureLabels": "New mature labels",
+          "reason": "Reason code"
+        },
+        "latest": {
+          "title": "Latest cycle and champion",
+          "status": "Cycle status",
+          "cycleId": "Cycle ID",
+          "decision": "Decision",
+          "championModel": "Champion model version",
+          "championHash": "Champion serving contract hash",
+          "updatedAt": "Cycle updated"
+        }
+      },
+      "detail": {
+        "loadError": "Cycle detail could not be loaded",
+        "loadErrorDescription": "The list remains available, but this authoritative detail snapshot could not be verified. Retry after the service recovers.",
+        "refreshing": "Refreshing selected cycle detail",
+        "empty": "No authoritative detail is available for the selected cycle.",
+        "notObserved": "Not observed",
+        "outcome": {
+          "pending": "Pending"
+        },
+        "audit": {
+          "title": "Cycle audit",
+          "cycleId": "Cycle ID",
+          "profile": "Research profile artifact",
+          "capabilityHashes": "Capability registry hashes",
+          "trigger": "Trigger",
+          "generation": "Generation",
+          "labelCutoff": "Label cutoff",
+          "championModel": "Champion model version",
+          "championHash": "Champion serving contract hash",
+          "policyHash": "Feedback policy hash",
+          "familyHash": "Candidate family hash",
+          "idempotencyHash": "Idempotency hash",
+          "terminalReason": "Terminal reason code",
+          "startedAt": "Started",
+          "completedAt": "Completed",
+          "leaseExpiresAt": "Lease expires",
+          "cancelRequestedAt": "Cancellation requested",
+          "createdAt": "Created",
+          "updatedAt": "Updated"
+        },
+        "timeline": {
+          "title": "Immutable stage timeline",
+          "empty": "No stage event has been recorded.",
+          "aria": "Feedback stage events in durable sequence order",
+          "eventId": "Stage event ID",
+          "actor": "Actor",
+          "jobId": "Research job ID",
+          "reason": "Reason code",
+          "eventHash": "Event hash",
+          "evidenceUri": "Evidence URI",
+          "evidenceHash": "Evidence hash",
+          "createdAt": "Persisted",
+          "stage": {
+            "trigger": "Trigger",
+            "coverage": "Coverage",
+            "drift": "Drift",
+            "dataset_seal": "Dataset seal",
+            "training": "Training",
+            "calibration": "Calibration",
+            "cpcv": "CPCV",
+            "comparison": "Comparison",
+            "shadow_replay": "Shadow replay",
+            "decision": "Decision"
+          },
+          "event": {
+            "triggered": "Triggered",
+            "job_linked": "Job linked",
+            "started": "Started",
+            "succeeded": "Succeeded",
+            "failed": "Failed",
+            "cancellation_requested": "Cancellation requested",
+            "cancelled": "Cancelled",
+            "lease_recovered": "Lease recovered"
+          }
+        },
+        "coverage": {
+          "title": "Coverage and cohorts",
+          "empty": "No verified coverage artifact is available.",
+          "decision": "Server decision",
+          "reason": "Reason code",
+          "ratio": "Coverage ratio",
+          "minimum": "Minimum coverage",
+          "labels": "Mature labels",
+          "newLabels": "New mature labels",
+          "policyEvaluations": "Policy evaluations",
+          "window": "Evaluation window",
+          "artifactId": "Artifact ID",
+          "artifactUri": "Artifact URI",
+          "artifactHash": "Artifact hash",
+          "modelLearning": "Model learning",
+          "executionLearning": "Execution learning",
+          "policyEvaluation": "Policy evaluation",
+          "candidate": "Candidates",
+          "eligible": "Eligible",
+          "included": "Included"
+        },
+        "drift": {
+          "title": "Drift evidence",
+          "empty": "No drift report has been recorded.",
+          "reportId": "Drift report ID",
+          "observed": "Observed value",
+          "threshold": "Threshold",
+          "samples": "Samples",
+          "baselineWindow": "Baseline window",
+          "evaluationWindow": "Evaluation window",
+          "labelCutoff": "Label cutoff",
+          "observedAt": "Observed",
+          "detailUri": "Detail URI",
+          "detailHash": "Detail hash",
+          "reportHash": "Report hash",
+          "kind": {
+            "data": "Data drift",
+            "concept": "Concept drift",
+            "label": "Label drift"
+          },
+          "metric": {
+            "population_stability_index": "Population stability index",
+            "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p-value",
+            "rank_ic_drop": "Rank IC drop",
+            "jensen_shannon_divergence": "Jensen–Shannon divergence"
+          },
+          "assessment": {
+            "within_threshold": "Within threshold",
+            "threshold_exceeded": "Threshold exceeded",
+            "insufficient_evidence": "Insufficient evidence"
+          }
+        },
+        "comparison": {
+          "title": "Comparison and holdout audit",
+          "empty": "No one-time evaluation holdout has been reserved.",
+          "useId": "Evaluation use ID",
+          "purpose": "Purpose",
+          "profileArtifact": "Research profile artifact",
+          "datasetPurpose": "Dataset purpose",
+          "datasetId": "Evaluation dataset ID",
+          "datasetHash": "Evaluation dataset hash",
+          "bytesHash": "Evaluation artifact bytes hash",
+          "cohortHash": "Cohort manifest hash",
+          "comparisonHash": "Comparison contract hash",
+          "familyHash": "Candidate family hash",
+          "semanticHash": "Semantic use hash",
+          "champion": "Champion model version",
+          "championHash": "Champion serving contract hash",
+          "cpcvUri": "CPCV artifact URI",
+          "cpcvHash": "CPCV artifact hash",
+          "useHash": "Evaluation use hash",
+          "window": "Evaluation window",
+          "labelCutoff": "Label cutoff",
+          "reservedAt": "Reserved",
+          "createdAt": "Persisted"
+        }
+      },
+      "actions": {
+        "reasonRule": "Use 4–128 lowercase letters, digits, underscores, or periods; no spaces.",
+        "trigger": {
+          "button": "Trigger cycle",
+          "title": "Trigger feedback cycle",
+          "summary": "Freeze and enqueue one manual feedback cycle for the selected authoritative profile.",
+          "profile": "Research profile",
+          "success": "Feedback cycle triggered.",
+          "replayed": "The original feedback-cycle command was replayed exactly."
+        },
+        "cancel": {
+          "button": "Request cancellation",
+          "title": "Cancel feedback cycle",
+          "summary": "Request governed cancellation. The coordinator remains the lifecycle authority.",
+          "cycle": "Feedback cycle",
+          "success": "Feedback-cycle cancellation requested.",
+          "replayed": "The original cancellation command was replayed exactly."
+        },
+        "permit": {
+          "title": "Promotion permits",
+          "description": "Issue or revoke bounded publication authority. This surface never promotes a model or route.",
+          "readDenied": "Publication permit evidence is unavailable for the current permissions.",
+          "issueTitle": "Issue promotion permit",
+          "issueSummary": "Issue bounded authority from the selected candidate-ready cycle. Server preflight remains authoritative.",
+          "selectedCycle": "Selected candidate-ready cycle",
+          "noCycle": "No cycle selected",
+          "expiresAt": "Absolute expiry",
+          "runtimeModes": "Allowed runtime modes",
+          "idempotencyKey": "Idempotency key",
+          "notEligible": "Select a succeeded candidate-ready cycle before issuing a permit.",
+          "invalidInput": "Select at least one runtime mode and a valid future expiry.",
+          "issue": "Review and issue",
+          "issueSuccess": "Promotion permit issued.",
+          "issueReplayed": "The original permit issuance was replayed exactly.",
+          "loadError": "Promotion permits could not be loaded; the last verified list remains visible.",
+          "empty": "No promotion permit is visible.",
+          "profile": "Research profile",
+          "category": "Category",
+          "issuedBy": "Issued by",
+          "issuedReason": "Issuance reason",
+          "scopeHash": "Scope hash",
+          "preflightHash": "Preflight hash",
+          "revision": "Revision",
+          "observedAt": "Status observed",
+          "permitId": "Promotion permit",
+          "revoke": "Revoke permit",
+          "revokeTitle": "Revoke promotion permit",
+          "revokeSummary": "Revoke this publication authority with revision-0 compare-and-swap.",
+          "revokeConfirm": "REVOKE",
+          "revokeSuccess": "Promotion permit revoked.",
+          "revokeReplayed": "The original permit revocation was replayed exactly.",
+          "status": {
+            "active": "Active",
+            "expired": "Expired",
+            "revoked": "Revoked"
+          }
+        }
+      },
+      "cycles": {
+        "empty": "No durable feedback cycle matches this page.",
+        "listAria": "Feedback cycles",
+        "selected": "Selected cycle",
+        "cycleId": "Cycle ID",
+        "profile": "Profile",
+        "trigger": "Trigger",
+        "status": "Status",
+        "decision": "Decision",
+        "labelCutoff": "Label cutoff",
+        "updatedAt": "Updated"
+      },
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "trigger": {
+        "scheduled": "Scheduled",
+        "manual": "Manual"
+      },
+      "decision": {
+        "pending": "Pending",
+        "no_action": "No action",
+        "challenger_rejected": "Challenger rejected",
+        "candidate_ready": "Candidate ready",
+        "promoted": "Promoted"
+      }
     },
     "tradePolicies": {
       "title": "Trade Policies",
@@ -1079,6 +1405,7 @@
         "thesisHypothesis": "Hypothesis",
         "thesisLimitations": "Known limitations",
         "artifactLineage": "Artifact Lineage",
+        "sectionSelector": "Model detail section",
         "artifactLineageUnavailable": "No training artifact lineage exists for this governed hand-authored model.",
         "serializedModelHash": "Serialized model hash",
         "lineageKind": "Lineage kind",
@@ -1088,6 +1415,43 @@
         "inputContractHash": "Input-contract hash",
         "inputTransformHash": "Input-transform hash",
         "factorInputs": "Normalized factor inputs",
+        "servingContract": "Serving Contract & Promotion Lineage",
+        "servingContractUnavailable": "The complete serving contract has not loaded.",
+        "contractVersion": "Contract version",
+        "derivation": "Model derivation",
+        "contractHash": "Persisted serving-contract hash",
+        "embeddedHash": "Embedded contract hash",
+        "factorSchemaHash": "Factor-plane schema hash",
+        "requiredDomains": "Required domain families",
+        "capabilityHashes": "Capability registry hashes",
+        "capabilityHash": "Capability registry hash",
+        "factorRevisions": "Exact factor revisions",
+        "factorRevisionsEmpty": "This classical serving contract has an explicitly empty factor plane.",
+        "factorId": "Factor definition",
+        "factorRevision": "Revision and schema binding",
+        "factorDefinitionHash": "Factor definition hash",
+        "featureContractHash": "Feature contract hash",
+        "featureSchemaHash": "Feature schema hash",
+        "labelSchemaHash": "Label schema hash",
+        "policySnapshotHash": "Decision policy snapshot hash",
+        "datasetManifestHash": "Dataset manifest hash",
+        "datasetBytesHash": "Dataset artifact bytes hash",
+        "profileContentHash": "Research profile content hash",
+        "modelPayloadHash": "Model payload hash",
+        "modelCalibrationHash": "Model calibration hash",
+        "biasTableHash": "Factor bias-table hash",
+        "profileArtifacts": "Policy profile artifacts",
+        "profileArtifactHash": "{kind} profile artifact hash",
+        "evaluationLineage": "Evaluation-use lineage ({count})",
+        "evaluationLineageEmpty": "No one-time feedback evaluation use references this model.",
+        "feedbackCycle": "Feedback cycle",
+        "evaluationHash": "Evaluation-use hash",
+        "promotionLineage": "Promotion lineage ({count})",
+        "promotionLineageEmpty": "No governed route promotion references this model.",
+        "promotionRole": "Promotion role and lifecycle",
+        "permitId": "Promotion permit",
+        "promotionHash": "Promotion transaction hash",
+        "actorReason": "Actor · role · reason",
         "parity": "Training-serving Parity",
         "tradePolicy": "Trade Policy Binding",
         "tradePolicyId": "Trade Policy Artifact",
@@ -1235,6 +1599,8 @@
       "detail": {
         "title": "Factor Definition",
         "summary": "Summary",
+        "definitionHash": "Definition hash",
+        "featureContractHash": "Feature contract hash",
         "normalization": "Normalization",
         "outputSemantics": "Output Semantics",
         "required": "Required",
@@ -1243,7 +1609,14 @@
         "inputFeatures": "Input Features",
         "inputSchemaVersion": "Input Schema Version",
         "outputSchemaVersion": "Output Schema Version",
-        "createdAt": "Created"
+        "createdAt": "Created",
+        "servingUsage": "Verified serving usage",
+        "servingUsageEmpty": "No model serving contract consumes this factor revision.",
+        "modelVersion": "Model version",
+        "modelSpec": "Model specification",
+        "profile": "Research profile",
+        "servingContractHash": "Serving contract hash",
+        "artifactHash": "Model artifact hash"
       },
       "collinearity": {
         "action": "Collinearity",
@@ -1546,6 +1919,11 @@
     "domainSources": {
       "listTitle": "Domain ingest cursors",
       "refresh": "Refresh",
+      "notObserved": "Not observed",
+      "required": "Required",
+      "optional": "Optional",
+      "credentialRequired": "Credential required",
+      "affectedCounts": "{markets} market(s) · {profiles} profile(s)",
       "cards": {
         "crypto": "Crypto source plane",
         "weather": "Weather source plane",
@@ -1553,10 +1931,12 @@
         "activeCursors": "Active cursors",
         "activeFeeds": "Active feeds",
         "worstLag": "Worst lag",
+        "notObserved": "Not observed",
         "cryptoHint": "Binance kline/aggTrade and Chainlink Data Streams checkpoints",
         "weatherHint": "AviationWeather, GHCNh, and GEFS station checkpoints",
-        "staleCursors": "{count} cursor(s) > 5m lag",
-        "errorCursors": "{count} cursor(s) in error"
+        "staleCursors": "{count} stale expectation(s)",
+        "errorCursors": "{count} failed expectation(s)",
+        "notObservedCursors": "{count} cursor(s) not observed"
       },
       "table": {
         "title": "Ingest cursors",
@@ -1565,10 +1945,14 @@
         "instrument": "Instrument",
         "checkpoint": "Typed checkpoint / hash",
         "status": "Status",
+        "cursorStatus": "Cursor status",
+        "required": "Requirement",
+        "statusReason": "Status reason",
+        "freshness": "Freshness budget (s)",
         "lag": "Lag (s)",
-        "lastError": "Last error",
         "lastEvent": "Last event",
-        "cursorUpdated": "Cursor updated"
+        "cursorUpdated": "Cursor updated",
+        "affected": "Affected scope"
       }
     },
     "basisAlerts": {
@@ -1848,8 +2232,6 @@
       "title": "Recommendation Orbit",
       "aria": "Top recommendations from the latest report, organized by category, rank, confidence and suggested amount.",
       "list": "Keyboard-operable TopN recommendation list",
-      "play": "Play",
-      "pause": "Pause",
       "drawerTitle": "Recommendation Action Brief",
       "rank": "Rank",
       "market": "Market",
@@ -1858,7 +2240,8 @@
       "expectedReturn": "Expected Return",
       "suggested": "Suggested Amount",
       "evidence": "Leading factors and evidence confidence",
-      "openDetail": "Open Full Evidence & Eligibility"
+      "openDetail": "Open Full Evidence & Eligibility",
+      "openReports": "Open recommendation reports"
     },
     "lifecycle": {
       "title": "Report-to-Execution Lifecycle",
@@ -1869,12 +2252,30 @@
       "aria": "Account risk exposure aggregated by category as a treemap.",
       "none": "The live account has no real exposure"
     },
-    "research": {
-      "title": "Research Readiness Runway",
-      "progressAria": "Research history coverage progress",
-      "days": "days of samples",
-      "evidenceMissing": "No serving evidence proves the 200-day sample, factor gate and model gate yet; progress is never fabricated.",
-      "open": "Open Readiness Evidence"
+    "feedback": {
+      "title": "Feedback & Retraining",
+      "open": "Open Workbench",
+      "history": "Verified history",
+      "latest": "Latest feedback",
+      "updatedAt": "Updated",
+      "openCycle": "Open latest cycle",
+      "loadError": "Feedback snapshot failed to load",
+      "invalidRevision": "Feedback snapshot revision was invalid or regressed",
+      "permission": "You do not have permission to read feedback evidence.",
+      "errorDescription": "No authoritative feedback snapshot is available. The Dashboard snapshot remains usable.",
+      "staleDescription": "Showing the last good feedback snapshot while an authoritative refresh is unavailable.",
+      "blocked": "At least one vertical is blocked or has no verified readiness evidence.",
+      "empty": "No vertical feedback profile is available.",
+      "revision": "Feedback revision {revision} · generated {time}",
+      "state": {
+        "permission": "Feedback evidence permission required",
+        "loading": "Loading feedback readiness",
+        "error": "Feedback readiness unavailable",
+        "stale": "Showing stale feedback readiness",
+        "empty": "No feedback verticals",
+        "blocked": "Feedback readiness blocked",
+        "ready": "Feedback readiness available"
+      }
     },
     "inbox": {
       "title": "Action Inbox",

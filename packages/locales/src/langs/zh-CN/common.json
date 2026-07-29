@@ -25,5 +25,7 @@
   "no": "否",
   "copied": "已复制",
   "showSearchPanel": "显示搜索面板",
-  "hideSearchPanel": "隐藏搜索面板"
+  "hideSearchPanel": "隐藏搜索面板",
+  "scrollableTableHeader": "可滚动表头",
+  "scrollableTableBody": "可滚动表格内容"
 }

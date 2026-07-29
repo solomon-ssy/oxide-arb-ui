@@ -5,7 +5,11 @@ import type {
   TrainingDatasetView,
 } from '@vben/types';
 
-import { DATASET_PURPOSES, FEEDBACK_COHORTS } from '@vben/types';
+import {
+  DATASET_PURPOSES,
+  FEEDBACK_COHORTS,
+  MODEL_FAMILIES,
+} from '@vben/types';
 
 const DATASET_ID = '01900000-0000-7000-8000-000000000001';
 const POLICY_ID = '01900000-0000-7000-8000-000000000002';
@@ -78,7 +82,7 @@ function modelLearningCohort(): DatasetCohortManifest {
   };
 }
 
-/** Build a fresh, internally consistent v2 dataset wire fixture. */
+/** Build a fresh, internally consistent v3 dataset wire fixture. */
 export function datasetFixture(
   purpose: DatasetPurpose = DATASET_PURPOSES.training,
 ): TrainingDatasetView {
@@ -93,6 +97,11 @@ export function datasetFixture(
     created_at: '2026-07-10T10:00:00.000Z',
     dataset_hash: datasetHash,
     decision_policy_snapshot_id: POLICY_ID,
+    factor_serving_plane: {
+      definitions: [],
+      factor_schema_hash: factorHash,
+      format_version: 1,
+    },
     factor_schema_hash: factorHash,
     failure_detail: null,
     feature_schema_hash: featureHash,
@@ -103,12 +112,18 @@ export function datasetFixture(
     label_schema_hash: labelHash,
     manifest: {
       cohort_manifest: manifestCohort,
-      factor_schema_hash: factorHash,
+      factor_serving_plane: {
+        definitions: [],
+        factor_schema_hash: factorHash,
+        format_version: 1,
+      },
       feature_schema_hash: featureHash,
-      format_version: 2,
+      feature_schema_version: 1,
+      format_version: 3,
       horizons_secs: [3600, 86_400],
       knowledge_lag_secs: 10,
       label_schema_hash: labelHash,
+      model_family: MODEL_FAMILIES.classicalLogisticRegression,
       model_spec_definition_hash: modelSpecDefinitionHash,
       model_spec_id: 'model-spec',
       purpose,
@@ -124,6 +139,7 @@ export function datasetFixture(
       window_start: WINDOW_START,
     },
     manifest_hash: `blake3:${'0'.repeat(64)}`,
+    model_family: MODEL_FAMILIES.classicalLogisticRegression,
     model_spec_definition_hash: modelSpecDefinitionHash,
     model_spec_id: 'model-spec',
     parquet_uri: 's3://datasets/frozen.parquet',

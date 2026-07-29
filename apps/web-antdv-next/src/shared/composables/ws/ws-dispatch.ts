@@ -8,6 +8,7 @@ import type {
   ReconciliationLifecycleEvent,
   ReportLifecycleEvent,
   ReportRunLifecycleEvent,
+  ResearchFeedbackEvent,
   SettlementRedeemLifecycleEvent,
   SyncSnapshot,
   SystemAlertEvent,
@@ -15,7 +16,10 @@ import type {
   WsEnvelope,
 } from '@vben/types';
 
+import type { FeedbackRecoveryReason } from '#/store/feedback';
+
 import { useEntryConditionStore } from '#/store/entry-condition';
+import { useFeedbackStore } from '#/store/feedback';
 // Direct module imports (not the `#/store` barrel) keep this reducer free of
 // the auth/api dependency chain, so unit tests can drive it with bare Pinia.
 import { useMarketStore } from '#/store/market';
@@ -27,6 +31,52 @@ import { useSettlementRedeemStore } from '#/store/settlement-redeem';
 import { useSystemStore } from '#/store/system';
 import { useWsStore } from '#/store/ws';
 
+const FEEDBACK_EVENT_KEYS = [
+  'occurred_at',
+  'profile_id',
+  'revision',
+  'subject_id',
+  'subject_kind',
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFeedbackEvent(value: unknown): value is ResearchFeedbackEvent {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const keys = Object.keys(value).toSorted();
+  return (
+    keys.length === FEEDBACK_EVENT_KEYS.length &&
+    keys.every((key, index) => key === FEEDBACK_EVENT_KEYS[index]) &&
+    typeof value.revision === 'number' &&
+    Number.isSafeInteger(value.revision) &&
+    value.revision >= 0 &&
+    value.subject_kind === 'feedback_cycle' &&
+    typeof value.subject_id === 'string' &&
+    value.subject_id.length > 0 &&
+    typeof value.profile_id === 'string' &&
+    value.profile_id.length > 0 &&
+    typeof value.occurred_at === 'string' &&
+    !Number.isNaN(Date.parse(value.occurred_at))
+  );
+}
+
+function feedbackErrorReason(value: unknown): FeedbackRecoveryReason | null {
+  if (!isRecord(value) || typeof value.error !== 'string') {
+    return null;
+  }
+  if (
+    value.error === 'replay_unavailable' ||
+    value.error === 'replay_window_exceeded'
+  ) {
+    return value.error;
+  }
+  return null;
+}
+
 /**
  * UI side-effects delegated by the dispatcher. Store writes happen inside
  * `dispatchWsEnvelope`; anything user-facing (notifications, toasts) is owned by
@@ -37,6 +87,8 @@ export interface WsDispatchHooks {
   onAlert: (alert: SystemAlertEvent) => void;
   /** `config.activated` frame — lightweight info toast. */
   onConfigActivated: (event: ConfigActivatedEvent) => void;
+  /** Durable feedback cursor must be recovered over REST before reconnect. */
+  onFeedbackRecoveryRequired: (reason: FeedbackRecoveryReason) => void;
   /** `market.resolved` frame — optional UI side-effect (store update is in the dispatcher). */
   onMarketResolved: (event: MarketResolvedEvent) => void;
 }
@@ -44,8 +96,9 @@ export interface WsDispatchHooks {
 /**
  * Route one server envelope through the canonical channel-to-store dispatch
  * table. Lists always re-fetch over REST; WS only bumps
- * revisions or updates the market book cache. Unknown types are logged and
- * dropped; `error` frames are logged without toasting (no error storms).
+ * revisions or updates the market book cache. Unknown generic types are logged
+ * and dropped. Invalid feedback hints fail closed into REST cursor recovery;
+ * `error` frames are logged without toasting (no error storms).
  */
 export function dispatchWsEnvelope(
   envelope: WsEnvelope,
@@ -59,6 +112,11 @@ export function dispatchWsEnvelope(
       break;
     }
     case 'error': {
+      const reason = feedbackErrorReason(envelope.data);
+      if (reason !== null) {
+        useFeedbackStore().requireRecovery(reason);
+        hooks.onFeedbackRecoveryRequired(reason);
+      }
       console.warn('[qp-ws] server error frame:', envelope.data);
       break;
     }
@@ -110,6 +168,17 @@ export function dispatchWsEnvelope(
       useSettlementRedeemStore().bumpRevision(
         envelope.data as SettlementRedeemLifecycleEvent,
       );
+      break;
+    }
+    case 'research.feedback': {
+      if (isFeedbackEvent(envelope.data)) {
+        useFeedbackStore().applyEvent(envelope.data);
+      } else {
+        const reason = 'invalid_feedback_event';
+        useFeedbackStore().requireRecovery(reason);
+        hooks.onFeedbackRecoveryRequired(reason);
+        console.warn('[qp-ws] invalid research.feedback frame:', envelope.data);
+      }
       break;
     }
     case 'sync': {

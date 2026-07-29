@@ -12,10 +12,12 @@ export * from './execution-gate';
 export type * from './execution-order';
 export type * from './execution-recovery';
 export type * from './exit-plan';
+export type * from './feedback';
 // Pure intent-FSM predicates (runtime functions) mirroring backend guards.
 export * from './intent-fsm';
 // `market` carries the search sentinel `MARKET_CATEGORY_UNKNOWN_FILTER`.
 export * from './market';
+export type * from './model-lineage';
 export type * from './operation-log';
 export type * from './order-intent';
 export type * from './position';

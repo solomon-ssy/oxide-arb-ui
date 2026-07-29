@@ -3,6 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   accessStore: { accessToken: 'access-token' as null | string },
   clearActionEligibility: vi.fn(),
+  dispatchWsEnvelope: vi.fn(),
+  feedbackStore: {
+    reconcileRevision: vi.fn(),
+    recoveryRequired: false,
+    revision: 17,
+  },
+  getFeedbackRevisionApi: vi.fn(),
   issueWsTicketApi: vi.fn(),
   setStatus: vi.fn(),
 }));
@@ -17,7 +24,10 @@ vi.mock('@vben/stores', () => ({
   useAccessStore: () => mocks.accessStore,
 }));
 vi.mock('@vben/types', () => ({
-  WS_CHANNELS: { marketBookUpdate: 'market.book_update' },
+  WS_CHANNELS: {
+    marketBookUpdate: 'market.book_update',
+    researchFeedback: 'research.feedback',
+  },
 }));
 vi.mock('antdv-next', () => ({
   message: { info: vi.fn() },
@@ -28,6 +38,7 @@ vi.mock('antdv-next', () => ({
   },
 }));
 vi.mock('#/api', () => ({
+  getFeedbackRevisionApi: mocks.getFeedbackRevisionApi,
   issueWsTicketApi: mocks.issueWsTicketApi,
 }));
 vi.mock('#/locales', () => ({
@@ -37,6 +48,7 @@ vi.mock('#/shared/composables/use-qp-access', () => ({
   useQpAccess: () => ({ hasAccessByCodes: () => true }),
 }));
 vi.mock('#/store', () => ({
+  useFeedbackStore: () => mocks.feedbackStore,
   useSystemStore: () => ({
     clearActionEligibility: mocks.clearActionEligibility,
   }),
@@ -47,10 +59,13 @@ vi.mock('#/store', () => ({
   }),
 }));
 vi.mock('./ws/ws-channel-permissions', () => ({
-  authorizedGlobalChannels: () => ['materialization.run_update'],
+  authorizedGlobalChannels: () => [
+    'materialization.run_update',
+    'research.feedback',
+  ],
 }));
 vi.mock('./ws/ws-dispatch', () => ({
-  dispatchWsEnvelope: vi.fn(),
+  dispatchWsEnvelope: mocks.dispatchWsEnvelope,
 }));
 vi.mock('./ws/ws-url', () => ({
   buildWsTicketProtocol: (ticket: string) => `qp-ticket.${ticket}`,
@@ -59,6 +74,7 @@ vi.mock('./ws/ws-url', () => ({
 
 interface SentCommand {
   action: string;
+  after_revision?: number;
   channel?: string;
 }
 
@@ -104,6 +120,10 @@ class TestWebSocket {
     this.emit('close');
   }
 
+  message(data: string) {
+    this.emit('message', new MessageEvent('message', { data }));
+  }
+
   open() {
     this.readyState = TestWebSocket.OPEN;
     this.emit('open');
@@ -113,8 +133,7 @@ class TestWebSocket {
     this.sent.push(payload);
   }
 
-  private emit(type: string) {
-    const event = new Event(type);
+  private emit(type: string, event: Event = new Event(type)) {
     for (const listener of this.listeners.get(type) ?? []) {
       listener(event);
     }
@@ -131,6 +150,18 @@ describe('useQpWs network recovery', () => {
     vi.useFakeTimers();
     mocks.accessStore.accessToken = 'access-token';
     mocks.clearActionEligibility.mockReset();
+    mocks.dispatchWsEnvelope.mockReset();
+    mocks.feedbackStore.reconcileRevision.mockReset();
+    mocks.feedbackStore.reconcileRevision.mockImplementation(
+      (revision: number) => {
+        mocks.feedbackStore.recoveryRequired = false;
+        mocks.feedbackStore.revision = revision;
+        return true;
+      },
+    );
+    mocks.feedbackStore.recoveryRequired = false;
+    mocks.feedbackStore.revision = 17;
+    mocks.getFeedbackRevisionApi.mockReset();
     mocks.issueWsTicketApi.mockReset();
     mocks.setStatus.mockReset();
     TestWebSocket.instances = [];
@@ -164,6 +195,11 @@ describe('useQpWs network recovery', () => {
     first.open();
     expect(commands(first)).toEqual([
       { action: 'subscribe', channel: 'materialization.run_update' },
+      {
+        action: 'subscribe',
+        after_revision: 17,
+        channel: 'research.feedback',
+      },
       { action: 'sync' },
     ]);
 
@@ -184,9 +220,66 @@ describe('useQpWs network recovery', () => {
     second.open();
     expect(commands(second)).toEqual([
       { action: 'subscribe', channel: 'materialization.run_update' },
+      {
+        action: 'subscribe',
+        after_revision: 17,
+        channel: 'research.feedback',
+      },
       { action: 'sync' },
     ]);
     expect(qpWs.status.value).toBe('connected');
+    qpWs.disconnect();
+  });
+
+  it('refreshes an invalid feedback cursor before reconnecting', async () => {
+    vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(true);
+    mocks.feedbackStore.revision = 3;
+    mocks.getFeedbackRevisionApi.mockResolvedValue({ revision: 42 });
+    mocks.issueWsTicketApi
+      .mockResolvedValueOnce({ ticket: 'ticket-1' })
+      .mockResolvedValueOnce({ ticket: 'ticket-2' });
+    mocks.dispatchWsEnvelope.mockImplementation((_envelope, hooks) => {
+      mocks.feedbackStore.recoveryRequired = true;
+      hooks.onFeedbackRecoveryRequired('invalid_feedback_event');
+    });
+
+    const { useQpWs } = await import('./use-qp-ws');
+    const qpWs = useQpWs();
+    qpWs.connect();
+    await vi.waitFor(() => expect(TestWebSocket.instances).toHaveLength(1));
+
+    const first = TestWebSocket.instances[0];
+    if (first === undefined) {
+      throw new Error('first WebSocket was not created');
+    }
+    first.open();
+    first.message(
+      JSON.stringify({
+        data: {},
+        timestamp: '2026-07-29T01:00:00.000Z',
+        type: 'research.feedback',
+      }),
+    );
+
+    await vi.waitFor(() => expect(TestWebSocket.instances).toHaveLength(2));
+    expect(first.readyState).toBe(TestWebSocket.CLOSED);
+    expect(mocks.getFeedbackRevisionApi).toHaveBeenCalledOnce();
+    expect(mocks.feedbackStore.reconcileRevision).toHaveBeenCalledWith(42);
+
+    const second = TestWebSocket.instances[1];
+    if (second === undefined) {
+      throw new Error('replacement WebSocket was not created');
+    }
+    second.open();
+    expect(commands(second)).toEqual([
+      { action: 'subscribe', channel: 'materialization.run_update' },
+      {
+        action: 'subscribe',
+        after_revision: 42,
+        channel: 'research.feedback',
+      },
+      { action: 'sync' },
+    ]);
     qpWs.disconnect();
   });
 });

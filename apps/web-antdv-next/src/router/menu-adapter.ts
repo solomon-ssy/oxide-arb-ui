@@ -22,6 +22,7 @@ const PATH_KEY_ROUTE_NAMES = new Set([
   'research-domain-sources',
   'research-factors',
   'research-feature-integrity',
+  'research-feedback',
   'research-jobs',
   'research-market-linkages',
   'research-model-specs',

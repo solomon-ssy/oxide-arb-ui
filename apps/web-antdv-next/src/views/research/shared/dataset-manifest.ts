@@ -2,7 +2,7 @@ import type { DatasetCohortManifest, TrainingDatasetView } from '@vben/types';
 
 import { DATASET_PURPOSES } from '@vben/types';
 
-export const DATASET_ARTIFACT_FORMAT_VERSION = 2;
+export const DATASET_ARTIFACT_FORMAT_VERSION = 3;
 export const DATASET_COHORT_MANIFEST_FORMAT_VERSION = 1;
 export const DATASET_SOURCE_LINEAGE_FORMAT_VERSION = 1;
 
@@ -85,7 +85,7 @@ function cohortSemanticIssues(
 
 /**
  * Verify the transparent API projection against every normalized ledger field
- * duplicated in the v2 artifact manifest. This is a UI fail-closed affordance;
+ * duplicated in the v3 artifact manifest. This is a UI fail-closed affordance;
  * server-side validation and artifact read-back remain authoritative.
  */
 export function datasetManifestBindingIssues(
@@ -119,6 +119,7 @@ export function datasetManifestBindingIssues(
     dataset.training_dataset_id,
   );
   compare('model_spec_id', manifest.model_spec_id, dataset.model_spec_id);
+  compare('model_family', manifest.model_family, dataset.model_family);
   compare(
     'model_spec_definition_hash',
     manifest.model_spec_definition_hash,
@@ -167,8 +168,18 @@ export function datasetManifestBindingIssues(
     dataset.feature_schema_hash,
   );
   compare(
+    'feature_schema_version',
+    manifest.feature_schema_version,
+    dataset.feature_schema_version,
+  );
+  compare(
+    'factor_serving_plane',
+    manifest.factor_serving_plane,
+    dataset.factor_serving_plane,
+  );
+  compare(
     'factor_schema_hash',
-    manifest.factor_schema_hash,
+    manifest.factor_serving_plane.factor_schema_hash,
     dataset.factor_schema_hash,
   );
   compare(

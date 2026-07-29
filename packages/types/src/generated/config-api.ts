@@ -4,7 +4,11 @@
  */
 
 export type PolicyActorKind = 'operator' | 'system';
-export type PolicyActivationKind = 'initial' | 'promote' | 'rollback';
+export type PolicyActivationKind =
+  | 'initial'
+  | 'model_promotion'
+  | 'promote'
+  | 'rollback';
 export type ConfigResourceKind =
   | 'execution_authorization'
   | 'execution_risk_policy'
@@ -799,7 +803,10 @@ export interface ModelConfig {
    */
   active_exit_model_version_id?: ModelVersionRef | null;
   /**
-   * Active published model version id.
+   * Active published model for the explicit pooled Buy route.
+   *
+   * This route may score only non-Crypto/non-Weather report scopes. It is
+   * not a fallback for a missing vertical route.
    */
   active_model_version_id?: ModelVersionRef | null;
   calibration?: ModelCalibrationConfig;
@@ -810,11 +817,12 @@ export interface ModelConfig {
   /**
    * Category-specific Buy-side model pointers (`ModelRouting`).
    *
-   * A market whose category has a pointer here scores through that artifact
-   * (which may consume the category's domain slice); only categories without
-   * a pointer use the generic `active_model_version_id`. A configured route
-   * that cannot load, validate its exact scope, or infer fails the entire
-   * report round. Governed exactly like the active/shadow pointers.
+   * Only Crypto and Weather may appear here. An enabled vertical must be the
+   * sole category in its report and must have its exact pointer; missing,
+   * unloadable, unpublished, or mis-scoped routes fail before selection.
+   * Non-vertical categories use the explicit pooled
+   * `active_model_version_id`. Governed exactly like the pooled/shadow
+   * pointers.
    */
   category_model_pointers?: {
     crypto?: ModelVersionRef;

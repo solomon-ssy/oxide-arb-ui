@@ -1,5 +1,8 @@
 <script lang="ts" setup>
-import type { DomainSourceCursorView } from '@vben/types';
+import type {
+  DomainCursorStatus,
+  DomainSourceExpectationView,
+} from '@vben/types';
 
 import { computed, onMounted, ref } from 'vue';
 
@@ -11,49 +14,28 @@ import { Button, Card, Statistic, Tag } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { listDomainSources } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
+import { formatDateTimeLocal } from '#/shared/components/format';
 
+import { summarizeDomainSources } from './modules/domain-source-presentation';
 import { useDomainSourceColumns } from './modules/schemas/table-columns';
 
 defineOptions({ name: 'ResearchDomainSourcesPage' });
 
-const STALE_LAG_SECS = 300;
-const CRITICAL_LAG_SECS = 600;
-
 const { handleRequest } = useRequestHandler();
 
-const rows = ref<DomainSourceCursorView[]>([]);
+const rows = ref<DomainSourceExpectationView[]>([]);
 
-const cryptoRows = computed(() =>
-  rows.value.filter((row) => row.family === 'crypto'),
-);
-const weatherRows = computed(() =>
-  rows.value.filter((row) => row.family === 'weather'),
-);
-
-const worstLag = computed(() => {
-  if (rows.value.length === 0) {
-    return 0;
-  }
-  return Math.max(...rows.value.map((row) => row.lag_secs));
-});
-
-const staleCount = computed(
-  () => rows.value.filter((row) => row.lag_secs > STALE_LAG_SECS).length,
-);
-
-const errorCount = computed(
-  () => rows.value.filter((row) => row.status === 'error').length,
-);
+const summary = computed(() => summarizeDomainSources(rows.value));
 
 const emptyPage = {
   has_next: false,
-  items: [] as DomainSourceCursorView[],
+  items: [] as DomainSourceExpectationView[],
   page: 1,
   size: 0,
   total: 0,
 };
 
-const [Grid, gridApi] = useVbenVxeGrid<DomainSourceCursorView>({
+const [Grid, gridApi] = useVbenVxeGrid<DomainSourceExpectationView>({
   gridOptions: {
     columns: useDomainSourceColumns(),
     pagerConfig: { enabled: false },
@@ -69,8 +51,13 @@ const [Grid, gridApi] = useVbenVxeGrid<DomainSourceCursorView>({
           };
         },
       },
+      response: {
+        list: 'items',
+        result: 'items',
+        total: 'total',
+      },
     },
-    rowConfig: { keyField: 'instrument_key' },
+    rowConfig: { keyField: 'expectation_id' },
     toolbarConfig: { refresh: { code: 'query' } },
   },
 });
@@ -83,23 +70,26 @@ onMounted(() => {
   void refresh();
 });
 
-function lagTagColor(lag: number) {
-  if (lag > CRITICAL_LAG_SECS) {
-    return 'error';
+function cursorStatusColor(status: DomainCursorStatus) {
+  switch (status) {
+    case 'backfilling': {
+      return 'processing';
+    }
+    case 'bootstrap': {
+      return 'default';
+    }
+    case 'error': {
+      return 'error';
+    }
+    case 'live': {
+      return 'success';
+    }
   }
-  if (lag > STALE_LAG_SECS) {
-    return 'warning';
-  }
-  return 'success';
-}
-
-function lagClass(lag: number) {
-  return lag > STALE_LAG_SECS ? 'font-medium text-destructive' : undefined;
 }
 </script>
 
 <template>
-  <Page auto-content-height>
+  <Page auto-content-height data-testid="domain-sources-page">
     <div class="mb-4 flex flex-wrap gap-4">
       <Card
         size="small"
@@ -107,7 +97,7 @@ function lagClass(lag: number) {
       >
         <Statistic
           :title="$t('page.research.domainSources.cards.activeCursors')"
-          :value="cryptoRows.length"
+          :value="summary.crypto"
         />
         <div class="mt-2 text-xs text-muted-foreground">
           {{ $t('page.research.domainSources.cards.cryptoHint') }}
@@ -119,7 +109,7 @@ function lagClass(lag: number) {
       >
         <Statistic
           :title="$t('page.research.domainSources.cards.activeFeeds')"
-          :value="weatherRows.length"
+          :value="summary.weather"
         />
         <div class="mt-2 text-xs text-muted-foreground">
           {{ $t('page.research.domainSources.cards.weatherHint') }}
@@ -130,22 +120,32 @@ function lagClass(lag: number) {
         :title="$t('page.research.domainSources.cards.health')"
       >
         <Statistic
-          suffix="s"
+          :suffix="summary.worstLagSecs === null ? undefined : 's'"
           :title="$t('page.research.domainSources.cards.worstLag')"
-          :value="worstLag"
+          :value="
+            summary.worstLagSecs ??
+            $t('page.research.domainSources.cards.notObserved')
+          "
         />
         <div class="mt-2 flex flex-wrap gap-2">
-          <Tag :color="lagTagColor(worstLag)">
+          <Tag :color="summary.stale > 0 ? 'warning' : 'success'">
             {{
               $t('page.research.domainSources.cards.staleCursors', {
-                count: staleCount,
+                count: summary.stale,
               })
             }}
           </Tag>
-          <Tag :color="errorCount > 0 ? 'error' : 'success'">
+          <Tag :color="summary.errors > 0 ? 'error' : 'success'">
             {{
               $t('page.research.domainSources.cards.errorCursors', {
-                count: errorCount,
+                count: summary.errors,
+              })
+            }}
+          </Tag>
+          <Tag :color="summary.notObserved > 0 ? 'default' : 'success'">
+            {{
+              $t('page.research.domainSources.cards.notObservedCursors', {
+                count: summary.notObserved,
               })
             }}
           </Tag>
@@ -155,7 +155,7 @@ function lagClass(lag: number) {
 
     <Grid :table-title="$t('page.research.domainSources.table.title')">
       <template #toolbar-tools>
-        <Button type="primary" @click="refresh">
+        <Button class="min-h-11 min-w-11" type="primary" @click="refresh">
           {{ $t('page.research.domainSources.refresh') }}
         </Button>
       </template>
@@ -165,24 +165,95 @@ function lagClass(lag: number) {
         }}</span>
       </template>
       <template #lag="{ row }">
-        <span :class="lagClass(row.lag_secs)">{{ row.lag_secs }}</span>
-      </template>
-      <template #lastError="{ row }">
         <span
-          v-if="row.last_error"
+          v-if="row.lag_secs !== null"
+          :class="
+            row.status === 'stale' || row.status === 'error'
+              ? 'font-medium text-destructive'
+              : undefined
+          "
+        >
+          {{ row.lag_secs }}
+        </span>
+        <span v-else class="text-muted-foreground">
+          {{ $t('page.research.domainSources.notObserved') }}
+        </span>
+      </template>
+      <template #statusReason="{ row }">
+        <span
+          v-if="row.status_reason"
           class="break-all font-mono text-xs text-destructive"
         >
-          {{ row.last_error }}
+          {{ row.status_reason }}
         </span>
         <span v-else class="text-muted-foreground">—</span>
       </template>
+      <template #cursorStatus="{ row }">
+        <Tag
+          v-if="row.cursor_status"
+          :color="cursorStatusColor(row.cursor_status)"
+        >
+          {{ $t(`enum.domainCursorStatus.${row.cursor_status}`) }}
+        </Tag>
+        <span v-else class="text-muted-foreground">
+          {{ $t('page.research.domainSources.notObserved') }}
+        </span>
+      </template>
+      <template #required="{ row }">
+        <div class="flex flex-wrap gap-1">
+          <Tag :color="row.required ? 'blue' : 'default'">
+            {{
+              $t(
+                row.required
+                  ? 'page.research.domainSources.required'
+                  : 'page.research.domainSources.optional',
+              )
+            }}
+          </Tag>
+          <Tag v-if="row.credential_required" color="warning">
+            {{ $t('page.research.domainSources.credentialRequired') }}
+          </Tag>
+        </div>
+      </template>
       <template #checkpoint="{ row }">
-        <div class="font-mono text-xs">
+        <div v-if="row.checkpoint" class="font-mono text-xs">
           <div>{{ row.checkpoint.kind }}</div>
-          <div class="break-all text-muted-foreground">
+          <div
+            v-if="row.checkpoint_hash"
+            class="break-all text-muted-foreground"
+          >
             {{ row.checkpoint_hash }}
           </div>
         </div>
+        <span v-else class="text-muted-foreground">
+          {{ $t('page.research.domainSources.notObserved') }}
+        </span>
+      </template>
+      <template #lastEvent="{ row }">
+        <span v-if="row.last_event_time">
+          {{ formatDateTimeLocal(row.last_event_time) }}
+        </span>
+        <span v-else class="text-muted-foreground">
+          {{ $t('page.research.domainSources.notObserved') }}
+        </span>
+      </template>
+      <template #cursorUpdated="{ row }">
+        <span v-if="row.cursor_updated_at">
+          {{ formatDateTimeLocal(row.cursor_updated_at) }}
+        </span>
+        <span v-else class="text-muted-foreground">
+          {{ $t('page.research.domainSources.notObserved') }}
+        </span>
+      </template>
+      <template #affected="{ row }">
+        <span class="text-xs">
+          {{
+            $t('page.research.domainSources.affectedCounts', {
+              markets: row.affected_market_ids.length,
+              profiles: row.affected_profile_ids.length,
+            })
+          }}
+        </span>
       </template>
     </Grid>
   </Page>

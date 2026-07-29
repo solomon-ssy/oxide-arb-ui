@@ -8,7 +8,7 @@ import type {
   WsEnvelope,
 } from '@vben/types';
 
-import type { WsConnectionStatus } from '#/store';
+import type { FeedbackRecoveryReason, WsConnectionStatus } from '#/store';
 
 import { computed, effectScope, ref, watch } from 'vue';
 
@@ -19,10 +19,10 @@ import { WS_CHANNELS } from '@vben/types';
 
 import { message, notification } from 'antdv-next';
 
-import { issueWsTicketApi } from '#/api';
+import { getFeedbackRevisionApi, issueWsTicketApi } from '#/api';
 import { $t } from '#/locales';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useSystemStore, useWsStore } from '#/store';
+import { useFeedbackStore, useSystemStore, useWsStore } from '#/store';
 
 import { authorizedGlobalChannels } from './ws/ws-channel-permissions';
 import { dispatchWsEnvelope } from './ws/ws-dispatch';
@@ -66,6 +66,7 @@ function createQpWs(): QpWsApi {
 
   const api = scope.run(() => {
     const accessStore = useAccessStore();
+    const feedbackStore = useFeedbackStore();
     const systemStore = useSystemStore();
     const wsStore = useWsStore();
     const { hasAccessByCodes } = useQpAccess();
@@ -154,7 +155,15 @@ function createQpWs(): QpWsApi {
 
     function replaySubscriptions() {
       for (const channel of authorizedGlobalChannels(hasAccessByCodes)) {
-        sendCommand({ action: 'subscribe', channel });
+        if (channel === WS_CHANNELS.researchFeedback) {
+          sendCommand({
+            action: 'subscribe',
+            after_revision: feedbackStore.revision,
+            channel,
+          });
+        } else {
+          sendCommand({ action: 'subscribe', channel });
+        }
       }
       sendCommand({ action: 'sync' });
       for (const [marketId, count] of marketRefCounts) {
@@ -206,8 +215,27 @@ function createQpWs(): QpWsApi {
             $t('page.ws.configActivated', { version: event.version_id }),
           );
         },
+        onFeedbackRecoveryRequired(reason) {
+          beginFeedbackRecovery(reason);
+        },
         onMarketResolved() {},
       });
+    }
+
+    function beginFeedbackRecovery(reason: FeedbackRecoveryReason) {
+      if (!desired.value) {
+        return;
+      }
+      generation += 1;
+      reconnectAttempts = 0;
+      clearReconnectTimer();
+      clearHeartbeat();
+
+      const activeSocket = socket;
+      socket = null;
+      socketState.value = 'CLOSED';
+      activeSocket?.close(4002, `feedback cursor recovery: ${reason}`);
+      void openSocket();
     }
 
     function startHeartbeat(ws: WebSocket) {
@@ -249,6 +277,15 @@ function createQpWs(): QpWsApi {
       const attemptGeneration = ++generation;
       socketState.value = 'CONNECTING';
       try {
+        if (feedbackStore.recoveryRequired) {
+          const { revision } = await getFeedbackRevisionApi();
+          if (!desired.value || attemptGeneration !== generation) {
+            return;
+          }
+          if (!feedbackStore.reconcileRevision(revision)) {
+            throw new Error('authoritative feedback revision was rejected');
+          }
+        }
         const { ticket } = await issueWsTicketApi();
         if (!desired.value || attemptGeneration !== generation) {
           return;

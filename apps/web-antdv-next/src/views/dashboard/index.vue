@@ -4,18 +4,21 @@ import type {
   DashboardOverviewView,
   DashboardSection,
   DashboardWindow,
+  FeedbackCycleStatus,
+  FeedbackOverviewView,
   QuantRecommendationView,
 } from '@vben/types';
 
-import { computed, onMounted, ref, watch } from 'vue';
+import type { FeedbackProfileReadinessState } from '../research/feedback/modules/feedback-profile-presentation';
+import type { DashboardSnapshot } from './modules/dashboard-snapshot';
+
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
-import { MotionGroup } from '@vben/plugins/motion';
 
 import {
-  useDebounceFn,
   useDocumentVisibility,
   useIntervalFn,
   usePreferredReducedMotion,
@@ -34,7 +37,6 @@ import {
   Tag,
 } from 'antdv-next';
 
-import { getDashboardOverview } from '#/api/dashboard';
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import {
@@ -52,10 +54,30 @@ import {
 } from '#/shared/components/format/tag-options';
 import KpiStatCard from '#/shared/components/kpi-stat-card.vue';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
+import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
-import { useQuantReportStore, useSystemStore } from '#/store';
+import {
+  useFeedbackStore,
+  useQuantReportStore,
+  useSystemStore,
+  useWsStore,
+} from '#/store';
 
+import {
+  isFeedbackSnapshotCurrent,
+  summarizeDashboardFeedback,
+} from './modules/dashboard-feedback-summary';
+import { DashboardRefreshCoordinator } from './modules/dashboard-refresh-coordinator';
+import {
+  DASHBOARD_FALLBACK_INTERVAL_MS,
+  dashboardWsHealth,
+  isVisibilityRecovery,
+  isWsRecovery,
+  latestWsActivity,
+  shouldPollDashboard,
+} from './modules/dashboard-refresh-policy';
+import { getDashboardSnapshot } from './modules/dashboard-snapshot';
 import EquityDrawdownChart from './modules/equity-drawdown-chart.vue';
 import ExposureTreemap from './modules/exposure-treemap.vue';
 import LifecycleSankey from './modules/lifecycle-sankey.vue';
@@ -66,9 +88,12 @@ import './modules/register-dashboard-charts';
 defineOptions({ name: 'DashboardOverview' });
 
 const router = useRouter();
+const feedbackStore = useFeedbackStore();
 const systemStore = useSystemStore();
 const reportStore = useQuantReportStore();
+const wsStore = useWsStore();
 const qpWs = useQpWs();
+const { hasAccessByCodes } = useQpAccess();
 const {
   canRun: canRunReport,
   openRunReport,
@@ -79,24 +104,45 @@ const visibility = useDocumentVisibility();
 
 const windowValue = ref<DashboardWindow>('7d');
 const overview = ref<DashboardOverviewView | null>(null);
+const feedbackOverview = ref<FeedbackOverviewView | null>(null);
 const initialLoading = ref(true);
 const refreshing = ref(false);
+const refreshPending = ref(false);
 const loadError = ref<null | string>(null);
+const feedbackError = ref<null | string>(null);
 const selectedRecommendation = ref<null | QuantRecommendationView>(null);
 const blockersOpen = ref(false);
 
-const motionVariants = computed(() =>
-  reducedMotion.value === 'reduce'
-    ? { initial: { opacity: 1 }, enter: { opacity: 1 } }
-    : {
-        initial: { opacity: 0, y: 10 },
-        enter: {
-          opacity: 1,
-          transition: { duration: 190, ease: 'easeOut' },
-          y: 0,
-        },
-      },
+const canReadFeedback = computed(() =>
+  hasAccessByCodes(['materialization:read']),
 );
+const feedbackSummary = computed(() =>
+  feedbackOverview.value === null
+    ? null
+    : summarizeDashboardFeedback(feedbackOverview.value),
+);
+const feedbackState = computed(() => {
+  if (!canReadFeedback.value) {
+    return 'permission';
+  }
+  if (refreshPending.value && feedbackOverview.value === null) {
+    return 'loading';
+  }
+  if (feedbackError.value !== null) {
+    return feedbackOverview.value === null ? 'error' : 'stale';
+  }
+  if (
+    feedbackSummary.value === null ||
+    feedbackSummary.value.profiles.length === 0
+  ) {
+    return 'empty';
+  }
+  return feedbackSummary.value.profiles.some(
+    (profile) => profile.readinessState !== 'ready',
+  )
+    ? 'blocked'
+    : 'ready';
+});
 
 function valueOf<T>(section: DashboardSection<T> | undefined): null | T {
   if (section?.state === 'ready' || section?.state === 'stale') {
@@ -263,39 +309,97 @@ const primaryActionLabel = computed(() =>
     : $t('page.dashboard.primaryAction.view_blockers'),
 );
 
-async function loadOverview() {
-  const hasSnapshot = overview.value !== null;
-  if (hasSnapshot) refreshing.value = true;
-  else initialLoading.value = true;
-  loadError.value = null;
-  try {
-    overview.value = await getDashboardOverview(windowValue.value);
-    if (authority.value) {
-      systemStore.applyControlPlaneStatus(authority.value.system);
+const refreshCoordinator = new DashboardRefreshCoordinator<DashboardSnapshot>({
+  fetchOverview: (window, signal) =>
+    getDashboardSnapshot(window, signal, canReadFeedback.value),
+  initialWindow: windowValue.value,
+  onError: () => {
+    loadError.value = $t('page.dashboard.loadError.overview');
+  },
+  onPendingChange: (pending) => {
+    refreshPending.value = pending;
+    initialLoading.value = pending && overview.value === null;
+    refreshing.value = pending && overview.value !== null;
+  },
+  onSnapshot: (snapshot) => {
+    if (snapshot.overview.state === 'ready') {
+      overview.value = snapshot.overview.value;
+      loadError.value = null;
+      const nextAuthority = valueOf(snapshot.overview.value.authority);
+      if (nextAuthority) {
+        systemStore.applyControlPlaneStatus(nextAuthority.system);
+      }
+    } else {
+      loadError.value = $t('page.dashboard.loadError.overview');
     }
-  } catch (error) {
-    loadError.value =
-      error instanceof Error
-        ? error.message
-        : $t('page.dashboard.loadError.overview');
-  } finally {
-    initialLoading.value = false;
-    refreshing.value = false;
-  }
+
+    if (snapshot.feedback.state === 'forbidden') {
+      feedbackOverview.value = null;
+      feedbackError.value = null;
+    } else if (snapshot.feedback.state === 'error') {
+      feedbackError.value = $t('page.dashboard.feedback.loadError');
+    } else if (
+      isFeedbackSnapshotCurrent(snapshot.feedback.value, feedbackStore.revision)
+    ) {
+      feedbackOverview.value = snapshot.feedback.value;
+      feedbackError.value = null;
+    } else {
+      feedbackError.value = $t('page.dashboard.feedback.invalidRevision');
+    }
+  },
+});
+
+function refreshOverview() {
+  refreshCoordinator.refresh();
 }
 
 const { overviewRefreshKey } = useDashboardStatusRefreshKey();
-const reloadForEvent = useDebounceFn(() => void loadOverview(), 300);
-watch(windowValue, () => void loadOverview());
-watch(() => reportStore.revision, reloadForEvent);
+watch(windowValue, (window) => refreshCoordinator.changeWindow(window));
+watch(
+  () => reportStore.revision,
+  () => refreshCoordinator.invalidate(),
+);
+watch(
+  () => feedbackStore.refreshGeneration,
+  () => refreshCoordinator.invalidate(),
+);
 // Never watch `checked_at`: every overview response / WS status frame mints a
 // new timestamp, which re-entered this path and flickered the whole page.
 watch(overviewRefreshKey, (next, previous) => {
-  if (previous && next !== previous) reloadForEvent();
+  if (previous && next !== previous) {
+    refreshCoordinator.invalidate();
+  }
+});
+watch(canReadFeedback, (allowed) => {
+  if (!allowed) {
+    feedbackOverview.value = null;
+    feedbackError.value = null;
+  }
+  refreshCoordinator.refresh();
+});
+watch(
+  () => qpWs.status.value,
+  (next, previous) => {
+    if (isWsRecovery(next, previous)) {
+      refreshCoordinator.refresh();
+    }
+  },
+);
+watch(visibility, (next, previous) => {
+  if (isVisibilityRecovery(next, previous)) {
+    refreshCoordinator.refresh();
+  }
 });
 useIntervalFn(() => {
-  if (visibility.value === 'visible') void loadOverview();
-}, 30_000);
+  const health = dashboardWsHealth(
+    qpWs.status.value,
+    latestWsActivity(wsStore.lastHeartbeatAt, wsStore.lastSyncAt),
+    Date.now(),
+  );
+  if (shouldPollDashboard(health, visibility.value)) {
+    refreshCoordinator.refresh();
+  }
+}, DASHBOARD_FALLBACK_INTERVAL_MS);
 
 function executePrimaryAction() {
   const action = authority.value?.primary_action;
@@ -312,6 +416,17 @@ function navigate(path: string) {
   void router.push(path);
 }
 
+function openFeedbackCycle(cycleId: null | string) {
+  if (cycleId === null) {
+    navigate('/research/feedback');
+    return;
+  }
+  void router.push({
+    path: '/research/feedback',
+    query: { cycle_id: cycleId, view: 'cycles' },
+  });
+}
+
 function openSelectedRecommendation() {
   const recommendation = selectedRecommendation.value;
   if (!recommendation) return;
@@ -324,11 +439,21 @@ function severityStatus(severity: DashboardActionItemView['severity']) {
   return 'processing';
 }
 
-function sectionLabel(section: DashboardSection<unknown>) {
-  return $t(`page.dashboard.section.${section.state}`);
+function readinessColor(state: FeedbackProfileReadinessState) {
+  if (state === 'ready') return 'success';
+  if (state === 'blocked') return 'error';
+  return 'warning';
 }
 
-onMounted(() => void loadOverview());
+function feedbackStatusColor(status: FeedbackCycleStatus | null) {
+  if (status === 'cancelled' || status === 'failed') return 'error';
+  if (status === 'running') return 'processing';
+  if (status === 'succeeded') return 'success';
+  return status === 'queued' ? 'default' : 'warning';
+}
+
+onMounted(() => refreshCoordinator.refresh());
+onBeforeUnmount(() => refreshCoordinator.dispose());
 </script>
 
 <template>
@@ -342,7 +467,7 @@ onMounted(() => void loadOverview());
         type="error"
       >
         <template #action>
-          <Button size="small" @click="loadOverview">
+          <Button size="small" @click="refreshOverview">
             {{ $t('page.shared.asyncState.retry') }}
           </Button>
         </template>
@@ -350,169 +475,162 @@ onMounted(() => void loadOverview());
 
       <Skeleton v-if="initialLoading" :paragraph="{ rows: 14 }" active />
 
-      <template v-else-if="overview">
-        <section
-          class="command-rail bg-card relative overflow-hidden rounded-xl border p-4"
-          aria-labelledby="dashboard-authority-title"
-        >
-          <div class="pointer-events-none absolute inset-0 opacity-40"></div>
-          <div
-            class="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
+      <template v-else>
+        <template v-if="overview">
+          <section
+            class="command-rail bg-card relative overflow-hidden rounded-xl border p-4"
+            aria-labelledby="dashboard-authority-title"
           >
-            <div>
-              <div class="flex items-center gap-2">
-                <IconifyIcon
-                  icon="lucide:scan-line"
-                  class="text-primary size-5"
-                />
-                <h1
-                  id="dashboard-authority-title"
-                  class="text-lg font-semibold"
-                >
-                  {{ $t('page.dashboard.commandCenter.title') }}
-                </h1>
-                <Tag v-if="refreshing" color="processing">
-                  {{ $t('page.dashboard.commandCenter.refreshing') }}
-                </Tag>
-                <Tag v-else-if="partialSections.length > 0" color="warning">
-                  {{
-                    $t('page.dashboard.commandCenter.partial', {
-                      count: partialSections.length,
-                    })
-                  }}
-                </Tag>
+            <div class="pointer-events-none absolute inset-0 opacity-40"></div>
+            <div
+              class="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
+            >
+              <div>
+                <div class="flex items-center gap-2">
+                  <IconifyIcon
+                    icon="lucide:scan-line"
+                    class="text-primary size-5"
+                  />
+                  <h1
+                    id="dashboard-authority-title"
+                    class="text-lg font-semibold"
+                  >
+                    {{ $t('page.dashboard.commandCenter.title') }}
+                  </h1>
+                  <Tag v-if="refreshing" color="processing">
+                    {{ $t('page.dashboard.commandCenter.refreshing') }}
+                  </Tag>
+                  <Tag v-else-if="partialSections.length > 0" color="warning">
+                    {{
+                      $t('page.dashboard.commandCenter.partial', {
+                        count: partialSections.length,
+                      })
+                    }}
+                  </Tag>
+                </div>
+                <p class="text-muted-foreground mt-1 text-sm">
+                  {{ $t('page.dashboard.commandCenter.subtitle') }}
+                </p>
               </div>
-              <p class="text-muted-foreground mt-1 text-sm">
-                {{ $t('page.dashboard.commandCenter.subtitle') }}
-              </p>
+              <div class="flex flex-wrap items-center gap-2">
+                <Segmented
+                  v-model:value="windowValue"
+                  :options="[
+                    { label: '24H', value: '24h' },
+                    { label: '7D', value: '7d' },
+                    { label: '30D', value: '30d' },
+                  ]"
+                />
+                <Button
+                  class="min-h-11"
+                  data-testid="dashboard-primary-action"
+                  :disabled="!authority?.primary_action_enabled"
+                  :loading="refreshing"
+                  type="primary"
+                  @click="executePrimaryAction"
+                >
+                  <IconifyIcon icon="lucide:crosshair" />
+                  {{ primaryActionLabel }}
+                </Button>
+              </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <Segmented
-                v-model:value="windowValue"
-                :options="[
-                  { label: '24H', value: '24h' },
-                  { label: '7D', value: '7d' },
-                  { label: '30D', value: '30d' },
-                ]"
+            <dl
+              v-if="authority"
+              class="relative mt-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-3 xl:grid-cols-6"
+            >
+              <div class="status-cell">
+                <dt>{{ $t('page.dashboard.status.runtimeMode') }}</dt>
+                <dd>
+                  <Tag :color="runtimeModeTag?.color ?? 'default'">
+                    {{ runtimeModeTag?.label ?? '—' }}
+                  </Tag>
+                </dd>
+              </div>
+              <div class="status-cell">
+                <dt>{{ $t('page.dashboard.status.killSwitch') }}</dt>
+                <dd>
+                  <Tag :color="killSwitchTag?.color ?? 'default'">
+                    {{ killSwitchTag?.label ?? '—' }}
+                  </Tag>
+                </dd>
+              </div>
+              <div class="status-cell">
+                <dt>{{ $t('page.dashboard.status.ws') }}</dt>
+                <dd>
+                  <Tag :color="wsColor[qpWs.status.value]">
+                    {{ $t(`page.ws.status.${qpWs.status.value}`) }}
+                  </Tag>
+                </dd>
+              </div>
+              <div class="status-cell" data-screenshot-volatile="true">
+                <dt>{{ $t('page.dashboard.status.bookFreshness') }}</dt>
+                <dd>
+                  {{
+                    authority.system.market_data.last_message_age_ms ?? '—'
+                  }}ms
+                </dd>
+              </div>
+              <div class="status-cell">
+                <dt>{{ $t('page.dashboard.status.latestReport') }}</dt>
+                <dd>
+                  {{ formatDateTimeLocal(latestReport?.report.decision_at) }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <div class="grid grid-cols-2 gap-4 xl:grid-cols-5">
+            <KpiStatCard
+              v-for="(kpi, index) in kpis"
+              :key="kpi.title"
+              :accent="kpi.accent"
+              :class="
+                index === kpis.length - 1 && kpis.length % 2 === 1
+                  ? 'col-span-2 xl:col-span-1'
+                  : undefined
+              "
+              :decimals="kpi.decimals"
+              :delay="index * 35"
+              :duration="reducedMotion === 'reduce' ? 0 : 700"
+              :end-val="kpi.endVal"
+              :icon="kpi.icon"
+              :prefix="kpi.prefix"
+              :suffix="kpi.suffix"
+              :title="kpi.title"
+            >
+              <template #footer>{{ kpi.footer }}</template>
+            </KpiStatCard>
+          </div>
+
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+            <div class="xl:col-span-7">
+              <EquityDrawdownChart :section="overview.equity_curve" />
+            </div>
+            <div class="xl:col-span-5">
+              <RecommendationOrbit
+                :recommendations="latestReport?.recommendations ?? []"
+                @open-reports="navigate('/quant/reports')"
+                @select="selectedRecommendation = $event"
               />
-              <Button
-                data-testid="dashboard-primary-action"
-                :disabled="!authority?.primary_action_enabled"
-                :loading="refreshing"
-                type="primary"
-                @click="executePrimaryAction"
-              >
-                <IconifyIcon icon="lucide:crosshair" />
-                {{ primaryActionLabel }}
-              </Button>
             </div>
           </div>
-          <dl
-            v-if="authority"
-            class="relative mt-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-3 xl:grid-cols-6"
-          >
-            <div class="status-cell">
-              <dt>{{ $t('page.dashboard.status.runtimeMode') }}</dt>
-              <dd>
-                <Tag :color="runtimeModeTag?.color ?? 'default'">
-                  {{ runtimeModeTag?.label ?? '—' }}
-                </Tag>
-              </dd>
-            </div>
-            <div class="status-cell">
-              <dt>{{ $t('page.dashboard.status.killSwitch') }}</dt>
-              <dd>
-                <Tag :color="killSwitchTag?.color ?? 'default'">
-                  {{ killSwitchTag?.label ?? '—' }}
-                </Tag>
-              </dd>
-            </div>
-            <div class="status-cell">
-              <dt>{{ $t('page.dashboard.status.ws') }}</dt>
-              <dd>
-                <Tag :color="wsColor[qpWs.status.value]">
-                  {{ $t(`page.ws.status.${qpWs.status.value}`) }}
-                </Tag>
-              </dd>
-            </div>
-            <div class="status-cell" data-screenshot-volatile="true">
-              <dt>{{ $t('page.dashboard.status.bookFreshness') }}</dt>
-              <dd>
-                {{ authority.system.market_data.last_message_age_ms ?? '—' }}ms
-              </dd>
-            </div>
-            <div class="status-cell">
-              <dt>{{ $t('page.dashboard.status.latestReport') }}</dt>
-              <dd>
-                {{ formatDateTimeLocal(latestReport?.report.decision_at) }}
-              </dd>
-            </div>
-          </dl>
-        </section>
 
-        <MotionGroup
-          is="div"
-          class="grid grid-cols-2 gap-4 xl:grid-cols-5"
-          :variants="motionVariants"
-        >
-          <KpiStatCard
-            v-for="(kpi, index) in kpis"
-            :key="kpi.title"
-            :accent="kpi.accent"
-            :class="
-              index === kpis.length - 1 && kpis.length % 2 === 1
-                ? 'col-span-2 xl:col-span-1'
-                : undefined
-            "
-            :decimals="kpi.decimals"
-            :delay="index * 35"
-            :duration="reducedMotion === 'reduce' ? 0 : 700"
-            :end-val="kpi.endVal"
-            :icon="kpi.icon"
-            :prefix="kpi.prefix"
-            :suffix="kpi.suffix"
-            :title="kpi.title"
-          >
-            <template #footer>{{ kpi.footer }}</template>
-          </KpiStatCard>
-        </MotionGroup>
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+            <div class="xl:col-span-7">
+              <LifecycleSankey :section="overview.report_lifecycle" />
+            </div>
+            <div class="xl:col-span-5">
+              <ExposureTreemap :section="overview.exposures" />
+            </div>
+          </div>
+        </template>
 
-        <MotionGroup
-          is="div"
-          class="grid grid-cols-1 gap-5 xl:grid-cols-12"
-          :variants="motionVariants"
-        >
-          <div class="xl:col-span-7">
-            <EquityDrawdownChart :section="overview.equity_curve" />
-          </div>
-          <div class="xl:col-span-5">
-            <RecommendationOrbit
-              :paused="selectedRecommendation !== null"
-              :recommendations="latestReport?.recommendations ?? []"
-              @select="selectedRecommendation = $event"
-            />
-          </div>
-        </MotionGroup>
-
-        <MotionGroup
-          is="div"
-          class="grid grid-cols-1 gap-5 xl:grid-cols-12"
-          :variants="motionVariants"
-        >
-          <div class="xl:col-span-7">
-            <LifecycleSankey :section="overview.report_lifecycle" />
-          </div>
-          <div class="xl:col-span-5">
-            <ExposureTreemap :section="overview.exposures" />
-          </div>
-        </MotionGroup>
-
-        <MotionGroup
-          is="div"
-          class="grid grid-cols-1 gap-5 lg:grid-cols-3"
-          :variants="motionVariants"
+        <div
+          class="grid grid-cols-1 gap-5"
+          :class="{ 'lg:grid-cols-3': overview }"
         >
           <DashboardPanel
+            v-if="overview"
             :title="$t('page.dashboard.dataQuality.title')"
             icon="lucide:gauge"
             tone="sky"
@@ -560,6 +678,7 @@ onMounted(() => void loadOverview());
           </DashboardPanel>
 
           <DashboardPanel
+            v-if="overview"
             :title="$t('page.dashboard.health.title')"
             icon="lucide:heart-pulse"
             tone="teal"
@@ -598,115 +717,230 @@ onMounted(() => void loadOverview());
           </DashboardPanel>
 
           <DashboardPanel
-            :title="$t('page.dashboard.research.title')"
-            icon="lucide:flask-conical"
+            :title="$t('page.dashboard.feedback.title')"
+            icon="lucide:refresh-cw"
             tone="violet"
           >
-            <template v-if="valueOf(overview.research_readiness)">
-              <Progress
-                :aria-label="$t('page.dashboard.research.progressAria')"
-                :percent="
-                  Math.min(
-                    100,
-                    Math.round(
-                      ((valueOf(overview.research_readiness)
-                        ?.observed_history_days ?? 0) /
-                        200) *
-                        100,
-                    ),
-                  )
-                "
-                :success="{
-                  percent: valueOf(overview.research_readiness)
-                    ?.factor_gate_ready
-                    ? 100
-                    : 0,
-                }"
-                :title="$t('page.dashboard.research.progressAria')"
-                type="dashboard"
+            <template #extra>
+              <Button
+                v-if="canReadFeedback"
+                class="min-h-11"
+                size="small"
+                type="text"
+                @click="navigate('/research/feedback')"
+              >
+                {{ $t('page.dashboard.feedback.open') }}
+              </Button>
+            </template>
+
+            <div aria-live="polite" class="sr-only" role="status">
+              {{ $t(`page.dashboard.feedback.state.${feedbackState}`) }}
+            </div>
+
+            <Skeleton
+              v-if="feedbackState === 'loading'"
+              active
+              :paragraph="{ rows: 5 }"
+            />
+            <Alert
+              v-else-if="feedbackState === 'permission'"
+              :message="$t('page.dashboard.feedback.permission')"
+              show-icon
+              type="warning"
+            />
+            <Alert
+              v-else-if="feedbackState === 'error'"
+              :description="$t('page.dashboard.feedback.errorDescription')"
+              :message="
+                feedbackError ?? $t('page.dashboard.feedback.loadError')
+              "
+              show-icon
+              type="error"
+            />
+            <template v-else>
+              <Alert
+                v-if="feedbackError"
+                class="mb-3"
+                :description="$t('page.dashboard.feedback.staleDescription')"
+                :message="feedbackError"
+                show-icon
+                type="warning"
               />
-              <p class="mt-3 text-center text-sm">
+              <Alert
+                v-if="feedbackState === 'blocked'"
+                class="mb-3"
+                :message="$t('page.dashboard.feedback.blocked')"
+                show-icon
+                type="warning"
+              />
+              <ul v-if="feedbackSummary?.profiles.length" class="grid gap-3">
+                <li
+                  v-for="profile in feedbackSummary.profiles"
+                  :key="profile.profileId"
+                  class="min-w-0 rounded-lg border p-3"
+                >
+                  <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    <span class="min-w-0 flex-1 truncate font-mono text-xs">
+                      {{ profile.profileId }}
+                    </span>
+                    <Tag>
+                      {{
+                        profile.category
+                          ? $t(`enum.marketCategory.${profile.category}`)
+                          : $t(
+                              'page.research.feedback.profile.category.control',
+                            )
+                      }}
+                    </Tag>
+                    <Tag :color="readinessColor(profile.readinessState)">
+                      {{
+                        $t(
+                          `page.research.feedback.profile.readiness.${profile.readinessState}`,
+                        )
+                      }}
+                    </Tag>
+                  </div>
+                  <dl class="mt-3 grid gap-2 text-xs">
+                    <div class="flex items-start justify-between gap-3">
+                      <dt class="text-muted-foreground">
+                        {{ $t('page.dashboard.feedback.history') }}
+                      </dt>
+                      <dd class="text-right font-mono tabular-nums">
+                        <template v-if="profile.observedHistoryDays !== null">
+                          {{ profile.observedHistoryDays }} /
+                          {{
+                            profile.requiredHistoryDays ??
+                            $t('page.research.feedback.profile.notObserved')
+                          }}
+                        </template>
+                        <template v-else>
+                          {{ $t('page.research.feedback.profile.notObserved') }}
+                        </template>
+                      </dd>
+                    </div>
+                    <div class="flex items-start justify-between gap-3">
+                      <dt class="text-muted-foreground">
+                        {{ $t('page.dashboard.feedback.latest') }}
+                      </dt>
+                      <dd class="flex flex-wrap justify-end gap-1 text-right">
+                        <Tag
+                          :color="
+                            feedbackStatusColor(profile.latestCycleStatus)
+                          "
+                        >
+                          {{
+                            profile.latestCycleStatus
+                              ? $t(
+                                  `page.research.feedback.status.${profile.latestCycleStatus}`,
+                                )
+                              : $t('page.research.feedback.profile.notObserved')
+                          }}
+                        </Tag>
+                        <span v-if="profile.latestDecision">
+                          {{
+                            $t(
+                              `page.research.feedback.decision.${profile.latestDecision}`,
+                            )
+                          }}
+                        </span>
+                      </dd>
+                    </div>
+                    <div class="flex items-start justify-between gap-3">
+                      <dt class="text-muted-foreground">
+                        {{ $t('page.dashboard.feedback.updatedAt') }}
+                      </dt>
+                      <dd class="text-right">
+                        {{
+                          profile.latestUpdatedAt
+                            ? formatDateTimeLocal(profile.latestUpdatedAt)
+                            : $t('page.research.feedback.profile.notObserved')
+                        }}
+                      </dd>
+                    </div>
+                  </dl>
+                  <Button
+                    v-if="profile.latestCycleId"
+                    class="mt-2 w-full"
+                    size="small"
+                    type="text"
+                    @click="openFeedbackCycle(profile.latestCycleId)"
+                  >
+                    {{ $t('page.dashboard.feedback.openCycle') }}
+                  </Button>
+                </li>
+              </ul>
+              <Empty
+                v-else
+                :description="$t('page.dashboard.feedback.empty')"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
+              <p
+                v-if="feedbackSummary"
+                class="text-muted-foreground mt-3 text-right text-xs"
+                data-screenshot-volatile="true"
+              >
                 {{
-                  valueOf(overview.research_readiness)?.observed_history_days ??
-                  0
+                  $t('page.dashboard.feedback.revision', {
+                    revision: feedbackSummary.revision,
+                    time: formatDateTimeLocal(feedbackSummary.generatedAt),
+                  })
                 }}
-                / 200 {{ $t('page.dashboard.research.days') }}
               </p>
             </template>
-            <div
-              v-else
-              class="flex h-full min-h-40 flex-col items-center justify-center text-center"
-            >
-              <IconifyIcon
-                icon="lucide:shield-question"
-                class="text-muted-foreground mb-3 size-8"
-              />
-              <p class="text-sm font-medium">
-                {{ sectionLabel(overview.research_readiness) }}
-              </p>
-              <p class="text-muted-foreground mt-1 max-w-xs text-xs">
-                {{ $t('page.dashboard.research.evidenceMissing') }}
-              </p>
-              <Button
-                class="mt-3"
-                size="small"
-                @click="navigate('/research/datasets')"
-              >
-                {{ $t('page.dashboard.research.open') }}
-              </Button>
-            </div>
           </DashboardPanel>
-        </MotionGroup>
+        </div>
 
-        <DashboardPanel
-          :title="$t('page.dashboard.inbox.title')"
-          icon="lucide:inbox"
-          tone="amber"
-        >
-          <div v-if="actions.length > 0" class="grid gap-2">
-            <button
-              v-for="action in actions"
-              :key="action.id"
-              class="hover:bg-accent focus-visible:ring-primary grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border px-3 py-3 text-left focus-visible:ring-2 focus-visible:outline-none"
-              type="button"
-              @click="navigate(action.target_route)"
-            >
-              <Badge :status="severityStatus(action.severity)" />
-              <span class="min-w-0">
-                <span class="block truncate text-sm font-medium">{{
-                  $t(`page.dashboard.inbox.reason.${action.reason_code}`)
-                }}</span>
-                <span class="text-muted-foreground block text-xs">{{
-                  $t('page.dashboard.inbox.owner', { owner: action.owner })
-                }}</span>
-                <span class="text-muted-foreground block text-xs">{{
-                  formatDateTimeLocal(action.observed_at)
-                }}</span>
-              </span>
-              <IconifyIcon
-                icon="lucide:arrow-up-right"
-                class="text-muted-foreground size-4"
-              />
-            </button>
-          </div>
-          <Empty
-            v-else
-            :description="$t('page.dashboard.inbox.clear')"
-            :image="Empty.PRESENTED_IMAGE_SIMPLE"
-          />
-        </DashboardPanel>
+        <template v-if="overview">
+          <DashboardPanel
+            :title="$t('page.dashboard.inbox.title')"
+            icon="lucide:inbox"
+            tone="amber"
+          >
+            <div v-if="actions.length > 0" class="grid gap-2">
+              <button
+                v-for="action in actions"
+                :key="action.id"
+                class="hover:bg-accent focus-visible:ring-primary grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border px-3 py-3 text-left focus-visible:ring-2 focus-visible:outline-none"
+                type="button"
+                @click="navigate(action.target_route)"
+              >
+                <Badge :status="severityStatus(action.severity)" />
+                <span class="min-w-0">
+                  <span class="block truncate text-sm font-medium">{{
+                    $t(`page.dashboard.inbox.reason.${action.reason_code}`)
+                  }}</span>
+                  <span class="text-muted-foreground block text-xs">{{
+                    $t('page.dashboard.inbox.owner', { owner: action.owner })
+                  }}</span>
+                  <span class="text-muted-foreground block text-xs">{{
+                    formatDateTimeLocal(action.observed_at)
+                  }}</span>
+                </span>
+                <IconifyIcon
+                  icon="lucide:arrow-up-right"
+                  class="text-muted-foreground size-4"
+                />
+              </button>
+            </div>
+            <Empty
+              v-else
+              :description="$t('page.dashboard.inbox.clear')"
+              :image="Empty.PRESENTED_IMAGE_SIMPLE"
+            />
+          </DashboardPanel>
 
-        <p
-          class="text-muted-foreground text-right text-xs"
-          data-screenshot-volatile="true"
-        >
-          {{
-            $t('page.dashboard.commandCenter.revision', {
-              revision: overview.revision.slice(0, 8),
-              time: formatDateTimeLocal(overview.generated_at),
-            })
-          }}
-        </p>
+          <p
+            class="text-muted-foreground text-right text-xs"
+            data-screenshot-volatile="true"
+          >
+            {{
+              $t('page.dashboard.commandCenter.revision', {
+                revision: overview.revision.slice(0, 8),
+                time: formatDateTimeLocal(overview.generated_at),
+              })
+            }}
+          </p>
+        </template>
       </template>
 
       <Drawer

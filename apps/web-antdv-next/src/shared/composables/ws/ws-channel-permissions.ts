@@ -19,6 +19,7 @@ export const WS_CHANNEL_PERMISSIONS: Record<WsChannel, string> = {
   [WS_CHANNELS.quantReport]: 'quant_report:read',
   [WS_CHANNELS.quantReportRun]: 'quant_report:read',
   [WS_CHANNELS.quantSettlement]: 'settlement_redeem:read',
+  [WS_CHANNELS.researchFeedback]: 'materialization:read',
   [WS_CHANNELS.systemAlert]: 'system:read',
   [WS_CHANNELS.systemStatus]: 'system:read',
 };

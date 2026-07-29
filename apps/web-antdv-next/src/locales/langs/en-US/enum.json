@@ -566,6 +566,14 @@
     "live": "Live",
     "error": "Error"
   },
+  "domainSourceExpectationStatus": {
+    "not_started": "Not started",
+    "live": "Live",
+    "stale": "Stale",
+    "credential_blocked": "Credential blocked",
+    "error": "Error",
+    "unsupported": "Unsupported"
+  },
   "priceComparator": {
     "up_vs_reference": "Up vs reference",
     "above": "Above strike",

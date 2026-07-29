@@ -73,6 +73,7 @@
     "researchBacktests": "回测",
     "researchJobs": "任务中心",
     "researchFeatureIntegrity": "特征完整性",
+    "researchFeedback": "反馈与再训练",
     "researchFactors": "因子",
     "researchCalibrationArtifacts": "校准产物",
     "researchMarketLinkages": "市场联动",
@@ -176,6 +177,331 @@
     "common": {
       "timeRangeStart": "起始",
       "timeRangeEnd": "结束"
+    },
+    "copyValue": "复制{label}",
+    "copiedValue": "已复制{label}",
+    "feedback": {
+      "title": "反馈与再训练",
+      "description": "审计持久化反馈周期、再训练就绪度与受治理决策。WebSocket 事件只用于使这些权威 REST 视图失效。",
+      "refresh": "刷新",
+      "retry": "重试",
+      "loadError": "无法加载反馈数据",
+      "loadErrorDescription": "当前没有可用的权威反馈快照，请在服务恢复后重试。",
+      "staleDescription": "刷新重试期间继续显示上一份已验证快照。",
+      "blockedTitle": "就绪度证据不可用",
+      "blockedDescription": "历史与队列事实仍可审计，但在后端提供已验证的留存与延迟证据前，再训练就绪度保持阻断。",
+      "state": {
+        "permission": "无权访问反馈工作台",
+        "loading": "正在加载反馈工作台",
+        "error": "反馈工作台加载失败",
+        "empty": "没有反馈周期",
+        "blocked": "反馈就绪度已阻断",
+        "ready": "反馈工作台已就绪"
+      },
+      "tabs": {
+        "overview": "概览",
+        "cycles": "周期"
+      },
+      "queue": {
+        "queued": "排队周期",
+        "running": "运行中周期",
+        "pendingOutbox": "待发布 Outbox 事件"
+      },
+      "overview": {
+        "profileCount": "内置画像",
+        "revision": "持久化修订号",
+        "generatedAt": "快照生成时间"
+      },
+      "profile": {
+        "sectionTitle": "内置画像证据",
+        "sectionDescription": "已验证就绪度由当前快照共享；覆盖率、最新周期与冠军模型标识保持为各画像独立的服务端事实。",
+        "empty": "权威快照中没有内置画像。",
+        "version": "版本 {version}",
+        "category": {
+          "control": "对照组"
+        },
+        "activationTrack": "激活轨道",
+        "policyHash": "反馈策略哈希",
+        "profileHash": "画像内容哈希",
+        "evaluationWindow": "评估窗口",
+        "days": "{days} 天",
+        "cadence": "反馈节奏",
+        "cooldown": "再训练冷却期",
+        "notObserved": "未观测",
+        "gate": {
+          "passed": "已通过",
+          "blocked": "已阻断",
+          "notObserved": "未观测"
+        },
+        "track": {
+          "research_only": "仅研究",
+          "semi_auto_candidate": "半自动候选"
+        },
+        "readiness": {
+          "title": "已验证就绪度",
+          "ready": "已就绪",
+          "blocked": "已阻断",
+          "not_observed": "未观测",
+          "history": "已观测历史",
+          "historyValue": "{observed} / {required} 天",
+          "retention": "留存门禁",
+          "latency": "延迟门禁",
+          "observedAt": "证据观测时间"
+        },
+        "coverage": {
+          "title": "最新覆盖率",
+          "decision": "服务端决策",
+          "state": {
+            "advance": "继续推进",
+            "no_action": "无需动作",
+            "not_observed": "未观测"
+          },
+          "observed": "覆盖率",
+          "minimum": "最低覆盖率",
+          "matureLabels": "成熟标签",
+          "newMatureLabels": "新增成熟标签",
+          "reason": "原因代码"
+        },
+        "latest": {
+          "title": "最新周期与冠军模型",
+          "status": "周期状态",
+          "cycleId": "周期 ID",
+          "decision": "决策",
+          "championModel": "冠军模型版本",
+          "championHash": "冠军模型服务契约哈希",
+          "updatedAt": "周期更新时间"
+        }
+      },
+      "detail": {
+        "loadError": "无法加载周期详情",
+        "loadErrorDescription": "周期列表仍可用，但当前权威详情快照无法验证。请在服务恢复后重试。",
+        "refreshing": "正在刷新已选周期详情",
+        "empty": "已选周期没有可用的权威详情。",
+        "notObserved": "未观测",
+        "outcome": {
+          "pending": "待决策"
+        },
+        "audit": {
+          "title": "周期审计",
+          "cycleId": "周期 ID",
+          "profile": "研究画像 Artifact",
+          "capabilityHashes": "能力注册表哈希",
+          "trigger": "触发方式",
+          "generation": "代次",
+          "labelCutoff": "标签截止时间",
+          "championModel": "冠军模型版本",
+          "championHash": "冠军模型服务契约哈希",
+          "policyHash": "反馈策略哈希",
+          "familyHash": "候选族哈希",
+          "idempotencyHash": "幂等哈希",
+          "terminalReason": "终态原因代码",
+          "startedAt": "开始时间",
+          "completedAt": "完成时间",
+          "leaseExpiresAt": "租约到期时间",
+          "cancelRequestedAt": "请求取消时间",
+          "createdAt": "创建时间",
+          "updatedAt": "更新时间"
+        },
+        "timeline": {
+          "title": "不可变阶段时间线",
+          "empty": "尚未记录阶段事件。",
+          "aria": "按持久化序号排列的反馈阶段事件",
+          "eventId": "阶段事件 ID",
+          "actor": "操作者",
+          "jobId": "研究任务 ID",
+          "reason": "原因代码",
+          "eventHash": "事件哈希",
+          "evidenceUri": "证据 URI",
+          "evidenceHash": "证据哈希",
+          "createdAt": "持久化时间",
+          "stage": {
+            "trigger": "触发",
+            "coverage": "覆盖率",
+            "drift": "漂移",
+            "dataset_seal": "数据集封存",
+            "training": "训练",
+            "calibration": "校准",
+            "cpcv": "CPCV",
+            "comparison": "比较",
+            "shadow_replay": "影子回放",
+            "decision": "决策"
+          },
+          "event": {
+            "triggered": "已触发",
+            "job_linked": "已关联任务",
+            "started": "已开始",
+            "succeeded": "已成功",
+            "failed": "已失败",
+            "cancellation_requested": "已请求取消",
+            "cancelled": "已取消",
+            "lease_recovered": "已恢复租约"
+          }
+        },
+        "coverage": {
+          "title": "覆盖率与 Cohort",
+          "empty": "没有可用的已验证覆盖率 Artifact。",
+          "decision": "服务端决策",
+          "reason": "原因代码",
+          "ratio": "覆盖率",
+          "minimum": "最低覆盖率",
+          "labels": "成熟标签",
+          "newLabels": "新增成熟标签",
+          "policyEvaluations": "策略评估数",
+          "window": "评估窗口",
+          "artifactId": "Artifact ID",
+          "artifactUri": "Artifact URI",
+          "artifactHash": "Artifact 哈希",
+          "modelLearning": "模型学习",
+          "executionLearning": "执行学习",
+          "policyEvaluation": "策略评估",
+          "candidate": "候选数",
+          "eligible": "合格数",
+          "included": "纳入数"
+        },
+        "drift": {
+          "title": "漂移证据",
+          "empty": "尚未记录漂移报告。",
+          "reportId": "漂移报告 ID",
+          "observed": "观测值",
+          "threshold": "阈值",
+          "samples": "样本数",
+          "baselineWindow": "基准窗口",
+          "evaluationWindow": "评估窗口",
+          "labelCutoff": "标签截止时间",
+          "observedAt": "观测时间",
+          "detailUri": "详情 URI",
+          "detailHash": "详情哈希",
+          "reportHash": "报告哈希",
+          "kind": {
+            "data": "数据漂移",
+            "concept": "概念漂移",
+            "label": "标签漂移"
+          },
+          "metric": {
+            "population_stability_index": "总体稳定性指数",
+            "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p 值",
+            "rank_ic_drop": "Rank IC 下降",
+            "jensen_shannon_divergence": "Jensen–Shannon 散度"
+          },
+          "assessment": {
+            "within_threshold": "阈值内",
+            "threshold_exceeded": "超过阈值",
+            "insufficient_evidence": "证据不足"
+          }
+        },
+        "comparison": {
+          "title": "比较与留出集审计",
+          "empty": "尚未预留一次性评估留出集。",
+          "useId": "评估使用记录 ID",
+          "purpose": "用途",
+          "profileArtifact": "研究画像 Artifact",
+          "datasetPurpose": "数据集用途",
+          "datasetId": "评估数据集 ID",
+          "datasetHash": "评估数据集哈希",
+          "bytesHash": "评估 Artifact 字节哈希",
+          "cohortHash": "Cohort Manifest 哈希",
+          "comparisonHash": "比较契约哈希",
+          "familyHash": "候选族哈希",
+          "semanticHash": "语义使用哈希",
+          "champion": "冠军模型版本",
+          "championHash": "冠军模型服务契约哈希",
+          "cpcvUri": "CPCV Artifact URI",
+          "cpcvHash": "CPCV Artifact 哈希",
+          "useHash": "评估使用哈希",
+          "window": "评估窗口",
+          "labelCutoff": "标签截止时间",
+          "reservedAt": "预留时间",
+          "createdAt": "持久化时间"
+        }
+      },
+      "actions": {
+        "reasonRule": "请输入 4–128 位小写字母、数字、下划线或句点，不得包含空格。",
+        "trigger": {
+          "button": "触发周期",
+          "title": "触发反馈周期",
+          "summary": "为所选权威研究画像冻结并入队一个手动反馈周期。",
+          "profile": "研究画像",
+          "success": "反馈周期已触发。",
+          "replayed": "已精确重放原反馈周期命令。"
+        },
+        "cancel": {
+          "button": "请求取消",
+          "title": "取消反馈周期",
+          "summary": "提交受治理的取消请求；Coordinator 仍是生命周期权威。",
+          "cycle": "反馈周期",
+          "success": "已请求取消反馈周期。",
+          "replayed": "已精确重放原取消命令。"
+        },
+        "permit": {
+          "title": "晋升 Permit",
+          "description": "签发或撤销有界发布权限；本界面绝不晋升模型或路由。",
+          "readDenied": "当前权限无法读取发布 Permit 证据。",
+          "issueTitle": "签发晋升 Permit",
+          "issueSummary": "基于所选 candidate-ready 周期签发有界权限；服务端预检仍是最终权威。",
+          "selectedCycle": "所选 candidate-ready 周期",
+          "noCycle": "未选择周期",
+          "expiresAt": "绝对到期时间",
+          "runtimeModes": "允许的运行模式",
+          "idempotencyKey": "幂等键",
+          "notEligible": "请先选择一个成功且 candidate-ready 的周期。",
+          "invalidInput": "请至少选择一个运行模式，并填写有效的未来到期时间。",
+          "issue": "审阅并签发",
+          "issueSuccess": "晋升 Permit 已签发。",
+          "issueReplayed": "已精确重放原 Permit 签发命令。",
+          "loadError": "无法加载晋升 Permit；继续显示上一份已验证列表。",
+          "empty": "当前没有可见的晋升 Permit。",
+          "profile": "研究画像",
+          "category": "类目",
+          "issuedBy": "签发人",
+          "issuedReason": "签发原因",
+          "scopeHash": "范围哈希",
+          "preflightHash": "预检哈希",
+          "revision": "修订号",
+          "observedAt": "状态观测时间",
+          "permitId": "晋升 Permit",
+          "revoke": "撤销 Permit",
+          "revokeTitle": "撤销晋升 Permit",
+          "revokeSummary": "以 revision-0 compare-and-swap 撤销此发布权限。",
+          "revokeConfirm": "撤销",
+          "revokeSuccess": "晋升 Permit 已撤销。",
+          "revokeReplayed": "已精确重放原 Permit 撤销命令。",
+          "status": {
+            "active": "有效",
+            "expired": "已过期",
+            "revoked": "已撤销"
+          }
+        }
+      },
+      "cycles": {
+        "empty": "本页没有匹配的持久化反馈周期。",
+        "listAria": "反馈周期",
+        "selected": "已选周期",
+        "cycleId": "周期 ID",
+        "profile": "画像",
+        "trigger": "触发方式",
+        "status": "状态",
+        "decision": "决策",
+        "labelCutoff": "标签截止时间",
+        "updatedAt": "更新时间"
+      },
+      "status": {
+        "queued": "排队中",
+        "running": "运行中",
+        "succeeded": "已成功",
+        "failed": "已失败",
+        "cancelled": "已取消"
+      },
+      "trigger": {
+        "scheduled": "定时",
+        "manual": "手动"
+      },
+      "decision": {
+        "pending": "待决策",
+        "no_action": "无需动作",
+        "challenger_rejected": "挑战者已拒绝",
+        "candidate_ready": "候选模型已就绪",
+        "promoted": "已晋升"
+      }
     },
     "tradePolicies": {
       "title": "交易策略",
@@ -1079,6 +1405,7 @@
         "thesisHypothesis": "假设",
         "thesisLimitations": "已知局限",
         "artifactLineage": "Artifact 血缘",
+        "sectionSelector": "模型详情分区",
         "artifactLineageUnavailable": "该受治理的手工模型没有训练 artifact 血缘。",
         "serializedModelHash": "序列化模型哈希",
         "lineageKind": "血缘类型",
@@ -1088,6 +1415,43 @@
         "inputContractHash": "输入契约哈希",
         "inputTransformHash": "输入转换哈希",
         "factorInputs": "归一化因子输入",
+        "servingContract": "服务契约与晋升血缘",
+        "servingContractUnavailable": "完整服务契约尚未加载。",
+        "contractVersion": "契约版本",
+        "derivation": "模型派生类型",
+        "contractHash": "持久化服务契约哈希",
+        "embeddedHash": "内嵌契约哈希",
+        "factorSchemaHash": "因子平面 Schema 哈希",
+        "requiredDomains": "必需 Domain Family",
+        "capabilityHashes": "能力注册表哈希",
+        "capabilityHash": "能力注册表哈希",
+        "factorRevisions": "精确因子修订",
+        "factorRevisionsEmpty": "该经典模型服务契约显式使用空因子平面。",
+        "factorId": "因子定义",
+        "factorRevision": "修订与 Schema 绑定",
+        "factorDefinitionHash": "因子定义哈希",
+        "featureContractHash": "特征契约哈希",
+        "featureSchemaHash": "特征 Schema 哈希",
+        "labelSchemaHash": "标签 Schema 哈希",
+        "policySnapshotHash": "决策策略快照哈希",
+        "datasetManifestHash": "数据集 Manifest 哈希",
+        "datasetBytesHash": "数据集 Artifact 字节哈希",
+        "profileContentHash": "研究 Profile 内容哈希",
+        "modelPayloadHash": "模型 Payload 哈希",
+        "modelCalibrationHash": "模型校准哈希",
+        "biasTableHash": "因子偏差表哈希",
+        "profileArtifacts": "策略 Profile Artifacts",
+        "profileArtifactHash": "{kind} Profile Artifact 哈希",
+        "evaluationLineage": "评估使用血缘（{count}）",
+        "evaluationLineageEmpty": "没有一次性反馈评估使用记录引用此模型。",
+        "feedbackCycle": "反馈周期",
+        "evaluationHash": "评估使用哈希",
+        "promotionLineage": "晋升血缘（{count}）",
+        "promotionLineageEmpty": "没有受治理路由晋升记录引用此模型。",
+        "promotionRole": "晋升角色与生命周期",
+        "permitId": "晋升 Permit",
+        "promotionHash": "晋升事务哈希",
+        "actorReason": "操作者 · 角色 · 原因",
         "parity": "训练—服务一致性",
         "tradePolicy": "交易策略绑定",
         "tradePolicyId": "交易策略 Artifact",
@@ -1235,6 +1599,8 @@
       "detail": {
         "title": "因子定义",
         "summary": "概要",
+        "definitionHash": "定义哈希",
+        "featureContractHash": "特征契约哈希",
         "normalization": "归一化",
         "outputSemantics": "输出语义",
         "required": "是否必需",
@@ -1243,7 +1609,14 @@
         "inputFeatures": "输入特征",
         "inputSchemaVersion": "输入 Schema 版本",
         "outputSchemaVersion": "输出 Schema 版本",
-        "createdAt": "创建时间"
+        "createdAt": "创建时间",
+        "servingUsage": "已验证服务使用",
+        "servingUsageEmpty": "没有模型服务契约消费此因子修订。",
+        "modelVersion": "模型版本",
+        "modelSpec": "模型规格",
+        "profile": "研究画像",
+        "servingContractHash": "服务契约哈希",
+        "artifactHash": "模型 Artifact 哈希"
       },
       "collinearity": {
         "action": "共线分析",
@@ -1546,6 +1919,11 @@
     "domainSources": {
       "listTitle": "域摄取 cursor",
       "refresh": "刷新",
+      "notObserved": "未观测",
+      "required": "必需",
+      "optional": "可选",
+      "credentialRequired": "需要凭据",
+      "affectedCounts": "{markets} 个市场 · {profiles} 个画像",
       "cards": {
         "crypto": "Crypto 来源面",
         "weather": "天气来源面",
@@ -1553,10 +1931,12 @@
         "activeCursors": "活跃 cursor",
         "activeFeeds": "活跃 feed",
         "worstLag": "最大滞后",
+        "notObserved": "未观测",
         "cryptoHint": "Binance kline/aggTrade 与 Chainlink Data Streams checkpoint",
         "weatherHint": "AviationWeather、GHCNh 与 GEFS 站点 checkpoint",
-        "staleCursors": "{count} 个 cursor 滞后 > 5 分钟",
-        "errorCursors": "{count} 个 cursor 处于错误状态"
+        "staleCursors": "{count} 个 expectation 陈旧",
+        "errorCursors": "{count} 个 expectation 失败",
+        "notObservedCursors": "{count} 个 cursor 未观测"
       },
       "table": {
         "title": "摄取 cursor",
@@ -1565,10 +1945,14 @@
         "instrument": "Instrument",
         "checkpoint": "类型化 checkpoint / 哈希",
         "status": "状态",
+        "cursorStatus": "Cursor 状态",
+        "required": "必需性",
+        "statusReason": "状态原因",
+        "freshness": "新鲜度预算 (s)",
         "lag": "滞后 (s)",
-        "lastError": "最近错误",
         "lastEvent": "最近事件",
-        "cursorUpdated": "Cursor 更新"
+        "cursorUpdated": "Cursor 更新",
+        "affected": "影响范围"
       }
     },
     "basisAlerts": {
@@ -1848,8 +2232,6 @@
       "title": "Recommendation Orbit",
       "aria": "最新报告的 TopN 推荐，按类别、排名、信心和建议金额组织。",
       "list": "可键盘操作的 TopN 推荐列表",
-      "play": "播放",
-      "pause": "暂停",
       "drawerTitle": "推荐操作摘要",
       "rank": "排名",
       "market": "市场",
@@ -1858,7 +2240,8 @@
       "expectedReturn": "预期收益",
       "suggested": "建议金额",
       "evidence": "主要因子与证据置信度",
-      "openDetail": "打开完整证据与执行资格"
+      "openDetail": "打开完整证据与执行资格",
+      "openReports": "查看推荐报告"
     },
     "lifecycle": {
       "title": "报告到执行生命周期",
@@ -1869,12 +2252,30 @@
       "aria": "账户按类别聚合的风险敞口树图。",
       "none": "当前账户没有真实敞口"
     },
-    "research": {
-      "title": "研究就绪跑道",
-      "progressAria": "研究样本覆盖进度",
-      "days": "天样本",
-      "evidenceMissing": "尚无可证明 200 天样本、factor gate 和 model gate 的 serving evidence；系统不会伪造进度。",
-      "open": "查看研究就绪证据"
+    "feedback": {
+      "title": "反馈与再训练",
+      "open": "打开工作台",
+      "history": "已验证历史",
+      "latest": "最新反馈",
+      "updatedAt": "更新时间",
+      "openCycle": "打开最近周期",
+      "loadError": "反馈快照加载失败",
+      "invalidRevision": "反馈快照 revision 非法或发生倒退",
+      "permission": "当前账号无权读取反馈证据。",
+      "errorDescription": "当前没有可用的权威反馈快照；Dashboard 其他快照仍可使用。",
+      "staleDescription": "权威刷新暂不可用，当前保留最近一次成功的反馈快照。",
+      "blocked": "至少一个垂直被阻断或尚无已验证的就绪证据。",
+      "empty": "尚无垂直反馈 profile。",
+      "revision": "反馈 revision {revision} · 生成于 {time}",
+      "state": {
+        "permission": "需要反馈证据读取权限",
+        "loading": "正在加载反馈就绪状态",
+        "error": "反馈就绪状态不可用",
+        "stale": "正在显示陈旧反馈就绪状态",
+        "empty": "没有反馈垂直",
+        "blocked": "反馈就绪被阻断",
+        "ready": "反馈就绪可用"
+      }
     },
     "inbox": {
       "title": "Action Inbox",

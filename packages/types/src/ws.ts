@@ -33,6 +33,7 @@ export const WS_CHANNELS = {
   quantReport: 'quant.report',
   quantReportRun: 'quant.report_run',
   quantSettlement: 'quant.settlement',
+  researchFeedback: 'research.feedback',
   systemAlert: 'system.alert',
   systemStatus: 'system.status',
 } as const;
@@ -183,6 +184,18 @@ export interface SettlementRedeemLifecycleEvent {
   state: SettlementCaseState;
 }
 
+/** Closed subject taxonomy for durable feedback invalidation hints. */
+export type ResearchFeedbackSubjectKind = 'feedback_cycle';
+
+/** Lean `research.feedback` invalidation hint; full state is fetched over REST. */
+export interface ResearchFeedbackEvent {
+  revision: number;
+  subject_kind: ResearchFeedbackSubjectKind;
+  subject_id: UuidString;
+  profile_id: string;
+  occurred_at: IsoDateTime;
+}
+
 /** WS `error` reply payload (invalid command / forbidden channel). */
 export interface WsErrorFrame {
   error: string;
@@ -211,6 +224,7 @@ export interface WsChannelPayloads {
   'quant.report': ReportLifecycleEvent;
   'quant.report_run': ReportRunLifecycleEvent;
   'quant.settlement': SettlementRedeemLifecycleEvent;
+  'research.feedback': ResearchFeedbackEvent;
   'system.alert': SystemAlertEvent;
   'system.status': SystemControlPlaneStatus;
 }
@@ -218,6 +232,15 @@ export interface WsChannelPayloads {
 /** Client-to-server command grammar (`action`-tagged). */
 export type WsClientCommand =
   | { action: 'ping' }
-  | { action: 'subscribe'; channel: WsChannel; market_id?: MarketId }
+  | {
+      action: 'subscribe';
+      after_revision: number;
+      channel: typeof WS_CHANNELS.researchFeedback;
+    }
+  | {
+      action: 'subscribe';
+      channel: Exclude<WsChannel, typeof WS_CHANNELS.researchFeedback>;
+      market_id?: MarketId;
+    }
   | { action: 'sync' }
   | { action: 'unsubscribe'; channel: WsChannel; market_id?: MarketId };

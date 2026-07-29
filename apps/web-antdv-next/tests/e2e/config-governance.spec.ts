@@ -24,7 +24,9 @@ async function openConfigResource(
   page: Page,
   resource = 'recommendation_policy',
 ) {
+  await page.waitForLoadState('networkidle');
   await page.goto(`/system/config/${resource}`);
+  await page.waitForLoadState('networkidle');
   await waitForShell(page);
   const workspace = page.getByTestId('config-resource-workspace');
   await expect(workspace).toBeVisible();
@@ -126,6 +128,7 @@ test('permission boundary keeps viewer config access read-only', async ({
   adminApi,
   authenticatedPage,
   browser,
+  browserAudit,
   namespace,
 }) => {
   const adminWorkspace = await openConfigResource(authenticatedPage);
@@ -136,6 +139,7 @@ test('permission boundary keeps viewer config access read-only', async ({
   const viewerContext = await browser.newContext();
   try {
     const viewerPage = await viewerContext.newPage();
+    await browserAudit.track(viewerPage);
     await loginAs(viewerPage, username, VIEWER_PASSWORD);
     const viewerWorkspace = await openConfigResource(viewerPage);
     await expect(
@@ -168,7 +172,9 @@ test('policy lifecycle closes draft validation approval activation and rollback'
   await expect(errorSummary).toBeVisible();
   await errorSummary.getByRole('button').first().click();
   await expect(invalidInput).toBeFocused();
+  await page.waitForLoadState('networkidle');
   await page.reload();
+  await page.waitForLoadState('networkidle');
   await waitForShell(page);
 
   const activeWorkspace = await prepareApprovedDraft(page);
@@ -194,12 +200,14 @@ test('policy lifecycle closes draft validation approval activation and rollback'
 
 test('concurrent policy activation rejects the stale browser generation', async ({
   browser,
+  browserAudit,
 }) => {
   const firstContext = await browser.newContext();
   const secondContext = await browser.newContext();
   try {
     const first = await firstContext.newPage();
     const second = await secondContext.newPage();
+    await Promise.all([browserAudit.track(first), browserAudit.track(second)]);
     await Promise.all([
       loginAs(first, 'admin', 'system-test-bootstrap-admin'),
       loginAs(second, 'admin', 'system-test-bootstrap-admin'),
@@ -213,13 +221,23 @@ test('concurrent policy activation rejects the stale browser generation', async 
       firstWorkspace.getByTestId('config-activation-success'),
     ).toBeVisible();
 
-    await secondWorkspace.getByTestId('activate-config-draft').click();
-    await confirmGovernedAction(
-      second,
-      'production-stack reject stale concurrent generation',
-    );
     const conflict = secondWorkspace.getByTestId('config-activation-conflict');
-    await expect(conflict).toBeVisible();
+    await browserAudit.allowResponse(
+      {
+        method: 'POST',
+        pathname:
+          /^\/api\/config\/recommendation_policy\/drafts\/[^/]+\/activate$/,
+        status: 409,
+      },
+      async () => {
+        await secondWorkspace.getByTestId('activate-config-draft').click();
+        await confirmGovernedAction(
+          second,
+          'production-stack reject stale concurrent generation',
+        );
+        await expect(conflict).toBeVisible();
+      },
+    );
     await expect(conflict).toContainText(/generation|版本|代次/i);
     await expect(
       secondWorkspace.getByTestId('config-activation-success'),

@@ -6,7 +6,7 @@ import {
 } from '../../shared/dataset-manifest';
 import { datasetFixture } from './dataset-test-fixture';
 
-describe('dataset v2 manifest bindings', () => {
+describe('dataset v3 manifest bindings', () => {
   it('accepts an exact structured manifest without substituting any field', () => {
     const value = datasetFixture();
     expect(datasetManifestBindingIssues(value)).toEqual([]);
@@ -17,7 +17,7 @@ describe('dataset v2 manifest bindings', () => {
     const value = datasetFixture();
     const manifest = value.manifest;
     if (!manifest) {
-      throw new Error('test fixture requires a v2 manifest');
+      throw new Error('test fixture requires a v3 manifest');
     }
     value.manifest = {
       ...manifest,
@@ -42,7 +42,7 @@ describe('dataset v2 manifest bindings', () => {
     expect(hasUsableDatasetManifest(value)).toBe(false);
   });
 
-  it('keeps an absent manifest unavailable instead of synthesizing v2', () => {
+  it('keeps an absent manifest unavailable instead of synthesizing v3', () => {
     const value = datasetFixture();
     value.manifest = null;
     expect(datasetManifestBindingIssues(value)).toEqual([]);

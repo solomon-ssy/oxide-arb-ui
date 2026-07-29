@@ -10,6 +10,8 @@ import type {
   CreateModelSpecRequest,
   FactorCollinearityQuery,
   FactorCollinearityView,
+  FactorDefinitionDetailQuery,
+  FactorDefinitionDetailView,
   FactorDefinitionListQuery,
   FactorDefinitionView,
   FeatureIntegrityLatchView,
@@ -19,6 +21,8 @@ import type {
   FeatureParityRunListQuery,
   FeatureParityRunView,
   ModelComparisonReportView,
+  ModelDetailQuery,
+  ModelDetailView,
   ModelPublishedCatalogQuery,
   ModelSpecListQuery,
   ModelVersionListQuery,
@@ -289,8 +293,13 @@ export async function listAllFactors(query: FactorDefinitionListQuery = {}) {
 }
 
 /** `GET /research/factors/{id}` — single factor definition (detail drawer). */
-export async function getFactor(id: string) {
-  return requestClient.get<FactorDefinitionView>(ResearchApi.factor(id));
+export async function getFactor(
+  id: string,
+  query: FactorDefinitionDetailQuery = {},
+) {
+  return requestClient.get<FactorDefinitionDetailView>(ResearchApi.factor(id), {
+    params: query,
+  });
 }
 
 /** `GET /research/factors/collinearity` — Spearman collinearity analysis. */
@@ -335,9 +344,11 @@ export async function trainModel(
   return governedPost<ResearchJobView>(ResearchApi.trainModel, body, ctx);
 }
 
-/** `GET /research/models/{id}` — trained model version. */
-export async function getModel(id: string) {
-  return requestClient.get<TrainedModelView>(ResearchApi.model(id));
+/** `GET /research/models/{id}` — trained model version and paged lineage. */
+export async function getModel(id: string, query: ModelDetailQuery = {}) {
+  return requestClient.get<ModelDetailView>(ResearchApi.model(id), {
+    params: query,
+  });
 }
 
 /**

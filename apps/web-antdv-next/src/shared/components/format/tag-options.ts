@@ -765,6 +765,29 @@ export function useDomainCursorStatusTagOptions() {
   );
 }
 
+/** Capability-declared source expectation status (server-derived). */
+export function useDomainSourceExpectationStatusTagOptions() {
+  return buildTagOptions(
+    [
+      'not_started',
+      'live',
+      'stale',
+      'credential_blocked',
+      'error',
+      'unsupported',
+    ],
+    (value) => $t(`enum.domainSourceExpectationStatus.${value}`),
+    {
+      credential_blocked: 'warning',
+      error: 'error',
+      live: 'success',
+      not_started: 'default',
+      stale: 'warning',
+      unsupported: 'default',
+    },
+  );
+}
+
 /** Market book freshness — maps to antdv `Badge` dot status. */
 export type MarketFreshnessState = 'fresh' | 'stale' | 'unknown';
 

@@ -2,6 +2,7 @@ import type {
   DecimalString,
   IsoDateTime,
   PageQuery,
+  Paginated,
   ProbabilityString,
   TimeRangeQuery,
   UsdString,
@@ -46,6 +47,39 @@ export type ModelPickerSide = 'buy' | 'sell';
 export type TrainingSampleSource = 'exit_decision' | 'historical_pit';
 
 // ── Training datasets ───────────────────────────────────────────────────────
+
+/** Immutable factor-definition document embedded in a serving plane. */
+export interface FactorServingDefinitionDocument {
+  computation: {
+    semantic_key: string;
+    semantic_version: number;
+  };
+  family: FactorFamily;
+  input_features: string[];
+  name: string;
+  normalization: FactorNormalization;
+  output: FactorOutputSemantics;
+  owner: string;
+  required: boolean;
+}
+
+/** Exact immutable factor revision embedded in a serving plane. */
+export interface FactorServingDefinitionRef {
+  definition: FactorServingDefinitionDocument;
+  definition_hash: string;
+  factor_definition_id: UuidString;
+  feature_contract_hash: string;
+  input_schema_version: number;
+  output_schema_version: number;
+  revision_version: number;
+}
+
+/** Complete content-addressed factor revision plane. */
+export interface FactorServingPlane {
+  definitions: FactorServingDefinitionRef[];
+  factor_schema_hash: string;
+  format_version: number;
+}
 
 /** Aggregate counts of exclusion reasons for a market selection snapshot. */
 export interface SelectionExclusionSummary {
@@ -160,15 +194,17 @@ export interface DatasetCohortManifest {
   window: DatasetCohortWindow;
 }
 
-/** Exact v2 manifest embedded in Parquet and persisted in the dataset ledger. */
+/** Exact v3 manifest embedded in Parquet and persisted in the dataset ledger. */
 export interface DatasetManifestView {
   cohort_manifest: DatasetCohortManifest | null;
-  factor_schema_hash: string;
+  factor_serving_plane: FactorServingPlane;
   feature_schema_hash: string;
+  feature_schema_version: number;
   format_version: number;
   horizons_secs: number[];
   knowledge_lag_secs: number;
   label_schema_hash: string;
+  model_family: ModelFamily;
   model_spec_id: string;
   model_spec_definition_hash: string;
   purpose: DatasetPurpose;
@@ -238,7 +274,9 @@ export type ReturnModelView =
 export interface TrainingDatasetView {
   training_dataset_id: UuidString;
   model_spec_id: string;
+  model_family: ModelFamily;
   model_spec_definition_hash: string;
+  factor_serving_plane: FactorServingPlane;
   research_profile_artifact_id: string;
   source_slice_id: UuidString;
   pit_cutoff: IsoDateTime;
@@ -249,8 +287,8 @@ export interface TrainingDatasetView {
   window_end: IsoDateTime;
   status: TrainingDatasetStatus;
   purpose: DatasetPurpose;
-  feature_schema_hash: null | string;
-  factor_schema_hash: null | string;
+  feature_schema_hash: string;
+  factor_schema_hash: string;
   label_schema_hash: null | string;
   dataset_hash: null | string;
   manifest_hash: null | string;
@@ -264,7 +302,7 @@ export interface TrainingDatasetView {
   sample_interval_secs: number;
   /** Forward label horizons frozen into this dataset (seconds). */
   horizons_secs: number[];
-  feature_schema_version: null | number;
+  feature_schema_version: number;
   sample_sources: null | TrainingSampleSource[];
   coverage: DatasetCoverage | null;
   decision_policy_snapshot_id: UuidString;
@@ -1029,6 +1067,30 @@ export interface FactorDefinitionView {
   required: boolean;
   created_at: IsoDateTime;
 }
+
+/** One verified model-serving contract that consumes this immutable factor. */
+export interface FactorServingUsageView {
+  model_version_id: UuidString;
+  model_spec_id: string;
+  model_spec_name: string;
+  model_family: ModelFamily;
+  version: number;
+  category_scope: MarketCategory | null;
+  profile_ref: ResearchProfileRef;
+  artifact_hash: string;
+  serving_contract_version: number;
+  serving_contract_hash: string;
+  publication_status: PublicationStatus;
+  created_at: IsoDateTime;
+}
+
+/** Immutable definition plus independently paginated serving usages. */
+export interface FactorDefinitionDetailView {
+  definition: FactorDefinitionView;
+  serving_usage: Paginated<FactorServingUsageView>;
+}
+
+export type FactorDefinitionDetailQuery = PageQuery;
 
 /** Filter + pagination for `GET /research/factors`. */
 export interface FactorDefinitionListQuery extends PageQuery {

@@ -1,5 +1,6 @@
 export * from './auth';
 export * from './entry-condition';
+export * from './feedback';
 export * from './market';
 export * from './order-intent';
 export * from './quant-report';

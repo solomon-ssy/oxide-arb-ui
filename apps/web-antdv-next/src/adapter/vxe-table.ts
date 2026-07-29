@@ -263,12 +263,17 @@ setupVbenVxeTable({
           const buttonContent = opt.text
             ? [iconVNode, h('span', {}, opt.text)]
             : [iconVNode];
+          const accessibleName =
+            opt['aria-label'] ??
+            (isString(opt.tooltip) ? opt.tooltip : opt.text);
 
           const baseButton = h(
             Button,
             {
               ...props,
               ...objectOmit(opt, ['dropdown', 'icon', 'text', 'tooltip']),
+              'aria-label': accessibleName,
+              class: ['min-h-11 min-w-11', props?.class, opt.class],
               onClick: listen
                 ? () =>
                     attrs?.onClick?.({

@@ -5,6 +5,8 @@ import process from 'node:process';
 import AxeBuilder from '@axe-core/playwright';
 import { test as base, expect, request } from 'playwright/test';
 
+import { BrowserFailureAudit } from './browser-failure-audit';
+
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'system-test-bootstrap-admin';
 
@@ -29,6 +31,7 @@ interface ApiPage<T> {
 
 interface BrowserFixtures {
   authenticatedPage: Page;
+  browserAudit: BrowserFailureAudit;
 }
 
 interface WorkerFixtures {
@@ -63,10 +66,21 @@ export const test = base.extend<BrowserFixtures, WorkerFixtures>({
     },
     { scope: 'worker' },
   ],
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ browserAudit, page }, use) => {
+    await browserAudit.track(page);
     await login(page);
     await use(page);
   },
+  browserAudit: [
+    async ({ page }, use) => {
+      const audit = new BrowserFailureAudit();
+      await audit.track(page);
+      await use(audit);
+      await audit.settle();
+      expect(audit.failures, audit.failures.join('\n')).toEqual([]);
+    },
+    { auto: true },
+  ],
   backendUrl: [
     async ({}, use) => {
       await use(process.env.PLAYWRIGHT_BACKEND_URL ?? 'http://127.0.0.1:8088');

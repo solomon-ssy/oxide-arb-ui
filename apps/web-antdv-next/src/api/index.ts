@@ -4,6 +4,7 @@ export * from './config';
 export * from './core';
 export * from './data-quality';
 export * from './execution-orders';
+export * from './feedback';
 export * from './markets';
 export * from './operation-logs';
 export * from './order-intents';

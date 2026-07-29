@@ -2,6 +2,7 @@
 import type {
   BacktestPathSetView,
   BacktestReportView,
+  ModelDetailView,
   QualityGateReportView,
   ResearchJobView,
   ReturnModelView,
@@ -27,6 +28,8 @@ import {
   DescriptionsItem,
   Empty,
   message,
+  Pagination,
+  Select,
   Space,
   Spin,
   TabPane,
@@ -58,12 +61,17 @@ import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useResearchStore } from '#/store';
 
+import CopyableHash from '../../shared/copyable-hash.vue';
 import CpcvValidationPanel from '../../shared/cpcv-validation-panel.vue';
 import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
 import ModelBacktestModal from './model-backtest-modal.vue';
 import ModelBindCalibrationModal from './model-bind-calibration-modal.vue';
 import ModelCpcvModal from './model-cpcv-modal.vue';
 import ModelMetricsPanel from './model-metrics-panel.vue';
+import {
+  modelServingCommitments,
+  modelServingLineage,
+} from './model-serving-lineage';
 
 defineOptions({ name: 'ModelDetailDrawer' });
 
@@ -87,6 +95,7 @@ const canReplay = hasAccessByCodes(['replay:create']);
 const SELL_MODEL_FAMILY = 'hold_vs_exit_weighted';
 
 const model = ref<null | TrainedModelView>(null);
+const modelDetail = ref<ModelDetailView | null>(null);
 const modelFamily = ref<null | string>(null);
 const isSellFamily = computed(
   () =>
@@ -109,10 +118,37 @@ const loading = ref(false);
 const gateLoading = ref(false);
 const bindPathSetLoading = ref(false);
 const openId = ref<null | string>(null);
+const evaluationPage = ref(1);
+const EVALUATION_PAGE_SIZE = 20;
+const activeDetailTab = ref('input-contract');
+const detailTabOptions = computed(() => [
+  {
+    label: $t('page.research.models.detail.artifactLineage'),
+    value: 'input-contract',
+  },
+  {
+    label: $t('page.research.models.detail.servingContract'),
+    value: 'serving-contract',
+  },
+  {
+    label: $t('page.research.models.detail.parity'),
+    value: 'parity',
+  },
+  {
+    label: $t('page.research.models.detail.tradePolicy'),
+    value: 'trade-policy',
+  },
+]);
 
 const metrics = computed(() => model.value?.metrics);
 const statusTag = computed(() =>
   findTagOption(statusTagOptions, model.value?.publication_status),
+);
+const servingLineage = computed(() =>
+  modelDetail.value ? modelServingLineage(modelDetail.value) : null,
+);
+const servingCommitments = computed(() =>
+  modelDetail.value ? modelServingCommitments(modelDetail.value) : null,
 );
 
 const cpcvInProgress = computed(() => !!activeCpcvJob.value);
@@ -396,7 +432,14 @@ async function refresh(id: string) {
   gateLoading.value = true;
   try {
     const [fresh, reports, listed, jobs] = await Promise.all([
-      handleRequest(() => getModel(id), { silent: true }),
+      handleRequest(
+        () =>
+          getModel(id, {
+            page: evaluationPage.value,
+            size: EVALUATION_PAGE_SIZE,
+          }),
+        { silent: true },
+      ),
       handleRequest(
         () => listBacktestReports({ model_version_id: id, size: 50 }),
         { silent: true },
@@ -416,6 +459,7 @@ async function refresh(id: string) {
     ]);
     if (openId.value === id) {
       model.value = fresh ?? null;
+      modelDetail.value = fresh ?? null;
       if (fresh) {
         modelFamily.value = String(fresh.model_family);
       }
@@ -466,13 +510,17 @@ async function refresh(id: string) {
 }
 
 const [Drawer, drawerApi] = useVbenDrawer({
+  closeOnPressEscape: true,
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
       const data = drawerApi.getData<ModelDrawerData>();
       openId.value = data.model.model_version_id;
       model.value = data.model;
+      modelDetail.value = null;
       gate.value = null;
+      evaluationPage.value = 1;
+      activeDetailTab.value = 'input-contract';
       selectedPathSetId.value =
         (typeof route.query.path_set_id === 'string'
           ? route.query.path_set_id
@@ -483,15 +531,23 @@ const [Drawer, drawerApi] = useVbenDrawer({
     } else {
       openId.value = null;
       model.value = null;
+      modelDetail.value = null;
       backtests.value = [];
       pathSets.value = [];
       pathSet.value = null;
       selectedPathSetId.value = null;
       activeCpcvJob.value = null;
       gate.value = null;
+      evaluationPage.value = 1;
     }
   },
 });
+
+function onEvaluationPageChange() {
+  if (openId.value) {
+    void refresh(openId.value);
+  }
+}
 
 // Refresh path set / backtests / gate when a research job completes (WS bump).
 watch(
@@ -549,7 +605,21 @@ watch(
         </Card>
 
         <Card size="small">
-          <Tabs destroy-on-hidden>
+          <label class="sr-only" for="model-detail-section">
+            {{ $t('page.research.models.detail.sectionSelector') }}
+          </label>
+          <Select
+            id="model-detail-section"
+            v-model:value="activeDetailTab"
+            :aria-label="$t('page.research.models.detail.sectionSelector')"
+            class="mb-3 min-h-11 w-full sm:hidden"
+            :options="detailTabOptions"
+          />
+          <Tabs
+            v-model:active-key="activeDetailTab"
+            class="model-detail-tabs"
+            destroy-on-hidden
+          >
             <TabPane
               key="input-contract"
               :tab="$t('page.research.models.detail.artifactLineage')"
@@ -633,6 +703,508 @@ watch(
                 v-else
                 :description="
                   $t('page.research.models.detail.artifactLineageUnavailable')
+                "
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
+            </TabPane>
+            <TabPane
+              key="serving-contract"
+              :tab="$t('page.research.models.detail.servingContract')"
+            >
+              <div
+                v-if="modelDetail && servingLineage && servingCommitments"
+                class="flex flex-col gap-4"
+              >
+                <Descriptions
+                  :column="{ lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 }"
+                  bordered
+                  size="small"
+                >
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.contractVersion')"
+                  >
+                    {{ servingLineage.contractVersion }}
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.derivation')"
+                  >
+                    {{ modelDetail.derivation.kind }}
+                    <template
+                      v-if="
+                        modelDetail.derivation.kind === 'return_calibration'
+                      "
+                    >
+                      ·
+                      <EntityRouteLink
+                        mono
+                        :label="modelDetail.derivation.parent_model_version_id"
+                        :to="`/research/models?open=${modelDetail.derivation.parent_model_version_id}`"
+                      />
+                      ·
+                      <EntityRouteLink
+                        mono
+                        :label="modelDetail.derivation.calibration_artifact_id"
+                        :to="`/research/calibration-artifacts?open=${modelDetail.derivation.calibration_artifact_id}`"
+                      />
+                    </template>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.contractHash')"
+                    :span="2"
+                  >
+                    <CopyableHash
+                      :label="$t('page.research.models.detail.contractHash')"
+                      :value="servingLineage.contractHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.embeddedHash')"
+                    :span="2"
+                  >
+                    <CopyableHash
+                      :label="$t('page.research.models.detail.embeddedHash')"
+                      :value="modelDetail.serving_contract.contract_hash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.factorSchemaHash')"
+                    :span="2"
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.factorSchemaHash')
+                      "
+                      :value="servingLineage.factorSchemaHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.requiredDomains')"
+                  >
+                    <div class="flex flex-wrap gap-1">
+                      <Tag
+                        v-for="family in servingLineage.requiredDomainFamilies"
+                        :key="family"
+                      >
+                        {{ $t(`enum.domainFamily.${family}`) }}
+                      </Tag>
+                      <span
+                        v-if="
+                          servingLineage.requiredDomainFamilies.length === 0
+                        "
+                      >
+                        —
+                      </span>
+                    </div>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.capabilityHashes')"
+                  >
+                    {{ servingLineage.capabilityRegistryHashes.length }}
+                  </DescriptionsItem>
+                </Descriptions>
+
+                <section
+                  v-if="servingLineage.capabilityRegistryHashes.length > 0"
+                  class="space-y-2"
+                >
+                  <h4 class="text-sm font-medium">
+                    {{ $t('page.research.models.detail.capabilityHashes') }}
+                  </h4>
+                  <CopyableHash
+                    v-for="hash in servingLineage.capabilityRegistryHashes"
+                    :key="hash"
+                    :label="$t('page.research.models.detail.capabilityHash')"
+                    :value="hash"
+                  />
+                </section>
+
+                <section class="space-y-2">
+                  <h4 class="text-sm font-medium">
+                    {{ $t('page.research.models.detail.factorRevisions') }}
+                  </h4>
+                  <Empty
+                    v-if="servingLineage.factorDefinitions.length === 0"
+                    :description="
+                      $t('page.research.models.detail.factorRevisionsEmpty')
+                    "
+                    :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                  />
+                  <Descriptions
+                    v-for="factor in servingLineage.factorDefinitions"
+                    v-else
+                    :key="factor.factor_definition_id"
+                    :column="1"
+                    bordered
+                    size="small"
+                  >
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.factorId')"
+                    >
+                      <EntityRouteLink
+                        mono
+                        :label="factor.factor_definition_id"
+                        :to="`/research/factors?open=${factor.factor_definition_id}`"
+                      />
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="
+                        $t('page.research.models.detail.factorDefinitionHash')
+                      "
+                    >
+                      <CopyableHash
+                        :label="
+                          $t('page.research.models.detail.factorDefinitionHash')
+                        "
+                        :value="factor.definition_hash"
+                      />
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="
+                        $t('page.research.models.detail.featureContractHash')
+                      "
+                    >
+                      <CopyableHash
+                        :label="
+                          $t('page.research.models.detail.featureContractHash')
+                        "
+                        :value="factor.feature_contract_hash"
+                      />
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.factorRevision')"
+                    >
+                      {{ factor.revision_version }} ·
+                      {{ factor.input_schema_version }} →
+                      {{ factor.output_schema_version }}
+                    </DescriptionsItem>
+                  </Descriptions>
+                </section>
+
+                <Descriptions :column="1" bordered size="small">
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.featureSchemaHash')"
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.featureSchemaHash')
+                      "
+                      :value="servingCommitments.featureSchemaHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.labelSchemaHash')"
+                  >
+                    <CopyableHash
+                      :label="$t('page.research.models.detail.labelSchemaHash')"
+                      :value="servingCommitments.labelSchemaHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.inputContractHash')"
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.inputContractHash')
+                      "
+                      :value="servingCommitments.inputContractHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.inputTransformHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.inputTransformHash')
+                      "
+                      :value="servingCommitments.inputTransformHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.trainingDatasetHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.trainingDatasetHash')
+                      "
+                      :value="servingCommitments.trainingDatasetHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.trainingInputHash')"
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.trainingInputHash')
+                      "
+                      :value="servingCommitments.trainingInputHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.policySnapshotHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.policySnapshotHash')
+                      "
+                      :value="servingCommitments.policySnapshotHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.datasetManifestHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.datasetManifestHash')
+                      "
+                      :value="servingCommitments.datasetManifestHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.datasetBytesHash')"
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.datasetBytesHash')
+                      "
+                      :value="servingCommitments.datasetBytesHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.specDefinitionHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.specDefinitionHash')
+                      "
+                      :value="servingCommitments.modelSpecDefinitionHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.profileContentHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.profileContentHash')
+                      "
+                      :value="servingCommitments.profileContentHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.modelPayloadHash')"
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.modelPayloadHash')
+                      "
+                      :value="servingCommitments.modelPayloadHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    v-if="servingCommitments.serializedModelHash"
+                    :label="
+                      $t('page.research.models.detail.serializedModelHash')
+                    "
+                  >
+                    <CopyableHash
+                      :label="
+                        $t('page.research.models.detail.serializedModelHash')
+                      "
+                      :value="servingCommitments.serializedModelHash"
+                    />
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="
+                      $t('page.research.models.detail.modelCalibrationHash')
+                    "
+                  >
+                    <CopyableHash
+                      v-if="servingCommitments.modelCalibrationHash"
+                      :label="
+                        $t('page.research.models.detail.modelCalibrationHash')
+                      "
+                      :value="servingCommitments.modelCalibrationHash"
+                    />
+                    <span v-else>—</span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.biasTableHash')"
+                  >
+                    <CopyableHash
+                      v-if="servingCommitments.biasTableHash"
+                      :label="$t('page.research.models.detail.biasTableHash')"
+                      :value="servingCommitments.biasTableHash"
+                    />
+                    <span v-else>—</span>
+                  </DescriptionsItem>
+                  <DescriptionsItem
+                    :label="$t('page.research.models.detail.tradePolicyHash')"
+                  >
+                    <CopyableHash
+                      v-if="servingCommitments.tradePolicyHash"
+                      :label="$t('page.research.models.detail.tradePolicyHash')"
+                      :value="servingCommitments.tradePolicyHash"
+                    />
+                    <span v-else>—</span>
+                  </DescriptionsItem>
+                </Descriptions>
+
+                <section class="space-y-2">
+                  <h4 class="text-sm font-medium">
+                    {{ $t('page.research.models.detail.profileArtifacts') }}
+                  </h4>
+                  <Descriptions
+                    v-for="artifact in servingCommitments.profileArtifacts"
+                    :key="artifact.kind"
+                    :column="1"
+                    bordered
+                    size="small"
+                  >
+                    <DescriptionsItem
+                      :label="
+                        $t('page.research.models.detail.profileArtifactHash', {
+                          kind: artifact.kind,
+                        })
+                      "
+                    >
+                      <CopyableHash
+                        :label="
+                          $t(
+                            'page.research.models.detail.profileArtifactHash',
+                            { kind: artifact.kind },
+                          )
+                        "
+                        :value="artifact.content_hash"
+                      />
+                    </DescriptionsItem>
+                  </Descriptions>
+                </section>
+
+                <section class="space-y-2">
+                  <h4 class="text-sm font-medium">
+                    {{
+                      $t('page.research.models.detail.evaluationLineage', {
+                        count: modelDetail.evaluation_lineage.total,
+                      })
+                    }}
+                  </h4>
+                  <Empty
+                    v-if="modelDetail.evaluation_lineage.items.length === 0"
+                    :description="
+                      $t('page.research.models.detail.evaluationLineageEmpty')
+                    "
+                    :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                  />
+                  <Descriptions
+                    v-for="usage in modelDetail.evaluation_lineage.items"
+                    v-else
+                    :key="usage.feedback_evaluation_use_id"
+                    :column="1"
+                    bordered
+                    size="small"
+                  >
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.feedbackCycle')"
+                    >
+                      <EntityRouteLink
+                        mono
+                        :label="usage.feedback_cycle_id"
+                        :to="`/research/feedback?view=cycles&cycle_id=${usage.feedback_cycle_id}`"
+                      />
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.evaluationHash')"
+                    >
+                      <CopyableHash
+                        :label="
+                          $t('page.research.models.detail.evaluationHash')
+                        "
+                        :value="usage.evaluation_use_hash"
+                      />
+                    </DescriptionsItem>
+                  </Descriptions>
+                  <Pagination
+                    v-if="
+                      modelDetail.evaluation_lineage.total >
+                      modelDetail.evaluation_lineage.size
+                    "
+                    v-model:current="evaluationPage"
+                    :page-size="modelDetail.evaluation_lineage.size"
+                    :show-size-changer="false"
+                    :total="modelDetail.evaluation_lineage.total"
+                    @change="onEvaluationPageChange"
+                  />
+                </section>
+
+                <section class="space-y-2">
+                  <h4 class="text-sm font-medium">
+                    {{
+                      $t('page.research.models.detail.promotionLineage', {
+                        count: modelDetail.promotion_lineage.length,
+                      })
+                    }}
+                  </h4>
+                  <Empty
+                    v-if="modelDetail.promotion_lineage.length === 0"
+                    :description="
+                      $t('page.research.models.detail.promotionLineageEmpty')
+                    "
+                    :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                  />
+                  <Descriptions
+                    v-for="promotion in modelDetail.promotion_lineage"
+                    v-else
+                    :key="promotion.audit_id"
+                    :column="1"
+                    bordered
+                    size="small"
+                  >
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.promotionRole')"
+                    >
+                      {{ promotion.role }} · {{ promotion.before_status }} →
+                      {{ promotion.after_status }}
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.permitId')"
+                    >
+                      <span class="break-all font-mono text-xs">
+                        {{ promotion.promotion_permit_id }}
+                      </span>
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.promotionHash')"
+                    >
+                      <CopyableHash
+                        :label="$t('page.research.models.detail.promotionHash')"
+                        :value="promotion.promotion_transaction_hash"
+                      />
+                    </DescriptionsItem>
+                    <DescriptionsItem
+                      :label="$t('page.research.models.detail.actorReason')"
+                    >
+                      {{ promotion.actor_username }} ·
+                      {{ promotion.actor_role ?? '—' }} ·
+                      {{ promotion.reason }}
+                    </DescriptionsItem>
+                  </Descriptions>
+                </section>
+              </div>
+              <Empty
+                v-else
+                :description="
+                  $t('page.research.models.detail.servingContractUnavailable')
                 "
                 :image="Empty.PRESENTED_IMAGE_SIMPLE"
               />
@@ -983,3 +1555,11 @@ watch(
     <CpcvModal />
   </Drawer>
 </template>
+
+<style scoped>
+@media (max-width: 639px) {
+  .model-detail-tabs :deep(.ant-tabs-nav) {
+    display: none;
+  }
+}
+</style>

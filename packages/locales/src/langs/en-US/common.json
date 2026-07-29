@@ -25,5 +25,7 @@
   "no": "No",
   "copied": "Copied",
   "showSearchPanel": "Show search panel",
-  "hideSearchPanel": "Hide search panel"
+  "hideSearchPanel": "Hide search panel",
+  "scrollableTableHeader": "Scrollable table header",
+  "scrollableTableBody": "Scrollable table body"
 }

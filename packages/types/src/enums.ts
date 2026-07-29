@@ -798,6 +798,7 @@ export const RESEARCH_JOB_KINDS = {
 export const CALIBRATION_KINDS = {
   marketPriceBias: 'market_price_bias',
   modelScore: 'model_score',
+  weatherStationLeadBias: 'weather_station_lead_bias',
 } as const;
 
 export type CalibrationKind = WireEnum<typeof CALIBRATION_KINDS>;

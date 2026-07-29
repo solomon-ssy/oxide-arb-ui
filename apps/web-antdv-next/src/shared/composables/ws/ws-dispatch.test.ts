@@ -1,5 +1,6 @@
 import type {
   MarketBookView,
+  ResearchFeedbackEvent,
   SyncSnapshot,
   SystemAlertEvent,
   SystemControlPlaneStatus,
@@ -9,9 +10,12 @@ import type {
 
 import type { WsDispatchHooks } from './ws-dispatch';
 
+import { WS_CHANNELS } from '@vben/types';
+
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useFeedbackStore } from '#/store/feedback';
 import { useMarketStore } from '#/store/market';
 import { useOrderIntentStore } from '#/store/order-intent';
 import { useQuantReportStore } from '#/store/quant-report';
@@ -27,6 +31,7 @@ function hooks(): WsDispatchHooks {
   return {
     onAlert: vi.fn(),
     onConfigActivated: vi.fn(),
+    onFeedbackRecoveryRequired: vi.fn(),
     onMarketResolved: vi.fn(),
   };
 }
@@ -116,9 +121,26 @@ function marketBook(): MarketBookView {
   return { market_id: '0xabc', no: null, yes: null };
 }
 
+function feedbackEvent(
+  overrides: Partial<ResearchFeedbackEvent> = {},
+): ResearchFeedbackEvent {
+  return {
+    occurred_at: '2026-07-29T01:00:00.000Z',
+    profile_id: 'crypto_price_15m',
+    revision: 7,
+    subject_id: '019fa8be-8a00-7f00-8000-000000000001',
+    subject_kind: 'feedback_cycle',
+    ...overrides,
+  };
+}
+
 describe('dispatchWsEnvelope', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+  });
+
+  it('exposes the canonical research feedback channel', () => {
+    expect(WS_CHANNELS.researchFeedback).toBe('research.feedback');
   });
 
   it('system.status overwrites the system store and marks status heartbeat', () => {
@@ -242,6 +264,65 @@ describe('dispatchWsEnvelope', () => {
     expect(useResearchStore().revision).toBe(1);
   });
 
+  it('research.feedback advances only a strictly newer durable revision', () => {
+    const h = hooks();
+    dispatchWsEnvelope(
+      envelope(WS_CHANNELS.researchFeedback, feedbackEvent()),
+      h,
+    );
+    dispatchWsEnvelope(
+      envelope(WS_CHANNELS.researchFeedback, feedbackEvent({ revision: 6 })),
+      h,
+    );
+
+    const store = useFeedbackStore();
+    expect(store.revision).toBe(7);
+    expect(store.refreshGeneration).toBe(1);
+    expect(store.lastEvent?.profile_id).toBe('crypto_price_15m');
+    expect(h.onFeedbackRecoveryRequired).not.toHaveBeenCalled();
+  });
+
+  it('unknown feedback subjects fail closed into REST recovery', () => {
+    const h = hooks();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    dispatchWsEnvelope(
+      envelope(WS_CHANNELS.researchFeedback, {
+        ...feedbackEvent(),
+        subject_kind: 'future_subject',
+      }),
+      h,
+    );
+
+    const store = useFeedbackStore();
+    expect(store.revision).toBe(0);
+    expect(store.recoveryRequired).toBe(true);
+    expect(store.recoveryReason).toBe('invalid_feedback_event');
+    expect(h.onFeedbackRecoveryRequired).toHaveBeenCalledWith(
+      'invalid_feedback_event',
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
+  it('feedback replay errors require an authoritative cursor refresh', () => {
+    const h = hooks();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    dispatchWsEnvelope(
+      envelope('error', {
+        after_revision: 0,
+        error: 'replay_window_exceeded',
+      }),
+      h,
+    );
+
+    expect(useFeedbackStore().recoveryReason).toBe('replay_window_exceeded');
+    expect(h.onFeedbackRecoveryRequired).toHaveBeenCalledWith(
+      'replay_window_exceeded',
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
   it('quant.reconciliation bumps the reconciliation revision', () => {
     dispatchWsEnvelope(
       envelope('quant.reconciliation', {
@@ -302,13 +383,13 @@ describe('dispatchWsEnvelope', () => {
   });
 
   it('error and unknown frames only warn', () => {
+    const h = hooks();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    dispatchWsEnvelope(envelope('error', { error: 'forbidden' }), hooks());
-    dispatchWsEnvelope(
-      envelope('trade.filled' as WsEnvelope['type'], {}),
-      hooks(),
-    );
+    dispatchWsEnvelope(envelope('error', { error: 'forbidden' }), h);
+    dispatchWsEnvelope(envelope('trade.filled' as WsEnvelope['type'], {}), h);
     expect(warn).toHaveBeenCalledTimes(2);
+    expect(h.onFeedbackRecoveryRequired).not.toHaveBeenCalled();
+    expect(useFeedbackStore().recoveryRequired).toBe(false);
     warn.mockRestore();
   });
 });

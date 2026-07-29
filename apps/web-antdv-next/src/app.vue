@@ -62,7 +62,15 @@ watch(
   color: hsl(var(--foreground)) !important;
 }
 
-.dark .ant-tag-filled:not(.ant-tag-default) {
+.ant-tag-filled:not(.ant-tag-default) {
   color: hsl(var(--foreground)) !important;
+}
+
+.vben-link,
+.vben-link:hover,
+.vben-link:active {
+  color: hsl(var(--foreground));
+  text-decoration-line: underline;
+  text-underline-offset: 2px;
 }
 </style>

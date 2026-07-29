@@ -84,7 +84,10 @@ function onActionClick({
 }
 
 useQueryOpenDrawer({
-  fetch: (id) => getFactor(id),
+  fetch: async (id) => {
+    const detail = await getFactor(id);
+    return detail.definition;
+  },
   open: (factor) => drawerApi.setData({ factor }).open(),
 });
 
@@ -95,10 +98,14 @@ watch(
 </script>
 
 <template>
-  <Page auto-content-height>
+  <Page auto-content-height data-testid="factors-page">
     <Grid :table-title="$t('page.research.factors.listTitle')">
       <template #toolbar-tools>
-        <Button type="primary" @click="collinearityRef?.open()">
+        <Button
+          class="min-h-11"
+          type="primary"
+          @click="collinearityRef?.open()"
+        >
           {{ $t('page.research.factors.collinearity.action') }}
         </Button>
       </template>

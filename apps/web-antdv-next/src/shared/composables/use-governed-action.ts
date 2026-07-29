@@ -31,6 +31,13 @@ export interface GovernedDetailRow {
   routeTo?: string;
 }
 
+/** Optional stricter body-reason contract for a governed endpoint. */
+export interface GovernedReasonRule {
+  help: string;
+  maxLength: number;
+  validate: (reason: string) => boolean;
+}
+
 export interface GovernedOptions {
   confirmWord?: string;
   danger?: boolean;
@@ -40,6 +47,7 @@ export interface GovernedOptions {
   fields?: GovernedField[];
   /** Decide whether a failed mutation keeps the confirmation modal open. */
   onError?: (error: ApiError) => 'close' | 'keep_open';
+  reasonRule?: GovernedReasonRule;
   summary?: string;
   title: string;
 }
@@ -95,6 +103,7 @@ function createGovernedActionApi(): GovernedActionApi {
           danger: options.danger,
           details: options.details,
           fields: options.fields,
+          reasonRule: options.reasonRule,
           summary: options.summary,
           title: options.title,
           onCancel: () => resolve(null),

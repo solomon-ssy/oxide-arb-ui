@@ -61,6 +61,26 @@ describe('feature-integrity backend menu adaptation', () => {
     });
   });
 
+  it('keeps feedback cycle selection in one permission-gated tab', () => {
+    const page = node({
+      component: 'research/feedback/index',
+      kind: 'menu',
+      name: 'research-feedback',
+      path: '/research/feedback',
+      permission_code: 'materialization:read',
+    });
+
+    const result = adaptMenuTree([page]);
+
+    expect(result.permissionCodes).toEqual(['materialization:read']);
+    expect(result.routes[0]).toMatchObject({
+      component: 'research/feedback/index',
+      meta: { fullPathKey: false },
+      name: 'research-feedback',
+      path: '/research/feedback',
+    });
+  });
+
   it.each([
     ['execution-orders', '/quant/execution-orders'],
     ['positions', '/quant/positions'],
