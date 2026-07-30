@@ -11,7 +11,7 @@ import { antdLocale } from '#/locales';
 defineOptions({ name: 'App' });
 
 const { isDark } = usePreferences();
-const { tokens } = useAntdDesignTokens();
+const { buttonTokens, tokens } = useAntdDesignTokens();
 
 const tokenTheme = computed(() => {
   const algorithm = isDark.value
@@ -23,15 +23,27 @@ const tokenTheme = computed(() => {
     algorithm.push(theme.compactAlgorithm);
   }
 
-  const components = isDark.value
-    ? {
-        Tabs: {
-          itemActiveColor: tokens.colorTextBase,
-          itemHoverColor: tokens.colorTextBase,
-          itemSelectedColor: tokens.colorTextBase,
-        },
-      }
-    : undefined;
+  const components = {
+    Button: {
+      // Outlined controls retain semantic border/background changes while
+      // their labels stay readable in default, hover, and active states.
+      colorPrimaryActive: buttonTokens.colorPrimaryActive,
+      colorPrimaryHover: buttonTokens.colorPrimaryHover,
+      dangerColor: isDark.value
+        ? tokens.colorBgLayout
+        : tokens.colorTextLightSolid,
+      defaultActiveColor: tokens.colorTextBase,
+      defaultColor: tokens.colorTextBase,
+      defaultHoverColor: tokens.colorTextBase,
+    },
+    Tabs: {
+      // The ink bar already communicates selection. Using body text for tab
+      // labels avoids low-contrast brand-color text, including hover states.
+      itemActiveColor: tokens.colorTextBase,
+      itemHoverColor: tokens.colorTextBase,
+      itemSelectedColor: tokens.colorTextBase,
+    },
+  };
 
   return {
     algorithm,

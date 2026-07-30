@@ -1,5 +1,6 @@
 import { defineConfig } from '@vben/vite-config';
 
+import { localIconCollectionsPlugin } from './build/local-icon-collections';
 import { productionBundlePolicyPlugin } from './build/production-bundle-policy';
 
 export default defineConfig(async () => {
@@ -11,7 +12,7 @@ export default defineConfig(async () => {
         // The operator console requires native BigInt for exact decimal controls.
         target: 'es2022',
       },
-      plugins: [productionBundlePolicyPlugin()],
+      plugins: [localIconCollectionsPlugin(), productionBundlePolicyPlugin()],
       server: {
         proxy: {
           // Keep the browser Host (e.g. localhost:5999) so backend

@@ -1,11 +1,11 @@
-import type { Buffer } from 'node:buffer';
-import type { Page, WebSocket } from 'playwright/test';
+import type { Page } from 'playwright/test';
 
 import type { BrowserFailureAudit } from './browser-failure-audit';
 
 import {
   expect,
   expectAccessible,
+  installWebSocketAudit,
   readApiData,
   readFirstApiItem,
   test,
@@ -52,54 +52,6 @@ interface ResearchJob {
   status: 'cancelled' | 'failed' | 'queued' | 'running' | 'succeeded';
 }
 
-interface WsFrame {
-  action?: string;
-  channel?: string;
-  data?: {
-    job_id?: string;
-    status?: string;
-  };
-  type?: string;
-}
-
-interface BrowserAudit {
-  received: WsFrame[];
-  sent: WsFrame[];
-  sockets: WebSocket[];
-}
-
-function parseFrame(payload: Buffer | string): null | WsFrame {
-  try {
-    return JSON.parse(payload.toString()) as WsFrame;
-  } catch {
-    return null;
-  }
-}
-
-function installBrowserAudit(page: Page): BrowserAudit {
-  const received: WsFrame[] = [];
-  const sent: WsFrame[] = [];
-  const sockets: WebSocket[] = [];
-
-  page.on('websocket', (socket) => {
-    sockets.push(socket);
-    socket.on('framesent', ({ payload }) => {
-      const frame = parseFrame(payload);
-      if (frame) sent.push(frame);
-    });
-    socket.on('framereceived', ({ payload }) => {
-      const frame = parseFrame(payload);
-      if (frame) received.push(frame);
-    });
-  });
-
-  return {
-    received,
-    sent,
-    sockets,
-  };
-}
-
 async function navigate(page: Page, audit: BrowserFailureAudit, url: string) {
   await audit.drainHttp(page);
   await page.goto(url);
@@ -111,7 +63,7 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   browserAudit,
 }) => {
   test.setTimeout(180_000);
-  const audit = installBrowserAudit(authenticatedPage);
+  const audit = installWebSocketAudit(authenticatedPage);
   let backtestQueries = 0;
   authenticatedPage.on('response', (response) => {
     if (
@@ -152,7 +104,17 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
     purpose: 'evaluation',
     training_dataset_id: dataset.training_dataset_id,
   });
-  expect(dataset.parquet_uri).toMatch(/^file:\/\//);
+  expect(dataset.parquet_uri).not.toBeNull();
+  const parquetUri = new URL(dataset.parquet_uri ?? '');
+  expect(parquetUri.protocol).toBe('s3:');
+  expect(parquetUri.hostname).toBe('quant-pivot-production-stack');
+  expect(parquetUri.pathname).toBe(
+    `/artifacts/datasets/${dataset.training_dataset_id.replaceAll('-', '')}.parquet`,
+  );
+  expect([...parquetUri.searchParams.keys()]).toEqual(['versionId']);
+  expect(parquetUri.searchParams.get('versionId')).toEqual(
+    expect.stringMatching(/\S+/),
+  );
   expect(dataset.cohort_manifest?.counts).toMatchObject({
     candidate_count: 80,
     eligible_count: 80,

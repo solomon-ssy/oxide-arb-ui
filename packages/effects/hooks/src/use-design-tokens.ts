@@ -8,7 +8,13 @@ import { convertToRgb, updateCSSVariables } from '@vben/utils';
  */
 
 export function useAntdDesignTokens() {
+  const { isDark } = usePreferences();
   const rootStyles = getComputedStyle(document.documentElement);
+
+  const buttonTokens = reactive({
+    colorPrimaryActive: '',
+    colorPrimaryHover: '',
+  });
 
   const tokens = reactive({
     borderRadius: '' as any,
@@ -20,12 +26,16 @@ export function useAntdDesignTokens() {
     colorBorder: '',
     colorBorderSecondary: '',
     colorError: '',
+    colorErrorActive: '',
+    colorErrorHover: '',
     colorInfo: '',
     colorPrimary: '',
     colorSuccess: '',
     colorTextBase: '',
     colorTextDescription: '',
+    colorTextLightSolid: '',
     colorTextPlaceholder: '',
+    colorTextTertiary: '',
     colorWarning: '',
     zIndexPopupBase: 2000, // 调整基础弹层层级，避免下拉等组件被弹窗或者最大化状态下的表格遮挡
   });
@@ -36,13 +46,34 @@ export function useAntdDesignTokens() {
   };
 
   watch(
-    () => preferences.theme,
+    () => [preferences.theme, isDark.value] as const,
     () => {
       tokens.colorPrimary = getCssVariableValue('--primary');
 
+      // Antdv's generated orange hover shade is lighter than the configured
+      // brand seed and cannot retain 4.5:1 against a solid-button label.
+      // Keep the brand seed intact while selecting accessible interaction
+      // shades for the Button component in each surface mode.
+      buttonTokens.colorPrimaryHover = getCssVariableValue(
+        isDark.value ? '--primary' : '--primary-600',
+      );
+      buttonTokens.colorPrimaryActive = getCssVariableValue('--primary-700');
+
       tokens.colorInfo = getCssVariableValue('--primary');
 
-      tokens.colorError = getCssVariableValue('--destructive');
+      // The customizable destructive seed is intentionally vivid, but its 500
+      // shade cannot meet 4.5:1 as outlined-button text on either surface.
+      // Select mode-specific palette shades so destructive controls remain
+      // distinguishable without sacrificing normal-text contrast.
+      tokens.colorError = getCssVariableValue(
+        isDark.value ? '--destructive-400' : '--destructive-700',
+      );
+      tokens.colorErrorHover = getCssVariableValue(
+        isDark.value ? '--destructive-300' : '--destructive-800',
+      );
+      tokens.colorErrorActive = getCssVariableValue(
+        isDark.value ? '--destructive-200' : '--destructive-900',
+      );
 
       tokens.colorWarning = getCssVariableValue('--warning');
 
@@ -50,7 +81,11 @@ export function useAntdDesignTokens() {
 
       tokens.colorTextBase = getCssVariableValue('--foreground');
       tokens.colorTextDescription = getCssVariableValue('--muted-foreground');
+      tokens.colorTextLightSolid = getCssVariableValue(
+        '--destructive-foreground',
+      );
       tokens.colorTextPlaceholder = getCssVariableValue('--muted-foreground');
+      tokens.colorTextTertiary = getCssVariableValue('--muted-foreground');
 
       getCssVariableValue('--primary-foreground');
 
@@ -74,6 +109,7 @@ export function useAntdDesignTokens() {
   );
 
   return {
+    buttonTokens,
     tokens,
   };
 }

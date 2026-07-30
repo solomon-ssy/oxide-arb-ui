@@ -4,11 +4,21 @@ const UNHANDLED_REJECTION_BRIDGE =
   '__quantPivotReportUnhandledRejection' as const;
 const EXPECTED_RECONNECT_FAILURE =
   /ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|aborted/i;
+const FORBIDDEN_RUNTIME_HOSTS = new Set([
+  'api.iconify.design',
+  'api.simplesvg.com',
+  'api.unisvg.com',
+]);
 
 export interface ExpectedResponse {
   method: string;
   pathname: RegExp | string;
   status: number;
+}
+
+export interface ExpectedConsole {
+  text: RegExp | string;
+  type: 'error' | 'warning';
 }
 
 export interface ExpectedRequestFailure {
@@ -18,18 +28,49 @@ export interface ExpectedRequestFailure {
   search: string;
 }
 
+interface ConsoleAllowance {
+  consumed: boolean;
+  expected: ExpectedConsole;
+}
+
 export class BrowserFailureAudit {
   get failures(): readonly string[] {
     return this.#failures;
   }
+  readonly #consoleAllowances: ConsoleAllowance[] = [];
   readonly #failures: string[] = [];
   readonly #httpInFlight = new Map<Page, number>();
   readonly #httpWaiters = new Map<Page, Set<() => void>>();
-  readonly #pages = new Set<Page>();
 
+  readonly #pages = new Set<Page>();
   readonly #requestFailureAllowances: ExpectedRequestFailure[] = [];
   readonly #responseAllowances: ExpectedResponse[] = [];
   #webSocketReconnectDepth = 0;
+
+  async allowConsole<T>(
+    expected: ExpectedConsole,
+    action: () => Promise<T>,
+  ): Promise<T> {
+    const allowance = { consumed: false, expected };
+    this.#consoleAllowances.push(allowance);
+    try {
+      return await action();
+    } finally {
+      const index = this.#consoleAllowances.lastIndexOf(allowance);
+      if (index !== -1) {
+        this.#consoleAllowances.splice(index, 1);
+      }
+      if (!allowance.consumed) {
+        const text =
+          typeof expected.text === 'string'
+            ? expected.text
+            : expected.text.toString();
+        this.#failures.push(
+          `expected console.${expected.type} was not observed: ${text}`,
+        );
+      }
+    }
+  }
 
   async allowRequestFailures<T>(
     allowances: readonly ExpectedRequestFailure[],
@@ -127,6 +168,12 @@ export class BrowserFailureAudit {
       this.#failures.push(`pageerror: ${error.message}`);
     });
     page.on('request', (request) => {
+      const url = new URL(request.url());
+      if (FORBIDDEN_RUNTIME_HOSTS.has(url.hostname)) {
+        this.#failures.push(
+          `forbidden-runtime-request ${request.method()} ${request.url()}`,
+        );
+      }
       if (request.resourceType() !== 'websocket') {
         this.#httpInFlight.set(page, (this.#httpInFlight.get(page) ?? 0) + 1);
       }
@@ -185,6 +232,16 @@ export class BrowserFailureAudit {
   }
 
   #allowsConsole(message: ConsoleMessage): boolean {
+    const exactAllowance = this.#consoleAllowances.find((allowance) => {
+      if (allowance.consumed || allowance.expected.type !== message.type()) {
+        return false;
+      }
+      return this.#matchesText(message.text(), allowance.expected.text);
+    });
+    if (exactAllowance) {
+      exactAllowance.consumed = true;
+      return true;
+    }
     if (
       message.type() !== 'error' ||
       !message.text().startsWith('Failed to load resource:')
@@ -251,6 +308,14 @@ export class BrowserFailureAudit {
     }
     expected.lastIndex = 0;
     return expected.test(pathname);
+  }
+
+  #matchesText(text: string, expected: RegExp | string): boolean {
+    if (typeof expected === 'string') {
+      return text === expected;
+    }
+    expected.lastIndex = 0;
+    return expected.test(text);
   }
 
   #resolveDrains(page: Page): void {

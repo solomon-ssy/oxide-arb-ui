@@ -12,8 +12,16 @@ import type {
 import type { FeedbackProfileReadinessState } from '../research/feedback/modules/feedback-profile-presentation';
 import type { DashboardSnapshot } from './modules/dashboard-snapshot';
 
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import {
+  computed,
+  onActivated,
+  onBeforeUnmount,
+  onDeactivated,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
@@ -53,6 +61,7 @@ import {
   useQuantRuntimeModeTagOptions,
 } from '#/shared/components/format/tag-options';
 import KpiStatCard from '#/shared/components/kpi-stat-card.vue';
+import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
@@ -68,7 +77,6 @@ import {
   isFeedbackSnapshotCurrent,
   summarizeDashboardFeedback,
 } from './modules/dashboard-feedback-summary';
-import { DashboardRefreshCoordinator } from './modules/dashboard-refresh-coordinator';
 import {
   DASHBOARD_FALLBACK_INTERVAL_MS,
   dashboardWsHealth,
@@ -112,6 +120,7 @@ const loadError = ref<null | string>(null);
 const feedbackError = ref<null | string>(null);
 const selectedRecommendation = ref<null | QuantRecommendationView>(null);
 const blockersOpen = ref(false);
+const pageActive = ref(false);
 
 const canReadFeedback = computed(() =>
   hasAccessByCodes(['materialization:read']),
@@ -309,10 +318,13 @@ const primaryActionLabel = computed(() =>
     : $t('page.dashboard.primaryAction.view_blockers'),
 );
 
-const refreshCoordinator = new DashboardRefreshCoordinator<DashboardSnapshot>({
-  fetchOverview: (window, signal) =>
+const refreshCoordinator = new AuthoritativeReadCoordinator<
+  DashboardWindow,
+  DashboardSnapshot
+>({
+  fetchSnapshot: (window, signal) =>
     getDashboardSnapshot(window, signal, canReadFeedback.value),
-  initialWindow: windowValue.value,
+  initialKey: windowValue.value,
   onError: () => {
     loadError.value = $t('page.dashboard.loadError.overview');
   },
@@ -350,23 +362,37 @@ const refreshCoordinator = new DashboardRefreshCoordinator<DashboardSnapshot>({
 });
 
 function refreshOverview() {
-  refreshCoordinator.refresh();
+  if (pageActive.value) {
+    void refreshCoordinator.refresh();
+  }
 }
 
 const { overviewRefreshKey } = useDashboardStatusRefreshKey();
-watch(windowValue, (window) => refreshCoordinator.changeWindow(window));
+watch(windowValue, (window) => {
+  if (pageActive.value) {
+    refreshCoordinator.changeKey(window);
+  }
+});
 watch(
   () => reportStore.revision,
-  () => refreshCoordinator.invalidate(),
+  () => {
+    if (pageActive.value) {
+      refreshCoordinator.invalidate();
+    }
+  },
 );
 watch(
   () => feedbackStore.refreshGeneration,
-  () => refreshCoordinator.invalidate(),
+  () => {
+    if (pageActive.value) {
+      refreshCoordinator.invalidate();
+    }
+  },
 );
 // Never watch `checked_at`: every overview response / WS status frame mints a
 // new timestamp, which re-entered this path and flickered the whole page.
 watch(overviewRefreshKey, (next, previous) => {
-  if (previous && next !== previous) {
+  if (pageActive.value && previous && next !== previous) {
     refreshCoordinator.invalidate();
   }
 });
@@ -374,32 +400,38 @@ watch(canReadFeedback, (allowed) => {
   if (!allowed) {
     feedbackOverview.value = null;
     feedbackError.value = null;
+    refreshCoordinator.cancel();
+  } else if (pageActive.value) {
+    void refreshCoordinator.refresh();
   }
-  refreshCoordinator.refresh();
 });
 watch(
   () => qpWs.status.value,
   (next, previous) => {
-    if (isWsRecovery(next, previous)) {
-      refreshCoordinator.refresh();
+    if (pageActive.value && isWsRecovery(next, previous)) {
+      void refreshCoordinator.refresh();
     }
   },
 );
 watch(visibility, (next, previous) => {
-  if (isVisibilityRecovery(next, previous)) {
-    refreshCoordinator.refresh();
+  if (pageActive.value && isVisibilityRecovery(next, previous)) {
+    void refreshCoordinator.refresh();
   }
 });
-useIntervalFn(() => {
-  const health = dashboardWsHealth(
-    qpWs.status.value,
-    latestWsActivity(wsStore.lastHeartbeatAt, wsStore.lastSyncAt),
-    Date.now(),
-  );
-  if (shouldPollDashboard(health, visibility.value)) {
-    refreshCoordinator.refresh();
-  }
-}, DASHBOARD_FALLBACK_INTERVAL_MS);
+const { pause: pauseFallback, resume: resumeFallback } = useIntervalFn(
+  () => {
+    const health = dashboardWsHealth(
+      qpWs.status.value,
+      latestWsActivity(wsStore.lastHeartbeatAt, wsStore.lastSyncAt),
+      Date.now(),
+    );
+    if (pageActive.value && shouldPollDashboard(health, visibility.value)) {
+      void refreshCoordinator.refresh();
+    }
+  },
+  DASHBOARD_FALLBACK_INTERVAL_MS,
+  { immediate: false },
+);
 
 function executePrimaryAction() {
   const action = authority.value?.primary_action;
@@ -452,8 +484,36 @@ function feedbackStatusColor(status: FeedbackCycleStatus | null) {
   return status === 'queued' ? 'default' : 'warning';
 }
 
-onMounted(() => refreshCoordinator.refresh());
-onBeforeUnmount(() => refreshCoordinator.dispose());
+function activateDashboard() {
+  if (pageActive.value) {
+    return;
+  }
+  pageActive.value = true;
+  resumeFallback();
+  refreshCoordinator.setKey(windowValue.value);
+  void refreshCoordinator.refresh();
+}
+
+function deactivateDashboard() {
+  if (!pageActive.value) {
+    return;
+  }
+  pageActive.value = false;
+  pauseFallback();
+  refreshCoordinator.cancel();
+}
+
+onMounted(activateDashboard);
+onActivated(activateDashboard);
+onDeactivated(deactivateDashboard);
+onBeforeRouteLeave(() => {
+  deactivateDashboard();
+});
+onBeforeUnmount(() => {
+  pageActive.value = false;
+  pauseFallback();
+  refreshCoordinator.dispose();
+});
 </script>
 
 <template>

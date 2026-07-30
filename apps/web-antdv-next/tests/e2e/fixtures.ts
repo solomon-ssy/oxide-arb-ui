@@ -1,4 +1,5 @@
-import type { APIRequestContext, Page } from 'playwright/test';
+import type { Buffer } from 'node:buffer';
+import type { APIRequestContext, Page, WebSocket } from 'playwright/test';
 
 import process from 'node:process';
 
@@ -32,6 +33,25 @@ interface ApiPage<T> {
 interface BrowserFixtures {
   authenticatedPage: Page;
   browserAudit: BrowserFailureAudit;
+}
+
+export interface WebSocketAuditFrame {
+  action?: string;
+  after_revision?: number;
+  channel?: string;
+  data?: {
+    job_id?: string;
+    revision?: number;
+    status?: string;
+    subject_id?: string;
+  };
+  type?: string;
+}
+
+export interface WebSocketAudit {
+  received: WebSocketAuditFrame[];
+  sent: WebSocketAuditFrame[];
+  sockets: WebSocket[];
 }
 
 interface WorkerFixtures {
@@ -96,6 +116,34 @@ export const test = base.extend<BrowserFixtures, WorkerFixtures>({
 });
 
 export { expect } from 'playwright/test';
+
+function parseWebSocketFrame(payload: Buffer | string) {
+  try {
+    return JSON.parse(payload.toString()) as WebSocketAuditFrame;
+  } catch {
+    return null;
+  }
+}
+
+export function installWebSocketAudit(page: Page): WebSocketAudit {
+  const received: WebSocketAuditFrame[] = [];
+  const sent: WebSocketAuditFrame[] = [];
+  const sockets: WebSocket[] = [];
+
+  page.on('websocket', (socket) => {
+    sockets.push(socket);
+    socket.on('framesent', ({ payload }) => {
+      const frame = parseWebSocketFrame(payload);
+      if (frame) sent.push(frame);
+    });
+    socket.on('framereceived', ({ payload }) => {
+      const frame = parseWebSocketFrame(payload);
+      if (frame) received.push(frame);
+    });
+  });
+
+  return { received, sent, sockets };
+}
 
 export async function login(page: Page) {
   await loginAs(page, ADMIN_USERNAME, ADMIN_PASSWORD);

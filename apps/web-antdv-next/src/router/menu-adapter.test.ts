@@ -81,6 +81,21 @@ describe('feature-integrity backend menu adaptation', () => {
     });
   });
 
+  it('contains an unregistered backend icon without a runtime fetch', () => {
+    const page = node({
+      component: 'research/feedback/index',
+      icon: 'lucide:server-controlled-unknown',
+      kind: 'menu',
+      name: 'research-feedback',
+      path: '/research/feedback',
+      permission_code: 'materialization:read',
+    });
+
+    expect(adaptMenuTree([page]).routes[0]).toMatchObject({
+      meta: { icon: 'lucide:circle-help' },
+    });
+  });
+
   it.each([
     ['execution-orders', '/quant/execution-orders'],
     ['positions', '/quant/positions'],

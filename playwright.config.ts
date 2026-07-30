@@ -55,7 +55,7 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command: `cargo build -p quant-pivot-xtask -p quant-pivot-bin && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port 8088 --browser-fixture${retainBackendArtifacts}`,
+          command: `cargo build -p quant-pivot-xtask -p quant-pivot-bin && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port 8088 --fixture governed-feedback${retainBackendArtifacts}`,
           gracefulShutdown: { signal: 'SIGTERM', timeout: 60_000 },
           reuseExistingServer: false,
           stderr: 'pipe',

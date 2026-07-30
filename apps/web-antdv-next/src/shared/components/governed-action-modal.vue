@@ -117,6 +117,7 @@ function focusModalTitle() {
 }
 
 const [Modal, modalApi] = useVbenModal({
+  closeOnPressEscape: true,
   destroyOnClose: true,
   onCancel() {
     payload.value?.onCancel?.();

@@ -24,8 +24,29 @@ defineOptions({ name: 'ResearchDomainSourcesPage' });
 const { handleRequest } = useRequestHandler();
 
 const rows = ref<DomainSourceExpectationView[]>([]);
+const loadState = ref<'error' | 'idle' | 'loaded' | 'loading'>('idle');
 
 const summary = computed(() => summarizeDomainSources(rows.value));
+const loadAnnouncement = computed(() => {
+  switch (loadState.value) {
+    case 'error': {
+      return $t('page.research.domainSources.loadFailedAnnouncement');
+    }
+    case 'loaded': {
+      return rows.value.length === 0
+        ? $t('page.research.domainSources.emptyAnnouncement')
+        : $t('page.research.domainSources.loadedAnnouncement', {
+            count: rows.value.length,
+          });
+    }
+    case 'loading': {
+      return $t('page.research.domainSources.loadingAnnouncement');
+    }
+    default: {
+      return '';
+    }
+  }
+});
 
 const emptyPage = {
   has_next: false,
@@ -42,8 +63,15 @@ const [Grid, gridApi] = useVbenVxeGrid<DomainSourceExpectationView>({
     proxyConfig: {
       ajax: {
         query: async () => {
+          loadState.value = 'loading';
           const data = await handleRequest(() => listDomainSources());
-          rows.value = data ?? [];
+          if (data === null) {
+            rows.value = [];
+            loadState.value = 'error';
+          } else {
+            rows.value = data;
+            loadState.value = 'loaded';
+          }
           return {
             ...emptyPage,
             items: rows.value,
@@ -90,6 +118,9 @@ function cursorStatusColor(status: DomainCursorStatus) {
 
 <template>
   <Page auto-content-height data-testid="domain-sources-page">
+    <p aria-atomic="true" aria-live="polite" class="sr-only" role="status">
+      {{ loadAnnouncement }}
+    </p>
     <div class="mb-4 flex flex-wrap gap-4">
       <Card
         size="small"

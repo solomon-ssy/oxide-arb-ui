@@ -176,7 +176,7 @@ function showDetail(outcome: GateOutcome): boolean {
       <template #description>
         <span class="text-xs">
           {{ $t('page.research.qualityGate.intentLabel') }}: {{ intentLabel }}
-          <span v-if="report?.evaluated_at" class="text-muted-foreground">
+          <span v-if="report?.evaluated_at">
             · {{ formatDateTimeLocal(report.evaluated_at) }}
           </span>
         </span>

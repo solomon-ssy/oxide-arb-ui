@@ -151,11 +151,21 @@ function refresh() {
         {{ descText }}
       </p>
       <slot v-if="$slots.action" name="action"></slot>
-      <VbenButton v-else-if="showBack" size="lg" @click="back">
+      <VbenButton
+        v-else-if="showBack"
+        class="min-h-11 min-w-11"
+        size="lg"
+        @click="back"
+      >
         <ArrowLeft class="mr-2 size-4" />
         {{ $t('common.backToHome') }}
       </VbenButton>
-      <VbenButton v-else-if="showRefresh" size="lg" @click="refresh">
+      <VbenButton
+        v-else-if="showRefresh"
+        class="min-h-11 min-w-11"
+        size="lg"
+        @click="refresh"
+      >
         <RotateCw class="mr-2 size-4" />
         {{ $t('common.refresh') }}
       </VbenButton>

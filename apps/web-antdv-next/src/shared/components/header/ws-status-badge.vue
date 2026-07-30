@@ -45,22 +45,26 @@ const isStatusStale = computed(() => {
   return nowMs.value - lastMs > STALE_MS;
 });
 
+const statusLabel = computed(() => $t(`page.ws.status.${wsStore.status}`));
+
 const tooltip = computed(() => {
-  const state = $t(`page.ws.status.${wsStore.status}`);
   const syncedAt = wsStore.lastSyncAt
     ? $t('page.ws.lastSync', { at: formatDateTimeLocal(wsStore.lastSyncAt) })
     : $t('page.ws.neverSynced');
   const staleHint = isStatusStale.value
     ? ` · ${$t('page.ws.statusStale')}`
     : '';
-  return `${state} · ${syncedAt}${staleHint}`;
+  return `${statusLabel.value} · ${syncedAt}${staleHint}`;
 });
 </script>
 
 <template>
   <Tooltip :title="tooltip">
     <button
-      class="hover:bg-accent relative flex size-8 cursor-pointer items-center justify-center rounded-md"
+      :aria-label="statusLabel"
+      class="hover:bg-accent relative flex size-11 cursor-pointer items-center justify-center rounded-md"
+      :data-state="wsStore.status"
+      data-testid="websocket-status"
       type="button"
       @click="connect"
     >

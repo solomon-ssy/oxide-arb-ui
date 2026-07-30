@@ -16,6 +16,8 @@ import type {
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
+import { withSilentError } from '@vben/request/qp';
+
 import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
@@ -31,9 +33,10 @@ export interface FeedbackReadOptions {
 
 /** Read the authoritative feedback overview snapshot. */
 export async function getFeedbackOverview(options: FeedbackReadOptions = {}) {
-  return requestClient.get<FeedbackOverviewView>(FeedbackApi.overview, {
-    signal: options.signal,
-  });
+  return requestClient.get<FeedbackOverviewView>(
+    FeedbackApi.overview,
+    withSilentError({ signal: options.signal }),
+  );
 }
 
 /** Page the durable feedback-cycle ledger. */
@@ -41,10 +44,13 @@ export async function listFeedbackCycles(
   query: FeedbackCycleListQuery = {},
   options: FeedbackReadOptions = {},
 ) {
-  return requestClient.get<Paginated<FeedbackCycleView>>(FeedbackApi.cycles, {
-    params: query,
-    signal: options.signal,
-  });
+  return requestClient.get<Paginated<FeedbackCycleView>>(
+    FeedbackApi.cycles,
+    withSilentError({
+      params: query,
+      signal: options.signal,
+    }),
+  );
 }
 
 /** Read one authoritative feedback-cycle detail snapshot. */
@@ -54,9 +60,9 @@ export async function getFeedbackCycle(
 ) {
   return requestClient.get<FeedbackCycleDetailView>(
     `${FeedbackApi.cycles}/${encodeURIComponent(cycleId)}`,
-    {
+    withSilentError({
       signal: options.signal,
-    },
+    }),
   );
 }
 
@@ -92,10 +98,10 @@ export async function listPromotionPermits(
 ) {
   return requestClient.get<Paginated<PromotionPermitView>>(
     FeedbackApi.permits,
-    {
+    withSilentError({
       params: query,
       signal: options.signal,
-    },
+    }),
   );
 }
 

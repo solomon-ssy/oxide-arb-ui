@@ -50,6 +50,7 @@ import {
 } from '#/api/feedback';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useFeedbackStore } from '#/store';
@@ -70,6 +71,12 @@ import { feedbackWorkbenchState } from './modules/feedback-workbench-state';
 defineOptions({ name: 'ResearchFeedbackPage' });
 
 type WorkbenchView = 'cycles' | 'overview';
+
+interface FeedbackWorkbenchSnapshot {
+  cycles: Paginated<FeedbackCycleView>;
+  overview: FeedbackOverviewView;
+  previousCycleId?: string;
+}
 
 const PAGE_SIZE = 20;
 const emptyCycles: Paginated<FeedbackCycleView> = {
@@ -109,8 +116,6 @@ const permitError = ref<null | string>(null);
 const permitIdempotencyKey = ref(crypto.randomUUID());
 const selectedTriggerProfileId = ref('');
 const pendingActions = reactive(new Set<string>());
-let loadGeneration = 0;
-let loadController: AbortController | null = null;
 let detailGeneration = 0;
 let detailController: AbortController | null = null;
 let permitGeneration = 0;
@@ -131,6 +136,11 @@ const triggerProfileOptions = computed(
       label: `${profile.profile_ref.id}@${profile.profile_ref.version}`,
       value: profile.profile_ref.id,
     })) ?? [],
+);
+const triggerPending = computed(
+  () =>
+    selectedTriggerProfileId.value !== '' &&
+    pendingActions.has(`trigger:${selectedTriggerProfileId.value}`),
 );
 
 const activeView = computed<WorkbenchView>({
@@ -532,65 +542,64 @@ async function revokePermit(permit: PromotionPermitView) {
   }
 }
 
-async function refresh() {
-  if (!canRead.value) {
-    loading.value = false;
-    refreshing.value = false;
-    return;
-  }
-
-  const previousCycleId = selectedCycle.value?.feedback_cycle_id;
-  const generation = ++loadGeneration;
-  loadController?.abort();
-  const controller = new AbortController();
-  loadController = controller;
-  loadError.value = null;
-  if (overview.value === null) {
-    loading.value = true;
-  } else {
-    refreshing.value = true;
-  }
-
-  try {
+const refreshCoordinator = new AuthoritativeReadCoordinator<
+  number,
+  FeedbackWorkbenchSnapshot
+>({
+  async fetchSnapshot(page, signal) {
+    const previousCycleId = selectedCycle.value?.feedback_cycle_id;
     const [nextOverview, nextCycles] = await Promise.all([
-      getFeedbackOverview({ signal: controller.signal }),
-      listFeedbackCycles(
-        { page: currentPage.value, size: PAGE_SIZE },
-        { signal: controller.signal },
-      ),
+      getFeedbackOverview({ signal }),
+      listFeedbackCycles({ page, size: PAGE_SIZE }, { signal }),
     ]);
-    if (generation !== loadGeneration) {
-      return;
-    }
-    validateOverview(nextOverview);
-    overview.value = nextOverview;
+    return {
+      cycles: nextCycles,
+      overview: nextOverview,
+      previousCycleId,
+    };
+  },
+  initialKey: currentPage.value,
+  onError() {
+    loadError.value = $t('page.research.feedback.loadError');
+  },
+  onPendingChange(pending) {
+    loading.value = pending && overview.value === null;
+    refreshing.value = pending && overview.value !== null;
+  },
+  onSnapshot(snapshot) {
+    validateOverview(snapshot.overview);
+    loadError.value = null;
+    overview.value = snapshot.overview;
     if (
       selectedTriggerProfileId.value === '' &&
-      nextOverview.profiles.length > 0
+      snapshot.overview.profiles.length > 0
     ) {
       selectedTriggerProfileId.value =
-        nextOverview.profiles[0]?.profile_ref.id ?? '';
+        snapshot.overview.profiles[0]?.profile_ref.id ?? '';
     }
-    cyclePage.value = nextCycles;
+    cyclePage.value = snapshot.cycles;
     const nextCycleId = selectedCycle.value?.feedback_cycle_id;
-    if (nextCycleId !== undefined && nextCycleId === previousCycleId) {
+    if (nextCycleId !== undefined && nextCycleId === snapshot.previousCycleId) {
       void refreshCycleDetail(nextCycleId);
     }
     void refreshPermits();
-  } catch {
-    if (generation === loadGeneration) {
-      loadError.value = $t('page.research.feedback.loadError');
-    }
-  } finally {
-    if (generation === loadGeneration) {
-      loading.value = false;
-      refreshing.value = false;
-    }
+  },
+});
+
+function refresh(): Promise<void> {
+  if (!canRead.value) {
+    loading.value = false;
+    refreshing.value = false;
+    return Promise.resolve();
   }
+  refreshCoordinator.setKey(currentPage.value);
+  return refreshCoordinator.refresh();
 }
 
-watch(currentPage, () => {
-  void refresh();
+watch(currentPage, (page) => {
+  if (canRead.value) {
+    refreshCoordinator.changeKey(page);
+  }
 });
 watch(
   () => selectedCycle.value?.feedback_cycle_id,
@@ -606,13 +615,18 @@ watch(
 watch(
   () => feedbackStore.refreshGeneration,
   () => {
-    void refresh();
+    if (canRead.value) {
+      refreshCoordinator.invalidate();
+    }
   },
 );
 watch(canRead, (allowed, wasAllowed) => {
   if (allowed && !wasAllowed) {
     void refresh();
   } else if (!allowed) {
+    refreshCoordinator.cancel();
+    loading.value = false;
+    refreshing.value = false;
     resetCycleDetail();
   }
 });
@@ -624,8 +638,7 @@ onMounted(() => {
   void refresh();
 });
 onBeforeUnmount(() => {
-  loadGeneration += 1;
-  loadController?.abort();
+  refreshCoordinator.dispose();
   detailGeneration += 1;
   detailController?.abort();
   permitGeneration += 1;
@@ -672,8 +685,8 @@ onBeforeUnmount(() => {
           <Button
             v-if="canTrigger"
             class="min-h-11 shrink-0"
-            :disabled="selectedTriggerProfileId === ''"
-            :loading="pendingActions.has(`trigger:${selectedTriggerProfileId}`)"
+            :disabled="selectedTriggerProfileId === '' || triggerPending"
+            :loading="triggerPending"
             type="primary"
             @click="triggerCycle"
           >
@@ -770,7 +783,10 @@ onBeforeUnmount(() => {
               <DescriptionsItem
                 :label="$t('page.research.feedback.overview.revision')"
               >
-                <span class="font-mono tabular-nums">
+                <span
+                  class="font-mono tabular-nums"
+                  data-testid="feedback-overview-revision"
+                >
                   {{ overview.revision }}
                 </span>
               </DescriptionsItem>

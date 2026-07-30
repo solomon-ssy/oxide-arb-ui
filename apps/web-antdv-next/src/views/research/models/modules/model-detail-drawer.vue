@@ -150,6 +150,20 @@ const servingLineage = computed(() =>
 const servingCommitments = computed(() =>
   modelDetail.value ? modelServingCommitments(modelDetail.value) : null,
 );
+const detailAnnouncement = computed(() => {
+  if (loading.value) {
+    return $t('page.research.models.detail.loadingAnnouncement');
+  }
+  if (!modelDetail.value) {
+    return $t('page.research.models.detail.loadFailedAnnouncement');
+  }
+  if (gateLoading.value) {
+    return $t('page.research.models.detail.readinessLoadingAnnouncement');
+  }
+  return gate.value
+    ? $t('page.research.models.detail.loadedAnnouncement')
+    : $t('page.research.models.detail.readinessUnavailableAnnouncement');
+});
 
 const cpcvInProgress = computed(() => !!activeCpcvJob.value);
 
@@ -565,6 +579,9 @@ watch(
     :title="$t('page.research.models.detail.title')"
     class="w-full max-w-3xl"
   >
+    <p aria-atomic="true" aria-live="polite" class="sr-only" role="status">
+      {{ detailAnnouncement }}
+    </p>
     <Spin :spinning="loading">
       <div v-if="model" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
