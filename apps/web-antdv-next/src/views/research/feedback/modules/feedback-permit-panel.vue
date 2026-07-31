@@ -2,24 +2,22 @@
 import type {
   FeedbackCycleView,
   IssuePromotionPermitRequest,
+  ModelRouteActivationReceiptView,
   Paginated,
   PromotionPermitView,
-  QuantRuntimeMode,
 } from '@vben/types';
 
-import { computed, ref } from 'vue';
-
-import { QUANT_RUNTIME_MODE_OPTIONS } from '@vben/types';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { RouterLink } from 'vue-router';
 
 import {
   Alert,
   Button,
   Card,
-  CheckboxGroup,
   Descriptions,
   DescriptionsItem,
   Empty,
-  Input,
+  Select,
   Tag,
 } from 'antdv-next';
 
@@ -28,11 +26,15 @@ import { formatDateTimeLocal } from '#/shared/components/format';
 
 import {
   canIssuePromotionPermit,
-  canonicalPromotionModes,
-  parsePromotionExpiry,
+  PERMIT_TTL_PRESETS,
+  promotionPermitRemaining,
+  promotionPermitStatus,
+  validatePermitTtl,
 } from './feedback-action-state';
 
 const props = defineProps<{
+  activationReceipt: ModelRouteActivationReceiptView | null;
+  canActivate: boolean;
   canIssue: boolean;
   canRead: boolean;
   canRevoke: boolean;
@@ -46,19 +48,24 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  issue: [request: Omit<IssuePromotionPermitRequest, 'reason'>];
+  activate: [permit: PromotionPermitView];
+  issue: [request: Omit<IssuePromotionPermitRequest, 'note'>];
   retry: [];
   revoke: [permit: PromotionPermitView];
 }>();
 
-const selectedModes = ref<QuantRuntimeMode[]>(['report_only']);
-const expiryInput = ref('');
+const ttlSecs = ref<number>(1800);
 const inputError = ref<null | string>(null);
+const clockNow = ref(performance.now());
+const observedLocallyAt = new Map<string, number>();
+let clockTimer: ReturnType<typeof setInterval> | undefined;
 
-const modeOptions = computed(() =>
-  QUANT_RUNTIME_MODE_OPTIONS.map((mode) => ({
-    label: $t(`enum.quantRuntimeMode.${mode}`),
-    value: mode,
+const ttlOptions = computed(() =>
+  PERMIT_TTL_PRESETS.map((seconds) => ({
+    label: $t('page.research.feedback.actions.permit.ttlMinutes', {
+      minutes: seconds / 60,
+    }),
+    value: seconds,
   })),
 );
 
@@ -68,8 +75,56 @@ const issueEligible = computed(
     props.selectedCycle !== undefined &&
     canIssuePromotionPermit(props.selectedCycle),
 );
+const visibleActivationReceipt = computed(() => {
+  const receipt = props.activationReceipt;
+  return receipt !== null &&
+    receipt.feedback_cycle_id === props.selectedCycle?.feedback_cycle_id
+    ? receipt
+    : null;
+});
 
-function statusColor(status: PromotionPermitView['status']) {
+watch(
+  () =>
+    props.page.items
+      .map(
+        (permit) =>
+          `${permit.promotion_permit_id}:${permit.observed_at}:${permit.status}`,
+      )
+      .join('|'),
+  () => {
+    const receivedAt = performance.now();
+    const currentKeys = new Set(
+      props.page.items.map((permit) => observationKey(permit)),
+    );
+    for (const key of observedLocallyAt.keys()) {
+      if (!currentKeys.has(key)) {
+        observedLocallyAt.delete(key);
+      }
+    }
+    for (const permit of props.page.items) {
+      observedLocallyAt.set(observationKey(permit), receivedAt);
+    }
+  },
+  { immediate: true },
+);
+
+onMounted(() => {
+  clockTimer = setInterval(() => {
+    clockNow.value = performance.now();
+  }, 1000);
+});
+
+onBeforeUnmount(() => {
+  if (clockTimer !== undefined) {
+    clearInterval(clockTimer);
+  }
+});
+
+function observationKey(permit: PromotionPermitView) {
+  return `${permit.promotion_permit_id}:${permit.observed_at}`;
+}
+
+function statusColor(status: ReturnType<typeof promotionPermitStatus>) {
   switch (status) {
     case 'active': {
       return 'success';
@@ -77,10 +132,50 @@ function statusColor(status: PromotionPermitView['status']) {
     case 'expired': {
       return 'warning';
     }
+    case 'invalid': {
+      return 'error';
+    }
     case 'revoked': {
       return 'error';
     }
   }
+}
+
+function receivedAt(permit: PromotionPermitView) {
+  const localObservation =
+    observedLocallyAt.get(observationKey(permit)) ?? clockNow.value;
+  return localObservation;
+}
+
+function presentationStatus(permit: PromotionPermitView) {
+  return promotionPermitStatus(permit, receivedAt(permit), clockNow.value);
+}
+
+function countdown(permit: PromotionPermitView) {
+  const remaining = promotionPermitRemaining(
+    permit,
+    receivedAt(permit),
+    clockNow.value,
+  );
+  if (remaining === null) {
+    return $t('page.research.feedback.actions.permit.invalidClock');
+  }
+  if (presentationStatus(permit) !== 'active') {
+    return $t('page.research.feedback.detail.notObserved');
+  }
+  const hours = Math.floor(remaining / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+  const seconds = remaining % 60;
+  return [hours, minutes, seconds]
+    .map((value) => value.toString().padStart(2, '0'))
+    .join(':');
+}
+
+function formatUtc(value: string) {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp)
+    ? new Date(timestamp).toISOString()
+    : $t('page.research.feedback.actions.permit.invalidClock');
 }
 
 function submitIssue() {
@@ -91,10 +186,10 @@ function submitIssue() {
   try {
     inputError.value = null;
     emit('issue', {
-      allowed_runtime_modes: canonicalPromotionModes(selectedModes.value),
-      expires_at: parsePromotionExpiry(expiryInput.value),
       feedback_cycle_id: cycle.feedback_cycle_id,
       idempotency_key: props.idempotencyKey,
+      reason_code: 'operator_authorized',
+      ttl_secs: validatePermitTtl(ttlSecs.value),
     });
   } catch {
     inputError.value = $t('page.research.feedback.actions.permit.invalidInput');
@@ -106,6 +201,7 @@ function submitIssue() {
   <section
     aria-labelledby="feedback-promotion-permits-title"
     class="mt-6 space-y-4"
+    data-testid="feedback-permit-panel"
   >
     <div>
       <h2 id="feedback-promotion-permits-title" class="text-base font-semibold">
@@ -122,6 +218,87 @@ function submitIssue() {
       show-icon
       type="warning"
     />
+
+    <Card
+      v-if="visibleActivationReceipt"
+      data-testid="feedback-activation-receipt"
+      size="small"
+    >
+      <template #title>
+        {{ $t('page.research.feedback.actions.permit.receipt.title') }}
+      </template>
+      <template #extra>
+        <Tag color="success">
+          {{
+            $t(
+              visibleActivationReceipt.replayed
+                ? 'page.research.feedback.actions.permit.receipt.replayed'
+                : 'page.research.feedback.actions.permit.receipt.activated',
+            )
+          }}
+        </Tag>
+      </template>
+      <Descriptions
+        :column="{ lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 }"
+        bordered
+        size="small"
+      >
+        <DescriptionsItem
+          :label="$t('page.research.feedback.actions.permit.receipt.route')"
+        >
+          {{ visibleActivationReceipt.previous_route_generation }} →
+          {{ visibleActivationReceipt.activated_route_generation }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.feedback.actions.permit.receipt.model')"
+        >
+          <span class="break-all font-mono text-xs">
+            {{ visibleActivationReceipt.previous_model_version_id }} →
+            {{ visibleActivationReceipt.activated_model_version_id }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.feedback.actions.permit.receipt.actors')"
+        >
+          {{
+            $t('page.research.feedback.actions.permit.receipt.actorLineage', {
+              activator: visibleActivationReceipt.activated_by_username,
+              issuer: visibleActivationReceipt.permit_issued_by_username,
+            })
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.feedback.actions.permit.receipt.timestamp')"
+        >
+          {{ formatUtc(visibleActivationReceipt.server_timestamp) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.research.feedback.actions.permit.receipt.transactionHash')
+          "
+          span="filled"
+        >
+          <span class="break-all font-mono text-xs">
+            {{ visibleActivationReceipt.transaction_hash }}
+          </span>
+        </DescriptionsItem>
+      </Descriptions>
+      <Alert
+        class="mt-4"
+        :message="
+          $t('page.research.feedback.actions.permit.executionUnchanged')
+        "
+        show-icon
+        type="success"
+      />
+      <RouterLink
+        class="!text-foreground mt-4 inline-flex min-h-11 items-center rounded-sm underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        data-testid="feedback-rollback-link"
+        :to="{ path: '/system/config/model_routing' }"
+      >
+        {{ $t('page.research.feedback.actions.permit.receipt.rollback') }}
+      </RouterLink>
+    </Card>
 
     <Card v-if="canRead && canIssue" size="small">
       <template #title>
@@ -140,26 +317,16 @@ function submitIssue() {
           </div>
         </div>
         <div class="min-w-0">
-          <label class="text-sm font-medium" for="feedback-permit-expiry">
-            {{ $t('page.research.feedback.actions.permit.expiresAt') }}
+          <label class="text-sm font-medium" for="feedback-permit-ttl">
+            {{ $t('page.research.feedback.actions.permit.ttl') }}
           </label>
-          <Input
-            id="feedback-permit-expiry"
-            v-model:value="expiryInput"
-            class="mt-1"
-            type="datetime-local"
+          <Select
+            id="feedback-permit-ttl"
+            v-model:value="ttlSecs"
+            class="mt-1 w-full"
+            :options="ttlOptions"
           />
         </div>
-        <fieldset class="min-w-0">
-          <legend class="text-sm font-medium">
-            {{ $t('page.research.feedback.actions.permit.runtimeModes') }}
-          </legend>
-          <CheckboxGroup
-            v-model:value="selectedModes"
-            class="mt-2 flex flex-wrap gap-3"
-            :options="modeOptions"
-          />
-        </fieldset>
         <div class="min-w-0">
           <div class="text-sm font-medium">
             {{ $t('page.research.feedback.actions.permit.idempotencyKey') }}
@@ -181,6 +348,7 @@ function submitIssue() {
       </p>
       <Button
         class="mt-4 min-h-11"
+        data-testid="feedback-issue-permit"
         :disabled="!issueEligible"
         :loading="issuePending"
         type="primary"
@@ -207,6 +375,7 @@ function submitIssue() {
       <Card
         v-for="permit in page.items"
         :key="permit.promotion_permit_id"
+        :data-testid="`feedback-permit-${permit.promotion_permit_id}`"
         size="small"
       >
         <template #title>
@@ -215,10 +384,10 @@ function submitIssue() {
           </span>
         </template>
         <template #extra>
-          <Tag :color="statusColor(permit.status)">
+          <Tag :color="statusColor(presentationStatus(permit))">
             {{
               $t(
-                `page.research.feedback.actions.permit.status.${permit.status}`,
+                `page.research.feedback.actions.permit.status.${presentationStatus(permit)}`,
               )
             }}
           </Tag>
@@ -228,6 +397,13 @@ function submitIssue() {
           bordered
           size="small"
         >
+          <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.cycle')"
+          >
+            <span class="break-all font-mono text-xs">
+              {{ permit.feedback_cycle_id }}
+            </span>
+          </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.profile')"
           >
@@ -251,9 +427,45 @@ function submitIssue() {
             }}
           </DescriptionsItem>
           <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.serverClock')"
+          >
+            {{ formatUtc(permit.observed_at) }}
+          </DescriptionsItem>
+          <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.expiresAt')"
           >
-            {{ formatDateTimeLocal(permit.expires_at) }}
+            {{ formatUtc(permit.expires_at) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.countdown')"
+          >
+            <span class="font-mono tabular-nums">
+              {{ countdown(permit) }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.routeRevision')"
+          >
+            {{ permit.expected_policy_generation }} ·
+            {{ permit.expected_runtime_control_revision }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.modelDiff')"
+            span="filled"
+          >
+            <span class="break-all font-mono text-xs">
+              {{ permit.champion_model_version_id }} →
+              {{ permit.candidate_model_version_id }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.manifest')"
+            span="filled"
+          >
+            <span class="break-all font-mono text-xs">
+              {{ permit.candidate_manifest_id }} ·
+              {{ permit.candidate_manifest_hash }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.issuedBy')"
@@ -280,6 +492,16 @@ function submitIssue() {
             </span>
           </DescriptionsItem>
           <DescriptionsItem
+            :label="
+              $t('page.research.feedback.actions.permit.promotionGateHash')
+            "
+            span="filled"
+          >
+            <span class="break-all font-mono text-xs">
+              {{ permit.promotion_gate_hash }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.revision')"
           >
             {{ permit.revision }}
@@ -290,15 +512,43 @@ function submitIssue() {
             {{ formatDateTimeLocal(permit.observed_at) }}
           </DescriptionsItem>
         </Descriptions>
-        <Button
-          v-if="canRevoke && permit.status === 'active'"
-          class="mt-4 min-h-11"
-          danger
-          :loading="pendingActions.has(`revoke:${permit.promotion_permit_id}`)"
-          @click="emit('revoke', permit)"
+        <Alert
+          v-if="presentationStatus(permit) === 'active'"
+          class="mt-4"
+          :message="
+            $t('page.research.feedback.actions.permit.activationInvariant')
+          "
+          show-icon
+          type="info"
+        />
+        <div
+          v-if="presentationStatus(permit) === 'active'"
+          class="mt-4 flex flex-wrap gap-2"
         >
-          {{ $t('page.research.feedback.actions.permit.revoke') }}
-        </Button>
+          <Button
+            v-if="canActivate"
+            class="min-h-11"
+            :data-testid="`feedback-activate-${permit.promotion_permit_id}`"
+            :loading="
+              pendingActions.has(`activate:${permit.promotion_permit_id}`)
+            "
+            type="primary"
+            @click="emit('activate', permit)"
+          >
+            {{ $t('page.research.feedback.actions.permit.activate') }}
+          </Button>
+          <Button
+            v-if="canRevoke"
+            class="min-h-11"
+            danger
+            :loading="
+              pendingActions.has(`revoke:${permit.promotion_permit_id}`)
+            "
+            @click="emit('revoke', permit)"
+          >
+            {{ $t('page.research.feedback.actions.permit.revoke') }}
+          </Button>
+        </div>
       </Card>
     </div>
   </section>

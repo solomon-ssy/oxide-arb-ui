@@ -63,7 +63,7 @@ async function loadOptions() {
         model.model_spec_id === currentSpecId,
     )
     .map((model) => ({
-      label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
+      label: `${model.model_version_id} · v${model.version} · ${model.model_family}`,
       value: model.model_version_id,
     }));
   formApi.updateSchema([

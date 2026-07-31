@@ -94,7 +94,7 @@ async function loadOptions() {
     ),
   ]);
   const modelOptions: OptionItem[] = (models ?? []).map((model) => ({
-    label: `${model.model_version_id} · v${model.version} · ${model.publication_status}`,
+    label: `${model.model_version_id} · v${model.version} · ${model.model_family}`,
     value: model.model_version_id,
   }));
   const seen = new Set<string>();

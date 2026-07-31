@@ -14,6 +14,7 @@ export function useAntdDesignTokens() {
   const buttonTokens = reactive({
     colorPrimaryActive: '',
     colorPrimaryHover: '',
+    primaryColor: '',
   });
 
   const tokens = reactive({
@@ -58,6 +59,7 @@ export function useAntdDesignTokens() {
         isDark.value ? '--primary' : '--primary-600',
       );
       buttonTokens.colorPrimaryActive = getCssVariableValue('--primary-700');
+      buttonTokens.primaryColor = getCssVariableValue('--primary-foreground');
 
       tokens.colorInfo = getCssVariableValue('--primary');
 
@@ -86,8 +88,6 @@ export function useAntdDesignTokens() {
       );
       tokens.colorTextPlaceholder = getCssVariableValue('--muted-foreground');
       tokens.colorTextTertiary = getCssVariableValue('--muted-foreground');
-
-      getCssVariableValue('--primary-foreground');
 
       tokens.colorBorderSecondary = tokens.colorBorder =
         getCssVariableValue('--border');

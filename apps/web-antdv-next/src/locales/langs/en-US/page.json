@@ -190,6 +190,12 @@
       "staleDescription": "The last verified snapshot remains visible while refresh is retried.",
       "blockedTitle": "Readiness evidence is unavailable",
       "blockedDescription": "History and queue facts remain auditable, but retraining readiness is blocked until the backend can provide verified retention and latency evidence.",
+      "recovery": {
+        "degradedTitle": "Live feedback updates are degraded",
+        "degradedDescription": "WebSocket delivery is unavailable. Bounded REST polling is active until the live channel recovers.",
+        "requiredTitle": "Authoritative feedback recovery is required",
+        "requiredDescription": "Live hints are suspended after {reason}. Bounded polling remains active while an authoritative cursor and snapshot are recovered."
+      },
       "state": {
         "permission": "Feedback workbench access denied",
         "loading": "Loading feedback workbench",
@@ -274,6 +280,7 @@
       },
       "detail": {
         "loadError": "Cycle detail could not be loaded",
+        "notFound": "The cycle in this URL does not exist or is no longer visible.",
         "loadErrorDescription": "The list remains available, but this authoritative detail snapshot could not be verified. Retry after the service recovers.",
         "refreshing": "Refreshing selected cycle detail",
         "empty": "No authoritative detail is available for the selected cycle.",
@@ -316,14 +323,17 @@
           "createdAt": "Persisted",
           "stage": {
             "trigger": "Trigger",
+            "truth_freeze": "Truth freeze",
             "coverage": "Coverage",
+            "attribution_plan": "Attribution plan",
             "drift": "Drift",
             "dataset_seal": "Dataset seal",
             "training": "Training",
             "calibration": "Calibration",
             "cpcv": "CPCV",
+            "validation": "Validation",
             "comparison": "Comparison",
-            "shadow_replay": "Shadow replay",
+            "shadow": "Shadow replay",
             "decision": "Decision"
           },
           "event": {
@@ -357,6 +367,64 @@
           "candidate": "Candidates",
           "eligible": "Eligible",
           "included": "Included"
+        },
+        "candidateReady": {
+          "title": "Candidate decision scorecard",
+          "ready": "Eligible for governed route review",
+          "description": "All values are server-derived from the immutable Decision DAG. Automatic retraining stops here; issuing a permit and activating the route remain separate operator actions.",
+          "noBlockers": "All promotion blockers cleared",
+          "seconds": "seconds",
+          "route": {
+            "title": "Serving route diff",
+            "models": "Champion → challenger",
+            "generation": "Route generation",
+            "authority": "Protected authority",
+            "unchanged": "Execution mode, capital, funder, and signing authority unchanged"
+          },
+          "comparison": {
+            "title": "Same-window comparison",
+            "observations": "Observations",
+            "effect": "Challenger effect",
+            "lowerBound": "Simultaneous lower bound",
+            "adjustedP": "Romano–Wolf adjusted p-value",
+            "confidence": "Familywise confidence"
+          },
+          "shadow": {
+            "title": "Production shadow evidence",
+            "observations": "Observed / required decisions",
+            "window": "Observed / required window",
+            "overlap": "Mean / minimum TopN overlap",
+            "divergence": "Hard divergence",
+            "detected": "Detected",
+            "none": "None"
+          },
+          "attribution": {
+            "title": "Attribution artifacts",
+            "priorUses": "Prior-cycle planner inputs",
+            "explanations": "Prediction explanations",
+            "counterfactuals": "Decision counterfactuals",
+            "associations": "Outcome associations",
+            "trajectories": "Execution trajectories",
+            "policyOutcomes": "Policy counterfactual outcomes"
+          },
+          "qualityGate": {
+            "title": "Unique validation quality gate",
+            "passed": "All hard gates passed",
+            "observed": "Observed",
+            "threshold": "Threshold"
+          },
+          "gateStatus": {
+            "pass": "Pass",
+            "fail": "Fail",
+            "warn": "Warning",
+            "not_applicable": "Not applicable"
+          },
+          "evidence": {
+            "title": "Immutable evidence hashes",
+            "qualityHash": "Quality-gate report hash",
+            "useSetHash": "Prior attribution use-set hash",
+            "producedSetHash": "Produced attribution set hash"
+          }
         },
         "drift": {
           "title": "Drift evidence",
@@ -414,6 +482,65 @@
           "createdAt": "Persisted"
         }
       },
+      "scheduler": {
+        "title": "Automatic retraining scheduler",
+        "description": "PostgreSQL-authoritative cadence, cooldown, lease, retry, and pause state. Automatic work stops at CandidateReady.",
+        "empty": "No scheduler state is available.",
+        "loadError": "Scheduler state could not be loaded; the last verified snapshot remains visible.",
+        "profile": "Research profile",
+        "nextDue": "Next due",
+        "cooldownUntil": "Cooldown until",
+        "cadence": "Cadence",
+        "cooldown": "Cooldown",
+        "lease": "Lease",
+        "retry": "Retry",
+        "lastCycle": "Last cycle",
+        "pauseRevision": "Pause revision",
+        "lastError": "Last error",
+        "pauseNote": "Pause note",
+        "observedAt": "Server observed",
+        "days": "{value} days",
+        "hours": "{value} hours",
+        "seconds": "{value} seconds",
+        "pause": "Pause scheduler",
+        "resume": "Resume scheduler",
+        "pauseTitle": "Pause automatic retraining",
+        "resumeTitle": "Resume automatic retraining",
+        "pauseSummary": "Pause future scheduled claims for this profile with pause-revision compare-and-swap. Running cycle truth is not rewritten.",
+        "resumeSummary": "Resume scheduled claims for this profile with pause-revision compare-and-swap. Cadence and cooldown remain server-owned.",
+        "pauseSuccess": "Automatic retraining scheduler paused.",
+        "resumeSuccess": "Automatic retraining scheduler resumed.",
+        "state": {
+          "paused": "Paused",
+          "retrying": "Retrying",
+          "leased": "Leased",
+          "scheduled": "Scheduled"
+        }
+      },
+      "truthOps": {
+        "title": "Canonical truth operations",
+        "description": "PostgreSQL inbox, projection, execution-attempt, and recommendation-rollup coverage used by TruthFreeze. Backlog values are never interpreted as zero-valued outcomes.",
+        "resolutionBacklog": "Resolution projection backlog",
+        "quarantined": "Resolution quarantine",
+        "oldestUnresolved": "Oldest unresolved observation",
+        "resolutionWatermark": "Resolution verified through",
+        "attemptBacklog": "Unsealed execution attempts",
+        "attemptWatermark": "Execution attempts sealed through",
+        "rollupBacklog": "Unsealed recommendation rollups",
+        "rollupWatermark": "Recommendation rollups sealed through",
+        "observedAt": "Server observed",
+        "notApplicable": "None",
+        "invalidTimestamp": "Invalid timestamp",
+        "ageSeconds": "{value} seconds old",
+        "state": {
+          "healthy": "Truth pipeline caught up",
+          "healthyDescription": "No unresolved, quarantined, or unsealed truth is visible at the observed cutoff.",
+          "lagging": "Truth pipeline has backlog",
+          "laggingDescription": "TruthFreeze will block any affected cohort until the visible backlog is sealed.",
+          "quarantined": "Resolution observations require intervention",
+          "quarantinedDescription": "At least one resolution observation is quarantined or terminally failed; affected feedback cycles fail closed."
+        }
+      },
       "actions": {
         "reasonRule": "Use 4–128 lowercase letters, digits, underscores, or periods; no spaces.",
         "trigger": {
@@ -422,6 +549,7 @@
           "summary": "Freeze and enqueue one manual feedback cycle for the selected authoritative profile.",
           "profile": "Research profile",
           "success": "Feedback cycle triggered.",
+          "converged": "The manual trigger was recorded against the existing canonical cadence cycle; no duplicate cycle was created.",
           "replayed": "The original feedback-cycle command was replayed exactly."
         },
         "cancel": {
@@ -434,17 +562,26 @@
         },
         "permit": {
           "title": "Promotion permits",
-          "description": "Issue or revoke bounded publication authority. This surface never promotes a model or route.",
-          "readDenied": "Publication permit evidence is unavailable for the current permissions.",
+          "description": "Issue, activate, or revoke bounded route authority as distinct governed actions. Permit issuance never changes serving.",
+          "readDenied": "Route-activation permit evidence is unavailable for the current permissions.",
           "issueTitle": "Issue promotion permit",
           "issueSummary": "Issue bounded authority from the selected candidate-ready cycle. Server preflight remains authoritative.",
           "selectedCycle": "Selected candidate-ready cycle",
           "noCycle": "No cycle selected",
+          "cycle": "Feedback cycle",
+          "ttl": "Permit TTL",
+          "ttlMinutes": "{minutes} minutes",
           "expiresAt": "Absolute expiry",
+          "serverClock": "Server clock at read",
+          "countdown": "Time remaining",
+          "routeRevision": "Policy / runtime revision",
+          "modelDiff": "Current champion → candidate",
+          "manifest": "Candidate manifest",
           "runtimeModes": "Allowed runtime modes",
           "idempotencyKey": "Idempotency key",
           "notEligible": "Select a succeeded candidate-ready cycle before issuing a permit.",
-          "invalidInput": "Select at least one runtime mode and a valid future expiry.",
+          "invalidInput": "Select an approved 5, 15, 30, or 60 minute TTL.",
+          "invalidClock": "Invalid server clock evidence; refresh before taking action.",
           "issue": "Review and issue",
           "issueSuccess": "Promotion permit issued.",
           "issueReplayed": "The original permit issuance was replayed exactly.",
@@ -456,18 +593,43 @@
           "issuedReason": "Issuance reason",
           "scopeHash": "Scope hash",
           "preflightHash": "Preflight hash",
+          "promotionGateHash": "Final promotion-gate hash",
           "revision": "Revision",
           "observedAt": "Status observed",
           "permitId": "Promotion permit",
+          "targetModel": "Server-derived target model",
+          "routeDiff": "Route generation",
+          "authorityInvariant": "Protected authority",
+          "activationInvariant": "Activation changes only the model route. Execution mode, capital limits, funder, and signing authority remain unchanged.",
+          "executionUnchanged": "Execution mode, capital, funder, and signing authority are unchanged.",
+          "activate": "Activate route",
+          "activateTitle": "Activate candidate model route",
+          "activateSummary": "Consume this permit in one atomic route transaction. Every bound gate, hash, runtime revision, and protected authority is revalidated server-side.",
+          "activateConfirm": "ACTIVATE",
+          "activateSuccess": "Model route activated.",
+          "activateReplayed": "The original route activation receipt was replayed exactly.",
           "revoke": "Revoke permit",
           "revokeTitle": "Revoke promotion permit",
-          "revokeSummary": "Revoke this publication authority with revision-0 compare-and-swap.",
+          "revokeSummary": "Revoke this route-activation authority with revision-0 compare-and-swap.",
           "revokeConfirm": "REVOKE",
           "revokeSuccess": "Promotion permit revoked.",
           "revokeReplayed": "The original permit revocation was replayed exactly.",
+          "receipt": {
+            "title": "Route activation receipt",
+            "activated": "Activated",
+            "replayed": "Replayed",
+            "route": "Route generation",
+            "model": "Model route",
+            "actors": "Actor lineage",
+            "actorLineage": "Permit: {issuer} · Activation: {activator}",
+            "timestamp": "Server timestamp",
+            "transactionHash": "Transaction hash",
+            "rollback": "Open Model Routing rollback"
+          },
           "status": {
             "active": "Active",
             "expired": "Expired",
+            "invalid": "Invalid clock evidence",
             "revoked": "Revoked"
           }
         }
@@ -1319,10 +1481,35 @@
         "detail": "Details",
         "backtest": "Backtest",
         "cpcv": "Run CPCV",
-        "publish": "Publish",
-        "retire": "Retire",
-        "rollback": "Rollback",
         "train": "Train model"
+      },
+      "bootstrap": {
+        "action": "Establish first champion",
+        "actor": "Activation actor",
+        "authority": "Protected authority",
+        "authorityUnchanged": "Execution mode, capital, signing authority, and funder authority remain unchanged.",
+        "failed": "The first-champion activation did not complete. Refresh the authoritative state and retry with the same intent.",
+        "gateUnavailable": "The authoritative Candidate quality gate could not be loaded; bootstrap is blocked.",
+        "generation": "Policy generation",
+        "model": "Candidate model",
+        "openRouting": "Open Model Routing rollback",
+        "prerequisitesFailed": "Bootstrap is blocked until the Buy route scope, calibration, Candidate quality gate, full parity, CPCV evidence, ReportOnly mode, and empty route all pass.",
+        "prerequisitesHint": "Requires an eligible Pooled, Crypto, or Weather Buy model with immutable calibration, a passing Candidate gate, CPCV and full-parity evidence, ReportOnly mode, and no existing champion on that route.",
+        "receipt": "Activation / audit IDs",
+        "retry": "Retry authoritative read",
+        "rollback": "Rollback",
+        "route": "Buy route",
+        "routeOccupied": "This route already has champion {model}; future changes must use the feedback permit and activation flow.",
+        "routes": {
+          "crypto": "Crypto Buy",
+          "pooled": "Pooled Buy",
+          "weather": "Weather Buy"
+        },
+        "stateUnavailable": "Current policy or runtime-control state is unavailable; bootstrap is fail-closed.",
+        "succeeded": "The first champion was activated with a durable receipt.",
+        "summary": "Establish the first server-derived champion for an empty Pooled, Crypto, or Weather Buy route.",
+        "title": "First-champion bootstrap",
+        "transaction": "Transaction hash"
       },
       "train": {
         "title": "Train model",
@@ -1363,38 +1550,9 @@
         "incomplete": "The linked training dataset and runtime config are required.",
         "feedback": "CPCV validation submitted.",
         "action": "Run CPCV",
-        "dualTrackHint": "Publish requires a single-path backtest (turnover / tail loss / max drawdown) and a CPCV path set (median rank IC / DSR / PBO).",
-        "sellDualTrackHint": "Sell publish requires a lot-level CPCV path set (activity-only lot-native Sharpe / DSR / PBO / rank IC, max drawdown, tail loss, and baseline uplift vs exit-at-first). Empty calendar buckets are never zero-padded. There is no single-path Buy-style backtest for this family.",
+        "dualTrackHint": "CandidateReady requires a single-path backtest (turnover / tail loss / max drawdown) and a CPCV path set (median rank IC / DSR / PBO).",
+        "sellDualTrackHint": "Sell CandidateReady requires a lot-level CPCV path set (activity-only lot-native Sharpe / DSR / PBO / rank IC, max drawdown, tail loss, and baseline uplift vs exit-at-first). Empty calendar buckets are never zero-padded. There is no single-path Buy-style backtest for this family.",
         "sellSummary": "Sell CPCV uses the exact family, target, horizons, and inputs frozen by the model spec, plus a residual-shares state machine (stops on path divergence after partial exit) and activity-only lot-native returns for DSR/PBO."
-      },
-      "publish": {
-        "title": "Publish model",
-        "summary": "Promote model version {id} to Published.",
-        "summaryWithWarnings": "Promote model version {id} to Published. {count} soft gate warning(s) — review before confirming.",
-        "blocked": "Cannot publish: {count} hard gate(s) failing. Review the publish readiness scorecard.",
-        "blockedNamed": "Cannot publish: {count} hard gate(s) failing ({gates}). Review the publish readiness scorecard.",
-        "runCpcvHint": "Alpha-significance gates need a CPCV path set that clears DSR/PBO/rank IC — run CPCV from the model drawer, bind it, then retry publish.",
-        "bindPathSetHint": "Publish requires a bound CPCV path set. If a path set already exists, pin it with “Set as publish path set”; otherwise run CPCV first.",
-        "feedback": "Model published."
-      },
-      "rollback": {
-        "title": "Rollback model",
-        "summary": "Restore retired model version {id} to Published.",
-        "feedback": "Model rolled back."
-      },
-      "retire": {
-        "title": "Retire model",
-        "summary": "Retire published model version {id}.",
-        "feedback": "Model retired."
-      },
-      "bindCalibration": {
-        "action": "Bind calibrator",
-        "title": "Bind calibrator",
-        "summary": "Create a new candidate model version whose return model is calibrated from the selected artifact.",
-        "calibrator": "Model-score calibrator",
-        "calibratorPlaceholder": "Select calibrator artifact",
-        "downsideSource": "Downside source",
-        "validation": "Select a calibrator artifact."
       },
       "detail": {
         "title": "Trained Model",
@@ -1408,9 +1566,9 @@
         "sectionSelector": "Model detail section",
         "loadingAnnouncement": "Loading model details.",
         "loadFailedAnnouncement": "Model details could not be loaded.",
-        "readinessLoadingAnnouncement": "Model details loaded. Evaluating publish readiness.",
-        "loadedAnnouncement": "Model details and publish readiness loaded.",
-        "readinessUnavailableAnnouncement": "Model details loaded. Publish readiness is unavailable.",
+        "readinessLoadingAnnouncement": "Model details loaded. Evaluating candidate readiness.",
+        "loadedAnnouncement": "Model details and candidate readiness loaded.",
+        "readinessUnavailableAnnouncement": "Model details loaded. Candidate readiness is unavailable.",
         "artifactLineageUnavailable": "No training artifact lineage exists for this governed hand-authored model.",
         "serializedModelHash": "Serialized model hash",
         "lineageKind": "Lineage kind",
@@ -1466,7 +1624,7 @@
         "returnModelKind": "Kind",
         "returnModelHeuristic": "Heuristic (uncalibrated)",
         "returnModelCalibrated": "Calibrated",
-        "returnModelHeuristicWarning": "This model uses an uncalibrated heuristic return mapping. Publish and execution paths fail closed until a calibrator is bound.",
+        "returnModelHeuristicWarning": "This model uses an uncalibrated heuristic return mapping. Route activation fails closed; fitting a calibrator derives a new immutable ModelVersion.",
         "returnModelUnknown": "Return-model provenance not exposed for this version.",
         "calibratorRef": "Calibrator",
         "downsideSource": "Downside source",
@@ -1486,7 +1644,7 @@
         "pseudoTopN": "Pseudo TopN",
         "objectiveProxyHint": "Tail/turnover use a TopN score-ranked equal-weight pseudo portfolio (optimization proxy ≠ backtest USD allocations).",
         "objectiveUnknown": "Training-objective provenance not exposed for this version.",
-        "publishReadiness": "Publish Readiness",
+        "candidateReadiness": "Candidate Readiness",
         "metrics": "Trainer Metrics",
         "metricsPanel": {
           "objectiveValue": "In-sample Objective",
@@ -1682,8 +1840,8 @@
       "fitCalibrator": {
         "action": "Fit model calibrator",
         "title": "Fit model calibrator",
-        "summary": "Fit a held-out probability calibrator for a candidate model version using an independent calibration dataset.",
-        "feedback": "Model calibrator fit enqueued",
+        "summary": "Fit a held-out probability calibrator and derive a new immutable calibrated ModelVersion through the sole governance service.",
+        "feedback": "Calibrated ModelVersion derivation enqueued",
         "validation": "Select a model version and calibration dataset.",
         "model": "Model version",
         "modelPlaceholder": "Select model version",
@@ -2035,13 +2193,13 @@
       }
     },
     "qualityGate": {
-      "empty": "Publish readiness has not been evaluated.",
+      "empty": "Quality-gate readiness has not been evaluated.",
       "intentLabel": "Intent",
       "notApplicable": "Not evaluated for this intent ({count})",
       "verdict": {
-        "ready": "Ready to publish — all hard gates cleared.",
-        "warnings": "Publishable with {count} soft warning(s).",
-        "blocked": "{count} hard gate(s) failing — publish blocked."
+        "ready": "Ready — all hard gates cleared.",
+        "warnings": "All hard gates cleared with {count} soft warning(s).",
+        "blocked": "{count} hard gate(s) failing — governed advancement blocked."
       }
     },
     "cpcv": {
@@ -4023,15 +4181,18 @@
     },
     "modelRouting": {
       "title": "Model artifact routing",
-      "description": "Select only immutable published artifacts with a compatible side and scope. Free-text IDs are not accepted.",
+      "description": "Read-only Champion, Shadow, and Exit models derived from the active route generation. Free-text IDs are never accepted.",
+      "governanceNotice": "Model routing has no ordinary Draft or activation path. Bootstrap the first Champion from an eligible calibrated model; subsequent Champion changes require a CandidateReady cycle, short-lived permit, and separate activation. This page only exposes evidence and historical Revision rollback.",
+      "openModels": "Open trained models",
+      "openFeedback": "Open Feedback governance",
       "activeBuy": "Active Buy model",
       "shadowBuy": "Shadow Buy model",
       "activeExit": "Active exit model",
-      "selectArtifact": "Select published artifact",
-      "loadError": "The published model catalog could not be loaded. Routing remains read-only and unknown IDs are rejected.",
+      "selectArtifact": "Immutable model artifact",
+      "loadError": "The model evidence catalog could not be loaded. Current routing remains read-only.",
       "artifactHash": "Artifact hash",
       "evidence": "Publication evidence",
-      "published": "Published",
+      "published": "Validated artifact",
       "categoryTitle": "Category-specific routing",
       "categoryDescription": "Empty categories inherit the generic Buy model. Overrides require an artifact with an exactly matching category_scope.",
       "exactScopeOnly": "Exact scope only",
@@ -4043,6 +4204,7 @@
       },
       "family": {
         "weighted_factor": "Weighted factor",
+        "classical_gradient_boosted_trees": "Gradient-boosted trees",
         "classical_random_forest": "Random forest",
         "classical_extra_trees": "Extra Trees",
         "classical_logistic_regression": "Logistic regression",

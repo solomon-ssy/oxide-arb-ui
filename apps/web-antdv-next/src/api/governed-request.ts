@@ -15,13 +15,11 @@ export function buildGovernedHeaders(
 }
 
 /**
- * Every governed mutation body must carry an operator `reason`. Concrete
- * request types (e.g. `RunReportRequest`) are structurally assignable as long
- * as they declare `reason: string`; extra typed fields are preserved on the
- * wire. (The previous `Record<string, unknown>` intersection rejected named
- * interfaces because they lack an index signature.)
+ * Governed contracts carry either the legacy domain `reason` field or the
+ * explicit governance pair `reason_code` + `note`. Concrete request types are
+ * structurally assignable and retain all additional typed wire fields.
  */
-type GovernedBody = { reason: string };
+type GovernedBody = { note: string; reason_code: string } | { reason: string };
 
 /** Governed writes suppress global toasts; modal handlers own operator feedback. */
 const GOVERNED_CONFIG = withSilentError({});

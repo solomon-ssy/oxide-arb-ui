@@ -6,6 +6,7 @@
 export type PolicyActorKind = 'operator' | 'system';
 export type PolicyActivationKind =
   | 'initial'
+  | 'model_bootstrap'
   | 'model_promotion'
   | 'promote'
   | 'rollback';
@@ -797,13 +798,13 @@ export interface ModelRouting {
  */
 export interface ModelConfig {
   /**
-   * Active published Sell-side hold-vs-exit scorer version. The
+   * Champion Sell-side hold-vs-exit scorer version. The
    * opportunistic-Sell exit evaluator loads this; a distinct pointer from
    * `active_model_version_id` so Buy and Sell models are governed separately.
    */
   active_exit_model_version_id?: ModelVersionRef | null;
   /**
-   * Active published model for the explicit pooled Buy route.
+   * Champion model for the explicit pooled Buy route.
    *
    * This route may score only non-Crypto/non-Weather report scopes. It is
    * not a fallback for a missing vertical route.
@@ -819,7 +820,7 @@ export interface ModelConfig {
    *
    * Only Crypto and Weather may appear here. An enabled vertical must be the
    * sole category in its report and must have its exact pointer; missing,
-   * unloadable, unpublished, or mis-scoped routes fail before selection.
+   * unloadable or mis-scoped routes fail before selection.
    * Non-vertical categories use the explicit pooled
    * `active_model_version_id`. Governed exactly like the pooled/shadow
    * pointers.
@@ -840,12 +841,6 @@ export interface ModelConfig {
    * Minimum model confidence.
    */
   min_model_confidence?: string;
-  /**
-   * Maximum age of a quality-gate report before model load is denied.
-   * Consumed by governance (`ModelQualityGate` / load-time deny), not by
-   * the `ModelRunner` inference path.
-   */
-  min_quality_gate_age_secs?: number;
   /**
    * Shadow/live diff threshold.
    */

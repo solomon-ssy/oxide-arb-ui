@@ -25,7 +25,6 @@ import {
   OUTCOME_SIDES,
   POSITION_LEDGER_STATES,
   POSITION_PLANES,
-  PUBLICATION_STATUSES,
   QUANT_RUNTIME_MODES,
   RECOMMENDATION_REPORT_STATUSES,
   RECOMMENDATION_STATUSES,
@@ -414,20 +413,6 @@ export function useMarketCategoryTagOptions() {
   );
 }
 
-/** Immutable model-version publication status tags. */
-export function usePublicationStatusTagOptions() {
-  return buildTagOptions(
-    Object.values(PUBLICATION_STATUSES),
-    (value) => $t(`enum.publicationStatus.${value}`),
-    {
-      [PUBLICATION_STATUSES.candidate]: 'processing',
-      [PUBLICATION_STATUSES.published]: 'success',
-      [PUBLICATION_STATUSES.retired]: 'gold',
-      [PUBLICATION_STATUSES.shadow]: 'purple',
-    },
-  );
-}
-
 /** Closed dataset-purpose tags shared by every catalog renderer. */
 export function useDatasetPurposeTagOptions() {
   return buildTagOptions(
@@ -526,6 +511,7 @@ export function useModelFamilyTagOptions() {
     {
       [MODEL_FAMILIES.classicalElasticNet]: 'purple',
       [MODEL_FAMILIES.classicalExtraTrees]: 'purple',
+      [MODEL_FAMILIES.classicalGradientBoostedTrees]: 'cyan',
       [MODEL_FAMILIES.classicalLasso]: 'purple',
       [MODEL_FAMILIES.classicalLogisticRegression]: 'purple',
       [MODEL_FAMILIES.classicalRandomForest]: 'purple',

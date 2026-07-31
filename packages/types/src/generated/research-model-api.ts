@@ -45,6 +45,7 @@ export type ModelFamily =
   | (
       | 'classical_elastic_net'
       | 'classical_extra_trees'
+      | 'classical_gradient_boosted_trees'
       | 'classical_lasso'
       | 'classical_logistic_regression'
       | 'classical_random_forest'
@@ -72,8 +73,8 @@ export interface ResearchModelApiContractSchema {
  * A model spec is the **authoring root** of the offline research lifecycle:
  * the operator declares the model family, prediction horizon, and feature /
  * label schema versions the downstream dataset build and training runs bind
- * to. A spec is immutable once created; publication lifecycle belongs only to
- * trained model versions (see `TrainModelRequest` / model-governance).
+ * to. A spec and every trained model version are immutable; serving role is
+ * derived only from a governed route generation.
  *
  * `model_family` deserializes from its canonical wire label (`"weighted_factor"`,
  * `"classical_random_forest"`, `"hold_vs_exit_weighted"`, …); an unknown label
@@ -96,6 +97,7 @@ export interface CreateModelSpecRequest {
     | (
         | 'classical_elastic_net'
         | 'classical_extra_trees'
+        | 'classical_gradient_boosted_trees'
         | 'classical_lasso'
         | 'classical_logistic_regression'
         | 'classical_random_forest'

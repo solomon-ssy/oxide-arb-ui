@@ -1,12 +1,15 @@
 import type {
   FeedbackCycleView,
-  IsoDateTime,
-  QuantRuntimeMode,
+  PromotionPermitStatus,
+  PromotionPermitView,
 } from '@vben/types';
 
-import { QUANT_RUNTIME_MODE_OPTIONS } from '@vben/types';
-
 const FEEDBACK_REASON_PATTERN = /^[a-z0-9_.]{1,128}$/;
+export const PERMIT_TTL_PRESETS: readonly number[] = [300, 900, 1800, 3600];
+
+export type PromotionPermitPresentationStatus =
+  | 'invalid'
+  | PromotionPermitStatus;
 
 /** Mirror the stricter trigger/cancel reason grammar enforced by the backend. */
 export function isFeedbackReasonValid(reason: string): boolean {
@@ -22,30 +25,12 @@ export function validateFeedbackReason(reason: string): string {
   return trimmed;
 }
 
-/** Deduplicate operator selection and restore the backend's canonical rank. */
-export function canonicalPromotionModes(
-  modes: readonly QuantRuntimeMode[],
-): QuantRuntimeMode[] {
-  const selected = new Set(modes);
-  const canonical = QUANT_RUNTIME_MODE_OPTIONS.filter((mode) =>
-    selected.has(mode),
-  );
-  if (canonical.length === 0) {
-    throw new TypeError('at least one promotion runtime mode is required');
+/** Restrict the operator UI to the governed 5/15/30/60 minute presets. */
+export function validatePermitTtl(ttlSecs: number): number {
+  if (!PERMIT_TTL_PRESETS.includes(ttlSecs)) {
+    throw new TypeError('promotion permit TTL is not an approved preset');
   }
-  return canonical;
-}
-
-/** Parse a user-entered absolute expiry without inventing a client TTL. */
-export function parsePromotionExpiry(
-  value: string,
-  nowMilliseconds = Date.now(),
-): IsoDateTime {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp) || timestamp <= nowMilliseconds) {
-    throw new TypeError('promotion permit expiry must be in the future');
-  }
-  return new Date(timestamp).toISOString();
+  return ttlSecs;
 }
 
 /** Client-side affordance only; the server owns lifecycle authorization. */
@@ -59,6 +44,49 @@ export function canCancelFeedbackCycle(cycle: FeedbackCycleView): boolean {
 /** Candidate-ready is the only UI issuance affordance; preflight stays server-side. */
 export function canIssuePromotionPermit(cycle: FeedbackCycleView): boolean {
   return cycle.status === 'succeeded' && cycle.decision === 'candidate_ready';
+}
+
+/**
+ * Derive remaining authority from the server clock snapshot and a monotonic
+ * local elapsed duration. The browser wall clock never participates.
+ */
+export function promotionPermitRemaining(
+  permit: PromotionPermitView,
+  receivedAt: number,
+  now: number,
+): null | number {
+  const observedAt = Date.parse(permit.observed_at);
+  const expiresAt = Date.parse(permit.expires_at);
+  if (
+    !Number.isFinite(observedAt) ||
+    !Number.isFinite(expiresAt) ||
+    !Number.isFinite(receivedAt) ||
+    !Number.isFinite(now) ||
+    expiresAt < observedAt
+  ) {
+    return null;
+  }
+  const elapsedLocally = Math.max(0, now - receivedAt);
+  return Math.max(
+    0,
+    Math.floor((expiresAt - observedAt - elapsedLocally) / 1000),
+  );
+}
+
+/** Present stale active snapshots as expired once their server-derived TTL elapses. */
+export function promotionPermitStatus(
+  permit: PromotionPermitView,
+  receivedAt: number,
+  now: number,
+): PromotionPermitPresentationStatus {
+  if (permit.status !== 'active') {
+    return permit.status;
+  }
+  const remaining = promotionPermitRemaining(permit, receivedAt, now);
+  if (remaining === null) {
+    return 'invalid';
+  }
+  return remaining === 0 ? 'expired' : 'active';
 }
 
 /** Acquire one exact command key, returning false for a concurrent re-submit. */

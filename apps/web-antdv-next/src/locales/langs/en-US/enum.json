@@ -114,7 +114,6 @@
     "data_stale": "Data stale",
     "low_confidence": "Low confidence",
     "manually_blocked": "Manually blocked",
-    "model_not_published": "Model not published",
     "report_only_mode": "Report-only mode",
     "risk_envelope_invalid": "Risk envelope invalid",
     "shadow_not_passed": "Shadow gate not passed",
@@ -387,6 +386,7 @@
   "modelFamily": {
     "weighted_factor": "Weighted factor (Buy ranker)",
     "hold_vs_exit_weighted": "Hold vs exit (Sell scorer)",
+    "classical_gradient_boosted_trees": "Classical: gradient-boosted trees",
     "classical_random_forest": "Classical: random forest",
     "classical_extra_trees": "Classical: extra trees",
     "classical_logistic_regression": "Classical: logistic regression",
@@ -622,6 +622,7 @@
     "sell_fallback_ratio": "Sell Fallback Ratio",
     "calibration_required": "Calibration Required",
     "cpcv_required": "CPCV Path Set Required",
+    "explainability_required": "Explainability Evidence Required",
     "deflated_sharpe": "Deflated Sharpe Ratio",
     "min_track_record_length": "Min Track Record Length",
     "pbo": "Probability of Backtest Overfitting",

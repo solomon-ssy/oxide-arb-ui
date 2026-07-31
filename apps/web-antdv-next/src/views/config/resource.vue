@@ -146,11 +146,6 @@ const activeModelRouting = computed<ModelRouting | null>(() =>
     ? (activeDocument.value as ModelRouting)
     : null,
 );
-const workingModelRouting = computed<ModelRouting | null>(() =>
-  resourceKind.value === 'model_routing' && workingDocument.value
-    ? (workingDocument.value as ModelRouting)
-    : null,
-);
 const activeReportSchedule = computed<null | ReportSchedule>(() =>
   resourceKind.value === 'report_schedule' && activeDocument.value
     ? (activeDocument.value as ReportSchedule)
@@ -175,7 +170,10 @@ const hasActivateAccess = hasAccessByCodes(['config:activate']);
 const hasRollbackAccess = hasAccessByCodes(['config:rollback']);
 const governanceMutationBlocked = computed(() => loadError.value);
 const canCreate = computed(
-  () => hasCreateAccess && !governanceMutationBlocked.value,
+  () =>
+    hasCreateAccess &&
+    !governanceMutationBlocked.value &&
+    resourceKind.value !== 'model_routing',
 );
 const canApprove = computed(
   () => hasApproveAccess && !governanceMutationBlocked.value,
@@ -617,6 +615,23 @@ onMounted(() => void loadResource());
         type="info"
       />
       <Alert
+        v-if="resourceKind === 'model_routing' && stage === 'view'"
+        :message="$t('page.config.modelRouting.governanceNotice')"
+        show-icon
+        type="info"
+      >
+        <template #action>
+          <div class="flex flex-wrap justify-end gap-2">
+            <Button size="small" @click="router.push('/research/models')">
+              {{ $t('page.config.modelRouting.openModels') }}
+            </Button>
+            <Button size="small" @click="router.push('/research/feedback')">
+              {{ $t('page.config.modelRouting.openFeedback') }}
+            </Button>
+          </div>
+        </template>
+      </Alert>
+      <Alert
         v-if="rollbackMode"
         :message="$t('page.config.workflow.rollbackNotice')"
         show-icon
@@ -774,12 +789,6 @@ onMounted(() => void loadResource());
                   </ul>
                 </template>
               </Alert>
-              <ModelRoutingPicker
-                v-if="workingModelRouting"
-                class="mb-4"
-                :model-value="workingModelRouting"
-                @update:model-value="updateWorkingDocument"
-              />
               <ReportSchedulePreview
                 v-if="workingReportSchedule"
                 class="mb-4"

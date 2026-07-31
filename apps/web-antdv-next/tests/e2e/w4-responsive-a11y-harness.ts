@@ -2,6 +2,7 @@ import type { APIResponse, Page, Route } from 'playwright/test';
 
 import type {
   ApiEnvelope,
+  FeedbackCandidateReadyView,
   FeedbackCycleDetailView,
   FeedbackCycleView,
   FeedbackDecision,
@@ -102,11 +103,94 @@ function projectDecision(
   };
 }
 
+function candidateScorecard(
+  detail: FeedbackCycleDetailView,
+): FeedbackCandidateReadyView {
+  return {
+    attribution: {
+      decision_counterfactual_count: 24,
+      execution_trajectory_count: 12,
+      outcome_association_count: 1,
+      policy_counterfactual_count: 12,
+      prediction_explanation_count: 24,
+      prior_cycle_use_count: 8,
+      produced_set_hash: 'blake3:e2e-attribution-produced',
+      use_set_hash: 'blake3:e2e-attribution-uses',
+    },
+    blockers: [],
+    comparison: {
+      adjusted_p_value: '0.01',
+      confidence: '0.95',
+      effect_bps: '18.5',
+      observation_count: 240,
+      simultaneous_lower_bound_bps: '7.2',
+    },
+    quality_gate: {
+      evaluated_at: detail.cycle.completed_at ?? detail.cycle.updated_at,
+      gates: [
+        {
+          class: 'hard',
+          detail: 'All point-in-time inputs remained at or before cutoff.',
+          gate: 'no_pit_leakage',
+          observed: 'true',
+          status: 'pass',
+          threshold: 'true',
+        },
+        {
+          class: 'hard',
+          detail: 'Deflated Sharpe cleared the governed threshold.',
+          gate: 'deflated_sharpe',
+          observed: '0.91',
+          status: 'pass',
+          threshold: '0.80',
+        },
+        {
+          class: 'hard',
+          detail: 'Probability of backtest overfitting remained below the cap.',
+          gate: 'pbo',
+          observed: '0.08',
+          status: 'pass',
+          threshold: '0.20',
+        },
+        {
+          class: 'hard',
+          detail: 'Exact explanation proof is bound to the serving contract.',
+          gate: 'explainability_required',
+          observed: 'verified',
+          status: 'pass',
+          threshold: 'verified',
+        },
+      ],
+      intent: 'candidate',
+      passed: true,
+      report_hash: 'blake3:e2e-quality-gate',
+    },
+    route_diff: {
+      candidate_model_version_id: '00000000-0000-0000-0000-000000000902',
+      champion_model_version_id: detail.cycle.champion_model_version_id,
+      current_route_generation: 7,
+      execution_authority_unchanged: true,
+      proposed_route_generation: 8,
+    },
+    shadow: {
+      any_hard_divergence: false,
+      mean_topn_overlap: '0.93',
+      minimum_topn_overlap: '0.85',
+      observed: 288,
+      observed_window_secs: 259_200,
+      required: 240,
+      required_window_secs: 259_200,
+    },
+  };
+}
+
 function projectDecisionDetail(
   detail: FeedbackCycleDetailView,
   decision: FeedbackDecision,
 ): void {
   detail.cycle = projectDecision(detail.cycle, decision);
+  detail.candidate_ready =
+    decision === 'candidate_ready' ? candidateScorecard(detail) : null;
   const terminal = detail.timeline.at(-1);
   if (terminal === undefined) {
     throw new TypeError('controlled decision detail requires a real timeline');

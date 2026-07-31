@@ -35,6 +35,13 @@ const tokenTheme = computed(() => {
       defaultActiveColor: tokens.colorTextBase,
       defaultColor: tokens.colorTextBase,
       defaultHoverColor: tokens.colorTextBase,
+      // Antdv transitions every visual property when an async action changes
+      // from disabled to enabled. The disabled palette is contrast-exempt, but
+      // interpolating from it after the control becomes actionable creates a
+      // real low-contrast interval. State colors must therefore switch
+      // atomically; focus, loading-icon, and overlay motion remain intact.
+      motionDurationMid: '0s',
+      primaryColor: buttonTokens.primaryColor,
     },
     Tabs: {
       // The ink bar already communicates selection. Using body text for tab

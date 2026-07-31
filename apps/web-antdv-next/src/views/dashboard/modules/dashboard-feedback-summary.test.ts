@@ -49,7 +49,6 @@ function profile(
             started_at: '2026-07-29T03:01:00.000Z',
             status: 'succeeded',
             terminal_reason_code: null,
-            trigger_family: 'scheduled',
             updated_at: '2026-07-29T03:05:00.000Z',
           }
         : null,
@@ -79,6 +78,17 @@ function overview(): FeedbackOverviewView {
       pending_outbox: 0,
       queued: 0,
       running: 0,
+    },
+    truth_operations: {
+      execution_attempt_sealed_through: '2026-07-29T03:10:00.000Z',
+      execution_attempt_unsealed_count: 0,
+      observed_at: '2026-07-29T03:10:00.000Z',
+      recommendation_rollup_sealed_through: '2026-07-29T03:10:00.000Z',
+      recommendation_rollup_unsealed_count: 0,
+      resolution_oldest_unresolved_at: null,
+      resolution_quarantined_count: 0,
+      resolution_unresolved_count: 0,
+      resolution_verified_through: '2026-07-29T03:10:00.000Z',
     },
     readiness: {
       latency_ready: true,

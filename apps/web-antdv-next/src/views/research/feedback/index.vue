@@ -4,7 +4,10 @@ import type {
   FeedbackCycleStatus,
   FeedbackCycleView,
   FeedbackOverviewView,
+  FeedbackSchedulerListView,
+  FeedbackSchedulerStateView,
   IssuePromotionPermitRequest,
+  ModelRouteActivationReceiptView,
   Paginated,
   PromotionPermitView,
 } from '@vben/types';
@@ -20,6 +23,7 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 
 import { Fallback, Page } from '@vben/common-ui';
+import { normalizeApiError } from '@vben/request/qp';
 
 import {
   Alert,
@@ -39,12 +43,16 @@ import {
 } from 'antdv-next';
 
 import {
+  activateModelRoute,
   cancelFeedbackCycle,
   getFeedbackCycle,
   getFeedbackOverview,
   issuePromotionPermit,
   listFeedbackCycles,
+  listFeedbackSchedulers,
   listPromotionPermits,
+  pauseFeedbackScheduler,
+  resumeFeedbackScheduler,
   revokePromotionPermit,
   triggerFeedbackCycle,
 } from '#/api/feedback';
@@ -53,7 +61,7 @@ import { formatDateTimeLocal } from '#/shared/components/format';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useFeedbackStore } from '#/store';
+import { useFeedbackStore, useWsStore } from '#/store';
 
 import {
   canCancelFeedbackCycle,
@@ -64,8 +72,11 @@ import {
 } from './modules/feedback-action-state';
 import FeedbackCycleDetailPanel from './modules/feedback-cycle-detail-panel.vue';
 import { validateFeedbackCycleDetail } from './modules/feedback-cycle-detail-state';
+import { validateFeedbackOverview } from './modules/feedback-overview-state';
 import FeedbackPermitPanel from './modules/feedback-permit-panel.vue';
 import FeedbackProfileCard from './modules/feedback-profile-card.vue';
+import FeedbackSchedulerPanel from './modules/feedback-scheduler-panel.vue';
+import FeedbackTruthOperationsPanel from './modules/feedback-truth-operations-panel.vue';
 import { feedbackWorkbenchState } from './modules/feedback-workbench-state';
 
 defineOptions({ name: 'ResearchFeedbackPage' });
@@ -79,6 +90,7 @@ interface FeedbackWorkbenchSnapshot {
 }
 
 const PAGE_SIZE = 20;
+const RECOVERY_POLL_MS = 15_000;
 const emptyCycles: Paginated<FeedbackCycleView> = {
   has_next: false,
   items: [],
@@ -97,6 +109,7 @@ const emptyPermits: Paginated<PromotionPermitView> = {
 const route = useRoute();
 const router = useRouter();
 const feedbackStore = useFeedbackStore();
+const wsStore = useWsStore();
 const { hasAccessByCodes } = useQpAccess();
 const { governed } = useGovernedAction();
 
@@ -111,15 +124,20 @@ const cycleDetail = ref<FeedbackCycleDetailView | null>(null);
 const detailLoading = ref(false);
 const detailRefreshing = ref(false);
 const detailError = ref<null | string>(null);
+const detailNotFound = ref(false);
 const permitLoading = ref(false);
 const permitError = ref<null | string>(null);
+const schedulerSnapshot = ref<FeedbackSchedulerListView | null>(null);
+const schedulerLoading = ref(false);
+const schedulerError = ref<null | string>(null);
+const activationReceipt = ref<ModelRouteActivationReceiptView | null>(null);
 const permitIdempotencyKey = ref(crypto.randomUUID());
 const selectedTriggerProfileId = ref('');
 const pendingActions = reactive(new Set<string>());
 let detailGeneration = 0;
 let detailController: AbortController | null = null;
-let permitGeneration = 0;
-let permitController: AbortController | null = null;
+let recoveryPollTimer: ReturnType<typeof setInterval> | undefined;
+const activationIdempotencyKeys = new Map<string, string>();
 
 const canRead = computed(() => hasAccessByCodes(['materialization:read']));
 const canTrigger = computed(() => hasAccessByCodes(['materialization:create']));
@@ -129,6 +147,12 @@ const canIssuePermit = computed(() =>
 );
 const canRevokePermit = computed(() =>
   hasAccessByCodes(['publication:retire']),
+);
+const canActivateRoute = computed(() =>
+  hasAccessByCodes(['publication:publish']),
+);
+const canControlScheduler = computed(() =>
+  hasAccessByCodes(['materialization:update']),
 );
 const triggerProfileOptions = computed(
   () =>
@@ -150,19 +174,37 @@ const activeView = computed<WorkbenchView>({
   },
 });
 
-const selectedCycleId = computed(() =>
-  typeof route.query.cycle_id === 'string' ? route.query.cycle_id : undefined,
+const routeCycleId = computed(() =>
+  typeof route.query.cycle_id === 'string' && route.query.cycle_id !== ''
+    ? route.query.cycle_id
+    : undefined,
 );
 
-const selectedCycle = computed(
-  () =>
+const effectiveCycleId = computed(
+  () => routeCycleId.value ?? cyclePage.value.items[0]?.feedback_cycle_id,
+);
+
+const selectedCycle = computed(() => {
+  const cycleId = effectiveCycleId.value;
+  if (cycleId === undefined) {
+    return undefined;
+  }
+  return (
     cyclePage.value.items.find(
-      (cycle) => cycle.feedback_cycle_id === selectedCycleId.value,
-    ) ?? cyclePage.value.items[0],
+      (cycle) => cycle.feedback_cycle_id === cycleId,
+    ) ??
+    (cycleDetail.value?.cycle.feedback_cycle_id === cycleId
+      ? cycleDetail.value.cycle
+      : undefined)
+  );
+});
+
+const wsRecoveryRequired = computed(
+  () => wsStore.status !== 'connected' || feedbackStore.recoveryRequired,
 );
 
 const selectedCycleDetail = computed(() => {
-  const selectedId = selectedCycle.value?.feedback_cycle_id;
+  const selectedId = effectiveCycleId.value;
   return cycleDetail.value?.cycle.feedback_cycle_id === selectedId
     ? cycleDetail.value
     : null;
@@ -247,14 +289,45 @@ function applyPermitMutation(permit: PromotionPermitView) {
   };
 }
 
-function validateOverview(snapshot: FeedbackOverviewView) {
-  if (
-    !Number.isSafeInteger(snapshot.revision) ||
-    snapshot.revision < feedbackStore.revision
-  ) {
-    throw new TypeError('feedback overview revision is invalid or regressed');
-  }
-}
+const permitReadCoordinator = new AuthoritativeReadCoordinator<
+  number,
+  Paginated<PromotionPermitView>
+>({
+  async fetchSnapshot(_key, signal) {
+    return listPromotionPermits({ page: 1, size: PAGE_SIZE }, { signal });
+  },
+  initialKey: 0,
+  onError() {
+    permitError.value = $t('page.research.feedback.actions.permit.loadError');
+  },
+  onPendingChange(pending) {
+    permitLoading.value = pending;
+  },
+  onSnapshot(snapshot) {
+    permitError.value = null;
+    permitPage.value = snapshot;
+  },
+});
+
+const schedulerReadCoordinator = new AuthoritativeReadCoordinator<
+  number,
+  FeedbackSchedulerListView
+>({
+  async fetchSnapshot(_key, signal) {
+    return listFeedbackSchedulers({ signal });
+  },
+  initialKey: 0,
+  onError() {
+    schedulerError.value = $t('page.research.feedback.scheduler.loadError');
+  },
+  onPendingChange(pending) {
+    schedulerLoading.value = pending;
+  },
+  onSnapshot(snapshot) {
+    schedulerError.value = null;
+    schedulerSnapshot.value = snapshot;
+  },
+});
 
 function resetCycleDetail() {
   detailGeneration += 1;
@@ -263,6 +336,7 @@ function resetCycleDetail() {
   detailLoading.value = false;
   detailRefreshing.value = false;
   detailError.value = null;
+  detailNotFound.value = false;
 }
 
 async function refreshCycleDetail(cycleId: string) {
@@ -276,6 +350,7 @@ async function refreshCycleDetail(cycleId: string) {
   const controller = new AbortController();
   detailController = controller;
   detailError.value = null;
+  detailNotFound.value = false;
   if (cycleDetail.value?.cycle.feedback_cycle_id === cycleId) {
     detailRefreshing.value = true;
   } else {
@@ -292,9 +367,16 @@ async function refreshCycleDetail(cycleId: string) {
     }
     validateFeedbackCycleDetail(snapshot, cycleId);
     cycleDetail.value = snapshot;
-  } catch {
+  } catch (error) {
     if (generation === detailGeneration) {
-      detailError.value = $t('page.research.feedback.detail.loadError');
+      const apiError = normalizeApiError(error);
+      detailNotFound.value =
+        apiError.httpStatus === 404 || apiError.code === 404;
+      detailError.value = $t(
+        detailNotFound.value
+          ? 'page.research.feedback.detail.notFound'
+          : 'page.research.feedback.detail.loadError',
+      );
     }
   } finally {
     if (generation === detailGeneration) {
@@ -304,39 +386,26 @@ async function refreshCycleDetail(cycleId: string) {
   }
 }
 
+async function refreshSchedulers() {
+  if (!canRead.value) {
+    schedulerReadCoordinator.cancel();
+    schedulerSnapshot.value = null;
+    schedulerLoading.value = false;
+    schedulerError.value = null;
+    return;
+  }
+  await schedulerReadCoordinator.refresh();
+}
+
 async function refreshPermits() {
   if (!canRead.value || !canReadPermits.value) {
-    permitGeneration += 1;
-    permitController?.abort();
+    permitReadCoordinator.cancel();
     permitPage.value = emptyPermits;
     permitLoading.value = false;
     permitError.value = null;
     return;
   }
-
-  const generation = ++permitGeneration;
-  permitController?.abort();
-  const controller = new AbortController();
-  permitController = controller;
-  permitLoading.value = true;
-  permitError.value = null;
-  try {
-    const page = await listPromotionPermits(
-      { page: 1, size: PAGE_SIZE },
-      { signal: controller.signal },
-    );
-    if (generation === permitGeneration) {
-      permitPage.value = page;
-    }
-  } catch {
-    if (generation === permitGeneration) {
-      permitError.value = $t('page.research.feedback.actions.permit.loadError');
-    }
-  } finally {
-    if (generation === permitGeneration) {
-      permitLoading.value = false;
-    }
-  }
+  await permitReadCoordinator.refresh();
 }
 
 async function triggerCycle() {
@@ -379,13 +448,13 @@ async function triggerCycle() {
     }
     applyCycleMutation(result.cycle);
     selectCycle(result.cycle);
-    message.success(
-      $t(
-        result.replayed
-          ? 'page.research.feedback.actions.trigger.replayed'
-          : 'page.research.feedback.actions.trigger.success',
-      ),
-    );
+    let messageKey = 'page.research.feedback.actions.trigger.success';
+    if (result.trigger_replayed) {
+      messageKey = 'page.research.feedback.actions.trigger.replayed';
+    } else if (result.cycle_reused) {
+      messageKey = 'page.research.feedback.actions.trigger.converged';
+    }
+    message.success($t(messageKey));
     await refresh();
   } finally {
     releaseFeedbackAction(pendingActions, actionKey);
@@ -443,9 +512,7 @@ async function cancelCycle(cycle: FeedbackCycleView) {
   }
 }
 
-async function issuePermit(
-  request: Omit<IssuePromotionPermitRequest, 'reason'>,
-) {
+async function issuePermit(request: Omit<IssuePromotionPermitRequest, 'note'>) {
   if (!canIssuePermit.value) {
     return;
   }
@@ -456,7 +523,7 @@ async function issuePermit(
   try {
     const result = await governed(
       (context) =>
-        issuePromotionPermit({ ...request, reason: context.reason }, context),
+        issuePromotionPermit({ ...request, note: context.reason }, context),
       {
         details: [
           {
@@ -465,8 +532,10 @@ async function issuePermit(
             value: request.feedback_cycle_id,
           },
           {
-            label: $t('page.research.feedback.actions.permit.expiresAt'),
-            value: formatDateTimeLocal(request.expires_at),
+            label: $t('page.research.feedback.actions.permit.ttl'),
+            value: $t('page.research.feedback.actions.permit.ttlMinutes', {
+              minutes: request.ttl_secs / 60,
+            }),
           },
         ],
         summary: $t('page.research.feedback.actions.permit.issueSummary'),
@@ -508,7 +577,11 @@ async function revokePermit(permit: PromotionPermitView) {
       (context) =>
         revokePromotionPermit(
           permit.promotion_permit_id,
-          { expected_revision: permit.revision, reason: context.reason },
+          {
+            expected_revision: permit.revision,
+            note: context.reason,
+            reason_code: 'operator_revoked',
+          },
           context,
         ),
       {
@@ -542,12 +615,178 @@ async function revokePermit(permit: PromotionPermitView) {
   }
 }
 
+async function activatePermit(permit: PromotionPermitView) {
+  if (!canActivateRoute.value || permit.status !== 'active') {
+    return;
+  }
+  const actionKey = `activate:${permit.promotion_permit_id}`;
+  if (!tryBeginFeedbackAction(pendingActions, actionKey)) {
+    return;
+  }
+  const idempotencyKey =
+    activationIdempotencyKeys.get(permit.promotion_permit_id) ??
+    crypto.randomUUID();
+  activationIdempotencyKeys.set(permit.promotion_permit_id, idempotencyKey);
+  try {
+    const result = await governed(
+      (context) =>
+        activateModelRoute(
+          {
+            expected_policy_generation: permit.expected_policy_generation,
+            expected_runtime_control_revision:
+              permit.expected_runtime_control_revision,
+            feedback_cycle_id: permit.feedback_cycle_id,
+            idempotency_key: idempotencyKey,
+            note: context.reason,
+            promotion_permit_id: permit.promotion_permit_id,
+            reason_code: 'operator_activated',
+          },
+          context,
+        ),
+      {
+        confirmWord: $t(
+          'page.research.feedback.actions.permit.activateConfirm',
+        ),
+        danger: true,
+        details: [
+          {
+            label: $t('page.research.feedback.actions.permit.permitId'),
+            mono: true,
+            value: permit.promotion_permit_id,
+          },
+          {
+            label: $t('page.research.feedback.actions.permit.routeDiff'),
+            value: `${permit.expected_policy_generation} → ${
+              permit.expected_policy_generation + 1
+            }`,
+          },
+          {
+            label: $t('page.research.feedback.actions.permit.targetModel'),
+            mono: true,
+            value: `${permit.champion_model_version_id} → ${permit.candidate_model_version_id}`,
+          },
+          {
+            label: $t(
+              'page.research.feedback.actions.permit.authorityInvariant',
+            ),
+            value: $t(
+              'page.research.feedback.actions.permit.executionUnchanged',
+            ),
+          },
+        ],
+        summary: $t('page.research.feedback.actions.permit.activateSummary'),
+        title: $t('page.research.feedback.actions.permit.activateTitle'),
+      },
+    );
+    if (result === null) {
+      return;
+    }
+    activationReceipt.value = result;
+    activationIdempotencyKeys.delete(permit.promotion_permit_id);
+    message.success(
+      $t(
+        result.replayed
+          ? 'page.research.feedback.actions.permit.activateReplayed'
+          : 'page.research.feedback.actions.permit.activateSuccess',
+      ),
+    );
+    await refresh();
+  } finally {
+    releaseFeedbackAction(pendingActions, actionKey);
+  }
+}
+
+async function controlScheduler(
+  state: FeedbackSchedulerStateView,
+  paused: boolean,
+) {
+  if (!canControlScheduler.value || state.paused === paused) {
+    return;
+  }
+  const verb = paused ? 'pause' : 'resume';
+  const actionKey = `scheduler:${state.research_profile_id}:${verb}`;
+  if (!tryBeginFeedbackAction(pendingActions, actionKey)) {
+    return;
+  }
+  try {
+    const result = await governed(
+      (context) => {
+        const request = {
+          expected_pause_revision: state.pause_revision,
+          note: context.reason,
+          reason_code: `operator_${verb}`,
+        };
+        return paused
+          ? pauseFeedbackScheduler(state.research_profile_id, request, context)
+          : resumeFeedbackScheduler(
+              state.research_profile_id,
+              request,
+              context,
+            );
+      },
+      {
+        danger: paused,
+        details: [
+          {
+            label: $t('page.research.feedback.scheduler.profile'),
+            mono: true,
+            value: state.research_profile_id,
+          },
+          {
+            label: $t('page.research.feedback.scheduler.pauseRevision'),
+            value: state.pause_revision.toString(),
+          },
+        ],
+        summary: $t(
+          paused
+            ? 'page.research.feedback.scheduler.pauseSummary'
+            : 'page.research.feedback.scheduler.resumeSummary',
+        ),
+        title: $t(
+          paused
+            ? 'page.research.feedback.scheduler.pauseTitle'
+            : 'page.research.feedback.scheduler.resumeTitle',
+        ),
+      },
+    );
+    if (result === null) {
+      return;
+    }
+    const current = schedulerSnapshot.value;
+    if (current !== null) {
+      const existing = current.items.findIndex(
+        (item) => item.research_profile_id === result.state.research_profile_id,
+      );
+      const items = [...current.items];
+      if (existing === -1) {
+        items.push(result.state);
+      } else {
+        items[existing] = result.state;
+      }
+      schedulerSnapshot.value = {
+        items,
+        observed_at: result.observed_at,
+      };
+    }
+    message.success(
+      $t(
+        paused
+          ? 'page.research.feedback.scheduler.pauseSuccess'
+          : 'page.research.feedback.scheduler.resumeSuccess',
+      ),
+    );
+    await refreshSchedulers();
+  } finally {
+    releaseFeedbackAction(pendingActions, actionKey);
+  }
+}
+
 const refreshCoordinator = new AuthoritativeReadCoordinator<
   number,
   FeedbackWorkbenchSnapshot
 >({
   async fetchSnapshot(page, signal) {
-    const previousCycleId = selectedCycle.value?.feedback_cycle_id;
+    const previousCycleId = effectiveCycleId.value;
     const [nextOverview, nextCycles] = await Promise.all([
       getFeedbackOverview({ signal }),
       listFeedbackCycles({ page, size: PAGE_SIZE }, { signal }),
@@ -567,7 +806,7 @@ const refreshCoordinator = new AuthoritativeReadCoordinator<
     refreshing.value = pending && overview.value !== null;
   },
   onSnapshot(snapshot) {
-    validateOverview(snapshot.overview);
+    validateFeedbackOverview(snapshot.overview, feedbackStore.revision);
     loadError.value = null;
     overview.value = snapshot.overview;
     if (
@@ -578,22 +817,48 @@ const refreshCoordinator = new AuthoritativeReadCoordinator<
         snapshot.overview.profiles[0]?.profile_ref.id ?? '';
     }
     cyclePage.value = snapshot.cycles;
-    const nextCycleId = selectedCycle.value?.feedback_cycle_id;
+    const nextCycleId = effectiveCycleId.value;
     if (nextCycleId !== undefined && nextCycleId === snapshot.previousCycleId) {
       void refreshCycleDetail(nextCycleId);
     }
-    void refreshPermits();
   },
 });
 
-function refresh(): Promise<void> {
+async function refresh(): Promise<void> {
   if (!canRead.value) {
     loading.value = false;
     refreshing.value = false;
-    return Promise.resolve();
+    return;
   }
   refreshCoordinator.setKey(currentPage.value);
-  return refreshCoordinator.refresh();
+  await Promise.all([
+    refreshCoordinator.refresh(),
+    refreshPermits(),
+    refreshSchedulers(),
+  ]);
+}
+
+function stopRecoveryPolling() {
+  if (recoveryPollTimer !== undefined) {
+    clearInterval(recoveryPollTimer);
+    recoveryPollTimer = undefined;
+  }
+}
+
+function syncRecoveryPolling() {
+  if (!canRead.value || !wsRecoveryRequired.value) {
+    stopRecoveryPolling();
+    return;
+  }
+  recoveryPollTimer ??= setInterval(() => {
+    void refresh();
+  }, RECOVERY_POLL_MS);
+}
+
+function refreshOnVisibility() {
+  if (document.visibilityState === 'visible' && canRead.value) {
+    void refresh();
+  }
 }
 
 watch(currentPage, (page) => {
@@ -602,7 +867,7 @@ watch(currentPage, (page) => {
   }
 });
 watch(
-  () => selectedCycle.value?.feedback_cycle_id,
+  effectiveCycleId,
   (cycleId, previousCycleId) => {
     if (cycleId === undefined) {
       resetCycleDetail();
@@ -617,32 +882,58 @@ watch(
   () => {
     if (canRead.value) {
       refreshCoordinator.invalidate();
+      schedulerReadCoordinator.invalidate();
+      if (canReadPermits.value) {
+        permitReadCoordinator.invalidate();
+      }
     }
   },
+);
+watch(
+  wsRecoveryRequired,
+  (required, wasRequired) => {
+    syncRecoveryPolling();
+    if (!required && wasRequired && canRead.value) {
+      void refresh();
+    }
+  },
+  { immediate: true },
 );
 watch(canRead, (allowed, wasAllowed) => {
   if (allowed && !wasAllowed) {
     void refresh();
   } else if (!allowed) {
     refreshCoordinator.cancel();
+    permitReadCoordinator.cancel();
+    schedulerReadCoordinator.cancel();
     loading.value = false;
     refreshing.value = false;
+    permitPage.value = emptyPermits;
+    permitLoading.value = false;
+    permitError.value = null;
+    schedulerSnapshot.value = null;
+    schedulerLoading.value = false;
+    schedulerError.value = null;
     resetCycleDetail();
   }
+  syncRecoveryPolling();
 });
 watch(canReadPermits, () => {
   void refreshPermits();
 });
 
 onMounted(() => {
+  document.addEventListener('visibilitychange', refreshOnVisibility);
   void refresh();
 });
 onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', refreshOnVisibility);
+  stopRecoveryPolling();
   refreshCoordinator.dispose();
+  permitReadCoordinator.dispose();
+  schedulerReadCoordinator.dispose();
   detailGeneration += 1;
   detailController?.abort();
-  permitGeneration += 1;
-  permitController?.abort();
 });
 </script>
 
@@ -723,6 +1014,33 @@ onBeforeUnmount(() => {
       </Alert>
 
       <template v-else>
+        <Alert
+          v-if="wsRecoveryRequired"
+          :description="
+            feedbackStore.recoveryRequired
+              ? $t('page.research.feedback.recovery.requiredDescription', {
+                  reason:
+                    feedbackStore.recoveryReason ??
+                    $t('page.research.feedback.detail.notObserved'),
+                })
+              : $t('page.research.feedback.recovery.degradedDescription')
+          "
+          :message="
+            $t(
+              feedbackStore.recoveryRequired
+                ? 'page.research.feedback.recovery.requiredTitle'
+                : 'page.research.feedback.recovery.degradedTitle',
+            )
+          "
+          show-icon
+          type="warning"
+        >
+          <template #action>
+            <Button class="min-h-11" @click="refresh">
+              {{ $t('page.research.feedback.retry') }}
+            </Button>
+          </template>
+        </Alert>
         <Alert
           v-if="loadError"
           :description="$t('page.research.feedback.staleDescription')"
@@ -831,11 +1149,28 @@ onBeforeUnmount(() => {
                 />
               </div>
             </section>
+
+            <FeedbackSchedulerPanel
+              :can-control="canControlScheduler"
+              :error="schedulerError"
+              :loading="schedulerLoading"
+              :pending-actions="pendingActions"
+              :snapshot="schedulerSnapshot"
+              @control="controlScheduler"
+              @retry="refreshSchedulers"
+            />
+
+            <FeedbackTruthOperationsPanel
+              v-if="overview"
+              :snapshot="overview.truth_operations"
+            />
           </TabPane>
 
           <TabPane key="cycles" :tab="$t('page.research.feedback.tabs.cycles')">
             <Empty
-              v-if="cyclePage.items.length === 0"
+              v-if="
+                cyclePage.items.length === 0 && effectiveCycleId === undefined
+              "
               :description="$t('page.research.feedback.cycles.empty')"
               :image="Empty.PRESENTED_IMAGE_SIMPLE"
             />
@@ -852,15 +1187,14 @@ onBeforeUnmount(() => {
                   v-for="cycle in cyclePage.items"
                   :key="cycle.feedback_cycle_id"
                   :aria-current="
-                    selectedCycle?.feedback_cycle_id === cycle.feedback_cycle_id
+                    effectiveCycleId === cycle.feedback_cycle_id
                       ? 'true'
                       : undefined
                   "
                   class="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   :class="{
                     'border-primary bg-accent':
-                      selectedCycle?.feedback_cycle_id ===
-                      cycle.feedback_cycle_id,
+                      effectiveCycleId === cycle.feedback_cycle_id,
                   }"
                   type="button"
                   @click="selectCycle(cycle)"
@@ -880,9 +1214,13 @@ onBeforeUnmount(() => {
                 </button>
               </nav>
 
-              <div v-if="selectedCycle" class="min-w-0">
+              <div v-if="effectiveCycleId" class="min-w-0">
                 <div
-                  v-if="canTrigger && canCancelFeedbackCycle(selectedCycle)"
+                  v-if="
+                    canTrigger &&
+                    selectedCycle &&
+                    canCancelFeedbackCycle(selectedCycle)
+                  "
                   class="mb-3 flex justify-end"
                 >
                   <Button
@@ -906,14 +1244,12 @@ onBeforeUnmount(() => {
                   "
                   :message="detailError"
                   show-icon
-                  type="warning"
+                  :type="detailNotFound ? 'error' : 'warning'"
                 >
                   <template #action>
                     <Button
                       class="min-h-11"
-                      @click="
-                        refreshCycleDetail(selectedCycle.feedback_cycle_id)
-                      "
+                      @click="refreshCycleDetail(effectiveCycleId)"
                     >
                       {{ $t('page.research.feedback.retry') }}
                     </Button>
@@ -963,8 +1299,10 @@ onBeforeUnmount(() => {
 
             <FeedbackPermitPanel
               :can-issue="canIssuePermit"
+              :can-activate="canActivateRoute"
               :can-read="canReadPermits"
               :can-revoke="canRevokePermit"
+              :activation-receipt="activationReceipt"
               :error="permitError"
               :idempotency-key="permitIdempotencyKey"
               :issue-pending="
@@ -975,6 +1313,7 @@ onBeforeUnmount(() => {
               :page="permitPage"
               :pending-actions="pendingActions"
               :selected-cycle="selectedCycle"
+              @activate="activatePermit"
               @issue="issuePermit"
               @retry="refreshPermits"
               @revoke="revokePermit"

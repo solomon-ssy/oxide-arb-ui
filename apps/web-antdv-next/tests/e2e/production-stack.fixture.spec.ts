@@ -11,7 +11,6 @@ import {
 interface FeedbackCycleRow {
   feedback_cycle_id: string;
   status: string;
-  trigger_family: string;
 }
 
 interface FeedbackMutation {
@@ -62,9 +61,8 @@ test('browser reconnects research feedback from its exact durable cursor', async
   const wire = installWebSocketAudit(page);
   const cancellationTarget = await readFirstApiItem<FeedbackCycleRow>(
     adminApi.context,
-    '/api/research/feedback-cycles?page=1&size=100',
-    (cycle) =>
-      cycle.status === 'running' && cycle.trigger_family === 'scheduled',
+    '/api/research/feedback-cycles?page=1&size=100&trigger_family=scheduled',
+    (cycle) => cycle.status === 'running',
   );
   let overviewReads = 0;
   page.on('response', (response) => {

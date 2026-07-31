@@ -8,7 +8,6 @@ import type {
 // Canonical calibration artifact types are owned by `./calibration`.
 export type {
   ActivateCalibrationArtifactRequest,
-  BindCalibrationRequest,
   CalibrationArtifactDetailView,
   CalibrationArtifactListQuery,
   CalibrationArtifactSummaryView,

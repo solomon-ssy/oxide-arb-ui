@@ -843,9 +843,14 @@ test('W4 responsive accessibility evidence matrix', async ({
       model.model_version_id,
       feedbackCycleId,
     );
-    await expect(page.locator('.ant-alert-warning')).toContainText(
-      /Readiness evidence is unavailable|就绪度证据不可用/i,
-    );
+    await expect(
+      page
+        .getByTestId('feedback-workbench')
+        .getByRole('alert')
+        .filter({
+          hasText: /Readiness evidence is unavailable|就绪度证据不可用/i,
+        }),
+    ).toBeVisible();
     await captureStateMatrix(
       page,
       'feedback-blocked',

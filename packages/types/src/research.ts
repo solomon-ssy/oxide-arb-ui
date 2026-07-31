@@ -24,7 +24,6 @@ import type {
   FeedbackCohort,
   MarketCategory,
   ModelFamily,
-  PublicationStatus,
   ResearchJobKind,
   ResearchJobResultKind,
   ResearchJobStatus,
@@ -628,9 +627,6 @@ export interface TrainedModelView {
   trade_policy_artifact_id: null | UuidString;
   trade_policy_hash: null | string;
   training_dataset_id: null | UuidString;
-  /** CPCV path set bound for publish gates (`undefined` until bound). */
-  publish_path_set_id?: null | UuidString;
-  publication_status: PublicationStatus;
   metrics: ModelVersionMetrics;
   /** Frozen objective provenance; classical/imported models use explicit non-LTR records. */
   training_objective: ModelTrainingObjective;
@@ -678,18 +674,16 @@ export interface ModelSpecListQuery extends PageQuery {
 /** Filter + pagination for `GET /research/models`. */
 export interface ModelVersionListQuery extends PageQuery, TimeRangeQuery {
   model_spec_id?: string;
-  publication_status?: PublicationStatus;
 }
 
-/** Query for `GET /research/models/published-catalog` (the governed
- * `ModelVersionSelect` picker source, 11.2.2 remediation R8). */
-export interface ModelPublishedCatalogQuery {
+/** Query for `GET /research/models/route-candidates`. */
+export interface ModelRouteCandidateQuery {
   category?: MarketCategory;
   side: ModelPickerSide;
 }
 
-/** One `Published` model version offered by the picker widget. */
-export interface PublishedModelOptionView {
+/** One immutable model version offered to route-governance workflows. */
+export interface ModelRouteCandidateView {
   model_version_id: UuidString;
   model_spec_id: string;
   spec_name: string;
@@ -698,23 +692,6 @@ export interface PublishedModelOptionView {
   model_family: ModelFamily;
   /** The artifact's own declared scope (`null` = generic cross-category). */
   category_scope: MarketCategory | null;
-  published_at: IsoDateTime | null;
-}
-
-/** `POST /research/models/{id}/publish` governed request body. */
-export interface PublishModelRequest {
-  reason: string;
-}
-
-/** `POST /research/models/{id}/retire` governed request body. */
-export interface RetireModelRequest {
-  reason: string;
-}
-
-/** `POST /research/models/{id}/bind-publish-path-set` governed request body. */
-export interface BindPublishPathSetRequest {
-  path_set_id: UuidString;
-  reason: string;
 }
 
 // ── Backtests / comparison ──────────────────────────────────────────────────
@@ -888,7 +865,7 @@ export interface ComparisonReportListQuery extends PageQuery, TimeRangeQuery {
   candidate_model_version_id?: UuidString;
 }
 
-// ── Model quality gate (publish readiness) ──────────────────────────────────
+// ── Model quality gate ───────────────────────────────────────────────────────
 
 /** Whether a gate blocks the advance (`hard`) or is advisory only (`soft`). */
 export type GateClass = 'hard' | 'soft';
@@ -896,8 +873,11 @@ export type GateClass = 'hard' | 'soft';
 /** Evaluated state of one gate against its threshold. */
 export type GateStatus = 'fail' | 'not_applicable' | 'pass' | 'warn';
 
-/** Which lifecycle transition a gate preview evaluates. */
-export type GatePreviewIntent = 'auto_execution' | 'candidate' | 'publish';
+/** Which governed transition a gate preview evaluates. */
+export type GatePreviewIntent =
+  | 'auto_execution'
+  | 'candidate'
+  | 'route_activation';
 
 /**
  * Stable gate identity wire name (append-only). The SPA keys its labels off
@@ -909,6 +889,7 @@ export type GateId =
   | 'category_concentration'
   | 'cpcv_required'
   | 'deflated_sharpe'
+  | 'explainability_required'
   | 'hit_rate'
   | 'label_coverage'
   | 'liquidity_exit_feasible'
@@ -1080,7 +1061,6 @@ export interface FactorServingUsageView {
   artifact_hash: string;
   serving_contract_version: number;
   serving_contract_hash: string;
-  publication_status: PublicationStatus;
   created_at: IsoDateTime;
 }
 

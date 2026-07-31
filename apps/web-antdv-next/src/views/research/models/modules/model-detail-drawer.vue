@@ -3,14 +3,19 @@ import type {
   BacktestPathSetView,
   BacktestReportView,
   ModelDetailView,
+  ModelRouteBootstrapReceiptView,
   QualityGateReportView,
   ResearchJobView,
   ReturnModelView,
+  RuntimeControlSnapshot,
   TrainedModelView,
 } from '@vben/types';
+import type {
+  ConfigResourcesView,
+  CurrentPolicyResourceView,
+} from '@vben/types/config-api';
 
 import type { BacktestBody } from './model-backtest-modal.vue';
-import type { BindCalibrationBody } from './model-bind-calibration-modal.vue';
 import type { CpcvBody } from './model-cpcv-modal.vue';
 
 import { computed, ref, watch } from 'vue';
@@ -37,10 +42,10 @@ import {
   Tag,
 } from 'antdv-next';
 
-import { bindCalibration } from '#/api/calibration';
+import { getConfigResources, getCurrentConfigResource } from '#/api/config';
+import { bootstrapModelRoute } from '#/api/feedback';
 import {
   backtestModel,
-  bindPublishPathSet,
   cpcvBacktestModel,
   getBacktestPathSet,
   getModel,
@@ -49,14 +54,11 @@ import {
   listBacktestReports,
   listResearchJobs,
 } from '#/api/research';
+import { getRuntimeControls } from '#/api/system';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import FeatureParityStatusPanel from '#/shared/components/feature-parity-status-panel.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import {
-  findTagOption,
-  usePublicationStatusTagOptions,
-} from '#/shared/components/format/tag-options';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useResearchStore } from '#/store';
@@ -65,7 +67,6 @@ import CopyableHash from '../../shared/copyable-hash.vue';
 import CpcvValidationPanel from '../../shared/cpcv-validation-panel.vue';
 import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
 import ModelBacktestModal from './model-backtest-modal.vue';
-import ModelBindCalibrationModal from './model-bind-calibration-modal.vue';
 import ModelCpcvModal from './model-cpcv-modal.vue';
 import ModelMetricsPanel from './model-metrics-panel.vue';
 import {
@@ -85,11 +86,8 @@ const { hasAccessByCodes } = useQpAccess();
 const route = useRoute();
 const router = useRouter();
 const researchStore = useResearchStore();
-const statusTagOptions = usePublicationStatusTagOptions();
-
-const canBindCalibration = hasAccessByCodes(['publication:create']);
-const canBindPathSet = hasAccessByCodes(['publication:create']);
 const canReplay = hasAccessByCodes(['replay:create']);
+const canBootstrapRoute = hasAccessByCodes(['publication:publish']);
 
 /** Sell family has lot-level CPCV only — no Buy-style single-path backtest. */
 const SELL_MODEL_FAMILY = 'hold_vs_exit_weighted';
@@ -114,9 +112,15 @@ const pathSet = ref<BacktestPathSetView | null>(null);
 const selectedPathSetId = ref<null | string>(null);
 const activeCpcvJob = ref<null | ResearchJobView>(null);
 const gate = ref<null | QualityGateReportView>(null);
+const configResources = ref<ConfigResourcesView | null>(null);
+const routingResource = ref<CurrentPolicyResourceView | null>(null);
+const runtimeControls = ref<null | RuntimeControlSnapshot>(null);
+const bootstrapReceipt = ref<ModelRouteBootstrapReceiptView | null>(null);
+const bootstrapError = ref<null | string>(null);
+const bootstrapLoading = ref(false);
+const bootstrapIdempotencyKey = ref(crypto.randomUUID());
 const loading = ref(false);
 const gateLoading = ref(false);
-const bindPathSetLoading = ref(false);
 const openId = ref<null | string>(null);
 const evaluationPage = ref(1);
 const EVALUATION_PAGE_SIZE = 20;
@@ -141,9 +145,6 @@ const detailTabOptions = computed(() => [
 ]);
 
 const metrics = computed(() => model.value?.metrics);
-const statusTag = computed(() =>
-  findTagOption(statusTagOptions, model.value?.publication_status),
-);
 const servingLineage = computed(() =>
   modelDetail.value ? modelServingLineage(modelDetail.value) : null,
 );
@@ -167,6 +168,65 @@ const detailAnnouncement = computed(() => {
 
 const cpcvInProgress = computed(() => !!activeCpcvJob.value);
 
+const bootstrapRoute = computed<'crypto' | 'pooled' | 'weather' | null>(() => {
+  const detail = modelDetail.value;
+  if (!detail) {
+    return null;
+  }
+  const category = detail.serving_contract.bindings.model.category_scope;
+  if (category === null) {
+    return 'pooled';
+  }
+  return category === 'crypto' || category === 'weather' ? category : null;
+});
+
+const bootstrapRouteLabel = computed(() => {
+  const route = bootstrapRoute.value;
+  return route ? $t(`page.research.models.bootstrap.routes.${route}`) : '—';
+});
+
+const routedModelId = computed(() => {
+  const revision = routingResource.value?.revision;
+  const route = bootstrapRoute.value;
+  if (
+    !revision ||
+    revision.document.resource_kind !== 'model_routing' ||
+    !route
+  ) {
+    return null;
+  }
+  const model = revision.document.document.model;
+  if (route === 'pooled') {
+    return model?.active_model_version_id ?? null;
+  }
+  const pointers = model?.category_model_pointers;
+  return route === 'crypto'
+    ? (pointers?.crypto ?? null)
+    : (pointers?.weather ?? null);
+});
+
+const bootstrapPrerequisitesReady = computed(() => {
+  const detail = modelDetail.value;
+  return (
+    canBootstrapRoute &&
+    bootstrapRoute.value !== null &&
+    routedModelId.value === null &&
+    gate.value?.passed === true &&
+    runtimeControls.value?.quant_runtime_mode === 'report_only' &&
+    detail?.serving_contract.bindings.model.calibration !== null &&
+    configResources.value !== null &&
+    routingResource.value?.revision !== null &&
+    runtimeControls.value !== null
+  );
+});
+
+const bootstrapStateUnavailable = computed(
+  () =>
+    !configResources.value ||
+    !routingResource.value?.revision ||
+    !runtimeControls.value,
+);
+
 /** Need to run CPCV: no path sets yet, or alpha metrics fail on a bound set. */
 const needsCpcvRunCta = computed(() => {
   const report = gate.value;
@@ -180,7 +240,7 @@ const needsCpcvRunCta = computed(() => {
   if (missingPathSet && pathSets.value.length === 0) {
     return true;
   }
-  // Bound path set exists but alpha metrics fail → re-run CPCV (or re-bind another).
+  // Alpha-metric failures require a new CPCV run; path selection is diagnostic only.
   const alphaFail = hardFails.some(
     (out) =>
       out.gate === 'pbo' ||
@@ -190,26 +250,7 @@ const needsCpcvRunCta = computed(() => {
       out.gate === 'tail_loss_budget' ||
       out.gate === 'sell_baseline_uplift',
   );
-  return alphaFail && !!model.value?.publish_path_set_id;
-});
-
-/** Path sets exist but none is publish-bound → bind CTA, not re-run. */
-const needsBindCta = computed(() => {
-  const report = gate.value;
-  if (!report || report.passed || !canBindPathSet) {
-    return false;
-  }
-  const missingPathSet = report.gates.some(
-    (out) =>
-      out.class === 'hard' &&
-      out.status === 'fail' &&
-      out.gate === 'cpcv_required',
-  );
-  return (
-    missingPathSet &&
-    pathSets.value.length > 0 &&
-    !model.value?.publish_path_set_id
-  );
+  return alphaFail;
 });
 
 const cpcvGateOutcomes = computed(() => {
@@ -224,10 +265,6 @@ const cpcvGateOutcomes = computed(() => {
   ]);
   return (gate.value?.gates ?? []).filter((row) => ids.has(row.gate));
 });
-
-const publishBoundPathSetId = computed(
-  () => model.value?.publish_path_set_id ?? null,
-);
 
 const returnModel = computed<null | ReturnModelView>(
   () => model.value?.return_model ?? null,
@@ -280,29 +317,12 @@ const isCalibratedReturnModel = computed(
   () => returnModel.value?.calibration === 'calibrated',
 );
 
-const [BindModal, bindModalApi] = useVbenModal({
-  connectedComponent: ModelBindCalibrationModal,
-});
 const [BacktestModal, backtestModalApi] = useVbenModal({
   connectedComponent: ModelBacktestModal,
 });
 const [CpcvModal, cpcvModalApi] = useVbenModal({
   connectedComponent: ModelCpcvModal,
 });
-
-function openBindCalibration() {
-  const current = model.value;
-  if (!current) {
-    return;
-  }
-  bindModalApi
-    .setData({
-      modelVersionId: current.model_version_id,
-      onSubmit: (body: BindCalibrationBody) =>
-        submitBindCalibration(current.model_version_id, body),
-    })
-    .open();
-}
 
 function openBacktest() {
   const current = model.value;
@@ -332,27 +352,6 @@ function openCpcv() {
       trainingDatasetId: current.training_dataset_id ?? undefined,
     })
     .open();
-}
-
-async function submitBindCalibration(
-  modelVersionId: string,
-  body: BindCalibrationBody,
-): Promise<boolean> {
-  const result = await governed(
-    (ctx) =>
-      bindCalibration(modelVersionId, { ...body, reason: ctx.reason }, ctx),
-    {
-      summary: $t('page.research.models.bindCalibration.summary'),
-      title: $t('page.research.models.bindCalibration.title'),
-    },
-  );
-  if (result) {
-    openId.value = result.model_version_id;
-    model.value = result;
-    void refresh(result.model_version_id);
-    return true;
-  }
-  return false;
 }
 
 async function submitBacktest(
@@ -395,34 +394,77 @@ async function submitCpcv(
   return false;
 }
 
-async function submitBindPublishPathSet() {
-  const id = model.value?.model_version_id;
-  const pathSetId = selectedPathSetId.value;
-  if (!id || !pathSetId) {
+async function bootstrapFirstChampion() {
+  const current = modelDetail.value;
+  const policy = configResources.value;
+  const runtime = runtimeControls.value;
+  const targetRoute = bootstrapRoute.value;
+  if (
+    !current ||
+    !policy ||
+    !runtime ||
+    !targetRoute ||
+    !bootstrapPrerequisitesReady.value
+  ) {
+    bootstrapError.value = $t(
+      'page.research.models.bootstrap.prerequisitesFailed',
+    );
     return;
   }
-  bindPathSetLoading.value = true;
+  bootstrapLoading.value = true;
+  bootstrapError.value = null;
   try {
-    const updated = await governed(
+    const result = await governed(
       (ctx) =>
-        bindPublishPathSet(
-          id,
-          { path_set_id: pathSetId, reason: ctx.reason },
+        bootstrapModelRoute(
+          {
+            expected_policy_generation: policy.active_bundle_generation,
+            expected_runtime_control_revision: runtime.revision,
+            idempotency_key: bootstrapIdempotencyKey.value,
+            model_version_id: current.model_version_id,
+            note: ctx.reason,
+            reason_code: 'first_champion_bootstrap',
+          },
           ctx,
         ),
       {
-        summary: $t('page.research.cpcv.bindSummary', {
-          id: pathSetId.slice(0, 8),
-        }),
-        title: $t('page.research.cpcv.bindTitle'),
+        danger: true,
+        details: [
+          {
+            label: $t('page.research.models.bootstrap.route'),
+            value: bootstrapRouteLabel.value,
+          },
+          {
+            label: $t('page.research.models.bootstrap.model'),
+            mono: true,
+            value: current.model_version_id,
+          },
+          {
+            label: $t('page.research.models.bootstrap.generation'),
+            mono: true,
+            value: `${policy.active_bundle_generation} → ${
+              policy.active_bundle_generation + 1
+            }`,
+          },
+          {
+            label: $t('page.research.models.bootstrap.authority'),
+            value: $t('page.research.models.bootstrap.authorityUnchanged'),
+          },
+        ],
+        summary: $t('page.research.models.bootstrap.summary'),
+        title: $t('page.research.models.bootstrap.title'),
       },
     );
-    if (updated) {
-      message.success($t('page.research.cpcv.bindFeedback'));
-      await refresh(id);
+    if (!result) {
+      bootstrapError.value = $t('page.research.models.bootstrap.failed');
+      return;
     }
+    bootstrapReceipt.value = result;
+    message.success($t('page.research.models.bootstrap.succeeded'));
+    bootstrapIdempotencyKey.value = crypto.randomUUID();
+    await refresh(current.model_version_id);
   } finally {
-    bindPathSetLoading.value = false;
+    bootstrapLoading.value = false;
   }
 }
 
@@ -445,32 +487,38 @@ async function refresh(id: string) {
   loading.value = true;
   gateLoading.value = true;
   try {
-    const [fresh, reports, listed, jobs] = await Promise.all([
-      handleRequest(
-        () =>
-          getModel(id, {
-            page: evaluationPage.value,
-            size: EVALUATION_PAGE_SIZE,
-          }),
-        { silent: true },
-      ),
-      handleRequest(
-        () => listBacktestReports({ model_version_id: id, size: 50 }),
-        { silent: true },
-      ),
-      handleRequest(
-        () => listBacktestPathSets({ model_version_id: id, size: 20 }),
-        { silent: true },
-      ),
-      handleRequest(
-        () =>
-          listResearchJobs({
-            kind: RESEARCH_JOB_KINDS.cpcvBacktest,
-            size: 20,
-          }),
-        { silent: true },
-      ),
-    ]);
+    const [fresh, reports, listed, jobs, resources, routing, runtime] =
+      await Promise.all([
+        handleRequest(
+          () =>
+            getModel(id, {
+              page: evaluationPage.value,
+              size: EVALUATION_PAGE_SIZE,
+            }),
+          { silent: true },
+        ),
+        handleRequest(
+          () => listBacktestReports({ model_version_id: id, size: 50 }),
+          { silent: true },
+        ),
+        handleRequest(
+          () => listBacktestPathSets({ model_version_id: id, size: 20 }),
+          { silent: true },
+        ),
+        handleRequest(
+          () =>
+            listResearchJobs({
+              kind: RESEARCH_JOB_KINDS.cpcvBacktest,
+              size: 20,
+            }),
+          { silent: true },
+        ),
+        handleRequest(() => getConfigResources(), { silent: true }),
+        handleRequest(() => getCurrentConfigResource('model_routing'), {
+          silent: true,
+        }),
+        handleRequest(() => getRuntimeControls(), { silent: true }),
+      ]);
     if (openId.value === id) {
       model.value = fresh ?? null;
       modelDetail.value = fresh ?? null;
@@ -480,10 +528,7 @@ async function refresh(id: string) {
       backtests.value = reports?.items ?? [];
       pathSets.value = listed?.items ?? [];
       const preferred =
-        selectedPathSetId.value ??
-        fresh?.publish_path_set_id ??
-        listed?.items?.[0]?.path_set_id ??
-        null;
+        selectedPathSetId.value ?? listed?.items?.[0]?.path_set_id ?? null;
       if (preferred) {
         selectedPathSetId.value = preferred;
         pathSet.value =
@@ -502,6 +547,14 @@ async function refresh(id: string) {
             isActiveResearchJobStatus(job.status) &&
             job.params?.model_version_id === id,
         ) ?? null;
+      configResources.value = resources ?? null;
+      routingResource.value = routing ?? null;
+      runtimeControls.value = runtime ?? null;
+      if (!resources || !routing || !runtime) {
+        bootstrapError.value = $t(
+          'page.research.models.bootstrap.stateUnavailable',
+        );
+      }
     }
   } finally {
     loading.value = false;
@@ -510,11 +563,16 @@ async function refresh(id: string) {
   // renders even when readiness evaluation is slow or fails closed.
   try {
     const readiness = await handleRequest(
-      () => getModelQualityGate(id, { intent: 'publish' }),
+      () => getModelQualityGate(id, { intent: 'candidate' }),
       { silent: true },
     );
     if (openId.value === id) {
       gate.value = readiness ?? null;
+      if (!readiness && canBootstrapRoute) {
+        bootstrapError.value = $t(
+          'page.research.models.bootstrap.gateUnavailable',
+        );
+      }
     }
   } finally {
     if (openId.value === id) {
@@ -533,14 +591,18 @@ const [Drawer, drawerApi] = useVbenDrawer({
       model.value = data.model;
       modelDetail.value = null;
       gate.value = null;
+      configResources.value = null;
+      routingResource.value = null;
+      runtimeControls.value = null;
+      bootstrapReceipt.value = null;
+      bootstrapError.value = null;
+      bootstrapIdempotencyKey.value = crypto.randomUUID();
       evaluationPage.value = 1;
       activeDetailTab.value = 'input-contract';
       selectedPathSetId.value =
-        (typeof route.query.path_set_id === 'string'
+        typeof route.query.path_set_id === 'string'
           ? route.query.path_set_id
-          : null) ??
-        data.model.publish_path_set_id ??
-        null;
+          : null;
       void refresh(data.model.model_version_id);
     } else {
       openId.value = null;
@@ -552,6 +614,11 @@ const [Drawer, drawerApi] = useVbenDrawer({
       selectedPathSetId.value = null;
       activeCpcvJob.value = null;
       gate.value = null;
+      configResources.value = null;
+      routingResource.value = null;
+      runtimeControls.value = null;
+      bootstrapReceipt.value = null;
+      bootstrapError.value = null;
       evaluationPage.value = 1;
     }
   },
@@ -585,7 +652,6 @@ watch(
     <Spin :spinning="loading">
       <div v-if="model" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
           <Space v-if="canReplay">
             <Button
               v-if="showSinglePathBacktest"
@@ -604,21 +670,138 @@ watch(
 
         <Card
           size="small"
-          :title="$t('page.research.models.detail.publishReadiness')"
+          :title="$t('page.research.models.detail.candidateReadiness')"
         >
           <QualityGateScorecard :loading="gateLoading" :report="gate" />
-          <Space v-if="needsCpcvRunCta || needsBindCta" class="mt-3">
+          <Space v-if="needsCpcvRunCta" class="mt-3">
             <Button v-if="needsCpcvRunCta" type="primary" @click="openCpcv">
               {{ $t('page.research.models.cpcv.action') }}
             </Button>
-            <Button
-              v-if="needsBindCta"
-              type="primary"
-              @click="submitBindPublishPathSet"
-            >
-              {{ $t('page.research.cpcv.bindPublish') }}
-            </Button>
           </Space>
+        </Card>
+
+        <Card
+          v-if="canBootstrapRoute || bootstrapReceipt"
+          size="small"
+          :title="$t('page.research.models.bootstrap.title')"
+        >
+          <div class="flex flex-col gap-3">
+            <Alert
+              v-if="bootstrapError"
+              :message="bootstrapError"
+              show-icon
+              type="error"
+            >
+              <template #action>
+                <Button
+                  size="small"
+                  @click="model && refresh(model.model_version_id)"
+                >
+                  {{ $t('page.research.models.bootstrap.retry') }}
+                </Button>
+              </template>
+            </Alert>
+            <Alert
+              v-else-if="bootstrapStateUnavailable"
+              :message="$t('page.research.models.bootstrap.stateUnavailable')"
+              show-icon
+              type="warning"
+            />
+            <Alert
+              v-else-if="routedModelId"
+              :message="
+                $t('page.research.models.bootstrap.routeOccupied', {
+                  model: routedModelId,
+                })
+              "
+              show-icon
+              type="info"
+            />
+            <Alert
+              :message="$t('page.research.models.bootstrap.authorityUnchanged')"
+              show-icon
+              type="info"
+            />
+            <Descriptions :column="1" bordered size="small">
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.route')"
+              >
+                {{ bootstrapRouteLabel }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.model')"
+              >
+                <span class="break-all font-mono text-xs">
+                  {{ model.model_version_id }}
+                </span>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.generation')"
+              >
+                {{
+                  configResources
+                    ? `${configResources.active_bundle_generation} → ${
+                        configResources.active_bundle_generation + 1
+                      }`
+                    : '—'
+                }}
+              </DescriptionsItem>
+            </Descriptions>
+            <Button
+              :disabled="!bootstrapPrerequisitesReady"
+              :loading="bootstrapLoading"
+              type="primary"
+              @click="bootstrapFirstChampion"
+            >
+              {{ $t('page.research.models.bootstrap.action') }}
+            </Button>
+            <Alert
+              v-if="!bootstrapPrerequisitesReady && !routedModelId"
+              :message="$t('page.research.models.bootstrap.prerequisitesHint')"
+              show-icon
+              type="warning"
+            />
+            <Descriptions
+              v-if="bootstrapReceipt"
+              :column="1"
+              bordered
+              size="small"
+            >
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.transaction')"
+              >
+                <CopyableHash
+                  :label="$t('page.research.models.bootstrap.transaction')"
+                  :value="bootstrapReceipt.transaction_hash"
+                />
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.actor')"
+              >
+                {{ bootstrapReceipt.activated_by_username }} ·
+                {{ bootstrapReceipt.activated_by_role }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.receipt')"
+              >
+                <span class="break-all font-mono text-xs">
+                  {{ bootstrapReceipt.policy_activation_id }} ·
+                  {{ bootstrapReceipt.model_governance_audit_id }}
+                </span>
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.research.models.bootstrap.rollback')"
+              >
+                <Button
+                  size="small"
+                  type="link"
+                  @click="router.push('/system/config/model_routing')"
+                >
+                  {{ $t('page.research.models.bootstrap.openRouting') }}
+                </Button>
+              </DescriptionsItem>
+            </Descriptions>
+          </div>
         </Card>
 
         <Card size="small">
@@ -1190,8 +1373,7 @@ watch(
                     <DescriptionsItem
                       :label="$t('page.research.models.detail.promotionRole')"
                     >
-                      {{ promotion.role }} · {{ promotion.before_status }} →
-                      {{ promotion.after_status }}
+                      {{ promotion.role }}
                     </DescriptionsItem>
                     <DescriptionsItem
                       :label="$t('page.research.models.detail.permitId')"
@@ -1324,14 +1506,6 @@ watch(
             :description="$t('page.research.models.detail.returnModelUnknown')"
             :image="Empty.PRESENTED_IMAGE_SIMPLE"
           />
-          <Button
-            v-if="canBindCalibration"
-            class="mt-3"
-            type="primary"
-            @click="openBindCalibration"
-          >
-            {{ $t('page.research.models.bindCalibration.action') }}
-          </Button>
         </Card>
 
         <Card
@@ -1551,23 +1725,18 @@ watch(
         <Card size="small" :title="$t('page.research.cpcv.title')">
           <CpcvValidationPanel
             :active-job-id="activeCpcvJob?.job_id ?? null"
-            :bind-loading="bindPathSetLoading"
-            :can-bind="canBindPathSet"
             :gate-outcomes="cpcvGateOutcomes"
             :in-progress="cpcvInProgress"
             :path-set="pathSet"
             :path-sets="pathSets"
             :progress-phase="activeCpcvJob?.progress?.phase ?? null"
             :progress-pct="activeCpcvJob?.progress_pct ?? null"
-            :publish-bound-path-set-id="publishBoundPathSetId"
             :selected-path-set-id="selectedPathSetId"
-            @bind-publish-path-set="submitBindPublishPathSet"
             @update:selected-path-set-id="selectPathSet"
           />
         </Card>
       </div>
     </Spin>
-    <BindModal />
     <BacktestModal />
     <CpcvModal />
   </Drawer>

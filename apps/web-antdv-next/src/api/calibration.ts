@@ -1,6 +1,5 @@
 import type {
   ActivateCalibrationArtifactRequest,
-  BindCalibrationRequest,
   CalibrationArtifactDetailView,
   CalibrationArtifactListQuery,
   CalibrationArtifactSummaryView,
@@ -9,7 +8,6 @@ import type {
   ModelCalibrationFitPreflightView,
   Paginated,
   ResearchJobView,
-  TrainedModelView,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
@@ -26,8 +24,6 @@ export namespace CalibrationApi {
     '/research/calibration-artifacts/fit-model-calibrator';
   export const activateArtifact = (id: string) =>
     `/research/calibration-artifacts/${id}/activate`;
-  export const bindCalibration = (modelVersionId: string) =>
-    `/research/models/${modelVersionId}/bind-calibration`;
   export const calibrationFitPreflight = (modelVersionId: string) =>
     `/research/models/${modelVersionId}/calibration-fit-preflight`;
 }
@@ -98,19 +94,6 @@ export async function activateCalibrationArtifact(
 ) {
   return governedPost<CalibrationArtifactDetailView>(
     CalibrationApi.activateArtifact(id),
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/models/{id}/bind-calibration` — bind a model-score calibrator. */
-export async function bindCalibration(
-  modelVersionId: string,
-  body: BindCalibrationRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<TrainedModelView>(
-    CalibrationApi.bindCalibration(modelVersionId),
     body,
     ctx,
   );

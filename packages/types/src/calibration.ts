@@ -6,11 +6,7 @@ import type {
   TimeRangeQuery,
   UuidString,
 } from './common';
-import type {
-  CalibrationKind,
-  CalibrationMethod,
-  DownsideSource,
-} from './enums';
+import type { CalibrationKind, CalibrationMethod } from './enums';
 
 // ── Shared bias-table curve shapes (market_price_bias payload) ──────────────
 
@@ -165,13 +161,6 @@ export interface FitModelCalibratorRequest {
 
 /** `POST /research/calibration-artifacts/{id}/activate` governed request body. */
 export interface ActivateCalibrationArtifactRequest {
-  reason: string;
-}
-
-/** `POST /research/models/{id}/bind-calibration` governed request body. */
-export interface BindCalibrationRequest {
-  calibrator_ref: UuidString;
-  downside_source: DownsideSource;
   reason: string;
 }
 

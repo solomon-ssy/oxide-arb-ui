@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ModelPickerSide, PublishedModelOptionView } from '@vben/types';
+import type { ModelPickerSide, ModelRouteCandidateView } from '@vben/types';
 import type { MarketCategory, ModelRouting } from '@vben/types/config-api';
 
 import { computed, onMounted, ref } from 'vue';
@@ -9,9 +9,8 @@ import { useRequestHandler } from '@vben/request/qp';
 
 import { Alert, Select, Tag } from 'antdv-next';
 
-import { listPublishedModelOptions } from '#/api/research';
+import { listModelRouteCandidates } from '#/api/research';
 import { $t } from '#/locales';
-import { formatDateTimeLocal } from '#/shared/components/format';
 
 defineOptions({ name: 'ModelRoutingPicker' });
 
@@ -42,8 +41,8 @@ interface GlobalRouteDefinition {
 const { handleRequest } = useRequestHandler();
 const loading = ref(true);
 const loadError = ref(false);
-const buyOptions = ref<PublishedModelOptionView[]>([]);
-const sellOptions = ref<PublishedModelOptionView[]>([]);
+const buyOptions = ref<ModelRouteCandidateView[]>([]);
+const sellOptions = ref<ModelRouteCandidateView[]>([]);
 
 const categories: MarketCategory[] = [
   'crypto',
@@ -157,7 +156,7 @@ function shortHash(value: string) {
   return `blake3:${normalized.slice(0, 12)}…`;
 }
 
-function modelFamilyLabel(family: PublishedModelOptionView['model_family']) {
+function modelFamilyLabel(family: ModelRouteCandidateView['model_family']) {
   return $t(`page.config.modelRouting.family.${family}`);
 }
 
@@ -174,8 +173,8 @@ async function loadCatalog() {
   const result = await handleRequest(
     () =>
       Promise.all([
-        listPublishedModelOptions({ side: 'buy' }),
-        listPublishedModelOptions({ side: 'sell' }),
+        listModelRouteCandidates({ side: 'buy' }),
+        listModelRouteCandidates({ side: 'sell' }),
       ]),
     { onError: () => (loadError.value = true), silent: true },
   );
@@ -260,11 +259,9 @@ onMounted(() => void loadCatalog());
             <dt>{{ $t('page.config.modelRouting.evidence') }}</dt>
             <dd>
               {{
-                selectedOption(pointerValue(route.key))?.published_at
-                  ? formatDateTimeLocal(
-                      selectedOption(pointerValue(route.key))?.published_at,
-                    )
-                  : $t('page.config.modelRouting.published')
+                `${selectedOption(pointerValue(route.key))?.model_family} · v${
+                  selectedOption(pointerValue(route.key))?.version
+                }`
               }}
             </dd>
           </div>

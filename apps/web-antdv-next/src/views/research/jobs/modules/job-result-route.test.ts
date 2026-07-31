@@ -46,12 +46,10 @@ describe('jobResultRoute', () => {
           kind: 'model_calibration_fit',
           result: {
             id: '01900000-0000-7000-8000-000000000099',
-            kind: 'calibration_artifact',
+            kind: 'model_version',
           },
         }),
       ),
-    ).toBe(
-      '/research/calibration-artifacts?open=01900000-0000-7000-8000-000000000099',
-    );
+    ).toBe('/research/models?open=01900000-0000-7000-8000-000000000099');
   });
 });

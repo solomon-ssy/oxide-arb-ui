@@ -47,7 +47,6 @@ function cycle(
       status === 'failed' || status === 'cancelled'
         ? `feedback_${status}`
         : null,
-    trigger_family: 'scheduled',
     updated_at: '2026-07-01T00:05:00Z',
   };
 }
@@ -55,10 +54,12 @@ function cycle(
 function detail(): FeedbackCycleDetailView {
   const cycleView = cycle('succeeded', 'no_action');
   return {
+    candidate_ready: null,
     coverage: null,
     cycle: cycleView,
     drift_reports: [],
     evaluation_uses: [],
+    triggers: [],
     timeline: [
       {
         actor: 'feedback-scheduler',
@@ -91,6 +92,63 @@ function detail(): FeedbackCycleDetailView {
         stage: 'coverage',
       },
     ],
+  };
+}
+
+function candidateReady(): NonNullable<
+  FeedbackCycleDetailView['candidate_ready']
+> {
+  return {
+    attribution: {
+      decision_counterfactual_count: 4,
+      execution_trajectory_count: 3,
+      outcome_association_count: 1,
+      policy_counterfactual_count: 3,
+      prediction_explanation_count: 4,
+      prior_cycle_use_count: 2,
+      produced_set_hash: 'blake3:produced',
+      use_set_hash: 'blake3:uses',
+    },
+    blockers: [],
+    comparison: {
+      adjusted_p_value: '0.01',
+      confidence: '0.95',
+      effect_bps: '12.5',
+      observation_count: 120,
+      simultaneous_lower_bound_bps: '3.1',
+    },
+    quality_gate: {
+      evaluated_at: '2026-07-01T00:04:00Z',
+      gates: [
+        {
+          class: 'hard',
+          detail: 'Exact serving-contract explanation verified.',
+          gate: 'explainability_required',
+          observed: 'verified',
+          status: 'pass',
+          threshold: 'verified',
+        },
+      ],
+      intent: 'candidate',
+      passed: true,
+      report_hash: 'blake3:quality',
+    },
+    route_diff: {
+      candidate_model_version_id: '00000000-0000-0000-0000-000000000102',
+      champion_model_version_id: '00000000-0000-0000-0000-000000000101',
+      current_route_generation: 4,
+      execution_authority_unchanged: true,
+      proposed_route_generation: 5,
+    },
+    shadow: {
+      any_hard_divergence: false,
+      mean_topn_overlap: '0.9',
+      minimum_topn_overlap: '0.8',
+      observed: 120,
+      observed_window_secs: 259_200,
+      required: 100,
+      required_window_secs: 259_200,
+    },
   };
 }
 
@@ -140,6 +198,29 @@ describe('feedback cycle detail state', () => {
     expect(() =>
       validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
     ).not.toThrow();
+  });
+
+  it('requires a complete scorecard for CandidateReady', () => {
+    const snapshot = detail();
+    snapshot.cycle = cycle('succeeded', 'candidate_ready');
+    expect(() =>
+      validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
+    ).toThrowError(TypeError);
+
+    snapshot.candidate_ready = candidateReady();
+    expect(() =>
+      validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
+    ).not.toThrow();
+  });
+
+  it('rejects a CandidateReady route diff that mutates protected authority', () => {
+    const snapshot = detail();
+    snapshot.cycle = cycle('succeeded', 'candidate_ready');
+    snapshot.candidate_ready = candidateReady();
+    snapshot.candidate_ready.route_diff.execution_authority_unchanged = false;
+    expect(() =>
+      validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
+    ).toThrowError(TypeError);
   });
 
   it('rejects a detail response for another cycle', () => {

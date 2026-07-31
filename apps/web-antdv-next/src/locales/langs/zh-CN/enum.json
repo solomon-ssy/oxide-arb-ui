@@ -114,7 +114,6 @@
     "data_stale": "数据陈旧",
     "low_confidence": "置信度过低",
     "manually_blocked": "人工封禁",
-    "model_not_published": "模型未发布",
     "report_only_mode": "仅报告模式",
     "risk_envelope_invalid": "风险边界无效",
     "shadow_not_passed": "影子门未通过",
@@ -387,6 +386,7 @@
   "modelFamily": {
     "weighted_factor": "加权因子（Buy 排序）",
     "hold_vs_exit_weighted": "Hold vs Exit（Sell 退出）",
+    "classical_gradient_boosted_trees": "经典：梯度提升树",
     "classical_random_forest": "经典：随机森林",
     "classical_extra_trees": "经典：Extra Trees",
     "classical_logistic_regression": "经典：逻辑回归",
@@ -622,6 +622,7 @@
     "sell_fallback_ratio": "卖出回退比例",
     "calibration_required": "需要校准",
     "cpcv_required": "需要 CPCV 路径集",
+    "explainability_required": "需要可解释性证据",
     "deflated_sharpe": "Deflated Sharpe Ratio",
     "min_track_record_length": "最短跟踪记录长度",
     "pbo": "回测过拟合概率",

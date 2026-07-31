@@ -20,10 +20,7 @@ import {
   backtestModel,
   cpcvBacktestModel,
   getModel,
-  getModelQualityGate,
   listModels,
-  publishModel,
-  retireModel,
   trainModel,
 } from '#/api/research';
 import { $t } from '#/locales';
@@ -54,8 +51,6 @@ const canTrain = hasAccessByCodes(['materialization:create']);
 const access = {
   canBacktest: hasAccessByCodes(['replay:create']),
   canCpcv: hasAccessByCodes(['replay:create']),
-  canPublish: hasAccessByCodes(['publication:publish']),
-  canRetire: hasAccessByCodes(['publication:retire']),
 };
 
 const initialFilters = {
@@ -101,8 +96,6 @@ const [Grid, gridApi] = useVbenVxeGrid<TrainedModelView>({
               model_spec_id:
                 (formValues.model_spec_id as string | undefined) || undefined,
               page: page.currentPage,
-              publication_status:
-                (formValues.publication_status as any) || undefined,
               size: page.pageSize,
               to: (range[1] as string | undefined) || undefined,
             }),
@@ -239,88 +232,6 @@ async function submitCpcv(
   return false;
 }
 
-async function publish(model: TrainedModelView) {
-  const id = model.model_version_id;
-  // Preflight the publish gate (same evaluator the backend enforces) so the
-  // operator sees a clear readiness verdict instead of a raw 409 after the fact.
-  const readiness = await handleRequest(
-    () => getModelQualityGate(id, { intent: 'publish' }),
-    { silent: true },
-  );
-  if (readiness && !readiness.passed) {
-    const hardFails = readiness.gates.filter(
-      (out) => out.class === 'hard' && out.status === 'fail',
-    );
-    const gateNames = hardFails.map((out) => out.gate).join(', ');
-    const cpcvRequiredFail = hardFails.some(
-      (out) => out.gate === 'cpcv_required',
-    );
-    const alphaMetricFail = hardFails.some(
-      (out) =>
-        out.gate === 'pbo' ||
-        out.gate === 'deflated_sharpe' ||
-        out.gate === 'rank_ic',
-    );
-    message.error(
-      $t('page.research.models.publish.blockedNamed', {
-        count: hardFails.length,
-        gates: gateNames,
-      }),
-    );
-    drawerApi.setData({ model }).open();
-    if (access.canCpcv) {
-      if (cpcvRequiredFail && !model.publish_path_set_id && !alphaMetricFail) {
-        // Unbound: either never ran CPCV, or ran but did not pin — drawer shows both CTAs.
-        message.info($t('page.research.models.publish.bindPathSetHint'));
-      } else if (alphaMetricFail || cpcvRequiredFail) {
-        message.info($t('page.research.models.publish.runCpcvHint'));
-      }
-    }
-    return;
-  }
-  const softCount = readiness
-    ? readiness.gates.filter(
-        (out) => out.class === 'soft' && out.status === 'warn',
-      ).length
-    : 0;
-  const result = await governed(
-    (ctx) => publishModel(id, { reason: ctx.reason }, ctx),
-    {
-      confirmWord: 'PUBLISH',
-      danger: true,
-      summary:
-        softCount > 0
-          ? $t('page.research.models.publish.summaryWithWarnings', {
-              count: softCount,
-              id,
-            })
-          : $t('page.research.models.publish.summary', { id }),
-      title: $t('page.research.models.publish.title'),
-    },
-  );
-  if (result) {
-    message.success($t('page.research.models.publish.feedback'));
-    void gridApi.query();
-  }
-}
-
-async function retire(model: TrainedModelView) {
-  const id = model.model_version_id;
-  const result = await governed(
-    (ctx) => retireModel(id, { reason: ctx.reason }, ctx),
-    {
-      confirmWord: 'RETIRE',
-      danger: true,
-      summary: $t('page.research.models.retire.summary', { id }),
-      title: $t('page.research.models.retire.title'),
-    },
-  );
-  if (result) {
-    message.success($t('page.research.models.retire.feedback'));
-    void gridApi.query();
-  }
-}
-
 function onActionClick({ code, row }: OnActionClickParams<TrainedModelView>) {
   switch (code) {
     case 'backtest': {
@@ -333,14 +244,6 @@ function onActionClick({ code, row }: OnActionClickParams<TrainedModelView>) {
     }
     case 'detail': {
       drawerApi.setData({ model: row }).open();
-      break;
-    }
-    case 'publish': {
-      void publish(row);
-      break;
-    }
-    case 'retire': {
-      void retire(row);
       break;
     }
     // No default

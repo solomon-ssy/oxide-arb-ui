@@ -435,7 +435,6 @@ export const INELIGIBILITY_REASONS = {
   dataStale: 'data_stale',
   lowConfidence: 'low_confidence',
   manuallyBlocked: 'manually_blocked',
-  modelNotPublished: 'model_not_published',
   reportOnlyMode: 'report_only_mode',
   riskEnvelopeInvalid: 'risk_envelope_invalid',
   shadowNotPassed: 'shadow_not_passed',
@@ -746,16 +745,6 @@ export type SettlementReconciliationState = WireEnum<
 
 // ── Research / governance ───────────────────────────────────────────────────
 
-/** Immutable model-version publication lifecycle (mirrors Rust `PublicationStatus`). */
-export const PUBLICATION_STATUSES = {
-  candidate: 'candidate',
-  published: 'published',
-  retired: 'retired',
-  shadow: 'shadow',
-} as const;
-
-export type PublicationStatus = WireEnum<typeof PUBLICATION_STATUSES>;
-
 export const MATERIALIZATION_RUN_STATUSES = {
   cancelled: 'cancelled',
   completed: 'completed',
@@ -995,6 +984,7 @@ export type FactorFamily = WireEnum<typeof FACTOR_FAMILIES>;
 export const MODEL_FAMILIES = {
   classicalElasticNet: 'classical_elastic_net',
   classicalExtraTrees: 'classical_extra_trees',
+  classicalGradientBoostedTrees: 'classical_gradient_boosted_trees',
   classicalLasso: 'classical_lasso',
   classicalLogisticRegression: 'classical_logistic_regression',
   classicalRandomForest: 'classical_random_forest',

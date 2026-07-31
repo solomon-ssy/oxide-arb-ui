@@ -10,11 +10,26 @@ import type { FeedbackCycleOutcomeState } from './feedback-cycle-detail-state';
 
 import { computed } from 'vue';
 
-import { Card, Descriptions, DescriptionsItem, Empty, Tag } from 'antdv-next';
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+import {
+  Alert,
+  Card,
+  Collapse,
+  CollapsePanel,
+  Descriptions,
+  DescriptionsItem,
+  Empty,
+  Tag,
+} from 'antdv-next';
 
 import { $t } from '#/locales';
-import { formatDateTimeLocal } from '#/shared/components/format';
+import {
+  formatBps,
+  formatDateTimeLocal,
+  formatPercent,
+} from '#/shared/components/format';
 
+import { gateStatusColor } from '../../shared/quality-gate';
 import { feedbackCycleOutcomeState } from './feedback-cycle-detail-state';
 
 const props = defineProps<{
@@ -22,6 +37,12 @@ const props = defineProps<{
 }>();
 
 const outcome = computed(() => feedbackCycleOutcomeState(props.detail.cycle));
+const candidateReady = computed(() => props.detail.candidate_ready);
+const usesWideDescriptionLayout =
+  useBreakpoints(breakpointsTailwind).greaterOrEqual('md');
+const descriptionColumn = computed(() =>
+  usesWideDescriptionLayout.value ? 2 : 1,
+);
 
 const cohorts = computed(() => {
   const coverage = props.detail.coverage;
@@ -120,6 +141,12 @@ function driftColor(assessment: FeedbackDriftAssessment) {
     }
   }
 }
+
+function gateStatusLabel(status: string) {
+  return $t(
+    `page.research.feedback.detail.candidateReady.gateStatus.${status}`,
+  );
+}
 </script>
 
 <template>
@@ -127,6 +154,396 @@ function driftColor(assessment: FeedbackDriftAssessment) {
     :aria-labelledby="`feedback-cycle-detail-${detail.cycle.feedback_cycle_id}`"
     class="min-w-0 space-y-4"
   >
+    <Card v-if="candidateReady" class="min-w-0" size="small">
+      <template #title>
+        <h2 class="text-base font-semibold">
+          {{ $t('page.research.feedback.detail.candidateReady.title') }}
+        </h2>
+      </template>
+      <template #extra>
+        <Tag color="success">
+          {{ $t('page.research.feedback.detail.candidateReady.ready') }}
+        </Tag>
+      </template>
+
+      <Alert
+        :description="
+          $t('page.research.feedback.detail.candidateReady.description')
+        "
+        :message="$t('page.research.feedback.detail.candidateReady.noBlockers')"
+        class="mb-4"
+        show-icon
+        type="success"
+      />
+
+      <div class="grid min-w-0 gap-4 xl:grid-cols-2">
+        <section class="min-w-0 rounded-md border p-3">
+          <h3 class="mb-3 text-sm font-semibold">
+            {{ $t('page.research.feedback.detail.candidateReady.route.title') }}
+          </h3>
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="
+                $t('page.research.feedback.detail.candidateReady.route.models')
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ candidateReady.route_diff.champion_model_version_id }}
+              </span>
+              <span aria-hidden="true" class="mx-2">→</span>
+              <span class="break-all font-mono text-xs">
+                {{ candidateReady.route_diff.candidate_model_version_id }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.route.generation',
+                )
+              "
+            >
+              <span class="font-mono tabular-nums">
+                {{ candidateReady.route_diff.current_route_generation }}
+                →
+                {{ candidateReady.route_diff.proposed_route_generation }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.route.authority',
+                )
+              "
+            >
+              <Tag color="success">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.route.unchanged',
+                  )
+                }}
+              </Tag>
+            </DescriptionsItem>
+          </Descriptions>
+        </section>
+
+        <section class="min-w-0 rounded-md border p-3">
+          <h3 class="mb-3 text-sm font-semibold">
+            {{
+              $t(
+                'page.research.feedback.detail.candidateReady.comparison.title',
+              )
+            }}
+          </h3>
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.comparison.observations',
+                )
+              "
+            >
+              <span class="font-mono tabular-nums">
+                {{ candidateReady.comparison.observation_count }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.comparison.effect',
+                )
+              "
+            >
+              {{ formatBps(candidateReady.comparison.effect_bps) }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.comparison.lowerBound',
+                )
+              "
+            >
+              {{
+                formatBps(
+                  candidateReady.comparison.simultaneous_lower_bound_bps,
+                )
+              }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.comparison.adjustedP',
+                )
+              "
+            >
+              <span class="font-mono tabular-nums">
+                {{ candidateReady.comparison.adjusted_p_value }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.comparison.confidence',
+                )
+              "
+            >
+              {{ formatPercent(candidateReady.comparison.confidence) }}
+            </DescriptionsItem>
+          </Descriptions>
+        </section>
+
+        <section class="min-w-0 rounded-md border p-3">
+          <h3 class="mb-3 text-sm font-semibold">
+            {{
+              $t('page.research.feedback.detail.candidateReady.shadow.title')
+            }}
+          </h3>
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.shadow.observations',
+                )
+              "
+            >
+              {{ candidateReady.shadow.observed }} /
+              {{ candidateReady.shadow.required }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.feedback.detail.candidateReady.shadow.window')
+              "
+            >
+              {{ candidateReady.shadow.observed_window_secs }} /
+              {{ candidateReady.shadow.required_window_secs }}
+              {{ $t('page.research.feedback.detail.candidateReady.seconds') }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.shadow.overlap',
+                )
+              "
+            >
+              {{ formatPercent(candidateReady.shadow.mean_topn_overlap) }} /
+              {{ formatPercent(candidateReady.shadow.minimum_topn_overlap) }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.shadow.divergence',
+                )
+              "
+            >
+              <Tag
+                :color="
+                  candidateReady.shadow.any_hard_divergence
+                    ? 'error'
+                    : 'success'
+                "
+              >
+                {{
+                  candidateReady.shadow.any_hard_divergence
+                    ? $t(
+                        'page.research.feedback.detail.candidateReady.shadow.detected',
+                      )
+                    : $t(
+                        'page.research.feedback.detail.candidateReady.shadow.none',
+                      )
+                }}
+              </Tag>
+            </DescriptionsItem>
+          </Descriptions>
+        </section>
+
+        <section class="min-w-0 rounded-md border p-3">
+          <h3 class="mb-3 text-sm font-semibold">
+            {{
+              $t(
+                'page.research.feedback.detail.candidateReady.attribution.title',
+              )
+            }}
+          </h3>
+          <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.priorUses',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{ candidateReady.attribution.prior_cycle_use_count }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.explanations',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{ candidateReady.attribution.prediction_explanation_count }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.counterfactuals',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{ candidateReady.attribution.decision_counterfactual_count }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.associations',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{ candidateReady.attribution.outcome_association_count }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.trajectories',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{ candidateReady.attribution.execution_trajectory_count }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.policyOutcomes',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{ candidateReady.attribution.policy_counterfactual_count }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <section class="mt-4 min-w-0 rounded-md border p-3">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-semibold">
+            {{
+              $t(
+                'page.research.feedback.detail.candidateReady.qualityGate.title',
+              )
+            }}
+          </h3>
+          <Tag color="success">
+            {{
+              $t(
+                'page.research.feedback.detail.candidateReady.qualityGate.passed',
+              )
+            }}
+          </Tag>
+        </div>
+        <div class="grid min-w-0 gap-2 lg:grid-cols-2">
+          <article
+            v-for="gate in candidateReady.quality_gate.gates"
+            :key="gate.gate"
+            class="min-w-0 rounded border p-2"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <span class="break-all font-mono text-xs">{{ gate.gate }}</span>
+              <Tag :color="gateStatusColor(gate.status)">
+                {{ gateStatusLabel(gate.status) }}
+              </Tag>
+            </div>
+            <dl class="mt-2 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <dt class="text-muted-foreground">
+                  {{
+                    $t(
+                      'page.research.feedback.detail.candidateReady.qualityGate.observed',
+                    )
+                  }}
+                </dt>
+                <dd class="break-all font-mono">{{ gate.observed }}</dd>
+              </div>
+              <div>
+                <dt class="text-muted-foreground">
+                  {{
+                    $t(
+                      'page.research.feedback.detail.candidateReady.qualityGate.threshold',
+                    )
+                  }}
+                </dt>
+                <dd class="break-all font-mono">{{ gate.threshold }}</dd>
+              </div>
+            </dl>
+            <p v-if="gate.detail" class="mt-2 text-xs text-muted-foreground">
+              {{ gate.detail }}
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <Collapse class="mt-4" ghost>
+        <CollapsePanel
+          key="candidate-ready-evidence"
+          :header="
+            $t('page.research.feedback.detail.candidateReady.evidence.title')
+          "
+        >
+          <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.evidence.qualityHash',
+                )
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ candidateReady.quality_gate.report_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.evidence.useSetHash',
+                )
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ candidateReady.attribution.use_set_hash }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.evidence.producedSetHash',
+                )
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ candidateReady.attribution.produced_set_hash }}
+              </span>
+            </DescriptionsItem>
+          </Descriptions>
+        </CollapsePanel>
+      </Collapse>
+    </Card>
+
     <Card class="min-w-0" size="small">
       <template #title>
         <h2
@@ -143,7 +560,8 @@ function driftColor(assessment: FeedbackDriftAssessment) {
       </template>
 
       <Descriptions
-        :column="{ lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 }"
+        :key="`audit-${detail.cycle.feedback_cycle_id}-${descriptionColumn}`"
+        :column="descriptionColumn"
         bordered
         size="small"
       >
@@ -178,9 +596,16 @@ function driftColor(assessment: FeedbackDriftAssessment) {
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.trigger')"
         >
-          {{
-            $t(`page.research.feedback.trigger.${detail.cycle.trigger_family}`)
-          }}
+          <ul class="space-y-1">
+            <li
+              v-for="trigger in detail.triggers"
+              :key="trigger.feedback_trigger_event_id"
+            >
+              {{
+                $t(`page.research.feedback.trigger.${trigger.trigger_family}`)
+              }}
+            </li>
+          </ul>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.generation')"
@@ -431,7 +856,8 @@ function driftColor(assessment: FeedbackDriftAssessment) {
       />
       <template v-else>
         <Descriptions
-          :column="{ lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 }"
+          :key="`coverage-${detail.cycle.feedback_cycle_id}-${descriptionColumn}`"
+          :column="descriptionColumn"
           bordered
           size="small"
         >
@@ -735,7 +1161,8 @@ function driftColor(assessment: FeedbackDriftAssessment) {
           class="min-w-0 rounded-md border p-3"
         >
           <Descriptions
-            :column="{ lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 }"
+            :key="`evaluation-${evaluation.feedback_evaluation_use_id}-${descriptionColumn}`"
+            :column="descriptionColumn"
             size="small"
           >
             <DescriptionsItem

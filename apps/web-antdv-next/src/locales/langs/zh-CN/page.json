@@ -190,6 +190,12 @@
       "staleDescription": "刷新重试期间继续显示上一份已验证快照。",
       "blockedTitle": "就绪度证据不可用",
       "blockedDescription": "历史与队列事实仍可审计，但在后端提供已验证的留存与延迟证据前，再训练就绪度保持阻断。",
+      "recovery": {
+        "degradedTitle": "反馈实时更新已降级",
+        "degradedDescription": "WebSocket 当前不可用；在实时通道恢复前，已启用有界 REST 轮询。",
+        "requiredTitle": "需要恢复权威反馈状态",
+        "requiredDescription": "由于 {reason}，实时提示已暂停；恢复权威游标与快照期间将保持有界轮询。"
+      },
       "state": {
         "permission": "无权访问反馈工作台",
         "loading": "正在加载反馈工作台",
@@ -274,6 +280,7 @@
       },
       "detail": {
         "loadError": "无法加载周期详情",
+        "notFound": "URL 指向的反馈周期不存在或当前不可见。",
         "loadErrorDescription": "周期列表仍可用，但当前权威详情快照无法验证。请在服务恢复后重试。",
         "refreshing": "正在刷新已选周期详情",
         "empty": "已选周期没有可用的权威详情。",
@@ -316,14 +323,17 @@
           "createdAt": "持久化时间",
           "stage": {
             "trigger": "触发",
+            "truth_freeze": "事实冻结",
             "coverage": "覆盖率",
+            "attribution_plan": "归因计划",
             "drift": "漂移",
             "dataset_seal": "数据集封存",
             "training": "训练",
             "calibration": "校准",
             "cpcv": "CPCV",
+            "validation": "质量验证",
             "comparison": "比较",
-            "shadow_replay": "影子回放",
+            "shadow": "影子回放",
             "decision": "决策"
           },
           "event": {
@@ -357,6 +367,64 @@
           "candidate": "候选数",
           "eligible": "合格数",
           "included": "纳入数"
+        },
+        "candidateReady": {
+          "title": "候选决策 Scorecard",
+          "ready": "可进入受治理的路由评审",
+          "description": "全部数值均由服务端从不可变 Decision DAG 推导。自动再训练在此停止；签发 Permit 与激活路由仍是两个独立的人工治理动作。",
+          "noBlockers": "全部晋升阻断项已清除",
+          "seconds": "秒",
+          "route": {
+            "title": "Serving 路由差异",
+            "models": "冠军 → 挑战者",
+            "generation": "路由代次",
+            "authority": "受保护权限",
+            "unchanged": "执行模式、资金、funder 与签名权限均未变化"
+          },
+          "comparison": {
+            "title": "同窗口比较",
+            "observations": "观测数",
+            "effect": "挑战者效应",
+            "lowerBound": "同时置信下界",
+            "adjustedP": "Romano–Wolf 校正 p 值",
+            "confidence": "族级置信度"
+          },
+          "shadow": {
+            "title": "生产 Shadow 证据",
+            "observations": "已观测 / 要求决策数",
+            "window": "已观测 / 要求窗口",
+            "overlap": "平均 / 最低 TopN 重合率",
+            "divergence": "硬分歧",
+            "detected": "已检测到",
+            "none": "无"
+          },
+          "attribution": {
+            "title": "归因 Artifacts",
+            "priorUses": "前序周期规划输入",
+            "explanations": "预测解释",
+            "counterfactuals": "决策反事实",
+            "associations": "结果关联",
+            "trajectories": "执行轨迹",
+            "policyOutcomes": "策略反事实结果"
+          },
+          "qualityGate": {
+            "title": "唯一 Validation 质量门",
+            "passed": "全部硬门禁通过",
+            "observed": "观测值",
+            "threshold": "阈值"
+          },
+          "gateStatus": {
+            "pass": "通过",
+            "fail": "失败",
+            "warn": "警告",
+            "not_applicable": "不适用"
+          },
+          "evidence": {
+            "title": "不可变证据哈希",
+            "qualityHash": "质量门报告哈希",
+            "useSetHash": "前序归因使用集哈希",
+            "producedSetHash": "本周期归因产出集哈希"
+          }
         },
         "drift": {
           "title": "漂移证据",
@@ -414,6 +482,65 @@
           "createdAt": "持久化时间"
         }
       },
+      "scheduler": {
+        "title": "自动再训练调度器",
+        "description": "以 PostgreSQL 为权威的节奏、冷却期、租约、重试与暂停状态；自动链路最多运行到 CandidateReady。",
+        "empty": "当前没有可用的调度器状态。",
+        "loadError": "无法加载调度器状态；继续显示上一份已验证快照。",
+        "profile": "研究画像",
+        "nextDue": "下次到期",
+        "cooldownUntil": "冷却至",
+        "cadence": "调度节奏",
+        "cooldown": "冷却期",
+        "lease": "租约",
+        "retry": "重试",
+        "lastCycle": "最近周期",
+        "pauseRevision": "暂停修订号",
+        "lastError": "最近错误",
+        "pauseNote": "暂停说明",
+        "observedAt": "服务端观测时间",
+        "days": "{value} 天",
+        "hours": "{value} 小时",
+        "seconds": "{value} 秒",
+        "pause": "暂停调度",
+        "resume": "恢复调度",
+        "pauseTitle": "暂停自动再训练",
+        "resumeTitle": "恢复自动再训练",
+        "pauseSummary": "以暂停修订号 CAS 停止该画像未来的定时 claim；不会改写正在运行的周期事实。",
+        "resumeSummary": "以暂停修订号 CAS 恢复该画像的定时 claim；调度节奏与冷却期仍由服务端控制。",
+        "pauseSuccess": "自动再训练调度器已暂停。",
+        "resumeSuccess": "自动再训练调度器已恢复。",
+        "state": {
+          "paused": "已暂停",
+          "retrying": "重试中",
+          "leased": "已租用",
+          "scheduled": "已调度"
+        }
+      },
+      "truthOps": {
+        "title": "权威事实运维",
+        "description": "展示 TruthFreeze 使用的 PostgreSQL inbox、投影、执行 attempt 与 recommendation rollup 覆盖状态；积压绝不会被解释为数值为零的 outcome。",
+        "resolutionBacklog": "Resolution 投影积压",
+        "quarantined": "Resolution 隔离数",
+        "oldestUnresolved": "最早未解析观测",
+        "resolutionWatermark": "Resolution 已验证至",
+        "attemptBacklog": "未封存执行 attempt",
+        "attemptWatermark": "执行 attempt 已封存至",
+        "rollupBacklog": "未封存 recommendation rollup",
+        "rollupWatermark": "Recommendation rollup 已封存至",
+        "observedAt": "服务端观测时间",
+        "notApplicable": "无",
+        "invalidTimestamp": "时间戳无效",
+        "ageSeconds": "已积压 {value} 秒",
+        "state": {
+          "healthy": "事实管道已追平",
+          "healthyDescription": "当前观测截止点不存在未解析、隔离或未封存事实。",
+          "lagging": "事实管道存在积压",
+          "laggingDescription": "受影响 cohort 会由 TruthFreeze 阻断，直至可见积压完成封存。",
+          "quarantined": "Resolution 观测需要人工处理",
+          "quarantinedDescription": "至少一条 resolution 观测处于隔离或终止失败状态；受影响反馈周期将 fail-closed。"
+        }
+      },
       "actions": {
         "reasonRule": "请输入 4–128 位小写字母、数字、下划线或句点，不得包含空格。",
         "trigger": {
@@ -422,6 +549,7 @@
           "summary": "为所选权威研究画像冻结并入队一个手动反馈周期。",
           "profile": "研究画像",
           "success": "反馈周期已触发。",
+          "converged": "手动触发已记录到当前 cadence 的既有权威周期，未创建重复周期。",
           "replayed": "已精确重放原反馈周期命令。"
         },
         "cancel": {
@@ -434,17 +562,26 @@
         },
         "permit": {
           "title": "晋升 Permit",
-          "description": "签发或撤销有界发布权限；本界面绝不晋升模型或路由。",
-          "readDenied": "当前权限无法读取发布 Permit 证据。",
+          "description": "将有界路由权限的签发、激活与撤销拆分为独立治理动作；签发 Permit 不会改变 serving。",
+          "readDenied": "当前权限无法读取路由激活 Permit 证据。",
           "issueTitle": "签发晋升 Permit",
           "issueSummary": "基于所选 candidate-ready 周期签发有界权限；服务端预检仍是最终权威。",
           "selectedCycle": "所选 candidate-ready 周期",
           "noCycle": "未选择周期",
+          "cycle": "反馈周期",
+          "ttl": "Permit TTL",
+          "ttlMinutes": "{minutes} 分钟",
           "expiresAt": "绝对到期时间",
+          "serverClock": "读取时服务端时钟",
+          "countdown": "剩余时间",
+          "routeRevision": "策略 / 运行时修订号",
+          "modelDiff": "当前 Champion → 候选模型",
+          "manifest": "候选 Manifest",
           "runtimeModes": "允许的运行模式",
           "idempotencyKey": "幂等键",
           "notEligible": "请先选择一个成功且 candidate-ready 的周期。",
-          "invalidInput": "请至少选择一个运行模式，并填写有效的未来到期时间。",
+          "invalidInput": "请选择 5、15、30 或 60 分钟的批准 TTL。",
+          "invalidClock": "服务端时钟证据无效；请刷新后再执行操作。",
           "issue": "审阅并签发",
           "issueSuccess": "晋升 Permit 已签发。",
           "issueReplayed": "已精确重放原 Permit 签发命令。",
@@ -456,18 +593,43 @@
           "issuedReason": "签发原因",
           "scopeHash": "范围哈希",
           "preflightHash": "预检哈希",
+          "promotionGateHash": "最终晋升门禁哈希",
           "revision": "修订号",
           "observedAt": "状态观测时间",
           "permitId": "晋升 Permit",
+          "targetModel": "服务端推导目标模型",
+          "routeDiff": "路由代次",
+          "authorityInvariant": "受保护权限",
+          "activationInvariant": "激活只改变模型路由；执行模式、资金上限、funder 与签名权限均保持不变。",
+          "executionUnchanged": "执行模式、资金、funder 与签名权限均未变化。",
+          "activate": "激活路由",
+          "activateTitle": "激活候选模型路由",
+          "activateSummary": "在单个原子事务中消费此 Permit；服务端会重新校验全部绑定门禁、哈希、运行时修订号和受保护权限。",
+          "activateConfirm": "激活",
+          "activateSuccess": "模型路由已激活。",
+          "activateReplayed": "已精确重放原路由激活回执。",
           "revoke": "撤销 Permit",
           "revokeTitle": "撤销晋升 Permit",
-          "revokeSummary": "以 revision-0 compare-and-swap 撤销此发布权限。",
+          "revokeSummary": "以 revision-0 compare-and-swap 撤销此路由激活权限。",
           "revokeConfirm": "撤销",
           "revokeSuccess": "晋升 Permit 已撤销。",
           "revokeReplayed": "已精确重放原 Permit 撤销命令。",
+          "receipt": {
+            "title": "路由激活回执",
+            "activated": "已激活",
+            "replayed": "已重放",
+            "route": "路由代次",
+            "model": "模型路由",
+            "actors": "操作者链路",
+            "actorLineage": "Permit：{issuer} · 激活：{activator}",
+            "timestamp": "服务端时间戳",
+            "transactionHash": "事务哈希",
+            "rollback": "打开模型路由回滚"
+          },
           "status": {
             "active": "有效",
             "expired": "已过期",
+            "invalid": "时钟证据无效",
             "revoked": "已撤销"
           }
         }
@@ -1319,10 +1481,35 @@
         "detail": "详情",
         "backtest": "回测",
         "cpcv": "运行 CPCV",
-        "publish": "发布",
-        "retire": "下线",
-        "rollback": "回滚",
         "train": "训练模型"
+      },
+      "bootstrap": {
+        "action": "建立首个 Champion",
+        "actor": "激活操作者",
+        "authority": "受保护权限",
+        "authorityUnchanged": "执行模式、资金、签名权限和 funder 权限均不会变化。",
+        "failed": "首个 Champion 激活未完成。请刷新权威状态，并以同一意图重试。",
+        "gateUnavailable": "无法读取权威 Candidate 质量门，bootstrap 已阻断。",
+        "generation": "策略 generation",
+        "model": "候选模型",
+        "openRouting": "打开 Model Routing 回滚",
+        "prerequisitesFailed": "只有 Buy route 范围、校准、Candidate 质量门、全量 parity、CPCV 证据、ReportOnly 模式和空 route 全部通过后才能 bootstrap。",
+        "prerequisitesHint": "要求符合条件的 Pooled、Crypto 或 Weather Buy 模型已绑定不可变校准、通过 Candidate 质量门、具备 CPCV 与全量 parity 证据、处于 ReportOnly，且目标 route 尚无 Champion。",
+        "receipt": "激活 / 审计 ID",
+        "retry": "重试权威读取",
+        "rollback": "回滚",
+        "route": "Buy route",
+        "routeOccupied": "该 route 已有 Champion {model}；后续变更必须走 feedback permit 与 activation 流程。",
+        "routes": {
+          "crypto": "Crypto Buy",
+          "pooled": "Pooled Buy",
+          "weather": "Weather Buy"
+        },
+        "stateUnavailable": "当前策略或 runtime-control 状态不可用；bootstrap 已按 fail-closed 阻断。",
+        "succeeded": "首个 Champion 已激活并生成持久化 receipt。",
+        "summary": "为空的 Pooled、Crypto 或 Weather Buy route 建立服务端推导的首个 Champion。",
+        "title": "首个 Champion bootstrap",
+        "transaction": "事务哈希"
       },
       "train": {
         "title": "训练模型",
@@ -1363,38 +1550,9 @@
         "incomplete": "必须具备模型绑定的训练数据集并选择运行配置。",
         "feedback": "CPCV 验证已提交。",
         "action": "运行 CPCV",
-        "dualTrackHint": "发布需要单路径回测（换手 / 尾部损失 / 最大回撤）与 CPCV 路径集（中位 rank IC / DSR / PBO）。",
-        "sellDualTrackHint": "Sell 发布需要 lot 级 CPCV 路径集（仅活动观测的 lot-native Sharpe / DSR / PBO / rank IC、最大回撤、尾部损失，以及相对「首决策全平」基线的 uplift）。空日历桶绝不填 0。该家族没有买方式单路径 Backtest。",
+        "dualTrackHint": "进入 CandidateReady 需要单路径回测（换手 / 尾部损失 / 最大回撤）与 CPCV 路径集（中位 rank IC / DSR / PBO）。",
+        "sellDualTrackHint": "Sell 进入 CandidateReady 需要 lot 级 CPCV 路径集（仅活动观测的 lot-native Sharpe / DSR / PBO / rank IC、最大回撤、尾部损失，以及相对「首决策全平」基线的 uplift）。空日历桶绝不填 0。该家族没有买方式单路径 Backtest。",
         "sellSummary": "Sell CPCV 使用 ModelSpec 冻结的精确家族、目标、horizon 与输入，并采用残仓状态机回放（部分退出后路径分叉即停止）以及仅活动观测的 lot-native 收益进入 DSR/PBO。"
-      },
-      "publish": {
-        "title": "发布模型",
-        "summary": "将模型版本 {id} 提升为已发布。",
-        "summaryWithWarnings": "将模型版本 {id} 提升为已发布。有 {count} 项软门禁警告——确认前请复核。",
-        "blocked": "无法发布：{count} 项硬门禁未过。请查看发布就绪度评分卡。",
-        "blockedNamed": "无法发布：{count} 项硬门禁未过（{gates}）。请查看发布就绪度评分卡。",
-        "runCpcvHint": "阿尔法显著性门禁需要通过 DSR/PBO/rank IC 的 CPCV 路径集——请在模型详情中运行 CPCV、绑定后再发布。",
-        "bindPathSetHint": "发布需要已绑定的 CPCV 路径集。若已有路径集，请用「设为发布路径集」绑定；否则请先运行 CPCV。",
-        "feedback": "模型已发布。"
-      },
-      "rollback": {
-        "title": "回滚模型",
-        "summary": "将已下线的模型版本 {id} 恢复为已发布。",
-        "feedback": "模型已回滚。"
-      },
-      "retire": {
-        "title": "下线模型",
-        "summary": "下线已发布的模型版本 {id}。",
-        "feedback": "模型已下线。"
-      },
-      "bindCalibration": {
-        "action": "绑定校准器",
-        "title": "绑定校准器",
-        "summary": "创建新的候选模型版本，其收益模型由所选校准 artifact 导出。",
-        "calibrator": "模型分数校准器",
-        "calibratorPlaceholder": "选择校准 artifact",
-        "downsideSource": "Downside 来源",
-        "validation": "请选择校准 artifact。"
       },
       "detail": {
         "title": "已训练模型",
@@ -1408,9 +1566,9 @@
         "sectionSelector": "模型详情分区",
         "loadingAnnouncement": "正在加载模型详情。",
         "loadFailedAnnouncement": "模型详情加载失败。",
-        "readinessLoadingAnnouncement": "模型详情已加载，正在评估发布就绪度。",
-        "loadedAnnouncement": "模型详情与发布就绪度均已加载。",
-        "readinessUnavailableAnnouncement": "模型详情已加载，发布就绪度暂不可用。",
+        "readinessLoadingAnnouncement": "模型详情已加载，正在评估候选就绪度。",
+        "loadedAnnouncement": "模型详情与候选就绪度均已加载。",
+        "readinessUnavailableAnnouncement": "模型详情已加载，候选就绪度暂不可用。",
         "artifactLineageUnavailable": "该受治理的手工模型没有训练 artifact 血缘。",
         "serializedModelHash": "序列化模型哈希",
         "lineageKind": "血缘类型",
@@ -1466,7 +1624,7 @@
         "returnModelKind": "类型",
         "returnModelHeuristic": "启发式（未校准）",
         "returnModelCalibrated": "已校准",
-        "returnModelHeuristicWarning": "该模型使用未校准启发式收益映射。绑定校准器前，发布与执行路径 fail-closed。",
+        "returnModelHeuristicWarning": "该模型使用未校准启发式收益映射，路由激活将 fail-closed；拟合校准器会派生新的 immutable ModelVersion。",
         "returnModelUnknown": "该版本未暴露收益模型溯源信息。",
         "calibratorRef": "校准器",
         "downsideSource": "Downside 来源",
@@ -1486,7 +1644,7 @@
         "pseudoTopN": "伪组合 TopN",
         "objectiveProxyHint": "尾部/换手使用 TopN 按分数排序的等权伪组合（优化代理 ≠ 回测 USD 配置）。",
         "objectiveUnknown": "该版本未暴露训练目标溯源信息。",
-        "publishReadiness": "发布就绪度",
+        "candidateReadiness": "候选就绪度",
         "metrics": "训练指标",
         "metricsPanel": {
           "objectiveValue": "样本内目标值",
@@ -1682,8 +1840,8 @@
       "fitCalibrator": {
         "action": "拟合模型校准器",
         "title": "拟合模型校准器",
-        "summary": "使用独立 held-out 校准集，为候选模型版本拟合概率校准器。",
-        "feedback": "模型校准器拟合任务已入队",
+        "summary": "使用独立 held-out 校准集拟合概率校准器，并通过唯一治理服务派生新的 immutable calibrated ModelVersion。",
+        "feedback": "校准模型版本派生任务已入队",
         "validation": "请选择模型版本与校准数据集。",
         "model": "模型版本",
         "modelPlaceholder": "选择模型版本",
@@ -2035,13 +2193,13 @@
       }
     },
     "qualityGate": {
-      "empty": "尚未评估发布就绪度。",
+      "empty": "尚未评估质量门就绪度。",
       "intentLabel": "意图",
       "notApplicable": "此意图未评估（{count}）",
       "verdict": {
-        "ready": "可发布——所有硬门禁均已通过。",
-        "warnings": "可发布，但有 {count} 项软门禁警告。",
-        "blocked": "{count} 项硬门禁未过——发布被阻断。"
+        "ready": "就绪——所有硬门禁均已通过。",
+        "warnings": "所有硬门禁已通过，但有 {count} 项软门禁警告。",
+        "blocked": "{count} 项硬门禁未过——受治理推进被阻断。"
       }
     },
     "cpcv": {
@@ -4023,15 +4181,18 @@
     },
     "modelRouting": {
       "title": "模型产物路由",
-      "description": "只允许选择已发布、类型与作用域匹配的不可变模型产物；不接受自由文本 ID。",
+      "description": "只读展示按 route generation 派生的 Champion、Shadow 与 Exit 模型；不接受自由文本 ID。",
+      "governanceNotice": "模型路由没有普通 Draft/激活入口。首个 Champion 必须从符合条件的已校准模型执行 bootstrap；后续 Champion 变更必须经过 CandidateReady 周期、短期 permit 与独立 activation。此页仅保留证据查看与历史 Revision 回滚。",
+      "openModels": "打开训练模型",
+      "openFeedback": "打开 Feedback 治理",
       "activeBuy": "生效 Buy 模型",
       "shadowBuy": "Shadow Buy 模型",
       "activeExit": "生效退出模型",
-      "selectArtifact": "选择已发布产物",
-      "loadError": "无法加载已发布模型目录；路由字段保持只读且不会接受未知 ID。",
+      "selectArtifact": "不可变模型产物",
+      "loadError": "无法加载模型证据目录；当前路由保持只读。",
       "artifactHash": "产物哈希",
       "evidence": "发布证据",
-      "published": "已发布",
+      "published": "已验证产物",
       "categoryTitle": "分类专用路由",
       "categoryDescription": "未指定时继承通用 Buy 模型；指定时只允许选择 category_scope 精确一致的产物。",
       "exactScopeOnly": "精确作用域",
@@ -4043,6 +4204,7 @@
       },
       "family": {
         "weighted_factor": "加权因子",
+        "classical_gradient_boosted_trees": "梯度提升树",
         "classical_random_forest": "随机森林",
         "classical_extra_trees": "Extra Trees",
         "classical_logistic_regression": "逻辑回归",
@@ -4256,7 +4418,6 @@
       },
       "min_model_confidence": { "label": "最低模型置信度" },
       "min_observations": { "label": "最少观测数" },
-      "min_quality_gate_age_secs": { "label": "质量门证据最大年龄（秒）" },
       "min_recommendation_usd": { "label": "最小推荐金额（USD）" },
       "min_samples_isotonic": { "label": "等距回归最小样本数" },
       "min_score": { "label": "最低评分" },

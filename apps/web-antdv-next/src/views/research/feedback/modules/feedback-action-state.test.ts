@@ -1,16 +1,63 @@
-import type { FeedbackCycleView } from '@vben/types';
+import type { FeedbackCycleView, PromotionPermitView } from '@vben/types';
 
 import { describe, expect, it } from 'vitest';
 
 import {
   canCancelFeedbackCycle,
   canIssuePromotionPermit,
-  canonicalPromotionModes,
-  parsePromotionExpiry,
+  promotionPermitRemaining,
+  promotionPermitStatus,
   releaseFeedbackAction,
   tryBeginFeedbackAction,
   validateFeedbackReason,
+  validatePermitTtl,
 } from './feedback-action-state';
+
+function permit(): PromotionPermitView {
+  return {
+    allowed_runtime_modes: ['report_only'],
+    candidate_manifest_hash: 'blake3:manifest',
+    candidate_manifest_id: 'manifest-1',
+    candidate_model_version_id: 'candidate-1',
+    category: 'crypto',
+    champion_model_version_id: 'champion-1',
+    champion_serving_contract_hash: 'blake3:champion',
+    expected_decision_policy_snapshot_id: 'snapshot-1',
+    expected_policy_generation: 3,
+    expected_runtime_control_revision: 4,
+    expected_snapshot_hash: 'blake3:snapshot',
+    expires_at: '2026-07-28T00:30:00Z',
+    feedback_cycle_id: 'cycle-1',
+    idempotency_key: 'idempotency-1',
+    issuance_hash: 'blake3:issuance',
+    issuance_reason: 'operator_authorized',
+    issued_at: '2026-07-28T00:00:00Z',
+    issued_by_role: 'super_admin',
+    issued_by_user_id: 'user-1',
+    issued_by_username: 'admin',
+    non_route_policy_hash: 'blake3:non-route',
+    observed_at: '2026-07-28T00:10:00Z',
+    preflight_hash: 'blake3:preflight',
+    profile_ref: {
+      content_hash: 'blake3:profile',
+      id: 'crypto',
+      version: 1,
+    },
+    promotion_gate_hash: 'blake3:gate',
+    promotion_permit_id: 'permit-1',
+    research_profile_artifact_id: 'profile-artifact-1',
+    revision: 0,
+    revoked_at: null,
+    revoked_by_role: null,
+    revoked_by_user_id: null,
+    revoked_by_username: null,
+    revocation_reason: null,
+    scope_hash: 'blake3:scope',
+    serving_constraints_hash: 'blake3:constraints',
+    status: 'active',
+    updated_at: '2026-07-28T00:00:00Z',
+  };
+}
 
 function cycle(
   status: FeedbackCycleView['status'],
@@ -19,7 +66,6 @@ function cycle(
   return {
     feedback_cycle_id: 'cycle-1',
     idempotency_hash: 'blake3:idempotency',
-    trigger_family: 'manual',
     profile_ref: {
       content_hash: 'blake3:profile',
       id: 'crypto',
@@ -59,27 +105,12 @@ describe('feedback governed action state', () => {
     }
   });
 
-  it('canonicalizes a non-empty runtime-mode set in backend rank order', () => {
-    expect(
-      canonicalPromotionModes([
-        'auto_execution',
-        'report_only',
-        'semi_auto',
-        'report_only',
-      ]),
-    ).toEqual(['report_only', 'semi_auto', 'auto_execution']);
-    expect(() => canonicalPromotionModes([])).toThrow(TypeError);
-  });
-
-  it('requires a valid future absolute expiry', () => {
-    const now = Date.parse('2026-07-28T00:00:00Z');
-    expect(parsePromotionExpiry('2026-07-29T00:00:00Z', now)).toBe(
-      '2026-07-29T00:00:00.000Z',
-    );
-    expect(() => parsePromotionExpiry('2026-07-27T00:00:00Z', now)).toThrow(
-      TypeError,
-    );
-    expect(() => parsePromotionExpiry('not-a-date', now)).toThrow(TypeError);
+  it('accepts only governed permit TTL presets', () => {
+    for (const ttl of [300, 900, 1800, 3600]) {
+      expect(validatePermitTtl(ttl)).toBe(ttl);
+    }
+    expect(() => validatePermitTtl(299)).toThrow(TypeError);
+    expect(() => validatePermitTtl(901)).toThrow(TypeError);
   });
 
   it('derives conservative client eligibility without replacing server gates', () => {
@@ -107,5 +138,25 @@ describe('feedback governed action state', () => {
     expect(tryBeginFeedbackAction(pending, 'trigger:crypto')).toBe(true);
     releaseFeedbackAction(pending, 'cancel:cycle-1');
     expect(tryBeginFeedbackAction(pending, 'cancel:cycle-1')).toBe(true);
+  });
+
+  it('uses server time plus monotonic elapsed time for permit expiry', () => {
+    const active = permit();
+    expect(promotionPermitRemaining(active, 1000, 1000)).toBe(1200);
+    expect(promotionPermitRemaining(active, 1000, 61_000)).toBe(1140);
+    expect(promotionPermitStatus(active, 1000, 1_201_000)).toBe('expired');
+
+    active.status = 'revoked';
+    expect(promotionPermitStatus(active, 1000, 1000)).toBe('revoked');
+  });
+
+  it('fails closed for malformed permit clock evidence', () => {
+    const malformed = permit();
+    malformed.observed_at = 'not-a-timestamp';
+    expect(promotionPermitRemaining(malformed, 1000, 1000)).toBeNull();
+    expect(promotionPermitStatus(malformed, 1000, 1000)).toBe('invalid');
+
+    malformed.observed_at = '2026-07-28T00:40:00Z';
+    expect(promotionPermitStatus(malformed, 1000, 1000)).toBe('invalid');
   });
 });

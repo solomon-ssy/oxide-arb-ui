@@ -4,7 +4,6 @@ import type {
   BacktestPathSetView,
   BacktestReportListQuery,
   BacktestReportView,
-  BindPublishPathSetRequest,
   BuildTrainingDatasetRequest,
   ComparisonReportListQuery,
   CreateModelSpecRequest,
@@ -23,17 +22,15 @@ import type {
   ModelComparisonReportView,
   ModelDetailQuery,
   ModelDetailView,
-  ModelPublishedCatalogQuery,
+  ModelRouteCandidateQuery,
+  ModelRouteCandidateView,
   ModelSpecListQuery,
   ModelVersionListQuery,
   Paginated,
-  PublishedModelOptionView,
-  PublishModelRequest,
   QualityGatePreviewQuery,
   QualityGateReportView,
   ResearchJobListQuery,
   ResearchJobView,
-  RetireModelRequest,
   RunBacktestRequest,
   RunCpcvBacktestRequest,
   RunFullFeatureParityRequest,
@@ -76,7 +73,7 @@ export namespace ResearchApi {
   export const planTrainingDataset = '/research/training-datasets/plan';
   export const buildTrainingDataset = '/research/training-datasets/build';
   export const models = '/research/models';
-  export const publishedModelCatalog = '/research/models/published-catalog';
+  export const modelRouteCandidates = '/research/models/route-candidates';
   export const modelSpecs = '/research/model-specs';
   export const featureContract = '/research/feature-contract';
   export const modelSpec = (id: string) => `/research/model-specs/${id}`;
@@ -86,10 +83,6 @@ export namespace ResearchApi {
     `/research/models/${id}/quality-gate`;
   export const backtestModel = (id: string) =>
     `/research/models/${id}/backtest`;
-  export const publishModel = (id: string) => `/research/models/${id}/publish`;
-  export const bindPublishPathSet = (id: string) =>
-    `/research/models/${id}/bind-publish-path-set`;
-  export const retireModel = (id: string) => `/research/models/${id}/retire`;
   export const backtestReports = '/research/backtest-reports';
   export const backtestReport = (id: string) =>
     `/research/backtest-reports/${id}`;
@@ -250,13 +243,12 @@ export async function listAllModels(query: ModelVersionListQuery = {}) {
   return readAllPages((page) => listModels({ ...query, page, size: 100 }));
 }
 
-/** `GET /research/models/published-catalog` — the `ModelVersionSelect`
- * picker source: `Published`, side-and-category-eligible versions. */
-export async function listPublishedModelOptions(
-  query: ModelPublishedCatalogQuery,
+/** `GET /research/models/route-candidates` — immutable route candidate source. */
+export async function listModelRouteCandidates(
+  query: ModelRouteCandidateQuery,
 ) {
-  return requestClient.get<PublishedModelOptionView[]>(
-    ResearchApi.publishedModelCatalog,
+  return requestClient.get<ModelRouteCandidateView[]>(
+    ResearchApi.modelRouteCandidates,
     { params: query },
   );
 }
@@ -352,9 +344,8 @@ export async function getModel(id: string, query: ModelDetailQuery = {}) {
 }
 
 /**
- * `GET /research/models/{id}/quality-gate` — read-only publish-readiness
- * dry-run. Runs the same gate as publish (no persistence) and returns the full
- * per-gate scorecard.
+ * `GET /research/models/{id}/quality-gate` — read-only governed-transition
+ * scorecard. It has no persistence side effect.
  */
 export async function getModelQualityGate(
   id: string,
@@ -450,39 +441,4 @@ export async function getComparisonReport(id: string) {
   return requestClient.get<ModelComparisonReportView>(
     ResearchApi.comparisonReport(id),
   );
-}
-
-/** `POST /research/models/{id}/publish` — governed model publish. */
-export async function publishModel(
-  id: string,
-  body: PublishModelRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<TrainedModelView>(
-    ResearchApi.publishModel(id),
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/models/{id}/bind-publish-path-set` — pin CPCV path set for publish gates. */
-export async function bindPublishPathSet(
-  id: string,
-  body: BindPublishPathSetRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<TrainedModelView>(
-    ResearchApi.bindPublishPathSet(id),
-    body,
-    ctx,
-  );
-}
-
-/** `POST /research/models/{id}/retire` — governed model retire. */
-export async function retireModel(
-  id: string,
-  body: RetireModelRequest,
-  ctx: GovernedContext,
-) {
-  return governedPost<TrainedModelView>(ResearchApi.retireModel(id), body, ctx);
 }

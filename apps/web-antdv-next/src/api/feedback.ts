@@ -1,11 +1,19 @@
 import type {
+  ActivateModelRouteRequest,
+  BootstrapModelRouteRequest,
   CancelFeedbackCycleRequest,
   FeedbackCycleDetailView,
   FeedbackCycleListQuery,
   FeedbackCycleMutationView,
+  FeedbackCycleTriggerView,
   FeedbackCycleView,
   FeedbackOverviewView,
+  FeedbackSchedulerControlRequest,
+  FeedbackSchedulerListView,
+  FeedbackSchedulerMutationView,
   IssuePromotionPermitRequest,
+  ModelRouteActivationReceiptView,
+  ModelRouteBootstrapReceiptView,
   Paginated,
   PromotionPermitListQuery,
   PromotionPermitMutationView,
@@ -22,9 +30,12 @@ import { governedPost } from '#/api/governed-request';
 import { requestClient } from '#/api/request';
 
 export namespace FeedbackApi {
+  export const activations = '/research/model-route-activations';
+  export const bootstraps = '/research/model-route-bootstraps';
   export const overview = '/research/feedback-overview';
-  export const permits = '/research/feedback-promotion-permits';
+  export const permits = '/research/model-route-activation-permits';
   export const cycles = '/research/feedback-cycles';
+  export const schedulers = '/research/feedback-schedulers';
 }
 
 export interface FeedbackReadOptions {
@@ -71,7 +82,7 @@ export async function triggerFeedbackCycle(
   body: TriggerFeedbackCycleRequest,
   context: GovernedContext,
 ) {
-  return governedPost<FeedbackCycleMutationView>(
+  return governedPost<FeedbackCycleTriggerView>(
     FeedbackApi.cycles,
     body,
     context,
@@ -125,6 +136,66 @@ export async function revokePromotionPermit(
 ) {
   return governedPost<PromotionPermitMutationView>(
     `${FeedbackApi.permits}/${encodeURIComponent(permitId)}/revoke`,
+    body,
+    context,
+  );
+}
+
+/** Read PostgreSQL-authoritative automatic retraining scheduler state. */
+export async function listFeedbackSchedulers(
+  options: FeedbackReadOptions = {},
+) {
+  return requestClient.get<FeedbackSchedulerListView>(
+    FeedbackApi.schedulers,
+    withSilentError({ signal: options.signal }),
+  );
+}
+
+/** Pause one scheduler profile through pause-revision CAS. */
+export async function pauseFeedbackScheduler(
+  profileId: string,
+  body: FeedbackSchedulerControlRequest,
+  context: GovernedContext,
+) {
+  return governedPost<FeedbackSchedulerMutationView>(
+    `${FeedbackApi.schedulers}/${encodeURIComponent(profileId)}/pause`,
+    body,
+    context,
+  );
+}
+
+/** Resume one scheduler profile through pause-revision CAS. */
+export async function resumeFeedbackScheduler(
+  profileId: string,
+  body: FeedbackSchedulerControlRequest,
+  context: GovernedContext,
+) {
+  return governedPost<FeedbackSchedulerMutationView>(
+    `${FeedbackApi.schedulers}/${encodeURIComponent(profileId)}/resume`,
+    body,
+    context,
+  );
+}
+
+/** Atomically consume one active permit and return its durable route receipt. */
+export async function activateModelRoute(
+  body: ActivateModelRouteRequest,
+  context: GovernedContext,
+) {
+  return governedPost<ModelRouteActivationReceiptView>(
+    FeedbackApi.activations,
+    body,
+    context,
+  );
+}
+
+/** Establish one server-derived first champion; never grants execution authority. */
+export async function bootstrapModelRoute(
+  body: BootstrapModelRouteRequest,
+  context: GovernedContext,
+) {
+  return governedPost<ModelRouteBootstrapReceiptView>(
+    FeedbackApi.bootstraps,
     body,
     context,
   );

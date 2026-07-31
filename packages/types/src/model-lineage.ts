@@ -1,10 +1,5 @@
 import type { IsoDateTime, PageQuery, Paginated } from './common';
-import type {
-  CalibrationKind,
-  MarketCategory,
-  ModelFamily,
-  PublicationStatus,
-} from './enums';
+import type { CalibrationKind, MarketCategory, ModelFamily } from './enums';
 import type { FeedbackEvaluationUseView } from './feedback';
 import type {
   ClassicalKind,
@@ -135,8 +130,6 @@ export interface ModelPromotionLineageView {
   actor_username: string;
   actor_role: null | string;
   reason: string;
-  before_status: PublicationStatus;
-  after_status: PublicationStatus;
   record: unknown;
   created_at: IsoDateTime;
 }

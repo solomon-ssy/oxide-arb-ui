@@ -31,10 +31,7 @@ const props = withDefaults(
   defineProps<{
     /** Active CPCV research job id (for deep-link while running). */
     activeJobId?: null | string;
-    bindLoading?: boolean;
-    /** Operator may pin a path set for publish gates. */
-    canBind?: boolean;
-    /** CPCV alpha gate rows from the publish dry-run (bound path set only). */
+    /** CPCV alpha gate rows from the selected validation evidence. */
     gateOutcomes?: GateOutcome[];
     /** When true, a CPCV job is queued/running for this model. */
     inProgress?: boolean;
@@ -45,8 +42,6 @@ const props = withDefaults(
     progressPct?: null | number;
     /** Job progress phase name (e.g. `cpcv`, `trial_grid`). */
     progressPhase?: null | string;
-    /** Path set pinned for publish gate evaluation. */
-    publishBoundPathSetId?: null | string;
     /** Currently selected path set id (controlled). */
     selectedPathSetId?: null | string;
   }>(),
@@ -55,10 +50,7 @@ const props = withDefaults(
     pathSet: null,
     pathSets: () => [],
     selectedPathSetId: null,
-    publishBoundPathSetId: null,
     gateOutcomes: () => [],
-    canBind: false,
-    bindLoading: false,
     activeJobId: null,
     progressPhase: null,
     progressPct: null,
@@ -66,7 +58,6 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  bindPublishPathSet: [];
   'update:selectedPathSetId': [id: string];
 }>();
 
@@ -119,29 +110,7 @@ const historyOptions = computed(() =>
   })),
 );
 
-const isPublishBound = computed(
-  () =>
-    !!props.pathSet &&
-    !!props.publishBoundPathSetId &&
-    props.pathSet.path_set_id === props.publishBoundPathSetId,
-);
-
-const selectionDiffersFromBound = computed(
-  () =>
-    !!props.publishBoundPathSetId &&
-    !!props.selectedPathSetId &&
-    props.selectedPathSetId !== props.publishBoundPathSetId,
-);
-
-const canBindSelection = computed(
-  () =>
-    props.canBind &&
-    !!props.selectedPathSetId &&
-    props.selectedPathSetId !== props.publishBoundPathSetId,
-);
-
-/** Gate tags/thresholds only when viewing the publish-bound path set. */
-const showGateTags = computed(() => isPublishBound.value);
+const showGateTags = computed(() => props.gateOutcomes.length > 0);
 
 function gateFor(id: GateOutcome['gate']): GateOutcome | undefined {
   return props.gateOutcomes.find((row) => row.gate === id);
@@ -314,32 +283,11 @@ const baselineUpliftMetric = computed(() => {
   />
   <div v-else class="flex flex-col gap-4">
     <Alert
-      v-if="selectionDiffersFromBound"
-      :message="$t('page.research.cpcv.selectionNotBound')"
-      show-icon
-      type="warning"
-    />
-    <Alert
-      v-else-if="!publishBoundPathSetId"
-      :message="$t('page.research.cpcv.bindRequiredHint')"
-      show-icon
-      type="warning"
-    />
-    <Alert
       :message="$t('page.research.cpcv.sharpeUnannualized')"
       show-icon
       type="info"
     />
     <div class="flex flex-wrap items-center gap-2">
-      <Tag v-if="isPublishBound" color="blue">
-        {{ $t('page.research.cpcv.publishBound') }}
-      </Tag>
-      <Tag v-else-if="publishBoundPathSetId" color="default">
-        {{ $t('page.research.cpcv.publishBoundOther') }}
-      </Tag>
-      <Tag v-else color="warning">
-        {{ $t('page.research.cpcv.publishUnbound') }}
-      </Tag>
       <div v-if="historyOptions.length > 1" class="flex items-center gap-2">
         <span class="text-muted-foreground text-sm">
           {{ $t('page.research.cpcv.history') }}
@@ -351,14 +299,6 @@ const baselineUpliftMetric = computed(() => {
           @update:value="onPathSetSelect"
         />
       </div>
-      <Button
-        v-if="canBindSelection"
-        :loading="bindLoading"
-        type="primary"
-        @click="emit('bindPublishPathSet')"
-      >
-        {{ $t('page.research.cpcv.bindPublish') }}
-      </Button>
     </div>
     <Descriptions bordered :column="2" size="small">
       <DescriptionsItem :label="$t('page.research.cpcv.pathSetId')">

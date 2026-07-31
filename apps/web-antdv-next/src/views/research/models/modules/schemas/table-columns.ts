@@ -3,17 +3,12 @@ import type { TrainedModelView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
-import { usePublicationStatusTagOptions } from '#/shared/components/format/tag-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
-
-import { canOfferModelPublish } from '../model-action-state';
 
 /** Row-action permission gates for the model governance controls. */
 export interface ModelActionAccess {
   canBacktest: boolean;
   canCpcv: boolean;
-  canPublish: boolean;
-  canRetire: boolean;
 }
 
 export function useTrainedModelColumns(
@@ -45,15 +40,6 @@ export function useTrainedModelColumns(
       field: 'version',
       title: $t('page.research.models.columns.version'),
       width: 90,
-    },
-    {
-      cellRender: {
-        name: 'CellTag',
-        options: usePublicationStatusTagOptions(),
-      },
-      field: 'publication_status',
-      title: $t('page.research.models.columns.status'),
-      width: 120,
     },
     {
       cellRender: { name: 'CellCopy' },
@@ -109,29 +95,12 @@ export function useTrainedModelColumns(
             $t('page.research.models.actions.cpcv'),
             { show: () => access.canCpcv },
           ),
-          iconOp<TrainedModelView>(
-            'publish',
-            $t('page.research.models.actions.publish'),
-            {
-              show: (row) =>
-                canOfferModelPublish(access.canPublish, row.publication_status),
-            },
-          ),
-          iconOp<TrainedModelView>(
-            'retire',
-            $t('page.research.models.actions.retire'),
-            {
-              danger: true,
-              show: (row) =>
-                access.canRetire && row.publication_status === 'published',
-            },
-          ),
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('page.research.models.columns.operation'),
-      width: 180,
+      width: 140,
     },
   ];
 }

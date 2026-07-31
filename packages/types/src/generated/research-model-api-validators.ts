@@ -12,7 +12,7 @@ const ucs2Length =
 export const validateCreateModelSpec = validate34;
 const schema32 = {
   description:
-    'Inbound body for `POST /research/model-specs`.\n\nA model spec is the **authoring root** of the offline research lifecycle:\nthe operator declares the model family, prediction horizon, and feature /\nlabel schema versions the downstream dataset build and training runs bind\nto. A spec is immutable once created; publication lifecycle belongs only to\ntrained model versions (see `TrainModelRequest` / model-governance).\n\n`model_family` deserializes from its canonical wire label (`"weighted_factor"`,\n`"classical_random_forest"`, `"hold_vs_exit_weighted"`, …); an unknown label\nis rejected at the boundary with `400`.',
+    'Inbound body for `POST /research/model-specs`.\n\nA model spec is the **authoring root** of the offline research lifecycle:\nthe operator declares the model family, prediction horizon, and feature /\nlabel schema versions the downstream dataset build and training runs bind\nto. A spec and every trained model version are immutable; serving role is\nderived only from a governed route generation.\n\n`model_family` deserializes from its canonical wire label (`"weighted_factor"`,\n`"classical_random_forest"`, `"hold_vs_exit_weighted"`, …); an unknown label\nis rejected at the boundary with `400`.',
   type: 'object',
   properties: {
     feature_schema_version: {
@@ -92,6 +92,7 @@ const schema38 = {
       type: 'string',
       enum: [
         'weighted_factor',
+        'classical_gradient_boosted_trees',
         'classical_random_forest',
         'classical_extra_trees',
         'classical_logistic_regression',
@@ -839,6 +840,7 @@ function validate34(
       if (
         !(
           data3 === 'weighted_factor' ||
+          data3 === 'classical_gradient_boosted_trees' ||
           data3 === 'classical_random_forest' ||
           data3 === 'classical_extra_trees' ||
           data3 === 'classical_logistic_regression' ||
@@ -3492,6 +3494,7 @@ function validate38(
       if (
         !(
           data8 === 'weighted_factor' ||
+          data8 === 'classical_gradient_boosted_trees' ||
           data8 === 'classical_random_forest' ||
           data8 === 'classical_extra_trees' ||
           data8 === 'classical_logistic_regression' ||

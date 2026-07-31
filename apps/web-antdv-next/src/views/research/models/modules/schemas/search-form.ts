@@ -1,7 +1,5 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { PUBLICATION_STATUSES } from '@vben/types';
-
 import { $t } from '#/locales';
 
 /** Prefilled filters seeded from cross-page deep links (`route.query`). */
@@ -20,18 +18,6 @@ export function useTrainedModelSearchSchema(
       defaultValue: initial.model_spec_id,
       fieldName: 'model_spec_id',
       label: $t('page.research.models.filters.modelSpec'),
-    },
-    {
-      component: 'Select',
-      componentProps: {
-        allowClear: true,
-        options: Object.values(PUBLICATION_STATUSES).map((value) => ({
-          label: $t(`enum.publicationStatus.${value}`),
-          value,
-        })),
-      },
-      fieldName: 'publication_status',
-      label: $t('page.research.models.filters.status'),
     },
     {
       component: 'RangePicker',

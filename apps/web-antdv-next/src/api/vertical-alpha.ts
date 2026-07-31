@@ -24,7 +24,6 @@ import { requestClient } from '#/api/request';
 
 export {
   activateCalibrationArtifact,
-  bindCalibration,
   fitBiasTable,
   fitModelCalibrator,
   getCalibrationArtifact,

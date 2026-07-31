@@ -68,7 +68,6 @@ function cryptoProfile(): FeedbackProfileOverviewView {
       started_at: '2026-07-01T00:01:00Z',
       status: 'succeeded',
       terminal_reason_code: null,
-      trigger_family: 'scheduled',
       updated_at: '2026-07-01T00:05:00Z',
     },
     minimum_coverage: '0.900000000000000001',

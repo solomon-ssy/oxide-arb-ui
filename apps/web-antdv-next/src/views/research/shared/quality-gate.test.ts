@@ -11,7 +11,7 @@ function report(
   return {
     evaluated_at: '2026-01-01T00:00:00Z',
     gates,
-    intent: 'publish',
+    intent: 'route_activation',
     passed,
     report_hash: 'blake3:0',
   };
