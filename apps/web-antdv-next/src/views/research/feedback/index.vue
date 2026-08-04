@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type {
+  FeedbackCandidateReadyView,
   FeedbackCycleDetailView,
   FeedbackCycleStatus,
   FeedbackCycleView,
@@ -10,10 +11,13 @@ import type {
   ModelRouteActivationReceiptView,
   Paginated,
   PromotionPermitView,
+  ResolutionProjectionAttentionItem,
+  ResolutionRemediationAction,
 } from '@vben/types';
 
 import {
   computed,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   reactive,
@@ -47,11 +51,14 @@ import {
   cancelFeedbackCycle,
   getFeedbackCycle,
   getFeedbackOverview,
+  getModelRouteActivation,
   issuePromotionPermit,
   listFeedbackCycles,
   listFeedbackSchedulers,
   listPromotionPermits,
   pauseFeedbackScheduler,
+  rejectShadowBinding,
+  remediateResolutionProjection,
   resumeFeedbackScheduler,
   revokePromotionPermit,
   triggerFeedbackCycle,
@@ -59,6 +66,11 @@ import {
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
+import {
+  FEEDBACK_RECOVERED_VISIBLE_MS,
+  feedbackLivenessState,
+  feedbackTransportHealth,
+} from '#/shared/composables/feedback-liveness';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useFeedbackStore, useWsStore } from '#/store';
@@ -66,6 +78,7 @@ import { useFeedbackStore, useWsStore } from '#/store';
 import {
   canCancelFeedbackCycle,
   isFeedbackReasonValid,
+  promotionRouteGenerationDiff,
   releaseFeedbackAction,
   tryBeginFeedbackAction,
   validateFeedbackReason,
@@ -131,28 +144,58 @@ const schedulerSnapshot = ref<FeedbackSchedulerListView | null>(null);
 const schedulerLoading = ref(false);
 const schedulerError = ref<null | string>(null);
 const activationReceipt = ref<ModelRouteActivationReceiptView | null>(null);
+const activationReceiptError = ref<null | string>(null);
+const activationReceiptLoading = ref(false);
 const permitIdempotencyKey = ref(crypto.randomUUID());
 const selectedTriggerProfileId = ref('');
 const pendingActions = reactive(new Set<string>());
 let detailGeneration = 0;
 let detailController: AbortController | null = null;
+let activationReceiptGeneration = 0;
+let activationReceiptController: AbortController | null = null;
+let revealedActivationId: string | undefined;
+let triggerSelectionCycleId: string | undefined;
+let livenessTickTimer: ReturnType<typeof setInterval> | undefined;
 let recoveryPollTimer: ReturnType<typeof setInterval> | undefined;
+const livenessNowMs = ref(Date.now());
+const pageVisible = ref(document.visibilityState === 'visible');
+const recoveredUntilMs = ref<null | number>(null);
 const activationIdempotencyKeys = new Map<string, string>();
+const rejectionIdempotencyKeys = new Map<string, string>();
+const triggerIdempotencyKeys = new Map<string, string>();
+const resolutionRemediationKeys = new Map<string, string>();
+
+watch(
+  [
+    () => wsStore.status,
+    () => wsStore.connectingAt,
+    () => wsStore.connectedAt,
+    () => wsStore.lastHeartbeatAt,
+  ],
+  () => {
+    livenessNowMs.value = Date.now();
+  },
+  { flush: 'sync' },
+);
 
 const canRead = computed(() => hasAccessByCodes(['materialization:read']));
 const canTrigger = computed(() => hasAccessByCodes(['materialization:create']));
 const canReadPermits = computed(() => hasAccessByCodes(['publication:read']));
 const canIssuePermit = computed(() =>
-  hasAccessByCodes(['publication:publish']),
+  hasAccessByCodes(['publication:authorize']),
 );
 const canRevokePermit = computed(() =>
   hasAccessByCodes(['publication:retire']),
 );
 const canActivateRoute = computed(() =>
-  hasAccessByCodes(['publication:publish']),
+  hasAccessByCodes(['publication:activate']),
 );
+const canRejectRoute = computed(() => hasAccessByCodes(['publication:reject']));
 const canControlScheduler = computed(() =>
   hasAccessByCodes(['materialization:update']),
+);
+const canRemediateResolution = computed(() =>
+  hasAccessByCodes(['reconciliation:resolve']),
 );
 const triggerProfileOptions = computed(
   () =>
@@ -168,8 +211,20 @@ const triggerPending = computed(
 );
 
 const activeView = computed<WorkbenchView>({
-  get: () => (route.query.view === 'cycles' ? 'cycles' : 'overview'),
+  get: () =>
+    routeCycleId.value !== undefined || route.query.view === 'cycles'
+      ? 'cycles'
+      : 'overview',
   set: (view) => {
+    if (view === 'overview') {
+      const {
+        activation_id: _activationId,
+        cycle_id: _cycleId,
+        ...query
+      } = route.query;
+      void router.replace({ query: { ...query, view } });
+      return;
+    }
     void router.replace({ query: { ...route.query, view } });
   },
 });
@@ -177,6 +232,12 @@ const activeView = computed<WorkbenchView>({
 const routeCycleId = computed(() =>
   typeof route.query.cycle_id === 'string' && route.query.cycle_id !== ''
     ? route.query.cycle_id
+    : undefined,
+);
+const routeActivationId = computed(() =>
+  typeof route.query.activation_id === 'string' &&
+  route.query.activation_id !== ''
+    ? route.query.activation_id
     : undefined,
 );
 
@@ -199,9 +260,49 @@ const selectedCycle = computed(() => {
   );
 });
 
-const wsRecoveryRequired = computed(
-  () => wsStore.status !== 'connected' || feedbackStore.recoveryRequired,
+const feedbackHealth = computed(() =>
+  feedbackTransportHealth({
+    connectedAt: wsStore.connectedAt,
+    connectingAt: wsStore.connectingAt,
+    lastHeartbeatAt: wsStore.lastHeartbeatAt,
+    nowMs: livenessNowMs.value,
+    recoveryRequired: feedbackStore.recoveryRequired,
+    status: wsStore.status,
+  }),
 );
+const feedbackLivenessDegraded = computed(
+  () => feedbackHealth.value === 'degraded',
+);
+const feedbackLiveness = computed(() =>
+  feedbackLivenessState({
+    health: feedbackHealth.value,
+    nowMs: livenessNowMs.value,
+    recoveredUntilMs: recoveredUntilMs.value,
+    visible: pageVisible.value,
+  }),
+);
+const feedbackLivenessColor = computed(() => {
+  switch (feedbackLiveness.value) {
+    case 'connected': {
+      return 'success';
+    }
+    case 'connecting': {
+      return 'processing';
+    }
+    case 'polling': {
+      return 'processing';
+    }
+    case 'recovered': {
+      return 'cyan';
+    }
+    case 'stale': {
+      return 'warning';
+    }
+    default: {
+      return 'default';
+    }
+  }
+});
 
 const selectedCycleDetail = computed(() => {
   const selectedId = effectiveCycleId.value;
@@ -209,6 +310,11 @@ const selectedCycleDetail = computed(() => {
     ? cycleDetail.value
     : null;
 });
+const selectedShadowBindingActive = computed(
+  () =>
+    selectedCycleDetail.value?.candidate_ready?.route_diff
+      .shadow_binding_status === 'active',
+);
 
 const workbenchState = computed(() =>
   feedbackWorkbenchState({
@@ -226,7 +332,8 @@ const workbenchState = computed(() =>
 function statusColor(status: FeedbackCycleStatus) {
   switch (status) {
     case 'cancelled':
-    case 'failed': {
+    case 'failed':
+    case 'quarantined': {
       return 'error';
     }
     case 'queued': {
@@ -367,6 +474,19 @@ async function refreshCycleDetail(cycleId: string) {
     }
     validateFeedbackCycleDetail(snapshot, cycleId);
     cycleDetail.value = snapshot;
+    if (triggerSelectionCycleId !== cycleId) {
+      selectedTriggerProfileId.value = snapshot.cycle.profile_ref.id;
+      triggerSelectionCycleId = cycleId;
+    }
+    if (
+      snapshot.activation_receipt !== null &&
+      (routeActivationId.value === undefined ||
+        routeActivationId.value ===
+          snapshot.activation_receipt.policy_activation_id)
+    ) {
+      activationReceipt.value = snapshot.activation_receipt;
+      activationReceiptError.value = null;
+    }
   } catch (error) {
     if (generation === detailGeneration) {
       const apiError = normalizeApiError(error);
@@ -382,6 +502,69 @@ async function refreshCycleDetail(cycleId: string) {
     if (generation === detailGeneration) {
       detailLoading.value = false;
       detailRefreshing.value = false;
+    }
+  }
+}
+
+function resetActivationReceipt() {
+  activationReceiptGeneration += 1;
+  activationReceiptController?.abort();
+  activationReceiptController = null;
+  activationReceipt.value = null;
+  activationReceiptError.value = null;
+  activationReceiptLoading.value = false;
+}
+
+async function refreshActivationReceipt(activationId: string) {
+  if (!canRead.value || !canReadPermits.value) {
+    resetActivationReceipt();
+    return;
+  }
+
+  const generation = ++activationReceiptGeneration;
+  activationReceiptController?.abort();
+  const controller = new AbortController();
+  activationReceiptController = controller;
+  activationReceiptLoading.value = true;
+  activationReceiptError.value = null;
+  try {
+    const receipt = await getModelRouteActivation(activationId, {
+      signal: controller.signal,
+    });
+    if (generation !== activationReceiptGeneration) {
+      return;
+    }
+    if (receipt.policy_activation_id !== activationId) {
+      throw new Error('activation receipt identity mismatch');
+    }
+    activationReceipt.value = receipt;
+    if (
+      routeCycleId.value !== receipt.feedback_cycle_id ||
+      route.query.view !== 'cycles'
+    ) {
+      await router.replace({
+        query: {
+          ...route.query,
+          activation_id: activationId,
+          cycle_id: receipt.feedback_cycle_id,
+          view: 'cycles',
+        },
+      });
+    }
+  } catch (error) {
+    if (generation === activationReceiptGeneration) {
+      const apiError = normalizeApiError(error);
+      activationReceipt.value = null;
+      activationReceiptError.value = $t(
+        apiError.httpStatus === 404 || apiError.code === 404
+          ? 'page.research.feedback.actions.permit.receipt.notFound'
+          : 'page.research.feedback.actions.permit.receipt.loadError',
+        { activationId },
+      );
+    }
+  } finally {
+    if (generation === activationReceiptGeneration) {
+      activationReceiptLoading.value = false;
     }
   }
 }
@@ -408,6 +591,16 @@ async function refreshPermits() {
   await permitReadCoordinator.refresh();
 }
 
+async function refreshPermitEvidence() {
+  const activationId = routeActivationId.value;
+  await Promise.all([
+    refreshPermits(),
+    activationId === undefined
+      ? Promise.resolve()
+      : refreshActivationReceipt(activationId),
+  ]);
+}
+
 async function triggerCycle() {
   const profileId = selectedTriggerProfileId.value;
   if (!canTrigger.value || profileId === '') {
@@ -418,10 +611,16 @@ async function triggerCycle() {
     return;
   }
   try {
+    const idempotencyKey =
+      triggerIdempotencyKeys.get(profileId) ?? crypto.randomUUID();
+    triggerIdempotencyKeys.set(profileId, idempotencyKey);
     const result = await governed(
       (context) =>
         triggerFeedbackCycle(
           {
+            evaluation_mode: 'conditional',
+            idempotency_key: idempotencyKey,
+            parent_cycle_id: null,
             profile_id: profileId,
             reason: validateFeedbackReason(context.reason),
           },
@@ -447,6 +646,7 @@ async function triggerCycle() {
       return;
     }
     applyCycleMutation(result.cycle);
+    triggerIdempotencyKeys.delete(profileId);
     selectCycle(result.cycle);
     let messageKey = 'page.research.feedback.actions.trigger.success';
     if (result.trigger_replayed) {
@@ -455,6 +655,152 @@ async function triggerCycle() {
       messageKey = 'page.research.feedback.actions.trigger.converged';
     }
     message.success($t(messageKey));
+    await refresh();
+  } finally {
+    releaseFeedbackAction(pendingActions, actionKey);
+  }
+}
+
+async function rejectCandidate(candidate: FeedbackCandidateReadyView) {
+  const route = candidate.route_diff;
+  if (!canRejectRoute.value || route.shadow_binding_status !== 'active') {
+    return;
+  }
+  const actionKey = `reject-shadow:${route.shadow_binding_id}`;
+  if (!tryBeginFeedbackAction(pendingActions, actionKey)) {
+    return;
+  }
+  const idempotencyKey =
+    rejectionIdempotencyKeys.get(route.shadow_binding_id) ??
+    crypto.randomUUID();
+  rejectionIdempotencyKeys.set(route.shadow_binding_id, idempotencyKey);
+  try {
+    const result = await governed(
+      (context) =>
+        rejectShadowBinding(
+          route.shadow_binding_id,
+          {
+            expected_binding_generation: route.shadow_binding_generation,
+            expected_policy_generation: route.current_policy_generation,
+            idempotency_key: idempotencyKey,
+            note: context.reason,
+            reason_code: 'operator_rejected',
+          },
+          context,
+        ),
+      {
+        confirmWord: $t(
+          'page.research.feedback.actions.shadowReject.confirmWord',
+        ),
+        danger: true,
+        details: [
+          {
+            label: $t('page.research.feedback.actions.shadowReject.bindingId'),
+            mono: true,
+            value: route.shadow_binding_id,
+          },
+          {
+            label: $t('page.research.feedback.actions.shadowReject.route'),
+            value: route.route,
+          },
+          {
+            label: $t('page.research.feedback.actions.shadowReject.candidate'),
+            mono: true,
+            value: route.candidate_model_version_id,
+          },
+        ],
+        summary: $t('page.research.feedback.actions.shadowReject.summary'),
+        title: $t('page.research.feedback.actions.shadowReject.title'),
+      },
+    );
+    if (result === null) {
+      return;
+    }
+    rejectionIdempotencyKeys.delete(route.shadow_binding_id);
+    message.success(
+      $t(
+        result.replayed
+          ? 'page.research.feedback.actions.shadowReject.replayed'
+          : 'page.research.feedback.actions.shadowReject.success',
+      ),
+    );
+    await refresh();
+  } finally {
+    releaseFeedbackAction(pendingActions, actionKey);
+  }
+}
+
+async function remediateResolution(
+  item: ResolutionProjectionAttentionItem,
+  action: ResolutionRemediationAction,
+) {
+  if (
+    !canRemediateResolution.value ||
+    !['mapping_blocked', 'quarantined'].includes(item.projection.status)
+  ) {
+    return;
+  }
+  const observationId = item.observation.resolution_observation_id;
+  const actionKey = `resolution-remediation:${observationId}:${action}`;
+  if (!tryBeginFeedbackAction(pendingActions, actionKey)) {
+    return;
+  }
+  const key = `${observationId}:${action}`;
+  const idempotencyKey =
+    resolutionRemediationKeys.get(key) ?? crypto.randomUUID();
+  resolutionRemediationKeys.set(key, idempotencyKey);
+  try {
+    const result = await governed(
+      (context) =>
+        remediateResolutionProjection(
+          observationId,
+          {
+            action,
+            expected_revision: item.projection.revision,
+            idempotency_key: idempotencyKey,
+            operator_note: context.reason,
+            reason_code:
+              action === 'exclude' ? 'operator_excluded' : 'operator_requeued',
+          },
+          context,
+        ),
+      {
+        confirmWord:
+          action === 'exclude'
+            ? $t('page.research.feedback.truthOps.actions.excludeConfirmWord')
+            : undefined,
+        danger: action === 'exclude',
+        details: [
+          {
+            label: $t('page.research.feedback.truthOps.actions.observationId'),
+            mono: true,
+            value: observationId,
+          },
+          {
+            label: $t('page.research.feedback.truthOps.actions.source'),
+            mono: true,
+            value: item.observation.raw_payload_hash,
+          },
+          {
+            label: $t('page.research.feedback.truthOps.actions.currentState'),
+            value: `${item.projection.status}@${item.projection.revision}`,
+          },
+        ],
+        summary: $t(`page.research.feedback.truthOps.actions.${action}Summary`),
+        title: $t(`page.research.feedback.truthOps.actions.${action}Title`),
+      },
+    );
+    if (result === null) {
+      return;
+    }
+    resolutionRemediationKeys.delete(key);
+    message.success(
+      $t(
+        result.replayed
+          ? 'page.research.feedback.truthOps.actions.replayed'
+          : `page.research.feedback.truthOps.actions.${action}Success`,
+      ),
+    );
     await refresh();
   } finally {
     releaseFeedbackAction(pendingActions, actionKey);
@@ -656,9 +1002,7 @@ async function activatePermit(permit: PromotionPermitView) {
           },
           {
             label: $t('page.research.feedback.actions.permit.routeDiff'),
-            value: `${permit.expected_policy_generation} → ${
-              permit.expected_policy_generation + 1
-            }`,
+            value: promotionRouteGenerationDiff(permit),
           },
           {
             label: $t('page.research.feedback.actions.permit.targetModel'),
@@ -681,8 +1025,17 @@ async function activatePermit(permit: PromotionPermitView) {
     if (result === null) {
       return;
     }
-    activationReceipt.value = result;
+    activationReceipt.value = result.receipt;
+    activationReceiptError.value = null;
     activationIdempotencyKeys.delete(permit.promotion_permit_id);
+    await router.replace({
+      query: {
+        ...route.query,
+        activation_id: result.receipt.policy_activation_id,
+        cycle_id: result.receipt.feedback_cycle_id,
+        view: 'cycles',
+      },
+    });
     message.success(
       $t(
         result.replayed
@@ -846,7 +1199,7 @@ function stopRecoveryPolling() {
 }
 
 function syncRecoveryPolling() {
-  if (!canRead.value || !wsRecoveryRequired.value) {
+  if (!canRead.value || !pageVisible.value || !feedbackLivenessDegraded.value) {
     stopRecoveryPolling();
     return;
   }
@@ -856,7 +1209,9 @@ function syncRecoveryPolling() {
 }
 
 function refreshOnVisibility() {
-  if (document.visibilityState === 'visible' && canRead.value) {
+  pageVisible.value = document.visibilityState === 'visible';
+  syncRecoveryPolling();
+  if (pageVisible.value && canRead.value) {
     void refresh();
   }
 }
@@ -866,6 +1221,78 @@ watch(currentPage, (page) => {
     refreshCoordinator.changeKey(page);
   }
 });
+watch(
+  routeCycleId,
+  (cycleId) => {
+    if (cycleId !== undefined && route.query.view !== 'cycles') {
+      void router.replace({
+        query: { ...route.query, view: 'cycles' },
+      });
+    }
+  },
+  { immediate: true },
+);
+watch(
+  routeActivationId,
+  (activationId) => {
+    if (activationId === undefined) {
+      resetActivationReceipt();
+    } else {
+      void refreshActivationReceipt(activationId);
+    }
+  },
+  { immediate: true },
+);
+watch(
+  [
+    routeActivationId,
+    () => activationReceipt.value?.policy_activation_id,
+    () => selectedCycle.value?.feedback_cycle_id,
+    loading,
+    detailLoading,
+    activationReceiptLoading,
+  ],
+  async ([
+    activationId,
+    receiptId,
+    cycleId,
+    pageIsLoading,
+    detailIsLoading,
+    receiptIsLoading,
+  ]) => {
+    if (activationId === undefined) {
+      revealedActivationId = undefined;
+      return;
+    }
+    if (
+      activationId !== receiptId ||
+      cycleId !== activationReceipt.value?.feedback_cycle_id ||
+      pageIsLoading ||
+      detailIsLoading ||
+      receiptIsLoading ||
+      revealedActivationId === activationId
+    ) {
+      return;
+    }
+    await nextTick();
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    const receipt = document.querySelector<HTMLElement>(
+      '#feedback-activation-receipt',
+    );
+    const receiptTitle = document.querySelector<HTMLElement>(
+      '#feedback-activation-receipt-title',
+    );
+    if (receipt === null || receiptTitle === null) {
+      return;
+    }
+    receipt.scrollIntoView({ behavior: 'instant', block: 'center' });
+    receiptTitle.focus({ preventScroll: true });
+    revealedActivationId = activationId;
+  },
+  { flush: 'post' },
+);
 watch(
   effectiveCycleId,
   (cycleId, previousCycleId) => {
@@ -890,12 +1317,21 @@ watch(
   },
 );
 watch(
-  wsRecoveryRequired,
-  (required, wasRequired) => {
-    syncRecoveryPolling();
-    if (!required && wasRequired && canRead.value) {
-      void refresh();
+  feedbackLivenessDegraded,
+  (degraded, wasDegraded) => {
+    if (!degraded && wasDegraded) {
+      recoveredUntilMs.value =
+        livenessNowMs.value + FEEDBACK_RECOVERED_VISIBLE_MS;
+      if (canRead.value) {
+        void refresh();
+      }
+    } else if (degraded) {
+      recoveredUntilMs.value = null;
+      if (wasDegraded === false && canRead.value && pageVisible.value) {
+        void refresh();
+      }
     }
+    syncRecoveryPolling();
   },
   { immediate: true },
 );
@@ -914,26 +1350,38 @@ watch(canRead, (allowed, wasAllowed) => {
     schedulerSnapshot.value = null;
     schedulerLoading.value = false;
     schedulerError.value = null;
+    resetActivationReceipt();
     resetCycleDetail();
   }
   syncRecoveryPolling();
 });
 watch(canReadPermits, () => {
-  void refreshPermits();
+  void refreshPermitEvidence();
 });
 
 onMounted(() => {
   document.addEventListener('visibilitychange', refreshOnVisibility);
+  livenessNowMs.value = Date.now();
+  pageVisible.value = document.visibilityState === 'visible';
+  livenessTickTimer = setInterval(() => {
+    livenessNowMs.value = Date.now();
+  }, 1000);
   void refresh();
 });
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', refreshOnVisibility);
+  if (livenessTickTimer !== undefined) {
+    clearInterval(livenessTickTimer);
+    livenessTickTimer = undefined;
+  }
   stopRecoveryPolling();
   refreshCoordinator.dispose();
   permitReadCoordinator.dispose();
   schedulerReadCoordinator.dispose();
   detailGeneration += 1;
   detailController?.abort();
+  activationReceiptGeneration += 1;
+  activationReceiptController?.abort();
 });
 </script>
 
@@ -958,6 +1406,21 @@ onBeforeUnmount(() => {
           </p>
         </div>
         <div v-if="canRead" class="flex w-full flex-wrap gap-2 sm:w-auto">
+          <Tag
+            :aria-label="
+              $t(`page.research.feedback.recovery.liveness.${feedbackLiveness}`)
+            "
+            :color="feedbackLivenessColor"
+            class="flex min-h-11 items-center"
+            :data-recovery-reason="feedbackStore.recoveryReason ?? undefined"
+            data-testid="feedback-liveness"
+            :data-transport-health="feedbackHealth"
+            :data-transport-status="wsStore.status"
+          >
+            {{
+              $t(`page.research.feedback.recovery.liveness.${feedbackLiveness}`)
+            }}
+          </Tag>
           <label
             v-if="canTrigger"
             class="sr-only"
@@ -971,6 +1434,7 @@ onBeforeUnmount(() => {
             v-model:value="selectedTriggerProfileId"
             :aria-label="$t('page.research.feedback.actions.trigger.profile')"
             class="min-h-11 min-w-48 flex-1 sm:flex-none"
+            data-testid="feedback-trigger-profile"
             :options="triggerProfileOptions"
           />
           <Button
@@ -1015,21 +1479,32 @@ onBeforeUnmount(() => {
 
       <template v-else>
         <Alert
-          v-if="wsRecoveryRequired"
+          v-if="feedbackLivenessDegraded"
           :description="
             feedbackStore.recoveryRequired
-              ? $t('page.research.feedback.recovery.requiredDescription', {
-                  reason:
-                    feedbackStore.recoveryReason ??
-                    $t('page.research.feedback.detail.notObserved'),
-                })
-              : $t('page.research.feedback.recovery.degradedDescription')
+              ? $t(
+                  feedbackLiveness === 'polling'
+                    ? 'page.research.feedback.recovery.requiredDescription'
+                    : 'page.research.feedback.recovery.requiredStaleDescription',
+                  {
+                    reason:
+                      feedbackStore.recoveryReason ??
+                      $t('page.research.feedback.detail.notObserved'),
+                  },
+                )
+              : $t(
+                  feedbackLiveness === 'polling'
+                    ? 'page.research.feedback.recovery.degradedDescription'
+                    : 'page.research.feedback.recovery.staleDescription',
+                )
           "
           :message="
             $t(
               feedbackStore.recoveryRequired
                 ? 'page.research.feedback.recovery.requiredTitle'
-                : 'page.research.feedback.recovery.degradedTitle',
+                : feedbackLiveness === 'polling'
+                  ? 'page.research.feedback.recovery.degradedTitle'
+                  : 'page.research.feedback.recovery.staleTitle',
             )
           "
           show-icon
@@ -1056,10 +1531,15 @@ onBeforeUnmount(() => {
           type="warning"
         />
 
-        <Tabs v-model:active-key="activeView" destroy-on-hidden>
+        <Tabs
+          id="feedback-workbench-tabs"
+          v-model:active-key="activeView"
+          class="[&_.ant-tabs-tab-btn]:flex [&_.ant-tabs-tab-btn]:min-h-11 [&_.ant-tabs-tab-btn]:items-center"
+        >
           <TabPane
             key="overview"
             :tab="$t('page.research.feedback.tabs.overview')"
+            :force-render="true"
           >
             <div
               v-if="overview"
@@ -1162,11 +1642,18 @@ onBeforeUnmount(() => {
 
             <FeedbackTruthOperationsPanel
               v-if="overview"
+              :can-remediate="canRemediateResolution"
+              :pending-actions="pendingActions"
               :snapshot="overview.truth_operations"
+              @remediate="remediateResolution"
             />
           </TabPane>
 
-          <TabPane key="cycles" :tab="$t('page.research.feedback.tabs.cycles')">
+          <TabPane
+            key="cycles"
+            :tab="$t('page.research.feedback.tabs.cycles')"
+            :force-render="true"
+          >
             <Empty
               v-if="
                 cyclePage.items.length === 0 && effectiveCycleId === undefined
@@ -1274,7 +1761,17 @@ onBeforeUnmount(() => {
                   >
                     {{ $t('page.research.feedback.detail.refreshing') }}
                   </span>
-                  <FeedbackCycleDetailPanel :detail="selectedCycleDetail" />
+                  <FeedbackCycleDetailPanel
+                    :can-reject="canRejectRoute"
+                    :detail="selectedCycleDetail"
+                    :reject-pending="
+                      selectedCycleDetail.candidate_ready !== null &&
+                      pendingActions.has(
+                        `reject-shadow:${selectedCycleDetail.candidate_ready.route_diff.shadow_binding_id}`,
+                      )
+                    "
+                    @reject="rejectCandidate"
+                  />
                 </div>
 
                 <Empty
@@ -1298,11 +1795,14 @@ onBeforeUnmount(() => {
             </div>
 
             <FeedbackPermitPanel
-              :can-issue="canIssuePermit"
+              :can-issue="canIssuePermit && selectedShadowBindingActive"
               :can-activate="canActivateRoute"
               :can-read="canReadPermits"
               :can-revoke="canRevokePermit"
               :activation-receipt="activationReceipt"
+              :activation-id="routeActivationId"
+              :activation-receipt-error="activationReceiptError"
+              :activation-receipt-loading="activationReceiptLoading"
               :error="permitError"
               :idempotency-key="permitIdempotencyKey"
               :issue-pending="
@@ -1315,7 +1815,7 @@ onBeforeUnmount(() => {
               :selected-cycle="selectedCycle"
               @activate="activatePermit"
               @issue="issuePermit"
-              @retry="refreshPermits"
+              @retry="refreshPermitEvidence"
               @revoke="revokePermit"
             />
           </TabPane>

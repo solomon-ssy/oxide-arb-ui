@@ -309,6 +309,7 @@ const kpis = computed(() => [
 
 const wsColor: Record<string, string> = {
   connected: 'success',
+  connecting: 'processing',
   disconnected: 'error',
   reconnecting: 'warning',
 };

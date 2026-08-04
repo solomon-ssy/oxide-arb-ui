@@ -308,10 +308,10 @@ export interface ReportFunnelMarketView {
   recommendation_report_id: UuidString;
   row_hash: string;
   decision_policy_snapshot_id: UuidString;
+  primary_token_id: string;
   secondary_diagnostics: Record<string, unknown>;
   signal_candidate_id: null | UuidString;
   terminal_stage: ReportFunnelStage;
-  token_id: string;
 }
 
 export interface ReportFunnelMarketListQuery extends PageQuery {

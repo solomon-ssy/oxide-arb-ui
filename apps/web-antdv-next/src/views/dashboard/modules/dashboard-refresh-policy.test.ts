@@ -35,11 +35,13 @@ describe('dashboard refresh policy', () => {
     expect(
       dashboardWsHealth('reconnecting', '2026-07-29T03:29:59.000Z', NOW),
     ).toBe('disconnected');
+    expect(dashboardWsHealth('connecting', null, NOW)).toBe('connecting');
   });
 
   it('runs the 30s fallback only while visible and disconnected or stale', () => {
     expect(DASHBOARD_FALLBACK_INTERVAL_MS).toBe(30_000);
     expect(shouldPollDashboard('healthy', 'visible')).toBe(false);
+    expect(shouldPollDashboard('connecting', 'visible')).toBe(false);
     expect(shouldPollDashboard('disconnected', 'hidden')).toBe(false);
     expect(shouldPollDashboard('stale', 'hidden')).toBe(false);
     expect(shouldPollDashboard('disconnected', 'visible')).toBe(true);
@@ -63,6 +65,7 @@ describe('dashboard refresh policy', () => {
 
   it('refreshes exactly on reconnect and hidden-to-visible recovery', () => {
     expect(isWsRecovery('connected', 'reconnecting')).toBe(true);
+    expect(isWsRecovery('connected', 'connecting')).toBe(false);
     expect(isWsRecovery('connected', 'connected')).toBe(false);
     expect(isWsRecovery('reconnecting', 'connected')).toBe(false);
     expect(isVisibilityRecovery('visible', 'hidden')).toBe(true);

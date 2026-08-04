@@ -540,9 +540,11 @@ export function useResearchJobStatusTagOptions() {
     Object.values(RESEARCH_JOB_STATUSES),
     (value) => $t(`enum.researchJobStatus.${value}`),
     {
+      [RESEARCH_JOB_STATUSES.awaitingEvidence]: 'cyan',
       [RESEARCH_JOB_STATUSES.cancelled]: 'volcano',
       [RESEARCH_JOB_STATUSES.failed]: 'error',
       [RESEARCH_JOB_STATUSES.queued]: 'geekblue',
+      [RESEARCH_JOB_STATUSES.retryScheduled]: 'warning',
       [RESEARCH_JOB_STATUSES.running]: 'processing',
       [RESEARCH_JOB_STATUSES.succeeded]: 'success',
     },

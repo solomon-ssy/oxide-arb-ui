@@ -96,7 +96,7 @@ describe('parseQualityGate', () => {
           {
             class: 'hard',
             detail: 'shadow stability not established',
-            gate: 'shadow_overlap_stability',
+            gate: 'shadow_decision_overlap',
             observed: 'none',
             status: 'not_applicable',
             threshold: '0.6',

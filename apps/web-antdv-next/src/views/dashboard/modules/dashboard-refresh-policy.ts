@@ -5,7 +5,11 @@ import type { WsConnectionStatus } from '#/store';
 export const DASHBOARD_FALLBACK_INTERVAL_MS = 30_000;
 export const DASHBOARD_WS_STALE_MS = 45_000;
 
-export type DashboardWsHealth = 'disconnected' | 'healthy' | 'stale';
+export type DashboardWsHealth =
+  | 'connecting'
+  | 'disconnected'
+  | 'healthy'
+  | 'stale';
 
 function activityTime(value: IsoDateTime | null): null | number {
   if (value === null) {
@@ -37,6 +41,9 @@ export function dashboardWsHealth(
   activityAt: IsoDateTime | null,
   nowMs: number,
 ): DashboardWsHealth {
+  if (status === 'connecting') {
+    return 'connecting';
+  }
   if (status !== 'connected') {
     return 'disconnected';
   }
@@ -55,14 +62,20 @@ export function shouldPollDashboard(
   health: DashboardWsHealth,
   visibility: DocumentVisibilityState,
 ): boolean {
-  return visibility === 'visible' && health !== 'healthy';
+  return (
+    visibility === 'visible' &&
+    (health === 'disconnected' || health === 'stale')
+  );
 }
 
 export function isWsRecovery(
   next: WsConnectionStatus,
   previous: undefined | WsConnectionStatus,
 ): boolean {
-  return next === 'connected' && previous !== undefined && previous !== next;
+  return (
+    next === 'connected' &&
+    (previous === 'disconnected' || previous === 'reconnecting')
+  );
 }
 
 export function isVisibilityRecovery(

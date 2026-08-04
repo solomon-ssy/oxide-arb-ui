@@ -13,6 +13,8 @@
   "error": {
     "actingRoleForbidden": "当前用户不能以所选角色执行该治理操作",
     "actingRoleRequired": "请选择执行角色",
+    "inlineSummary": "治理操作未生效",
+    "mutationFailed": "治理操作失败。请检查错误并使用已保留的输入重试。",
     "reasonTooShort": "治理说明至少 4 个字符"
   }
 }

@@ -3,6 +3,7 @@ import { computed, useSlots } from 'vue';
 
 import { useRefresh } from '@vben/hooks';
 import { RotateCw } from '@vben/icons';
+import { $t } from '@vben/locales';
 import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore } from '@vben/stores';
 
@@ -18,6 +19,10 @@ import {
 
 interface Props {
   /**
+   * Whether the shell is rendering at the mobile breakpoint.
+   */
+  isMobile?: boolean;
+  /**
    * Logo 主题
    */
   theme?: string;
@@ -27,13 +32,20 @@ defineOptions({
   name: 'LayoutHeader',
 });
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
+  isMobile: false,
   theme: 'light',
 });
 
 const emit = defineEmits<{ clearPreferencesAndLogout: [] }>();
 
 const REFERENCE_VALUE = 100;
+const MOBILE_HIDDEN_BUILTIN_SLOTS = new Set([
+  'fullscreen',
+  'global-search',
+  'language-toggle',
+  'timezone',
+]);
 
 const accessStore = useAccessStore();
 const { globalSearchShortcutKey, preferencesButtonPosition } = usePreferences();
@@ -79,6 +91,11 @@ const rightSlots = computed(() => {
         name: 'timezone',
       });
     }
+  } else if (props.isMobile && preferences.widget.themeToggle) {
+    list.push({
+      index: REFERENCE_VALUE + 20,
+      name: 'theme-toggle',
+    });
   }
   // 全屏
   if (preferences.widget.fullscreen) {
@@ -108,7 +125,11 @@ const rightSlots = computed(() => {
   const userDropdownIndex = Math.min(1000, nextIndex(list));
   list.push({ index: userDropdownIndex, name: 'user-dropdown' });
   // 按照索引排序，保证插槽顺序
-  return list.toSorted((a, b) => a.index - b.index);
+  return list
+    .toSorted((a, b) => a.index - b.index)
+    .filter(
+      (item) => !props.isMobile || !MOBILE_HIDDEN_BUILTIN_SLOTS.has(item.name),
+    );
 });
 
 const leftSlots = computed(() => {
@@ -156,7 +177,11 @@ function clearPreferencesAndLogout() {
   >
     <slot :name="slot.name">
       <template v-if="slot.name === 'refresh'">
-        <VbenIconButton class="my-0 mr-1 rounded-md" @click="refresh">
+        <VbenIconButton
+          :aria-label="$t('common.refresh')"
+          class="my-0 mr-1 rounded-md"
+          @click="refresh"
+        >
           <RotateCw class="size-4" />
         </VbenIconButton>
       </template>
@@ -201,7 +226,11 @@ function clearPreferencesAndLogout() {
           <LanguageToggle class="mr-1" />
         </template>
         <template v-else-if="slot.name === 'fullscreen'">
-          <VbenFullScreen class="mr-1" />
+          <VbenFullScreen
+            :enter-label="$t('ui.widgets.enterFullscreen')"
+            :exit-label="$t('ui.widgets.exitFullscreen')"
+            class="mr-1"
+          />
         </template>
         <template v-else-if="slot.name === 'timezone'">
           <TimezoneButton class="mt-0.5 mr-1" />

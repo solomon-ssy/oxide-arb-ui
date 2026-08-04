@@ -196,13 +196,7 @@ const routedModelId = computed(() => {
     return null;
   }
   const model = revision.document.document.model;
-  if (route === 'pooled') {
-    return model?.active_model_version_id ?? null;
-  }
-  const pointers = model?.category_model_pointers;
-  return route === 'crypto'
-    ? (pointers?.crypto ?? null)
-    : (pointers?.weather ?? null);
+  return model?.buy_routes?.[route]?.champion.model_version_id ?? null;
 });
 
 const bootstrapPrerequisitesReady = computed(() => {

@@ -5,6 +5,7 @@ import type { GovernedField } from '#/shared/composables/governed-field';
 import type {
   GovernedContext,
   GovernedReasonRule,
+  GovernedSubmitResult,
 } from '#/shared/composables/use-governed-action';
 
 import { computed, nextTick, reactive, ref, useId, watch } from 'vue';
@@ -13,6 +14,7 @@ import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
 import {
+  Alert,
   Checkbox,
   Descriptions,
   DescriptionsItem,
@@ -38,8 +40,8 @@ export interface GovernedActionPayload {
   details?: GovernedDetailRow[];
   fields?: GovernedField[];
   onCancel?: () => void;
-  /** Return `true` when the governed mutation succeeded. */
-  onSubmit: (ctx: GovernedContext) => Promise<boolean>;
+  /** Close only after success or an explicitly close-on-error policy. */
+  onSubmit: (ctx: GovernedContext) => Promise<GovernedSubmitResult>;
   reasonRule?: GovernedReasonRule;
   summary?: string;
   title: string;
@@ -51,6 +53,7 @@ const modalControlPrefix = useId();
 const actingRole = ref<string>('');
 const reason = ref('');
 const confirmWordInput = ref('');
+const mutationError = ref<null | string>(null);
 /** Raw string values of the payload's typed fields, keyed by field name. */
 const fieldValues = reactive<Record<string, string>>({});
 
@@ -116,6 +119,16 @@ function focusModalTitle() {
   });
 }
 
+function focusMutationError() {
+  void nextTick(() => {
+    document
+      .querySelector<HTMLElement>(
+        '[data-testid="governed-action-inline-error"]',
+      )
+      ?.focus({ preventScroll: true });
+  });
+}
+
 const [Modal, modalApi] = useVbenModal({
   closeOnPressEscape: true,
   destroyOnClose: true,
@@ -128,14 +141,19 @@ const [Modal, modalApi] = useVbenModal({
       return;
     }
     modalApi.lock();
+    mutationError.value = null;
     try {
-      const succeeded = await payload.value.onSubmit({
+      const result = await payload.value.onSubmit({
         actingRole: actingRole.value,
         fields: collectFields(),
         reason: reason.value.trim(),
       });
-      if (succeeded) {
+      if (result.close) {
         modalApi.close();
+      } else {
+        mutationError.value =
+          result.errorSummary ?? $t('governance.error.mutationFailed');
+        focusMutationError();
       }
     } finally {
       modalApi.unlock();
@@ -147,6 +165,7 @@ const [Modal, modalApi] = useVbenModal({
       modalApi.setState({ title: payload.value?.title ?? '' });
       reason.value = '';
       confirmWordInput.value = '';
+      mutationError.value = null;
       actingRole.value = roleOptions.value[0]?.value ?? '';
       for (const key of Object.keys(fieldValues)) {
         delete fieldValues[key];
@@ -180,6 +199,17 @@ watch(
       <p v-if="payload?.summary" class="text-muted-foreground text-sm">
         {{ payload.summary }}
       </p>
+
+      <Alert
+        v-if="mutationError"
+        data-testid="governed-action-inline-error"
+        :message="$t('governance.error.inlineSummary')"
+        :description="mutationError"
+        role="alert"
+        show-icon
+        tabindex="-1"
+        type="error"
+      />
 
       <Descriptions
         v-if="payload?.details?.length"

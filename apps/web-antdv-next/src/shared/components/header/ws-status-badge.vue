@@ -24,12 +24,14 @@ onScopeDispose(() => clearInterval(timer));
 
 const ICON_CLASS = {
   connected: 'text-success',
+  connecting: 'text-primary animate-spin',
   disconnected: 'text-destructive',
   reconnecting: 'text-warning animate-spin',
 } as const;
 
 const ICON_NAME = {
   connected: 'lucide:wifi',
+  connecting: 'lucide:loader-2',
   disconnected: 'lucide:wifi-off',
   reconnecting: 'lucide:loader-2',
 } as const;

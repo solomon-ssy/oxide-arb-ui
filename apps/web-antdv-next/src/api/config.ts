@@ -36,6 +36,8 @@ export namespace ConfigApi {
   export const schema = (kind: ConfigResourceKind) => `${base}/${kind}/schema`;
   export const revisions = (kind: ConfigResourceKind) =>
     `${base}/${kind}/revisions`;
+  export const revision = (kind: ConfigResourceKind, revisionId: string) =>
+    `${revisions(kind)}/${encodeURIComponent(revisionId)}`;
   export const drafts = (kind: ConfigResourceKind) => `${base}/${kind}/drafts`;
   export const validateDraft = (kind: ConfigResourceKind, revisionId: string) =>
     `${drafts(kind)}/${revisionId}/validate`;
@@ -65,6 +67,15 @@ export function getConfigRevisions(kind: ConfigResourceKind, limit = 50) {
   return requestClient.get<PolicyRevisionView[]>(ConfigApi.revisions(kind), {
     params: { limit },
   });
+}
+
+export function getConfigRevision(
+  kind: ConfigResourceKind,
+  revisionId: string,
+) {
+  return requestClient.get<PolicyRevisionView>(
+    ConfigApi.revision(kind, revisionId),
+  );
 }
 
 export function createConfigDraft(

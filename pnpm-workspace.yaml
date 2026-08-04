@@ -37,7 +37,8 @@ overrides:
   vue: 'catalog:'
 
 patchedDependencies:
-  antdv-next@1.4.1: patches/antdv-next@1.4.1.patch
+  '@v-c/tabs@1.3.0': patches/@v-c__tabs@1.3.0.patch
+  antdv-next@1.4.6: patches/antdv-next@1.4.6.patch
 catalog:
   '@ast-grep/napi': ^0.43.0
   '@axe-core/playwright': 4.12.1
@@ -102,7 +103,7 @@ catalog:
   ajv: 8.20.0
   ajv-formats: 3.0.1
   ant-design-vue: ^4.2.6
-  antdv-next: ^1.4.0
+  antdv-next: ^1.4.6
   archiver: ^7.0.1
   axios: ^1.17.0
   axios-mock-adapter: ^2.1.0

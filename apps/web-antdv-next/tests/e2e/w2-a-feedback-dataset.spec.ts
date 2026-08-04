@@ -49,7 +49,14 @@ interface ResearchJob {
     message: string;
   };
   job_id: string;
-  status: 'cancelled' | 'failed' | 'queued' | 'running' | 'succeeded';
+  status:
+    | 'awaiting_evidence'
+    | 'cancelled'
+    | 'failed'
+    | 'queued'
+    | 'retry_scheduled'
+    | 'running'
+    | 'succeeded';
 }
 
 async function navigate(page: Page, audit: BrowserFailureAudit, url: string) {

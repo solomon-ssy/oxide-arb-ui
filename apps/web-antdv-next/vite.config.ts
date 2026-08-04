@@ -1,9 +1,23 @@
+import process from 'node:process';
+
 import { defineConfig } from '@vben/vite-config';
+
+import { loadEnv } from 'vite';
 
 import { localIconCollectionsPlugin } from './build/local-icon-collections';
 import { productionBundlePolicyPlugin } from './build/production-bundle-policy';
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
+  const { VITE_DEV_PROXY_TARGET = 'http://localhost:8088' } = loadEnv(
+    mode,
+    process.cwd(),
+  );
+  const devProxyUrl = new URL(VITE_DEV_PROXY_TARGET);
+  if (!['http:', 'https:'].includes(devProxyUrl.protocol)) {
+    throw new Error('VITE_DEV_PROXY_TARGET must use http or https');
+  }
+  const devProxyTarget = devProxyUrl.origin;
+
   return {
     application: {},
     vite: {
@@ -21,11 +35,11 @@ export default defineConfig(async () => {
           // to :8088 and break Origin matching across the Vite proxy.
           '/ready': {
             changeOrigin: false,
-            target: 'http://localhost:8088',
+            target: devProxyTarget,
           },
           '/api': {
             changeOrigin: false,
-            target: 'http://localhost:8088',
+            target: devProxyTarget,
             ws: true,
           },
         },

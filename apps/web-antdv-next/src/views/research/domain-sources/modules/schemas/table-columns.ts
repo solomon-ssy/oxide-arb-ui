@@ -25,6 +25,12 @@ export function useDomainSourceColumns(): VxeTableGridOptions<DomainSourceExpect
       title: $t('page.research.domainSources.table.instrument'),
     },
     {
+      field: 'snapshot_status',
+      slots: { default: 'snapshotStatus' },
+      title: $t('page.research.domainSources.table.snapshotStatus'),
+      width: 130,
+    },
+    {
       field: 'status',
       cellRender: {
         name: 'CellTag',

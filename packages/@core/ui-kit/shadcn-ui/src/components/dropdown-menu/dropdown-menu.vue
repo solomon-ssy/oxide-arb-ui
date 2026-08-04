@@ -27,7 +27,10 @@ function handleItemClick(menu: IDropdownMenuItem) {
 </script>
 <template>
   <DropdownMenu>
-    <DropdownMenuTrigger class="flex h-full items-center gap-1">
+    <DropdownMenuTrigger
+      :aria-label="triggerAriaLabel"
+      class="flex h-full items-center gap-1"
+    >
       <slot></slot>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="start">

@@ -134,7 +134,7 @@ function degradeReasonLabel(reason: OperationalDegradeReason): string {
     <Popover placement="bottomRight" trigger="click">
       <button
         :aria-label="label"
-        class="focus-visible:ring-ring flex size-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none sm:size-auto"
+        class="focus-visible:ring-ring flex h-8 min-w-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none sm:w-auto"
         type="button"
       >
         <Tag :color="tagColor" class="!m-0 cursor-pointer max-sm:!p-1">

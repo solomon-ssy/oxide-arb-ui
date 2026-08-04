@@ -241,6 +241,7 @@ const headerSlots = computed(() => {
     :header-mode="preferences.header.mode"
     :header-theme="headerTheme"
     :header-toggle-sidebar-button="preferences.widget.sidebarToggle"
+    :header-toggle-sidebar-label="$t('ui.widgets.toggleNavigation')"
     :header-visible="preferences.header.enable"
     :is-mobile="preferences.app.isMobile"
     :layout="layout"
@@ -303,6 +304,7 @@ const headerSlots = computed(() => {
     <!-- 头部区域 -->
     <template #header>
       <LayoutHeader
+        :is-mobile="isMobile"
         :theme="theme"
         @clear-preferences-and-logout="clearPreferencesAndLogout"
       >
@@ -436,7 +438,7 @@ const headerSlots = computed(() => {
           @clear-preferences-and-logout="clearPreferencesAndLogout"
         />
       </template>
-      <VbenBackTop />
+      <VbenBackTop v-bind="{ ariaLabel: $t('common.backToTop') }" />
     </template>
   </VbenAdminLayout>
 </template>

@@ -109,10 +109,10 @@ const columns = computed(() => [
     width: 220,
   },
   {
-    dataIndex: 'token_id',
+    dataIndex: 'primary_token_id',
     ellipsis: true,
-    key: 'token_id',
-    title: $t('page.quantReports.funnel.columns.token'),
+    key: 'primary_token_id',
+    title: $t('page.quantReports.funnel.columns.primaryToken'),
     width: 180,
   },
   {

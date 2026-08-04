@@ -29,10 +29,13 @@ function overview(): FeedbackOverviewView {
       observed_at: '2026-07-30T02:00:00.000Z',
       recommendation_rollup_sealed_through: '2026-07-30T02:00:00.000Z',
       recommendation_rollup_unsealed_count: 0,
+      resolution_attention: [],
+      resolution_excluded_count: 0,
+      resolution_mapping_blocked_count: 0,
       resolution_oldest_unresolved_at: null,
       resolution_quarantined_count: 0,
+      resolution_terminal_through: '2026-07-30T02:00:00.000Z',
       resolution_unresolved_count: 0,
-      resolution_verified_through: '2026-07-30T02:00:00.000Z',
     },
   };
 }

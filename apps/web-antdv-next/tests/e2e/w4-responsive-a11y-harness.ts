@@ -108,7 +108,7 @@ function candidateScorecard(
 ): FeedbackCandidateReadyView {
   return {
     attribution: {
-      decision_counterfactual_count: 24,
+      decision_intervention_replay_count: 24,
       execution_trajectory_count: 12,
       outcome_association_count: 1,
       policy_counterfactual_count: 12,
@@ -174,10 +174,10 @@ function candidateScorecard(
     },
     shadow: {
       any_hard_divergence: false,
-      mean_topn_overlap: '0.93',
-      minimum_topn_overlap: '0.85',
+      mean_topn_decision_overlap: '0.93',
+      minimum_topn_decision_overlap: '0.85',
       observed: 288,
-      observed_window_secs: 259_200,
+      served_window_secs: 259_200,
       required: 240,
       required_window_secs: 259_200,
     },

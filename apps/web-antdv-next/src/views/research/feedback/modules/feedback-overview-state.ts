@@ -93,8 +93,16 @@ export function validateFeedbackOverview(
     'truth_operations.resolution_unresolved_count',
   );
   assertCounter(
+    truth.resolution_mapping_blocked_count,
+    'truth_operations.resolution_mapping_blocked_count',
+  );
+  assertCounter(
     truth.resolution_quarantined_count,
     'truth_operations.resolution_quarantined_count',
+  );
+  assertCounter(
+    truth.resolution_excluded_count,
+    'truth_operations.resolution_excluded_count',
   );
   assertCounter(
     truth.execution_attempt_unsealed_count,
@@ -107,6 +115,22 @@ export function validateFeedbackOverview(
   if (truth.resolution_quarantined_count > truth.resolution_unresolved_count) {
     throw new TypeError('resolution quarantine cannot exceed unresolved truth');
   }
+  if (
+    truth.resolution_mapping_blocked_count > truth.resolution_unresolved_count
+  ) {
+    throw new TypeError(
+      'mapping-blocked resolution projections cannot exceed unresolved truth',
+    );
+  }
+  if (
+    truth.resolution_quarantined_count +
+      truth.resolution_mapping_blocked_count >
+    truth.resolution_unresolved_count
+  ) {
+    throw new TypeError(
+      'blocked resolution projections cannot exceed unresolved truth',
+    );
+  }
 
   assertOldest(
     truth.resolution_unresolved_count,
@@ -116,8 +140,8 @@ export function validateFeedbackOverview(
   );
   const resolutionFrontier = assertFrontier(
     truth.resolution_unresolved_count,
-    truth.resolution_verified_through,
-    'truth_operations.resolution_verified_through',
+    truth.resolution_terminal_through,
+    'truth_operations.resolution_terminal_through',
     observedAt,
     generatedAt,
   );
@@ -130,6 +154,20 @@ export function validateFeedbackOverview(
       )
   ) {
     throw new TypeError('resolution frontier passed unresolved truth');
+  }
+  for (const item of truth.resolution_attention) {
+    if (
+      item.observation.resolution_observation_id !==
+        item.projection.resolution_observation_id ||
+      item.observation.source_checkpoint_hash !==
+        item.projection.source_checkpoint_hash
+    ) {
+      throw new TypeError('resolution attention lineage is inconsistent');
+    }
+    assertCounter(
+      item.projection.revision,
+      'truth_operations.resolution_attention.projection.revision',
+    );
   }
   assertFrontier(
     truth.execution_attempt_unsealed_count,

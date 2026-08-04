@@ -31,6 +31,7 @@ const { handleClick, visible } = useBackTop(props);
   <transition name="fade-down">
     <VbenButton
       v-if="visible"
+      :aria-label="props.ariaLabel"
       :style="backTopStyle"
       class="data z-popup bg-background shadow-float hover:bg-heavy dark:bg-accent dark:hover:bg-heavy fixed bottom-10 size-10 rounded-full duration-500"
       size="icon"

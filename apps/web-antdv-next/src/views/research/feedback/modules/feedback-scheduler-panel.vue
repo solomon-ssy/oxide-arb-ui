@@ -38,15 +38,34 @@ const orderedItems = computed(() =>
   ),
 );
 
-function schedulerState(state: FeedbackSchedulerStateView) {
-  if (state.paused) {
-    return 'paused';
-  }
-  if (state.last_error !== null) {
-    return 'retrying';
+type SchedulerDisplayState =
+  | 'leased'
+  | 'paused'
+  | 'pending'
+  | 'retrying'
+  | 'scheduled'
+  | 'settlement_failed';
+
+function schedulerState(
+  state: FeedbackSchedulerStateView,
+): SchedulerDisplayState {
+  if (
+    state.last_failure_kind === 'settlement' ||
+    state.last_settlement_error !== null
+  ) {
+    return 'settlement_failed';
   }
   if (state.lease_owner !== null) {
     return 'leased';
+  }
+  if (state.retry_at !== null || state.last_error !== null) {
+    return 'retrying';
+  }
+  if (state.pending_cutoff !== null) {
+    return 'pending';
+  }
+  if (state.paused) {
+    return 'paused';
   }
   return 'scheduled';
 }
@@ -59,11 +78,17 @@ function stateColor(state: FeedbackSchedulerStateView) {
     case 'paused': {
       return 'warning';
     }
+    case 'pending': {
+      return 'cyan';
+    }
     case 'retrying': {
       return 'error';
     }
     case 'scheduled': {
       return 'success';
+    }
+    case 'settlement_failed': {
+      return 'error';
     }
   }
 }
@@ -140,6 +165,24 @@ function formatDuration(seconds: number) {
             {{ formatDateTimeLocal(state.next_due_at) }}
           </DescriptionsItem>
           <DescriptionsItem
+            :label="$t('page.research.feedback.scheduler.pendingCutoff')"
+          >
+            {{
+              state.pending_cutoff
+                ? formatDateTimeLocal(state.pending_cutoff)
+                : $t('page.research.feedback.detail.notObserved')
+            }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.scheduler.pendingStarted')"
+          >
+            {{
+              state.pending_started_at
+                ? formatDateTimeLocal(state.pending_started_at)
+                : $t('page.research.feedback.detail.notObserved')
+            }}
+          </DescriptionsItem>
+          <DescriptionsItem
             :label="$t('page.research.feedback.scheduler.cooldownUntil')"
           >
             {{
@@ -178,7 +221,16 @@ function formatDuration(seconds: number) {
           >
             {{
               state.retry_at
-                ? `${formatDateTimeLocal(state.retry_at)} · #${state.attempt}`
+                ? `${formatDateTimeLocal(state.retry_at)} · ${state.last_failure_kind ?? 'unknown'} · #${state.attempt}`
+                : $t('page.research.feedback.detail.notObserved')
+            }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.scheduler.lastCutoff')"
+          >
+            {{
+              state.last_cutoff
+                ? formatDateTimeLocal(state.last_cutoff)
                 : $t('page.research.feedback.detail.notObserved')
             }}
           </DescriptionsItem>
@@ -193,6 +245,29 @@ function formatDuration(seconds: number) {
             </span>
           </DescriptionsItem>
           <DescriptionsItem
+            :label="$t('page.research.feedback.scheduler.coalescedGaps')"
+          >
+            {{ state.coalesced_gap_count }}
+            <span
+              v-if="state.last_coalesced_from && state.last_coalesced_to"
+              class="block text-xs text-muted-foreground"
+            >
+              {{ formatDateTimeLocal(state.last_coalesced_from) }} →
+              {{ formatDateTimeLocal(state.last_coalesced_to) }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.research.feedback.scheduler.settlementFailures')"
+          >
+            {{ state.settlement_failure_count }}
+            <span
+              v-if="state.last_settlement_failed_at"
+              class="block text-xs text-muted-foreground"
+            >
+              {{ formatDateTimeLocal(state.last_settlement_failed_at) }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
             :label="$t('page.research.feedback.scheduler.pauseRevision')"
           >
             {{ state.pause_revision }}
@@ -203,6 +278,13 @@ function formatDuration(seconds: number) {
             span="filled"
           >
             {{ state.last_error }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            v-if="state.last_settlement_error"
+            :label="$t('page.research.feedback.scheduler.settlementError')"
+            span="filled"
+          >
+            {{ state.last_settlement_error }}
           </DescriptionsItem>
           <DescriptionsItem
             v-if="state.pause_note"

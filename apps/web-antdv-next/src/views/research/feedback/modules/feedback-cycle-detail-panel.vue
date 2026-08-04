@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type {
   DatasetCohortCounts,
+  FeedbackCandidateReadyView,
   FeedbackCycleDetailView,
   FeedbackDriftAssessment,
   FeedbackStageEventKind,
@@ -10,9 +11,10 @@ import type { FeedbackCycleOutcomeState } from './feedback-cycle-detail-state';
 
 import { computed } from 'vue';
 
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+import { breakpointsTailwind, useBreakpoints, useNow } from '@vueuse/core';
 import {
   Alert,
+  Button,
   Card,
   Collapse,
   CollapsePanel,
@@ -29,15 +31,35 @@ import {
   formatPercent,
 } from '#/shared/components/format';
 
-import { gateStatusColor } from '../../shared/quality-gate';
+import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
 import { feedbackCycleOutcomeState } from './feedback-cycle-detail-state';
 
 const props = defineProps<{
+  canReject: boolean;
   detail: FeedbackCycleDetailView;
+  rejectPending: boolean;
+}>();
+
+const emit = defineEmits<{
+  reject: [candidate: FeedbackCandidateReadyView];
 }>();
 
 const outcome = computed(() => feedbackCycleOutcomeState(props.detail.cycle));
 const candidateReady = computed(() => props.detail.candidate_ready);
+const clockNow = useNow({ interval: 1000 });
+const shadowBindingActive = computed(
+  () => candidateReady.value?.route_diff.shadow_binding_status === 'active',
+);
+const shadowBindingAgeSecs = computed(() => {
+  const boundAt = candidateReady.value?.route_diff.shadow_bound_at;
+  if (boundAt === undefined) {
+    return null;
+  }
+  const timestamp = Date.parse(boundAt);
+  return Number.isFinite(timestamp)
+    ? Math.max(0, Math.floor((clockNow.value.getTime() - timestamp) / 1000))
+    : null;
+});
 const usesWideDescriptionLayout =
   useBreakpoints(breakpointsTailwind).greaterOrEqual('md');
 const descriptionColumn = computed(() =>
@@ -71,7 +93,8 @@ const cohorts = computed(() => {
 function outcomeColor(value: FeedbackCycleOutcomeState) {
   switch (value) {
     case 'cancelled':
-    case 'failed': {
+    case 'failed':
+    case 'quarantined': {
       return 'error';
     }
     case 'candidate_ready': {
@@ -93,7 +116,8 @@ function outcomeColor(value: FeedbackCycleOutcomeState) {
 function outcomeLabel(value: FeedbackCycleOutcomeState) {
   switch (value) {
     case 'cancelled':
-    case 'failed': {
+    case 'failed':
+    case 'quarantined': {
       return $t(`page.research.feedback.status.${value}`);
     }
     case 'pending': {
@@ -141,12 +165,6 @@ function driftColor(assessment: FeedbackDriftAssessment) {
     }
   }
 }
-
-function gateStatusLabel(status: string) {
-  return $t(
-    `page.research.feedback.detail.candidateReady.gateStatus.${status}`,
-  );
-}
 </script>
 
 <template>
@@ -161,19 +179,47 @@ function gateStatusLabel(status: string) {
         </h2>
       </template>
       <template #extra>
-        <Tag color="success">
-          {{ $t('page.research.feedback.detail.candidateReady.ready') }}
-        </Tag>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <Tag :color="shadowBindingActive ? 'success' : 'default'">
+            {{
+              shadowBindingActive
+                ? $t('page.research.feedback.detail.candidateReady.ready')
+                : $t(
+                    `page.research.feedback.detail.candidateReady.route.bindingStatus.${candidateReady.route_diff.shadow_binding_status}`,
+                  )
+            }}
+          </Tag>
+          <Button
+            v-if="canReject && shadowBindingActive"
+            data-testid="feedback-shadow-reject"
+            danger
+            :loading="rejectPending"
+            size="small"
+            @click="emit('reject', candidateReady)"
+          >
+            {{ $t('page.research.feedback.actions.shadowReject.button') }}
+          </Button>
+        </div>
       </template>
 
       <Alert
         :description="
-          $t('page.research.feedback.detail.candidateReady.description')
+          $t(
+            shadowBindingActive
+              ? 'page.research.feedback.detail.candidateReady.description'
+              : 'page.research.feedback.detail.candidateReady.historicalDescription',
+          )
         "
-        :message="$t('page.research.feedback.detail.candidateReady.noBlockers')"
+        :message="
+          shadowBindingActive
+            ? $t('page.research.feedback.detail.candidateReady.noBlockers')
+            : $t(
+                'page.research.feedback.detail.candidateReady.route.bindingTerminal',
+              )
+        "
         class="mb-4"
         show-icon
-        type="success"
+        :type="shadowBindingActive ? 'success' : 'info'"
       />
 
       <div class="grid min-w-0 gap-4 xl:grid-cols-2">
@@ -182,6 +228,26 @@ function gateStatusLabel(status: string) {
             {{ $t('page.research.feedback.detail.candidateReady.route.title') }}
           </h3>
           <Descriptions :column="1" size="small">
+            <DescriptionsItem
+              :label="
+                $t('page.research.feedback.detail.candidateReady.route.route')
+              "
+            >
+              <span class="font-mono text-xs">
+                {{ candidateReady.route_diff.route }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.route.bindingId',
+                )
+              "
+            >
+              <span class="break-all font-mono text-xs">
+                {{ candidateReady.route_diff.shadow_binding_id }}
+              </span>
+            </DescriptionsItem>
             <DescriptionsItem
               :label="
                 $t('page.research.feedback.detail.candidateReady.route.models')
@@ -193,6 +259,57 @@ function gateStatusLabel(status: string) {
               <span aria-hidden="true" class="mx-2">→</span>
               <span class="break-all font-mono text-xs">
                 {{ candidateReady.route_diff.candidate_model_version_id }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.route.bindingAge',
+                )
+              "
+            >
+              {{
+                formatDateTimeLocal(candidateReady.route_diff.shadow_bound_at)
+              }}
+              <span v-if="shadowBindingAgeSecs !== null">
+                · {{ shadowBindingAgeSecs }}
+                {{ $t('page.research.feedback.detail.candidateReady.seconds') }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.route.bindingGeneration',
+                )
+              "
+            >
+              <span class="font-mono tabular-nums">
+                {{ candidateReady.route_diff.shadow_binding_generation }} /
+                {{ candidateReady.route_diff.shadow_lifecycle_generation }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.feedback.detail.candidateReady.route.bindingStatusLabel',
+                )
+              "
+            >
+              <Tag :color="shadowBindingActive ? 'success' : 'default'">
+                {{
+                  $t(
+                    `page.research.feedback.detail.candidateReady.route.bindingStatus.${candidateReady.route_diff.shadow_binding_status}`,
+                  )
+                }}
+              </Tag>
+              <span
+                v-if="
+                  candidateReady.route_diff.shadow_termination_reason_code !==
+                  null
+                "
+                class="ml-2 font-mono text-xs"
+              >
+                {{ candidateReady.route_diff.shadow_termination_reason_code }}
               </span>
             </DescriptionsItem>
             <DescriptionsItem
@@ -313,19 +430,26 @@ function gateStatusLabel(status: string) {
                 $t('page.research.feedback.detail.candidateReady.shadow.window')
               "
             >
-              {{ candidateReady.shadow.observed_window_secs }} /
+              {{ candidateReady.shadow.served_window_secs }} /
               {{ candidateReady.shadow.required_window_secs }}
               {{ $t('page.research.feedback.detail.candidateReady.seconds') }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="
                 $t(
-                  'page.research.feedback.detail.candidateReady.shadow.overlap',
+                  'page.research.feedback.detail.candidateReady.shadow.decisionOverlap',
                 )
               "
             >
-              {{ formatPercent(candidateReady.shadow.mean_topn_overlap) }} /
-              {{ formatPercent(candidateReady.shadow.minimum_topn_overlap) }}
+              {{
+                formatPercent(candidateReady.shadow.mean_topn_decision_overlap)
+              }}
+              /
+              {{
+                formatPercent(
+                  candidateReady.shadow.minimum_topn_decision_overlap,
+                )
+              }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="
@@ -392,24 +516,43 @@ function gateStatusLabel(status: string) {
               <dt class="text-muted-foreground">
                 {{
                   $t(
-                    'page.research.feedback.detail.candidateReady.attribution.counterfactuals',
+                    'page.research.feedback.detail.candidateReady.attribution.interventionReplays',
                   )
                 }}
               </dt>
               <dd class="font-mono tabular-nums">
-                {{ candidateReady.attribution.decision_counterfactual_count }}
+                {{
+                  candidateReady.attribution.decision_intervention_replay_count
+                }}
               </dd>
             </div>
             <div>
               <dt class="text-muted-foreground">
                 {{
                   $t(
-                    'page.research.feedback.detail.candidateReady.attribution.associations',
+                    'page.research.feedback.detail.candidateReady.attribution.resolutionAssociations',
                   )
                 }}
               </dt>
               <dd class="font-mono tabular-nums">
-                {{ candidateReady.attribution.outcome_association_count }}
+                {{
+                  candidateReady.attribution
+                    .resolution_outcome_association_count
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-muted-foreground">
+                {{
+                  $t(
+                    'page.research.feedback.detail.candidateReady.attribution.executionAssociations',
+                  )
+                }}
+              </dt>
+              <dd class="font-mono tabular-nums">
+                {{
+                  candidateReady.attribution.execution_outcome_association_count
+                }}
               </dd>
             </div>
             <div>
@@ -441,61 +584,12 @@ function gateStatusLabel(status: string) {
       </div>
 
       <section class="mt-4 min-w-0 rounded-md border p-3">
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-sm font-semibold">
-            {{
-              $t(
-                'page.research.feedback.detail.candidateReady.qualityGate.title',
-              )
-            }}
-          </h3>
-          <Tag color="success">
-            {{
-              $t(
-                'page.research.feedback.detail.candidateReady.qualityGate.passed',
-              )
-            }}
-          </Tag>
-        </div>
-        <div class="grid min-w-0 gap-2 lg:grid-cols-2">
-          <article
-            v-for="gate in candidateReady.quality_gate.gates"
-            :key="gate.gate"
-            class="min-w-0 rounded border p-2"
-          >
-            <div class="flex flex-wrap items-start justify-between gap-2">
-              <span class="break-all font-mono text-xs">{{ gate.gate }}</span>
-              <Tag :color="gateStatusColor(gate.status)">
-                {{ gateStatusLabel(gate.status) }}
-              </Tag>
-            </div>
-            <dl class="mt-2 grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <dt class="text-muted-foreground">
-                  {{
-                    $t(
-                      'page.research.feedback.detail.candidateReady.qualityGate.observed',
-                    )
-                  }}
-                </dt>
-                <dd class="break-all font-mono">{{ gate.observed }}</dd>
-              </div>
-              <div>
-                <dt class="text-muted-foreground">
-                  {{
-                    $t(
-                      'page.research.feedback.detail.candidateReady.qualityGate.threshold',
-                    )
-                  }}
-                </dt>
-                <dd class="break-all font-mono">{{ gate.threshold }}</dd>
-              </div>
-            </dl>
-            <p v-if="gate.detail" class="mt-2 text-xs text-muted-foreground">
-              {{ gate.detail }}
-            </p>
-          </article>
-        </div>
+        <h3 class="mb-3 text-sm font-semibold">
+          {{
+            $t('page.research.feedback.detail.candidateReady.qualityGate.title')
+          }}
+        </h3>
+        <QualityGateScorecard :report="candidateReady.quality_gate" />
       </section>
 
       <Collapse class="mt-4" ghost>
@@ -581,17 +675,27 @@ function gateStatusLabel(status: string) {
           </span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.research.feedback.detail.audit.capabilityHashes')"
+          :label="$t('page.research.feedback.detail.audit.route')"
         >
-          <ul class="min-w-0 space-y-1">
-            <li
-              v-for="hash in detail.cycle.capability_registry_hashes"
-              :key="hash"
-              class="break-all font-mono text-xs"
-            >
-              {{ hash }}
-            </li>
-          </ul>
+          <span class="font-mono text-xs">
+            {{ detail.cycle.route }} /
+            {{ detail.cycle.champion_model_family }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.feedback.detail.audit.policyGeneration')"
+        >
+          <span class="font-mono tabular-nums">
+            {{ detail.cycle.policy_bundle_generation }} /
+            {{ detail.cycle.route_generation }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.research.feedback.detail.audit.evaluationMode')"
+        >
+          <span class="font-mono text-xs">
+            {{ detail.cycle.evaluation_mode }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.trigger')"
@@ -641,10 +745,11 @@ function gateStatusLabel(status: string) {
           </span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.research.feedback.detail.audit.familyHash')"
+          :label="$t('page.research.feedback.detail.audit.modelSpec')"
         >
           <span class="break-all font-mono text-xs">
-            {{ detail.cycle.candidate_family_hash }}
+            {{ detail.cycle.champion_model_spec_id }} /
+            {{ detail.cycle.champion_model_spec_definition_hash }}
           </span>
         </DescriptionsItem>
         <DescriptionsItem

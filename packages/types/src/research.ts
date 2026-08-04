@@ -770,10 +770,12 @@ export interface SharpeDistribution {
   median: DecimalString;
   p75: DecimalString;
   max: DecimalString;
-  /** Sell CPCV: median calendarized max drawdown across φ paths. */
+  /** Median OOS max drawdown across complete CPCV paths. */
   median_max_drawdown?: DecimalString | null;
-  /** Sell CPCV: median calendarized tail loss (fractional return). */
+  /** Median worst-quantile mean OOS return across complete CPCV paths. */
   median_tail_loss?: DecimalString | null;
+  /** Median OOS one-sided portfolio turnover across complete CPCV paths. */
+  median_turnover?: DecimalString | null;
   /** Sell CPCV: median model calendar return − exit-at-first baseline. */
   baseline_uplift?: DecimalString | null;
 }
@@ -884,9 +886,9 @@ export type GatePreviewIntent =
  * this; an unknown id degrades to the raw string.
  */
 export type GateId =
-  | 'backtest_required'
   | 'calibration_required'
   | 'category_concentration'
+  | 'cpcv_path_count'
   | 'cpcv_required'
   | 'deflated_sharpe'
   | 'explainability_required'
@@ -903,9 +905,10 @@ export type GateId =
   | 'sell_baseline_uplift'
   | 'sell_fallback_ratio'
   | 'sell_l2_book_fidelity'
-  | 'shadow_overlap_stability'
+  | 'shadow_decision_overlap'
   | 'tail_loss_budget'
-  | 'turnover_budget';
+  | 'turnover_budget'
+  | 'validation_evidence_required';
 
 /** One evaluated gate row — the self-describing scorecard entry. */
 export interface GateOutcome {
@@ -949,10 +952,12 @@ export interface ResearchJobProgress {
 export type ResearchJobErrorCode =
   | 'cancelled'
   | 'execution_failed'
+  | 'execution_retry_exhausted'
+  | 'execution_retry_scheduled'
   | 'interrupted_by_restart'
   | 'interrupted_exceeded_attempts';
 
-/** Structured failure payload recorded on a terminal `failed` job. */
+/** Structured terminal failure or active retry diagnostic. */
 export interface ResearchJobError {
   code: ResearchJobErrorCode;
   message: string;
@@ -983,9 +988,10 @@ export interface ResearchJobView {
   requested_by?: null | string;
   acting_role: string;
   parent_job_id?: null | UuidString;
-  /** Automatic crash-recovery re-queues so far. */
+  /** Automatic interruption/transient-execution retries so far. */
   recovery_attempt: number;
   max_recovery_attempts: number;
+  next_attempt_at?: IsoDateTime | null;
   lease_expires_at?: IsoDateTime | null;
   started_at?: IsoDateTime | null;
   finished_at?: IsoDateTime | null;

@@ -13,6 +13,8 @@
   "error": {
     "actingRoleForbidden": "You cannot perform this governed action under the selected role",
     "actingRoleRequired": "Select an acting role",
+    "inlineSummary": "The governed action was not applied",
+    "mutationFailed": "The governed action failed. Review the error and retry with the preserved inputs.",
     "reasonTooShort": "Governance reason must be at least 4 characters"
   }
 }

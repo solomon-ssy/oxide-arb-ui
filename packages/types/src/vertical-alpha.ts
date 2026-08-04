@@ -395,7 +395,23 @@ export type DomainSourceExpectationStatus =
 
 export type DomainCursorStatus = 'backfilling' | 'bootstrap' | 'error' | 'live';
 
-/** Expected binding plus nullable observed cursor (`GET /research/domain-sources`). */
+export type DomainSourceSnapshotStatus =
+  | 'blocked'
+  | 'declared'
+  | 'live'
+  | 'stale'
+  | 'unobserved';
+
+export interface DomainSourceFamilySummary {
+  blocked: number;
+  declared: number;
+  live: number;
+  stale: number;
+  unobserved: number;
+  worst_lag_secs: null | number;
+}
+
+/** Expected binding plus nullable observed cursor in a domain-source snapshot. */
 export interface DomainSourceExpectationView {
   expectation_id: string;
   family: 'crypto' | 'weather';
@@ -408,6 +424,7 @@ export interface DomainSourceExpectationView {
   freshness_secs: number;
   affected_market_ids: string[];
   affected_profile_ids: string[];
+  snapshot_status: DomainSourceSnapshotStatus;
   status: DomainSourceExpectationStatus;
   status_reason: null | string;
   cursor_status: DomainCursorStatus | null;
@@ -418,7 +435,13 @@ export interface DomainSourceExpectationView {
   /** `null` means no observed cursor and must never be rendered as zero. */
   lag_secs: null | number;
   cursor_updated_at: IsoDateTime | null;
+}
+
+/** Server-derived point-in-time health projection (`GET /research/domain-sources`). */
+export interface DomainSourcesSnapshot {
+  items: DomainSourceExpectationView[];
   observed_at: IsoDateTime;
+  summary_by_family: Record<'crypto' | 'weather', DomainSourceFamilySummary>;
 }
 
 // ── Basis cross-check alerts (11.2.2 remediation R6) ────────────────────────

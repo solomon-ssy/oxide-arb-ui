@@ -9,6 +9,7 @@ export type FeedbackCycleOutcomeState =
   | 'cancelled'
   | 'failed'
   | 'pending'
+  | 'quarantined'
   | FeedbackDecision;
 
 const knownDecisions = new Set<FeedbackDecision>([
@@ -19,7 +20,7 @@ const knownDecisions = new Set<FeedbackDecision>([
 ]);
 
 const knownStages = new Set([
-  'attribution_plan',
+  'attribution',
   'calibration',
   'comparison',
   'coverage',
@@ -27,7 +28,9 @@ const knownStages = new Set([
   'dataset_seal',
   'decision',
   'drift',
+  'recipe_plan',
   'shadow',
+  'shadow_bind',
   'training',
   'trigger',
   'truth_freeze',
@@ -100,6 +103,9 @@ export function feedbackCycleOutcomeState(
     case 'failed': {
       return 'failed';
     }
+    case 'quarantined': {
+      return 'quarantined';
+    }
     case 'queued':
     case 'running': {
       return 'pending';
@@ -123,6 +129,46 @@ export function validateFeedbackCycleDetail(
   }
   assertCount(detail.cycle.generation, 'cycle.generation');
   feedbackCycleOutcomeState(detail.cycle);
+  const receipt = detail.activation_receipt;
+  if (detail.cycle.decision === 'promoted') {
+    if (
+      receipt === null ||
+      receipt.feedback_cycle_id !== expectedCycleId ||
+      receipt.route !== detail.cycle.route ||
+      receipt.previous_model_version_id !==
+        detail.cycle.champion_model_version_id ||
+      receipt.rollback_target.route !== detail.cycle.route ||
+      receipt.rollback_target.activated_model_version_id !==
+        receipt.activated_model_version_id ||
+      receipt.rollback_target.restored_model_version_id !==
+        receipt.previous_model_version_id ||
+      !receipt.rollback_target.shadow_cleared
+    ) {
+      throw new TypeError(
+        'promoted feedback cycle requires its exact activation receipt',
+      );
+    }
+    assertCount(
+      receipt.previous_route_generation,
+      'activation_receipt.previous_route_generation',
+    );
+    assertCount(
+      receipt.activated_route_generation,
+      'activation_receipt.activated_route_generation',
+    );
+    if (
+      receipt.activated_route_generation !==
+      receipt.previous_route_generation + 1
+    ) {
+      throw new TypeError(
+        'activation receipt route generation is not monotonic',
+      );
+    }
+  } else if (receipt !== null) {
+    throw new TypeError(
+      'only a promoted feedback cycle may carry an activation receipt',
+    );
+  }
 
   let previousSequence = 0;
   for (const event of detail.timeline) {
@@ -217,10 +263,13 @@ export function validateFeedbackCycleDetail(
   }
 
   const candidateReady = detail.candidate_ready;
-  if (detail.cycle.decision === 'candidate_ready') {
+  if (
+    detail.cycle.decision === 'candidate_ready' ||
+    detail.cycle.decision === 'promoted'
+  ) {
     if (candidateReady === null) {
       throw new TypeError(
-        'candidate-ready cycle requires a decision scorecard',
+        'candidate-ready or promoted cycle requires its decision scorecard',
       );
     }
     assertCount(
@@ -236,8 +285,8 @@ export function validateFeedbackCycleDetail(
       'candidate_ready.shadow.required',
     );
     assertCount(
-      candidateReady.shadow.observed_window_secs,
-      'candidate_ready.shadow.observed_window_secs',
+      candidateReady.shadow.served_window_secs,
+      'candidate_ready.shadow.served_window_secs',
     );
     assertCount(
       candidateReady.shadow.required_window_secs,
@@ -260,11 +309,23 @@ export function validateFeedbackCycleDetail(
     ) {
       throw new TypeError('candidate-ready decision evidence is inconsistent');
     }
+    if (
+      detail.cycle.decision === 'promoted' &&
+      (receipt === null ||
+        candidateReady.route_diff.shadow_binding_status !== 'promoted' ||
+        candidateReady.route_diff.shadow_termination_policy_activation_id !==
+          receipt.policy_activation_id)
+    ) {
+      throw new TypeError(
+        'promoted scorecard and activation receipt lifecycle differ',
+      );
+    }
     for (const field of [
       'prior_cycle_use_count',
       'prediction_explanation_count',
-      'decision_counterfactual_count',
-      'outcome_association_count',
+      'decision_intervention_replay_count',
+      'resolution_outcome_association_count',
+      'execution_outcome_association_count',
       'execution_trajectory_count',
       'policy_counterfactual_count',
     ] as const) {
@@ -274,6 +335,8 @@ export function validateFeedbackCycleDetail(
       );
     }
   } else if (candidateReady !== null) {
-    throw new TypeError('non-candidate-ready cycle cannot carry a scorecard');
+    throw new TypeError(
+      'cycle without candidate evidence cannot carry a scorecard',
+    );
   }
 }

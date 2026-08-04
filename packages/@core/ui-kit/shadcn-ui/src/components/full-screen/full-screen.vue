@@ -7,6 +7,11 @@ import { VbenIconButton } from '../button';
 
 defineOptions({ name: 'FullScreen' });
 
+defineProps<{
+  enterLabel: string;
+  exitLabel: string;
+}>();
+
 const { isFullscreen, toggle } = useFullscreen();
 
 // 重新检查全屏状态
@@ -22,6 +27,8 @@ isFullscreen.value = !!(
 </script>
 <template>
   <VbenIconButton
+    :aria-label="isFullscreen ? exitLabel : enterLabel"
+    :tooltip="isFullscreen ? exitLabel : enterLabel"
     class="hover:animate-[shrink_0.3s_ease-in-out]"
     @click="toggle"
   >

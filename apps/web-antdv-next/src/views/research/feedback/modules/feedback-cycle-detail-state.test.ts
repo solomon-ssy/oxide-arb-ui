@@ -18,9 +18,6 @@ function cycle(
 ): FeedbackCycleView {
   return {
     cancel_requested_at: status === 'cancelled' ? '2026-07-01T00:02:00Z' : null,
-    candidate_family: {},
-    candidate_family_hash: 'blake3:candidate-family',
-    capability_registry_hashes: ['blake3:capability'],
     champion_model_version_id: '00000000-0000-0000-0000-000000000101',
     champion_serving_contract_hash: 'blake3:champion',
     completed_at:
@@ -35,6 +32,17 @@ function cycle(
     idempotency_hash: 'blake3:idempotency',
     label_cutoff: '2026-07-01T00:00:00Z',
     lease_expires_at: status === 'running' ? '2026-07-01T00:04:00Z' : null,
+    champion_model_family: 'classical_gradient_boosted_trees',
+    champion_model_spec_definition_hash: 'blake3:model-spec',
+    champion_model_spec_id: '00000000-0000-0000-0000-000000000501',
+    route: 'crypto',
+    route_generation: 4,
+    policy_bundle_generation: 4,
+    decision_policy_snapshot_hash: 'blake3:policy-snapshot',
+    decision_policy_snapshot_id: '00000000-0000-0000-0000-000000000601',
+    evaluation_mode: 'conditional',
+    parent_cycle_id: null,
+    forced_idempotency_key: null,
     profile_ref: {
       content_hash: 'blake3:profile',
       id: 'crypto_price_15m',
@@ -54,6 +62,7 @@ function cycle(
 function detail(): FeedbackCycleDetailView {
   const cycleView = cycle('succeeded', 'no_action');
   return {
+    activation_receipt: null,
     candidate_ready: null,
     coverage: null,
     cycle: cycleView,
@@ -95,14 +104,51 @@ function detail(): FeedbackCycleDetailView {
   };
 }
 
+function activationReceipt(
+  cycleView: FeedbackCycleView,
+): NonNullable<FeedbackCycleDetailView['activation_receipt']> {
+  return {
+    activated_by_role: 'operator',
+    activated_by_user_id: '00000000-0000-0000-0000-000000000201',
+    activated_by_username: 'operator',
+    activated_model_routing_revision_id: '00000000-0000-0000-0000-000000000501',
+    activated_model_version_id: '00000000-0000-0000-0000-000000000102',
+    activated_route_generation: 5,
+    audit_event_id: '00000000-0000-0000-0000-000000000601',
+    execution_authority_unchanged: true,
+    feedback_cycle_id: cycleView.feedback_cycle_id,
+    model_governance_audit_id: '00000000-0000-0000-0000-000000000602',
+    outbox_event_id: '00000000-0000-0000-0000-000000000601',
+    permit_issued_by_role: 'operator',
+    permit_issued_by_user_id: '00000000-0000-0000-0000-000000000201',
+    permit_issued_by_username: 'operator',
+    policy_activation_id: '00000000-0000-0000-0000-000000000603',
+    previous_model_version_id: cycleView.champion_model_version_id,
+    previous_route_generation: 4,
+    promotion_permit_id: '00000000-0000-0000-0000-000000000604',
+    rollback_target: {
+      activated_model_version_id: '00000000-0000-0000-0000-000000000102',
+      restored_model_version_id: cycleView.champion_model_version_id,
+      rollback_target_revision_hash: 'blake3:rollback',
+      rollback_target_revision_id: '00000000-0000-0000-0000-000000000502',
+      route: cycleView.route,
+      shadow_cleared: true,
+    },
+    route: cycleView.route,
+    server_timestamp: '2026-07-01T00:06:00Z',
+    transaction_hash: 'blake3:transaction',
+  };
+}
+
 function candidateReady(): NonNullable<
   FeedbackCycleDetailView['candidate_ready']
 > {
   return {
     attribution: {
-      decision_counterfactual_count: 4,
+      decision_intervention_replay_count: 4,
       execution_trajectory_count: 3,
-      outcome_association_count: 1,
+      resolution_outcome_association_count: 1,
+      execution_outcome_association_count: 1,
       policy_counterfactual_count: 3,
       prediction_explanation_count: 4,
       prior_cycle_use_count: 2,
@@ -136,16 +182,26 @@ function candidateReady(): NonNullable<
     route_diff: {
       candidate_model_version_id: '00000000-0000-0000-0000-000000000102',
       champion_model_version_id: '00000000-0000-0000-0000-000000000101',
+      current_policy_generation: 5,
       current_route_generation: 4,
       execution_authority_unchanged: true,
       proposed_route_generation: 5,
+      route: 'crypto',
+      shadow_binding_generation: 4,
+      shadow_binding_id: '00000000-0000-0000-0000-000000000701',
+      shadow_binding_status: 'active',
+      shadow_bound_at: '2026-07-01T00:03:00Z',
+      shadow_lifecycle_generation: 0,
+      shadow_terminated_at: null,
+      shadow_termination_policy_activation_id: null,
+      shadow_termination_reason_code: null,
     },
     shadow: {
       any_hard_divergence: false,
-      mean_topn_overlap: '0.9',
-      minimum_topn_overlap: '0.8',
+      mean_topn_decision_overlap: '0.9',
+      minimum_topn_decision_overlap: '0.8',
       observed: 120,
-      observed_window_secs: 259_200,
+      served_window_secs: 259_200,
       required: 100,
       required_window_secs: 259_200,
     },
@@ -167,6 +223,7 @@ describe('feedback cycle detail state', () => {
   it.each([
     ['failed', 'failed'],
     ['cancelled', 'cancelled'],
+    ['quarantined', 'quarantined'],
   ] as const)(
     'keeps %s distinct from business decisions',
     (status, expected) => {
@@ -211,6 +268,28 @@ describe('feedback cycle detail state', () => {
     expect(() =>
       validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
     ).not.toThrow();
+  });
+
+  it('requires an exact activation receipt for a promoted cycle', () => {
+    const snapshot = detail();
+    snapshot.cycle = cycle('succeeded', 'promoted');
+    expect(() =>
+      validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
+    ).toThrowError(TypeError);
+
+    snapshot.activation_receipt = activationReceipt(snapshot.cycle);
+    snapshot.candidate_ready = candidateReady();
+    snapshot.candidate_ready.route_diff.shadow_binding_status = 'promoted';
+    snapshot.candidate_ready.route_diff.shadow_termination_policy_activation_id =
+      snapshot.activation_receipt.policy_activation_id;
+    expect(() =>
+      validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
+    ).not.toThrow();
+
+    snapshot.activation_receipt.rollback_target.shadow_cleared = false;
+    expect(() =>
+      validateFeedbackCycleDetail(snapshot, snapshot.cycle.feedback_cycle_id),
+    ).toThrowError(TypeError);
   });
 
   it('rejects a CandidateReady route diff that mutates protected authority', () => {

@@ -74,6 +74,8 @@ function createQpWs(): QpWsApi {
 
     const desired = ref(false);
     const socketState = ref<'CLOSED' | 'CONNECTING' | 'OPEN'>('CLOSED');
+    const connectionAttemptFailed = ref(false);
+    const networkOnline = ref(navigator.onLine);
     const marketRefCounts = new Map<MarketId, number>();
     const notifications = ref<NotificationItem[]>([]);
     const alertToastLastSeen = new Map<string, number>();
@@ -83,6 +85,7 @@ function createQpWs(): QpWsApi {
     let heartbeatTimer: null | ReturnType<typeof setInterval> = null;
     let pongTimeout: null | ReturnType<typeof setTimeout> = null;
     let generation = 0;
+    let hasConnected = false;
     let reconnectAttempts = 0;
     let notificationSeq = 0;
     let networkListenersRegistered = false;
@@ -253,7 +256,7 @@ function createQpWs(): QpWsApi {
     }
 
     function scheduleReconnect() {
-      if (!desired.value || !navigator.onLine || reconnectTimer !== null) {
+      if (!desired.value || !networkOnline.value || reconnectTimer !== null) {
         return;
       }
       const delay = withJitter(reconnectBackoffMs(reconnectAttempts));
@@ -268,7 +271,7 @@ function createQpWs(): QpWsApi {
       if (
         !desired.value ||
         !accessStore.accessToken ||
-        !navigator.onLine ||
+        !networkOnline.value ||
         socketState.value !== 'CLOSED'
       ) {
         return;
@@ -277,12 +280,15 @@ function createQpWs(): QpWsApi {
       const attemptGeneration = ++generation;
       socketState.value = 'CONNECTING';
       try {
-        if (feedbackStore.recoveryRequired) {
+        if (
+          !feedbackStore.cursorInitialized ||
+          feedbackStore.recoveryRequired
+        ) {
           const { revision } = await getFeedbackRevisionApi();
           if (!desired.value || attemptGeneration !== generation) {
             return;
           }
-          if (!feedbackStore.reconcileRevision(revision)) {
+          if (!feedbackStore.adoptAuthoritativeRevision(revision)) {
             throw new Error('authoritative feedback revision was rejected');
           }
         }
@@ -301,6 +307,8 @@ function createQpWs(): QpWsApi {
             ws.close(1000, 'connection no longer desired');
             return;
           }
+          hasConnected = true;
+          connectionAttemptFailed.value = false;
           socketState.value = 'OPEN';
           reconnectAttempts = 0;
           startHeartbeat(ws);
@@ -313,6 +321,9 @@ function createQpWs(): QpWsApi {
             return;
           }
           socket = null;
+          if (!hasConnected) {
+            connectionAttemptFailed.value = true;
+          }
           socketState.value = 'CLOSED';
           clearHeartbeat();
           scheduleReconnect();
@@ -321,12 +332,14 @@ function createQpWs(): QpWsApi {
         if (attemptGeneration !== generation) {
           return;
         }
+        connectionAttemptFailed.value = true;
         socketState.value = 'CLOSED';
         scheduleReconnect();
       }
     }
 
     function suspendWhileOffline() {
+      networkOnline.value = false;
       if (!desired.value) {
         return;
       }
@@ -342,7 +355,8 @@ function createQpWs(): QpWsApi {
     }
 
     function reconnectWhenOnline() {
-      if (!desired.value || !navigator.onLine) {
+      networkOnline.value = true;
+      if (!desired.value) {
         return;
       }
       reconnectAttempts = 0;
@@ -372,7 +386,14 @@ function createQpWs(): QpWsApi {
       if (socketState.value === 'OPEN') {
         return 'connected';
       }
-      return desired.value ? 'reconnecting' : 'disconnected';
+      if (!desired.value) {
+        return 'disconnected';
+      }
+      return !networkOnline.value ||
+        hasConnected ||
+        connectionAttemptFailed.value
+        ? 'reconnecting'
+        : 'connecting';
     });
 
     watch(
@@ -383,7 +404,7 @@ function createQpWs(): QpWsApi {
           systemStore.clearActionEligibility();
         }
       },
-      { immediate: true },
+      { flush: 'sync', immediate: true },
     );
     watch(
       () => accessStore.accessToken,
@@ -398,6 +419,7 @@ function createQpWs(): QpWsApi {
       if (!accessStore.accessToken) {
         return;
       }
+      networkOnline.value = navigator.onLine;
       desired.value = true;
       registerNetworkListeners();
       void openSocket();
@@ -405,6 +427,9 @@ function createQpWs(): QpWsApi {
 
     function disconnect() {
       desired.value = false;
+      connectionAttemptFailed.value = false;
+      hasConnected = false;
+      networkOnline.value = navigator.onLine;
       generation += 1;
       reconnectAttempts = 0;
       clearReconnectTimer();

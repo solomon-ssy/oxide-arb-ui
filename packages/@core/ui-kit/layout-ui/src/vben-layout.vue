@@ -573,6 +573,8 @@ const idMainContent = ELEMENT_ID_MAIN_CONTENT;
           <template #toggle-button>
             <VbenIconButton
               v-if="showHeaderToggleButton"
+              :aria-expanded="isMobile ? !sidebarCollapse : undefined"
+              :aria-label="headerToggleSidebarLabel"
               class="my-0 mr-1 rounded-md"
               @click="handleHeaderToggle"
             >

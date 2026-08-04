@@ -3,7 +3,8 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useContentMaximize, useTabs } from '@vben/hooks';
-import { preferences } from '@vben/preferences';
+import { $t } from '@vben/locales';
+import { preferences, usePreferences } from '@vben/preferences';
 import { useTabbarStore } from '@vben/stores';
 
 import {
@@ -23,6 +24,7 @@ defineProps<{ showIcon?: boolean; theme?: string }>();
 
 const route = useRoute();
 const tabbarStore = useTabbarStore();
+const { isMobile } = usePreferences();
 const { contentIsMaximize, toggleMaximize } = useContentMaximize();
 const { refreshTab, unpinTab } = useTabs();
 
@@ -69,13 +71,25 @@ if (!preferences.tabbar.persist) {
     @update:active="handleClick"
   />
   <div class="flex-center h-full">
-    <TabsToolMore v-if="preferences.tabbar.showMore" :menus="menus" />
+    <TabsToolMore
+      v-if="preferences.tabbar.showMore"
+      :aria-label="$t('ui.widgets.tabActions')"
+      :menus="menus"
+    />
     <TabsToolRefresh
-      v-if="preferences.tabbar.showRefresh"
+      v-if="preferences.tabbar.showRefresh && !isMobile"
+      :aria-label="$t('ui.widgets.refreshTab')"
       @refresh="refreshTab"
     />
     <TabsToolScreen
-      v-if="preferences.tabbar.showMaximize"
+      v-if="preferences.tabbar.showMaximize && !isMobile"
+      :aria-label="
+        $t(
+          contentIsMaximize
+            ? 'ui.widgets.restoreContent'
+            : 'ui.widgets.maximizeContent',
+        )
+      "
       :screen="contentIsMaximize"
       @change="toggleMaximize"
       @update:screen="toggleMaximize"

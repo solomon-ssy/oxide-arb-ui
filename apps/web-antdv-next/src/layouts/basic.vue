@@ -143,10 +143,14 @@ watch(
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
     <template #header-right-10>
-      <WsStatusBadge />
+      <div class="hidden md:contents">
+        <WsStatusBadge />
+      </div>
     </template>
     <template #header-right-20>
-      <SystemStatusIndicator />
+      <div class="hidden md:contents">
+        <SystemStatusIndicator />
+      </div>
     </template>
     <template #header-right-25>
       <RuntimeModeIndicator />

@@ -12,6 +12,7 @@
     "build:analyze": "vite build --mode analyze",
     "dev": "vite --mode development",
     "preview": "vite preview",
+    "test": "pnpm --dir ../.. exec vitest --config vitest.config.ts run apps/web-antdv-next/src",
     "typecheck": "vue-tsc --noEmit --skipLibCheck"
   },
   "imports": {

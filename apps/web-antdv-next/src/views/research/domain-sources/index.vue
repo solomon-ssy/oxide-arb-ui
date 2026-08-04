@@ -2,6 +2,8 @@
 import type {
   DomainCursorStatus,
   DomainSourceExpectationView,
+  DomainSourceSnapshotStatus,
+  DomainSourcesSnapshot,
 } from '@vben/types';
 
 import { computed, onMounted, ref } from 'vue';
@@ -9,14 +11,13 @@ import { computed, onMounted, ref } from 'vue';
 import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, Card, Statistic, Tag } from 'antdv-next';
+import { Alert, Button, Card, Statistic, Tag } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { listDomainSources } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
-import { summarizeDomainSources } from './modules/domain-source-presentation';
 import { useDomainSourceColumns } from './modules/schemas/table-columns';
 
 defineOptions({ name: 'ResearchDomainSourcesPage' });
@@ -24,9 +25,9 @@ defineOptions({ name: 'ResearchDomainSourcesPage' });
 const { handleRequest } = useRequestHandler();
 
 const rows = ref<DomainSourceExpectationView[]>([]);
+const snapshot = ref<DomainSourcesSnapshot | null>(null);
 const loadState = ref<'error' | 'idle' | 'loaded' | 'loading'>('idle');
 
-const summary = computed(() => summarizeDomainSources(rows.value));
 const loadAnnouncement = computed(() => {
   switch (loadState.value) {
     case 'error': {
@@ -64,12 +65,16 @@ const [Grid, gridApi] = useVbenVxeGrid<DomainSourceExpectationView>({
       ajax: {
         query: async () => {
           loadState.value = 'loading';
-          const data = await handleRequest(() => listDomainSources());
+          snapshot.value = null;
+          rows.value = [];
+          const data = await handleRequest(() => listDomainSources(), {
+            silent: true,
+          });
           if (data === null) {
-            rows.value = [];
             loadState.value = 'error';
           } else {
-            rows.value = data;
+            snapshot.value = data;
+            rows.value = data.items;
             loadState.value = 'loaded';
           }
           return {
@@ -114,24 +119,108 @@ function cursorStatusColor(status: DomainCursorStatus) {
     }
   }
 }
+
+function snapshotStatusColor(status: DomainSourceSnapshotStatus) {
+  switch (status) {
+    case 'blocked': {
+      return 'error';
+    }
+    case 'declared': {
+      return 'processing';
+    }
+    case 'live': {
+      return 'success';
+    }
+    case 'stale': {
+      return 'warning';
+    }
+    case 'unobserved': {
+      return 'default';
+    }
+  }
+}
 </script>
 
 <template>
-  <Page auto-content-height data-testid="domain-sources-page">
+  <Page
+    :aria-busy="loadState === 'loading'"
+    auto-content-height
+    data-testid="domain-sources-page"
+  >
     <p aria-atomic="true" aria-live="polite" class="sr-only" role="status">
       {{ loadAnnouncement }}
     </p>
-    <div class="mb-4 flex flex-wrap gap-4">
+    <Alert
+      v-if="loadState === 'error'"
+      class="mb-4"
+      :description="$t('page.research.domainSources.loadFailedDescription')"
+      :message="$t('page.research.domainSources.loadFailedAnnouncement')"
+      show-icon
+      type="error"
+    >
+      <template #action>
+        <Button class="min-h-11 min-w-11" type="primary" @click="refresh">
+          {{ $t('page.research.domainSources.retry') }}
+        </Button>
+      </template>
+    </Alert>
+
+    <div v-if="snapshot" class="mb-4 flex flex-wrap gap-4">
       <Card
         size="small"
         :title="$t('page.research.domainSources.cards.crypto')"
       >
         <Statistic
-          :title="$t('page.research.domainSources.cards.activeCursors')"
-          :value="summary.crypto"
+          :title="$t('page.research.domainSources.cards.live')"
+          :value="snapshot.summary_by_family.crypto.live"
         />
-        <div class="mt-2 text-xs text-muted-foreground">
-          {{ $t('page.research.domainSources.cards.cryptoHint') }}
+        <div class="mt-2 flex flex-wrap gap-2">
+          <Tag color="processing">
+            {{
+              $t('page.research.domainSources.cards.declared', {
+                count: snapshot.summary_by_family.crypto.declared,
+              })
+            }}
+          </Tag>
+          <Tag
+            :color="
+              snapshot.summary_by_family.crypto.stale > 0
+                ? 'warning'
+                : 'success'
+            "
+          >
+            {{
+              $t('page.research.domainSources.cards.stale', {
+                count: snapshot.summary_by_family.crypto.stale,
+              })
+            }}
+          </Tag>
+          <Tag
+            :color="
+              snapshot.summary_by_family.crypto.blocked > 0
+                ? 'error'
+                : 'success'
+            "
+          >
+            {{
+              $t('page.research.domainSources.cards.blocked', {
+                count: snapshot.summary_by_family.crypto.blocked,
+              })
+            }}
+          </Tag>
+          <Tag
+            :color="
+              snapshot.summary_by_family.crypto.unobserved > 0
+                ? 'default'
+                : 'success'
+            "
+          >
+            {{
+              $t('page.research.domainSources.cards.unobserved', {
+                count: snapshot.summary_by_family.crypto.unobserved,
+              })
+            }}
+          </Tag>
         </div>
       </Card>
       <Card
@@ -139,11 +228,56 @@ function cursorStatusColor(status: DomainCursorStatus) {
         :title="$t('page.research.domainSources.cards.weather')"
       >
         <Statistic
-          :title="$t('page.research.domainSources.cards.activeFeeds')"
-          :value="summary.weather"
+          :title="$t('page.research.domainSources.cards.live')"
+          :value="snapshot.summary_by_family.weather.live"
         />
-        <div class="mt-2 text-xs text-muted-foreground">
-          {{ $t('page.research.domainSources.cards.weatherHint') }}
+        <div class="mt-2 flex flex-wrap gap-2">
+          <Tag color="processing">
+            {{
+              $t('page.research.domainSources.cards.declared', {
+                count: snapshot.summary_by_family.weather.declared,
+              })
+            }}
+          </Tag>
+          <Tag
+            :color="
+              snapshot.summary_by_family.weather.stale > 0
+                ? 'warning'
+                : 'success'
+            "
+          >
+            {{
+              $t('page.research.domainSources.cards.stale', {
+                count: snapshot.summary_by_family.weather.stale,
+              })
+            }}
+          </Tag>
+          <Tag
+            :color="
+              snapshot.summary_by_family.weather.blocked > 0
+                ? 'error'
+                : 'success'
+            "
+          >
+            {{
+              $t('page.research.domainSources.cards.blocked', {
+                count: snapshot.summary_by_family.weather.blocked,
+              })
+            }}
+          </Tag>
+          <Tag
+            :color="
+              snapshot.summary_by_family.weather.unobserved > 0
+                ? 'default'
+                : 'success'
+            "
+          >
+            {{
+              $t('page.research.domainSources.cards.unobserved', {
+                count: snapshot.summary_by_family.weather.unobserved,
+              })
+            }}
+          </Tag>
         </div>
       </Card>
       <Card
@@ -151,32 +285,27 @@ function cursorStatusColor(status: DomainCursorStatus) {
         :title="$t('page.research.domainSources.cards.health')"
       >
         <Statistic
-          :suffix="summary.worstLagSecs === null ? undefined : 's'"
-          :title="$t('page.research.domainSources.cards.worstLag')"
-          :value="
-            summary.worstLagSecs ??
-            $t('page.research.domainSources.cards.notObserved')
-          "
+          :title="$t('page.research.domainSources.cards.observedAt')"
+          :value="formatDateTimeLocal(snapshot.observed_at)"
         />
         <div class="mt-2 flex flex-wrap gap-2">
-          <Tag :color="summary.stale > 0 ? 'warning' : 'success'">
+          <Tag>
             {{
-              $t('page.research.domainSources.cards.staleCursors', {
-                count: summary.stale,
+              $t('page.research.domainSources.cards.familyLag', {
+                family: $t('page.research.domainSources.cards.crypto'),
+                lag:
+                  snapshot.summary_by_family.crypto.worst_lag_secs ??
+                  $t('page.research.domainSources.notObserved'),
               })
             }}
           </Tag>
-          <Tag :color="summary.errors > 0 ? 'error' : 'success'">
+          <Tag>
             {{
-              $t('page.research.domainSources.cards.errorCursors', {
-                count: summary.errors,
-              })
-            }}
-          </Tag>
-          <Tag :color="summary.notObserved > 0 ? 'default' : 'success'">
-            {{
-              $t('page.research.domainSources.cards.notObservedCursors', {
-                count: summary.notObserved,
+              $t('page.research.domainSources.cards.familyLag', {
+                family: $t('page.research.domainSources.cards.weather'),
+                lag:
+                  snapshot.summary_by_family.weather.worst_lag_secs ??
+                  $t('page.research.domainSources.notObserved'),
               })
             }}
           </Tag>
@@ -194,6 +323,11 @@ function cursorStatusColor(status: DomainCursorStatus) {
         <span class="break-all font-mono text-xs">{{
           row.instrument_key
         }}</span>
+      </template>
+      <template #snapshotStatus="{ row }">
+        <Tag :color="snapshotStatusColor(row.snapshot_status)">
+          {{ $t(`enum.domainSourceSnapshotStatus.${row.snapshot_status}`) }}
+        </Tag>
       </template>
       <template #lag="{ row }">
         <span

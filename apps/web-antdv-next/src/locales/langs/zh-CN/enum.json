@@ -409,6 +409,8 @@
   },
   "researchJobStatus": {
     "queued": "排队中",
+    "awaiting_evidence": "等待证据",
+    "retry_scheduled": "已安排重试",
     "running": "运行中",
     "succeeded": "已成功",
     "failed": "失败",
@@ -574,6 +576,13 @@
     "error": "错误",
     "unsupported": "不支持"
   },
+  "domainSourceSnapshotStatus": {
+    "blocked": "已阻断",
+    "declared": "已声明",
+    "live": "实时",
+    "stale": "陈旧",
+    "unobserved": "未观测"
+  },
   "priceComparator": {
     "up_vs_reference": "相对参考价 Up/Down",
     "above": "高于行权价",
@@ -613,8 +622,8 @@
     "no_pit_leakage": "无未来泄漏",
     "max_drawdown": "最大回撤",
     "liquidity_exit_feasible": "流动性退出可行性",
-    "shadow_overlap_stability": "影子重合稳定度",
-    "backtest_required": "回测必需",
+    "shadow_decision_overlap": "影子决策重合度",
+    "validation_evidence_required": "验证证据必需",
     "rank_ic": "Rank IC",
     "hit_rate": "命中率",
     "category_concentration": "类目集中度",
@@ -622,11 +631,12 @@
     "sell_fallback_ratio": "卖出回退比例",
     "calibration_required": "需要校准",
     "cpcv_required": "需要 CPCV 路径集",
+    "cpcv_path_count": "CPCV 完整重建路径数",
     "explainability_required": "需要可解释性证据",
     "deflated_sharpe": "Deflated Sharpe Ratio",
     "min_track_record_length": "最短跟踪记录长度",
     "pbo": "回测过拟合概率",
-    "tail_loss_budget": "尾部损失预算",
+    "tail_loss_budget": "最差分位平均收益下限（bps）",
     "turnover_budget": "换手预算"
   },
   "reportFunnelStage": {

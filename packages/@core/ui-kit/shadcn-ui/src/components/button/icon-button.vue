@@ -10,6 +10,7 @@ import { VbenTooltip } from '../tooltip';
 import VbenButton from './button.vue';
 
 interface Props extends VbenButtonProps {
+  ariaLabel?: string;
   class?: any;
   disabled?: boolean;
   onClick?: () => void;
@@ -35,6 +36,7 @@ const showTooltip = computed(() => !!slots.tooltip || !!props.tooltip);
 <template>
   <VbenButton
     v-if="!showTooltip"
+    :aria-label="ariaLabel"
     :class="cn('rounded-full', props.class)"
     :disabled="disabled"
     :variant="variant"
@@ -51,6 +53,7 @@ const showTooltip = computed(() => !!slots.tooltip || !!props.tooltip);
   >
     <template #trigger>
       <VbenButton
+        :aria-label="ariaLabel || tooltip"
         :class="cn('rounded-full', props.class)"
         :disabled="disabled"
         :variant="variant"

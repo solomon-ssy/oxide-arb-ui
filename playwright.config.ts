@@ -4,9 +4,16 @@ import { defineConfig, devices } from 'playwright/test';
 
 const externalServers = process.env.PLAYWRIGHT_EXTERNAL_SERVERS === 'true';
 const evidenceRun = process.env.PLAYWRIGHT_EVIDENCE_RUN;
+const productionFixture =
+  process.env.PLAYWRIGHT_PRODUCTION_FIXTURE ?? 'governed-feedback';
 
 if (evidenceRun && !/^[a-z0-9-]+$/.test(evidenceRun)) {
   throw new Error('PLAYWRIGHT_EVIDENCE_RUN must contain only a-z, 0-9, and -');
+}
+if (!['feedback-closure', 'governed-feedback'].includes(productionFixture)) {
+  throw new Error(
+    'PLAYWRIGHT_PRODUCTION_FIXTURE must be feedback-closure or governed-feedback',
+  );
 }
 
 const outputDir = evidenceRun ? `test-results/${evidenceRun}` : 'test-results';
@@ -55,7 +62,7 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command: `cargo build -p quant-pivot-xtask -p quant-pivot-bin && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port 8088 --fixture governed-feedback${retainBackendArtifacts}`,
+          command: `cargo build -p quant-pivot-xtask -p quant-pivot-bin && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port 8088 --fixture ${productionFixture}${retainBackendArtifacts}`,
           gracefulShutdown: { signal: 'SIGTERM', timeout: 60_000 },
           reuseExistingServer: false,
           stderr: 'pipe',

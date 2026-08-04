@@ -5,7 +5,8 @@ const mocks = vi.hoisted(() => ({
   clearActionEligibility: vi.fn(),
   dispatchWsEnvelope: vi.fn(),
   feedbackStore: {
-    reconcileRevision: vi.fn(),
+    adoptAuthoritativeRevision: vi.fn(),
+    cursorInitialized: true,
     recoveryRequired: false,
     revision: 17,
   },
@@ -151,15 +152,17 @@ describe('useQpWs network recovery', () => {
     mocks.accessStore.accessToken = 'access-token';
     mocks.clearActionEligibility.mockReset();
     mocks.dispatchWsEnvelope.mockReset();
-    mocks.feedbackStore.reconcileRevision.mockReset();
-    mocks.feedbackStore.reconcileRevision.mockImplementation(
+    mocks.feedbackStore.adoptAuthoritativeRevision.mockReset();
+    mocks.feedbackStore.adoptAuthoritativeRevision.mockImplementation(
       (revision: number) => {
+        mocks.feedbackStore.cursorInitialized = true;
         mocks.feedbackStore.recoveryRequired = false;
         mocks.feedbackStore.revision = revision;
         return true;
       },
     );
     mocks.feedbackStore.recoveryRequired = false;
+    mocks.feedbackStore.cursorInitialized = true;
     mocks.feedbackStore.revision = 17;
     mocks.getFeedbackRevisionApi.mockReset();
     mocks.issueWsTicketApi.mockReset();
@@ -172,6 +175,33 @@ describe('useQpWs network recovery', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+
+  it('distinguishes the initial handshake from a failed reconnect', async () => {
+    vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(true);
+    mocks.feedbackStore.cursorInitialized = false;
+    mocks.getFeedbackRevisionApi.mockResolvedValue({ revision: 17 });
+    mocks.issueWsTicketApi.mockResolvedValue({ ticket: 'ticket-1' });
+
+    const { useQpWs } = await import('./use-qp-ws');
+    const qpWs = useQpWs();
+    qpWs.connect();
+    expect(qpWs.status.value).toBe('connecting');
+    expect(mocks.setStatus).toHaveBeenLastCalledWith('connecting');
+
+    await vi.waitFor(() => expect(TestWebSocket.instances).toHaveLength(1));
+    expect(mocks.getFeedbackRevisionApi).toHaveBeenCalledOnce();
+    expect(mocks.feedbackStore.adoptAuthoritativeRevision).toHaveBeenCalledWith(
+      17,
+    );
+    const first = TestWebSocket.instances[0];
+    if (first === undefined) {
+      throw new Error('initial WebSocket was not created');
+    }
+    first.close();
+    expect(qpWs.status.value).toBe('reconnecting');
+    expect(mocks.setStatus).toHaveBeenLastCalledWith('reconnecting');
+    qpWs.disconnect();
   });
 
   it('suspends while offline and immediately reconnects with subscriptions when online', async () => {
@@ -264,7 +294,9 @@ describe('useQpWs network recovery', () => {
     await vi.waitFor(() => expect(TestWebSocket.instances).toHaveLength(2));
     expect(first.readyState).toBe(TestWebSocket.CLOSED);
     expect(mocks.getFeedbackRevisionApi).toHaveBeenCalledOnce();
-    expect(mocks.feedbackStore.reconcileRevision).toHaveBeenCalledWith(42);
+    expect(mocks.feedbackStore.adoptAuthoritativeRevision).toHaveBeenCalledWith(
+      42,
+    );
 
     const second = TestWebSocket.instances[1];
     if (second === undefined) {

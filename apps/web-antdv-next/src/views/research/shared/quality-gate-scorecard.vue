@@ -192,7 +192,7 @@ function showDetail(outcome: GateOutcome): boolean {
       <template #bodyCell="slotProps">
         <template v-if="asEvaluatedBodyCell(slotProps).column.key === 'gate'">
           <div class="flex min-w-0 flex-wrap items-center gap-2 text-xs">
-            <span class="truncate font-medium">{{
+            <span class="min-w-0 break-words font-medium">{{
               gateLabel(asEvaluatedBodyCell(slotProps).record.gate)
             }}</span>
             <Tag

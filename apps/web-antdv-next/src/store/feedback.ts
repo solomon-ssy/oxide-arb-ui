@@ -23,6 +23,7 @@ function isValidRevision(revision: number): boolean {
  */
 export const useFeedbackStore = defineStore('qp-feedback', () => {
   const revision = ref(0);
+  const cursorInitialized = ref(false);
   const refreshGeneration = ref(0);
   const lastEvent = ref<null | ResearchFeedbackEvent>(null);
   const recoveryRequired = ref(false);
@@ -40,6 +41,7 @@ export const useFeedbackStore = defineStore('qp-feedback', () => {
       return false;
     }
     revision.value = event.revision;
+    cursorInitialized.value = true;
     lastEvent.value = event;
     refreshGeneration.value += 1;
     return true;
@@ -48,10 +50,11 @@ export const useFeedbackStore = defineStore('qp-feedback', () => {
   function requireRecovery(reason: FeedbackRecoveryReason) {
     recoveryRequired.value = true;
     recoveryReason.value = reason;
+    cursorInitialized.value = false;
     refreshGeneration.value += 1;
   }
 
-  function reconcileRevision(nextRevision: number): boolean {
+  function adoptAuthoritativeRevision(nextRevision: number): boolean {
     if (!isValidRevision(nextRevision)) {
       requireRecovery('invalid_overview_revision');
       return false;
@@ -61,14 +64,15 @@ export const useFeedbackStore = defineStore('qp-feedback', () => {
       return false;
     }
     revision.value = nextRevision;
+    cursorInitialized.value = true;
     recoveryRequired.value = false;
     recoveryReason.value = null;
-    refreshGeneration.value += 1;
     return true;
   }
 
   function $reset() {
     revision.value = 0;
+    cursorInitialized.value = false;
     refreshGeneration.value = 0;
     lastEvent.value = null;
     recoveryRequired.value = false;
@@ -77,9 +81,10 @@ export const useFeedbackStore = defineStore('qp-feedback', () => {
 
   return {
     $reset,
+    adoptAuthoritativeRevision,
     applyEvent,
+    cursorInitialized,
     lastEvent,
-    reconcileRevision,
     recoveryReason,
     recoveryRequired,
     refreshGeneration,

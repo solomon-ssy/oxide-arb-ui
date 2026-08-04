@@ -62,6 +62,17 @@ type GovernedActionApi = {
 
 let governedActionApi: GovernedActionApi | null = null;
 
+export interface GovernedSubmitResult {
+  close: boolean;
+  errorSummary?: string;
+}
+
+function governedErrorMessage(error: ApiError) {
+  return error.httpStatus === 403 || error.code === 403
+    ? $t('governance.error.actingRoleForbidden')
+    : error.message;
+}
+
 /** Governed modals own toast copy (403 acting-role vs backend detail). */
 function showGovernedApiError(error: ApiError) {
   if (error.httpStatus === 403 || error.code === 403) {
@@ -107,17 +118,32 @@ function createGovernedActionApi(): GovernedActionApi {
           summary: options.summary,
           title: options.title,
           onCancel: () => resolve(null),
-          onSubmit: async (ctx: GovernedContext): Promise<boolean> => {
+          onSubmit: async (
+            ctx: GovernedContext,
+          ): Promise<GovernedSubmitResult> => {
             const errorState: { closeModal: boolean } = { closeModal: false };
+            let errorSummary: string | undefined;
             const result = await handleRequest(() => execute(ctx), {
               onError: (error) => {
                 showGovernedApiError(error);
+                errorSummary = governedErrorMessage(error);
                 errorState.closeModal = options.onError?.(error) === 'close';
               },
               silent: true,
             });
-            resolve(result);
-            return result !== null || errorState.closeModal;
+            if (result !== null) {
+              resolve(result);
+              return { close: true };
+            }
+            if (errorState.closeModal) {
+              resolve(null);
+              return { close: true };
+            }
+            return {
+              close: false,
+              errorSummary:
+                errorSummary ?? $t('governance.error.mutationFailed'),
+            };
           },
         });
         modalApi.setState({ title: options.title });

@@ -7,6 +7,7 @@ import {
   canIssuePromotionPermit,
   promotionPermitRemaining,
   promotionPermitStatus,
+  promotionRouteGenerationDiff,
   releaseFeedbackAction,
   tryBeginFeedbackAction,
   validateFeedbackReason,
@@ -26,6 +27,7 @@ function permit(): PromotionPermitView {
     expected_policy_generation: 3,
     expected_runtime_control_revision: 4,
     expected_snapshot_hash: 'blake3:snapshot',
+    expected_route_generation: 8,
     expires_at: '2026-07-28T00:30:00Z',
     feedback_cycle_id: 'cycle-1',
     idempotency_key: 'idempotency-1',
@@ -74,11 +76,19 @@ function cycle(
     research_profile_artifact_id: 'profile-artifact-1',
     feedback_policy_hash: 'blake3:policy',
     label_cutoff: '2026-07-28T00:00:00Z',
-    capability_registry_hashes: ['blake3:capability'],
     champion_model_version_id: 'model-version-1',
     champion_serving_contract_hash: 'blake3:serving',
-    candidate_family: {},
-    candidate_family_hash: 'blake3:family',
+    champion_model_spec_id: 'model-spec-1',
+    champion_model_spec_definition_hash: 'blake3:model-spec',
+    champion_model_family: 'classical_gradient_boosted_trees',
+    route: 'crypto',
+    decision_policy_snapshot_id: 'snapshot-1',
+    decision_policy_snapshot_hash: 'blake3:snapshot',
+    policy_bundle_generation: 3,
+    route_generation: 3,
+    evaluation_mode: 'conditional',
+    parent_cycle_id: null,
+    forced_idempotency_key: null,
     status,
     decision,
     terminal_reason_code: null,
@@ -111,6 +121,10 @@ describe('feedback governed action state', () => {
     }
     expect(() => validatePermitTtl(299)).toThrow(TypeError);
     expect(() => validatePermitTtl(901)).toThrow(TypeError);
+  });
+
+  it('presents the bound route generation instead of policy generation', () => {
+    expect(promotionRouteGenerationDiff(permit())).toBe('8 → 9');
   });
 
   it('derives conservative client eligibility without replacing server gates', () => {

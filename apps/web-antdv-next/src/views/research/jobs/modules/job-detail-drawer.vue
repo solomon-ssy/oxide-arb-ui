@@ -159,7 +159,7 @@ function openResult() {
 
         <Alert
           v-if="job.error"
-          type="error"
+          :type="job.status === 'retry_scheduled' ? 'warning' : 'error'"
           show-icon
           :message="job.error.code"
           :description="job.error.message"
@@ -177,6 +177,12 @@ function openResult() {
               :label="$t('page.research.jobs.detail.recoveryAttempt')"
             >
               {{ job.recovery_attempt }} / {{ job.max_recovery_attempts }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              v-if="job.next_attempt_at"
+              :label="$t('page.research.jobs.detail.nextAttemptAt')"
+            >
+              {{ formatDateTimeLocal(job.next_attempt_at) }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.jobs.detail.startedAt')"

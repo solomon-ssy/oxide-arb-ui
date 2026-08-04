@@ -46,6 +46,13 @@ export function canIssuePromotionPermit(cycle: FeedbackCycleView): boolean {
   return cycle.status === 'succeeded' && cycle.decision === 'candidate_ready';
 }
 
+/** Present the exact route generation consumed by activation, never policy generation. */
+export function promotionRouteGenerationDiff(
+  permit: PromotionPermitView,
+): string {
+  return `${permit.expected_route_generation} → ${permit.expected_route_generation + 1}`;
+}
+
 /**
  * Derive remaining authority from the server clock snapshot and a monotonic
  * local elapsed duration. The browser wall clock never participates.

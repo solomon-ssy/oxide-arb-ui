@@ -8,6 +8,9 @@ export type PolicyActivationKind =
   | 'initial'
   | 'model_bootstrap'
   | 'model_promotion'
+  | 'model_shadow_binding'
+  | 'model_shadow_cancellation'
+  | 'model_shadow_rejection'
   | 'promote'
   | 'rollback';
 export type ConfigResourceKind =
@@ -68,6 +71,17 @@ export type MarketCategory =
  * Runtime-config model-version id reference.
  */
 export type ModelVersionRef = string;
+/**
+ * Immutable provenance of one route-owned model binding.
+ */
+export type ModelBindingSource =
+  | {
+      feedback_cycle_id: string;
+      source_kind: 'feedback';
+    }
+  | {
+      source_kind: 'bootstrap';
+    };
 /**
  * A monotonic schema version for feature / factor / label / config schemas.
  *
@@ -794,49 +808,29 @@ export interface ModelRouting {
   schema_version?: number;
 }
 /**
- * Active and shadow model references.
+ * Route-owned Buy models and independent Sell model reference.
  */
 export interface ModelConfig {
   /**
    * Champion Sell-side hold-vs-exit scorer version. The
    * opportunistic-Sell exit evaluator loads this; a distinct pointer from
-   * `active_model_version_id` so Buy and Sell models are governed separately.
+   * Buy routes so Buy and Sell models are governed separately.
    */
   active_exit_model_version_id?: ModelVersionRef | null;
   /**
-   * Champion model for the explicit pooled Buy route.
-   *
-   * This route may score only non-Crypto/non-Weather report scopes. It is
-   * not a fallback for a missing vertical route.
+   * Exact Buy-side bindings. A missing route fails closed and never falls
+   * back to another route.
    */
-  active_model_version_id?: ModelVersionRef | null;
+  buy_routes?: {
+    crypto?: BuyRouteBinding;
+    pooled?: BuyRouteBinding;
+    weather?: BuyRouteBinding;
+  };
   calibration?: ModelCalibrationConfig;
   /**
    * Minimum candidate score to enter portfolio pruning.
    */
   candidate_score_floor?: string;
-  /**
-   * Category-specific Buy-side model pointers (`ModelRouting`).
-   *
-   * Only Crypto and Weather may appear here. An enabled vertical must be the
-   * sole category in its report and must have its exact pointer; missing,
-   * unloadable or mis-scoped routes fail before selection.
-   * Non-vertical categories use the explicit pooled
-   * `active_model_version_id`. Governed exactly like the pooled/shadow
-   * pointers.
-   */
-  category_model_pointers?: {
-    crypto?: ModelVersionRef;
-    culture?: ModelVersionRef;
-    economics?: ModelVersionRef;
-    finance?: ModelVersionRef;
-    geopolitics?: ModelVersionRef;
-    other?: ModelVersionRef;
-    politics?: ModelVersionRef;
-    sports?: ModelVersionRef;
-    tech?: ModelVersionRef;
-    weather?: ModelVersionRef;
-  };
   /**
    * Minimum model confidence.
    */
@@ -845,10 +839,23 @@ export interface ModelConfig {
    * Shadow/live diff threshold.
    */
   shadow_diff_threshold?: string;
-  /**
-   * Shadow model version id.
-   */
-  shadow_model_version_id?: ModelVersionRef | null;
+}
+/**
+ * Champion plus the optional challenger bound to one exact Buy route.
+ */
+export interface BuyRouteBinding {
+  champion: ModelBinding;
+  shadow?: ModelBinding | null;
+}
+/**
+ * One role binding inside a Buy route.
+ */
+export interface ModelBinding {
+  bound_at: string;
+  config_revision: number;
+  generation: number;
+  model_version_id: string;
+  source: ModelBindingSource;
 }
 /**
  * Model-score probability-calibrator fit policy.

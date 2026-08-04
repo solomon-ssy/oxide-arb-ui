@@ -863,19 +863,23 @@ export type ResearchJobResultKind = WireEnum<typeof RESEARCH_JOB_RESULT_KINDS>;
 
 /** Durable research-job lifecycle state (mirrors Rust `ResearchJobStatus`). */
 export const RESEARCH_JOB_STATUSES = {
+  awaitingEvidence: 'awaiting_evidence',
   cancelled: 'cancelled',
   failed: 'failed',
   queued: 'queued',
+  retryScheduled: 'retry_scheduled',
   running: 'running',
   succeeded: 'succeeded',
 } as const;
 
 export type ResearchJobStatus = WireEnum<typeof RESEARCH_JOB_STATUSES>;
 
-/** Whether a job is still pending/executing (occupies a slot; cancellable). */
+/** Whether a job is still pending/executing and may be cancelled. */
 export function isActiveResearchJobStatus(status: ResearchJobStatus): boolean {
   return (
     status === RESEARCH_JOB_STATUSES.queued ||
+    status === RESEARCH_JOB_STATUSES.awaitingEvidence ||
+    status === RESEARCH_JOB_STATUSES.retryScheduled ||
     status === RESEARCH_JOB_STATUSES.running
   );
 }

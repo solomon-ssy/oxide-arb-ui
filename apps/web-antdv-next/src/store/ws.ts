@@ -12,7 +12,11 @@ const NOTIFICATION_ALERT_LEVELS: ReadonlySet<AlertLevel> = new Set([
 ]);
 
 /** UI-facing connection state of the quant-pivot WebSocket. */
-export type WsConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
+export type WsConnectionStatus =
+  | 'connected'
+  | 'connecting'
+  | 'disconnected'
+  | 'reconnecting';
 
 /**
  * WebSocket connection telemetry: status badge tri-state, last successful
@@ -20,6 +24,8 @@ export type WsConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
  */
 export const useWsStore = defineStore('qp-ws', () => {
   const status = ref<WsConnectionStatus>('disconnected');
+  const connectingAt = ref<IsoDateTime | null>(null);
+  const connectedAt = ref<IsoDateTime | null>(null);
   const lastSyncAt = ref<IsoDateTime | null>(null);
   const lastHeartbeatAt = ref<IsoDateTime | null>(null);
   /** Last `system.status` push or sync snapshot carrying system status. */
@@ -28,6 +34,17 @@ export const useWsStore = defineStore('qp-ws', () => {
   const recentAlertLevel = ref<AlertLevel | null>(null);
 
   function setStatus(next: WsConnectionStatus) {
+    if (next === status.value) {
+      return;
+    }
+    const transitionedAt = new Date().toISOString();
+    if (next === 'connected' && status.value !== 'connected') {
+      connectedAt.value = transitionedAt;
+    } else if (next !== 'connected') {
+      connectedAt.value = null;
+    }
+    connectingAt.value = next === 'connecting' ? transitionedAt : null;
+    lastHeartbeatAt.value = null;
     status.value = next;
   }
 
@@ -57,6 +74,8 @@ export const useWsStore = defineStore('qp-ws', () => {
 
   function $reset() {
     status.value = 'disconnected';
+    connectingAt.value = null;
+    connectedAt.value = null;
     lastSyncAt.value = null;
     lastHeartbeatAt.value = null;
     lastSystemStatusAt.value = null;
@@ -66,6 +85,8 @@ export const useWsStore = defineStore('qp-ws', () => {
   return {
     $reset,
     clearRecentAlert,
+    connectingAt,
+    connectedAt,
     lastHeartbeatAt,
     lastSyncAt,
     lastSystemStatusAt,

@@ -19,7 +19,10 @@ export function buildGovernedHeaders(
  * explicit governance pair `reason_code` + `note`. Concrete request types are
  * structurally assignable and retain all additional typed wire fields.
  */
-type GovernedBody = { note: string; reason_code: string } | { reason: string };
+type GovernedBody =
+  | { note: string; reason_code: string }
+  | { operator_note: string; reason_code: string }
+  | { reason: string };
 
 /** Governed writes suppress global toasts; modal handlers own operator feedback. */
 const GOVERNED_CONFIG = withSilentError({});

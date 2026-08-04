@@ -27,6 +27,7 @@ interface VbenDropdownMenuItem {
 
 interface DropdownMenuProps {
   menus: VbenDropdownMenuItem[];
+  triggerAriaLabel?: string;
 }
 
 export type { DropdownMenuProps, VbenDropdownMenuItem };

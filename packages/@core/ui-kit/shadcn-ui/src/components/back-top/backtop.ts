@@ -30,6 +30,7 @@ export const backtopProps = {
 } as const;
 
 export interface BacktopProps {
+  ariaLabel: string;
   bottom?: number;
   isGroup?: boolean;
   right?: number;

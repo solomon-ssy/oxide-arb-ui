@@ -82,6 +82,10 @@ interface VbenLayoutProps {
    */
   headerToggleSidebarButton?: boolean;
   /**
+   * Accessible name for the header navigation toggle.
+   */
+  headerToggleSidebarLabel?: string;
+  /**
    * header是否显示
    * @default true
    */

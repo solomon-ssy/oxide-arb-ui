@@ -28,6 +28,7 @@ describe('feedback revision store', () => {
     expect(store.applyEvent(event(7))).toBe(false);
 
     expect(store.revision).toBe(8);
+    expect(store.cursorInitialized).toBe(true);
     expect(store.refreshGeneration).toBe(1);
   });
 
@@ -35,21 +36,27 @@ describe('feedback revision store', () => {
     const store = useFeedbackStore();
     store.applyEvent(event(8));
     store.requireRecovery('replay_window_exceeded');
+    expect(store.cursorInitialized).toBe(false);
 
-    expect(store.reconcileRevision(7)).toBe(false);
+    expect(store.adoptAuthoritativeRevision(7)).toBe(false);
     expect(store.recoveryReason).toBe('revision_regression');
     expect(store.recoveryRequired).toBe(true);
 
-    expect(store.reconcileRevision(12)).toBe(true);
+    const refreshGeneration = store.refreshGeneration;
+    expect(store.adoptAuthoritativeRevision(12)).toBe(true);
     expect(store.revision).toBe(12);
     expect(store.recoveryReason).toBeNull();
     expect(store.recoveryRequired).toBe(false);
+    expect(store.cursorInitialized).toBe(true);
+    expect(store.refreshGeneration).toBe(refreshGeneration);
   });
 
   it('rejects unsafe numeric cursors', () => {
     const store = useFeedbackStore();
 
-    expect(store.reconcileRevision(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
+    expect(store.adoptAuthoritativeRevision(Number.MAX_SAFE_INTEGER + 1)).toBe(
+      false,
+    );
     expect(store.recoveryReason).toBe('invalid_overview_revision');
     expect(store.revision).toBe(0);
   });

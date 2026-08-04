@@ -2,7 +2,7 @@ import type {
   AcknowledgeBasisAlertRequest,
   BasisAlertListQuery,
   BasisAlertView,
-  DomainSourceExpectationView,
+  DomainSourcesSnapshot,
   LinkageResolveSummaryView,
   MarketLinkageDetailView,
   MarketLinkageHistoryEntryView,
@@ -101,7 +101,7 @@ export async function overrideMarketLinkage(
 
 /** `GET /research/domain-sources` — domain ingest cursor health. */
 export async function listDomainSources() {
-  return requestClient.get<DomainSourceExpectationView[]>(
+  return requestClient.get<DomainSourcesSnapshot>(
     VerticalAlphaApi.domainSources,
   );
 }

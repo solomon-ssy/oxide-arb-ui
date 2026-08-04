@@ -5,6 +5,7 @@ import type {
   FeedbackCycleDetailView,
   FeedbackCycleListQuery,
   FeedbackCycleMutationView,
+  FeedbackCycleTriggerRequest,
   FeedbackCycleTriggerView,
   FeedbackCycleView,
   FeedbackOverviewView,
@@ -12,14 +13,18 @@ import type {
   FeedbackSchedulerListView,
   FeedbackSchedulerMutationView,
   IssuePromotionPermitRequest,
+  ModelRouteActivationMutationView,
   ModelRouteActivationReceiptView,
   ModelRouteBootstrapReceiptView,
   Paginated,
   PromotionPermitListQuery,
   PromotionPermitMutationView,
   PromotionPermitView,
+  RejectShadowBindingRequest,
+  RemediateResolutionProjectionRequest,
+  ResolutionProjectionRemediationView,
   RevokePromotionPermitRequest,
-  TriggerFeedbackCycleRequest,
+  ShadowBindingRejectionReceiptView,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
@@ -34,6 +39,8 @@ export namespace FeedbackApi {
   export const bootstraps = '/research/model-route-bootstraps';
   export const overview = '/research/feedback-overview';
   export const permits = '/research/model-route-activation-permits';
+  export const shadowBindings = '/research/model-route-shadow-bindings';
+  export const resolutionProjections = '/research/resolution-projections';
   export const cycles = '/research/feedback-cycles';
   export const schedulers = '/research/feedback-schedulers';
 }
@@ -79,7 +86,7 @@ export async function getFeedbackCycle(
 
 /** Trigger one server-frozen manual cycle through real governed RBAC. */
 export async function triggerFeedbackCycle(
-  body: TriggerFeedbackCycleRequest,
+  body: FeedbackCycleTriggerRequest,
   context: GovernedContext,
 ) {
   return governedPost<FeedbackCycleTriggerView>(
@@ -182,8 +189,47 @@ export async function activateModelRoute(
   body: ActivateModelRouteRequest,
   context: GovernedContext,
 ) {
-  return governedPost<ModelRouteActivationReceiptView>(
+  return governedPost<ModelRouteActivationMutationView>(
     FeedbackApi.activations,
+    body,
+    context,
+  );
+}
+
+/** Read one immutable activation and its server-sanitized rollback target. */
+export async function getModelRouteActivation(
+  activationId: string,
+  options: FeedbackReadOptions = {},
+) {
+  return requestClient.get<ModelRouteActivationReceiptView>(
+    `${FeedbackApi.activations}/${encodeURIComponent(activationId)}`,
+    withSilentError({ signal: options.signal }),
+  );
+}
+
+/** Reject one exact CandidateReady shadow binding and release its route slot. */
+export async function rejectShadowBinding(
+  bindingId: string,
+  body: RejectShadowBindingRequest,
+  context: GovernedContext,
+) {
+  return governedPost<ShadowBindingRejectionReceiptView>(
+    `${FeedbackApi.shadowBindings}/${encodeURIComponent(bindingId)}/reject`,
+    body,
+    context,
+  );
+}
+
+/** Apply a governed exact-CAS Requeue or Exclude remediation. */
+export async function remediateResolutionProjection(
+  observationId: string,
+  body: RemediateResolutionProjectionRequest,
+  context: GovernedContext,
+) {
+  return governedPost<ResolutionProjectionRemediationView>(
+    `${FeedbackApi.resolutionProjections}/${encodeURIComponent(
+      observationId,
+    )}/remediations`,
     body,
     context,
   );

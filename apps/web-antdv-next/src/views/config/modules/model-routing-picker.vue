@@ -1,13 +1,17 @@
 <script lang="ts" setup>
-import type { ModelPickerSide, ModelRouteCandidateView } from '@vben/types';
-import type { MarketCategory, ModelRouting } from '@vben/types/config-api';
+import type { ModelRouteCandidateView } from '@vben/types';
+import type {
+  BuyRouteBinding,
+  ModelBinding,
+  ModelRouting,
+} from '@vben/types/config-api';
 
 import { computed, onMounted, ref } from 'vue';
 
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert, Select, Tag } from 'antdv-next';
+import { Alert, Button, Tag } from 'antdv-next';
 
 import { listModelRouteCandidates } from '#/api/research';
 import { $t } from '#/locales';
@@ -19,132 +23,45 @@ const props = withDefaults(
     disabled?: boolean;
     modelValue: ModelRouting;
   }>(),
-  { disabled: false },
+  { disabled: true },
 );
 
-const emit = defineEmits<{
-  'update:modelValue': [value: ModelRouting];
-}>();
+type BuyRoute = 'crypto' | 'pooled' | 'weather';
 
-type ModelConfig = NonNullable<ModelRouting['model']>;
-type GlobalPointerKey =
-  | 'active_exit_model_version_id'
-  | 'active_model_version_id'
-  | 'shadow_model_version_id';
-
-interface GlobalRouteDefinition {
-  key: GlobalPointerKey;
+interface RouteDefinition {
+  key: BuyRoute;
   labelKey: string;
-  side: ModelPickerSide;
 }
 
 const { handleRequest } = useRequestHandler();
 const loading = ref(true);
 const loadError = ref(false);
-const buyOptions = ref<ModelRouteCandidateView[]>([]);
-const sellOptions = ref<ModelRouteCandidateView[]>([]);
+const candidates = ref<ModelRouteCandidateView[]>([]);
 
-const categories: MarketCategory[] = [
-  'crypto',
-  'culture',
-  'economics',
-  'finance',
-  'geopolitics',
-  'other',
-  'politics',
-  'sports',
-  'tech',
-  'weather',
+const routeDefinitions: RouteDefinition[] = [
+  { key: 'pooled', labelKey: 'page.config.modelRouting.route.pooled' },
+  { key: 'crypto', labelKey: 'page.config.modelRouting.route.crypto' },
+  { key: 'weather', labelKey: 'page.config.modelRouting.route.weather' },
 ];
 
-const globalRoutes = computed<GlobalRouteDefinition[]>(() => [
-  {
-    key: 'active_model_version_id',
-    labelKey: 'page.config.modelRouting.activeBuy',
-    side: 'buy',
-  },
-  {
-    key: 'shadow_model_version_id',
-    labelKey: 'page.config.modelRouting.shadowBuy',
-    side: 'buy',
-  },
-  {
-    key: 'active_exit_model_version_id',
-    labelKey: 'page.config.modelRouting.activeExit',
-    side: 'sell',
-  },
-]);
+const model = computed(() => props.modelValue.model);
 
-const model = computed<ModelConfig>(() => props.modelValue.model ?? {});
-
-function catalog(side: ModelPickerSide) {
-  return side === 'buy' ? buyOptions.value : sellOptions.value;
+function routeBinding(route: BuyRoute): BuyRouteBinding | undefined {
+  return model.value?.buy_routes?.[route];
 }
 
-function pointerValue(key: GlobalPointerKey) {
-  return model.value[key] ?? undefined;
+function candidate(id: null | string | undefined) {
+  return candidates.value.find((item) => item.model_version_id === id);
 }
 
-function categoryPointerValue(category: MarketCategory) {
-  return model.value.category_model_pointers?.[category];
+function sourceLabel(binding: ModelBinding) {
+  return $t(`page.config.modelRouting.source.${binding.source.source_kind}`);
 }
 
-function selectableOptions(
-  side: ModelPickerSide,
-  current: null | string | undefined,
-  category?: MarketCategory,
-) {
-  const eligible = catalog(side).filter((option) =>
-    category === undefined
-      ? option.category_scope === null
-      : option.category_scope === category,
-  );
-  const options = eligible.map((option) => ({
-    disabled: false,
-    label: `${option.spec_name} · v${option.version} · ${modelFamilyLabel(option.model_family)}`,
-    value: option.model_version_id,
-  }));
-  if (current && !eligible.some((item) => item.model_version_id === current)) {
-    options.unshift({
-      disabled: true,
-      label: $t('page.config.modelRouting.unavailableReference', {
-        id: shortId(current),
-      }),
-      value: current,
-    });
-  }
-  return options;
-}
-
-function selectedOption(id: null | string | undefined) {
-  if (!id) {
-    return undefined;
-  }
-  return [...buyOptions.value, ...sellOptions.value].find(
-    (option) => option.model_version_id === id,
-  );
-}
-
-function updateGlobalPointer(key: GlobalPointerKey, value: unknown) {
-  const nextValue =
-    typeof value === 'string' && value.length > 0 ? value : null;
-  emit('update:modelValue', {
-    ...props.modelValue,
-    model: { ...model.value, [key]: nextValue },
-  });
-}
-
-function updateCategoryPointer(category: MarketCategory, value: unknown) {
-  const pointers = { ...model.value.category_model_pointers };
-  if (typeof value === 'string' && value.length > 0) {
-    pointers[category] = value;
-  } else {
-    delete pointers[category];
-  }
-  emit('update:modelValue', {
-    ...props.modelValue,
-    model: { ...model.value, category_model_pointers: pointers },
-  });
+function sourceCycle(binding: ModelBinding) {
+  return binding.source.source_kind === 'feedback'
+    ? binding.source.feedback_cycle_id
+    : null;
 }
 
 function shortId(value: string) {
@@ -156,30 +73,25 @@ function shortHash(value: string) {
   return `blake3:${normalized.slice(0, 12)}…`;
 }
 
-function modelFamilyLabel(family: ModelRouteCandidateView['model_family']) {
-  return $t(`page.config.modelRouting.family.${family}`);
-}
-
-function filterOption(input: string, option: unknown) {
-  if (typeof option !== 'object' || option === null || !('label' in option)) {
-    return false;
-  }
-  return String(option.label).toLowerCase().includes(input.toLowerCase());
+function formatTimestamp(value: string) {
+  const timestamp = new Date(value);
+  return Number.isNaN(timestamp.getTime())
+    ? value
+    : timestamp.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+      });
 }
 
 async function loadCatalog() {
   loading.value = true;
   loadError.value = false;
   const result = await handleRequest(
-    () =>
-      Promise.all([
-        listModelRouteCandidates({ side: 'buy' }),
-        listModelRouteCandidates({ side: 'sell' }),
-      ]),
+    () => listModelRouteCandidates({ side: 'buy' }),
     { onError: () => (loadError.value = true), silent: true },
   );
   if (result) {
-    [buyOptions.value, sellOptions.value] = result;
+    candidates.value = result;
   }
   loading.value = false;
 }
@@ -193,7 +105,7 @@ onMounted(() => void loadCatalog());
     data-testid="model-routing-artifact-picker"
   >
     <header class="flex items-start gap-3">
-      <span class="routing-icon">
+      <span class="routing-icon" aria-hidden="true">
         <IconifyIcon icon="lucide:git-branch" />
       </span>
       <div>
@@ -212,100 +124,188 @@ onMounted(() => void loadCatalog());
       :message="$t('page.config.modelRouting.loadError')"
       show-icon
       type="error"
-    />
+    >
+      <template #action>
+        <Button :loading="loading" size="small" @click="loadCatalog">
+          {{ $t('page.config.modelRouting.retry') }}
+        </Button>
+      </template>
+    </Alert>
 
-    <div class="global-route-grid mt-5">
+    <div class="route-grid mt-5">
       <article
-        v-for="route in globalRoutes"
+        v-for="route in routeDefinitions"
         :key="route.key"
         class="route-card"
+        :data-testid="`model-route-${route.key}`"
       >
-        <div class="mb-2 flex items-center justify-between gap-2">
-          <label class="text-sm font-medium">{{ $t(route.labelKey) }}</label>
-          <Tag :color="route.side === 'buy' ? 'processing' : 'warning'">
-            {{ $t(`page.config.modelRouting.side.${route.side}`) }}
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h3 class="text-sm font-semibold">{{ $t(route.labelKey) }}</h3>
+          <Tag color="processing">
+            {{ $t('page.config.modelRouting.side.buy') }}
           </Tag>
         </div>
-        <Select
-          allow-clear
-          :disabled="disabled"
-          :filter-option="filterOption"
-          :loading="loading"
-          :options="selectableOptions(route.side, pointerValue(route.key))"
-          :placeholder="$t('page.config.modelRouting.selectArtifact')"
-          show-search
-          :value="pointerValue(route.key)"
-          class="w-full"
-          @update:value="updateGlobalPointer(route.key, $event)"
-        />
-        <dl
-          v-if="selectedOption(pointerValue(route.key))"
-          class="artifact-facts"
+
+        <p
+          v-if="!routeBinding(route.key)"
+          class="text-muted-foreground rounded-md border border-dashed p-3 text-sm"
         >
-          <div>
-            <dt>{{ $t('page.config.modelRouting.artifactHash') }}</dt>
-            <dd
-              class="font-mono"
-              :title="selectedOption(pointerValue(route.key))?.artifact_hash"
-            >
-              {{
-                shortHash(
-                  selectedOption(pointerValue(route.key))?.artifact_hash ?? '',
-                )
-              }}
+          {{ $t('page.config.modelRouting.unbound') }}
+        </p>
+
+        <dl v-else class="binding-stack">
+          <div class="binding-panel">
+            <dt>
+              <Tag color="success">
+                {{ $t('page.config.modelRouting.champion') }}
+              </Tag>
+            </dt>
+            <dd>
+              <strong
+                class="font-mono text-xs"
+                :title="routeBinding(route.key)?.champion.model_version_id"
+              >
+                {{
+                  shortId(
+                    routeBinding(route.key)?.champion.model_version_id ?? '',
+                  )
+                }}
+              </strong>
+              <span>
+                {{
+                  $t('page.config.modelRouting.generation', {
+                    generation:
+                      routeBinding(route.key)?.champion.generation ?? 0,
+                  })
+                }}
+              </span>
+              <span>
+                {{
+                  formatTimestamp(
+                    routeBinding(route.key)?.champion.bound_at ?? '',
+                  )
+                }}
+              </span>
+              <span>
+                {{ sourceLabel(routeBinding(route.key)!.champion) }}
+                <template v-if="sourceCycle(routeBinding(route.key)!.champion)">
+                  ·
+                  <span
+                    :title="
+                      sourceCycle(routeBinding(route.key)!.champion) ??
+                      undefined
+                    "
+                  >
+                    {{
+                      shortId(
+                        sourceCycle(routeBinding(route.key)!.champion) ?? '',
+                      )
+                    }}
+                  </span>
+                </template>
+              </span>
+              <span
+                v-if="
+                  candidate(routeBinding(route.key)?.champion.model_version_id)
+                "
+                :title="
+                  candidate(routeBinding(route.key)?.champion.model_version_id)
+                    ?.artifact_hash
+                "
+              >
+                {{
+                  shortHash(
+                    candidate(
+                      routeBinding(route.key)?.champion.model_version_id,
+                    )?.artifact_hash ?? '',
+                  )
+                }}
+              </span>
             </dd>
           </div>
-          <div>
-            <dt>{{ $t('page.config.modelRouting.evidence') }}</dt>
-            <dd>
-              {{
-                `${selectedOption(pointerValue(route.key))?.model_family} · v${
-                  selectedOption(pointerValue(route.key))?.version
-                }`
-              }}
+
+          <div class="binding-panel">
+            <dt>
+              <Tag
+                :color="routeBinding(route.key)?.shadow ? 'warning' : 'default'"
+              >
+                {{ $t('page.config.modelRouting.shadow') }}
+              </Tag>
+            </dt>
+            <dd v-if="routeBinding(route.key)?.shadow">
+              <strong
+                class="font-mono text-xs"
+                :title="routeBinding(route.key)?.shadow?.model_version_id"
+              >
+                {{
+                  shortId(
+                    routeBinding(route.key)?.shadow?.model_version_id ?? '',
+                  )
+                }}
+              </strong>
+              <span>
+                {{
+                  $t('page.config.modelRouting.generation', {
+                    generation:
+                      routeBinding(route.key)?.shadow?.generation ?? 0,
+                  })
+                }}
+              </span>
+              <span>
+                {{
+                  formatTimestamp(
+                    routeBinding(route.key)?.shadow?.bound_at ?? '',
+                  )
+                }}
+              </span>
+              <span>
+                {{ sourceLabel(routeBinding(route.key)!.shadow!) }}
+                <template v-if="sourceCycle(routeBinding(route.key)!.shadow!)">
+                  ·
+                  <span
+                    :title="
+                      sourceCycle(routeBinding(route.key)!.shadow!) ?? undefined
+                    "
+                  >
+                    {{
+                      shortId(
+                        sourceCycle(routeBinding(route.key)!.shadow!) ?? '',
+                      )
+                    }}
+                  </span>
+                </template>
+              </span>
+            </dd>
+            <dd v-else class="text-muted-foreground">
+              {{ $t('page.config.modelRouting.shadowAvailable') }}
             </dd>
           </div>
         </dl>
       </article>
-    </div>
 
-    <div class="category-routing mt-6 border-t pt-5">
-      <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <article class="route-card" data-testid="model-route-exit">
+        <div class="mb-3 flex items-center justify-between gap-2">
           <h3 class="text-sm font-semibold">
-            {{ $t('page.config.modelRouting.categoryTitle') }}
+            {{ $t('page.config.modelRouting.activeExit') }}
           </h3>
-          <p class="text-muted-foreground mt-1 text-xs leading-5">
-            {{ $t('page.config.modelRouting.categoryDescription') }}
-          </p>
+          <Tag color="warning">
+            {{ $t('page.config.modelRouting.side.sell') }}
+          </Tag>
         </div>
-        <Tag>
-          {{ $t('page.config.modelRouting.exactScopeOnly') }}
-        </Tag>
-      </div>
-      <div class="category-grid">
-        <label
-          v-for="category in categories"
-          :key="category"
-          class="category-row"
+        <p
+          v-if="!model?.active_exit_model_version_id"
+          class="text-muted-foreground rounded-md border border-dashed p-3 text-sm"
         >
-          <span>{{ $t(`page.config.policyField.${category}.label`) }}</span>
-          <Select
-            allow-clear
-            :disabled="disabled"
-            :filter-option="filterOption"
-            :loading="loading"
-            :options="
-              selectableOptions('buy', categoryPointerValue(category), category)
-            "
-            :placeholder="$t('page.config.modelRouting.inheritGeneric')"
-            show-search
-            :value="categoryPointerValue(category)"
-            class="w-full"
-            @update:value="updateCategoryPointer(category, $event)"
-          />
-        </label>
-      </div>
+          {{ $t('page.config.modelRouting.unbound') }}
+        </p>
+        <p
+          v-else
+          class="font-mono text-xs"
+          :title="model.active_exit_model_version_id"
+        >
+          {{ shortId(model.active_exit_model_version_id) }}
+        </p>
+      </article>
     </div>
   </section>
 </template>
@@ -322,6 +322,12 @@ onMounted(() => void loadCatalog());
   border-radius: 0.625rem;
 }
 
+.route-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
 .route-card {
   min-width: 0;
   padding: 0.875rem;
@@ -330,60 +336,39 @@ onMounted(() => void loadCatalog());
   border-radius: 0.625rem;
 }
 
-.global-route-grid {
+.binding-stack {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
   gap: 0.75rem;
 }
 
-.artifact-facts {
+.binding-panel {
   display: grid;
-  gap: 0.35rem;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
   padding-top: 0.75rem;
-  margin-top: 0.75rem;
-  font-size: 0.75rem;
   border-top: 1px solid hsl(var(--border));
 }
 
-.artifact-facts > div {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: space-between;
-}
-
-.artifact-facts dt {
-  flex: none;
+.binding-panel dd {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
+  overflow-wrap: anywhere;
 }
 
-.artifact-facts dd {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.binding-panel dd strong {
   color: hsl(var(--foreground));
-  text-align: right;
-  white-space: nowrap;
 }
 
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem 1rem;
-}
+@media (max-width: 420px) {
+  .model-routing-picker {
+    padding: 1rem;
+  }
 
-.category-row {
-  display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: center;
-  min-width: 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
-}
-
-@media (max-width: 900px) {
-  .category-grid {
+  .binding-panel {
     grid-template-columns: minmax(0, 1fr);
   }
 }

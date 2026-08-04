@@ -1,0 +1,30 @@
+diff --git a/dist/TabNavList/TabNode.vue_vue_type_script_setup_true_lang.js b/dist/TabNavList/TabNode.vue_vue_type_script_setup_true_lang.js
+--- a/dist/TabNavList/TabNode.vue_vue_type_script_setup_true_lang.js
++++ b/dist/TabNavList/TabNode.vue_vue_type_script_setup_true_lang.js
+@@ -90,12 +90,12 @@ var TabNode_vue_vue_type_script_setup_true_lang_default = /* @__PURE__ */ define
+ 			if (tab.value.label) if (typeof tab.value.label === "string" && !isEmptyElement(tab.value.icon)) btnChildren.push(h("span", {}, tab.value.label));
+ 			else btnChildren.push(tab.value.label);
+ 			const children = [h("div", {
+-				"id": tab.value.id && `${tab.value.id}-tab-${tab.value.key}`,
++				"id": props.id && `${props.id}-tab-${tab.value.key}`,
+ 				"ref": setBtnRef,
+ 				"role": "tab",
+ 				"aria-selected": active.value,
+ 				"class": [`${tabPrefix.value}-btn`],
+-				"aria-controls": tab.value.id && `${tab.value.id}-panel-${tab.value.key}`,
++				"aria-controls": props.id && `${props.id}-panel-${tab.value.key}`,
+ 				"aria-disabled": tab.value.disabled,
+ 				"tabindex": tab.value.disabled ? void 0 : active.value ? 0 : -1,
+ 				"onClick": (e) => {
+diff --git a/dist/Tabs.vue_vue_type_script_setup_true_lang.js b/dist/Tabs.vue_vue_type_script_setup_true_lang.js
+--- a/dist/Tabs.vue_vue_type_script_setup_true_lang.js
++++ b/dist/Tabs.vue_vue_type_script_setup_true_lang.js
+@@ -114,6 +114,7 @@ var Tabs_vue_vue_type_script_setup_true_lang_default = /* @__PURE__ */ defineCom
+ 		}, { immediate: true });
+-		const [mergedId, setMergedId] = useMergedState(null, { value: id.value });
++		const [mergedId, setMergedId] = useMergedState(null, { value: id });
+ 		onMounted(() => {
++			if (id.value != null) return;
+ 			const uuid = getUUid();
+ 			setMergedId(`vc-tabs-${process.env.NODE_ENV === "test" ? "test" : uuid}`);
+ 			setUUid(uuid + 1);

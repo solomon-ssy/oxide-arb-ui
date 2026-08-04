@@ -409,6 +409,8 @@
   },
   "researchJobStatus": {
     "queued": "Queued",
+    "awaiting_evidence": "Awaiting evidence",
+    "retry_scheduled": "Retry scheduled",
     "running": "Running",
     "succeeded": "Succeeded",
     "failed": "Failed",
@@ -574,6 +576,13 @@
     "error": "Error",
     "unsupported": "Unsupported"
   },
+  "domainSourceSnapshotStatus": {
+    "blocked": "Blocked",
+    "declared": "Declared",
+    "live": "Live",
+    "stale": "Stale",
+    "unobserved": "Unobserved"
+  },
   "priceComparator": {
     "up_vs_reference": "Up vs reference",
     "above": "Above strike",
@@ -613,8 +622,8 @@
     "no_pit_leakage": "No PIT Leakage",
     "max_drawdown": "Max Drawdown",
     "liquidity_exit_feasible": "Liquidity Exit Feasibility",
-    "shadow_overlap_stability": "Shadow Overlap Stability",
-    "backtest_required": "Backtest Required",
+    "shadow_decision_overlap": "Shadow Decision Overlap",
+    "validation_evidence_required": "Validation Evidence Required",
     "rank_ic": "Rank IC",
     "hit_rate": "Hit Rate",
     "category_concentration": "Category Concentration",
@@ -622,11 +631,12 @@
     "sell_fallback_ratio": "Sell Fallback Ratio",
     "calibration_required": "Calibration Required",
     "cpcv_required": "CPCV Path Set Required",
+    "cpcv_path_count": "Complete CPCV Path Count",
     "explainability_required": "Explainability Evidence Required",
     "deflated_sharpe": "Deflated Sharpe Ratio",
     "min_track_record_length": "Min Track Record Length",
     "pbo": "Probability of Backtest Overfitting",
-    "tail_loss_budget": "Tail Loss Budget",
+    "tail_loss_budget": "Lower-tail Mean Return Floor (bps)",
     "turnover_budget": "Turnover Budget"
   },
   "reportFunnelStage": {

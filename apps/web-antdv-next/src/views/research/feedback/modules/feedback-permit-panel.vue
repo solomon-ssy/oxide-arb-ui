@@ -33,7 +33,10 @@ import {
 } from './feedback-action-state';
 
 const props = defineProps<{
+  activationId?: string;
   activationReceipt: ModelRouteActivationReceiptView | null;
+  activationReceiptError: null | string;
+  activationReceiptLoading: boolean;
   canActivate: boolean;
   canIssue: boolean;
   canRead: boolean;
@@ -218,36 +221,92 @@ function submitIssue() {
       show-icon
       type="warning"
     />
+    <Alert
+      v-else-if="activationReceiptError"
+      :message="activationReceiptError"
+      show-icon
+      type="error"
+    >
+      <template #action>
+        <Button class="min-h-11" @click="emit('retry')">
+          {{ $t('page.research.feedback.retry') }}
+        </Button>
+      </template>
+    </Alert>
+    <Alert
+      v-else-if="activationId && activationReceiptLoading"
+      :message="$t('page.research.feedback.actions.permit.receipt.loading')"
+      show-icon
+      type="info"
+    />
 
     <Card
       v-if="visibleActivationReceipt"
+      id="feedback-activation-receipt"
+      aria-labelledby="feedback-activation-receipt-title"
+      class="scroll-mt-24 focus-within:ring-2 focus-within:ring-ring"
       data-testid="feedback-activation-receipt"
       size="small"
     >
       <template #title>
-        {{ $t('page.research.feedback.actions.permit.receipt.title') }}
+        <span
+          id="feedback-activation-receipt-title"
+          class="focus-visible:outline-none"
+          tabindex="-1"
+        >
+          {{ $t('page.research.feedback.actions.permit.receipt.title') }}
+        </span>
       </template>
       <template #extra>
         <Tag color="success">
-          {{
-            $t(
-              visibleActivationReceipt.replayed
-                ? 'page.research.feedback.actions.permit.receipt.replayed'
-                : 'page.research.feedback.actions.permit.receipt.activated',
-            )
-          }}
+          {{ $t('page.research.feedback.actions.permit.receipt.activated') }}
         </Tag>
       </template>
       <Descriptions
         :column="{ lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 }"
         bordered
+        class="feedback-receipt-descriptions"
         size="small"
       >
         <DescriptionsItem
+          :label="
+            $t('page.research.feedback.actions.permit.receipt.activationId')
+          "
+          span="filled"
+        >
+          <span class="break-all font-mono text-xs">
+            {{ visibleActivationReceipt.policy_activation_id }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
           :label="$t('page.research.feedback.actions.permit.receipt.route')"
         >
+          {{ visibleActivationReceipt.route }} ·
           {{ visibleActivationReceipt.previous_route_generation }} →
           {{ visibleActivationReceipt.activated_route_generation }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t(
+              'page.research.feedback.actions.permit.receipt.activatedRevision',
+            )
+          "
+        >
+          <span class="break-all font-mono text-xs">
+            {{ visibleActivationReceipt.activated_model_routing_revision_id }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.research.feedback.actions.permit.receipt.rollbackRevision')
+          "
+        >
+          <span class="break-all font-mono text-xs">
+            {{
+              visibleActivationReceipt.rollback_target
+                .rollback_target_revision_id
+            }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.actions.permit.receipt.model')"
@@ -294,7 +353,17 @@ function submitIssue() {
       <RouterLink
         class="!text-foreground mt-4 inline-flex min-h-11 items-center rounded-sm underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         data-testid="feedback-rollback-link"
-        :to="{ path: '/system/config/model_routing' }"
+        :to="{
+          path: '/system/config/model_routing',
+          query: {
+            activated_revision_id:
+              visibleActivationReceipt.activated_model_routing_revision_id,
+            activation_id: visibleActivationReceipt.policy_activation_id,
+            rollback_target_revision_id:
+              visibleActivationReceipt.rollback_target
+                .rollback_target_revision_id,
+          },
+        }"
       >
         {{ $t('page.research.feedback.actions.permit.receipt.rollback') }}
       </RouterLink>
@@ -450,6 +519,11 @@ function submitIssue() {
             {{ permit.expected_runtime_control_revision }}
           </DescriptionsItem>
           <DescriptionsItem
+            :label="$t('page.research.feedback.actions.permit.routeGeneration')"
+          >
+            {{ permit.expected_route_generation }}
+          </DescriptionsItem>
+          <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.modelDiff')"
             span="filled"
           >
@@ -553,3 +627,12 @@ function submitIssue() {
     </div>
   </section>
 </template>
+
+<style scoped>
+@media (max-width: 640px) {
+  .feedback-receipt-descriptions :deep(.ant-descriptions-item-label) {
+    width: 6.5rem;
+    min-width: 6.5rem;
+  }
+}
+</style>

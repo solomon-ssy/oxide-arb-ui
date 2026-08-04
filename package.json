@@ -66,6 +66,7 @@
     "reinstall": "pnpm run clean -- --del-lock && pnpm install",
     "test:unit": "vitest run --dom",
     "test:e2e": "turbo run test:e2e",
+    "test:e2e:feedback-closure": "cross-env PLAYWRIGHT_PRODUCTION_FIXTURE=feedback-closure PLAYWRIGHT_CLOSURE_SCENARIO=activation playwright test apps/web-antdv-next/tests/e2e/feedback-governance-flow.spec.ts --project=protected-chromium --grep='exact rollback' && cross-env PLAYWRIGHT_PRODUCTION_FIXTURE=feedback-closure-recovery PLAYWRIGHT_CLOSURE_SCENARIO=reject playwright test apps/web-antdv-next/tests/e2e/feedback-governance-flow.spec.ts --project=protected-chromium --grep='governed rejection'",
     "update:deps": "npx taze -r -w",
     "version": "pnpm exec changeset version && pnpm install --no-frozen-lockfile",
     "catalog": "pnpm dlx codemod pnpm/catalog"

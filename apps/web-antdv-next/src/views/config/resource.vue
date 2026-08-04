@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { ModelRouteActivationReceiptView } from '@vben/types';
 import type {
   ConfigResourceKind,
   ModelRouting,
@@ -13,7 +14,7 @@ import type {
 
 import type { PolicyClientValidationIssue } from './modules/policy-schema';
 
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -28,17 +29,20 @@ import {
   approveConfigDraft,
   createConfigDraft,
   getConfigResourceSchema,
+  getConfigRevision,
   getConfigRevisions,
   getCurrentConfigResource,
   rollbackConfigRevision,
   validateConfigDraft,
 } from '#/api/config';
+import { getModelRouteActivation } from '#/api/feedback';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
+import { linkedRollbackState } from './modules/linked-rollback-state';
 import ModelRoutingPicker from './modules/model-routing-picker.vue';
 import PolicyField from './modules/policy-field.vue';
 import {
@@ -86,12 +90,22 @@ const validation = ref<null | PolicyValidationView>(null);
 const approval = ref<null | PolicyApprovalView>(null);
 const activationResult = ref<null | PolicyActivationResultView>(null);
 const activationConflict = ref<null | string>(null);
+const linkedActivationReceipt = ref<ModelRouteActivationReceiptView | null>(
+  null,
+);
+const linkedActivatedRevision = ref<null | PolicyRevisionView>(null);
+const linkedRollbackRevision = ref<null | PolicyRevisionView>(null);
+const linkedRollbackError = ref<null | string>(null);
 const stage = ref<WorkflowStage>('view');
 const rollbackMode = ref(false);
 
 const resourceKind = computed<ConfigResourceKind | null>(() => {
   const value = route.params.resource;
   return isConfigResourceKind(value) ? value : null;
+});
+const linkedActivationId = computed(() => {
+  const value = route.query.activation_id;
+  return typeof value === 'string' && value !== '' ? value : null;
 });
 const meta = computed(() =>
   resourceKind.value ? CONFIG_RESOURCE_META[resourceKind.value] : null,
@@ -107,6 +121,15 @@ const activeRevisionId = computed(
 );
 const diffs = computed(() =>
   collectPolicyDiff(activeDocument.value, workingDocument.value),
+);
+const linkedRollbackDiffs = computed(() =>
+  collectPolicyDiff(
+    linkedActivatedRevision.value?.document.document ?? null,
+    linkedRollbackRevision.value?.document.document ?? null,
+  ),
+);
+const linkedRollbackStatus = computed(() =>
+  linkedRollbackState(activeRevisionId.value, linkedActivationReceipt.value),
 );
 const dirty = computed(() => diffs.value.length > 0);
 const editorValidationIssues = computed(() =>
@@ -157,11 +180,9 @@ const workingReportSchedule = computed<null | ReportSchedule>(() =>
     : null,
 );
 
-const MODEL_ROUTING_POINTER_FIELDS = [
+const MODEL_ROUTING_GOVERNED_FIELDS = [
   'model.active_exit_model_version_id',
-  'model.active_model_version_id',
-  'model.category_model_pointers',
-  'model.shadow_model_version_id',
+  'model.buy_routes',
 ];
 
 const hasCreateAccess = hasAccessByCodes(['config:create']);
@@ -244,6 +265,124 @@ function editorValidationMessage(issue: PolicyClientValidationIssue) {
   });
 }
 
+function linkedQueryId(name: string): null | string {
+  const value = route.query[name];
+  if (value === undefined) {
+    return null;
+  }
+  if (typeof value !== 'string' || value === '') {
+    throw new Error(`invalid linked rollback query field: ${name}`);
+  }
+  return value;
+}
+
+function routeBinding(
+  revision: PolicyRevisionView,
+  receipt: ModelRouteActivationReceiptView,
+) {
+  if (revision.document.resource_kind !== 'model_routing') {
+    throw new Error('linked rollback revision is not model routing');
+  }
+  const routing = revision.document.document as ModelRouting;
+  const binding = routing.model?.buy_routes?.[receipt.route];
+  if (binding === undefined) {
+    throw new Error('linked rollback route binding is missing');
+  }
+  return binding;
+}
+
+function verifyLinkedRollback(
+  receipt: ModelRouteActivationReceiptView,
+  activated: PolicyRevisionView,
+  rollback: PolicyRevisionView,
+) {
+  const activatedQuery = linkedQueryId('activated_revision_id');
+  const rollbackQuery = linkedQueryId('rollback_target_revision_id');
+  if (
+    (activatedQuery !== null &&
+      activatedQuery !== receipt.activated_model_routing_revision_id) ||
+    (rollbackQuery !== null &&
+      rollbackQuery !== receipt.rollback_target.rollback_target_revision_id) ||
+    activated.policy_revision_id !==
+      receipt.activated_model_routing_revision_id ||
+    rollback.policy_revision_id !==
+      receipt.rollback_target.rollback_target_revision_id ||
+    rollback.revision_hash !==
+      receipt.rollback_target.rollback_target_revision_hash ||
+    receipt.rollback_target.route !== receipt.route ||
+    !receipt.rollback_target.shadow_cleared
+  ) {
+    throw new Error('linked rollback receipt or revision identity mismatch');
+  }
+
+  const activatedBinding = routeBinding(activated, receipt);
+  const rollbackBinding = routeBinding(rollback, receipt);
+  if (
+    activatedBinding.champion.model_version_id !==
+      receipt.rollback_target.activated_model_version_id ||
+    activatedBinding.shadow !== null ||
+    activatedBinding.champion.source.source_kind !== 'feedback' ||
+    activatedBinding.champion.source.feedback_cycle_id !==
+      receipt.feedback_cycle_id ||
+    rollbackBinding.champion.model_version_id !==
+      receipt.rollback_target.restored_model_version_id ||
+    rollbackBinding.shadow !== null
+  ) {
+    throw new Error('linked rollback model-route delta is not sanitized');
+  }
+}
+
+async function loadLinkedRollback(activationId: string) {
+  linkedRollbackError.value = null;
+  const evidence = await handleRequest(
+    async () => {
+      const receipt = await getModelRouteActivation(activationId);
+      if (receipt.policy_activation_id !== activationId) {
+        throw new Error('linked activation identity mismatch');
+      }
+      const [activated, rollback] = await Promise.all([
+        getConfigRevision(
+          'model_routing',
+          receipt.activated_model_routing_revision_id,
+        ),
+        getConfigRevision(
+          'model_routing',
+          receipt.rollback_target.rollback_target_revision_id,
+        ),
+      ]);
+      verifyLinkedRollback(receipt, activated, rollback);
+      return { activated, receipt, rollback };
+    },
+    {
+      onError: () => {
+        linkedRollbackError.value = $t(
+          'page.config.workflow.linkedRollback.loadError',
+        );
+      },
+      silent: true,
+    },
+  );
+  if (evidence === null) {
+    return;
+  }
+
+  linkedActivationReceipt.value = evidence.receipt;
+  linkedActivatedRevision.value = evidence.activated;
+  linkedRollbackRevision.value = evidence.rollback;
+  revisions.value = [
+    evidence.activated,
+    evidence.rollback,
+    ...revisions.value.filter(
+      (revision) =>
+        revision.policy_revision_id !== evidence.activated.policy_revision_id &&
+        revision.policy_revision_id !== evidence.rollback.policy_revision_id,
+    ),
+  ];
+  if (canRollback.value && linkedRollbackStatus.value === 'actionable') {
+    reviewRollback(evidence.rollback);
+  }
+}
+
 function resetWorkflow() {
   stage.value = 'view';
   rollbackMode.value = false;
@@ -265,6 +404,10 @@ async function loadResource() {
   }
   loading.value = true;
   loadError.value = false;
+  linkedActivationReceipt.value = null;
+  linkedActivatedRevision.value = null;
+  linkedRollbackRevision.value = null;
+  linkedRollbackError.value = null;
   const result = await handleRequest(
     () =>
       Promise.all([
@@ -277,6 +420,16 @@ async function loadResource() {
   if (result) {
     [current.value, schemaView.value, revisions.value] = result;
     resetWorkflow();
+    const activationId = linkedActivationId.value;
+    if (activationId !== null) {
+      if (kind === 'model_routing') {
+        await loadLinkedRollback(activationId);
+      } else {
+        linkedRollbackError.value = $t(
+          'page.config.workflow.linkedRollback.wrongResource',
+        );
+      }
+    }
   }
   loading.value = false;
 }
@@ -448,6 +601,9 @@ async function activateRevision() {
         : activateConfigDraft(kind, revision.policy_revision_id, body, ctx);
     },
     {
+      confirmWord: rollbackMode.value
+        ? $t('page.config.workflow.rollbackConfirmWord')
+        : undefined,
       danger: rollbackMode.value || kind === 'execution_authorization',
       details: [
         {
@@ -530,8 +686,13 @@ function finishWorkflow() {
   void loadResource();
 }
 
-watch(resourceKind, () => void loadResource());
-onMounted(() => void loadResource());
+watch(
+  [resourceKind, linkedActivationId],
+  () => {
+    void loadResource();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -637,6 +798,118 @@ onMounted(() => void loadResource());
         show-icon
         type="warning"
       />
+      <Alert
+        v-if="linkedRollbackError"
+        :message="linkedRollbackError"
+        role="alert"
+        show-icon
+        type="error"
+      >
+        <template #action>
+          <Button size="small" @click="loadResource">
+            {{ $t('page.shared.asyncState.retry') }}
+          </Button>
+        </template>
+      </Alert>
+      <section
+        v-if="
+          linkedActivationReceipt &&
+          linkedActivatedRevision &&
+          linkedRollbackRevision
+        "
+        class="bg-card rounded-xl border p-5"
+        data-testid="linked-model-route-rollback"
+      >
+        <h2 class="text-base font-semibold">
+          {{ $t('page.config.workflow.linkedRollback.title') }}
+        </h2>
+        <p class="text-muted-foreground mt-1 text-sm">
+          {{ $t('page.config.workflow.linkedRollback.description') }}
+        </p>
+        <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-muted-foreground">
+              {{ $t('page.config.workflow.linkedRollback.activation') }}
+            </dt>
+            <dd class="break-all font-mono text-xs">
+              {{ linkedActivationReceipt.policy_activation_id }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">
+              {{ $t('page.config.workflow.linkedRollback.route') }}
+            </dt>
+            <dd>{{ linkedActivationReceipt.route }}</dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">
+              {{ $t('page.config.workflow.linkedRollback.activatedRevision') }}
+            </dt>
+            <dd class="break-all font-mono text-xs">
+              {{ linkedActivatedRevision.policy_revision_id }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-muted-foreground">
+              {{ $t('page.config.workflow.linkedRollback.targetRevision') }}
+            </dt>
+            <dd class="break-all font-mono text-xs">
+              {{ linkedRollbackRevision.policy_revision_id }}
+            </dd>
+          </div>
+        </dl>
+        <Alert
+          v-if="linkedRollbackStatus === 'restored'"
+          class="mt-4"
+          :message="$t('page.config.workflow.linkedRollback.restored')"
+          show-icon
+          type="success"
+        />
+        <Alert
+          v-else-if="linkedRollbackStatus === 'superseded'"
+          class="mt-4"
+          :message="$t('page.config.workflow.linkedRollback.superseded')"
+          show-icon
+          type="warning"
+        />
+        <div class="mt-4">
+          <h3 class="text-sm font-semibold">
+            {{
+              $t('page.config.workflow.linkedRollback.immutableDiff', {
+                count: linkedRollbackDiffs.length,
+              })
+            }}
+          </h3>
+          <div
+            v-if="linkedRollbackDiffs.length > 0"
+            class="mt-2 divide-y rounded-lg border"
+          >
+            <article
+              v-for="diff in linkedRollbackDiffs"
+              :key="diff.path.join('.')"
+              class="diff-row"
+            >
+              <h4 class="font-mono text-xs font-semibold">
+                {{ diff.path.join('.') }}
+              </h4>
+              <dl class="mt-2 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <dt>{{ $t('page.config.review.before') }}</dt>
+                  <dd>{{ formatPolicyValue(diff.before) }}</dd>
+                </div>
+                <div>
+                  <dt>{{ $t('page.config.review.after') }}</dt>
+                  <dd>{{ formatPolicyValue(diff.after) }}</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
+          <Empty
+            v-else
+            :description="$t('page.config.workflow.linkedRollback.emptyDiff')"
+          />
+        </div>
+      </section>
       <Alert
         v-if="loadError"
         :message="$t('page.config.error.load')"
@@ -750,7 +1023,7 @@ onMounted(() => void loadResource());
                 :model-value="activeDocument"
                 :root-schema="jsonSchema"
                 :schema="jsonSchema"
-                :hidden-fields="MODEL_ROUTING_POINTER_FIELDS"
+                :hidden-fields="MODEL_ROUTING_GOVERNED_FIELDS"
               />
               <Empty
                 v-else
@@ -796,7 +1069,7 @@ onMounted(() => void loadResource());
               />
               <PolicyField
                 v-if="workingDocument"
-                :hidden-fields="MODEL_ROUTING_POINTER_FIELDS"
+                :hidden-fields="MODEL_ROUTING_GOVERNED_FIELDS"
                 :issues="editorValidationIssues"
                 :model-value="workingDocument"
                 :root-schema="jsonSchema"

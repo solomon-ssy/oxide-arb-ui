@@ -12,6 +12,7 @@ import {
 } from '@vben/types';
 
 import { $t } from '#/locales';
+import { formatDateTimeLocal } from '#/shared/components/format';
 import {
   useResearchJobKindTagOptions,
   useResearchJobStatusTagOptions,
@@ -22,6 +23,20 @@ import { iconOp } from '#/shared/table/cell-operation-presets';
 function formatProgress(row: ResearchJobView): string {
   if (row.status === RESEARCH_JOB_STATUSES.queued) {
     return $t('page.research.jobs.progress.queued');
+  }
+  if (row.status === RESEARCH_JOB_STATUSES.retryScheduled) {
+    return row.next_attempt_at
+      ? $t('page.research.jobs.progress.retryAt', {
+          time: formatDateTimeLocal(row.next_attempt_at),
+        })
+      : $t('page.research.jobs.progress.retryScheduled');
+  }
+  if (row.status === RESEARCH_JOB_STATUSES.awaitingEvidence) {
+    return row.next_attempt_at
+      ? $t('page.research.jobs.progress.evidenceAt', {
+          time: formatDateTimeLocal(row.next_attempt_at),
+        })
+      : $t('page.research.jobs.progress.awaitingEvidence');
   }
   if (row.status === RESEARCH_JOB_STATUSES.succeeded) {
     return '100%';
