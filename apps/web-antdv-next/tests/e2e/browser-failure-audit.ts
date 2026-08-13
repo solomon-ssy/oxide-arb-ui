@@ -252,11 +252,20 @@ export class BrowserFailureAudit {
     if (!sourceUrl) {
       return false;
     }
-    const pathname = new URL(sourceUrl).pathname;
+    const url = new URL(sourceUrl);
+    const allowedRequestFailure = this.#requestFailureAllowances.some(
+      (allowance) =>
+        message.text().includes(allowance.errorText) &&
+        url.pathname === allowance.pathname &&
+        url.search === allowance.search,
+    );
+    if (allowedRequestFailure) {
+      return true;
+    }
     return this.#responseAllowances.some(
       (allowance) =>
         message.text().includes(`status of ${allowance.status}`) &&
-        this.#matchesPath(pathname, allowance.pathname),
+        this.#matchesPath(url.pathname, allowance.pathname),
     );
   }
 

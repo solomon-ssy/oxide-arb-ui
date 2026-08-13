@@ -2,12 +2,11 @@
 import type {
   QuantReportDetailView,
   QuantReportDiagnosticsView,
+  ReportRouteDiagnosticsView,
 } from '@vben/types';
 
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-
-import { usePreferences } from '@vben/preferences';
 
 import {
   Alert,
@@ -15,29 +14,24 @@ import {
   Card,
   Descriptions,
   DescriptionsItem,
-  Progress,
+  Table,
   Tag,
 } from 'antdv-next';
 
 import { $t } from '#/locales';
-import DataList from '#/shared/components/data-list.vue';
 import FeatureParityStatusPanel from '#/shared/components/feature-parity-status-panel.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
   formatDurationSecs,
-  formatPercent,
   formatScore,
   formatUsd,
 } from '#/shared/components/format';
 import {
   findTagOption,
-  useFeatureCellStateTagOptions,
-  useModelInputStateTagOptions,
   useQuantRuntimeModeTagOptions,
   useRecommendationReportStatusTagOptions,
 } from '#/shared/components/format/tag-options';
-import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'ReportOverview' });
 
@@ -46,19 +40,85 @@ const props = defineProps<{
   report: QuantReportDetailView;
 }>();
 
-const router = useRouter();
-const { isDark } = usePreferences();
+const emit = defineEmits<{
+  selectRoute: [route: ReportRouteDiagnosticsView];
+}>();
 
+const router = useRouter();
 const statusTagOptions = useRecommendationReportStatusTagOptions();
 const modeTagOptions = useQuantRuntimeModeTagOptions();
-const featureCellStateOptions = useFeatureCellStateTagOptions();
-const modelInputStateOptions = useModelInputStateTagOptions();
 
 const summary = computed(() => props.report.summary);
 const factDelivery = computed(() => props.report.fact_delivery);
-const factDeliveryVerified = computed(
-  () => factDelivery.value?.status === 'verified',
+const isEmpty = computed(
+  () => summary.value.published_recommendation_count === 0,
 );
+const globalEvidence = computed(() => props.diagnostics?.global ?? null);
+const optimizedPlan = computed(() =>
+  props.report.portfolio_decision.outcome === 'optimized'
+    ? props.report.portfolio_decision.plan
+    : null,
+);
+const knowledgeCutoff = computed(
+  () => props.diagnostics?.decision_boundary.knowledge_cutoff ?? null,
+);
+const sourceCutoffs = computed(() =>
+  Object.entries(
+    props.diagnostics?.decision_boundary.per_source_cutoffs ?? {},
+  ).map(([source, cutoff]) => ({ cutoff, source })),
+);
+
+const twoColumnLayout = { lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 };
+const threeColumnLayout = { lg: 3, md: 2, sm: 1, xl: 3, xs: 1, xxl: 3 };
+const fourColumnLayout = { lg: 4, md: 2, sm: 1, xl: 4, xs: 1, xxl: 4 };
+
+const routeColumns = [
+  {
+    dataIndex: 'route',
+    key: 'route',
+    title: $t('page.quantReports.detail.routes.route'),
+    width: 120,
+  },
+  {
+    dataIndex: 'outcome',
+    key: 'outcome',
+    title: $t('page.quantReports.detail.routes.outcome'),
+    width: 150,
+  },
+  {
+    key: 'model',
+    title: $t('page.quantReports.detail.routes.model'),
+  },
+  {
+    align: 'right' as const,
+    key: 'eligible',
+    title: $t('page.quantReports.detail.routes.eligible'),
+    width: 110,
+  },
+  {
+    align: 'right' as const,
+    key: 'candidates',
+    title: $t('page.quantReports.detail.routes.candidates'),
+    width: 110,
+  },
+  {
+    align: 'right' as const,
+    key: 'selected',
+    title: $t('page.quantReports.detail.routes.selected'),
+    width: 110,
+  },
+  {
+    key: 'stage',
+    title: $t('page.quantReports.detail.routes.stage'),
+    width: 160,
+  },
+  {
+    align: 'right' as const,
+    key: 'detail',
+    title: $t('common.detail'),
+    width: 90,
+  },
+];
 
 function factDeliveryColor(status: string | undefined) {
   switch (status) {
@@ -80,135 +140,23 @@ function factDeliveryColor(status: string | undefined) {
   }
 }
 
-// The backend projects the exact frozen v10 boundary. Re-deriving a cutoff in
-// the browser would hide missing serving evidence and could diverge from
-// source-specific availability lags.
-const knowledgeCutoff = computed(
-  () => props.diagnostics?.decision_boundary?.knowledge_cutoff ?? null,
-);
-
-const sourceCutoffRows = computed(() =>
-  Object.entries(
-    props.diagnostics?.decision_boundary?.per_source_cutoffs ?? {},
-  ).map(([source, cutoff]) => ({ cutoff, source })),
-);
-
-const featureStateRows = computed(() =>
-  Object.entries(props.diagnostics?.feature_state_counts ?? {}).map(
-    ([state, count]) => ({ count, state }),
-  ),
-);
-const modelInputStateRows = computed(() =>
-  Object.entries(props.diagnostics?.model_input_state_counts ?? {}).map(
-    ([state, count]) => ({ count, state }),
-  ),
-);
-
-const isEmpty = computed(
-  () => summary.value.published_recommendation_count === 0,
-);
-
-interface AllocationRow {
-  key: string;
-  label: string;
-  value: string;
+function routeOutcomeColor(outcome: ReportRouteDiagnosticsView['outcome']) {
+  switch (outcome) {
+    case 'failed': {
+      return 'error';
+    }
+    case 'ready': {
+      return 'success';
+    }
+    case 'zero_candidates': {
+      return 'warning';
+    }
+  }
 }
-
-interface RejectionRow {
-  count: number;
-  key: string;
-  label: string;
-}
-
-const allocationColumns = [
-  { dataIndex: 'label', ellipsis: true, key: 'label' },
-  { align: 'right' as const, dataIndex: 'value', key: 'value' },
-];
-
-const rejectionColumns = [
-  { dataIndex: 'label', ellipsis: true, key: 'label' },
-  { align: 'right' as const, dataIndex: 'count', key: 'count' },
-];
-
-const categoryAllocations = computed<AllocationRow[]>(() =>
-  Object.entries(summary.value.category_allocation).map(([category, usd]) => ({
-    key: category,
-    label: $t(`enum.marketCategory.${category}`),
-    value: usd,
-  })),
-);
-const eventAllocations = computed<AllocationRow[]>(() =>
-  Object.entries(summary.value.event_allocation).map(([event, usd]) => ({
-    key: event,
-    label: event,
-    value: usd,
-  })),
-);
-const rejectionRows = computed<RejectionRow[]>(() =>
-  summary.value.top_rejection_reasons.map((item) => ({
-    count: item.count,
-    key: item.reason,
-    label: $t(`enum.rejectionReason.${item.reason}`),
-  })),
-);
 
 function displayCount(value: null | number | undefined): number | string {
   return value === null || value === undefined ? EMPTY_PLACEHOLDER : value;
 }
-
-// Frozen server-side at report-compose time from the exact account and
-// decision-policy snapshot this report solved against. Never re-derived
-// client-side from a separately fetched policy revision, which may not be the
-// one used by this report and can encode a different bankroll denominator from
-// the one enforced by the portfolio optimizer.
-const aggregateExposureCapUsd = computed(() => {
-  const raw = summary.value.aggregate_exposure_cap_usd;
-  const parsed = raw === null || raw === undefined ? null : Number(raw);
-  return parsed !== null && Number.isFinite(parsed) && parsed > 0
-    ? parsed
-    : null;
-});
-
-const aggregateExposureAllocatedUsd = computed(() =>
-  Number(summary.value.total_suggested_usd),
-);
-
-const aggregateExposureProgress = computed(() => {
-  const cap = aggregateExposureCapUsd.value;
-  if (cap === null) {
-    return 0;
-  }
-  return Math.min(
-    100,
-    Math.round((aggregateExposureAllocatedUsd.value / cap) * 100),
-  );
-});
-
-const aggregateExposureProgressStatus = computed(() => {
-  const pct = aggregateExposureProgress.value;
-  if (pct >= 100) {
-    return 'exception' as const;
-  }
-  if (pct >= 90) {
-    return 'exception' as const;
-  }
-  if (pct >= 80) {
-    return 'normal' as const;
-  }
-  return 'active' as const;
-});
-
-const aggregateExposureStrokeColor = computed(() => {
-  void isDark.value;
-  const pct = aggregateExposureProgress.value;
-  if (pct >= 90) {
-    return { from: themeColors.destructive, to: themeColors.destructive };
-  }
-  if (pct >= 80) {
-    return { from: themeColors.warning, to: themeColors.destructive };
-  }
-  return undefined;
-});
 
 function openDecisionPolicyActivity() {
   void router.push('/system/config/activity');
@@ -218,7 +166,7 @@ function openDecisionPolicyActivity() {
 <template>
   <div class="flex flex-col gap-4">
     <Alert
-      v-if="!factDeliveryVerified"
+      v-if="factDelivery?.status !== 'verified'"
       :description="
         factDelivery?.last_error ??
         $t('page.quantReports.detail.factDelivery.pendingDescription')
@@ -236,8 +184,8 @@ function openDecisionPolicyActivity() {
     <Alert
       v-if="isEmpty"
       :description="
-        report.empty_reason
-          ? $t(`enum.emptyReportReason.${report.empty_reason}`)
+        summary.empty_reason
+          ? $t(`enum.emptyReportReason.${summary.empty_reason}`)
           : $t('page.quantReports.detail.empty.description')
       "
       :message="$t('page.quantReports.detail.empty.title')"
@@ -245,115 +193,183 @@ function openDecisionPolicyActivity() {
       type="info"
     />
     <Alert
-      v-if="diagnostics?.subject === 'pre_inference_report'"
-      :description="
-        $t('page.quantReports.detail.servingAudit.preInferenceDescription', {
-          stage: $t(`enum.featureParityStage.${diagnostics.stage_ceiling}`),
-        })
-      "
-      :message="$t('page.quantReports.detail.servingAudit.preInference')"
+      v-if="diagnostics && !diagnostics.global.evidence_complete"
+      :message="$t('page.quantReports.detail.servingAudit.incomplete')"
       show-icon
-      type="info"
+      type="error"
     />
 
     <Card
-      data-testid="report-fact-delivery"
+      data-testid="global-portfolio-economics"
       size="small"
-      :title="$t('page.quantReports.detail.factDelivery.title')"
+      :title="$t('page.quantReports.detail.portfolio.title')"
     >
-      <Descriptions :column="2" bordered size="small">
+      <Descriptions :column="fourColumnLayout" bordered size="small">
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.status')"
+          :label="$t('page.quantReports.detail.portfolio.robustNet')"
         >
-          <Tag :color="factDeliveryColor(factDelivery?.status)">
-            {{
-              factDelivery
-                ? $t(
-                    `page.quantReports.detail.factDelivery.statuses.${factDelivery.status}`,
-                  )
-                : $t('page.quantReports.detail.factDelivery.missing')
-            }}
-          </Tag>
+          <span class="font-mono">{{
+            formatUsd(summary.robust_expected_net_usd)
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.attempts')"
+          :label="$t('page.quantReports.detail.portfolio.nominalNet')"
         >
-          {{ factDelivery?.attempt_count ?? 0 }}
+          <span class="font-mono">{{
+            formatUsd(summary.nominal_expected_net_usd)
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="
-            $t('page.quantReports.detail.factDelivery.recommendationRows')
-          "
+          :label="$t('page.quantReports.detail.portfolio.cvar')"
         >
-          {{ factDelivery?.recommendation_row_count ?? EMPTY_PLACEHOLDER }}
+          <span class="font-mono">{{ formatUsd(summary.cvar_usd) }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.funnelRows')"
+          :label="$t('page.quantReports.detail.portfolio.maximumScenarioLoss')"
         >
-          {{ factDelivery?.funnel_row_count ?? EMPTY_PLACEHOLDER }}
+          <span class="font-mono">{{
+            formatUsd(summary.maximum_scenario_loss_usd)
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.bundleHash')"
-          :span="2"
+          :label="$t('page.quantReports.detail.portfolio.capitalTime')"
         >
-          <span class="break-all font-mono text-xs">
-            {{ factDelivery?.bundle_hash ?? EMPTY_PLACEHOLDER }}
+          <span class="font-mono">
+            {{ formatScore(summary.capital_occupancy_usd_hours) }} USD·h
           </span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="
-            $t('page.quantReports.detail.factDelivery.recommendationHash')
-          "
-          :span="2"
+          :label="$t('page.quantReports.detail.summary.totalSuggested')"
         >
-          <span class="break-all font-mono text-xs">
-            {{
-              factDelivery?.recommendation_row_chain_hash ?? EMPTY_PLACEHOLDER
-            }}
-          </span>
+          <span class="font-mono">{{
+            formatUsd(summary.total_suggested_usd)
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.funnelHash')"
-          :span="2"
+          :label="$t('page.quantReports.detail.summary.publishedCount')"
         >
-          <span class="break-all font-mono text-xs">
-            {{ factDelivery?.funnel_row_chain_hash ?? EMPTY_PLACEHOLDER }}
-          </span>
+          {{ summary.published_recommendation_count }} / {{ report.top_n }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.nextAttemptAt')"
+          :label="$t('page.quantReports.detail.summary.rejectedTierCount')"
         >
-          {{ formatDateTimeLocal(factDelivery?.next_attempt_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.verifiedAt')"
-        >
-          {{ formatDateTimeLocal(factDelivery?.verified_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.factDelivery.announcedAt')"
-        >
-          {{ formatDateTimeLocal(factDelivery?.announced_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          v-if="factDelivery?.last_error"
-          :label="$t('page.quantReports.detail.factDelivery.lastError')"
-          :span="2"
-        >
-          <span class="text-destructive">{{ factDelivery.last_error }}</span>
+          {{ summary.rejected_tier_count }}
         </DescriptionsItem>
       </Descriptions>
+    </Card>
+
+    <Card
+      data-testid="portfolio-solver-evidence"
+      size="small"
+      :title="$t('page.quantReports.detail.optimizer.title')"
+    >
+      <Alert
+        v-if="!optimizedPlan"
+        :description="
+          report.portfolio_decision.outcome === 'zero_candidates'
+            ? report.portfolio_decision.evidence_hash
+            : undefined
+        "
+        :message="$t('page.quantReports.detail.optimizer.zeroCandidates')"
+        show-icon
+        type="info"
+      />
+      <template v-else>
+        <Alert
+          class="mb-3"
+          :message="
+            optimizedPlan.solver.optimal &&
+            optimizedPlan.exact_verification.passed
+              ? $t('page.quantReports.detail.optimizer.verified')
+              : $t('page.quantReports.detail.optimizer.invalid')
+          "
+          show-icon
+          :type="
+            optimizedPlan.solver.optimal &&
+            optimizedPlan.exact_verification.passed
+              ? 'success'
+              : 'error'
+          "
+        />
+        <Descriptions :column="fourColumnLayout" bordered size="small">
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.backend')"
+          >
+            {{ optimizedPlan.solver.backend }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.stages')"
+          >
+            {{ optimizedPlan.solver.lexicographic_solve_count }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.threads')"
+          >
+            {{ optimizedPlan.solver.deterministic_threads }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.scale')"
+          >
+            {{ optimizedPlan.solver.coefficient_scale }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.boundScaleExponent')"
+          >
+            2^{{ optimizedPlan.solver.bound_scale_exponent }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.constraints')"
+          >
+            {{ optimizedPlan.constraints.checked_constraint_count }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.availableCashUsed')"
+          >
+            <span class="font-mono">{{
+              formatUsd(optimizedPlan.constraints.available_cash_used_usd)
+            }}</span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.openCapital')"
+          >
+            <span class="font-mono">{{
+              formatUsd(optimizedPlan.constraints.open_capital_usd)
+            }}</span>
+          </DescriptionsItem>
+        </Descriptions>
+        <Descriptions :column="1" bordered class="mt-3" size="small">
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.selectedTiers')"
+          >
+            {{ optimizedPlan.selected_tier_ids.length }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.constraintHash')"
+          >
+            <span class="font-mono text-xs break-all">{{
+              optimizedPlan.constraints.evidence_hash
+            }}</span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantReports.detail.optimizer.recomputedHash')"
+          >
+            <span class="font-mono text-xs break-all">{{
+              optimizedPlan.exact_verification.recomputed_economics_hash
+            }}</span>
+          </DescriptionsItem>
+        </Descriptions>
+      </template>
     </Card>
 
     <Card
       size="small"
       :title="$t('page.quantReports.detail.overview.identity')"
     >
-      <Descriptions :column="2" bordered size="small">
+      <Descriptions :column="twoColumnLayout" bordered size="small">
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.reportId')"
         >
-          <span class="font-mono text-xs">{{
+          <span class="font-mono text-xs break-all">{{
             report.recommendation_report_id
           }}</span>
         </DescriptionsItem>
@@ -363,6 +379,36 @@ function openDecisionPolicyActivity() {
           <Tag :color="findTagOption(statusTagOptions, report.status)?.color">
             {{ findTagOption(statusTagOptions, report.status)?.label }}
           </Tag>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.routes')"
+        >
+          <div class="flex flex-wrap gap-1" data-testid="represented-routes">
+            <Tag v-for="route in report.represented_routes.routes" :key="route">
+              {{ $t(`page.quantReports.routes.${route}`) }}
+            </Tag>
+          </div>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.routeSetDigest')"
+        >
+          <span class="font-mono text-xs break-all">{{
+            report.represented_routes.digest
+          }}</span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.scenarioArtifact')"
+        >
+          <span class="font-mono text-xs break-all">{{
+            report.scenario_artifact_id ?? EMPTY_PLACEHOLDER
+          }}</span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.overview.scenarioHash')"
+        >
+          <span class="font-mono text-xs break-all">{{
+            report.scenario_artifact_hash ?? EMPTY_PLACEHOLDER
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.quantReports.detail.overview.kind')">
           {{ $t(`enum.reportKind.${report.report_kind}`) }}
@@ -377,46 +423,9 @@ function openDecisionPolicyActivity() {
           </Tag>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.researchProfile')"
-        >
-          {{ report.profile_id }} · {{ report.profile_ref.id }}@{{
-            report.profile_ref.version
-          }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.triggerKind')"
-        >
-          {{
-            report.run
-              ? $t(`enum.reportTriggerKind.${report.run.trigger_kind}`)
-              : EMPTY_PLACEHOLDER
-          }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.triggerKey')"
-        >
-          <span class="font-mono text-xs">{{
-            report.run?.trigger_key ?? EMPTY_PLACEHOLDER
-          }}</span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.triggerTime')"
-        >
-          {{
-            formatDateTimeLocal(
-              report.run?.scheduled_for ?? report.run?.requested_at,
-            )
-          }}
-        </DescriptionsItem>
-        <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.decisionAt')"
         >
           {{ formatDateTimeLocal(report.decision_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.knowledgeLag')"
-        >
-          {{ formatDurationSecs(report.run?.knowledge_lag_secs) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.knowledgeCutoff')"
@@ -424,12 +433,9 @@ function openDecisionPolicyActivity() {
           {{ formatDateTimeLocal(knowledgeCutoff) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.horizon')"
+          :label="$t('page.quantReports.detail.overview.knowledgeLag')"
         >
-          {{ formatDurationSecs(report.horizon_secs) }}
-        </DescriptionsItem>
-        <DescriptionsItem :label="$t('page.quantReports.detail.overview.topN')">
-          {{ report.top_n }}
+          {{ formatDurationSecs(report.run?.knowledge_lag_secs) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.capitalBase')"
@@ -437,31 +443,6 @@ function openDecisionPolicyActivity() {
           <span class="font-mono">{{
             formatUsd(report.capital_base_usd)
           }}</span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.accountSource')"
-        >
-          {{ $t(`enum.accountSource.${report.account_source}`) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.publishedAt')"
-        >
-          {{ formatDateTimeLocal(report.published_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.revokedAt')"
-        >
-          {{ formatDateTimeLocal(report.revoked_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.expiredAt')"
-        >
-          {{ formatDateTimeLocal(report.expired_at) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.createdAt')"
-        >
-          {{ formatDateTimeLocal(report.created_at) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.accountSnapshotRef')"
@@ -487,10 +468,10 @@ function openDecisionPolicyActivity() {
           </Button>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.modelVersion')"
+          :label="$t('page.quantReports.detail.overview.portfolioPlan')"
         >
           <span class="font-mono text-xs break-all">{{
-            report.model_version_id
+            report.portfolio_plan_id
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem
@@ -504,403 +485,210 @@ function openDecisionPolicyActivity() {
     </Card>
 
     <Card
+      data-testid="route-readiness"
       size="small"
-      :title="$t('page.quantReports.detail.servingAudit.title')"
+      :title="$t('page.quantReports.detail.routes.title')"
     >
       <Alert
-        v-if="diagnostics && !diagnostics.evidence_complete"
-        class="mb-3"
-        :message="$t('page.quantReports.detail.servingAudit.incomplete')"
+        v-if="!diagnostics"
+        :message="$t('page.quantReports.detail.routes.missing')"
         show-icon
         type="error"
       />
-      <Descriptions :column="2" bordered size="small">
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.servingAudit.subject')"
-        >
-          {{
-            diagnostics
-              ? $t(
-                  `page.quantReports.detail.servingAudit.subjects.${diagnostics.subject}`,
-                )
-              : EMPTY_PLACEHOLDER
-          }}
-        </DescriptionsItem>
+      <Table
+        v-else
+        :columns="routeColumns"
+        :data-source="diagnostics.routes"
+        :pagination="false"
+        row-key="report_route_run_id"
+        :scroll="{ x: 1080 }"
+        size="small"
+      >
+        <template #bodyCell="{ column, record }">
+          <Tag v-if="column.key === 'route'">
+            {{ $t(`page.quantReports.routes.${record.route}`) }}
+          </Tag>
+          <Tag
+            v-else-if="column.key === 'outcome'"
+            :color="routeOutcomeColor(record.outcome)"
+          >
+            {{
+              $t(`page.quantReports.detail.routes.outcomes.${record.outcome}`)
+            }}
+          </Tag>
+          <span v-else-if="column.key === 'model'" class="font-mono text-xs">
+            {{ record.lineage?.model_version_id ?? EMPTY_PLACEHOLDER }}
+          </span>
+          <span v-else-if="column.key === 'eligible'">
+            {{ record.funnel.eligible_markets }}
+          </span>
+          <span v-else-if="column.key === 'candidates'">
+            {{ record.funnel.calibrated_candidates }}
+          </span>
+          <span v-else-if="column.key === 'selected'">
+            {{ record.funnel.selected_recommendations }}
+          </span>
+          <span v-else-if="column.key === 'stage'">
+            {{ $t(`enum.featureParityStage.${record.evidence.stage_ceiling}`) }}
+          </span>
+          <Button
+            v-else-if="column.key === 'detail'"
+            data-testid="open-route-lineage"
+            size="small"
+            type="link"
+            @click="emit('selectRoute', record)"
+          >
+            {{ $t('common.detail') }}
+          </Button>
+        </template>
+      </Table>
+    </Card>
+
+    <div class="grid grid-cols-1 gap-4 2xl:grid-cols-3">
+      <Card
+        size="small"
+        :title="$t('page.quantReports.detail.summary.routeAllocation')"
+      >
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            v-for="(usd, route) in summary.route_allocation"
+            :key="route"
+            :label="$t(`page.quantReports.routes.${route}`)"
+          >
+            <span class="font-mono">{{ formatUsd(usd) }}</span>
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+      <Card
+        size="small"
+        :title="$t('page.quantReports.detail.summary.categoryAllocation')"
+      >
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            v-for="(usd, category) in summary.category_allocation"
+            :key="category"
+            :label="$t(`enum.marketCategory.${category}`)"
+          >
+            <span class="font-mono">{{ formatUsd(usd) }}</span>
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+      <Card
+        size="small"
+        :title="$t('page.quantReports.detail.summary.eventAllocation')"
+      >
+        <Descriptions :column="1" bordered size="small">
+          <DescriptionsItem
+            v-for="(usd, event) in summary.event_allocation"
+            :key="event"
+            :label="event"
+          >
+            <span class="font-mono">{{ formatUsd(usd) }}</span>
+          </DescriptionsItem>
+        </Descriptions>
+      </Card>
+    </div>
+
+    <Card
+      data-testid="report-serving-audit"
+      size="small"
+      :title="$t('page.quantReports.detail.servingAudit.title')"
+    >
+      <Descriptions :column="threeColumnLayout" bordered size="small">
         <DescriptionsItem
           :label="$t('page.quantReports.detail.servingAudit.stageCeiling')"
         >
           {{
-            diagnostics
-              ? $t(`enum.featureParityStage.${diagnostics.stage_ceiling}`)
+            globalEvidence
+              ? $t(`enum.featureParityStage.${globalEvidence.stage_ceiling}`)
               : EMPTY_PLACEHOLDER
           }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.modelRun')"
-          :span="2"
-        >
-          <span class="font-mono text-xs break-all">
-            {{ report.model_run_id ?? EMPTY_PLACEHOLDER }}
-          </span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.servingAudit.modelFamily')"
-        >
-          {{ diagnostics?.model_route?.model_family ?? EMPTY_PLACEHOLDER }}
-        </DescriptionsItem>
-        <DescriptionsItem
           :label="$t('page.quantReports.detail.servingAudit.selectionCount')"
         >
-          {{ displayCount(diagnostics?.selection_count) }}
+          {{ displayCount(globalEvidence?.selection_count) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.servingAudit.captureCount')"
         >
-          {{ displayCount(diagnostics?.decision_capture_count) }}
+          {{ displayCount(globalEvidence?.decision_capture_count) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.servingAudit.featureVectors')"
         >
-          {{ displayCount(diagnostics?.feature_vector_count) }}
+          {{ displayCount(globalEvidence?.feature_vector_count) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.servingAudit.featureCells')"
         >
-          {{ displayCount(diagnostics?.feature_cell_count) }}
+          {{ displayCount(globalEvidence?.feature_cell_count) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.servingAudit.modelInputs')"
         >
-          {{ displayCount(diagnostics?.model_input_count) }}
+          {{ displayCount(globalEvidence?.model_input_count) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.servingAudit.contractHash')"
-          :span="2"
+          v-for="row in sourceCutoffs"
+          :key="row.source"
+          :label="row.source"
         >
-          <span class="font-mono text-xs break-all">
-            {{
-              diagnostics?.model_route?.input_contract_hash ?? EMPTY_PLACEHOLDER
-            }}
-          </span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.servingAudit.transformHash')"
-          :span="2"
-        >
-          <span class="font-mono text-xs break-all">
-            {{ diagnostics?.model_route?.transform_hash ?? EMPTY_PLACEHOLDER }}
-          </span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.servingAudit.trainingInputHash')"
-          :span="2"
-        >
-          <span class="font-mono text-xs break-all">
-            {{
-              diagnostics?.model_route?.training_input_hash ?? EMPTY_PLACEHOLDER
-            }}
-          </span>
+          {{ formatDateTimeLocal(row.cutoff) }}
         </DescriptionsItem>
       </Descriptions>
-
-      <div class="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
-        <Descriptions
-          bordered
-          :column="1"
-          size="small"
-          :title="$t('page.quantReports.detail.servingAudit.sourceCutoffs')"
-        >
-          <DescriptionsItem
-            v-for="row in sourceCutoffRows"
-            :key="row.source"
-            :label="row.source"
-          >
-            {{ formatDateTimeLocal(row.cutoff) }}
-          </DescriptionsItem>
-          <DescriptionsItem v-if="sourceCutoffRows.length === 0" label="—">
-            {{ EMPTY_PLACEHOLDER }}
-          </DescriptionsItem>
-        </Descriptions>
-        <Descriptions
-          bordered
-          :column="1"
-          size="small"
-          :title="$t('page.quantReports.detail.servingAudit.featureStates')"
-        >
-          <DescriptionsItem
-            v-for="row in featureStateRows"
-            :key="row.state"
-            :label="
-              findTagOption(featureCellStateOptions, row.state)?.label ??
-              EMPTY_PLACEHOLDER
-            "
-          >
-            {{ row.count }}
-          </DescriptionsItem>
-        </Descriptions>
-        <Descriptions
-          bordered
-          :column="1"
-          size="small"
-          :title="$t('page.quantReports.detail.servingAudit.inputStates')"
-        >
-          <DescriptionsItem
-            v-for="row in modelInputStateRows"
-            :key="row.state"
-            :label="
-              findTagOption(modelInputStateOptions, row.state)?.label ??
-              EMPTY_PLACEHOLDER
-            "
-          >
-            {{ row.count }}
-          </DescriptionsItem>
-        </Descriptions>
-      </div>
     </Card>
 
     <Card
+      data-testid="report-fact-delivery"
       size="small"
-      :title="$t('page.quantReports.detail.summary.aggregateExposure')"
+      :title="$t('page.quantReports.detail.factDelivery.title')"
     >
-      <div v-if="aggregateExposureCapUsd !== null" class="flex flex-col gap-2">
-        <Progress
-          :percent="aggregateExposureProgress"
-          :status="aggregateExposureProgressStatus"
-          :stroke-color="aggregateExposureStrokeColor"
-        />
-        <div class="flex items-center justify-between text-sm">
-          <span>
+      <Descriptions :column="threeColumnLayout" bordered size="small">
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.status')"
+        >
+          <Tag :color="factDeliveryColor(factDelivery?.status)">
             {{
-              $t('page.quantReports.detail.summary.aggregateExposureAllocated')
+              factDelivery
+                ? $t(
+                    `page.quantReports.detail.factDelivery.statuses.${factDelivery.status}`,
+                  )
+                : $t('page.quantReports.detail.factDelivery.missing')
             }}
-            <span class="font-mono">{{
-              formatUsd(String(aggregateExposureAllocatedUsd))
-            }}</span>
-          </span>
-          <span>
-            {{ $t('page.quantReports.detail.summary.aggregateExposureCap') }}
-            <span class="font-mono">{{
-              formatUsd(String(aggregateExposureCapUsd))
-            }}</span>
-          </span>
-        </div>
-      </div>
-      <Alert
-        v-else
-        :message="
-          $t('page.quantReports.detail.summary.aggregateExposureDisabled')
-        "
-        show-icon
-        type="info"
-      />
-    </Card>
-
-    <Card size="small" :title="$t('page.quantReports.detail.summary.title')">
-      <Descriptions :column="4" bordered size="small">
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.marketSelectionCount')"
-        >
-          {{ summary.market_selection_count }}
+          </Tag>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.candidateCount')"
+          :label="
+            $t('page.quantReports.detail.factDelivery.recommendationRows')
+          "
         >
-          {{ summary.candidate_count }}
+          {{ displayCount(factDelivery?.recommendation_row_count) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.rejectedCount')"
+          :label="$t('page.quantReports.detail.factDelivery.funnelRows')"
         >
-          {{ summary.rejected_count }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.publishedCount')"
-        >
-          {{ summary.published_recommendation_count }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.totalSuggested')"
-        >
-          <span class="font-mono">{{
-            formatUsd(summary.total_suggested_usd)
-          }}</span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.maxSingle')"
-        >
-          <span class="font-mono">{{
-            formatUsd(summary.max_single_recommendation_usd)
-          }}</span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.averageScore')"
-        >
-          <span class="font-mono">{{
-            formatScore(summary.average_score)
-          }}</span>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.minScore')"
-        >
-          <span class="font-mono">{{ formatScore(summary.min_score) }}</span>
+          {{ displayCount(factDelivery?.funnel_row_count) }}
         </DescriptionsItem>
       </Descriptions>
-
-      <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Descriptions
-          bordered
-          :column="1"
-          size="small"
-          :title="$t('page.quantReports.detail.summary.confidence')"
+      <Descriptions :column="1" bordered class="mt-3" size="small">
+        <DescriptionsItem
+          :label="$t('page.quantReports.detail.factDelivery.bundleHash')"
         >
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.confidenceMean')"
-          >
-            <span class="font-mono">{{
-              formatPercent(summary.model_confidence_summary.mean_confidence)
-            }}</span>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.confidenceMin')"
-          >
-            <span class="font-mono">{{
-              formatPercent(summary.model_confidence_summary.min_confidence)
-            }}</span>
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.confidenceMax')"
-          >
-            <span class="font-mono">{{
-              formatPercent(summary.model_confidence_summary.max_confidence)
-            }}</span>
-          </DescriptionsItem>
-        </Descriptions>
-
-        <Descriptions
-          bordered
-          :column="1"
-          size="small"
-          :title="$t('page.quantReports.detail.summary.dataQuality')"
-        >
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.dqFresh')"
-          >
-            {{ summary.data_quality_summary.fresh_count }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.dqAcceptable')"
-          >
-            {{ summary.data_quality_summary.acceptable_count }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.dqDegraded')"
-          >
-            {{ summary.data_quality_summary.degraded_count }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.dqStale')"
-          >
-            {{ summary.data_quality_summary.stale_count }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.dqInsufficient')"
-          >
-            {{ summary.data_quality_summary.insufficient_count }}
-          </DescriptionsItem>
-        </Descriptions>
-
-        <Descriptions
-          bordered
-          :column="1"
-          size="small"
-          :title="$t('page.quantReports.detail.summary.eligibility')"
-        >
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.eligibleReportOnly')"
-          >
-            {{ summary.execution_eligibility_summary.eligible_report_only }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantReports.detail.summary.eligibleSemiAuto')"
-          >
-            {{ summary.execution_eligibility_summary.eligible_semi_auto }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="
-              $t('page.quantReports.detail.summary.eligibleAutoExecution')
-            "
-          >
-            {{ summary.execution_eligibility_summary.eligible_auto_execution }}
-          </DescriptionsItem>
-        </Descriptions>
-
-        <div v-if="rejectionRows.length > 0" class="flex flex-col gap-1">
-          <span class="text-sm font-medium">
-            {{ $t('page.quantReports.detail.summary.topRejections') }}
-          </span>
-          <DataList
-            :columns="rejectionColumns"
-            :data-source="rejectionRows"
-            row-key="key"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'count'">
-                <span class="font-mono">{{ record.count }}</span>
-              </template>
-            </template>
-          </DataList>
-        </div>
-      </div>
-
-      <div
-        v-if="categoryAllocations.length > 0 || eventAllocations.length > 0"
-        class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2"
-      >
-        <div v-if="categoryAllocations.length > 0" class="flex flex-col gap-1">
-          <span class="text-sm font-medium">
-            {{ $t('page.quantReports.detail.summary.categoryAllocation') }}
-          </span>
-          <DataList
-            :columns="allocationColumns"
-            :data-source="categoryAllocations"
-            row-key="key"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'value'">
-                <span class="font-mono">{{ formatUsd(record.value) }}</span>
-              </template>
-            </template>
-          </DataList>
-        </div>
-        <div v-if="eventAllocations.length > 0" class="flex flex-col gap-1">
-          <span class="text-sm font-medium">
-            {{ $t('page.quantReports.detail.summary.eventAllocation') }}
-          </span>
-          <DataList
-            :columns="allocationColumns"
-            :data-source="eventAllocations"
-            row-key="key"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'label'">
-                <span class="font-mono text-xs">{{ record.label }}</span>
-              </template>
-              <template v-else-if="column.key === 'value'">
-                <span class="font-mono">{{ formatUsd(record.value) }}</span>
-              </template>
-            </template>
-          </DataList>
-        </div>
-      </div>
-
-      <Alert
-        v-for="(warning, index) in summary.warnings"
-        :key="index"
-        class="mt-2"
-        :message="warning"
-        show-icon
-        type="warning"
-      />
+          <span class="font-mono text-xs break-all">{{
+            factDelivery?.bundle_hash ?? EMPTY_PLACEHOLDER
+          }}</span>
+        </DescriptionsItem>
+      </Descriptions>
     </Card>
+
+    <Alert
+      v-for="(warning, index) in summary.warnings"
+      :key="index"
+      :message="warning"
+      show-icon
+      type="warning"
+    />
 
     <Card size="small" :title="$t('page.quantReports.detail.parity.title')">
       <FeatureParityStatusPanel :report-id="report.recommendation_report_id" />

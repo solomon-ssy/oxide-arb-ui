@@ -8,6 +8,8 @@ import {
 
 import { $t } from '#/locales';
 
+const BUY_MODEL_ROUTES = ['crypto', 'pooled', 'weather'] as const;
+
 /** Report list filters (AND-combined; forwarded to `GET /quant/reports`). */
 export function useReportSearchSchema(): VbenFormSchema[] {
   return [
@@ -36,9 +38,16 @@ export function useReportSearchSchema(): VbenFormSchema[] {
       label: $t('page.quantReports.filters.kind'),
     },
     {
-      component: 'Input',
-      fieldName: 'profile_id',
-      label: $t('page.quantReports.filters.profile'),
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        options: BUY_MODEL_ROUTES.map((value) => ({
+          label: $t(`page.quantReports.routes.${value}`),
+          value,
+        })),
+      },
+      fieldName: 'route',
+      label: $t('page.quantReports.filters.route'),
     },
     {
       component: 'Select',

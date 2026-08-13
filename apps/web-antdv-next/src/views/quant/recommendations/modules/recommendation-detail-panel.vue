@@ -4,7 +4,6 @@ import type { QuantRecommendationView } from '@vben/types';
 import { computed, ref, watch } from 'vue';
 
 import {
-  Alert,
   Button,
   Card,
   Descriptions,
@@ -77,20 +76,9 @@ watch(
 
 const context = computed(() => props.recommendation.market_context);
 const eligibility = computed(() => props.recommendation.execution_eligibility);
-type FrozenTradePlan = Extract<
-  QuantRecommendationView['trade_plan'],
-  { kind: 'frozen' }
->;
-function requireFrozenPlan(): FrozenTradePlan {
-  const plan = props.recommendation.trade_plan;
-  if (plan.kind !== 'frozen') {
-    throw new Error('frozen trade plan required');
-  }
-  return plan;
-}
-const entry = computed(() => requireFrozenPlan().entry);
-const sizing = computed(() => requireFrozenPlan().sizing);
-const exit = computed(() => requireFrozenPlan().exit);
+const entry = computed(() => props.recommendation.trade_plan.entry);
+const sizing = computed(() => props.recommendation.trade_plan.sizing);
+const exit = computed(() => props.recommendation.trade_plan.exit);
 
 const entryPrice = computed(() =>
   entry.value.order_policy.kind === 'passive'
@@ -137,6 +125,9 @@ function onCreateIntent() {
               findTagOption(sideTagOptions, recommendation.outcome_side)?.label
             }}
           </Tag>
+          <Tag data-testid="recommendation-route">
+            {{ $t(`page.quantReports.routes.${recommendation.route}`) }}
+          </Tag>
           <Tag
             :color="
               findTagOption(statusTagOptions, recommendation.status)?.color
@@ -161,23 +152,7 @@ function onCreateIntent() {
       </Tooltip>
     </div>
 
-    <Alert
-      v-if="recommendation.trade_plan.kind === 'unavailable'"
-      data-testid="trade-plan-unavailable"
-      :description="
-        recommendation.trade_plan.blockers
-          .map((blocker) =>
-            $t(`page.quantRecommendations.tradePlan.blocker.${blocker}`),
-          )
-          .join(' · ')
-      "
-      :message="$t('page.quantRecommendations.tradePlan.unavailable')"
-      show-icon
-      type="warning"
-    />
-
     <Card
-      v-else
       class="border-primary/30"
       size="small"
       :title="$t('page.quantRecommendations.decisionSummary.title')"
@@ -279,7 +254,7 @@ function onCreateIntent() {
       </Descriptions>
     </Card>
 
-    <div v-if="recommendation.trade_plan.kind === 'frozen'">
+    <div>
       <h4 class="mb-2 text-sm font-medium">
         {{ $t('page.quantRecommendations.sections.plans') }}
       </h4>
@@ -308,6 +283,32 @@ function onCreateIntent() {
                 :label="recommendation.recommendation_report_id"
                 :to="`/quant/reports/${recommendation.recommendation_report_id}`"
               />
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantRecommendations.identity.route')"
+          >
+            {{ $t(`page.quantReports.routes.${recommendation.route}`) }}
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantRecommendations.identity.routeRunId')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ recommendation.report_route_run_id }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantRecommendations.identity.portfolioPlanId')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ recommendation.portfolio_plan_id }}
+            </span>
+          </DescriptionsItem>
+          <DescriptionsItem
+            :label="$t('page.quantRecommendations.identity.economicTierId')"
+          >
+            <span class="font-mono text-xs break-all">
+              {{ recommendation.economic_tier_id }}
             </span>
           </DescriptionsItem>
           <DescriptionsItem
@@ -372,70 +373,77 @@ function onCreateIntent() {
       </Card>
 
       <Card
+        data-testid="recommendation-economics"
         size="small"
-        :title="$t('page.quantRecommendations.sections.score')"
+        :title="$t('page.quantRecommendations.sections.economics')"
       >
         <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.composite')"
+            :label="$t('page.quantRecommendations.economics.profitProbability')"
           >
             <span class="font-mono">{{
-              formatScore(recommendation.composite_score)
+              formatBps(recommendation.economics.profit_probability_bps)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.riskAdjusted')"
+            :label="$t('page.quantRecommendations.economics.robustNet')"
           >
             <span class="font-mono">{{
-              formatScore(recommendation.risk_adjusted_score)
+              formatUsd(recommendation.economics.robust_expected_net_usd)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.confidence')"
+            :label="$t('page.quantRecommendations.economics.nominalNet')"
           >
             <span class="font-mono">{{
-              formatPercent(recommendation.confidence)
+              formatUsd(recommendation.economics.nominal_expected_net_usd)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.expectedReturn')"
+            :label="$t('page.quantRecommendations.economics.marginalValue')"
           >
             <span class="font-mono">{{
-              formatBps(recommendation.expected_return_bps)
+              formatUsd(recommendation.economics.marginal_portfolio_value_usd)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.downside')"
+            :label="$t('page.quantRecommendations.economics.maxLoss')"
           >
             <span class="font-mono">{{
-              formatBps(recommendation.downside_bps)
+              formatUsd(recommendation.economics.max_loss_usd)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.liquidity')"
+            :label="$t('page.quantRecommendations.economics.cvarContribution')"
           >
             <span class="font-mono">{{
-              formatPercent(recommendation.liquidity_score)
+              formatUsd(recommendation.economics.cvar_contribution_usd)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.dataQuality')"
+            :label="$t('page.quantRecommendations.economics.capitalTime')"
           >
             <span class="font-mono">{{
-              formatPercent(recommendation.data_quality_score)
+              formatScore(recommendation.economics.capital_occupancy_usd_hours)
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.percentile')"
+            :label="$t('page.quantRecommendations.economics.profitFloor')"
           >
             <span class="font-mono">{{
-              formatPercent(recommendation.model_score_percentile)
+              formatBps(
+                recommendation.economic_tier.profit_probability_lower_bps,
+              )
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.score.rankBeforePortfolio')"
+            :label="$t('page.quantRecommendations.economics.intervalWidth')"
           >
-            {{ recommendation.rank_before_portfolio }}
+            <span class="font-mono">{{
+              formatBps(
+                recommendation.economic_tier.probability_interval_width_bps,
+              )
+            }}</span>
           </DescriptionsItem>
         </Descriptions>
       </Card>

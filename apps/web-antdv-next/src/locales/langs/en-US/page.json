@@ -1543,12 +1543,19 @@
         "retry": "Retry"
       },
       "trainingContract": {
-        "targetLabelName": "Target label",
-        "targetLabelPlaceholder": "e.g. token_payout_ratio",
-        "targetLabelHorizonSecs": "Label horizon (secs)",
+        "targetTask": "Forecasting task",
+        "targetLabel": "Governed label",
+        "targetHorizon": "Label horizon",
+        "targets": {
+          "outcome_payout": "Expected terminal payout",
+          "forward_return": "Forward executable return (research only)",
+          "hold_vs_exit_alpha": "Hold-vs-exit alpha"
+        },
+        "evaluationTradePolicy": "Evaluation Trade Policy",
+        "evaluationTradePolicyPlaceholder": "Optional for research; required before Route promotion",
         "validationFolds": "Validation folds",
-        "help": "The target, horizon, and rolling validation folds are frozen by the ModelSpec; training requests cannot override them. Every fold fits its own transform.",
-        "validationError": "Invalid training contract: provide a label (up to 128 bytes), a non-negative integer horizon, and 2–20 validation folds."
+        "help": "The model family determines a closed forecasting task and immutable Dataset label. A published Trade Policy is a separate out-of-sample executable evaluation binding; it never redefines the supervised target. Every validation fold fits its own transform.",
+        "validationError": "Invalid training contract: the target must match the model family, the evaluation policy must be a published artifact, and validation folds must be 2–20."
       }
     },
     "models": {
@@ -1807,6 +1814,36 @@
         "tailLoss": "Tail Loss",
         "liquidityFeasibility": "Liquidity Feasibility",
         "expectedVsRealized": "Expected vs Realized",
+        "portfolioFunnel": "Executable Portfolio Funnel",
+        "funnel": {
+          "decisionTicks": "Decision ticks",
+          "emittedCandidates": "Emitted candidates",
+          "candidatesWithoutTier": "Candidates without executable tier",
+          "executableTiers": "Executable tiers",
+          "rejectedTiers": "Admission-rejected tiers",
+          "admittedTiers": "Admitted tiers",
+          "selectedTiers": "Globally selected tiers",
+          "executedEntries": "Replayed entries",
+          "resolvedAllocations": "Resolved allocations",
+          "tickOutcomes": "Decision-tick outcomes",
+          "noCandidateTicks": "No candidate",
+          "noTierTicks": "No executable tier",
+          "noSelectionTicks": "No global selection",
+          "selectedTicks": "Selection produced",
+          "exclusionReasons": "Tier exclusion evidence",
+          "noExclusions": "No tier was excluded by admission or global optimization.",
+          "reasons": {
+            "existingStructuralConflict": "Existing structural conflict",
+            "liquidityBuffer": "Liquidity buffer",
+            "nominalExpectedNetFloor": "Nominal expected net floor",
+            "notSelectedByGlobalOptimum": "Not selected by global optimum",
+            "probabilityIntervalWidth": "Probability interval width",
+            "profitProbabilityFloor": "Profit-probability floor",
+            "robustExpectedNetFloor": "Robust expected net floor",
+            "scenarioExitCapacity": "Scenario exit capacity",
+            "singleRecommendationExposure": "Single-recommendation exposure"
+          }
+        },
         "categoryBreakdown": "Category Breakdown",
         "categoryPanel": {
           "category": "Category",
@@ -2286,8 +2323,10 @@
     },
     "qualityGate": {
       "empty": "Quality-gate readiness has not been evaluated.",
+      "evaluate": "Evaluate readiness",
       "intentLabel": "Intent",
       "notApplicable": "Not evaluated for this intent ({count})",
+      "reevaluate": "Re-evaluate readiness",
       "verdict": {
         "ready": "Ready — all hard gates cleared.",
         "warnings": "All hard gates cleared with {count} soft warning(s).",
@@ -2325,14 +2364,14 @@
       "minTrlMinutesSeconds": "{m}m {s}s",
       "minTrlHours": "{n}h",
       "minTrlHoursMinutes": "{h}h {m}m",
-      "trialCount": "Trial count (DSR N)",
+      "dsrConservativeIndependentTrialCount": "Conservative independent trials (DSR N)",
       "trialGridCount": "Trial grid",
       "coordSearchEffectiveN": "Coord-search effective N (audit only)",
       "pathSetHash": "Path set hash",
       "window": "Window",
       "dataset": "Training dataset",
       "decisionPolicySnapshot": "Decision Policy Snapshot",
-      "sharpeUnannualized": "Sharpe values are unannualized (periods_per_year = 1). Sell path sets use activity-only lot-native observations (empty calendar buckets are never zero-padded). CSCV trial matrix uses full-window (unpurged) returns. DSR N equals the trial-grid count only.",
+      "sharpeUnannualized": "Sharpe values are unannualized (periods_per_year = 1). Sell path sets use activity-only lot-native observations (empty calendar buckets are never zero-padded). CSCV trial matrix uses full-window (unpurged) returns. DSR N uses average-correlation interpolation when every pair is identifiable; a non-duplicate no-trade zero-variance trial keeps the complete precommitted trial-grid count without fabricating a correlation.",
       "sharpeDistribution": "Sharpe distribution",
       "paths": "φ paths",
       "pathIndex": "#",
@@ -2496,8 +2535,8 @@
       "rank": "Rank",
       "market": "Market",
       "outcome": "Outcome",
-      "confidence": "Confidence",
-      "expectedReturn": "Expected Return",
+      "confidence": "Profit Probability",
+      "expectedReturn": "Robust Expected Net USD",
       "suggested": "Suggested Amount",
       "evidence": "Leading factors and evidence confidence",
       "openDetail": "Open Full Evidence & Eligibility",
@@ -3099,6 +3138,7 @@
         "admissionBlocker": "Admission Blocker",
         "fresh": "Fresh",
         "stale": "Stale / Unavailable",
+        "token": "Token",
         "primaryToken": "Primary model token",
         "side": "Side",
         "orderType": "Order Type",
@@ -3537,6 +3577,11 @@
       "reports": "Reports",
       "operations": "Runs & Schedule Health"
     },
+    "routes": {
+      "crypto": "Crypto Route",
+      "pooled": "Pooled Route",
+      "weather": "Weather Route"
+    },
     "run": {
       "title": "Run Ad-hoc Report",
       "summary": "Enqueue an ad-hoc TopN report run. Leave overrides blank to use server defaults.",
@@ -3547,7 +3592,7 @@
       "accepted": "Report run accepted (request {id}, trigger {key})"
     },
     "filters": {
-      "profile": "Profile ID",
+      "route": "Route",
       "status": "Status",
       "kind": "Kind",
       "triggerKind": "Trigger",
@@ -3556,7 +3601,7 @@
     },
     "columns": {
       "reportId": "Report",
-      "profile": "Profile",
+      "routes": "Represented Routes",
       "decisionAt": "Decision Time",
       "runtimeMode": "Mode",
       "status": "Status",
@@ -3659,11 +3704,12 @@
       "filterStage": "Filter terminal stage",
       "filterReason": "Filter primary reason",
       "lineageTitle": "Market-decision lineage and diagnostics",
-      "profile": "Research profile",
+      "route": "Route",
       "rowHash": "Row content hash",
       "diagnostics": "Secondary diagnostics",
       "columns": {
         "market": "Market",
+        "route": "Route",
         "stage": "Terminal stage",
         "reason": "Primary reason",
         "token": "Token",
@@ -3733,18 +3779,19 @@
         "triggerTime": "Trigger Time",
         "status": "Status",
         "runtimeMode": "Runtime Mode",
-        "researchProfile": "Research Profile",
+        "routes": "Represented Routes",
+        "routeSetDigest": "Route-set Digest",
+        "scenarioArtifact": "Joint Scenario Artifact",
+        "scenarioHash": "Joint Scenario Hash",
         "decisionAt": "Decision Time",
         "knowledgeLag": "Knowledge Lag",
         "knowledgeCutoff": "Knowledge Cutoff",
-        "horizon": "Horizon",
         "topN": "Top N",
         "capitalBase": "Capital Base",
         "accountSource": "Account Source",
         "accountSnapshotRef": "Account Snapshot Ref",
         "decisionPolicySnapshot": "Decision Policy Snapshot",
-        "modelVersion": "Model Version",
-        "modelRun": "Model Run",
+        "portfolioPlan": "Global Portfolio Plan",
         "marketSelection": "Market Selection",
         "statusReason": "Status Reason",
         "publishedAt": "Published At",
@@ -3779,20 +3826,71 @@
         "featureStates": "Feature admission states",
         "inputStates": "Model-input / imputation states"
       },
+      "portfolio": {
+        "title": "Global Portfolio Economics",
+        "robustNet": "Robust Expected Net USD",
+        "nominalNet": "Nominal Expected Net USD",
+        "cvar": "Portfolio CVaR",
+        "maximumScenarioLoss": "Maximum Scenario Loss",
+        "capitalTime": "Capital Occupancy (USD·h)"
+      },
+      "optimizer": {
+        "title": "MILP Solver & Exact Verification",
+        "verified": "HiGHS proved the lexicographic optimum and Decimal post-solve verification passed.",
+        "invalid": "Solver or exact-verification evidence is invalid; this report must not be actionable.",
+        "zeroCandidates": "No optimizer invocation was needed because every complete Route produced zero admitted tiers.",
+        "backend": "Backend",
+        "stages": "Solve Stages",
+        "threads": "Deterministic Threads",
+        "scale": "Integer Scale",
+        "boundScaleExponent": "HiGHS Bound Scale",
+        "constraints": "Checked Constraints",
+        "availableCashUsed": "Available Cash Used",
+        "openCapital": "Open Capital",
+        "selectedTiers": "Selected Tiers",
+        "constraintHash": "Constraint Evidence Hash",
+        "recomputedHash": "Recomputed Economics Hash"
+      },
+      "routes": {
+        "title": "Atomic Route Readiness & Lineage",
+        "missing": "Route diagnostics are missing, so atomic report readiness cannot be proven.",
+        "route": "Route",
+        "outcome": "Outcome",
+        "model": "Champion Model",
+        "eligible": "Eligible Markets",
+        "featureComplete": "Feature Complete",
+        "candidates": "Calibrated Candidates",
+        "admittedTiers": "Economic Tiers",
+        "selected": "Selected Recommendations",
+        "stage": "Evidence Stage",
+        "funnel": "Route Funnel",
+        "lineageTitle": "Route Lineage Detail",
+        "lineageMissing": "This Route lacks complete model lineage and cannot be considered executable.",
+        "modelVersion": "Model Version",
+        "modelRun": "Serving Run",
+        "calibrationArtifact": "Calibration Artifact",
+        "tradePolicyArtifact": "Trade-policy Artifact",
+        "researchProfile": "Research-profile Artifact",
+        "horizon": "Prediction Horizon (seconds)",
+        "featureContract": "Feature-contract Digest",
+        "pitLineage": "PIT-lineage Digest",
+        "servingContract": "Serving-contract Digest",
+        "servingEvidence": "Serving Evidence",
+        "evidenceComplete": "Evidence Complete",
+        "outcomes": {
+          "ready": "Ready",
+          "zero_candidates": "Complete, zero candidates",
+          "failed": "Failed"
+        }
+      },
       "summary": {
         "title": "Summary",
         "marketSelectionCount": "Markets Selected",
         "candidateCount": "Candidates",
-        "rejectedCount": "Rejected",
+        "rejectedTierCount": "Rejected Economic Tiers",
         "publishedCount": "Published",
         "totalSuggested": "Total Suggested",
         "maxSingle": "Max Single Rec",
-        "averageScore": "Average Score",
-        "minScore": "Min Score",
-        "confidence": "Model Confidence",
-        "confidenceMean": "Mean",
-        "confidenceMin": "Min",
-        "confidenceMax": "Max",
         "dataQuality": "Data Quality",
         "dqFresh": "Fresh",
         "dqAcceptable": "Acceptable",
@@ -3806,23 +3904,25 @@
         "topRejections": "Top Rejection Reasons",
         "categoryAllocation": "Category Allocation",
         "eventAllocation": "Event Allocation",
-        "aggregateExposure": "Aggregate Exposure Cap",
-        "aggregateExposureAllocated": "Allocated",
-        "aggregateExposureCap": "Cap",
-        "aggregateExposureDisabled": "No aggregate exposure cap was enforced for this report (disabled, or the capital base was non-positive).",
+        "routeAllocation": "Route Allocation",
         "warnings": "Warnings",
         "count": "Count"
       },
       "recommendations": {
         "empty": "No recommendations in this report.",
+        "filterRoute": "Filter by Route",
         "columns": {
           "rank": "Rank",
+          "route": "Route",
           "market": "Market",
           "side": "Side",
-          "composite": "Composite",
-          "riskAdjusted": "Risk-Adj",
-          "confidence": "Confidence",
-          "expectedReturn": "Exp. Return",
+          "profitProbability": "Profit Probability",
+          "robustNet": "Robust Net USD",
+          "nominalNet": "Nominal Net USD",
+          "marginalValue": "Marginal Portfolio Value",
+          "maxLoss": "Maximum Loss",
+          "cvar": "CVaR Contribution",
+          "capitalTime": "Capital USD·h",
           "suggested": "Suggested",
           "eligibility": "Eligible Modes",
           "status": "Status",
@@ -3850,13 +3950,13 @@
           "side": "Side",
           "baseRank": "Baseline Rank",
           "compareRank": "This Report Rank",
-          "baseScore": "Baseline Risk Score",
-          "compareScore": "This Report Risk Score",
+          "baseRobustNet": "Baseline Robust Net",
+          "compareRobustNet": "This Report Robust Net",
           "delta": "Delta USD",
           "changedFields": "Changed"
         },
         "details": {
-          "scores": "Scores (baseline / this report)",
+          "scores": "Economics (baseline / this report)",
           "sizing": "Sizing (baseline → this report)",
           "validity": "Validity (baseline / this report)",
           "eligibility": "Eligibility (baseline / this report)",
@@ -3865,11 +3965,13 @@
         },
         "fields": {
           "rank": "Rank",
-          "composite_score": "Composite score",
-          "risk_adjusted_score": "Risk-adjusted score",
-          "confidence": "Confidence",
-          "expected_return": "Expected return",
-          "downside": "Downside",
+          "profit_probability": "Profit probability",
+          "nominal_expected_net_usd": "Nominal expected net USD",
+          "robust_expected_net_usd": "Robust expected net USD",
+          "maximum_loss_usd": "Maximum loss",
+          "cvar_contribution_usd": "CVaR contribution",
+          "capital_occupancy_usd_hours": "Capital occupancy",
+          "marginal_portfolio_value_usd": "Marginal portfolio value",
           "sizing": "Sizing",
           "validity": "Validity",
           "eligibility": "Eligibility",
@@ -3887,7 +3989,7 @@
     "notFound": "Recommendation not found",
     "sections": {
       "identity": "Identity",
-      "score": "Score",
+      "economics": "Economic Decision",
       "context": "Market Context",
       "eligibility": "Execution Eligibility",
       "plans": "Plans",
@@ -3905,26 +4007,13 @@
       "scaleOutTargets": "{count} cumulative scale-out targets",
       "trailingStop": "Trailing stop"
     },
-    "tradePlan": {
-      "unavailable": "Trade plan unavailable",
-      "blocker": {
-        "model_policy_binding_missing": "Model has no trade-policy binding",
-        "artifact_not_found": "Trade-policy artifact not found",
-        "artifact_not_published": "Trade-policy artifact is not published",
-        "artifact_hash_mismatch": "Trade-policy artifact hash mismatch",
-        "artifact_format_unsupported": "Unsupported trade-policy artifact format",
-        "cohort_not_found": "No matching cohort",
-        "cash_budget_tier_unavailable": "Suggested maximum total cash spend does not exactly match a validated tier",
-        "cohort_coverage_insufficient": "Cohort coverage is insufficient",
-        "liquidity_insufficient": "Live L2 depth is insufficient",
-        "tick_mismatch": "Tick metadata mismatch",
-        "price_outside_venue_range": "Price is outside the venue range",
-        "return_model_uncalibrated": "Return model is uncalibrated"
-      }
-    },
     "identity": {
       "recommendationId": "Recommendation ID",
       "reportId": "Report ID",
+      "route": "Route",
+      "routeRunId": "Route Run ID",
+      "portfolioPlanId": "Portfolio Plan ID",
+      "economicTierId": "Economic Tier ID",
       "rank": "Rank",
       "market": "Market",
       "event": "Event",
@@ -3938,16 +4027,16 @@
       "validUntil": "Valid Until",
       "activeIntent": "Active Intent"
     },
-    "score": {
-      "composite": "Composite Score",
-      "riskAdjusted": "Risk-Adjusted Score",
-      "confidence": "Confidence",
-      "expectedReturn": "Expected Return",
-      "downside": "Downside",
-      "liquidity": "Liquidity Score",
-      "dataQuality": "Data Quality Score",
-      "percentile": "Model Score Percentile",
-      "rankBeforePortfolio": "Rank (pre-portfolio)"
+    "economics": {
+      "profitProbability": "Profit Probability",
+      "robustNet": "Robust Expected Net USD",
+      "nominalNet": "Nominal Expected Net USD",
+      "marginalValue": "Marginal Portfolio Value",
+      "maxLoss": "Maximum Loss",
+      "cvarContribution": "CVaR Contribution",
+      "capitalTime": "Capital Occupancy (USD·h)",
+      "profitFloor": "Conservative Profit-probability Floor",
+      "intervalWidth": "Probability-interval Width"
     },
     "context": {
       "bestBid": "Best Bid",
@@ -3984,34 +4073,29 @@
       "title": "Sizing Plan",
       "suggested": "Suggested USD",
       "suggestedShares": "Suggested Shares",
-      "max": "Max USD",
-      "min": "Min USD",
+      "economicTierId": "Economic Tier ID",
+      "entryVwap": "Entry VWAP",
       "portfolioWeight": "Portfolio Weight",
       "marketExposureAfter": "Market Exposure After",
       "eventExposureAfter": "Event Exposure After",
       "categoryExposureAfter": "Category Exposure After",
-      "bindingConstraint": "Binding Constraint",
-      "bindingConstraintHelp": "The dominant constraint that limited the final size: {constraint}.",
-      "sizingModel": "Sizing Model",
-      "edge": "Edge",
-      "kelly": "Applied Multiplier (kelly_fraction × every shrink)",
-      "edgeUncertaintyShrink": "Edge-uncertainty shrink",
-      "correlationShrink": "Correlation shrink",
-      "reason": "Sizing Reason",
-      "waterfall": {
-        "title": "Kelly sizing waterfall",
-        "uncalibrated": "Kelly waterfall unavailable — return model is uncalibrated (no f* provenance recorded for this recommendation).",
-        "fStar": "f* (full Kelly)",
-        "kellyFraction": "Kelly fraction",
-        "confidence": "Confidence",
-        "drawdown": "Drawdown",
-        "edgeUncertainty": "Edge uncertainty",
-        "correlation": "Correlation",
-        "rawFraction": "Raw fraction (pre-cap)",
-        "aggregateExposureCap": "Aggregate exposure cap",
-        "cap": "Position cap",
-        "aria": "Kelly sizing waterfall with {stepCount} steps, ending at {finalValue} of the starting fraction. The binding constraint is {bindingLabel}."
-      }
+      "routeExposureAfter": "Route Exposure After",
+      "capitalTime": "Capital Occupancy (USD·h)",
+      "reason": "Sizing Reason"
+    },
+    "economicTier": {
+      "title": "Executable Economic Tier Evidence",
+      "entryNotional": "Entry Notional",
+      "fee": "Fee",
+      "slippage": "Slippage",
+      "visibleLiquidity": "Visible Liquidity",
+      "lineageHash": "Lineage Hash",
+      "cashflows": "Discounted Joint-scenario Cashflows",
+      "occupancy": "Capital-occupancy Buckets",
+      "scenario": "Scenario",
+      "discountedNet": "Discounted Net USD",
+      "bucketEnd": "Bucket End",
+      "lockedUsd": "Locked USD"
     },
     "exitPlan": {
       "title": "Exit Plan",
@@ -4038,6 +4122,10 @@
       "maxMarketExposure": "Max Market Exposure",
       "maxEventExposure": "Max Event Exposure",
       "maxCategoryExposure": "Max Category Exposure",
+      "maxRouteExposure": "Max Route Exposure",
+      "cvarContribution": "CVaR Contribution",
+      "portfolioCvarCap": "Portfolio CVaR Cap",
+      "scenarioLossCap": "Maximum Scenario-loss Cap",
       "maxSlippage": "Max Slippage",
       "requiresApproval": "Requires Approval",
       "autoExecutionAllowed": "Auto Execution Allowed",
@@ -4134,7 +4222,6 @@
         "killSwitch": "The kill-switch is not closed; new entries are blocked.",
         "eligibility": "This recommendation is not eligible for execution in the current runtime mode.",
         "riskEnvelope": "The risk envelope is invalid (max position or max loss is not positive).",
-        "tradePlan": "This recommendation has no trustworthy frozen trade plan; intent creation is blocked.",
         "validity": "Outside the recommendation validity window.",
         "reportStatus": "The parent report is no longer published.",
         "recommendationStatus": "This recommendation can no longer create an intent (revoked / expired / executed).",
@@ -4161,7 +4248,7 @@
     },
     "status": {
       "environment": "Environment",
-      "deploymentId": "Deployment ID",
+      "deployFields": "Deploy fields",
       "policyBundle": "Active policy bundle",
       "pendingApproval": "Pending approvals",
       "restart": "Restart requirement",
@@ -4186,11 +4273,11 @@
         "label": "Report Schedule",
         "description": "Calendar, timezone, cadence, and next-fire reconciliation."
       },
-      "operationalControl": {
+      "operationsPolicy": {
         "label": "Operational Control",
         "description": "Worker admission, halt behavior, and notification routing."
       },
-      "executionAuthorization": {
+      "executionAutomationPolicy": {
         "label": "Execution Authorization",
         "description": "Explicit Semi-auto and Auto-execution capital authorization."
       },
@@ -4199,8 +4286,8 @@
         "execution_risk_policy": "Execution Risk Policy",
         "model_routing": "Model Routing",
         "report_schedule": "Report Schedule",
-        "operational_control": "Operational Control",
-        "execution_authorization": "Execution Authorization"
+        "operations_policy": "Operational Control",
+        "execution_automation_policy": "Execution Authorization"
       }
     },
     "resource": {
@@ -4212,6 +4299,10 @@
       "pendingCount": "{count} pending",
       "activePolicy": "Active policy",
       "activePolicyDescription": "Read-only atomic snapshot. Changes always create a new immutable Draft.",
+      "currentColumn": "Current",
+      "currentColumnDescription": "Frozen read-only baseline for field-by-field Draft comparison.",
+      "draftColumn": "Draft",
+      "draftColumnDescription": "Changes create a new Revision and never approve or activate automatically.",
       "noActive": "No active policy",
       "changedFields": "Changed fields",
       "revision": "Revision",
@@ -4270,6 +4361,20 @@
       "removeItem": "Remove item",
       "emptyList": "No items",
       "changed": "{count} fields changed",
+      "unit": "Unit",
+      "applyEffect": "Apply boundary",
+      "access": "Access",
+      "readOnlyField": "Read-only; generated by a governed workflow",
+      "bucketEnd": "Bucket end (seconds)",
+      "bucketCapital": "Maximum locked capital (USD)",
+      "scheduleId": "Schedule ID",
+      "topN": "Recommendation TopN",
+      "knowledgeLag": "Knowledge lag (seconds)",
+      "cadence": "Cadence",
+      "interval": "Interval (seconds)",
+      "cronExpression": "Cron expression",
+      "timezone": "IANA timezone",
+      "enabled": "Enabled",
       "validation": {
         "additional_property": "This field is not part of the policy contract.",
         "const": "The value must remain {expected}.",
@@ -4286,6 +4391,35 @@
         "type": "Enter a valid {expected} value.",
         "union": "The value does not match any supported contract variant."
       }
+    },
+    "riskLevel": {
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk",
+      "critical": "Critical risk"
+    },
+    "unit": {
+      "usd": "USD",
+      "basis_points": "basis points",
+      "blocks": "source blocks",
+      "milliseconds": "milliseconds",
+      "seconds": "seconds",
+      "hours": "hours",
+      "usd_hours": "USD-hours",
+      "ratio": "ratio",
+      "count": "count",
+      "generation": "serving generation",
+      "revision": "policy revision"
+    },
+    "validationCode": {
+      "schema_version_mismatch": "The schema version does not match the current resource contract.",
+      "resource_kind_mismatch": "The document resource kind does not match the target resource.",
+      "credential_unavailable": "A required credential is unavailable.",
+      "semantic_constraint": "The field violates a business-semantic constraint.",
+      "dependency_unavailable": "A dependent consumer is unavailable.",
+      "artifact_incompatible": "The bound artifact is incompatible with the current contract.",
+      "schedule_invalid": "The schedule is invalid.",
+      "authorization_denied": "The operator is not authorized for this governance action."
     },
     "modelRouting": {
       "title": "Model artifact routing",
@@ -4378,6 +4512,8 @@
       }
     },
     "enumValue": {
+      "interval": "Fixed interval",
+      "cron": "Cron schedule",
       "isotonic": "Isotonic regression",
       "platt": "Platt scaling"
     },
@@ -4423,7 +4559,7 @@
       "model_evaluation_claim": "New model evaluation claim",
       "future_report_run_reconcile": "Unclaimed future schedules",
       "operational_admission": "Operational admission gate",
-      "execution_authorization_admission": "Execution authorization admission"
+      "execution_automation_policy_admission": "Execution authorization admission"
     },
     "consumer": {
       "market_selection": "Market Selection",
@@ -4460,7 +4596,10 @@
       "empty": "No Revisions",
       "operation": "Revision actions"
     },
-    "revisionStatus": { "draft": "Draft", "validated": "Validated" },
+    "revisionStatus": {
+      "draft": "Draft",
+      "validated": "Validated"
+    },
     "activity": {
       "title": "Config Activity",
       "description": "Cross-resource Draft, approval, and activation timeline.",
@@ -4473,79 +4612,565 @@
     },
     "deployment": {
       "title": "Deployment Config Snapshot",
-      "description": "Read-only startup-bound endpoints, identity, resource budgets, and credential health; values are redacted.",
-      "restartNotice": "These values change only through deployment artifacts and take effect after restart. Secret material is never returned.",
-      "identity": "Deployment identity",
-      "deploymentId": "Deployment ID",
-      "instanceId": "Instance ID",
-      "endpoints": "Service endpoints",
-      "endpointsDescription": "Only non-secret or redacted addresses are shown.",
-      "credentials": "Credential health",
-      "credentialsDescription": "Secret content is never returned; only credential-reference availability is checked.",
-      "budgets": "Host resource budgets",
-      "budgetsDescription": "Seven startup capacity groups replace contradictory standalone concurrency and timing knobs.",
-      "endpoint": {
-        "web_bind": "Web Bind",
-        "postgres": "PostgreSQL",
-        "clickhouse": "ClickHouse",
-        "redis": "Redis",
-        "gamma_api": "Gamma API",
-        "clob_api": "CLOB API",
-        "data_api": "Data API",
-        "artifact_store": "Artifact Store",
-        "domain_provider": "Domain Provider"
+      "description": "Exhaustive static deployment projection generated from Rust descriptors. Every leaf exposes its contract without returning sensitive literals.",
+      "restartNotice": "Deploy Config changes only through one explicit config file and takes effect after process restart. Hot reload and local overlays do not exist.",
+      "safeProjection": "Exhaustive safe projection",
+      "safeProjectionDescription": "Public values are visible. Secrets, sensitive endpoints, and identifiers expose configured/missing only.",
+      "totalFields": "Total config fields",
+      "protectedFields": "Protected fields",
+      "missingProtected": "Missing protected fields",
+      "search": "Search TOML path, title, consumer, or purpose",
+      "sensitivityFilter": "Sensitivity filter",
+      "allSensitivity": "All sensitivities",
+      "fieldCount": "{count} fields",
+      "field": "Field and purpose",
+      "safeValue": "Safe value",
+      "contract": "Type contract",
+      "impact": "Consumer and impact",
+      "required": "Required",
+      "optional": "Optional",
+      "restartRequired": "Restart required",
+      "protectedStatus": {
+        "configured": "Configured",
+        "missing": "Missing"
       },
-      "credential": {
-        "chainlink_data_streams_api_key": "Chainlink Data Streams API Key",
-        "chainlink_data_streams_api_secret": "Chainlink Data Streams API Secret",
-        "postgres_runtime": "PostgreSQL Runtime",
-        "clickhouse_runtime": "ClickHouse Runtime",
-        "redis_runtime": "Redis Runtime",
-        "jwt_signing": "JWT Signing",
-        "polymarket_private_key": "Polymarket Private Key",
-        "telegram_bot_token": "Telegram Bot Token",
-        "webhook_authorization": "Webhook Authorization",
-        "evidence_attestation": "Evidence Attestation",
-        "polymarket_relayer": "Polymarket Relayer"
-      },
-      "credentialStatus": {
-        "available": "Available",
-        "missing": "Missing",
-        "not_configured": "Not configured"
-      },
-      "budget": {
-        "database": "Database",
-        "clickhouse_writer": "ClickHouse Writer",
-        "market_data_ingest": "Market Data Ingest",
-        "cache": "Cache",
-        "research_jobs": "Research Jobs",
-        "report_execution": "Report & Execution",
-        "web": "Web"
-      },
-      "metric": {
-        "max_concurrency": "Max concurrency",
-        "min_concurrency": "Min concurrency",
-        "queue_capacity": "Queue capacity",
-        "batch_rows": "Batch rows",
-        "operation_timeout": "Operation timeout",
-        "lease_duration": "Lease duration",
-        "heartbeat_interval": "Heartbeat interval",
-        "cache_entries": "Cache entries",
-        "subscription_capacity": "Subscription capacity",
-        "configured_origins": "Allowed origins"
-      },
-      "unit": {
-        "count": "count",
-        "rows": "rows",
-        "milliseconds": "ms",
-        "seconds": "s",
-        "entries": "entries",
-        "tokens": "tokens"
+      "sensitivity": {
+        "public": "Public",
+        "secret": "Secret",
+        "sensitive_endpoint": "Sensitive endpoint",
+        "sensitive_identifier": "Sensitive identifier"
       }
     },
     "error": {
       "activationConflict": "Activation was rejected because the governed base changed. Revalidate and approve the exact candidate again.",
       "load": "The config resource could not be loaded. Check service health and retry."
+    },
+    "runtimeField": {
+      "execution_automation_policy": {
+        "auto_execution": {
+          "max_orders_per_report": {
+            "description": "Maximum orders auto-created per report.",
+            "label": "Max Orders Per Report"
+          },
+          "max_total_usd_per_report": {
+            "description": "Maximum total USD auto-executed per report.",
+            "label": "Max Total Usd Per Report"
+          }
+        },
+        "semi_auto": {
+          "approval_ttl_secs": {
+            "description": "Approval time-to-live in seconds.",
+            "label": "Approval Ttl Secs"
+          }
+        }
+      },
+      "execution_risk_policy": {
+        "breaker": {
+          "cooldown_secs": {
+            "description": "Seconds of failure-free operation before `Degraded` self-recovers to `Healthy`.",
+            "label": "Cooldown Secs"
+          },
+          "daily_realized_loss_cap_usd": {
+            "description": "Daily realized-loss cap in USD (UTC day). Cumulative same-day realized loss `≥ 80%` of the cap degrades venue health (admission `#18` defers); `≥` the cap trips the kill-switch (`execution_halted`, latched). `0` disables the daily-realized-loss dimension.",
+            "label": "Daily Realized Loss Cap Usd"
+          },
+          "venue_consecutive_failures_to_degrade": {
+            "description": "Consecutive venue failures that move the breaker to `Degraded` (admission defers).",
+            "label": "Venue Consecutive Failures To Degrade"
+          },
+          "venue_consecutive_failures_to_halt": {
+            "description": "Consecutive venue failures that move the breaker to `Halted` and trip the kill-switch.",
+            "label": "Venue Consecutive Failures To Halt"
+          },
+          "venue_error_rate_bps_to_halt": {
+            "description": "Rolling-window venue error rate (basis points) that trips `Halted`.",
+            "label": "Venue Error Rate Bps To Halt"
+          },
+          "venue_min_window_samples": {
+            "description": "Minimum window samples before the error-rate gate is evaluated (avoids small-N trips).",
+            "label": "Venue Min Window Samples"
+          },
+          "venue_window_secs": {
+            "description": "Rolling observation window length in seconds.",
+            "label": "Venue Window Secs"
+          }
+        },
+        "entry_order_policy": {
+          "max_slippage_bps": {
+            "description": "Maximum allowed entry-order slippage in basis points.",
+            "label": "Max Slippage Bps"
+          },
+          "min_entry_book_depth_usd": {
+            "description": "Minimum visible book depth (USD) required at entry. Frozen onto every recommendation's `EntryPlan.min_depth_usd` at report build and enforced by execution admission (`LiquidityDepthCheck`): an intent is deferred when the fillable ask notional up to the limit price is below this floor. `0` disables the depth floor.",
+            "label": "Min Entry Book Depth Usd"
+          }
+        },
+        "exit_monitor": {
+          "enabled": {
+            "description": "Whether the exit-monitor worker actively evaluates open lots.",
+            "label": "Enabled"
+          },
+          "monitor_secs": {
+            "description": "Seconds between exit-monitor scans (price / time / trailing cadence).",
+            "label": "Monitor Secs"
+          },
+          "opportunistic_sell": {
+            "enabled": {
+              "description": "Whether opportunistic-Sell evaluation is active at all.",
+              "label": "Enabled"
+            },
+            "shadow_mode": {
+              "description": "When true, the scorer runs and is audited but never submits an exit (fail-safe hold; SL/time/trailing/invalidation still apply).",
+              "label": "Shadow Mode"
+            }
+          },
+          "signal_recheck_secs": {
+            "description": "Minimum seconds between signal re-inference checks for one lot.",
+            "label": "Signal Recheck Secs"
+          },
+          "signal_reinference": {
+            "enabled": {
+              "description": "Whether model-backed signal re-inference is active.",
+              "label": "Enabled"
+            },
+            "shadow_mode": {
+              "description": "When true, re-inference runs and is audited, but thesis-invalidation exits are suppressed (fail-safe hold; SL/time/trailing still apply).",
+              "label": "Shadow Mode"
+            }
+          }
+        },
+        "portfolio": {
+          "admission": {
+            "liquidity_buffer_bps": {
+              "description": "Additional liquidity haircut, in basis points, applied before a candidate may enter global optimization.",
+              "label": "Liquidity Buffer Bps"
+            },
+            "max_probability_interval_width_bps": {
+              "description": "Maximum calibrated probability-interval width, in basis points, admitted before optimization.",
+              "label": "Max Probability Interval Width Bps"
+            },
+            "min_nominal_expected_net_usd": {
+              "description": "Validated decimal value serialized as a JSON string without losing precision.",
+              "label": "Min Nominal Expected Net Usd"
+            },
+            "min_profit_probability_bps": {
+              "description": "Minimum conservative profit-probability lower bound, in basis points; it is an admission constraint, never an objective weight.",
+              "label": "Min Profit Probability Bps"
+            },
+            "min_robust_expected_net_usd": {
+              "description": "Validated decimal value serialized as a JSON string without losing precision.",
+              "label": "Min Robust Expected Net Usd"
+            }
+          },
+          "budget": {
+            "cash_reserve_usd": {
+              "description": "Cash that must remain immediately available in every scenario.",
+              "label": "Cash Reserve Usd"
+            },
+            "max_open_capital_usd": {
+              "description": "Maximum capital that may be locked by all open positions and intents.",
+              "label": "Max Open Capital Usd"
+            },
+            "total_budget_usd": {
+              "description": "Maximum account capital that this strategy may govern.",
+              "label": "Total Budget Usd"
+            }
+          },
+          "exposure_limits": {
+            "max_category_exposure_usd": {
+              "description": "Maximum USD exposure per category.",
+              "label": "Max Category Exposure Usd"
+            },
+            "max_event_exposure_usd": {
+              "description": "Maximum USD exposure per event.",
+              "label": "Max Event Exposure Usd"
+            },
+            "max_market_exposure_usd": {
+              "description": "Maximum USD exposure per market.",
+              "label": "Max Market Exposure Usd"
+            },
+            "max_open_recommendations": {
+              "description": "Maximum number of simultaneously open recommendations.",
+              "label": "Max Open Recommendations"
+            },
+            "max_route_exposure_usd": {
+              "description": "Maximum USD exposure per model Route.",
+              "label": "Max Route Exposure Usd"
+            },
+            "max_single_recommendation_usd": {
+              "description": "Maximum USD allocated to one recommendation.",
+              "label": "Max Single Recommendation Usd"
+            }
+          },
+          "tail_risk": {
+            "capital_time_buckets": {
+              "description": "Strictly increasing capital-lock buckets; every tier must terminate in a covered bucket.",
+              "label": "Capital Time Buckets"
+            },
+            "cvar_confidence_bps": {
+              "description": "`CVaR` confidence level in basis points, strictly between 0 and 10,000.",
+              "label": "Cvar Confidence Bps"
+            },
+            "max_cvar_usd": {
+              "description": "Maximum allowed `CVaR` loss in USD.",
+              "label": "Max Cvar Usd"
+            },
+            "max_drawdown_usd": {
+              "description": "Maximum strategy drawdown admitted at the decision boundary.",
+              "label": "Max Drawdown Usd"
+            },
+            "max_scenario_loss_usd": {
+              "description": "Maximum allowed loss in any promoted or stress scenario.",
+              "label": "Max Scenario Loss Usd"
+            }
+          }
+        },
+        "reconciliation": {
+          "enabled": {
+            "description": "Whether execution reconciliation is enabled.",
+            "label": "Enabled"
+          },
+          "interval_secs": {
+            "description": "Reconciliation sweep interval in seconds.",
+            "label": "Interval Secs"
+          },
+          "stale_open_secs": {
+            "description": "Seconds an order may remain unreconciled (resting open, or unreadable at the venue) before the worker forces a terminal resolution: a stale resting order is actively cancelled, an unreadable order is escalated to `Unresolvable`. Bounds how long capital can stay in-flight.",
+            "label": "Stale Open Secs"
+          }
+        }
+      },
+      "model_routing": {
+        "model": {
+          "active_exit_model_version_id": {
+            "description": "Champion Sell-side hold-vs-exit scorer version. The opportunistic-Sell exit evaluator loads this; a distinct pointer from Buy routes so Buy and Sell models are governed separately.",
+            "label": "Active Exit Model Version Id"
+          },
+          "buy_routes": {
+            "crypto": {
+              "champion": {
+                "bound_at": {
+                  "description": "UTC activation time frozen into the binding lineage and report decision snapshot.",
+                  "label": "Bound At"
+                },
+                "config_revision": {
+                  "description": "Governed policy-bundle generation that created this immutable model binding.",
+                  "label": "Config Revision"
+                },
+                "generation": {
+                  "description": "Monotonic Route serving generation frozen for the complete report run.",
+                  "label": "Generation"
+                },
+                "model_version_id": {
+                  "description": "Exact immutable model-version UUID; no cross-version fallback is allowed.",
+                  "label": "Model Version Id"
+                },
+                "source": {
+                  "description": "Immutable provenance of one route-owned model binding.",
+                  "label": "Source"
+                }
+              },
+              "shadow": {
+                "description": "Optional Route-local challenger binding used only for audited shadow comparison; it never serves report decisions.",
+                "label": "Shadow"
+              }
+            },
+            "pooled": {
+              "champion": {
+                "bound_at": {
+                  "description": "UTC activation time frozen into the binding lineage and report decision snapshot.",
+                  "label": "Bound At"
+                },
+                "config_revision": {
+                  "description": "Governed policy-bundle generation that created this immutable model binding.",
+                  "label": "Config Revision"
+                },
+                "generation": {
+                  "description": "Monotonic Route serving generation frozen for the complete report run.",
+                  "label": "Generation"
+                },
+                "model_version_id": {
+                  "description": "Exact immutable model-version UUID; no cross-version fallback is allowed.",
+                  "label": "Model Version Id"
+                },
+                "source": {
+                  "description": "Immutable provenance of one route-owned model binding.",
+                  "label": "Source"
+                }
+              },
+              "shadow": {
+                "description": "Optional Route-local challenger binding used only for audited shadow comparison; it never serves report decisions.",
+                "label": "Shadow"
+              }
+            },
+            "weather": {
+              "champion": {
+                "bound_at": {
+                  "description": "UTC activation time frozen into the binding lineage and report decision snapshot.",
+                  "label": "Bound At"
+                },
+                "config_revision": {
+                  "description": "Governed policy-bundle generation that created this immutable model binding.",
+                  "label": "Config Revision"
+                },
+                "generation": {
+                  "description": "Monotonic Route serving generation frozen for the complete report run.",
+                  "label": "Generation"
+                },
+                "model_version_id": {
+                  "description": "Exact immutable model-version UUID; no cross-version fallback is allowed.",
+                  "label": "Model Version Id"
+                },
+                "source": {
+                  "description": "Immutable provenance of one route-owned model binding.",
+                  "label": "Source"
+                }
+              },
+              "shadow": {
+                "description": "Optional Route-local challenger binding used only for audited shadow comparison; it never serves report decisions.",
+                "label": "Shadow"
+              }
+            }
+          },
+          "calibration": {
+            "ci_confidence": {
+              "description": "Two-sided confidence level for reliability-bin Wilson intervals.",
+              "label": "Ci Confidence"
+            },
+            "embargo_secs": {
+              "description": "Minimum embargo gap (seconds) between a model's training-dataset window and its calibration-dataset window.",
+              "label": "Embargo Secs"
+            },
+            "method": {
+              "description": "Default calibrator fitting method (`isotonic` or `platt`).",
+              "label": "Method"
+            },
+            "min_samples_isotonic": {
+              "description": "Minimum samples required to select isotonic (below ⇒ fit must use Platt).",
+              "label": "Min Samples Isotonic"
+            }
+          },
+          "portfolio_scenario_model_bindings": {
+            "description": "Exact scenario-model bindings. Lookup is by ordered Route-set digest; absence or ambiguity fails the entire report.",
+            "label": "Portfolio Scenario Model Bindings"
+          },
+          "shadow_diff_threshold": {
+            "description": "Shadow/live diff threshold.",
+            "label": "Shadow Diff Threshold"
+          }
+        }
+      },
+      "operations_policy": {
+        "entry_condition": {
+          "backstop_interval_ms": {
+            "description": "Millisecond cadence of the safety backstop scan. Source notifications, book wakes, and clock deadlines remain the primary wake paths.",
+            "label": "Backstop Interval Ms"
+          },
+          "expiry_batch_limit": {
+            "description": "Maximum number of expired instances transitioned in one expiry sweep.",
+            "label": "Expiry Batch Limit"
+          },
+          "lease_duration_secs": {
+            "description": "Duration in seconds of an exclusive instance-processing lease.",
+            "label": "Lease Duration Secs"
+          },
+          "lease_renew_interval_secs": {
+            "description": "Renewal cadence in seconds for a held lease; must remain shorter than the lease duration so takeover is explicit and auditable.",
+            "label": "Lease Renew Interval Secs"
+          },
+          "next_evaluation_delay_ms": {
+            "description": "Milliseconds before a still-active instance becomes eligible for its next scheduled evaluation after one worker pass.",
+            "label": "Next Evaluation Delay Ms"
+          },
+          "pass_limit": {
+            "description": "Maximum number of due condition instances evaluated in one worker pass.",
+            "label": "Pass Limit"
+          }
+        },
+        "kill_switch": {
+          "emergency_exit": {
+            "kind": {
+              "description": "Emergency-exit behavior.",
+              "label": "Kind"
+            },
+            "max_slippage_bps": {
+              "description": "Maximum slippage for automated emergency liquidation, in basis points.",
+              "label": "Max Slippage Bps"
+            }
+          }
+        },
+        "notifications": {
+          "report_published": {
+            "description": "Notify operators when a recommendation report is published.",
+            "label": "Report Published"
+          }
+        },
+        "outcome_reconciliation": {
+          "candidate_batch_size": {
+            "description": "Maximum recommendations or intents processed by each lane per pass.",
+            "label": "Candidate Batch Size"
+          },
+          "enabled": {
+            "description": "Whether the outcome reconciliation worker is enabled.",
+            "label": "Enabled"
+          },
+          "source_block_span": {
+            "description": "Maximum finalized source blocks scanned per resolution pass.",
+            "label": "Source Block Span"
+          },
+          "sweep_secs": {
+            "description": "Delay between reconciliation passes in seconds.",
+            "label": "Sweep Secs"
+          }
+        }
+      },
+      "recommendation_policy": {
+        "data_quality": {
+          "feature_staleness_policy": {
+            "description": "Named policy for stale feature handling.",
+            "label": "Feature Staleness Policy"
+          },
+          "max_book_age_ms": {
+            "description": "Maximum age for a book snapshot before it is stale.",
+            "label": "Max Book Age Ms"
+          },
+          "max_domain_observation_age_secs": {
+            "description": "Maximum acceptable age (seconds) of the freshest domain observation for a linked instrument at decision time (`StalenessRule::MaxDomainObservationAge`).",
+            "label": "Max Domain Observation Age Secs"
+          },
+          "max_feature_bucket_age_secs": {
+            "description": "Maximum acceptable age (seconds) of the freshest materialized feature bucket at decision time. Governs offline/online feature staleness (`StalenessRule::MaxFeatureBucketAge`) — independent of live ingest lag.",
+            "label": "Max Feature Bucket Age Secs"
+          },
+          "max_ingest_lag_ms": {
+            "description": "Maximum acceptable ingest **pipeline** lag (enqueue→ClickHouse flush-ack), in milliseconds. Live-plane backpressure health only — NOT venue book age. Governs `DataQualitySnapshot.ingest_lag_exceeded`, execution admission, and market-candidate selection.",
+            "label": "Max Ingest Lag Ms"
+          },
+          "max_stale_book_ratio_bps": {
+            "description": "Maximum tolerated stale-book ratio across the live book plane (basis points). Consumed by execution admission `DataQualityCheck` (#6): deny when `stale_tokens / total_tokens * 10_000` exceeds this cap. Distilled into frozen admission input at build time so checks never read config directly.",
+            "label": "Max Stale Book Ratio Bps"
+          },
+          "max_trade_tape_age_secs": {
+            "description": "Maximum acceptable age (seconds) of the freshest trade-tape print at decision time (`StalenessRule::MaxTradeTapeAge`).",
+            "label": "Max Trade Tape Age Secs"
+          },
+          "reject_crossed_books": {
+            "description": "Reject crossed books before feature generation.",
+            "label": "Reject Crossed Books"
+          },
+          "reject_empty_books": {
+            "description": "Reject empty books before feature generation.",
+            "label": "Reject Empty Books"
+          }
+        },
+        "reports": {
+          "ad_hoc_default_knowledge_lag_secs": {
+            "description": "Default global knowledge lag frozen for an ad-hoc request without an override.",
+            "label": "Ad Hoc Default Knowledge Lag Secs"
+          },
+          "ad_hoc_default_top_n": {
+            "description": "Default `TopN` frozen when an ad-hoc request omits its override.",
+            "label": "Ad Hoc Default Top N"
+          },
+          "ad_hoc_report_enabled": {
+            "description": "Whether ad-hoc report generation is enabled.",
+            "label": "Ad Hoc Report Enabled"
+          },
+          "delivery_policy": {
+            "description": "Delivery policy name.",
+            "label": "Delivery Policy"
+          },
+          "entry_window_ratio": {
+            "description": "Entry-window ratio in `(0, 1]`: a recommendation's entry-by deadline is `as_of + effective_horizon * entry_window_ratio`. `0.5` enters only while at least half the signal's edge remains (the half-life point); the time-stop / exit still uses the full effective horizon.",
+            "label": "Entry Window Ratio"
+          },
+          "hard_candidate_ceiling": {
+            "description": "Deployment-proven upper bound for one complete catalog-visible report. Exceeding it fails the report; it never truncates market candidates.",
+            "label": "Hard Candidate Ceiling"
+          },
+          "max_top_n": {
+            "description": "Maximum `TopN` size (hard upper bound for every schedule and ad-hoc run, capped by [`MAX_REPORT_TOP_N`]).",
+            "label": "Max Top N"
+          }
+        },
+        "selection": {
+          "allow_near_resolution": {
+            "description": "Whether near-resolution markets may enter the selection.",
+            "label": "Allow Near Resolution"
+          },
+          "enabled_categories": {
+            "description": "Category slugs eligible for quant reports.",
+            "label": "Enabled Categories"
+          },
+          "max_spread_bps": {
+            "description": "Maximum allowed top-of-book spread in basis points.",
+            "label": "Max Spread Bps"
+          },
+          "max_time_to_resolution_secs": {
+            "description": "Maximum seconds until market resolution.",
+            "label": "Max Time To Resolution Secs"
+          },
+          "min_liquidity_usd": {
+            "description": "Minimum displayed liquidity in USD.",
+            "label": "Min Liquidity Usd"
+          },
+          "min_time_to_resolution_secs": {
+            "description": "Minimum seconds until market resolution.",
+            "label": "Min Time To Resolution Secs"
+          },
+          "min_volume_24h_usd": {
+            "description": "Minimum 24h volume in USD.",
+            "label": "Min Volume 24h Usd"
+          }
+        }
+      },
+      "report_schedule": {
+        "schedules": {
+          "description": "Complete governed report schedule list. Each item freezes cadence, timezone, TopN, knowledge lag, and enabled state.",
+          "label": "Schedules"
+        }
+      }
+    },
+    "runtimeGroup": {
+      "execution_automation_policy": {
+        "auto_execution": "Auto Execution",
+        "semi_auto": "Semi Auto"
+      },
+      "execution_risk_policy": {
+        "breaker": "Breaker",
+        "entry_order_policy": "Entry Order Policy",
+        "exit_monitor": "Exit Monitor",
+        "portfolio": {
+          "admission": "Portfolio / Admission",
+          "budget": "Portfolio / Budget",
+          "exposure_limits": "Portfolio / Exposure Limits",
+          "tail_risk": "Portfolio / Tail Risk"
+        },
+        "reconciliation": "Reconciliation"
+      },
+      "model_routing": {
+        "model": {
+          "active_exit_model_version_id": "Model / Active Exit Model Version Id",
+          "buy_routes": "Model / Buy Routes",
+          "calibration": "Model / Calibration",
+          "portfolio_scenario_model_bindings": "Model / Portfolio Scenario Model Bindings",
+          "shadow_diff_threshold": "Model / Shadow Diff Threshold"
+        }
+      },
+      "operations_policy": {
+        "entry_condition": "Entry Condition",
+        "kill_switch": "Kill Switch",
+        "notifications": "Notifications",
+        "outcome_reconciliation": "Outcome Reconciliation"
+      },
+      "recommendation_policy": {
+        "data_quality": "Data Quality",
+        "reports": "Reports",
+        "selection": "Selection"
+      },
+      "report_schedule": {
+        "schedules": "Schedules"
+      }
     }
   },
   "operationLog": {

@@ -1543,12 +1543,19 @@
         "retry": "重试"
       },
       "trainingContract": {
-        "targetLabelName": "目标标签",
-        "targetLabelPlaceholder": "如 token_payout_ratio",
-        "targetLabelHorizonSecs": "标签地平线（秒）",
+        "targetTask": "预测任务",
+        "targetLabel": "受治理标签",
+        "targetHorizon": "标签地平线",
+        "targets": {
+          "outcome_payout": "预期终局兑付比例",
+          "forward_return": "远期可执行收益（仅研究）",
+          "hold_vs_exit_alpha": "持有相对退出优势"
+        },
+        "evaluationTradePolicy": "评估 Trade Policy",
+        "evaluationTradePolicyPlaceholder": "研究阶段可选；Route 晋升前必需",
         "validationFolds": "验证折数",
-        "help": "标签、地平线与滚动验证折数随 ModelSpec 冻结；训练请求不能覆盖。每个 fold 独立拟合转换器。",
-        "validationError": "训练契约无效：标签必填（最多 128 字节），地平线需为非负整数，验证折数需为 2–20。"
+        "help": "模型家族决定封闭的预测任务与不可变 Dataset 标签。已发布 Trade Policy 仅用于独立的样本外可执行性评估，绝不重新定义监督学习目标；每个验证 fold 独立拟合转换器。",
+        "validationError": "训练契约无效：目标必须与模型家族一致，评估策略必须是已发布产物，且验证折数必须为 2–20。"
       }
     },
     "models": {
@@ -1807,6 +1814,36 @@
         "tailLoss": "尾部损失",
         "liquidityFeasibility": "流动性可行性",
         "expectedVsRealized": "预期 vs 实际",
+        "portfolioFunnel": "可执行组合漏斗",
+        "funnel": {
+          "decisionTicks": "决策时点",
+          "emittedCandidates": "模型产出候选",
+          "candidatesWithoutTier": "无可执行层级的候选",
+          "executableTiers": "可执行层级",
+          "rejectedTiers": "准入拒绝层级",
+          "admittedTiers": "通过准入层级",
+          "selectedTiers": "全局组合入选层级",
+          "executedEntries": "已重放入场",
+          "resolvedAllocations": "已结算配置",
+          "tickOutcomes": "决策时点结果",
+          "noCandidateTicks": "无候选",
+          "noTierTicks": "无可执行层级",
+          "noSelectionTicks": "全局组合未选择",
+          "selectedTicks": "产生组合选择",
+          "exclusionReasons": "层级排除证据",
+          "noExclusions": "没有层级被准入规则或全局组合优化排除。",
+          "reasons": {
+            "existingStructuralConflict": "已有结构性冲突",
+            "liquidityBuffer": "流动性缓冲不足",
+            "nominalExpectedNetFloor": "名义预期净收益门槛",
+            "notSelectedByGlobalOptimum": "未被全局最优组合选择",
+            "probabilityIntervalWidth": "概率区间过宽",
+            "profitProbabilityFloor": "盈利概率下界门槛",
+            "robustExpectedNetFloor": "稳健预期净收益门槛",
+            "scenarioExitCapacity": "场景退出容量不足",
+            "singleRecommendationExposure": "单推荐敞口上限"
+          }
+        },
         "categoryBreakdown": "分类拆解",
         "categoryPanel": {
           "category": "类目",
@@ -2286,8 +2323,10 @@
     },
     "qualityGate": {
       "empty": "尚未评估质量门就绪度。",
+      "evaluate": "评估就绪度",
       "intentLabel": "意图",
       "notApplicable": "此意图未评估（{count}）",
+      "reevaluate": "重新评估就绪度",
       "verdict": {
         "ready": "就绪——所有硬门禁均已通过。",
         "warnings": "所有硬门禁已通过，但有 {count} 项软门禁警告。",
@@ -2325,14 +2364,14 @@
       "minTrlMinutesSeconds": "{m} 分 {s} 秒",
       "minTrlHours": "{n} 小时",
       "minTrlHoursMinutes": "{h} 小时 {m} 分",
-      "trialCount": "Trial 数（DSR N）",
+      "dsrConservativeIndependentTrialCount": "保守独立试验数（DSR N）",
       "trialGridCount": "Trial 网格",
       "coordSearchEffectiveN": "坐标搜索有效 N（仅审计）",
       "pathSetHash": "路径集哈希",
       "window": "窗口",
       "dataset": "训练数据集",
       "decisionPolicySnapshot": "决策策略快照",
-      "sharpeUnannualized": "Sharpe 未年化（periods_per_year = 1）。Sell 路径集使用仅活动观测的 lot-native 序列（空日历桶绝不填 0）。CSCV trial 矩阵使用全窗口（未 purge）收益。DSR N 仅等于 trial 网格数。",
+      "sharpeUnannualized": "Sharpe 未年化（periods_per_year = 1）。Sell 路径集使用仅活动观测的 lot-native 序列（空日历桶绝不填 0）。CSCV trial 矩阵使用全窗口（未 purge）收益。所有 trial pair 可识别时，DSR N 使用平均相关性插值；非重复 no-trade trial 为零方差时，保留完整预提交 trial 网格数，不伪造相关系数。",
       "sharpeDistribution": "Sharpe 分布",
       "paths": "φ 路径",
       "pathIndex": "#",
@@ -2496,8 +2535,8 @@
       "rank": "排名",
       "market": "市场",
       "outcome": "方向",
-      "confidence": "信心",
-      "expectedReturn": "预期收益",
+      "confidence": "盈利概率",
+      "expectedReturn": "稳健预期净 USD",
       "suggested": "建议金额",
       "evidence": "主要因子与证据置信度",
       "openDetail": "打开完整证据与执行资格",
@@ -3099,6 +3138,7 @@
         "admissionBlocker": "准入阻断原因",
         "fresh": "新鲜",
         "stale": "陈旧 / 不可用",
+        "token": "Token",
         "primaryToken": "模型主 Token",
         "side": "方向",
         "orderType": "订单类型",
@@ -3537,6 +3577,11 @@
       "reports": "报告",
       "operations": "运行与调度健康"
     },
+    "routes": {
+      "crypto": "Crypto Route",
+      "pooled": "Pooled Route",
+      "weather": "Weather Route"
+    },
     "run": {
       "title": "运行临时报告",
       "summary": "入队一次临时 TopN 报告运行。留空覆盖项则使用服务端默认值。",
@@ -3547,7 +3592,7 @@
       "accepted": "报告运行已受理（请求 {id}，触发 {key}）"
     },
     "filters": {
-      "profile": "画像 ID",
+      "route": "Route",
       "status": "状态",
       "kind": "类型",
       "triggerKind": "触发",
@@ -3556,7 +3601,7 @@
     },
     "columns": {
       "reportId": "报告",
-      "profile": "画像",
+      "routes": "覆盖 Route",
       "decisionAt": "决策时间",
       "runtimeMode": "模式",
       "status": "状态",
@@ -3659,11 +3704,12 @@
       "filterStage": "筛选 terminal stage",
       "filterReason": "筛选 primary reason",
       "lineageTitle": "市场决策血缘与诊断",
-      "profile": "研究画像",
+      "route": "Route",
       "rowHash": "行内容哈希",
       "diagnostics": "Secondary diagnostics",
       "columns": {
         "market": "市场",
+        "route": "Route",
         "stage": "Terminal stage",
         "reason": "Primary reason",
         "token": "Token",
@@ -3733,18 +3779,19 @@
         "triggerTime": "触发时间",
         "status": "状态",
         "runtimeMode": "运行模式",
-        "researchProfile": "研究画像",
+        "routes": "覆盖 Route",
+        "routeSetDigest": "Route 集合摘要",
+        "scenarioArtifact": "联合场景制品",
+        "scenarioHash": "联合场景哈希",
         "decisionAt": "决策时间",
         "knowledgeLag": "知识延迟",
         "knowledgeCutoff": "知识截止时间",
-        "horizon": "持有窗口",
         "topN": "Top N",
         "capitalBase": "资本基数",
         "accountSource": "账户来源",
         "accountSnapshotRef": "账户快照引用",
         "decisionPolicySnapshot": "决策策略快照",
-        "modelVersion": "模型版本",
-        "modelRun": "模型运行",
+        "portfolioPlan": "全局组合计划",
         "marketSelection": "市场选池",
         "statusReason": "状态原因",
         "publishedAt": "发布时间",
@@ -3779,20 +3826,71 @@
         "featureStates": "特征准入状态",
         "inputStates": "模型输入 / 插补状态"
       },
+      "portfolio": {
+        "title": "全局组合经济性",
+        "robustNet": "稳健预期净 USD",
+        "nominalNet": "名义预期净 USD",
+        "cvar": "组合 CVaR",
+        "maximumScenarioLoss": "最大场景损失",
+        "capitalTime": "资本占用（USD·h）"
+      },
+      "optimizer": {
+        "title": "MILP 求解与精确复核",
+        "verified": "HiGHS 已证明词典序最优，Decimal 求解后精确复核通过。",
+        "invalid": "求解器或精确复核证据无效，本报告不得进入可执行状态。",
+        "zeroCandidates": "所有完整 Route 均无准入档位，因此无需调用优化器。",
+        "backend": "后端",
+        "stages": "求解阶段",
+        "threads": "确定性线程",
+        "scale": "整数缩放",
+        "boundScaleExponent": "HiGHS 边界缩放",
+        "constraints": "已复核约束",
+        "availableCashUsed": "已用可用现金",
+        "openCapital": "开放资本",
+        "selectedTiers": "入选档位",
+        "constraintHash": "约束证据哈希",
+        "recomputedHash": "重算经济性哈希"
+      },
+      "routes": {
+        "title": "Route 原子就绪与血缘",
+        "missing": "Route 诊断缺失，无法证明报告原子就绪。",
+        "route": "Route",
+        "outcome": "结果",
+        "model": "Champion 模型",
+        "eligible": "准入市场",
+        "featureComplete": "特征完整",
+        "candidates": "已校准候选",
+        "admittedTiers": "经济档位",
+        "selected": "入选推荐",
+        "stage": "证据阶段",
+        "funnel": "Route 漏斗",
+        "lineageTitle": "Route 血缘详情",
+        "lineageMissing": "该 Route 缺少完整模型血缘，报告不可视为可执行。",
+        "modelVersion": "模型版本",
+        "modelRun": "服务运行",
+        "calibrationArtifact": "校准制品",
+        "tradePolicyArtifact": "交易策略制品",
+        "researchProfile": "研究画像制品",
+        "horizon": "预测窗口（秒）",
+        "featureContract": "特征契约摘要",
+        "pitLineage": "PIT 血缘摘要",
+        "servingContract": "服务契约摘要",
+        "servingEvidence": "服务证据",
+        "evidenceComplete": "证据完整",
+        "outcomes": {
+          "ready": "就绪",
+          "zero_candidates": "完整但无候选",
+          "failed": "失败"
+        }
+      },
       "summary": {
         "title": "汇总",
         "marketSelectionCount": "选中市场",
         "candidateCount": "候选数",
-        "rejectedCount": "被拒数",
+        "rejectedTierCount": "被拒经济档位",
         "publishedCount": "已发布",
         "totalSuggested": "建议总额",
         "maxSingle": "单条最大",
-        "averageScore": "平均分",
-        "minScore": "最低分",
-        "confidence": "模型置信度",
-        "confidenceMean": "均值",
-        "confidenceMin": "最小",
-        "confidenceMax": "最大",
         "dataQuality": "数据质量",
         "dqFresh": "新鲜",
         "dqAcceptable": "可接受",
@@ -3806,23 +3904,25 @@
         "topRejections": "主要被拒原因",
         "categoryAllocation": "类别分配",
         "eventAllocation": "事件分配",
-        "aggregateExposure": "总敞口上限",
-        "aggregateExposureAllocated": "已分配",
-        "aggregateExposureCap": "上限",
-        "aggregateExposureDisabled": "本报告未施加总敞口上限（未启用，或资金基准非正）。",
+        "routeAllocation": "Route 分配",
         "warnings": "告警",
         "count": "数量"
       },
       "recommendations": {
         "empty": "该报告没有推荐。",
+        "filterRoute": "筛选 Route",
         "columns": {
           "rank": "排名",
+          "route": "Route",
           "market": "市场",
           "side": "方向",
-          "composite": "综合",
-          "riskAdjusted": "风险调整",
-          "confidence": "置信度",
-          "expectedReturn": "预期收益",
+          "profitProbability": "盈利概率",
+          "robustNet": "稳健净 USD",
+          "nominalNet": "名义净 USD",
+          "marginalValue": "边际组合价值",
+          "maxLoss": "最大损失",
+          "cvar": "CVaR 贡献",
+          "capitalTime": "资本 USD·h",
           "suggested": "建议额",
           "eligibility": "可执行模式",
           "status": "状态",
@@ -3850,13 +3950,13 @@
           "side": "方向",
           "baseRank": "基准排名",
           "compareRank": "本报告排名",
-          "baseScore": "基准风险评分",
-          "compareScore": "本报告风险评分",
+          "baseRobustNet": "基准稳健净值",
+          "compareRobustNet": "本报告稳健净值",
           "delta": "差额 USD",
           "changedFields": "变化项"
         },
         "details": {
-          "scores": "评分（基准 / 本报告）",
+          "scores": "经济性（基准 / 本报告）",
           "sizing": "仓位（基准 → 本报告）",
           "validity": "有效期（基准 / 本报告）",
           "eligibility": "执行资格（基准 / 本报告）",
@@ -3865,11 +3965,13 @@
         },
         "fields": {
           "rank": "排名",
-          "composite_score": "综合评分",
-          "risk_adjusted_score": "风险调整评分",
-          "confidence": "置信度",
-          "expected_return": "预期收益",
-          "downside": "下行风险",
+          "profit_probability": "盈利概率",
+          "nominal_expected_net_usd": "名义预期净 USD",
+          "robust_expected_net_usd": "稳健预期净 USD",
+          "maximum_loss_usd": "最大损失",
+          "cvar_contribution_usd": "CVaR 贡献",
+          "capital_occupancy_usd_hours": "资本占用",
+          "marginal_portfolio_value_usd": "边际组合价值",
           "sizing": "仓位",
           "validity": "有效期",
           "eligibility": "执行资格",
@@ -3887,7 +3989,7 @@
     "notFound": "推荐不存在",
     "sections": {
       "identity": "标识",
-      "score": "评分",
+      "economics": "经济决策",
       "context": "市场上下文",
       "eligibility": "执行资格",
       "plans": "计划",
@@ -3905,26 +4007,13 @@
       "scaleOutTargets": "{count} 档累计分批退出",
       "trailingStop": "移动止损"
     },
-    "tradePlan": {
-      "unavailable": "交易计划不可执行",
-      "blocker": {
-        "model_policy_binding_missing": "模型未绑定交易策略",
-        "artifact_not_found": "策略 Artifact 不存在",
-        "artifact_not_published": "策略 Artifact 未发布",
-        "artifact_hash_mismatch": "策略 Artifact 哈希不一致",
-        "artifact_format_unsupported": "策略 Artifact 格式不受支持",
-        "cohort_not_found": "未找到匹配 cohort",
-        "cash_budget_tier_unavailable": "建议最大总现金支出没有精确匹配已验证档位",
-        "cohort_coverage_insufficient": "Cohort 覆盖率不足",
-        "liquidity_insufficient": "实时 L2 深度不足",
-        "tick_mismatch": "Tick metadata 不一致",
-        "price_outside_venue_range": "价格超出场所有效范围",
-        "return_model_uncalibrated": "收益模型未校准"
-      }
-    },
     "identity": {
       "recommendationId": "推荐 ID",
       "reportId": "报告 ID",
+      "route": "Route",
+      "routeRunId": "Route 运行 ID",
+      "portfolioPlanId": "组合计划 ID",
+      "economicTierId": "经济档位 ID",
       "rank": "排名",
       "market": "市场",
       "event": "事件",
@@ -3938,16 +4027,16 @@
       "validUntil": "生效至",
       "activeIntent": "进行中意图"
     },
-    "score": {
-      "composite": "综合评分",
-      "riskAdjusted": "风险调整评分",
-      "confidence": "置信度",
-      "expectedReturn": "预期收益",
-      "downside": "下行",
-      "liquidity": "流动性评分",
-      "dataQuality": "数据质量评分",
-      "percentile": "模型分位",
-      "rankBeforePortfolio": "排名（组合前）"
+    "economics": {
+      "profitProbability": "盈利概率",
+      "robustNet": "稳健预期净 USD",
+      "nominalNet": "名义预期净 USD",
+      "marginalValue": "边际组合价值",
+      "maxLoss": "最大损失",
+      "cvarContribution": "CVaR 贡献",
+      "capitalTime": "资本占用（USD·h）",
+      "profitFloor": "保守盈利概率下界",
+      "intervalWidth": "概率区间宽度"
     },
     "context": {
       "bestBid": "最优买价",
@@ -3984,34 +4073,29 @@
       "title": "仓位计划",
       "suggested": "建议 USD",
       "suggestedShares": "建议份额",
-      "max": "最大 USD",
-      "min": "最小 USD",
+      "economicTierId": "经济档位 ID",
+      "entryVwap": "入场 VWAP",
       "portfolioWeight": "组合权重",
       "marketExposureAfter": "市场敞口(后)",
       "eventExposureAfter": "事件敞口(后)",
       "categoryExposureAfter": "类别敞口(后)",
-      "bindingConstraint": "约束因子",
-      "bindingConstraintHelp": "限制最终仓位的主导约束：{constraint}。",
-      "sizingModel": "仓位模型",
-      "edge": "边际",
-      "kelly": "应用乘数（kelly_fraction × 各项收缩之积）",
-      "edgeUncertaintyShrink": "Edge 不确定性收缩",
-      "correlationShrink": "相关性收缩",
-      "reason": "仓位原因",
-      "waterfall": {
-        "title": "Kelly 仓位瀑布图",
-        "uncalibrated": "Kelly 瀑布图不可用 — 收益模型未校准（该推荐未记录 f* 来源）。",
-        "fStar": "f*（满额 Kelly）",
-        "kellyFraction": "Kelly 分数",
-        "confidence": "置信度",
-        "drawdown": "回撤",
-        "edgeUncertainty": "Edge 不确定性",
-        "correlation": "相关性",
-        "rawFraction": "原始分数（上限前）",
-        "aggregateExposureCap": "总敞口上限",
-        "cap": "单仓上限",
-        "aria": "Kelly 仓位瀑布图，共 {stepCount} 个步骤，最终为起始分数的 {finalValue}。约束生效步骤为{bindingLabel}。"
-      }
+      "routeExposureAfter": "Route 敞口(后)",
+      "capitalTime": "资本占用（USD·h）",
+      "reason": "仓位原因"
+    },
+    "economicTier": {
+      "title": "可执行经济档位证据",
+      "entryNotional": "入场名义金额",
+      "fee": "费用",
+      "slippage": "滑点",
+      "visibleLiquidity": "可见流动性",
+      "lineageHash": "血缘哈希",
+      "cashflows": "贴现联合场景现金流",
+      "occupancy": "资本占用时间桶",
+      "scenario": "场景",
+      "discountedNet": "贴现净 USD",
+      "bucketEnd": "时间桶终点",
+      "lockedUsd": "锁定 USD"
     },
     "exitPlan": {
       "title": "退出计划",
@@ -4038,6 +4122,10 @@
       "maxMarketExposure": "最大市场敞口",
       "maxEventExposure": "最大事件敞口",
       "maxCategoryExposure": "最大类别敞口",
+      "maxRouteExposure": "最大 Route 敞口",
+      "cvarContribution": "CVaR 贡献",
+      "portfolioCvarCap": "组合 CVaR 上限",
+      "scenarioLossCap": "最大场景损失上限",
       "maxSlippage": "最大滑点",
       "requiresApproval": "需要审批",
       "autoExecutionAllowed": "允许全自动",
@@ -4134,7 +4222,6 @@
         "killSwitch": "熔断开关未处于 closed 状态，当前禁止开新仓。",
         "eligibility": "该推荐在当前运行模式下不可执行。",
         "riskEnvelope": "风险边界无效（最大仓位或最大亏损不为正）。",
-        "tradePlan": "该推荐没有可信的冻结交易计划，禁止创建意图。",
         "validity": "已超出推荐的有效时间窗口。",
         "reportStatus": "父报告已不再是已发布状态。",
         "recommendationStatus": "该推荐已不可创建意图（已撤销 / 已过期 / 已执行）。",
@@ -4161,7 +4248,7 @@
     },
     "status": {
       "environment": "环境",
-      "deploymentId": "Deployment ID",
+      "deployFields": "Deploy 字段",
       "policyBundle": "生效策略包",
       "pendingApproval": "待处理审批",
       "restart": "重启要求",
@@ -4186,11 +4273,11 @@
         "label": "报告调度",
         "description": "报告日历、时区、节奏与下一次触发。"
       },
-      "operationalControl": {
+      "operationsPolicy": {
         "label": "运行控制",
         "description": "Worker 准入、熔断行为和通知路由。"
       },
-      "executionAuthorization": {
+      "executionAutomationPolicy": {
         "label": "执行授权",
         "description": "Semi-auto 与 Auto-execution 的显式资金授权。"
       },
@@ -4199,8 +4286,8 @@
         "execution_risk_policy": "执行风险策略",
         "model_routing": "模型路由",
         "report_schedule": "报告调度",
-        "operational_control": "运行控制",
-        "execution_authorization": "执行授权"
+        "operations_policy": "运行控制",
+        "execution_automation_policy": "执行授权"
       }
     },
     "resource": {
@@ -4212,6 +4299,10 @@
       "pendingCount": "{count} 项待审批",
       "activePolicy": "当前生效策略",
       "activePolicyDescription": "只读展示当前原子快照；修改会创建新的不可变 Draft。",
+      "currentColumn": "Current（当前生效）",
+      "currentColumnDescription": "冻结的只读基线，用于逐字段对照 Draft。",
+      "draftColumn": "Draft（待提交）",
+      "draftColumnDescription": "所有修改只进入新 Revision，不会自动审批或生效。",
       "noActive": "尚无生效策略",
       "changedFields": "变更字段",
       "revision": "Revision",
@@ -4270,6 +4361,20 @@
       "removeItem": "删除条目",
       "emptyList": "暂无条目",
       "changed": "已修改 {count} 个字段",
+      "unit": "单位",
+      "applyEffect": "生效点",
+      "access": "访问属性",
+      "readOnlyField": "只读，由受治理流程生成",
+      "bucketEnd": "时间桶截止（秒）",
+      "bucketCapital": "最大锁定资金（USD）",
+      "scheduleId": "调度 ID",
+      "topN": "推荐数量 TopN",
+      "knowledgeLag": "知识延迟（秒）",
+      "cadence": "触发节奏",
+      "interval": "执行间隔（秒）",
+      "cronExpression": "Cron 表达式",
+      "timezone": "IANA 时区",
+      "enabled": "启用",
       "validation": {
         "additional_property": "该字段不属于当前策略契约。",
         "const": "该值必须保持为 {expected}。",
@@ -4286,6 +4391,35 @@
         "type": "请输入合法的 {expected} 类型值。",
         "union": "该值不匹配任何受支持的契约变体。"
       }
+    },
+    "riskLevel": {
+      "low": "低风险",
+      "medium": "中风险",
+      "high": "高风险",
+      "critical": "关键风险"
+    },
+    "unit": {
+      "usd": "USD",
+      "basis_points": "基点",
+      "blocks": "源区块",
+      "milliseconds": "毫秒",
+      "seconds": "秒",
+      "hours": "小时",
+      "usd_hours": "USD·小时",
+      "ratio": "比例",
+      "count": "数量",
+      "generation": "服务代次",
+      "revision": "策略修订号"
+    },
+    "validationCode": {
+      "schema_version_mismatch": "Schema 版本与当前资源契约不一致。",
+      "resource_kind_mismatch": "文档资源类型与目标资源不一致。",
+      "credential_unavailable": "所需凭据不可用。",
+      "semantic_constraint": "字段未通过业务语义约束。",
+      "dependency_unavailable": "依赖消费者当前不可用。",
+      "artifact_incompatible": "绑定产物与当前契约不兼容。",
+      "schedule_invalid": "调度配置无效。",
+      "authorization_denied": "当前操作者无权执行该治理动作。"
     },
     "modelRouting": {
       "title": "模型产物路由",
@@ -4377,227 +4511,6 @@
         "emergency_halted": "紧急停机"
       }
     },
-    "policyField": {
-      "active_exit_model_version_id": { "label": "生效退出模型版本" },
-      "ad_hoc_default_knowledge_lag_secs": {
-        "label": "临时报表默认知识延迟（秒）",
-        "description": "临时报表未指定覆盖值时冻结的全局知识延迟。"
-      },
-      "ad_hoc_default_top_n": {
-        "label": "临时报表默认 TopN",
-        "description": "临时报表未指定数量时采用的默认推荐数。"
-      },
-      "ad_hoc_report_enabled": {
-        "label": "允许临时报表",
-        "description": "关闭后只允许按治理调度生成报表。"
-      },
-      "allow_near_resolution": {
-        "label": "允许临近结算市场",
-        "description": "开启后，临近结算的市场也可进入候选集。"
-      },
-      "allowed_cash_budget_tiers_usd": { "label": "允许的现金预算档位（USD）" },
-      "approval_ttl_secs": { "label": "审批有效期（秒）" },
-      "auto_execution": { "label": "自动执行" },
-      "backstop_interval_ms": { "label": "兜底扫描间隔（毫秒）" },
-      "batch_size": { "label": "单批处理上限" },
-      "binding_materiality_threshold": { "label": "约束显著性阈值" },
-      "breaker": { "label": "执行熔断器" },
-      "budget": { "label": "资金预算" },
-      "cadence": { "label": "触发节奏" },
-      "calibration": { "label": "概率校准" },
-      "canary": { "label": "受控灰度授权" },
-      "candidate_score_floor": { "label": "候选评分下限" },
-      "capital": { "label": "资金准入" },
-      "ci_confidence": { "label": "置信区间水平" },
-      "cluster_threshold": { "label": "相关聚类阈值" },
-      "confidence_weighting": { "label": "置信度缩放" },
-      "confirmation_blocks": { "label": "链上确认区块数" },
-      "constraints": { "label": "风险与流动性约束" },
-      "cooldown_secs": { "label": "恢复冷却时间（秒）" },
-      "correlation": { "label": "相关性约束" },
-      "crypto": { "label": "加密市场" },
-      "culture": { "label": "文化市场" },
-      "daily_realized_loss_cap_usd": { "label": "单日已实现亏损上限（USD）" },
-      "data_quality": {
-        "label": "数据质量",
-        "description": "控制报告决策使用的数据新鲜度与盘口完整性，并随新 ReportRun 冻结。"
-      },
-      "delivery_policy": {
-        "label": "交付策略",
-        "description": "决定报表持久化后是否同时通知运营人员。"
-      },
-      "drawdown_scaling": { "label": "回撤缩放" },
-      "economics": { "label": "经济市场" },
-      "edge_uncertainty_floor": { "label": "优势不确定性缩放下限" },
-      "edge_uncertainty_k": { "label": "优势不确定性系数" },
-      "embargo_secs": { "label": "训练校准隔离期（秒）" },
-      "emergency_exit": { "label": "紧急退出" },
-      "enabled": { "label": "启用" },
-      "enabled_categories": {
-        "label": "允许的市场分类",
-        "description": "只有选中的市场分类会进入量化报告候选集。"
-      },
-      "entry_condition": { "label": "入场条件任务" },
-      "entry_order_policy": { "label": "入场订单策略" },
-      "entry_window_ratio": {
-        "label": "入场窗口比例",
-        "description": "推荐信号有效期中允许建立仓位的比例，取值范围为 (0, 1]。"
-      },
-      "exit_monitor": { "label": "退出监控" },
-      "expires_at": { "label": "授权截止时间" },
-      "expiry_batch_limit": { "label": "过期处理批次上限" },
-      "expr": { "label": "Cron 表达式" },
-      "fallback_horizon_secs": {
-        "label": "默认预测周期（秒）",
-        "description": "仅在模型未提供候选级预测周期时使用。"
-      },
-      "feature_staleness_policy": {
-        "label": "特征过期处理",
-        "description": "规定必要特征过期时是拒绝决策还是采用受控降级。"
-      },
-      "finance": { "label": "金融市场" },
-      "geopolitics": { "label": "地缘政治市场" },
-      "hard_candidate_ceiling": {
-        "label": "候选硬上限",
-        "description": "完整目录可见报告允许处理的候选上限；超限会失败，不会静默截断。"
-      },
-      "integer_inclusion": { "label": "启用整数规划" },
-      "interval_secs": { "label": "执行间隔（秒）" },
-      "kelly_fraction": { "label": "Kelly 使用比例" },
-      "kelly_safety": { "label": "Kelly 安全约束" },
-      "kill_switch": { "label": "熔断策略" },
-      "kind": { "label": "类型" },
-      "knowledge_lag_secs": { "label": "知识延迟（秒）" },
-      "lease_duration_secs": { "label": "任务租约时长（秒）" },
-      "lease_renew_interval_secs": { "label": "租约续期间隔（秒）" },
-      "liquidity_usage_cap_pct": { "label": "流动性占用上限" },
-      "lookback_days": { "label": "历史回看天数" },
-      "max_aggregate_exposure_pct": { "label": "组合总敞口上限" },
-      "max_attempts": { "label": "最大尝试次数" },
-      "max_book_age_ms": {
-        "label": "盘口最大延迟（毫秒）",
-        "description": "超过该时长的盘口快照会被判定为过期。"
-      },
-      "max_category_exposure_usd": { "label": "单分类敞口上限（USD）" },
-      "max_correlated_exposure_usd": { "label": "相关资产敞口上限（USD）" },
-      "max_domain_observation_age_secs": {
-        "label": "领域观测最大延迟（秒）",
-        "description": "关联外部观测在决策时允许的最大年龄。"
-      },
-      "max_event_exposure_usd": { "label": "单事件敞口上限（USD）" },
-      "max_feature_bucket_age_secs": {
-        "label": "特征桶最大延迟（秒）",
-        "description": "离线与在线特征桶在决策时允许的最大年龄。"
-      },
-      "max_ingest_lag_ms": {
-        "label": "摄取链路最大延迟（毫秒）",
-        "description": "从入队到 ClickHouse 写入确认允许的最大流水线延迟。"
-      },
-      "max_market_exposure_usd": { "label": "单市场敞口上限（USD）" },
-      "max_open_intents": { "label": "未完成意图上限" },
-      "max_orders_per_report": { "label": "单报告自动订单上限" },
-      "max_position_pct": { "label": "单仓位权益占比上限" },
-      "max_reserved_usd": { "label": "预留资金上限（USD）" },
-      "max_single_recommendation_usd": { "label": "单推荐资金上限（USD）" },
-      "max_slippage_bps": { "label": "最大滑点（bps）" },
-      "max_spread_bps": {
-        "label": "最大买卖价差（bps）",
-        "description": "超过该价差的市场不会进入推荐候选集。"
-      },
-      "max_stale_book_ratio_bps": {
-        "label": "过期盘口比例上限（bps）",
-        "description": "实时盘口中过期 token 的比例超过该值时，报告或执行准入会失败。"
-      },
-      "max_time_to_resolution_secs": {
-        "label": "最长结算剩余时间（秒）",
-        "description": "距离结算时间超过该值的市场不会进入候选集。"
-      },
-      "max_top_n": {
-        "label": "TopN 上限",
-        "description": "所有调度与临时报表允许输出的推荐数量硬上限。"
-      },
-      "max_total_cash_per_report": { "label": "单报告现金上限（USD）" },
-      "max_total_usd_per_report": { "label": "单报告自动执行上限（USD）" },
-      "max_trade_tape_age_secs": {
-        "label": "成交带最大延迟（秒）",
-        "description": "决策时最新成交记录允许的最大年龄。"
-      },
-      "method": { "label": "方法" },
-      "min_confidence": { "label": "最低置信度" },
-      "min_entry_book_depth_usd": { "label": "入场最小盘口深度（USD）" },
-      "min_liquidity_usd": {
-        "label": "最低流动性（USD）",
-        "description": "低于该可见流动性的市场不会进入推荐候选集。"
-      },
-      "min_model_confidence": { "label": "最低模型置信度" },
-      "min_observations": { "label": "最少观测数" },
-      "min_recommendation_usd": { "label": "最小推荐金额（USD）" },
-      "min_samples_isotonic": { "label": "等距回归最小样本数" },
-      "min_score": { "label": "最低评分" },
-      "min_time_to_resolution_secs": {
-        "label": "最短结算剩余时间（秒）",
-        "description": "距离结算时间低于该值的市场不会进入候选集。"
-      },
-      "min_volume_24h_usd": {
-        "label": "24 小时最低成交额（USD）",
-        "description": "低于该成交额的市场不会进入推荐候选集。"
-      },
-      "model": { "label": "模型指针" },
-      "monitor_secs": { "label": "监控间隔（秒）" },
-      "next_evaluation_delay_ms": { "label": "下次评估延迟（毫秒）" },
-      "notifications": { "label": "通知路由" },
-      "objective_return_weight": { "label": "预期收益目标权重" },
-      "opportunistic_sell": { "label": "机会型卖出" },
-      "optimizer": { "label": "组合优化器" },
-      "other": { "label": "其他市场" },
-      "pass_limit": { "label": "单轮评估上限" },
-      "policy_artifact_id": { "label": "策略产物 ID" },
-      "policy_content_hash": { "label": "策略内容哈希" },
-      "politics": { "label": "政治市场" },
-      "portfolio": { "label": "组合风险" },
-      "reconciliation": { "label": "订单对账" },
-      "reject_crossed_books": {
-        "label": "拒绝交叉盘口",
-        "description": "特征生成前拒绝 bid 高于 ask 的异常盘口。"
-      },
-      "reject_empty_books": {
-        "label": "拒绝空盘口",
-        "description": "特征生成前拒绝没有有效报价的盘口。"
-      },
-      "report_published": { "label": "报告发布通知" },
-      "reports": {
-        "label": "报告输出",
-        "description": "控制临时报表能力、TopN 上限、预测周期与交付方式。"
-      },
-      "retry_backoff_secs": { "label": "重试退避基数（秒）" },
-      "schedule_id": { "label": "调度 ID" },
-      "schedules": { "label": "报告调度列表" },
-      "selection": {
-        "label": "市场筛选",
-        "description": "规定哪些 Polymarket 市场有资格进入报告候选集。"
-      },
-      "semi_auto": { "label": "半自动执行" },
-      "settlement_redeem": { "label": "结算赎回" },
-      "shadow_diff_threshold": { "label": "Shadow 差异阈值" },
-      "shadow_mode": { "label": "Shadow 模式" },
-      "signal_recheck_secs": { "label": "信号复核间隔（秒）" },
-      "signal_reinference": { "label": "信号重推理" },
-      "sizing": { "label": "仓位计算" },
-      "solver": { "label": "求解器" },
-      "sports": { "label": "体育市场" },
-      "stale_open_secs": { "label": "未决订单超时（秒）" },
-      "sweep_secs": { "label": "扫描间隔（秒）" },
-      "tech": { "label": "科技市场" },
-      "timezone": { "label": "时区" },
-      "top_n": { "label": "推荐数量 TopN" },
-      "total_budget_usd": { "label": "总资金预算（USD）" },
-      "venue_consecutive_failures_to_degrade": { "label": "连续失败降级阈值" },
-      "venue_consecutive_failures_to_halt": { "label": "连续失败停机阈值" },
-      "venue_error_rate_bps_to_halt": { "label": "错误率停机阈值（bps）" },
-      "venue_min_window_samples": { "label": "错误率窗口最小样本数" },
-      "venue_window_secs": { "label": "错误率观察窗口（秒）" },
-      "weather": { "label": "天气市场" }
-    },
     "enumValue": {
       "reject_stale_required": "拒绝过期必要特征",
       "store_and_notify": "持久化并通知",
@@ -4613,6 +4526,7 @@
       "weather": "天气",
       "other": "其他",
       "fixed_interval": "固定间隔",
+      "interval": "固定间隔",
       "cron": "Cron 调度",
       "FixedInterval": "固定间隔",
       "Cron": "Cron 调度",
@@ -4664,7 +4578,7 @@
       "model_evaluation_claim": "新模型评估 claim",
       "future_report_run_reconcile": "未 claim 的未来调度",
       "operational_admission": "运行准入门",
-      "execution_authorization_admission": "执行授权准入"
+      "execution_automation_policy_admission": "执行授权准入"
     },
     "consumer": {
       "market_selection": "市场筛选",
@@ -4701,7 +4615,10 @@
       "empty": "暂无 Revision",
       "operation": "Revision 操作"
     },
-    "revisionStatus": { "draft": "Draft", "validated": "已校验" },
+    "revisionStatus": {
+      "draft": "Draft",
+      "validated": "已校验"
+    },
     "activity": {
       "title": "配置活动",
       "description": "跨资源的 Draft、审批与激活时间线。",
@@ -4714,79 +4631,565 @@
     },
     "deployment": {
       "title": "部署配置快照",
-      "description": "启动时绑定的 endpoint、身份、资源预算与凭据健康状态；所有值只读并脱敏。",
-      "restartNotice": "本页配置只能通过部署工件变更，并在进程重启后生效。Secret 仅展示健康状态。",
-      "identity": "部署身份",
-      "deploymentId": "Deployment ID",
-      "instanceId": "Instance ID",
-      "endpoints": "服务 Endpoint",
-      "endpointsDescription": "只展示非敏感地址或脱敏值。",
-      "credentials": "凭据健康",
-      "credentialsDescription": "不返回 secret 内容，只检查 credential reference 是否可用。",
-      "budgets": "主机资源预算",
-      "budgetsDescription": "七组启动时容量预算，避免互相矛盾的零散并发与时间参数。",
-      "endpoint": {
-        "web_bind": "Web Bind",
-        "postgres": "PostgreSQL",
-        "clickhouse": "ClickHouse",
-        "redis": "Redis",
-        "gamma_api": "Gamma API",
-        "clob_api": "CLOB API",
-        "data_api": "Data API",
-        "artifact_store": "Artifact Store",
-        "domain_provider": "Domain Provider"
+      "description": "由 Rust descriptor 穷尽生成的静态部署配置投影；每个 leaf 均展示契约，敏感值绝不返回字面量。",
+      "restartNotice": "全部 Deploy Config 只通过显式配置文件变更，并在进程重启后生效；不存在热更新或本地 overlay。",
+      "safeProjection": "穷尽式安全投影",
+      "safeProjectionDescription": "Public 值可见；Secret、敏感 endpoint 与敏感标识只显示 configured/missing。",
+      "totalFields": "配置字段总数",
+      "protectedFields": "受保护字段",
+      "missingProtected": "缺失的受保护字段",
+      "search": "按 TOML path、标题、消费者或用途搜索",
+      "sensitivityFilter": "敏感级别筛选",
+      "allSensitivity": "全部敏感级别",
+      "fieldCount": "{count} 个字段",
+      "field": "字段与用途",
+      "safeValue": "安全值",
+      "contract": "类型契约",
+      "impact": "消费者与影响",
+      "required": "必填",
+      "optional": "可选",
+      "restartRequired": "重启生效",
+      "protectedStatus": {
+        "configured": "已配置",
+        "missing": "缺失"
       },
-      "credential": {
-        "chainlink_data_streams_api_key": "Chainlink Data Streams API Key",
-        "chainlink_data_streams_api_secret": "Chainlink Data Streams API Secret",
-        "postgres_runtime": "PostgreSQL Runtime",
-        "clickhouse_runtime": "ClickHouse Runtime",
-        "redis_runtime": "Redis Runtime",
-        "jwt_signing": "JWT Signing",
-        "polymarket_private_key": "Polymarket Private Key",
-        "telegram_bot_token": "Telegram Bot Token",
-        "webhook_authorization": "Webhook Authorization",
-        "evidence_attestation": "Evidence Attestation",
-        "polymarket_relayer": "Polymarket Relayer"
-      },
-      "credentialStatus": {
-        "available": "可用",
-        "missing": "缺失",
-        "not_configured": "未配置"
-      },
-      "budget": {
-        "database": "数据库",
-        "clickhouse_writer": "ClickHouse Writer",
-        "market_data_ingest": "行情摄取",
-        "cache": "缓存",
-        "research_jobs": "研究任务",
-        "report_execution": "报告与执行",
-        "web": "Web"
-      },
-      "metric": {
-        "max_concurrency": "最大并发",
-        "min_concurrency": "最小并发",
-        "queue_capacity": "队列容量",
-        "batch_rows": "批次行数",
-        "operation_timeout": "操作超时",
-        "lease_duration": "租约时长",
-        "heartbeat_interval": "心跳间隔",
-        "cache_entries": "缓存条目",
-        "subscription_capacity": "订阅容量",
-        "configured_origins": "允许 Origin"
-      },
-      "unit": {
-        "count": "个",
-        "rows": "行",
-        "milliseconds": "ms",
-        "seconds": "s",
-        "entries": "条",
-        "tokens": "token"
+      "sensitivity": {
+        "public": "公开",
+        "secret": "Secret",
+        "sensitive_endpoint": "敏感 Endpoint",
+        "sensitive_identifier": "敏感标识"
       }
     },
     "error": {
       "activationConflict": "治理基线已变化，本次激活被拒绝。请重新校验并审批精确候选版本。",
       "load": "配置资源加载失败，请检查服务状态后重试。"
+    },
+    "runtimeField": {
+      "execution_automation_policy": {
+        "auto_execution": {
+          "max_orders_per_report": {
+            "description": "每份已发布报告最多允许自动创建的订单数；超出部分仍可保留为需人工批准的推荐，不得绕过执行准入。",
+            "label": "单报告自动订单上限"
+          },
+          "max_total_usd_per_report": {
+            "description": "每份报告可自动执行的累计 USD 名义金额硬上限；计算按全局排名顺序累加已授权 tier。",
+            "label": "单报告自动执行上限（USD）"
+          }
+        },
+        "semi_auto": {
+          "approval_ttl_secs": {
+            "description": "半自动执行人工批准的有效期（秒）；过期后必须基于最新账户、市场与政策快照重新准入。",
+            "label": "审批有效期（秒）"
+          }
+        }
+      },
+      "execution_risk_policy": {
+        "breaker": {
+          "cooldown_secs": {
+            "description": "Venue 在无新失败的情况下从 Degraded 自恢复为 Healthy 所需的连续时间（秒）。",
+            "label": "恢复冷却时间（秒）"
+          },
+          "daily_realized_loss_cap_usd": {
+            "description": "按 UTC 自然日计算的已实现亏损硬上限（USD）；达到 80% 时降级 venue health，达到上限时锁定 kill-switch。必须严格大于零。",
+            "label": "单日已实现亏损上限（USD）"
+          },
+          "venue_consecutive_failures_to_degrade": {
+            "description": "将 venue breaker 从 Healthy 降级为 Degraded 所需的连续失败次数；Degraded 会延后新执行准入。",
+            "label": "连续失败降级阈值"
+          },
+          "venue_consecutive_failures_to_halt": {
+            "description": "将 venue breaker 切换为 Halted 并锁定 kill-switch 所需的连续失败次数，不得小于降级阈值。",
+            "label": "连续失败停机阈值"
+          },
+          "venue_error_rate_bps_to_halt": {
+            "description": "滚动观测窗口内会触发 Halted 的 venue 错误率（基点），必须位于 1–10,000。",
+            "label": "错误率停机阈值（bps）"
+          },
+          "venue_min_window_samples": {
+            "description": "启用错误率门禁前滚动窗口必须具备的最小样本数，用于避免小样本误触发。",
+            "label": "错误率窗口最小样本数"
+          },
+          "venue_window_secs": {
+            "description": "统计 venue 错误率与连续失败状态的滚动观测窗口长度（秒）。",
+            "label": "错误率观察窗口（秒）"
+          }
+        },
+        "entry_order_policy": {
+          "max_slippage_bps": {
+            "description": "入场订单允许相对报告冻结价格产生的最大滑点（基点），报告建模和下单前均必须复核。",
+            "label": "最大滑点（bps）"
+          },
+          "min_entry_book_depth_usd": {
+            "description": "入场限价内必须真实可成交的最小可见卖盘深度（USD）；冻结到 EntryPlan 并在执行准入再次校验，必须严格大于零。",
+            "label": "入场最小盘口深度（USD）"
+          }
+        },
+        "exit_monitor": {
+          "enabled": {
+            "description": "控制退出监控 worker 是否主动评估所有开放 lot；关闭会停止价格、时间、trailing 与模型退出检查。",
+            "label": "启用"
+          },
+          "monitor_secs": {
+            "description": "退出监控扫描价格止损、时间止损、trailing 与分批退出的基础周期（秒）。",
+            "label": "监控间隔（秒）"
+          },
+          "opportunistic_sell": {
+            "enabled": {
+              "description": "是否在持仓论点仍有效时启用机会型 Sell 评估；启用前必须可执行模型再推理。",
+              "label": "启用"
+            },
+            "shadow_mode": {
+              "description": "开启时仍运行并审计机会型 Sell 打分，但不提交该类退出；强制止损和时间退出不受影响。",
+              "label": "Shadow 模式"
+            }
+          },
+          "signal_recheck_secs": {
+            "description": "同一 lot 两次模型信号再推理之间的最小间隔（秒），与更高频的价格监控周期独立。",
+            "label": "信号复核间隔（秒）"
+          },
+          "signal_reinference": {
+            "enabled": {
+              "description": "是否为开放 lot 启用模型支持的论点再推理，以检测信号失效。",
+              "label": "启用"
+            },
+            "shadow_mode": {
+              "description": "开启时仍生成完整再推理审计证据，但抑制“论点失效”退出；强制止损、时间与 trailing 退出继续生效。",
+              "label": "Shadow 模式"
+            }
+          }
+        },
+        "portfolio": {
+          "admission": {
+            "liquidity_buffer_bps": {
+              "description": "在准入时额外扣除的流动性安全缓冲，用于覆盖报价陈旧、深度衰减与成交不确定性。",
+              "label": "流动性缓冲（基点）"
+            },
+            "max_probability_interval_width_bps": {
+              "description": "允许的校准概率不确定性区间最大宽度（基点）；区间更宽的候选在优化前即被拒绝。",
+              "label": "概率区间最大宽度（基点）"
+            },
+            "min_nominal_expected_net_usd": {
+              "description": "候选进入全局优化前必须达到的最低名义预期净收益（USD），已扣除费用、滑点和资本成本。",
+              "label": "最低名义预期净收益（USD）"
+            },
+            "min_profit_probability_bps": {
+              "description": "候选准入所需的最低保守盈利概率下界（基点），不与 USD 目标做无量纲加权。",
+              "label": "最低盈利概率下界（基点）"
+            },
+            "min_robust_expected_net_usd": {
+              "description": "候选进入全局优化前必须达到的最低稳健预期净收益（USD），按允许的最不利分布评估。",
+              "label": "最低稳健预期净收益（USD）"
+            }
+          },
+          "budget": {
+            "cash_reserve_usd": {
+              "description": "每个联合场景下都必须保持可立即使用的 USD 现金储备，不得被新推荐或既有持仓占用。",
+              "label": "现金保留额（USD）"
+            },
+            "max_open_capital_usd": {
+              "description": "所有开放持仓、OrderIntent 与新选 tier 合计可锁定的最大本金（USD）。",
+              "label": "最大开放资本（USD）"
+            },
+            "total_budget_usd": {
+              "description": "策略允许治理的账户总资本上限（USD）；实际可用金额仍以冻结的真实 AccountSnapshot 为准。",
+              "label": "总资金预算（USD）"
+            }
+          },
+          "exposure_limits": {
+            "max_category_exposure_usd": {
+              "description": "同一 category 下既有持仓与新选 tier 合计的最大 USD 暴露；category 仅是风险桶，不是报告分区。",
+              "label": "单分类敞口上限（USD）"
+            },
+            "max_event_exposure_usd": {
+              "description": "同一底层 event 下所有 market/outcome 在结构互斥与既有持仓合并后的最大 USD 暴露。",
+              "label": "单事件敞口上限（USD）"
+            },
+            "max_market_exposure_usd": {
+              "description": "单个 market 下所有 outcome/side 在既有持仓与新选 tier 合并后的最大 USD 暴露。",
+              "label": "单市场敞口上限（USD）"
+            },
+            "max_open_recommendations": {
+              "description": "允许同时处于开放状态的 Recommendation 数量上限，包含已有推荐和本次全局组合新选项。",
+              "label": "最大开放推荐数"
+            },
+            "max_route_exposure_usd": {
+              "description": "单个模型 Route 在既有持仓与新选 tier 合并后的最大 USD 风险暴露。",
+              "label": "单 Route 敞口上限（USD）"
+            },
+            "max_single_recommendation_usd": {
+              "description": "单条 Recommendation 允许分配的最大 USD 本金，在真实 L2 walk 产生的离散 sizing tier 上强制执行。",
+              "label": "单推荐资金上限（USD）"
+            }
+          },
+          "tail_risk": {
+            "capital_time_buckets": {
+              "description": "定义严格递增的资本锁定时间桶及各桶 USD 上限；每个可执行 sizing tier 都必须在某个时间桶内结束，否则报告 fail closed。",
+              "label": "资本占用时间桶"
+            },
+            "cvar_confidence_bps": {
+              "description": "以基点表示 CVaR 尾部置信水平，必须严格位于 0 与 10,000 之间；数值越高，约束越聚焦极端损失尾部。",
+              "label": "CVaR 置信水平（基点）"
+            },
+            "max_cvar_usd": {
+              "description": "全局组合在指定置信水平下可接受的最大 CVaR 尾部损失（USD），作为 MILP 硬约束而非目标权重。",
+              "label": "CVaR 损失上限（USD）"
+            },
+            "max_drawdown_usd": {
+              "description": "在决策边界准入的最大策略回撤（USD）；超限时整份报告不得发布。",
+              "label": "最大回撤上限（USD）"
+            },
+            "max_scenario_loss_usd": {
+              "description": "在任一已促进的联合场景或显式压力场景中允许的最大损失（USD）。",
+              "label": "最大场景损失（USD）"
+            }
+          }
+        },
+        "reconciliation": {
+          "enabled": {
+            "description": "是否启用订单与 venue 状态对账；自动或半自动执行能力启用时必须保持开启。",
+            "label": "启用"
+          },
+          "interval_secs": {
+            "description": "执行对账 worker 轮询未终态订单与资本保留状态的周期（秒）。",
+            "label": "执行间隔（秒）"
+          },
+          "stale_open_secs": {
+            "description": "订单持续未对账的最长时间（秒）；超时挂单会主动撤销，venue 不可读时升级为 Unresolvable。",
+            "label": "未决订单超时（秒）"
+          }
+        }
+      },
+      "model_routing": {
+        "model": {
+          "active_exit_model_version_id": {
+            "description": "当前生效的 Sell-side hold-vs-exit 模型版本，与 Buy Route 绑定独立治理，不得相互 fallback。",
+            "label": "生效退出模型版本"
+          },
+          "buy_routes": {
+            "crypto": {
+              "champion": {
+                "bound_at": {
+                  "description": "记录该模型或联合场景绑定完成的 UTC 时间，用于冻结报告决策快照和追溯激活顺序。",
+                  "label": "绑定时间"
+                },
+                "config_revision": {
+                  "description": "引用生成该绑定的治理配置 revision，用于防止模型与决策政策跨代混用。",
+                  "label": "配置 Revision"
+                },
+                "generation": {
+                  "description": "该 Route 服务绑定的单调 generation，报告运行期间会被冻结，防止中途激活造成模型污染。",
+                  "label": "Route Generation"
+                },
+                "model_version_id": {
+                  "description": "精确绑定到不可变模型版本 UUID；报告决策快照内不得跨版本 fallback。",
+                  "label": "模型版本 ID"
+                },
+                "source": {
+                  "description": "不可变的模型绑定来源，明确区分初始治理与 feedback cycle 促进，便于完整追溯。",
+                  "label": "绑定来源"
+                }
+              },
+              "shadow": {
+                "description": "该 Route 的 Shadow 模型绑定，仅生成可审计对比证据，不参与实时决策或执行。",
+                "label": "Shadow 模型绑定"
+              }
+            },
+            "pooled": {
+              "champion": {
+                "bound_at": {
+                  "description": "记录该模型或联合场景绑定完成的 UTC 时间，用于冻结报告决策快照和追溯激活顺序。",
+                  "label": "绑定时间"
+                },
+                "config_revision": {
+                  "description": "引用生成该绑定的治理配置 revision，用于防止模型与决策政策跨代混用。",
+                  "label": "配置 Revision"
+                },
+                "generation": {
+                  "description": "该 Route 服务绑定的单调 generation，报告运行期间会被冻结，防止中途激活造成模型污染。",
+                  "label": "Route Generation"
+                },
+                "model_version_id": {
+                  "description": "精确绑定到不可变模型版本 UUID；报告决策快照内不得跨版本 fallback。",
+                  "label": "模型版本 ID"
+                },
+                "source": {
+                  "description": "不可变的模型绑定来源，明确区分初始治理与 feedback cycle 促进，便于完整追溯。",
+                  "label": "绑定来源"
+                }
+              },
+              "shadow": {
+                "description": "该 Route 的 Shadow 模型绑定，仅生成可审计对比证据，不参与实时决策或执行。",
+                "label": "Shadow 模型绑定"
+              }
+            },
+            "weather": {
+              "champion": {
+                "bound_at": {
+                  "description": "记录该模型或联合场景绑定完成的 UTC 时间，用于冻结报告决策快照和追溯激活顺序。",
+                  "label": "绑定时间"
+                },
+                "config_revision": {
+                  "description": "引用生成该绑定的治理配置 revision，用于防止模型与决策政策跨代混用。",
+                  "label": "配置 Revision"
+                },
+                "generation": {
+                  "description": "该 Route 服务绑定的单调 generation，报告运行期间会被冻结，防止中途激活造成模型污染。",
+                  "label": "Route Generation"
+                },
+                "model_version_id": {
+                  "description": "精确绑定到不可变模型版本 UUID；报告决策快照内不得跨版本 fallback。",
+                  "label": "模型版本 ID"
+                },
+                "source": {
+                  "description": "不可变的模型绑定来源，明确区分初始治理与 feedback cycle 促进，便于完整追溯。",
+                  "label": "绑定来源"
+                }
+              },
+              "shadow": {
+                "description": "该 Route 的 Shadow 模型绑定，仅生成可审计对比证据，不参与实时决策或执行。",
+                "label": "Shadow 模型绑定"
+              }
+            }
+          },
+          "calibration": {
+            "ci_confidence": {
+              "description": "可靠性分箱 Wilson 区间的双侧置信水平，必须严格位于 0.5 和 1 之间。",
+              "label": "置信区间水平"
+            },
+            "embargo_secs": {
+              "description": "模型训练数据窗口与校准数据窗口之间的最小 embargo（秒），必须大于零以防止时间泄漏。",
+              "label": "训练校准隔离期（秒）"
+            },
+            "method": {
+              "description": "默认概率校准器拟合方法；isotonic 仅在样本量达标时允许，否则必须使用 Platt。",
+              "label": "方法"
+            },
+            "min_samples_isotonic": {
+              "description": "允许拟合 isotonic calibration 所需的最小 PIT 样本数；低于该阈值时必须 fail closed 到 Platt 方法选择，不得静默拟合。",
+              "label": "等距回归最小样本数"
+            }
+          },
+          "portfolio_scenario_model_bindings": {
+            "description": "按有序 represented Route 集合绑定唯一的联合场景模型 artifact；Route set、serving、calibration、trade policy 或时间桶 digest 不匹配时整份报告 fail closed。",
+            "label": "组合场景模型绑定"
+          },
+          "shadow_diff_threshold": {
+            "description": "同一 Route 的 Shadow 与 Champion 预测差异审计阈值；超限会生成硬分歧证据，不会自动切换模型。",
+            "label": "Shadow 差异阈值"
+          }
+        }
+      },
+      "operations_policy": {
+        "entry_condition": {
+          "backstop_interval_ms": {
+            "description": "入场条件 worker 的安全兜底扫描周期（毫秒）；实时 source/book/clock 通知仍是主唤醒路径。",
+            "label": "兜底扫描间隔（毫秒）"
+          },
+          "expiry_batch_limit": {
+            "description": "单次过期清扫最多转移为终态的条件实例数，为工作量和事务延迟提供硬边界。",
+            "label": "过期处理批次上限"
+          },
+          "lease_duration_secs": {
+            "description": "单个 worker 独占处理条件实例的 lease 时长（秒），过期后才允许其他 worker 显式接管。",
+            "label": "任务租约时长（秒）"
+          },
+          "lease_renew_interval_secs": {
+            "description": "已持有 lease 的续租周期（秒），必须严格小于 lease 时长，以保证接管可审计。",
+            "label": "租约续期间隔（秒）"
+          },
+          "next_evaluation_delay_ms": {
+            "description": "一次评估后仍活跃的条件实例再次进入调度队列前的最小延迟（毫秒）。",
+            "label": "下次评估延迟（毫秒）"
+          },
+          "pass_limit": {
+            "description": "单个 worker pass 最多评估的到期条件实例数，用于限制 CPU、DB 事务与尾延迟。",
+            "label": "单轮评估上限"
+          }
+        },
+        "kill_switch": {
+          "emergency_exit": {
+            "kind": {
+              "description": "Kill-switch 升级后的紧急退出方式；manual_only 仅通知操作员，liquidate_all 才允许在滑点上限内自动减仓。",
+              "label": "类型"
+            },
+            "max_slippage_bps": {
+              "description": "自动紧急清算允许的最大滑点（基点）；即使已触发 kill-switch，也不允许无价格保护下单。",
+              "label": "最大滑点（bps）"
+            }
+          }
+        },
+        "notifications": {
+          "report_published": {
+            "description": "是否在完整 RecommendationReport 事务发布成功后通知操作员；失败 run 和部分结果不得伪装为发布通知。",
+            "label": "报告发布通知"
+          }
+        },
+        "outcome_reconciliation": {
+          "candidate_batch_size": {
+            "description": "限制每轮结果对账在单个处理通道中扫描的 Recommendation 或 OrderIntent 数量，防止无界延迟和内存占用。",
+            "label": "候选批次上限"
+          },
+          "enabled": {
+            "description": "是否启用已解析市场结果对账，这是 15-stage feedback closure 生成成熟标签的必要条件。",
+            "label": "启用"
+          },
+          "source_block_span": {
+            "description": "每次结果解析允许扫描的最大已最终确认源区块数，用于限制单轮工作量。",
+            "label": "来源区块扫描跨度"
+          },
+          "sweep_secs": {
+            "description": "市场结果对账轮次之间的间隔（秒），必须大于零以防止空转或停摆。",
+            "label": "扫描间隔（秒）"
+          }
+        }
+      },
+      "recommendation_policy": {
+        "data_quality": {
+          "feature_staleness_policy": {
+            "description": "规定必要特征过期时是拒绝决策还是采用受控降级。",
+            "label": "特征过期处理"
+          },
+          "max_book_age_ms": {
+            "description": "超过该时长的盘口快照会被判定为过期。",
+            "label": "盘口最大延迟（毫秒）"
+          },
+          "max_domain_observation_age_secs": {
+            "description": "关联外部观测在决策时允许的最大年龄。",
+            "label": "领域观测最大延迟（秒）"
+          },
+          "max_feature_bucket_age_secs": {
+            "description": "离线与在线特征桶在决策时允许的最大年龄。",
+            "label": "特征桶最大延迟（秒）"
+          },
+          "max_ingest_lag_ms": {
+            "description": "从入队到 ClickHouse 写入确认允许的最大流水线延迟。",
+            "label": "摄取链路最大延迟（毫秒）"
+          },
+          "max_stale_book_ratio_bps": {
+            "description": "实时盘口中过期 token 的比例超过该值时，报告或执行准入会失败。",
+            "label": "过期盘口比例上限（bps）"
+          },
+          "max_trade_tape_age_secs": {
+            "description": "决策时最新成交记录允许的最大年龄。",
+            "label": "成交带最大延迟（秒）"
+          },
+          "reject_crossed_books": {
+            "description": "特征生成前拒绝 bid 高于 ask 的异常盘口。",
+            "label": "拒绝交叉盘口"
+          },
+          "reject_empty_books": {
+            "description": "特征生成前拒绝没有有效报价的盘口。",
+            "label": "拒绝空盘口"
+          }
+        },
+        "reports": {
+          "ad_hoc_default_knowledge_lag_secs": {
+            "description": "临时报表未指定覆盖值时冻结的全局知识延迟。",
+            "label": "临时报表默认知识延迟（秒）"
+          },
+          "ad_hoc_default_top_n": {
+            "description": "临时报表未指定数量时采用的默认推荐数。",
+            "label": "临时报表默认 TopN"
+          },
+          "ad_hoc_report_enabled": {
+            "description": "关闭后只允许按治理调度生成报表。",
+            "label": "允许临时报表"
+          },
+          "delivery_policy": {
+            "description": "决定报表持久化后是否同时通知运营人员。",
+            "label": "交付策略"
+          },
+          "entry_window_ratio": {
+            "description": "推荐信号有效期中允许建立仓位的比例，取值范围为 (0, 1]。",
+            "label": "入场窗口比例"
+          },
+          "hard_candidate_ceiling": {
+            "description": "完整目录可见报告允许处理的候选上限；超限会失败，不会静默截断。",
+            "label": "候选硬上限"
+          },
+          "max_top_n": {
+            "description": "所有调度与临时报表允许输出的推荐数量硬上限。",
+            "label": "TopN 上限"
+          }
+        },
+        "selection": {
+          "allow_near_resolution": {
+            "description": "开启后，临近结算的市场也可进入候选集。",
+            "label": "允许临近结算市场"
+          },
+          "enabled_categories": {
+            "description": "只有选中的市场分类会进入量化报告候选集。",
+            "label": "允许的市场分类"
+          },
+          "max_spread_bps": {
+            "description": "超过该价差的市场不会进入推荐候选集。",
+            "label": "最大买卖价差（bps）"
+          },
+          "max_time_to_resolution_secs": {
+            "description": "距离结算时间超过该值的市场不会进入候选集。",
+            "label": "最长结算剩余时间（秒）"
+          },
+          "min_liquidity_usd": {
+            "description": "低于该可见流动性的市场不会进入推荐候选集。",
+            "label": "最低流动性（USD）"
+          },
+          "min_time_to_resolution_secs": {
+            "description": "距离结算时间低于该值的市场不会进入候选集。",
+            "label": "最短结算剩余时间（秒）"
+          },
+          "min_volume_24h_usd": {
+            "description": "低于该成交额的市场不会进入推荐候选集。",
+            "label": "24 小时最低成交额（USD）"
+          }
+        }
+      },
+      "report_schedule": {
+        "schedules": {
+          "description": "完整的受治理报告调度列表；每项明确 cadence/timezone、TopN、PIT knowledge lag 和启用状态，已启用调度必须共享一致 knowledge lag。",
+          "label": "报告调度列表"
+        }
+      }
+    },
+    "runtimeGroup": {
+      "execution_automation_policy": {
+        "auto_execution": "自动执行授权",
+        "semi_auto": "半自动执行授权"
+      },
+      "execution_risk_policy": {
+        "breaker": "执行熔断",
+        "entry_order_policy": "入场订单策略",
+        "exit_monitor": "退出监控",
+        "portfolio": {
+          "admission": "组合 / 候选准入",
+          "budget": "组合 / 资金预算",
+          "exposure_limits": "组合 / 敞口上限",
+          "tail_risk": "组合 / 尾部风险"
+        },
+        "reconciliation": "执行对账"
+      },
+      "model_routing": {
+        "model": {
+          "active_exit_model_version_id": "模型 / 退出模型",
+          "buy_routes": "模型 / Buy Route 绑定",
+          "calibration": "模型 / 概率校准",
+          "portfolio_scenario_model_bindings": "模型 / 联合场景绑定",
+          "shadow_diff_threshold": "模型 / Shadow 阈值"
+        }
+      },
+      "operations_policy": {
+        "entry_condition": "入场条件 Worker",
+        "kill_switch": "Kill Switch",
+        "notifications": "通知策略",
+        "outcome_reconciliation": "结果对账"
+      },
+      "recommendation_policy": {
+        "data_quality": "数据质量",
+        "reports": "报告策略",
+        "selection": "市场筛选"
+      },
+      "report_schedule": {
+        "schedules": "报告调度"
+      }
     }
   },
   "operationLog": {

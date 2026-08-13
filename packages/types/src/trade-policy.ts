@@ -218,7 +218,7 @@ export interface TradePolicyExitTemplate {
   opportunistic_exit: OpportunisticExitPolicy;
   reason_execution: TradePolicyExitExecutionTemplate[];
   redeem_policy: RedeemPolicy;
-  require_execution_eligibility: boolean;
+  require_route_gate_eligibility: boolean;
   scale_out_targets: TradePolicyScaleOutTemplate[];
   settlement_mode: ExitSettlementMode;
   trailing_stop: null | TradePolicyTrailingStopTemplate;
@@ -268,7 +268,7 @@ export interface TradePolicyCohortView {
   passive_reconciled_trade_coverage: DecimalString | null;
   probability_of_backtest_overfitting: DecimalString;
   redeem_policy: RedeemPolicy;
-  require_execution_eligibility: boolean;
+  require_route_gate_eligibility: boolean;
   sample_count: number;
   scale_out_targets: TradePolicyScaleOutTemplate[];
   selected_candidate_id: string;

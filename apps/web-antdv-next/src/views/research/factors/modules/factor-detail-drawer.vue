@@ -197,7 +197,9 @@ watch(usagePage, () => {
             <DescriptionsItem
               :label="$t('page.research.factors.detail.createdAt')"
             >
-              {{ formatDateTimeLocal(factor.created_at) }}
+              <span class="block w-full" data-screenshot-volatile="true">
+                {{ formatDateTimeLocal(factor.created_at) }}
+              </span>
             </DescriptionsItem>
           </Descriptions>
         </Card>
@@ -217,6 +219,7 @@ watch(usagePage, () => {
               :key="usage.model_version_id"
               :column="1"
               bordered
+              data-screenshot-volatile="true"
               size="small"
             >
               <DescriptionsItem

@@ -94,88 +94,123 @@ test('browser reconnects research feedback from its exact durable cursor', async
   const baselineOverviewReads = overviewReads;
   const socketCount = wire.sockets.length;
 
-  await browserAudit.allowWebSocketReconnect(async () => {
-    await page.context().setOffline(true);
-    await expect
-      .poll(() => wire.sockets.filter((socket) => socket.isClosed()).length)
-      .toBeGreaterThan(0);
-
-    const cancellation = await adminApi.context.post(
-      `/api/research/feedback-cycles/${cancellationTarget.feedback_cycle_id}/cancel`,
+  await browserAudit.allowRequestFailures(
+    [
       {
-        data: { reason: 'w4_e03_browser_offline_cancel' },
-        headers: { 'x-acting-role': 'super_admin' },
+        errorText: 'net::ERR_INTERNET_DISCONNECTED',
+        method: 'GET',
+        pathname: '/api/research/feedback-overview',
+        search: '',
       },
-    );
-    const cancellationBody =
-      (await cancellation.json()) as ApiEnvelope<FeedbackMutation>;
-    expect(
-      cancellation.status(),
-      JSON.stringify(cancellationBody, null, 2),
-    ).toBe(202);
-    expect(cancellationBody).toMatchObject({
-      code: 202,
-      data: {
-        cycle: {
-          feedback_cycle_id: cancellationTarget.feedback_cycle_id,
-          status: 'running',
-        },
-        replayed: false,
+      {
+        errorText: 'net::ERR_INTERNET_DISCONNECTED',
+        method: 'GET',
+        pathname: '/api/research/feedback-cycles',
+        search: '?page=1&size=20',
       },
-    });
-    const offline = await readApiData<FeedbackOverview>(
-      adminApi.context,
-      '/api/research/feedback-overview',
-    );
-    expect(offline.revision).toBeGreaterThan(baseline.revision);
+      {
+        errorText: 'net::ERR_INTERNET_DISCONNECTED',
+        method: 'GET',
+        pathname: '/api/research/model-route-activation-permits',
+        search: '?page=1&size=20',
+      },
+      {
+        errorText: 'net::ERR_INTERNET_DISCONNECTED',
+        method: 'GET',
+        pathname: '/api/research/feedback-schedulers',
+        search: '',
+      },
+    ],
+    () =>
+      browserAudit.allowWebSocketReconnect(async () => {
+        await page.context().setOffline(true);
+        await expect
+          .poll(() => wire.sockets.filter((socket) => socket.isClosed()).length)
+          .toBeGreaterThan(0);
 
-    await page.context().setOffline(false);
-    await expect
-      .poll(() => wire.sockets.length, {
-        message: 'browser did not establish a replacement WebSocket',
-        timeout: 20_000,
-      })
-      .toBeGreaterThan(socketCount);
-    await expect
-      .poll(
-        () =>
-          wire.sent.findLast(
-            (frame) =>
-              frame.action === 'subscribe' &&
-              frame.channel === 'research.feedback',
-          )?.after_revision,
-        {
-          message: 'reconnected feedback subscription lost its durable cursor',
+        const cancellation = await adminApi.context.post(
+          `/api/research/feedback-cycles/${cancellationTarget.feedback_cycle_id}/cancel`,
+          {
+            data: { reason: 'w4_e03_browser_offline_cancel' },
+            headers: { 'x-acting-role': 'super_admin' },
+          },
+        );
+        const cancellationBody =
+          (await cancellation.json()) as ApiEnvelope<FeedbackMutation>;
+        expect(
+          cancellation.status(),
+          JSON.stringify(cancellationBody, null, 2),
+        ).toBe(202);
+        expect(cancellationBody).toMatchObject({
+          code: 202,
+          data: {
+            cycle: {
+              feedback_cycle_id: cancellationTarget.feedback_cycle_id,
+              status: 'running',
+            },
+            replayed: false,
+          },
+        });
+        const offline = await readApiData<FeedbackOverview>(
+          adminApi.context,
+          '/api/research/feedback-overview',
+        );
+        expect(offline.revision).toBeGreaterThan(baseline.revision);
+
+        await page.context().setOffline(false);
+        await expect
+          .poll(() => wire.sockets.length, {
+            message: 'browser did not establish a replacement WebSocket',
+            timeout: 20_000,
+          })
+          .toBeGreaterThan(socketCount);
+        await expect
+          .poll(
+            () =>
+              wire.sent.findLast(
+                (frame) =>
+                  frame.action === 'subscribe' &&
+                  frame.channel === 'research.feedback',
+              )?.after_revision,
+            {
+              message:
+                'reconnected feedback subscription lost its durable cursor',
+              timeout: 20_000,
+            },
+          )
+          .toBe(baseline.revision);
+        await expect
+          .poll(
+            () =>
+              wire.received.some(
+                (frame) =>
+                  frame.type === 'research.feedback' &&
+                  frame.data?.revision === offline.revision &&
+                  frame.data.subject_id ===
+                    cancellationTarget.feedback_cycle_id,
+              ),
+            {
+              message:
+                'browser did not receive the offline durable feedback event',
+              timeout: 20_000,
+            },
+          )
+          .toBe(true);
+        await expect(revision).toHaveText(String(offline.revision), {
           timeout: 20_000,
-        },
-      )
-      .toBe(baseline.revision);
-    await expect
-      .poll(
-        () =>
-          wire.received.some(
-            (frame) =>
-              frame.type === 'research.feedback' &&
-              frame.data?.revision === offline.revision &&
-              frame.data.subject_id === cancellationTarget.feedback_cycle_id,
-          ),
-        {
-          message: 'browser did not receive the offline durable feedback event',
-          timeout: 20_000,
-        },
-      )
-      .toBe(true);
-    await expect(revision).toHaveText(String(offline.revision), {
-      timeout: 20_000,
-    });
-    await expect
-      .poll(() => overviewReads, {
-        message: 'feedback replay did not recover authoritative REST state',
-      })
-      .toBeGreaterThan(baselineOverviewReads);
-    await expect(websocketStatus).toHaveAttribute('data-state', 'connected');
-    await expect(websocketStatus).toHaveAccessibleName(
-      /Realtime connected|实时已连接/i,
-    );
-  });
+        });
+        await expect
+          .poll(() => overviewReads, {
+            message: 'feedback replay did not recover authoritative REST state',
+          })
+          .toBeGreaterThan(baselineOverviewReads);
+        await expect(websocketStatus).toHaveAttribute(
+          'data-state',
+          'connected',
+        );
+        await expect(websocketStatus).toHaveAccessibleName(
+          /Realtime connected|实时已连接/i,
+        );
+      }),
+  );
 });

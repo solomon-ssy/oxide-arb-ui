@@ -1,10 +1,13 @@
 import type { FeatureContractView } from '@vben/types';
 
+import { MODEL_FAMILIES } from '@vben/types';
+
 import { describe, expect, it } from 'vitest';
 
 import { featureContractOptions } from './feature-contract-options';
 import {
   DEFAULT_MODEL_TRAINING_CONTRACT,
+  modelTrainingTarget,
   normalizeModelTrainingContract,
 } from './model-training-contract';
 
@@ -54,46 +57,70 @@ describe('model-spec authoring', () => {
 
   it('normalizes the complete generated training contract', () => {
     expect(
-      normalizeModelTrainingContract({
-        ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        target_label_name: ' token_payout_ratio ',
-      }),
+      normalizeModelTrainingContract(
+        DEFAULT_MODEL_TRAINING_CONTRACT,
+        MODEL_FAMILIES.weightedFactor,
+        86_400,
+      ),
     ).toEqual(DEFAULT_MODEL_TRAINING_CONTRACT);
 
     const policyArtifactId = '01900000-0000-7000-8000-000000000099';
     expect(
-      normalizeModelTrainingContract({
-        ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        target_label_name: 'policy_net_return_bps',
-        trade_policy_artifact_id: policyArtifactId,
-      })?.trade_policy_artifact_id,
+      normalizeModelTrainingContract(
+        {
+          ...DEFAULT_MODEL_TRAINING_CONTRACT,
+          evaluation_trade_policy_artifact_id: policyArtifactId,
+        },
+        MODEL_FAMILIES.weightedFactor,
+        86_400,
+      )?.evaluation_trade_policy_artifact_id,
     ).toBe(policyArtifactId);
   });
 
-  it('rejects malformed labels, horizons, and fold counts before submit', () => {
+  it('derives the only family-compatible target', () => {
+    expect(modelTrainingTarget(MODEL_FAMILIES.weightedFactor, 86_400)).toEqual({
+      kind: 'outcome_payout',
+    });
     expect(
-      normalizeModelTrainingContract({
-        ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        target_label_name: ' ',
-      }),
+      modelTrainingTarget(MODEL_FAMILIES.classicalLogisticRegression, 3600),
+    ).toEqual({ kind: 'outcome_payout' });
+    expect(modelTrainingTarget(MODEL_FAMILIES.classicalRidge, 3600)).toEqual({
+      horizon_secs: 3600,
+      kind: 'forward_return',
+    });
+    expect(
+      modelTrainingTarget(MODEL_FAMILIES.holdVsExitWeighted, 3600),
+    ).toEqual({ kind: 'hold_vs_exit_alpha' });
+  });
+
+  it('rejects target, policy, horizon, and fold mismatches', () => {
+    expect(
+      normalizeModelTrainingContract(
+        {
+          ...DEFAULT_MODEL_TRAINING_CONTRACT,
+          target: { horizon_secs: 86_400, kind: 'forward_return' },
+        },
+        MODEL_FAMILIES.weightedFactor,
+        86_400,
+      ),
     ).toBeNull();
     expect(
-      normalizeModelTrainingContract({
-        ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        target_label_name: '标'.repeat(43),
-      }),
+      normalizeModelTrainingContract(
+        {
+          ...DEFAULT_MODEL_TRAINING_CONTRACT,
+          evaluation_trade_policy_artifact_id: 'not-a-uuid',
+        },
+        MODEL_FAMILIES.weightedFactor,
+        86_400,
+      ),
     ).toBeNull();
     expect(
-      normalizeModelTrainingContract({
-        ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        target_label_horizon_secs: -1,
-      }),
+      normalizeModelTrainingContract(
+        { ...DEFAULT_MODEL_TRAINING_CONTRACT, validation_folds: 1 },
+        MODEL_FAMILIES.weightedFactor,
+        86_400,
+      ),
     ).toBeNull();
-    expect(
-      normalizeModelTrainingContract({
-        ...DEFAULT_MODEL_TRAINING_CONTRACT,
-        validation_folds: 1,
-      }),
-    ).toBeNull();
+    expect(modelTrainingTarget(MODEL_FAMILIES.classicalRidge, -1)).toBeNull();
   });
 });

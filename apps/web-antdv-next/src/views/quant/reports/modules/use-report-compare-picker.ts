@@ -57,7 +57,6 @@ export function useReportComparePicker() {
             listQuantReports({
               kind: current.report_kind,
               page,
-              profile_id: current.profile_id,
               size: PAGE_SIZE,
             }),
           { silent: true },
@@ -67,7 +66,9 @@ export function useReportComparePicker() {
         }
         for (const item of result.items) {
           if (
-            item.recommendation_report_id !== current.recommendation_report_id
+            item.recommendation_report_id !==
+              current.recommendation_report_id &&
+            item.represented_routes.digest === current.represented_routes.digest
           ) {
             collected.push(toOption(item));
           }

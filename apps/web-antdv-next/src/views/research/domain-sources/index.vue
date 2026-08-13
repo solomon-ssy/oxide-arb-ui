@@ -285,6 +285,7 @@ function snapshotStatusColor(status: DomainSourceSnapshotStatus) {
         :title="$t('page.research.domainSources.cards.health')"
       >
         <Statistic
+          data-screenshot-volatile="true"
           :title="$t('page.research.domainSources.cards.observedAt')"
           :value="formatDateTimeLocal(snapshot.observed_at)"
         />

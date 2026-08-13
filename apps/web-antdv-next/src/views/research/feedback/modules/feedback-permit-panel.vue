@@ -508,7 +508,10 @@ function submitIssue() {
           <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.countdown')"
           >
-            <span class="font-mono tabular-nums">
+            <span
+              class="font-mono tabular-nums"
+              data-screenshot-volatile="true"
+            >
               {{ countdown(permit) }}
             </span>
           </DescriptionsItem>

@@ -356,8 +356,10 @@ const baselineUpliftMetric = computed(() => {
       <DescriptionsItem :label="$t('page.research.cpcv.minTrl')">
         {{ formatMinTrl(pathSet.min_track_record_length_secs) }}
       </DescriptionsItem>
-      <DescriptionsItem :label="$t('page.research.cpcv.trialCount')">
-        {{ pathSet.trial_count }}
+      <DescriptionsItem
+        :label="$t('page.research.cpcv.dsrConservativeIndependentTrialCount')"
+      >
+        {{ pathSet.dsr_conservative_independent_trial_count }}
       </DescriptionsItem>
       <DescriptionsItem :label="$t('page.research.cpcv.trialGridCount')">
         {{ pathSet.trial_grid_count }}

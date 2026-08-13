@@ -8,6 +8,7 @@ import type {
   PolicyDocument,
   PolicyResourceSchemaView,
   PolicyRevisionView,
+  PolicyValidationIssue,
   PolicyValidationView,
   ReportSchedule,
 } from '@vben/types/config-api';
@@ -44,13 +45,12 @@ import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import { linkedRollbackState } from './modules/linked-rollback-state';
 import ModelRoutingPicker from './modules/model-routing-picker.vue';
-import PolicyField from './modules/policy-field.vue';
 import {
   clonePolicyValue,
   collectPolicyDiff,
   formatPolicyValue,
   parsePolicyJsonSchema,
-  policyFieldLabel,
+  runtimeFieldLabel,
   validatePolicyValue,
 } from './modules/policy-schema';
 import ReportSchedulePreview from './modules/report-schedule-preview.vue';
@@ -58,6 +58,7 @@ import {
   CONFIG_RESOURCE_META,
   isConfigResourceKind,
 } from './modules/resource-metadata';
+import RuntimeResourceEditor from './modules/runtime-resource-editor.vue';
 
 defineOptions({ name: 'ConfigResourcePage' });
 
@@ -79,6 +80,7 @@ const reducedMotion = usePreferredReducedMotion();
 
 const loading = ref(true);
 const loadError = ref(false);
+const draftColumn = ref<HTMLElement | null>(null);
 const current = ref<Awaited<
   ReturnType<typeof getCurrentConfigResource>
 > | null>(null);
@@ -111,7 +113,9 @@ const meta = computed(() =>
   resourceKind.value ? CONFIG_RESOURCE_META[resourceKind.value] : null,
 );
 const jsonSchema = computed(() =>
-  schemaView.value ? parsePolicyJsonSchema(schemaView.value.json_schema) : null,
+  schemaView.value
+    ? parsePolicyJsonSchema(schemaView.value.document_schema)
+    : null,
 );
 const activeDocument = computed(
   () => current.value?.revision?.document.document ?? null,
@@ -147,16 +151,26 @@ const validationIssues = computed(
 
 async function focusInvalidField(path: string[]) {
   await nextTick();
-  const fieldPath = path.join('.');
-  const inlineError = [
-    ...document.querySelectorAll<HTMLElement>('[data-field-path]'),
-  ].find((element) => element.dataset.fieldPath === fieldPath);
-  const control =
-    inlineError?.previousElementSibling?.querySelector<HTMLElement>(
-      'input:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-    );
+  const pointer = `/${path
+    .map((segment) => segment.replaceAll('~', '~0').replaceAll('/', '~1'))
+    .join('/')}`;
+  const control = [
+    ...(draftColumn.value?.querySelectorAll<HTMLElement>(
+      '[data-config-pointer]',
+    ) ?? []),
+  ]
+    .filter((element) => element.dataset.configPointer === pointer)
+    .map((element) =>
+      element.querySelector<HTMLElement>(
+        'input:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    )
+    .find((candidate): candidate is HTMLElement => candidate !== null);
   control?.focus({ preventScroll: false });
-  control?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  control?.scrollIntoView({
+    behavior: reducedMotion.value === 'reduce' ? 'auto' : 'smooth',
+    block: 'center',
+  });
 }
 const preflightChecks = computed(
   () => validation.value?.validation_evidence.preflight ?? [],
@@ -179,11 +193,6 @@ const workingReportSchedule = computed<null | ReportSchedule>(() =>
     ? (workingDocument.value as ReportSchedule)
     : null,
 );
-
-const MODEL_ROUTING_GOVERNED_FIELDS = [
-  'model.active_exit_model_version_id',
-  'model.buy_routes',
-];
 
 const hasCreateAccess = hasAccessByCodes(['config:create']);
 const hasApproveAccess = hasAccessByCodes(['config:approve']);
@@ -234,7 +243,7 @@ function policyDocument(
   payload: PolicyPayload,
 ): PolicyDocument {
   switch (kind) {
-    case 'execution_authorization': {
+    case 'execution_automation_policy': {
       return { document: payload, resource_kind: kind } as PolicyDocument;
     }
     case 'execution_risk_policy': {
@@ -243,7 +252,7 @@ function policyDocument(
     case 'model_routing': {
       return { document: payload, resource_kind: kind } as PolicyDocument;
     }
-    case 'operational_control': {
+    case 'operations_policy': {
       return { document: payload, resource_kind: kind } as PolicyDocument;
     }
     case 'recommendation_policy': {
@@ -259,10 +268,56 @@ function shortId(value?: null | string) {
   return value ? `${value.slice(0, 12)}…` : '—';
 }
 
+function escapedPointer(path: string[]) {
+  return `/${path
+    .map((segment) => segment.replaceAll('~', '~0').replaceAll('/', '~1'))
+    .join('/')}`;
+}
+
+function humanizeDiffSegment(segment: string) {
+  if (/^\d+$/.test(segment)) {
+    return `#${Number(segment) + 1}`;
+  }
+  return segment
+    .split('_')
+    .filter(Boolean)
+    .map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`)
+    .join(' ');
+}
+
+function diffLabel(path: string[]) {
+  if (!schemaView.value) return escapedPointer(path);
+  const pointer = escapedPointer(path);
+  const descriptor = schemaView.value.fields
+    .filter(
+      (field) =>
+        pointer === field.pointer || pointer.startsWith(`${field.pointer}/`),
+    )
+    .toSorted((left, right) => right.pointer.length - left.pointer.length)[0];
+  if (!descriptor) return pointer;
+  const descriptorDepth = descriptor.pointer.split('/').filter(Boolean).length;
+  const suffix = path
+    .slice(descriptorDepth)
+    .map((segment) => humanizeDiffSegment(segment));
+  return [
+    runtimeFieldLabel(
+      schemaView.value.kind,
+      descriptor.pointer,
+      descriptor.title,
+    ),
+    ...suffix,
+  ].join(' / ');
+}
+
 function editorValidationMessage(issue: PolicyClientValidationIssue) {
   return $t(`page.config.editor.validation.${issue.code}`, {
     expected: issue.expected ?? '',
   });
+}
+
+function serverValidationMessage(issue: PolicyValidationIssue) {
+  const key = `page.config.validationCode.${issue.code}`;
+  return $t(key, issue.message_parameters);
 }
 
 function linkedQueryId(name: string): null | string {
@@ -320,13 +375,13 @@ function verifyLinkedRollback(
   if (
     activatedBinding.champion.model_version_id !==
       receipt.rollback_target.activated_model_version_id ||
-    activatedBinding.shadow !== null ||
+    (activatedBinding.shadow ?? null) !== null ||
     activatedBinding.champion.source.source_kind !== 'feedback' ||
     activatedBinding.champion.source.feedback_cycle_id !==
       receipt.feedback_cycle_id ||
     rollbackBinding.champion.model_version_id !==
       receipt.rollback_target.restored_model_version_id ||
-    rollbackBinding.shadow !== null
+    (rollbackBinding.shadow ?? null) !== null
   ) {
     throw new Error('linked rollback model-route delta is not sanitized');
   }
@@ -604,7 +659,7 @@ async function activateRevision() {
       confirmWord: rollbackMode.value
         ? $t('page.config.workflow.rollbackConfirmWord')
         : undefined,
-      danger: rollbackMode.value || kind === 'execution_authorization',
+      danger: rollbackMode.value || kind === 'execution_automation_policy',
       details: [
         {
           label: $t('page.config.resource.expectedGeneration'),
@@ -912,12 +967,17 @@ watch(
       </section>
       <Alert
         v-if="loadError"
+        data-testid="config-load-error"
         :message="$t('page.config.error.load')"
         show-icon
         type="error"
       >
         <template #action>
-          <Button size="small" @click="loadResource">
+          <Button
+            data-testid="retry-config-load"
+            size="small"
+            @click="loadResource"
+          >
             {{ $t('page.shared.asyncState.retry') }}
           </Button>
         </template>
@@ -932,7 +992,9 @@ watch(
         @close="activationConflict = null"
       >
         <template #description>
-          <span data-screenshot-volatile="true">{{ activationConflict }}</span>
+          <span class="block w-full" data-screenshot-volatile="true">
+            {{ activationConflict }}
+          </span>
         </template>
       </Alert>
 
@@ -996,7 +1058,7 @@ watch(
               :model-value="activeModelRouting"
             />
             <RuntimeControlPanel
-              v-if="stage === 'view' && resourceKind === 'operational_control'"
+              v-if="stage === 'view' && resourceKind === 'operations_policy'"
             />
             <ReportSchedulePreview
               v-if="stage === 'view' && activeReportSchedule"
@@ -1017,13 +1079,12 @@ watch(
                   </p>
                 </div>
               </div>
-              <PolicyField
+              <RuntimeResourceEditor
                 v-if="activeDocument"
                 disabled
+                :fields="schemaView.fields"
                 :model-value="activeDocument"
-                :root-schema="jsonSchema"
-                :schema="jsonSchema"
-                :hidden-fields="MODEL_ROUTING_GOVERNED_FIELDS"
+                :resource="schemaView.kind"
               />
               <Empty
                 v-else
@@ -1062,20 +1123,55 @@ watch(
                   </ul>
                 </template>
               </Alert>
-              <ReportSchedulePreview
-                v-if="workingReportSchedule"
-                class="mb-4"
-                :model-value="workingReportSchedule"
-              />
-              <PolicyField
-                v-if="workingDocument"
-                :hidden-fields="MODEL_ROUTING_GOVERNED_FIELDS"
-                :issues="editorValidationIssues"
-                :model-value="workingDocument"
-                :root-schema="jsonSchema"
-                :schema="jsonSchema"
-                @update:model-value="updateWorkingDocument"
-              />
+              <div class="policy-comparison-grid">
+                <section
+                  v-if="activeDocument"
+                  class="min-w-0"
+                  data-testid="config-current-column"
+                >
+                  <header class="mb-3 px-1">
+                    <h2 class="text-sm font-semibold">
+                      {{ $t('page.config.resource.currentColumn') }}
+                    </h2>
+                    <p class="text-muted-foreground mt-1 text-xs">
+                      {{ $t('page.config.resource.currentColumnDescription') }}
+                    </p>
+                  </header>
+                  <RuntimeResourceEditor
+                    disabled
+                    :fields="schemaView.fields"
+                    :model-value="activeDocument"
+                    :resource="schemaView.kind"
+                  />
+                </section>
+                <section
+                  v-if="workingDocument"
+                  ref="draftColumn"
+                  class="min-w-0"
+                  data-testid="config-draft-column"
+                >
+                  <header class="mb-3 px-1">
+                    <h2 class="text-sm font-semibold">
+                      {{ $t('page.config.resource.draftColumn') }}
+                    </h2>
+                    <p class="text-muted-foreground mt-1 text-xs">
+                      {{ $t('page.config.resource.draftColumnDescription') }}
+                    </p>
+                  </header>
+                  <ReportSchedulePreview
+                    v-if="workingReportSchedule"
+                    class="mb-4"
+                    :model-value="workingReportSchedule"
+                  />
+                  <RuntimeResourceEditor
+                    :fields="schemaView.fields"
+                    :issues="editorValidationIssues"
+                    :model-value="workingDocument"
+                    :resource="schemaView.kind"
+                    @update:model-value="updateWorkingDocument"
+                  />
+                </section>
+              </div>
             </section>
 
             <section
@@ -1109,22 +1205,26 @@ watch(
                   class="diff-row"
                 >
                   <h3 class="font-mono text-xs font-semibold">
-                    {{
-                      diff.path
-                        .map((part) => policyFieldLabel(part, {}))
-                        .join(' / ')
-                    }}
+                    {{ diffLabel(diff.path) }}
                   </h3>
                   <dl class="mt-2 grid gap-3 sm:grid-cols-2">
                     <div>
                       <dt>{{ $t('page.config.review.before') }}</dt>
-                      <dd data-screenshot-volatile="true">
+                      <dd
+                        class="config-review-value"
+                        data-screenshot-volatile="true"
+                        tabindex="0"
+                      >
                         {{ formatPolicyValue(diff.before) }}
                       </dd>
                     </div>
                     <div>
                       <dt>{{ $t('page.config.review.after') }}</dt>
-                      <dd data-screenshot-volatile="true">
+                      <dd
+                        class="config-review-value"
+                        data-screenshot-volatile="true"
+                        tabindex="0"
+                      >
                         {{ formatPolicyValue(diff.after) }}
                       </dd>
                     </div>
@@ -1165,12 +1265,17 @@ watch(
                   <ul class="mt-2 space-y-2">
                     <li
                       v-for="issue in validationIssues"
-                      :key="`${issue.path}:${issue.code}`"
+                      :key="`${issue.pointer}:${issue.code}`"
                     >
-                      <strong class="font-mono text-xs">{{
-                        issue.path
-                      }}</strong>
-                      <span class="ml-2">{{ issue.message }}</span>
+                      <strong class="font-mono text-xs">
+                        {{ issue.pointer }}
+                      </strong>
+                      <span class="ml-2">{{
+                        serverValidationMessage(issue)
+                      }}</span>
+                      <span class="mt-1 block text-xs">
+                        {{ issue.remediation }}
+                      </span>
                     </li>
                   </ul>
                 </template>
@@ -1331,7 +1436,13 @@ watch(
               {{ $t('page.config.revisions.description') }}
             </p>
           </div>
-          <div v-if="revisions.length > 0" class="overflow-x-auto">
+          <div
+            v-if="revisions.length > 0"
+            :aria-label="$t('page.config.revisions.title')"
+            class="overflow-x-auto"
+            role="region"
+            tabindex="0"
+          >
             <table class="revision-table">
               <thead>
                 <tr>
@@ -1350,6 +1461,7 @@ watch(
                 <tr
                   v-for="revision in revisions"
                   :key="revision.policy_revision_id"
+                  :data-revision-id="revision.policy_revision_id"
                 >
                   <td class="font-mono" data-screenshot-volatile="true">
                     {{ shortId(revision.policy_revision_id) }}
@@ -1396,6 +1508,8 @@ watch(
 }
 
 .config-active-tag {
+  justify-content: center;
+  inline-size: 9.5rem;
   background: hsl(var(--card)) !important;
   border-color: hsl(var(--primary)) !important;
 }
@@ -1468,6 +1582,17 @@ watch(
   align-items: start;
 }
 
+.policy-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.policy-comparison-grid :deep(.runtime-field-grid) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .impact-panel {
   position: sticky;
   top: 1rem;
@@ -1485,6 +1610,11 @@ watch(
 .diff-row dd {
   margin-top: 0.35rem;
   overflow-wrap: anywhere;
+}
+
+.config-review-value {
+  max-block-size: 28rem;
+  overflow: auto;
 }
 
 .diff-row {
@@ -1595,6 +1725,10 @@ watch(
 
   .impact-panel {
     position: static;
+  }
+
+  .policy-comparison-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

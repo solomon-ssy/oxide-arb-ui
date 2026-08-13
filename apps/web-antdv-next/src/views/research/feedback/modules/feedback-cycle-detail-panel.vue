@@ -271,7 +271,11 @@ function driftColor(assessment: FeedbackDriftAssessment) {
               {{
                 formatDateTimeLocal(candidateReady.route_diff.shadow_bound_at)
               }}
-              <span v-if="shadowBindingAgeSecs !== null">
+              <span
+                v-if="shadowBindingAgeSecs !== null"
+                class="tabular-nums"
+                data-screenshot-volatile="true"
+              >
                 · {{ shadowBindingAgeSecs }}
                 {{ $t('page.research.feedback.detail.candidateReady.seconds') }}
               </span>
@@ -772,20 +776,24 @@ function driftColor(assessment: FeedbackDriftAssessment) {
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.startedAt')"
         >
-          {{
-            detail.cycle.started_at
-              ? formatDateTimeLocal(detail.cycle.started_at)
-              : $t('page.research.feedback.detail.notObserved')
-          }}
+          <span class="block w-full" data-screenshot-volatile="true">
+            {{
+              detail.cycle.started_at
+                ? formatDateTimeLocal(detail.cycle.started_at)
+                : $t('page.research.feedback.detail.notObserved')
+            }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.completedAt')"
         >
-          {{
-            detail.cycle.completed_at
-              ? formatDateTimeLocal(detail.cycle.completed_at)
-              : $t('page.research.feedback.detail.notObserved')
-          }}
+          <span class="block w-full" data-screenshot-volatile="true">
+            {{
+              detail.cycle.completed_at
+                ? formatDateTimeLocal(detail.cycle.completed_at)
+                : $t('page.research.feedback.detail.notObserved')
+            }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.leaseExpiresAt')"
@@ -808,12 +816,16 @@ function driftColor(assessment: FeedbackDriftAssessment) {
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.createdAt')"
         >
-          {{ formatDateTimeLocal(detail.cycle.created_at) }}
+          <span class="block w-full" data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(detail.cycle.created_at) }}
+          </span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.detail.audit.updatedAt')"
         >
-          {{ formatDateTimeLocal(detail.cycle.updated_at) }}
+          <span class="block w-full" data-screenshot-volatile="true">
+            {{ formatDateTimeLocal(detail.cycle.updated_at) }}
+          </span>
         </DescriptionsItem>
       </Descriptions>
     </Card>

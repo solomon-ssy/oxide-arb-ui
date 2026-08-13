@@ -85,16 +85,14 @@ const deltaColumns = [
   },
   {
     align: 'right' as const,
-    dataIndex: ['base', 'risk_adjusted_score'],
-    key: 'base_score',
-    title: $t('page.quantReports.detail.diff.columns.baseScore'),
+    key: 'base_robust_net',
+    title: $t('page.quantReports.detail.diff.columns.baseRobustNet'),
     width: 120,
   },
   {
     align: 'right' as const,
-    dataIndex: ['compare', 'risk_adjusted_score'],
-    key: 'compare_score',
-    title: $t('page.quantReports.detail.diff.columns.compareScore'),
+    key: 'compare_robust_net',
+    title: $t('page.quantReports.detail.diff.columns.compareRobustNet'),
     width: 130,
   },
   {
@@ -132,23 +130,24 @@ function deltaRowKey(row: RecommendationDeltaView): string {
 function suggestedUsd(
   snapshot: null | RecommendationDiffSnapshotView,
 ): null | string {
-  return snapshot?.trade_plan.kind === 'frozen'
-    ? snapshot.trade_plan.sizing.suggested_usd
-    : null;
+  return snapshot?.trade_plan.sizing.suggested_usd ?? null;
 }
 
 function changedFieldLabel(field: RecommendationChangedField): string {
   return $t(`page.quantReports.detail.diff.fields.${field}`);
 }
 
-function scoreSummary(snapshot: null | RecommendationDiffSnapshotView): string {
+function economicsSummary(
+  snapshot: null | RecommendationDiffSnapshotView,
+): string {
   if (!snapshot) return EMPTY_PLACEHOLDER;
+  const economics = snapshot.economics;
   return [
-    `composite ${formatScore(snapshot.composite_score)}`,
-    `risk ${formatScore(snapshot.risk_adjusted_score)}`,
-    `confidence ${formatScore(snapshot.confidence)}`,
-    `return ${formatBps(snapshot.expected_return_bps)}`,
-    `downside ${formatBps(snapshot.downside_bps)}`,
+    `P(profit) ${formatBps(economics.profit_probability_bps)}`,
+    `robust ${formatUsd(economics.robust_expected_net_usd)}`,
+    `nominal ${formatUsd(economics.nominal_expected_net_usd)}`,
+    `CVaR ${formatUsd(economics.cvar_contribution_usd)}`,
+    `USD·h ${formatScore(economics.capital_occupancy_usd_hours)}`,
   ].join(' · ');
 }
 
@@ -161,7 +160,7 @@ function validitySummary(
 }
 
 function entrySummary(snapshot: null | RecommendationDiffSnapshotView): string {
-  if (!snapshot || snapshot.trade_plan.kind !== 'frozen') {
+  if (!snapshot) {
     return EMPTY_PLACEHOLDER;
   }
   const { entry } = snapshot.trade_plan;
@@ -169,7 +168,7 @@ function entrySummary(snapshot: null | RecommendationDiffSnapshotView): string {
 }
 
 function exitSummary(snapshot: null | RecommendationDiffSnapshotView): string {
-  if (!snapshot || snapshot.trade_plan.kind !== 'frozen') {
+  if (!snapshot) {
     return EMPTY_PLACEHOLDER;
   }
   const { exit } = snapshot.trade_plan;
@@ -372,17 +371,17 @@ onMounted(async () => {
             <template v-else-if="column.key === 'compare_rank'">
               {{ record.compare?.rank ?? EMPTY_PLACEHOLDER }}
             </template>
-            <template v-else-if="column.key === 'base_score'">
+            <template v-else-if="column.key === 'base_robust_net'">
               <span class="font-mono">{{
                 record.base
-                  ? formatScore(record.base.risk_adjusted_score)
+                  ? formatUsd(record.base.economics.robust_expected_net_usd)
                   : EMPTY_PLACEHOLDER
               }}</span>
             </template>
-            <template v-else-if="column.key === 'compare_score'">
+            <template v-else-if="column.key === 'compare_robust_net'">
               <span class="font-mono">{{
                 record.compare
-                  ? formatScore(record.compare.risk_adjusted_score)
+                  ? formatUsd(record.compare.economics.robust_expected_net_usd)
                   : EMPTY_PLACEHOLDER
               }}</span>
             </template>
@@ -407,8 +406,8 @@ onMounted(async () => {
               <DescriptionsItem
                 :label="$t('page.quantReports.detail.diff.details.scores')"
               >
-                <div>{{ scoreSummary(record.base) }}</div>
-                <div>{{ scoreSummary(record.compare) }}</div>
+                <div>{{ economicsSummary(record.base) }}</div>
+                <div>{{ economicsSummary(record.compare) }}</div>
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.quantReports.detail.diff.details.sizing')"

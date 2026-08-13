@@ -163,6 +163,7 @@ onMounted(() => void loadCatalog());
             <dd>
               <strong
                 class="font-mono text-xs"
+                data-screenshot-volatile="true"
                 :title="routeBinding(route.key)?.champion.model_version_id"
               >
                 {{
@@ -179,7 +180,7 @@ onMounted(() => void loadCatalog());
                   })
                 }}
               </span>
-              <span>
+              <span class="font-mono" data-screenshot-volatile="true">
                 {{
                   formatTimestamp(
                     routeBinding(route.key)?.champion.bound_at ?? '',
@@ -191,6 +192,8 @@ onMounted(() => void loadCatalog());
                 <template v-if="sourceCycle(routeBinding(route.key)!.champion)">
                   ·
                   <span
+                    class="font-mono"
+                    data-screenshot-volatile="true"
                     :title="
                       sourceCycle(routeBinding(route.key)!.champion) ??
                       undefined
@@ -208,6 +211,8 @@ onMounted(() => void loadCatalog());
                 v-if="
                   candidate(routeBinding(route.key)?.champion.model_version_id)
                 "
+                class="font-mono"
+                data-screenshot-volatile="true"
                 :title="
                   candidate(routeBinding(route.key)?.champion.model_version_id)
                     ?.artifact_hash
@@ -235,6 +240,7 @@ onMounted(() => void loadCatalog());
             <dd v-if="routeBinding(route.key)?.shadow">
               <strong
                 class="font-mono text-xs"
+                data-screenshot-volatile="true"
                 :title="routeBinding(route.key)?.shadow?.model_version_id"
               >
                 {{
@@ -251,7 +257,7 @@ onMounted(() => void loadCatalog());
                   })
                 }}
               </span>
-              <span>
+              <span class="font-mono" data-screenshot-volatile="true">
                 {{
                   formatTimestamp(
                     routeBinding(route.key)?.shadow?.bound_at ?? '',
@@ -263,6 +269,8 @@ onMounted(() => void loadCatalog());
                 <template v-if="sourceCycle(routeBinding(route.key)!.shadow!)">
                   ·
                   <span
+                    class="font-mono"
+                    data-screenshot-volatile="true"
                     :title="
                       sourceCycle(routeBinding(route.key)!.shadow!) ?? undefined
                     "
@@ -301,6 +309,7 @@ onMounted(() => void loadCatalog());
         <p
           v-else
           class="font-mono text-xs"
+          data-screenshot-volatile="true"
           :title="model.active_exit_model_version_id"
         >
           {{ shortId(model.active_exit_model_version_id) }}

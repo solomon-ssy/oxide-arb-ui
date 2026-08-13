@@ -15,7 +15,6 @@ import type {
 } from './decision-evidence';
 import type { EntryConditionPlan } from './entry-condition';
 import type {
-  BindingConstraint,
   ExitSettlementMode,
   FactorDirection,
   FactorFamily,
@@ -31,7 +30,6 @@ import type {
   RecommendationReportStatus,
   RecommendationStatus,
   RedeemPolicy,
-  SizingModelKind,
   TickSize,
 } from './enums';
 import type {
@@ -40,6 +38,7 @@ import type {
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
 } from './exit-plan';
+import type { BuyModelRoute } from './feedback';
 import type { ResearchProfileRef } from './research-profile';
 
 export interface RecommendationIdentity {
@@ -84,32 +83,17 @@ export type EntryOrderPolicy =
   | { kind: 'passive'; limit_price: PriceString; post_only: boolean };
 
 export interface SizingPlan {
+  economic_tier_id: UuidString;
   suggested_usd: UsdString;
-  max_usd: UsdString;
-  min_usd: UsdString;
+  suggested_shares: SharesString;
+  entry_vwap: PriceString;
+  portfolio_weight_pct: DecimalString;
   market_exposure_after_usd: UsdString;
   event_exposure_after_usd: UsdString;
   category_exposure_after_usd: UsdString;
-  suggested_shares: SharesString;
-  portfolio_weight_pct: DecimalString;
-  /** The merged product of every stage below — not the config constant (see `kelly_fraction_config_applied`). */
-  kelly_fraction_applied: DecimalString | null;
-  edge_uncertainty_shrink_applied?: DecimalString | null;
-  correlation_shrink_applied?: DecimalString | null;
-  binding_constraint: BindingConstraint;
+  route_exposure_after_usd: UsdString;
+  capital_occupancy_usd_hours: DecimalString;
   sizing_reason: string;
-  sizing_model: SizingModelKind;
-  edge_bps: BpsString | null;
-  /** Sizing-waterfall provenance: the raw full-Kelly fraction. */
-  f_star_applied?: DecimalString | null;
-  /** The governed static fractional-Kelly constant (e.g. 0.5 for half-Kelly). */
-  kelly_fraction_config_applied?: DecimalString | null;
-  confidence_shrink_applied?: DecimalString | null;
-  drawdown_shrink_applied?: DecimalString | null;
-  /** Fraction before the per-position equity cap. */
-  raw_fraction_applied?: DecimalString | null;
-  /** The per-position equity cap (`portfolio.sizing.max_position_pct`). */
-  position_cap_fraction_applied?: DecimalString | null;
 }
 
 export interface ExitPlan {
@@ -151,30 +135,13 @@ export interface TradePolicyCohortDimension {
   methodology_id: string;
 }
 
-export type TradePlanBlocker =
-  | 'artifact_format_unsupported'
-  | 'artifact_hash_mismatch'
-  | 'artifact_not_found'
-  | 'artifact_not_published'
-  | 'cash_budget_tier_unavailable'
-  | 'cohort_coverage_insufficient'
-  | 'cohort_not_found'
-  | 'liquidity_insufficient'
-  | 'model_policy_binding_missing'
-  | 'price_outside_venue_range'
-  | 'return_model_uncalibrated'
-  | 'tick_mismatch';
-
-export type RecommendationTradePlan =
-  | { blockers: TradePlanBlocker[]; kind: 'unavailable' }
-  | {
-      entry: EntryPlan;
-      exit: ExitPlan;
-      kind: 'frozen';
-      policy: TradePolicyCohortProvenance;
-      risk_envelope: RiskEnvelope;
-      sizing: SizingPlan;
-    };
+export interface RecommendationTradePlan {
+  entry: EntryPlan;
+  exit: ExitPlan;
+  policy: TradePolicyCohortProvenance;
+  risk_envelope: RiskEnvelope;
+  sizing: SizingPlan;
+}
 
 export interface RiskEnvelope {
   max_loss_usd: UsdString;
@@ -182,11 +149,64 @@ export interface RiskEnvelope {
   max_market_exposure_usd: UsdString;
   max_event_exposure_usd: UsdString;
   max_category_exposure_usd: UsdString;
+  max_route_exposure_usd: UsdString;
+  cvar_contribution_usd: UsdString;
+  portfolio_cvar_cap_usd: UsdString;
+  maximum_scenario_loss_cap_usd: UsdString;
   max_slippage_bps: BpsString;
   requires_approval: boolean;
   auto_execution_allowed: boolean;
   risk_notes: string[];
   envelope_hash: string;
+}
+
+export interface EntryEconomics {
+  notional_usd: UsdString;
+  entry_vwap: PriceString;
+  fee_usd: UsdString;
+  slippage_usd: UsdString;
+  visible_liquidity_usd: UsdString;
+}
+
+export interface ScenarioCashflow {
+  scenario_index: number;
+  discounted_net_usd: UsdString;
+}
+
+export interface CapitalOccupancyBucket {
+  end_secs: number;
+  locked_usd: UsdString;
+}
+
+export interface RecommendationEconomics {
+  profit_probability_bps: BpsString;
+  nominal_expected_net_usd: UsdString;
+  robust_expected_net_usd: UsdString;
+  max_loss_usd: UsdString;
+  cvar_contribution_usd: UsdString;
+  capital_occupancy_usd_hours: DecimalString;
+  marginal_portfolio_value_usd: UsdString;
+}
+
+export interface ExecutableEconomicTier {
+  economic_tier_id: UuidString;
+  report_route_run_id: UuidString;
+  candidate_id: UuidString;
+  tier_ordinal: number;
+  route: BuyModelRoute;
+  market_id: string;
+  event_id: string;
+  category: MarketCategory;
+  token_id: string;
+  outcome_side: OutcomeSide;
+  shares: SharesString;
+  entry: EntryEconomics;
+  profit_probability_lower_bps: number;
+  probability_interval_width_bps: number;
+  scenario_cashflows: ScenarioCashflow[];
+  capital_occupancy: CapitalOccupancyBucket[];
+  economics: RecommendationEconomics;
+  lineage_hash: string;
 }
 
 export interface FactorBreakdownEntry {
@@ -214,29 +234,25 @@ export interface ExecutionEligibility {
   ineligibility_reasons: IneligibilityReason[];
   approval_required: boolean;
   auto_policy_id: null | string;
-  uncalibrated_watermark: boolean;
 }
 
 /** `GET /quant/recommendations/{id}` — a single scored recommendation. */
 export interface QuantRecommendationView {
   recommendation_id: UuidString;
   recommendation_report_id: UuidString;
+  report_route_run_id: UuidString;
+  portfolio_plan_id: UuidString;
+  economic_tier_id: UuidString;
   rank: number;
+  route: BuyModelRoute;
   market_id: string;
   event_id: string;
   token_id: string;
   outcome_side: OutcomeSide;
-  composite_score: ProbabilityString;
-  risk_adjusted_score: ProbabilityString;
-  confidence: ProbabilityString;
-  expected_return_bps: BpsString;
-  downside_bps: BpsString;
+  economics: RecommendationEconomics;
+  economic_tier: ExecutableEconomicTier;
   identity: RecommendationIdentity;
   market_context: MarketContext;
-  rank_before_portfolio: number;
-  liquidity_score: ProbabilityString;
-  data_quality_score: ProbabilityString;
-  model_score_percentile: ProbabilityString;
   trade_plan: RecommendationTradePlan;
   factor_breakdown: FactorBreakdownEntry[];
   execution_eligibility: ExecutionEligibility;

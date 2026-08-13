@@ -1,5 +1,3 @@
-import type { QuantRecommendationView } from '@vben/types';
-
 import type { CreateIntentGateInput } from './use-create-intent-gate';
 
 import {
@@ -28,16 +26,14 @@ function recommendation(
         QUANT_RUNTIME_MODES.autoExecution,
       ],
       ineligibility_reasons: [],
-      uncalibrated_watermark: false,
     },
     report_status: RECOMMENDATION_REPORT_STATUSES.published,
     trade_plan: {
-      kind: 'frozen',
       risk_envelope: {
         max_loss_usd: '100',
         max_position_usd: '500',
       },
-    } as QuantRecommendationView['trade_plan'],
+    },
     status: RECOMMENDATION_STATUSES.published,
     valid_from: '2026-07-03T11:00:00.000Z',
     valid_until: '2026-07-03T13:00:00.000Z',
@@ -107,7 +103,6 @@ describe('evaluateCreateIntentGate', () => {
         auto_policy_id: null,
         eligible_modes: [QUANT_RUNTIME_MODES.autoExecution],
         ineligibility_reasons: [],
-        uncalibrated_watermark: false,
       },
     });
     expect(
@@ -129,8 +124,7 @@ describe('evaluateCreateIntentGate', () => {
           QUANT_RUNTIME_MODES.semiAuto,
           QUANT_RUNTIME_MODES.autoExecution,
         ],
-        ineligibility_reasons: ['low_confidence'],
-        uncalibrated_watermark: false,
+        ineligibility_reasons: ['automation_cap_exceeded'],
       },
     });
     expect(
@@ -149,8 +143,7 @@ describe('evaluateCreateIntentGate', () => {
         approval_required: true,
         auto_policy_id: null,
         eligible_modes: [QUANT_RUNTIME_MODES.semiAuto],
-        ineligibility_reasons: ['low_confidence'],
-        uncalibrated_watermark: false,
+        ineligibility_reasons: ['automation_cap_exceeded'],
       },
     });
     expect(
@@ -166,29 +159,15 @@ describe('evaluateCreateIntentGate', () => {
   it('blocks when the risk envelope has a non-positive cap', () => {
     const rec = recommendation({
       trade_plan: {
-        kind: 'frozen',
         risk_envelope: {
           max_loss_usd: '0',
           max_position_usd: '500',
         },
-      } as QuantRecommendationView['trade_plan'],
+      },
     });
     expect(
       evaluateCreateIntentGate(input({ recommendation: rec })).reason,
     ).toBe('riskEnvelope');
-  });
-
-  it('blocks an unavailable trade plan', () => {
-    const rec = recommendation({
-      trade_plan: {
-        blockers: ['artifact_not_published'],
-        kind: 'unavailable',
-      },
-    });
-    expect(evaluateCreateIntentGate(input({ recommendation: rec }))).toEqual({
-      enabled: false,
-      reason: 'tradePlan',
-    });
   });
 
   it('blocks before the validity window opens', () => {

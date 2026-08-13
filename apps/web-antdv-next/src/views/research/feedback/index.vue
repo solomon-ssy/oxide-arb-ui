@@ -24,7 +24,7 @@ import {
   ref,
   watch,
 } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 
 import { Fallback, Page } from '@vben/common-ui';
 import { normalizeApiError } from '@vben/request/qp';
@@ -151,8 +151,13 @@ const selectedTriggerProfileId = ref('');
 const pendingActions = reactive(new Set<string>());
 let detailGeneration = 0;
 let detailController: AbortController | null = null;
+let detailRequest: null | Promise<void> = null;
+let detailRequestCycleId: string | undefined;
+let detailRefreshQueued = false;
 let activationReceiptGeneration = 0;
 let activationReceiptController: AbortController | null = null;
+let activationReceiptRequest: null | Promise<void> = null;
+let leaving = false;
 let revealedActivationId: string | undefined;
 let triggerSelectionCycleId: string | undefined;
 let livenessTickTimer: ReturnType<typeof setInterval> | undefined;
@@ -439,6 +444,7 @@ const schedulerReadCoordinator = new AuthoritativeReadCoordinator<
 function resetCycleDetail() {
   detailGeneration += 1;
   detailController?.abort();
+  detailRefreshQueued = false;
   cycleDetail.value = null;
   detailLoading.value = false;
   detailRefreshing.value = false;
@@ -446,7 +452,7 @@ function resetCycleDetail() {
   detailNotFound.value = false;
 }
 
-async function refreshCycleDetail(cycleId: string) {
+async function loadCycleDetail(cycleId: string) {
   if (!canRead.value) {
     resetCycleDetail();
     return;
@@ -506,6 +512,31 @@ async function refreshCycleDetail(cycleId: string) {
   }
 }
 
+function refreshCycleDetail(cycleId: string): Promise<void> {
+  if (leaving) {
+    return Promise.resolve();
+  }
+  if (detailRequest !== null && detailRequestCycleId === cycleId) {
+    detailRefreshQueued = true;
+    return detailRequest;
+  }
+  const request = loadCycleDetail(cycleId);
+  detailRequest = request;
+  detailRequestCycleId = cycleId;
+  void request.finally(() => {
+    if (detailRequest === request) {
+      detailRequest = null;
+      detailRequestCycleId = undefined;
+      const refreshQueued = detailRefreshQueued;
+      detailRefreshQueued = false;
+      if (refreshQueued && !leaving) {
+        void refreshCycleDetail(cycleId);
+      }
+    }
+  });
+  return request;
+}
+
 function resetActivationReceipt() {
   activationReceiptGeneration += 1;
   activationReceiptController?.abort();
@@ -515,7 +546,7 @@ function resetActivationReceipt() {
   activationReceiptLoading.value = false;
 }
 
-async function refreshActivationReceipt(activationId: string) {
+async function loadActivationReceipt(activationId: string) {
   if (!canRead.value || !canReadPermits.value) {
     resetActivationReceipt();
     return;
@@ -539,8 +570,9 @@ async function refreshActivationReceipt(activationId: string) {
     }
     activationReceipt.value = receipt;
     if (
-      routeCycleId.value !== receipt.feedback_cycle_id ||
-      route.query.view !== 'cycles'
+      !leaving &&
+      (routeCycleId.value !== receipt.feedback_cycle_id ||
+        route.query.view !== 'cycles')
     ) {
       await router.replace({
         query: {
@@ -567,6 +599,20 @@ async function refreshActivationReceipt(activationId: string) {
       activationReceiptLoading.value = false;
     }
   }
+}
+
+function refreshActivationReceipt(activationId: string): Promise<void> {
+  if (leaving) {
+    return Promise.resolve();
+  }
+  const request = loadActivationReceipt(activationId);
+  activationReceiptRequest = request;
+  void request.finally(() => {
+    if (activationReceiptRequest === request) {
+      activationReceiptRequest = null;
+    }
+  });
+  return request;
 }
 
 async function refreshSchedulers() {
@@ -1178,7 +1224,7 @@ const refreshCoordinator = new AuthoritativeReadCoordinator<
 });
 
 async function refresh(): Promise<void> {
-  if (!canRead.value) {
+  if (leaving || !canRead.value) {
     loading.value = false;
     refreshing.value = false;
     return;
@@ -1199,7 +1245,12 @@ function stopRecoveryPolling() {
 }
 
 function syncRecoveryPolling() {
-  if (!canRead.value || !pageVisible.value || !feedbackLivenessDegraded.value) {
+  if (
+    leaving ||
+    !canRead.value ||
+    !pageVisible.value ||
+    !feedbackLivenessDegraded.value
+  ) {
     stopRecoveryPolling();
     return;
   }
@@ -1307,7 +1358,7 @@ watch(
 watch(
   () => feedbackStore.refreshGeneration,
   () => {
-    if (canRead.value) {
+    if (!leaving && canRead.value) {
       refreshCoordinator.invalidate();
       schedulerReadCoordinator.invalidate();
       if (canReadPermits.value) {
@@ -1367,6 +1418,17 @@ onMounted(() => {
     livenessNowMs.value = Date.now();
   }, 1000);
   void refresh();
+});
+onBeforeRouteLeave(async () => {
+  leaving = true;
+  stopRecoveryPolling();
+  await Promise.all([
+    detailRequest ?? Promise.resolve(),
+    activationReceiptRequest ?? Promise.resolve(),
+    refreshCoordinator.drain(),
+    permitReadCoordinator.drain(),
+    schedulerReadCoordinator.drain(),
+  ]);
 });
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', refreshOnVisibility);
@@ -1449,6 +1511,7 @@ onBeforeUnmount(() => {
           </Button>
           <Button
             class="min-h-11 shrink-0"
+            data-testid="feedback-refresh"
             :loading="refreshing"
             @click="refresh"
           >
@@ -1686,7 +1749,7 @@ onBeforeUnmount(() => {
                   type="button"
                   @click="selectCycle(cycle)"
                 >
-                  <span class="min-w-0">
+                  <span class="min-w-0 flex-1" data-screenshot-volatile="true">
                     <span class="block truncate font-mono text-xs">
                       {{ cycle.feedback_cycle_id }}
                     </span>

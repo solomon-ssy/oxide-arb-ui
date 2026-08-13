@@ -18,9 +18,8 @@ describe('model CPCV workflow', () => {
         model_family: 'hold_vs_exit_weighted',
         prediction_horizon_secs: 43_200,
         training_contract: {
-          target_label_horizon_secs: 900,
-          target_label_name: 'governed_exit_alpha',
-          trade_policy_artifact_id: null,
+          evaluation_trade_policy_artifact_id: null,
+          target: { kind: 'hold_vs_exit_alpha' },
           validation_folds: 5,
         },
       }),
@@ -28,8 +27,8 @@ describe('model CPCV workflow', () => {
       modelFamily: 'hold_vs_exit_weighted',
       predictionHorizonSecs: 43_200,
       rawInputCount: 2,
-      targetLabelHorizonSecs: 900,
-      targetLabelName: 'governed_exit_alpha',
+      targetLabelHorizonSecs: 0,
+      targetLabelName: 'hold_vs_exit_alpha_bps',
       validationFolds: 5,
     });
   });

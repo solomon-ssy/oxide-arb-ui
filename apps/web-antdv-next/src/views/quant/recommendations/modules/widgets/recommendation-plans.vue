@@ -1,19 +1,16 @@
 <script lang="ts" setup>
 import type { QuantRecommendationView } from '@vben/types';
 
-import type { WaterfallChartStep } from '#/shared/components/waterfall-chart.vue';
-
 import { computed } from 'vue';
 
 import {
-  Alert,
   Card,
   Descriptions,
   DescriptionsItem,
+  Table,
   Tag,
   Timeline,
   TimelineItem,
-  Tooltip,
 } from 'antdv-next';
 
 import { $t } from '#/locales';
@@ -28,150 +25,44 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
-import WaterfallChart from '#/shared/components/waterfall-chart.vue';
 
 defineOptions({ name: 'RecommendationPlans' });
 
 const props = defineProps<{ recommendation: QuantRecommendationView }>();
 
-type FrozenTradePlan = Extract<
-  QuantRecommendationView['trade_plan'],
-  { kind: 'frozen' }
->;
+const entry = computed(() => props.recommendation.trade_plan.entry);
+const sizing = computed(() => props.recommendation.trade_plan.sizing);
+const exit = computed(() => props.recommendation.trade_plan.exit);
+const risk = computed(() => props.recommendation.trade_plan.risk_envelope);
+const tier = computed(() => props.recommendation.economic_tier);
 
-function requireFrozenPlan(): FrozenTradePlan {
-  const plan = props.recommendation.trade_plan;
-  if (plan.kind !== 'frozen') {
-    throw new Error('frozen trade plan required');
-  }
-  return plan;
-}
-
-const entry = computed(() => requireFrozenPlan().entry);
-const sizing = computed(() => requireFrozenPlan().sizing);
-const exit = computed(() => requireFrozenPlan().exit);
-const risk = computed(() => requireFrozenPlan().risk_envelope);
-
-/**
- * The full f* → ×kelly_fraction → ×confidence → ×drawdown →
- * ×edge_uncertainty → ×correlation → raw → cap sizing waterfall.
- * `null` when the recommendation's return model is uncalibrated / edge-free
- * (no Kelly provenance was recorded for it).
- */
-const waterfallSteps = computed<null | WaterfallChartStep[]>(() => {
-  const plan = sizing.value;
-  const fStar = toNumber(plan.f_star_applied);
-  if (fStar === null) {
-    return null;
-  }
-  const kellyFractionConfig = toNumber(plan.kelly_fraction_config_applied) ?? 1;
-  const confidenceShrink = toNumber(plan.confidence_shrink_applied) ?? 1;
-  const drawdownShrink = toNumber(plan.drawdown_shrink_applied) ?? 1;
-  const edgeUncertaintyShrink =
-    toNumber(plan.edge_uncertainty_shrink_applied) ?? 1;
-  const correlationShrink = toNumber(plan.correlation_shrink_applied) ?? 1;
-  const rawFraction = toNumber(plan.raw_fraction_applied);
-  const positionCap = toNumber(plan.position_cap_fraction_applied);
-
-  const binding = plan.binding_constraint;
-  let running = fStar;
-  const steps: WaterfallChartStep[] = [
-    {
-      key: 'f_star',
-      label: $t('page.quantRecommendations.sizingPlan.waterfall.fStar'),
-      factor: null,
-      value: running,
-      isBinding: false,
-    },
-  ];
-  const stage = (
-    key: string,
-    labelKey: string,
-    factor: number,
-    bindingConstraint: string,
-  ) => {
-    running *= factor;
-    steps.push({
-      key,
-      label: $t(`page.quantRecommendations.sizingPlan.waterfall.${labelKey}`),
-      factor,
-      value: running,
-      isBinding: binding === bindingConstraint,
-    });
-  };
-  stage('kelly_fraction', 'kellyFraction', kellyFractionConfig, 'kelly_cap');
-  stage('confidence', 'confidence', confidenceShrink, 'confidence_cap');
-  stage('drawdown', 'drawdown', drawdownShrink, 'drawdown_cap');
-  stage(
-    'edge_uncertainty',
-    'edgeUncertainty',
-    edgeUncertaintyShrink,
-    '__none__',
-  );
-  stage('correlation', 'correlation', correlationShrink, 'correlation_cap');
-  if (rawFraction !== null) {
-    steps.push({
-      key: 'raw_fraction',
-      label: $t('page.quantRecommendations.sizingPlan.waterfall.rawFraction'),
-      factor: null,
-      value: rawFraction,
-      isBinding: false,
-    });
-    running = rawFraction;
-  }
-  if (positionCap !== null) {
-    const capped = Math.min(running, positionCap);
-    steps.push({
-      key: 'cap',
-      label: $t('page.quantRecommendations.sizingPlan.waterfall.cap'),
-      factor: null,
-      value: capped,
-      isBinding: binding === 'kelly_cap' && running > positionCap,
-    });
-    running = capped;
-  }
-  if (binding === 'aggregate_exposure_cap') {
-    steps.push({
-      key: 'aggregate_exposure_cap',
-      label: $t(
-        'page.quantRecommendations.sizingPlan.waterfall.aggregateExposureCap',
-      ),
-      factor: null,
-      value: running,
-      isBinding: true,
-    });
-  }
-  return steps;
-});
-
-const bindingConstraintColor = computed(() => {
-  const binding = sizing.value.binding_constraint;
-  if (binding === 'none') {
-    return 'default';
-  }
-  if (
-    binding === 'aggregate_exposure_cap' ||
-    binding === 'available_cash' ||
-    binding === 'portfolio_budget'
-  ) {
-    return 'error';
-  }
-  return 'warning';
-});
-
-const bindingConstraintTooltip = computed(() =>
-  $t('page.quantRecommendations.sizingPlan.bindingConstraintHelp', {
-    constraint: $t(`enum.bindingConstraint.${sizing.value.binding_constraint}`),
-  }),
-);
-
-function toNumber(value: null | string | undefined): null | number {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
+const scenarioColumns = [
+  {
+    dataIndex: 'scenario_index',
+    key: 'scenario_index',
+    title: $t('page.quantRecommendations.economicTier.scenario'),
+    width: 120,
+  },
+  {
+    align: 'right' as const,
+    dataIndex: 'discounted_net_usd',
+    key: 'discounted_net_usd',
+    title: $t('page.quantRecommendations.economicTier.discountedNet'),
+  },
+];
+const occupancyColumns = [
+  {
+    dataIndex: 'end_secs',
+    key: 'end_secs',
+    title: $t('page.quantRecommendations.economicTier.bucketEnd'),
+  },
+  {
+    align: 'right' as const,
+    dataIndex: 'locked_usd',
+    key: 'locked_usd',
+    title: $t('page.quantRecommendations.economicTier.lockedUsd'),
+  },
+];
 
 const trailingStopLabel = computed(() => {
   const stop = exit.value.trailing_stop;
@@ -198,20 +89,7 @@ function millis(value: number): string {
 </script>
 
 <template>
-  <Alert
-    v-if="recommendation.trade_plan.kind === 'unavailable'"
-    :description="
-      recommendation.trade_plan.blockers
-        .map((blocker) =>
-          $t(`page.quantRecommendations.tradePlan.blocker.${blocker}`),
-        )
-        .join(' · ')
-    "
-    :message="$t('page.quantRecommendations.tradePlan.unavailable')"
-    show-icon
-    type="warning"
-  />
-  <div v-else class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+  <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
     <Card size="small" :title="$t('page.quantRecommendations.entryPlan.title')">
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem
@@ -310,14 +188,16 @@ function millis(value: number): string {
           {{ formatShares(sizing.suggested_shares) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.min')"
+          :label="$t('page.quantRecommendations.sizingPlan.economicTierId')"
         >
-          {{ formatUsd(sizing.min_usd) }}
+          <span class="font-mono text-xs break-all">{{
+            sizing.economic_tier_id
+          }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.max')"
+          :label="$t('page.quantRecommendations.sizingPlan.entryVwap')"
         >
-          {{ formatUsd(sizing.max_usd) }}
+          {{ formatPrice(sizing.entry_vwap) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.portfolioWeight')"
@@ -344,42 +224,14 @@ function millis(value: number): string {
           {{ formatUsd(sizing.category_exposure_after_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.bindingConstraint')"
+          :label="$t('page.quantRecommendations.sizingPlan.routeExposureAfter')"
         >
-          <Tooltip :title="bindingConstraintTooltip">
-            <Tag :color="bindingConstraintColor">
-              {{ $t(`enum.bindingConstraint.${sizing.binding_constraint}`) }}
-            </Tag>
-          </Tooltip>
+          {{ formatUsd(sizing.route_exposure_after_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.sizingModel')"
+          :label="$t('page.quantRecommendations.sizingPlan.capitalTime')"
         >
-          {{ $t(`enum.sizingModelKind.${sizing.sizing_model}`) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.edge')"
-        >
-          {{ formatBps(sizing.edge_bps) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.kelly')"
-        >
-          {{ formatPercent(sizing.kelly_fraction_applied) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          v-if="sizing.edge_uncertainty_shrink_applied != null"
-          :label="
-            $t('page.quantRecommendations.sizingPlan.edgeUncertaintyShrink')
-          "
-        >
-          {{ formatPercent(sizing.edge_uncertainty_shrink_applied) }}
-        </DescriptionsItem>
-        <DescriptionsItem
-          v-if="sizing.correlation_shrink_applied != null"
-          :label="$t('page.quantRecommendations.sizingPlan.correlationShrink')"
-        >
-          {{ formatPercent(sizing.correlation_shrink_applied) }}
+          {{ sizing.capital_occupancy_usd_hours }} USD·h
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.reason')"
@@ -387,22 +239,75 @@ function millis(value: number): string {
           {{ sizing.sizing_reason || EMPTY_PLACEHOLDER }}
         </DescriptionsItem>
       </Descriptions>
+    </Card>
 
-      <div v-if="waterfallSteps" class="mt-3">
-        <p class="text-muted-foreground mb-2 text-xs">
-          {{ $t('page.quantRecommendations.sizingPlan.waterfall.title') }}
-        </p>
-        <WaterfallChart :steps="waterfallSteps" />
+    <Card
+      data-testid="economic-tier-evidence"
+      size="small"
+      :title="$t('page.quantRecommendations.economicTier.title')"
+    >
+      <Descriptions :column="1" bordered size="small">
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.entryNotional')"
+        >
+          {{ formatUsd(tier.entry.notional_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.fee')"
+        >
+          {{ formatUsd(tier.entry.fee_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.slippage')"
+        >
+          {{ formatUsd(tier.entry.slippage_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.visibleLiquidity')"
+        >
+          {{ formatUsd(tier.entry.visible_liquidity_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.lineageHash')"
+        >
+          <span class="font-mono text-xs break-all">{{
+            tier.lineage_hash
+          }}</span>
+        </DescriptionsItem>
+      </Descriptions>
+      <div class="mt-4 grid grid-cols-1 gap-4 2xl:grid-cols-2">
+        <Table
+          :columns="scenarioColumns"
+          :data-source="tier.scenario_cashflows"
+          :pagination="false"
+          row-key="scenario_index"
+          size="small"
+          :title="() => $t('page.quantRecommendations.economicTier.cashflows')"
+        >
+          <template #bodyCell="{ column, record }">
+            <span v-if="column.key === 'discounted_net_usd'" class="font-mono">
+              {{ formatUsd(record.discounted_net_usd) }}
+            </span>
+          </template>
+        </Table>
+        <Table
+          :columns="occupancyColumns"
+          :data-source="tier.capital_occupancy"
+          :pagination="false"
+          row-key="end_secs"
+          size="small"
+          :title="() => $t('page.quantRecommendations.economicTier.occupancy')"
+        >
+          <template #bodyCell="{ column, record }">
+            <span v-if="column.key === 'end_secs'">
+              {{ formatDurationSecs(record.end_secs) }}
+            </span>
+            <span v-else-if="column.key === 'locked_usd'" class="font-mono">
+              {{ formatUsd(record.locked_usd) }}
+            </span>
+          </template>
+        </Table>
       </div>
-      <Alert
-        v-else
-        class="mt-3"
-        :message="
-          $t('page.quantRecommendations.sizingPlan.waterfall.uncalibrated')
-        "
-        show-icon
-        type="error"
-      />
     </Card>
 
     <Card size="small" :title="$t('page.quantRecommendations.exitPlan.title')">
@@ -495,7 +400,7 @@ function millis(value: number): string {
           :label="$t('page.quantRecommendations.exitPlan.requireEligibility')"
         >
           {{
-            boolLabel(exit.thesis_invalidation.require_execution_eligibility)
+            boolLabel(exit.thesis_invalidation.require_route_gate_eligibility)
           }}
         </DescriptionsItem>
       </Descriptions>
@@ -534,6 +439,26 @@ function millis(value: number): string {
           "
         >
           {{ formatUsd(risk.max_category_exposure_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.riskEnvelope.maxRouteExposure')"
+        >
+          {{ formatUsd(risk.max_route_exposure_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.riskEnvelope.cvarContribution')"
+        >
+          {{ formatUsd(risk.cvar_contribution_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.riskEnvelope.portfolioCvarCap')"
+        >
+          {{ formatUsd(risk.portfolio_cvar_cap_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.riskEnvelope.scenarioLossCap')"
+        >
+          {{ formatUsd(risk.maximum_scenario_loss_cap_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.riskEnvelope.maxSlippage')"

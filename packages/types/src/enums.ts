@@ -403,41 +403,10 @@ export const FACTOR_VALUE_STATES = {
 
 export type FactorValueState = WireEnum<typeof FACTOR_VALUE_STATES>;
 
-/** Position-sizing model that produced a recommendation's size. */
-export const SIZING_MODEL_KINDS = {
-  kelly: 'kelly',
-} as const;
-
-export type SizingModelKind = WireEnum<typeof SIZING_MODEL_KINDS>;
-
-/** The cap that bound a recommendation's final size. */
-export const BINDING_CONSTRAINTS = {
-  aggregateExposureCap: 'aggregate_exposure_cap',
-  availableCash: 'available_cash',
-  categoryCap: 'category_cap',
-  confidenceCap: 'confidence_cap',
-  correlationCap: 'correlation_cap',
-  drawdownCap: 'drawdown_cap',
-  eventCap: 'event_cap',
-  kellyCap: 'kelly_cap',
-  liquidityCap: 'liquidity_cap',
-  none: 'none',
-  portfolioBudget: 'portfolio_budget',
-  singleMarketCap: 'single_market_cap',
-  singleRecommendationCap: 'single_recommendation_cap',
-} as const;
-
-export type BindingConstraint = WireEnum<typeof BINDING_CONSTRAINTS>;
-
 /** Why a recommendation is ineligible for execution in a given mode. */
 export const INELIGIBILITY_REASONS = {
-  budgetExhausted: 'budget_exhausted',
-  dataStale: 'data_stale',
-  lowConfidence: 'low_confidence',
-  manuallyBlocked: 'manually_blocked',
+  automationCapExceeded: 'automation_cap_exceeded',
   reportOnlyMode: 'report_only_mode',
-  riskEnvelopeInvalid: 'risk_envelope_invalid',
-  shadowNotPassed: 'shadow_not_passed',
 } as const;
 
 export type IneligibilityReason = WireEnum<typeof INELIGIBILITY_REASONS>;
@@ -449,27 +418,9 @@ export const EMPTY_REPORT_REASONS = {
   insufficientDataQuality: 'insufficient_data_quality',
   noPositiveSignal: 'no_positive_signal',
   portfolioBudgetExhausted: 'portfolio_budget_exhausted',
-  systemDegraded: 'system_degraded',
 } as const;
 
 export type EmptyReportReason = WireEnum<typeof EMPTY_REPORT_REASONS>;
-
-/** Why a candidate was dropped during portfolio planning (not published). */
-export const REJECTION_REASONS = {
-  availableCashExhausted: 'available_cash_exhausted',
-  belowMinSize: 'below_min_size',
-  beyondTopN: 'beyond_top_n',
-  budgetExhausted: 'budget_exhausted',
-  categoryCapExhausted: 'category_cap_exhausted',
-  correlationCapExhausted: 'correlation_cap_exhausted',
-  eventCapExhausted: 'event_cap_exhausted',
-  invalidEdgeInputs: 'invalid_edge_inputs',
-  liquidityInfeasible: 'liquidity_infeasible',
-  marketCapExhausted: 'market_cap_exhausted',
-  noPositiveSignal: 'no_positive_signal',
-} as const;
-
-export type RejectionReason = WireEnum<typeof REJECTION_REASONS>;
 
 // ── Execution plane ─────────────────────────────────────────────────────────
 

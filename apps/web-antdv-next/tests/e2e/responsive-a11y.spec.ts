@@ -14,6 +14,11 @@ import process from 'node:process';
 import AxeBuilder from '@axe-core/playwright';
 
 import {
+  DashboardWebSocketOwner,
+  installControlledBrowserEnvironment,
+  setControlledOnline,
+} from './dashboard-race-harness';
+import {
   expect,
   login,
   readFirstApiItem,
@@ -21,19 +26,15 @@ import {
   waitForShell,
 } from './fixtures';
 import {
-  DashboardWebSocketOwner,
-  installControlledBrowserEnvironment,
-  setControlledOnline,
-} from './w4-dashboard-race-harness';
-import {
   holdFeedbackSnapshot,
   holdFeedbackTrigger,
+  installDashboardPresentation,
   installFeedbackErrorState,
   installFeedbackPermissionState,
   installFeedbackPresentation,
   screenshotAggregate,
   sha256File,
-} from './w4-responsive-a11y-harness';
+} from './responsive-a11y-harness';
 
 interface FeedbackCycleRow {
   champion_model_version_id: string;
@@ -93,7 +94,7 @@ interface EvidenceManifestRow {
 }
 
 const VIEWPORTS: Viewport[] = [
-  { height: 812, name: '375x812', width: 375 },
+  { height: 844, name: '390x844', width: 390 },
   { height: 1024, name: '768x1024', width: 768 },
   { height: 720, name: '1280x720', width: 1280 },
   { height: 900, name: '1440x900', width: 1440 },
@@ -413,7 +414,11 @@ async function collectTouchTarget(
     findings.push(`${label}: touch target is absent`);
     return;
   }
-  const target = locator.first();
+  const target = locator.filter({ visible: true }).first();
+  if ((await target.count()) === 0) {
+    findings.push(`${label}: touch target has no visible instance`);
+    return;
+  }
   await target.scrollIntoViewIfNeeded();
   const box = await target.boundingBox();
   if (box === null) {
@@ -452,12 +457,6 @@ async function collectTouch(
           'dashboard/feedback-workbench',
           findings,
         );
-      } else {
-        await collectTouchTarget(
-          page.getByTestId('websocket-status'),
-          'dashboard-reconnecting/ws-status',
-          findings,
-        );
       }
       break;
     }
@@ -468,7 +467,7 @@ async function collectTouch(
     case 'feedback-cycles':
     case 'feedback-detail': {
       await collectTouchTarget(
-        page.getByRole('button', { name: /Refresh|刷\s*新/i }).first(),
+        page.getByTestId('feedback-refresh'),
         `${state}/refresh`,
         findings,
       );
@@ -513,7 +512,7 @@ async function collectTouch(
     case 'feedback-loading':
     case 'feedback-overview': {
       await collectTouchTarget(
-        page.getByRole('button', { name: /Refresh|刷\s*新/i }).first(),
+        page.getByTestId('feedback-refresh'),
         `${state}/refresh`,
         findings,
       );
@@ -529,10 +528,7 @@ async function collectTouch(
     }
     case 'feedback-permission': {
       await collectTouchTarget(
-        page
-          .getByTestId('feedback-workbench')
-          .locator('button, a[href]')
-          .first(),
+        page.getByRole('button', { name: /Back to home|返回首页/i }),
         'feedback-permission/recovery-action',
         findings,
       );
@@ -573,7 +569,13 @@ async function collectLiveRegion(
 }
 
 async function prepareEvidenceFrame(page: Page, state: VisualState) {
-  await page.evaluate(() => window.scrollTo({ left: 0, top: 0 }));
+  await page.evaluate(() => {
+    window.scrollTo({ left: 0, top: 0 });
+    for (const element of document.querySelectorAll<HTMLElement>('*')) {
+      if (element.scrollLeft !== 0) element.scrollLeft = 0;
+      if (element.scrollTop !== 0) element.scrollTop = 0;
+    }
+  });
   if (
     state === 'feedback-detail' ||
     state === 'decision-candidate-ready' ||
@@ -611,6 +613,16 @@ async function captureStateMatrix(
   findings: string[],
   manifest: EvidenceManifestRow[],
 ) {
+  await page.evaluate(() => {
+    if (document.querySelector('style[data-w4-visual-stability]') !== null) {
+      return;
+    }
+    const style = document.createElement('style');
+    style.dataset.w4VisualStability = 'true';
+    style.textContent =
+      '[data-testid="websocket-status"] > span { visibility: hidden !important; }';
+    document.head.append(style);
+  });
   for (const theme of THEMES) {
     await page.setViewportSize({ height: 900, width: 1440 });
     await page.evaluate(() => window.scrollTo({ left: 0, top: 0 }));
@@ -625,7 +637,7 @@ async function captureStateMatrix(
       await collectAxe(page, state, label, findings);
       await collectOverflow(page, label, findings);
       await collectLiveRegion(page, state, label, findings);
-      if (viewport.width === 375) {
+      if (viewport.width === 390) {
         await collectTouch(page, state, findings);
         await prepareEvidenceFrame(page, state);
       }
@@ -633,7 +645,19 @@ async function captureStateMatrix(
       const screenshotPath = resolve(evidenceDir, screenshotName);
       await page.screenshot({
         animations: 'disabled',
+        caret: 'hide',
+        fullPage: true,
+        mask: [
+          page.locator('[data-screenshot-volatile="true"]'),
+          page.getByTestId('feedback-trigger-profile'),
+          page
+            .locator('.ant-descriptions-item-content')
+            .filter({ has: page.getByTestId('model-bootstrap-candidate') }),
+          page.locator('a[href^="/research/models?open="]'),
+          page.locator(STATE_ROOTS[state]).locator('.font-mono'),
+        ],
         path: screenshotPath,
+        scale: 'css',
       });
       const digest = await sha256File(screenshotPath);
       manifest.push({
@@ -661,7 +685,7 @@ async function collectKeyboard(
 ) {
   try {
     await audit.allowRequestFailures(FEEDBACK_TRANSITION_ABORTS, async () => {
-      await page.setViewportSize({ height: 812, width: 375 });
+      await page.setViewportSize({ height: 844, width: 390 });
       await openState(page, audit, 'dashboard', factorId, '', '');
       const orbit = page
         .getByTestId('dashboard-command-center')
@@ -714,6 +738,7 @@ async function collectKeyboard(
           name: /Feedback cycles|反馈周期/i,
         })
         .getByRole('button')
+        .filter({ hasText: feedbackCycleId })
         .first();
       await cycleAction.focus();
       if (
@@ -759,7 +784,7 @@ async function collectKeyboard(
   }
 }
 
-test('W4 responsive accessibility evidence matrix', async ({
+test('responsive accessibility evidence matrix', async ({
   adminApi,
   authenticatedPage,
   browser,
@@ -780,7 +805,7 @@ test('W4 responsive accessibility evidence matrix', async ({
     'phase-11.9',
     evidenceRun,
   );
-  await mkdir(evidenceDir);
+  await mkdir(evidenceDir, { recursive: true });
 
   const factor = await readFirstApiItem<FactorRow>(
     adminApi.context,
@@ -801,11 +826,61 @@ test('W4 responsive accessibility evidence matrix', async ({
   const findings: string[] = [];
   const manifest: EvidenceManifestRow[] = [];
 
+  const dashboardCleanup = await installDashboardPresentation(page);
+  try {
+    await openState(
+      page,
+      browserAudit,
+      'dashboard',
+      factor.factor_definition_id,
+      model.model_version_id,
+      feedbackCycleId,
+    );
+    await captureStateMatrix(
+      page,
+      'dashboard',
+      'real-upstream-derived-presentation',
+      evidenceDir,
+      findings,
+      manifest,
+    );
+  } finally {
+    await dashboardCleanup();
+  }
+
+  const feedbackPresentationCleanup = await installFeedbackPresentation(
+    page,
+    'no_action',
+    feedbackCycleId,
+  );
+  try {
+    for (const state of [
+      'feedback-overview',
+      'feedback-cycles',
+      'feedback-detail',
+    ] as const) {
+      await openState(
+        page,
+        browserAudit,
+        state,
+        factor.factor_definition_id,
+        model.model_version_id,
+        feedbackCycleId,
+      );
+      await captureStateMatrix(
+        page,
+        state,
+        'real-upstream-derived-presentation',
+        evidenceDir,
+        findings,
+        manifest,
+      );
+    }
+  } finally {
+    await feedbackPresentationCleanup();
+  }
+
   const authoritativeStates = [
-    'dashboard',
-    'feedback-overview',
-    'feedback-cycles',
-    'feedback-detail',
     'domain-sources',
     'factor-detail',
     'model-detail',

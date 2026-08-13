@@ -13,6 +13,7 @@ dist.war
 coverage
 playwright-report
 test-results
+*.ts-snapshots/
 *.local
 **/.vitepress/cache
 .cache

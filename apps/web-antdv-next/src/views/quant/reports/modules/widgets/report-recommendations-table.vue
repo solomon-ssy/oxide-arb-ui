@@ -1,19 +1,15 @@
 <script lang="ts" setup>
 import type { QuantRecommendationView } from '@vben/types';
 
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
 
-import { Button, Empty, Table, Tag, Tooltip } from 'antdv-next';
+import { Button, Empty, Select, Table, Tag, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
-import {
-  formatBps,
-  formatPercent,
-  formatScore,
-  formatUsd,
-} from '#/shared/components/format';
+import { formatBps, formatScore, formatUsd } from '#/shared/components/format';
 import {
   findTagOption,
   useOutcomeSideTagOptions,
@@ -22,13 +18,28 @@ import {
 
 defineOptions({ name: 'ReportRecommendationsTable' });
 
-defineProps<{ recommendations: QuantRecommendationView[] }>();
+const props = defineProps<{ recommendations: QuantRecommendationView[] }>();
 
 const emit = defineEmits<{
   select: [recommendation: QuantRecommendationView];
 }>();
 
 const router = useRouter();
+const routeFilter = ref<string>();
+
+const routeOptions = computed(() =>
+  [...new Set(props.recommendations.map((item) => item.route))].map(
+    (value) => ({
+      label: $t(`page.quantReports.routes.${value}`),
+      value,
+    }),
+  ),
+);
+const visibleRecommendations = computed(() =>
+  routeFilter.value
+    ? props.recommendations.filter((item) => item.route === routeFilter.value)
+    : props.recommendations,
+);
 
 function openFullPage(id: string) {
   void router.push(`/quant/recommendations/${id}`);
@@ -54,6 +65,12 @@ const statusTagOptions = useRecommendationStatusTagOptions();
 
 const columns = [
   {
+    dataIndex: 'route',
+    key: 'route',
+    title: $t('page.quantReports.detail.recommendations.columns.route'),
+    width: 110,
+  },
+  {
     align: 'right' as const,
     dataIndex: 'rank',
     key: 'rank',
@@ -73,33 +90,47 @@ const columns = [
   },
   {
     align: 'right' as const,
-    dataIndex: 'composite_score',
-    key: 'composite_score',
-    title: $t('page.quantReports.detail.recommendations.columns.composite'),
-    width: 110,
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'risk_adjusted_score',
-    key: 'risk_adjusted_score',
-    title: $t('page.quantReports.detail.recommendations.columns.riskAdjusted'),
-    width: 110,
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'confidence',
-    key: 'confidence',
-    title: $t('page.quantReports.detail.recommendations.columns.confidence'),
-    width: 110,
-  },
-  {
-    align: 'right' as const,
-    dataIndex: 'expected_return_bps',
-    key: 'expected_return_bps',
+    key: 'profit_probability',
     title: $t(
-      'page.quantReports.detail.recommendations.columns.expectedReturn',
+      'page.quantReports.detail.recommendations.columns.profitProbability',
     ),
+    width: 130,
+  },
+  {
+    align: 'right' as const,
+    key: 'robust_net',
+    title: $t('page.quantReports.detail.recommendations.columns.robustNet'),
+    width: 130,
+  },
+  {
+    align: 'right' as const,
+    key: 'nominal_net',
+    title: $t('page.quantReports.detail.recommendations.columns.nominalNet'),
+    width: 130,
+  },
+  {
+    align: 'right' as const,
+    key: 'marginal_value',
+    title: $t('page.quantReports.detail.recommendations.columns.marginalValue'),
+    width: 140,
+  },
+  {
+    align: 'right' as const,
+    key: 'max_loss',
+    title: $t('page.quantReports.detail.recommendations.columns.maxLoss'),
     width: 120,
+  },
+  {
+    align: 'right' as const,
+    key: 'cvar',
+    title: $t('page.quantReports.detail.recommendations.columns.cvar'),
+    width: 120,
+  },
+  {
+    align: 'right' as const,
+    key: 'capital_time',
+    title: $t('page.quantReports.detail.recommendations.columns.capitalTime'),
+    width: 130,
   },
   {
     align: 'right' as const,
@@ -129,8 +160,23 @@ const columns = [
 </script>
 
 <template>
+  <div v-if="recommendations.length > 0" class="mb-3 flex justify-end">
+    <label class="sr-only" for="report-route-filter">
+      {{ $t('page.quantReports.detail.recommendations.filterRoute') }}
+    </label>
+    <Select
+      id="report-route-filter"
+      v-model:value="routeFilter"
+      allow-clear
+      :aria-label="$t('page.quantReports.detail.recommendations.filterRoute')"
+      class="w-48"
+      data-testid="report-route-filter"
+      :options="routeOptions"
+      :placeholder="$t('page.quantReports.detail.recommendations.filterRoute')"
+    />
+  </div>
   <Empty
-    v-if="recommendations.length === 0"
+    v-if="visibleRecommendations.length === 0"
     :description="$t('page.quantReports.detail.recommendations.empty')"
     :image="Empty.PRESENTED_IMAGE_SIMPLE"
   />
@@ -138,40 +184,61 @@ const columns = [
     v-else
     :columns="columns"
     :custom-row="rowProps"
-    :data-source="recommendations"
+    data-testid="global-report-recommendations"
+    :data-source="visibleRecommendations"
     :pagination="false"
     row-key="recommendation_id"
+    :scroll="{ x: 1780 }"
     size="small"
   >
     <template #bodyCell="{ column, record }">
-      <template v-if="column.key === 'outcome_side'">
+      <template v-if="column.key === 'route'">
+        <Tag>{{ $t(`page.quantReports.routes.${record.route}`) }}</Tag>
+      </template>
+      <template v-else-if="column.key === 'outcome_side'">
         <Tag :color="findTagOption(sideTagOptions, record.outcome_side)?.color">
           {{ findTagOption(sideTagOptions, record.outcome_side)?.label }}
         </Tag>
       </template>
-      <template v-else-if="column.key === 'composite_score'">
-        <span class="font-mono">{{ formatScore(record.composite_score) }}</span>
-      </template>
-      <template v-else-if="column.key === 'risk_adjusted_score'">
+      <template v-else-if="column.key === 'profit_probability'">
         <span class="font-mono">{{
-          formatScore(record.risk_adjusted_score)
+          formatBps(record.economics.profit_probability_bps)
         }}</span>
       </template>
-      <template v-else-if="column.key === 'confidence'">
-        <span class="font-mono">{{ formatPercent(record.confidence) }}</span>
-      </template>
-      <template v-else-if="column.key === 'expected_return_bps'">
+      <template v-else-if="column.key === 'robust_net'">
         <span class="font-mono">{{
-          formatBps(record.expected_return_bps)
+          formatUsd(record.economics.robust_expected_net_usd)
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'nominal_net'">
+        <span class="font-mono">{{
+          formatUsd(record.economics.nominal_expected_net_usd)
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'marginal_value'">
+        <span class="font-mono">{{
+          formatUsd(record.economics.marginal_portfolio_value_usd)
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'max_loss'">
+        <span class="font-mono">{{
+          formatUsd(record.economics.max_loss_usd)
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'cvar'">
+        <span class="font-mono">{{
+          formatUsd(record.economics.cvar_contribution_usd)
+        }}</span>
+      </template>
+      <template v-else-if="column.key === 'capital_time'">
+        <span class="font-mono">{{
+          formatScore(record.economics.capital_occupancy_usd_hours)
         }}</span>
       </template>
       <template v-else-if="column.key === 'suggested'">
-        <span v-if="record.trade_plan.kind === 'frozen'" class="font-mono">
+        <span class="font-mono">
           {{ formatUsd(record.trade_plan.sizing.suggested_usd) }}
         </span>
-        <Tag v-else color="warning">
-          {{ $t('page.quantRecommendations.tradePlan.unavailable') }}
-        </Tag>
       </template>
       <template v-else-if="column.key === 'eligibility'">
         <Tag

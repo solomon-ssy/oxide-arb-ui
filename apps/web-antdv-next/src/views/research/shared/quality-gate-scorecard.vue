@@ -176,7 +176,11 @@ function showDetail(outcome: GateOutcome): boolean {
       <template #description>
         <span class="text-xs">
           {{ $t('page.research.qualityGate.intentLabel') }}: {{ intentLabel }}
-          <span v-if="report?.evaluated_at">
+          <span
+            v-if="report?.evaluated_at"
+            class="inline-block w-40"
+            data-screenshot-volatile="true"
+          >
             · {{ formatDateTimeLocal(report.evaluated_at) }}
           </span>
         </span>
@@ -217,7 +221,7 @@ function showDetail(outcome: GateOutcome): boolean {
               class="text-muted-foreground min-w-0 break-all text-right font-mono"
             >
               {{ asEvaluatedBodyCell(slotProps).record.observed }}
-              <span class="opacity-60">
+              <span>
                 / {{ asEvaluatedBodyCell(slotProps).record.threshold }}
               </span>
             </span>

@@ -219,7 +219,7 @@ onMounted(() => void load());
           >
             <div
               v-for="current in health.current_reports"
-              :key="`${current.profile_id}:${current.report_kind}`"
+              :key="current.recommendation_report_id"
               class="flex flex-col gap-1"
             >
               <EntityRouteLink
@@ -228,7 +228,6 @@ onMounted(() => void load());
                 :to="`/quant/reports/${current.recommendation_report_id}`"
               />
               <span class="text-muted-foreground text-xs">
-                {{ current.profile_id }} ·
                 {{ $t(`enum.reportKind.${current.report_kind}`) }}
               </span>
             </div>

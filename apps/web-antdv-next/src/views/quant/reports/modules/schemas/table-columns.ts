@@ -57,10 +57,18 @@ export function useReportColumns(
       width: 120,
     },
     {
-      field: 'profile_id',
-      minWidth: 150,
+      field: 'represented_routes',
+      formatter: ({
+        cellValue,
+      }: {
+        cellValue: QuantReportView['represented_routes'];
+      }) =>
+        cellValue.routes
+          .map((route) => $t(`page.quantReports.routes.${route}`))
+          .join(' · '),
+      minWidth: 180,
       showOverflow: 'tooltip',
-      title: $t('page.quantReports.columns.profile'),
+      title: $t('page.quantReports.columns.routes'),
     },
     {
       align: 'right',

@@ -479,7 +479,7 @@ async function selectPathSet(id: string) {
 
 async function refresh(id: string) {
   loading.value = true;
-  gateLoading.value = true;
+  gate.value = null;
   try {
     const [fresh, reports, listed, jobs, resources, routing, runtime] =
       await Promise.all([
@@ -553,8 +553,14 @@ async function refresh(id: string) {
   } finally {
     loading.value = false;
   }
-  // The publish gate is a separate dry-run: keep it non-blocking so the summary
-  // renders even when readiness evaluation is slow or fails closed.
+}
+
+async function evaluateReadiness() {
+  const id = openId.value;
+  if (!id || gateLoading.value) {
+    return;
+  }
+  gateLoading.value = true;
   try {
     const readiness = await handleRequest(
       () => getModelQualityGate(id, { intent: 'candidate' }),
@@ -666,6 +672,21 @@ watch(
           size="small"
           :title="$t('page.research.models.detail.candidateReadiness')"
         >
+          <template #extra>
+            <Button
+              :loading="gateLoading"
+              size="small"
+              @click="evaluateReadiness"
+            >
+              {{
+                $t(
+                  gate
+                    ? 'page.research.qualityGate.reevaluate'
+                    : 'page.research.qualityGate.evaluate',
+                )
+              }}
+            </Button>
+          </template>
           <QualityGateScorecard :loading="gateLoading" :report="gate" />
           <Space v-if="needsCpcvRunCta" class="mt-3">
             <Button v-if="needsCpcvRunCta" type="primary" @click="openCpcv">
@@ -701,16 +722,17 @@ watch(
               show-icon
               type="warning"
             />
-            <Alert
-              v-else-if="routedModelId"
-              :message="
-                $t('page.research.models.bootstrap.routeOccupied', {
-                  model: routedModelId,
-                })
-              "
-              show-icon
-              type="info"
-            />
+            <Alert v-else-if="routedModelId" show-icon type="info">
+              <template #message>
+                <span class="block w-full" data-screenshot-volatile="true">
+                  {{
+                    $t('page.research.models.bootstrap.routeOccupied', {
+                      model: routedModelId,
+                    })
+                  }}
+                </span>
+              </template>
+            </Alert>
             <Alert
               :message="$t('page.research.models.bootstrap.authorityUnchanged')"
               show-icon
@@ -725,7 +747,10 @@ watch(
               <DescriptionsItem
                 :label="$t('page.research.models.bootstrap.model')"
               >
-                <span class="break-all font-mono text-xs">
+                <span
+                  class="block w-full break-all font-mono text-xs"
+                  data-testid="model-bootstrap-candidate"
+                >
                   {{ model.model_version_id }}
                 </span>
               </DescriptionsItem>

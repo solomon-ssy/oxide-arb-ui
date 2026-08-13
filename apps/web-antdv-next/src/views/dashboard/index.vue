@@ -1022,20 +1022,26 @@ onBeforeUnmount(() => {
               {{ selectedRecommendation.identity.outcome_name }}
             </DescriptionsItem>
             <DescriptionsItem :label="$t('page.dashboard.orbit.confidence')">
-              {{ formatPercent(selectedRecommendation.confidence) }}
+              {{
+                formatBps(
+                  selectedRecommendation.economics.profit_probability_bps,
+                )
+              }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.dashboard.orbit.expectedReturn')"
             >
-              {{ formatBps(selectedRecommendation.expected_return_bps) }}
+              {{
+                formatUsd(
+                  selectedRecommendation.economics.robust_expected_net_usd,
+                )
+              }}
             </DescriptionsItem>
             <DescriptionsItem :label="$t('page.dashboard.orbit.suggested')">
               {{
-                selectedRecommendation.trade_plan.kind === 'frozen'
-                  ? formatUsd(
-                      selectedRecommendation.trade_plan.sizing.suggested_usd,
-                    )
-                  : $t('page.dashboard.section.blocked')
+                formatUsd(
+                  selectedRecommendation.trade_plan.sizing.suggested_usd,
+                )
               }}
             </DescriptionsItem>
           </Descriptions>

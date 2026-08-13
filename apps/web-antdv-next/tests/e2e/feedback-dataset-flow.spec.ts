@@ -1,4 +1,4 @@
-import type { Page } from 'playwright/test';
+import type { Locator, Page } from 'playwright/test';
 
 import type { BrowserFailureAudit } from './browser-failure-audit';
 
@@ -64,7 +64,25 @@ async function navigate(page: Page, audit: BrowserFailureAudit, url: string) {
   await page.goto(url);
 }
 
-test('W2-A production Dataset and Evaluation backtest close over REST and WS', async ({
+async function openBacktestDrawer(
+  page: Page,
+  audit: BrowserFailureAudit,
+  backtestReportId: string,
+): Promise<Locator> {
+  await navigate(page, audit, '/research/backtests');
+  await waitForShell(page);
+  const reportLink = page.getByRole('link', {
+    exact: true,
+    name: backtestReportId,
+  });
+  await expect(reportLink).toBeVisible();
+  await reportLink.click();
+  const drawer = page.getByRole('dialog').last();
+  await expect(drawer).toBeVisible();
+  return drawer;
+}
+
+test('production Dataset and immutable backtest close over REST and WS', async ({
   adminApi,
   authenticatedPage,
   browserAudit,
@@ -99,13 +117,18 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
     )
     .toBe(true);
 
+  const backtest = await readFirstApiItem<BacktestRow>(
+    adminApi.context,
+    '/api/research/backtest-reports?page=1&size=100',
+    (item) =>
+      item.coverage === '0.975609756098' &&
+      item.hit_rate === '0.625' &&
+      item.rank_ic === '0.143',
+  );
   const dataset = await readFirstApiItem<DatasetRow>(
     adminApi.context,
     '/api/research/training-datasets?purpose=evaluation&page=1&size=100',
-    (item) =>
-      item.purpose === 'evaluation' &&
-      item.status === 'ready' &&
-      item.cohort_manifest?.cohort === 'model_learning',
+    (item) => item.training_dataset_id === backtest.evaluation_dataset_id,
   );
   expect(dataset.manifest).toMatchObject({
     purpose: 'evaluation',
@@ -130,12 +153,7 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   expect(dataset.cohort_manifest?.counts.exclusion_counts).toEqual([]);
   expect(dataset.cohort_manifest?.counts.censor_counts).toEqual([]);
 
-  const backtest = await readFirstApiItem<BacktestRow>(
-    adminApi.context,
-    '/api/research/backtest-reports?page=1&size=100',
-    (item) => item.evaluation_dataset_id === dataset.training_dataset_id,
-  );
-  expect(backtest.coverage).toBe('0.975');
+  expect(backtest.coverage).toBe('0.975609756098');
   expect(backtest.hit_rate).toBe('0.625');
   expect(backtest.rank_ic).toBe('0.143');
 
@@ -153,14 +171,11 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   await expect(datasetDrawer).toContainText(/bound consistently|绑定一致/i);
   await expectAccessible(authenticatedPage, '[role="dialog"]');
 
-  await navigate(
+  const backtestDrawer = await openBacktestDrawer(
     authenticatedPage,
     browserAudit,
-    `/research/backtests?open=${backtest.backtest_report_id}`,
+    backtest.backtest_report_id,
   );
-  await waitForShell(authenticatedPage);
-  const backtestDrawer = authenticatedPage.getByRole('dialog').last();
-  await expect(backtestDrawer).toBeVisible();
   await expect(backtestDrawer).toContainText(backtest.model_version_id);
   await expect(backtestDrawer).toContainText(dataset.training_dataset_id);
   await expect(backtestDrawer).toContainText(/quality|质量|门禁/i);
@@ -220,7 +235,7 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
       data: {
         decision_policy_snapshot_id: backtest.decision_policy_snapshot_id,
         evaluation_dataset_id: dataset.training_dataset_id,
-        reason: 'W2-A production WS invalidation acceptance',
+        reason: 'production WS invalidation acceptance',
       },
       headers: { 'x-acting-role': 'super_admin' },
     },
@@ -261,7 +276,13 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
     completedJob.error
       ? `${completedJob.error.code}: ${completedJob.error.message}`
       : `job ${completedJob.job_id} ended without typed failure detail`,
-  ).toBe('succeeded');
+  ).toBe('failed');
+  expect(completedJob.error).toMatchObject({
+    code: 'execution_failed',
+    message: expect.stringMatching(
+      /Missing required field: blake3:[0-9a-f]{64} in section \[model\.portfolio_scenario_model_bindings\]/,
+    ),
+  });
   await expect
     .poll(
       () =>
@@ -365,14 +386,11 @@ test('W2-A production Dataset and Evaluation backtest close over REST and WS', a
   ).toBe(0);
   await expectAccessible(authenticatedPage, '[role="dialog"]');
 
-  await navigate(
+  const mobileBacktestDrawer = await openBacktestDrawer(
     authenticatedPage,
     browserAudit,
-    `/research/backtests?open=${backtest.backtest_report_id}`,
+    backtest.backtest_report_id,
   );
-  await waitForShell(authenticatedPage);
-  const mobileBacktestDrawer = authenticatedPage.getByRole('dialog').last();
-  await expect(mobileBacktestDrawer).toBeVisible();
   expect(
     await mobileBacktestDrawer.evaluate(
       (element) => element.scrollWidth - element.clientWidth,

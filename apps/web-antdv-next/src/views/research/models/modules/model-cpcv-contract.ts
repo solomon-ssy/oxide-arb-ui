@@ -1,5 +1,10 @@
 import type { QuantModelSpecView, RunCpcvBacktestRequest } from '@vben/types';
 
+import {
+  trainingTargetHorizon,
+  trainingTargetLabel,
+} from '../../model-specs/modules/model-training-contract';
+
 export type CpcvRequestBody = Pick<
   RunCpcvBacktestRequest,
   'decision_policy_snapshot_id' | 'training_dataset_id'
@@ -31,8 +36,10 @@ export function cpcvFrozenContractFromSpec(
     modelFamily: spec.model_family,
     predictionHorizonSecs: spec.prediction_horizon_secs,
     rawInputCount: spec.input_contract.inputs.length,
-    targetLabelHorizonSecs: spec.training_contract.target_label_horizon_secs,
-    targetLabelName: spec.training_contract.target_label_name,
+    targetLabelHorizonSecs: trainingTargetHorizon(
+      spec.training_contract.target,
+    ),
+    targetLabelName: trainingTargetLabel(spec.training_contract.target),
     validationFolds: spec.training_contract.validation_folds,
   };
 }

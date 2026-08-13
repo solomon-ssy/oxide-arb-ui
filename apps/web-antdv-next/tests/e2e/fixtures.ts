@@ -2,6 +2,7 @@ import type { Buffer } from 'node:buffer';
 import type { APIRequestContext, Page, WebSocket } from 'playwright/test';
 
 import process from 'node:process';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import AxeBuilder from '@axe-core/playwright';
 import { test as base, expect, request } from 'playwright/test';
@@ -196,7 +197,22 @@ export async function readApiData<T>(
   context: APIRequestContext,
   path: string,
 ): Promise<T> {
-  const response = await context.get(path);
+  let response;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      response = await context.get(path);
+      break;
+    } catch (error) {
+      if (
+        attempt >= 2 ||
+        !(error instanceof Error) ||
+        !error.message.includes('ECONNRESET')
+      ) {
+        throw error;
+      }
+      await delay(100 * (attempt + 1));
+    }
+  }
   const body = await response.text();
   if (!response.ok()) {
     throw new Error(`GET ${path} failed with ${response.status()}: ${body}`);

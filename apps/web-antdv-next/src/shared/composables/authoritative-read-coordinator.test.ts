@@ -207,6 +207,38 @@ describe('authoritative read coordinator', () => {
     expect(onSnapshot).toHaveBeenCalledWith('30d');
   });
 
+  it('drains active transport without aborting or publishing it', async () => {
+    vi.useFakeTimers();
+    const pending = deferred<string>();
+    let signal: AbortSignal | undefined;
+    const fetchSnapshot = vi.fn(
+      async (_key: string, requestSignal: AbortSignal) => {
+        signal = requestSignal;
+        return pending.promise;
+      },
+    );
+    const onSnapshot = vi.fn();
+    const coordinator = new AuthoritativeReadCoordinator({
+      fetchSnapshot,
+      initialKey: '24h',
+      onError: vi.fn(),
+      onPendingChange: vi.fn(),
+      onSnapshot,
+    });
+
+    void coordinator.refresh();
+    coordinator.invalidate();
+    const drained = coordinator.drain();
+    expect(signal?.aborted).toBe(false);
+
+    pending.resolve('must-not-publish');
+    await drained;
+    await vi.runAllTimersAsync();
+    expect(fetchSnapshot).toHaveBeenCalledOnce();
+    expect(signal?.aborted).toBe(false);
+    expect(onSnapshot).not.toHaveBeenCalled();
+  });
+
   it('aborts on dispose without publishing or scheduling trailing work', async () => {
     vi.useFakeTimers();
     const pending = deferred<string>();

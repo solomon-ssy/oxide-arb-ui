@@ -11,7 +11,7 @@ export function buildPnlCurveSeries(
   }
   const series: [number, number][] = [];
   for (const point of points) {
-    const epochMs = new Date(point.as_of).getTime();
+    const epochMs = new Date(point.decision_at).getTime();
     const value = parseDecimal(point.cumulative_realized_pnl_usd);
     if (Number.isFinite(epochMs) && value !== null) {
       series.push([epochMs, value.toNumber()]);

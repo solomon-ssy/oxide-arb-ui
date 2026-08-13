@@ -11,7 +11,7 @@ import { Button, Empty, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
 import DashboardPanel from '#/shared/components/dashboard-panel.vue';
-import { formatUsd } from '#/shared/components/format';
+import { formatBps, formatUsd } from '#/shared/components/format';
 import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'DashboardRecommendationOrbit' });
@@ -31,19 +31,22 @@ const { getChartInstance, renderEcharts } = useEcharts(chartRef);
 const chartData = computed(() => {
   void isDark.value;
   const orbitPalette = themeColors.visual;
-  return props.recommendations.map((recommendation) => ({
-    category: recommendation.identity.category,
-    confidence: recommendation.confidence,
-    itemStyle: {
-      color:
-        orbitPalette[(recommendation.rank - 1) % orbitPalette.length] ??
-        orbitPalette[0],
-      opacity: Math.max(0.75, Number(recommendation.confidence)),
-    },
-    name: `#${recommendation.rank} ${recommendation.identity.outcome_name}`,
-    recommendationId: recommendation.recommendation_id,
-    value: Math.max(1, Number(recommendation.confidence) * 75),
-  }));
+  return props.recommendations.map((recommendation) => {
+    const profitProbability =
+      Number(recommendation.economics.profit_probability_bps) / 10_000;
+    return {
+      category: recommendation.identity.category,
+      itemStyle: {
+        color:
+          orbitPalette[(recommendation.rank - 1) % orbitPalette.length] ??
+          orbitPalette[0],
+        opacity: Math.max(0.75, profitProbability),
+      },
+      name: `#${recommendation.rank} ${recommendation.identity.outcome_name}`,
+      recommendationId: recommendation.recommendation_id,
+      value: Math.max(1, profitProbability * 75),
+    };
+  });
 });
 
 async function render() {
@@ -115,7 +118,7 @@ async function render() {
           (candidate) => candidate.recommendation_id === data.recommendationId,
         );
         return recommendation
-          ? `${data.name}<br/>${$t('page.dashboard.orbit.confidence')}: ${recommendation.confidence}`
+          ? `${data.name}<br/>${$t('page.dashboard.orbit.confidence')}: ${formatBps(recommendation.economics.profit_probability_bps)}`
           : '';
       },
       trigger: 'item',
@@ -172,10 +175,7 @@ onUnmounted(() => {
               recommendation.identity.question
             }}</span>
             <Tag>{{ recommendation.identity.outcome_name }}</Tag>
-            <span
-              v-if="recommendation.trade_plan.kind === 'frozen'"
-              class="tabular-nums"
-            >
+            <span class="tabular-nums">
               {{ formatUsd(recommendation.trade_plan.sizing.suggested_usd) }}
             </span>
           </button>

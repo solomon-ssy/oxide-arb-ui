@@ -14,10 +14,10 @@ export type PolicyActivationKind =
   | 'promote'
   | 'rollback';
 export type ConfigResourceKind =
-  | 'execution_authorization'
+  | 'execution_automation_policy'
   | 'execution_risk_policy'
   | 'model_routing'
-  | 'operational_control'
+  | 'operations_policy'
   | 'recommendation_policy'
   | 'report_schedule';
 /**
@@ -30,8 +30,8 @@ export type ConfigResourceKind =
  */
 export type PolicyDocument =
   | {
-      document: ExecutionAuthorization;
-      resource_kind: 'execution_authorization';
+      document: ExecutionAutomationPolicy;
+      resource_kind: 'execution_automation_policy';
     }
   | {
       document: ExecutionRiskPolicy;
@@ -42,8 +42,8 @@ export type PolicyDocument =
       resource_kind: 'model_routing';
     }
   | {
-      document: OperationalControl;
-      resource_kind: 'operational_control';
+      document: OperationsPolicy;
+      resource_kind: 'operations_policy';
     }
   | {
       document: RecommendationPolicy;
@@ -72,16 +72,13 @@ export type MarketCategory =
  */
 export type ModelVersionRef = string;
 /**
- * Immutable provenance of one route-owned model binding.
+ * Exact Buy-side route represented by one report and one durable model run.
+ *
+ * `Pooled` may contain only non-vertical market categories. `Crypto` and
+ * `Weather` are isolated category routes because their `ResearchProfile`,
+ * domain-source, factor-plane, and serving-contract preimages are distinct.
  */
-export type ModelBindingSource =
-  | {
-      feedback_cycle_id: string;
-      source_kind: 'feedback';
-    }
-  | {
-      source_kind: 'bootstrap';
-    };
+export type BuyModelRoute = 'crypto' | 'pooled' | 'weather';
 /**
  * A monotonic schema version for feature / factor / label / config schemas.
  *
@@ -139,55 +136,70 @@ export type ConfigActivityView =
       event_type: 'revision';
     };
 export type PolicyApprovalDecision = 'approved' | 'rejected';
-export type CredentialKind =
-  | 'chainlink_data_streams_api_key'
-  | 'chainlink_data_streams_api_secret'
-  | 'clickhouse_runtime'
-  | 'evidence_attestation'
-  | 'jwt_signing'
-  | 'polymarket_private_key'
-  | 'polymarket_relayer'
-  | 'postgres_runtime'
-  | 'redis_runtime'
-  | 'telegram_bot_token'
-  | 'webhook_authorization';
-export type CredentialHealthStatus = 'available' | 'missing' | 'not_configured';
-export type DeploymentEndpointKind =
-  | 'artifact_store'
-  | 'clickhouse'
-  | 'clob_api'
-  | 'data_api'
-  | 'domain_provider'
-  | 'gamma_api'
-  | 'postgres'
-  | 'redis'
-  | 'web_bind';
-export type ResourceBudgetKind =
-  | 'cache'
-  | 'clickhouse_writer'
-  | 'database'
-  | 'market_data_ingest'
-  | 'report_execution'
-  | 'research_jobs'
-  | 'web';
-export type ResourceBudgetMetric =
-  | 'batch_rows'
-  | 'cache_entries'
-  | 'configured_origins'
-  | 'heartbeat_interval'
-  | 'lease_duration'
-  | 'max_concurrency'
-  | 'min_concurrency'
-  | 'operation_timeout'
-  | 'queue_capacity'
-  | 'subscription_capacity';
-export type ResourceBudgetUnit =
+/**
+ * Apply semantics for static process configuration.
+ */
+export type DeployApplyEffect = 'process_restart_required';
+/**
+ * Confidentiality policy for one deploy leaf.
+ */
+export type DeploySensitivity =
+  | 'public'
+  | 'secret'
+  | 'sensitive_endpoint'
+  | 'sensitive_identifier';
+/**
+ * Unit rendered in generated comments and safe deployment projections.
+ */
+export type DeployFieldUnit =
+  | 'basis_points'
+  | 'blocks'
+  | 'bytes'
+  | 'chain_id'
   | 'count'
-  | 'entries'
+  | 'days'
+  | 'decimal_places'
+  | 'degrees'
+  | 'hours'
+  | 'index'
+  | 'meters'
   | 'milliseconds'
-  | 'rows'
+  | 'months'
+  | 'percent'
+  | 'port'
+  | 'ratio'
+  | 'request_weight_per_minute'
   | 'seconds'
-  | 'tokens';
+  | 'shares'
+  | 'usd'
+  | 'years';
+/**
+ * TOML value category exposed to documentation and inventory tooling.
+ */
+export type DeployValueKind =
+  | 'boolean'
+  | 'decimal'
+  | 'integer'
+  | 'scalar_array'
+  | 'string'
+  | 'string_array'
+  | 'variant';
+/**
+ * Safe value projection selected by descriptor sensitivity.
+ */
+export type DeployProjectedValue =
+  | {
+      status: DeployProtectedStatus;
+      visibility: 'protected';
+    }
+  | {
+      value: unknown;
+      visibility: 'public';
+    };
+/**
+ * Whether a protected deploy value is configured without exposing its literal.
+ */
+export type DeployProtectedStatus = 'configured' | 'missing';
 export type PolicyConsumer =
   | 'alert_dispatcher'
   | 'data_quality_gate'
@@ -203,12 +215,49 @@ export type PolicyConsumer =
   | 'runtime_mode_gate'
   | 'worker_admission';
 export type PolicyApplyBoundary =
-  | 'execution_authorization_admission'
+  | 'execution_automation_policy_admission'
   | 'future_report_run_reconcile'
   | 'model_evaluation_claim'
   | 'operational_admission'
   | 'order_intent_creation'
   | 'report_run_claim';
+/**
+ * UI control selected from the exact Rust/JSON-Schema field shape.
+ */
+export type RuntimeFieldControl =
+  | 'artifact_mapping'
+  | 'artifact_picker'
+  | 'capital_time_buckets'
+  | 'decimal'
+  | 'duration'
+  | 'integer'
+  | 'money'
+  | 'multi_select'
+  | 'probability'
+  | 'schedule_list'
+  | 'select'
+  | 'text'
+  | 'toggle'
+  | 'variant';
+/**
+ * Operator-risk classification for one field mutation.
+ */
+export type RuntimeFieldRiskLevel = 'critical' | 'high' | 'low' | 'medium';
+/**
+ * Human unit rendered beside one Runtime Config control.
+ */
+export type RuntimeFieldUnit =
+  | 'basis_points'
+  | 'blocks'
+  | 'count'
+  | 'generation'
+  | 'hours'
+  | 'milliseconds'
+  | 'ratio'
+  | 'revision'
+  | 'seconds'
+  | 'usd'
+  | 'usd_hours';
 /**
  * How often a report schedule fires.
  *
@@ -331,8 +380,8 @@ export interface PolicyRevisionView {
  * Market-selection, data-quality, and recommendation payload semantics.
  */
 export interface RecommendationPolicy {
-  data_quality?: DataQualityConfig;
-  reports?: ReportsConfig;
+  data_quality: DataQualityConfig;
+  reports: ReportsConfig;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -341,8 +390,8 @@ export interface RecommendationPolicy {
    * in every signature. Versions are `>= 1` by convention; untrusted wire and DB
    * values are validated through [`SchemaVersion::try_new`].
    */
-  schema_version?: number;
-  selection?: SelectionConfig;
+  schema_version: number;
+  selection: SelectionConfig;
 }
 /**
  * Data quality thresholds for PIT features and facts.
@@ -351,30 +400,30 @@ export interface DataQualityConfig {
   /**
    * Named policy for stale feature handling.
    */
-  feature_staleness_policy?: 'allow_degraded' | 'reject_stale_required';
+  feature_staleness_policy: 'allow_degraded' | 'reject_stale_required';
   /**
    * Maximum age for a book snapshot before it is stale.
    */
-  max_book_age_ms?: number;
+  max_book_age_ms: number;
   /**
    * Maximum acceptable age (seconds) of the freshest domain observation for
    * a linked instrument at decision time
    * (`StalenessRule::MaxDomainObservationAge`).
    */
-  max_domain_observation_age_secs?: number;
+  max_domain_observation_age_secs: number;
   /**
    * Maximum acceptable age (seconds) of the freshest materialized feature
    * bucket at decision time. Governs offline/online feature staleness
    * (`StalenessRule::MaxFeatureBucketAge`) — independent of live ingest lag.
    */
-  max_feature_bucket_age_secs?: number;
+  max_feature_bucket_age_secs: number;
   /**
    * Maximum acceptable ingest **pipeline** lag (enqueue→ClickHouse flush-ack),
    * in milliseconds. Live-plane backpressure health only — NOT venue book age.
    * Governs `DataQualitySnapshot.ingest_lag_exceeded`, execution admission, and
    * market-candidate selection.
    */
-  max_ingest_lag_ms?: number;
+  max_ingest_lag_ms: number;
   /**
    * Maximum tolerated stale-book ratio across the live book plane (basis points).
    *
@@ -382,20 +431,20 @@ export interface DataQualityConfig {
    * `stale_tokens / total_tokens * 10_000` exceeds this cap. Distilled into
    * frozen admission input at build time so checks never read config directly.
    */
-  max_stale_book_ratio_bps?: number;
+  max_stale_book_ratio_bps: number;
   /**
    * Maximum acceptable age (seconds) of the freshest trade-tape print at
    * decision time (`StalenessRule::MaxTradeTapeAge`).
    */
-  max_trade_tape_age_secs?: number;
+  max_trade_tape_age_secs: number;
   /**
    * Reject crossed books before feature generation.
    */
-  reject_crossed_books?: boolean;
+  reject_crossed_books: boolean;
   /**
    * Reject empty books before feature generation.
    */
-  reject_empty_books?: boolean;
+  reject_empty_books: boolean;
 }
 /**
  * Report schedules and payload sizing.
@@ -404,44 +453,36 @@ export interface ReportsConfig {
   /**
    * Default global knowledge lag frozen for an ad-hoc request without an override.
    */
-  ad_hoc_default_knowledge_lag_secs?: number;
+  ad_hoc_default_knowledge_lag_secs: number;
   /**
    * Default `TopN` frozen when an ad-hoc request omits its override.
    */
-  ad_hoc_default_top_n?: number;
+  ad_hoc_default_top_n: number;
   /**
    * Whether ad-hoc report generation is enabled.
    */
-  ad_hoc_report_enabled?: boolean;
+  ad_hoc_report_enabled: boolean;
   /**
    * Delivery policy name.
    */
-  delivery_policy?: 'store_and_notify' | 'store_only';
+  delivery_policy: 'store_and_notify' | 'store_only';
   /**
    * Entry-window ratio in `(0, 1]`: a recommendation's entry-by deadline is
    * `as_of + effective_horizon * entry_window_ratio`. `0.5` enters only while
    * at least half the signal's edge remains (the half-life point); the
    * time-stop / exit still uses the full effective horizon.
    */
-  entry_window_ratio?: string;
-  /**
-   * Fallback prediction horizon (seconds), used **only** when the model
-   * provides no per-candidate `suggested_horizon_secs` (classical / non-ML
-   * runs). The per-recommendation validity is otherwise data-driven from the
-   * model's frozen horizon capped by the market's time-to-resolution; this is
-   * never a flat TTL applied uniformly.
-   */
-  fallback_horizon_secs?: number;
+  entry_window_ratio: string;
   /**
    * Deployment-proven upper bound for one complete catalog-visible report.
    * Exceeding it fails the report; it never truncates market candidates.
    */
-  hard_candidate_ceiling?: number;
+  hard_candidate_ceiling: number;
   /**
    * Maximum `TopN` size (hard upper bound for every schedule and ad-hoc run,
    * capped by [`MAX_REPORT_TOP_N`]).
    */
-  max_top_n?: number;
+  max_top_n: number;
 }
 /**
  * Market selection selection policy.
@@ -450,42 +491,41 @@ export interface SelectionConfig {
   /**
    * Whether near-resolution markets may enter the selection.
    */
-  allow_near_resolution?: boolean;
+  allow_near_resolution: boolean;
   /**
    * Category slugs eligible for quant reports.
    */
-  enabled_categories?: MarketCategory[];
+  enabled_categories: MarketCategory[];
   /**
    * Maximum allowed top-of-book spread in basis points.
    */
-  max_spread_bps?: number;
+  max_spread_bps: number;
   /**
    * Maximum seconds until market resolution.
    */
-  max_time_to_resolution_secs?: number;
+  max_time_to_resolution_secs: number;
   /**
    * Minimum displayed liquidity in USD.
    */
-  min_liquidity_usd?: string;
+  min_liquidity_usd: string;
   /**
    * Minimum seconds until market resolution.
    */
-  min_time_to_resolution_secs?: number;
+  min_time_to_resolution_secs: number;
   /**
    * Minimum 24h volume in USD.
    */
-  min_volume_24h_usd?: string;
+  min_volume_24h_usd: string;
 }
 /**
  * Capital, sizing, order, exit, reconciliation, and breaker policy.
  */
 export interface ExecutionRiskPolicy {
-  breaker?: ExecutionBreakerConfig;
-  capital?: CapitalPolicy;
-  entry_order_policy?: EntryOrderPolicy;
-  exit_monitor?: ExitMonitorPolicy;
-  portfolio?: PortfolioConfig;
-  reconciliation?: ReconciliationPolicy;
+  breaker: ExecutionBreakerConfig;
+  entry_order_policy: EntryOrderPolicy;
+  exit_monitor: ExitMonitorPolicy;
+  portfolio: PortfolioConfig;
+  reconciliation: ReconciliationPolicy;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -494,7 +534,7 @@ export interface ExecutionRiskPolicy {
    * in every signature. Versions are `>= 1` by convention; untrusted wire and DB
    * values are validated through [`SchemaVersion::try_new`].
    */
-  schema_version?: number;
+  schema_version: number;
 }
 /**
  * Venue-dimension execution-breaker thresholds.
@@ -509,53 +549,34 @@ export interface ExecutionBreakerConfig {
   /**
    * Seconds of failure-free operation before `Degraded` self-recovers to `Healthy`.
    */
-  cooldown_secs?: number;
+  cooldown_secs: number;
   /**
    * Daily realized-loss cap in USD (UTC day). Cumulative same-day realized
    * loss `≥ 80%` of the cap degrades venue health (admission `#18` defers);
-   * `≥` the cap trips the kill-switch (`execution_halted`, latched). `0`
-   * disables the daily-realized-loss dimension.
+   * `≥` the cap trips the kill-switch (`execution_halted`, latched). The
+   * cap must be strictly positive; there is no disabled sentinel.
    */
-  daily_realized_loss_cap_usd?: string;
+  daily_realized_loss_cap_usd: string;
   /**
    * Consecutive venue failures that move the breaker to `Degraded` (admission defers).
    */
-  venue_consecutive_failures_to_degrade?: number;
+  venue_consecutive_failures_to_degrade: number;
   /**
    * Consecutive venue failures that move the breaker to `Halted` and trip the kill-switch.
    */
-  venue_consecutive_failures_to_halt?: number;
+  venue_consecutive_failures_to_halt: number;
   /**
    * Rolling-window venue error rate (basis points) that trips `Halted`.
    */
-  venue_error_rate_bps_to_halt?: number;
+  venue_error_rate_bps_to_halt: number;
   /**
    * Minimum window samples before the error-rate gate is evaluated (avoids small-N trips).
    */
-  venue_min_window_samples?: number;
+  venue_min_window_samples: number;
   /**
    * Rolling observation window length in seconds.
    */
-  venue_window_secs?: number;
-}
-/**
- * Capital policy for execution admission.
- *
- * Both caps gate order-intent admission (checks `#21` / `#22`). A value of
- * `0` **disables** that dimension (no cap) — matching the other opt-in USD
- * governance knobs. When `> 0` the cap is enforced hard (`Deny`).
- */
-export interface CapitalPolicy {
-  /**
-   * Maximum number of concurrently open execution intents. `0` disables the
-   * open-intent count cap. Enforced by admission `#21`.
-   */
-  max_open_intents?: number;
-  /**
-   * Maximum USD that may be reserved across all open execution intents.
-   * `0` disables the reserved-capital cap. Enforced by admission `#22`.
-   */
-  max_reserved_usd?: string;
+  venue_window_secs: number;
 }
 /**
  * Entry order policy for recommendations.
@@ -564,15 +585,16 @@ export interface EntryOrderPolicy {
   /**
    * Maximum allowed entry-order slippage in basis points.
    */
-  max_slippage_bps?: number;
+  max_slippage_bps: number;
   /**
    * Minimum visible book depth (USD) required at entry. Frozen onto every
    * recommendation's `EntryPlan.min_depth_usd` at report build and enforced
    * by execution admission (`LiquidityDepthCheck`): an intent is deferred
    * when the fillable ask notional up to the limit price is below this
-   * floor. `0` disables the depth floor.
+   * floor. The value must be strictly positive; there is no disabled or
+   * unlimited sentinel.
    */
-  min_entry_book_depth_usd?: string;
+  min_entry_book_depth_usd: string;
 }
 /**
  * Exit-monitor cadence and re-inference policy.
@@ -585,17 +607,17 @@ export interface ExitMonitorPolicy {
   /**
    * Whether the exit-monitor worker actively evaluates open lots.
    */
-  enabled?: boolean;
+  enabled: boolean;
   /**
    * Seconds between exit-monitor scans (price / time / trailing cadence).
    */
-  monitor_secs?: number;
-  opportunistic_sell?: OpportunisticSellPolicy;
+  monitor_secs: number;
+  opportunistic_sell: OpportunisticSellPolicy;
   /**
    * Minimum seconds between signal re-inference checks for one lot.
    */
-  signal_recheck_secs?: number;
-  signal_reinference?: ExitSignalReinferencePolicy;
+  signal_recheck_secs: number;
+  signal_reinference: ExitSignalReinferencePolicy;
 }
 /**
  * Opportunistic-Sell advisory scale-out.
@@ -604,12 +626,12 @@ export interface OpportunisticSellPolicy {
   /**
    * Whether opportunistic-Sell evaluation is active at all.
    */
-  enabled?: boolean;
+  enabled: boolean;
   /**
    * When true, the scorer runs and is audited but never submits an exit
    * (fail-safe hold; SL/time/trailing/invalidation still apply).
    */
-  shadow_mode?: boolean;
+  shadow_mode: boolean;
 }
 /**
  * Model-backed thesis-invalidation re-inference.
@@ -618,159 +640,133 @@ export interface ExitSignalReinferencePolicy {
   /**
    * Whether model-backed signal re-inference is active.
    */
-  enabled?: boolean;
+  enabled: boolean;
   /**
    * When true, re-inference runs and is audited, but thesis-invalidation
    * exits are suppressed (fail-safe hold; SL/time/trailing still apply).
    */
-  shadow_mode?: boolean;
+  shadow_mode: boolean;
 }
 /**
- * Portfolio policy: budget governance, exposure constraints, and sizing model.
+ * Portfolio policy expressed entirely as hard economic constraints.
  *
  * Policy limits only — never account state. Real equity and positions come
  * from the account snapshot, never from this configuration.
  */
 export interface PortfolioConfig {
-  budget?: PortfolioBudget;
-  constraints?: PortfolioConstraints;
-  kelly_safety?: KellySafetyConfig;
-  optimizer?: PortfolioOptimizerConfig;
-  sizing?: SizingModelConfig;
+  admission: PortfolioAdmission;
+  budget: PortfolioBudget;
+  exposure_limits: PortfolioExposureLimits;
+  tail_risk: PortfolioTailRisk;
+}
+/**
+ * Candidate admission floors applied before global optimization.
+ */
+export interface PortfolioAdmission {
+  /**
+   * Additional executable-liquidity haircut applied to available depth, in basis points.
+   */
+  liquidity_buffer_bps: number;
+  /**
+   * Maximum calibrated probability-interval width admitted, in basis points.
+   */
+  max_probability_interval_width_bps: number;
+  /**
+   * Minimum nominal discounted expected net USD required for a tier to enter optimization.
+   */
+  min_nominal_expected_net_usd: string;
+  /**
+   * Conservative lower bound on the probability of positive net USD, in basis points.
+   */
+  min_profit_probability_bps: number;
+  /**
+   * Minimum ambiguity-robust discounted expected net USD required before optimization.
+   */
+  min_robust_expected_net_usd: string;
 }
 /**
  * Capital budget governance caps.
  */
 export interface PortfolioBudget {
   /**
-   * Maximum USD allocated to one recommendation.
+   * Cash that must remain immediately available in every scenario.
    */
-  max_single_recommendation_usd?: string;
+  cash_reserve_usd: string;
   /**
-   * Minimum useful recommendation size in USD.
+   * Maximum capital that may be locked by all open positions and intents.
    */
-  min_recommendation_usd?: string;
+  max_open_capital_usd: string;
   /**
-   * Maximum deployable capital (governance cap, all modes).
-   *
-   * `equity = min(real net-liquidation value, total_budget_usd)`; this value
-   * **never** stands in for equity itself.
+   * Maximum account capital that this strategy may govern.
    */
-  total_budget_usd?: string;
+  total_budget_usd: string;
 }
 /**
- * Exposure / liquidity constraints.
+ * Exposure caps evaluated against existing positions plus selected tiers.
  */
-export interface PortfolioConstraints {
-  correlation?: CorrelationConfig;
-  /**
-   * Maximum fraction of visible liquidity an allocation may consume.
-   */
-  liquidity_usage_cap_pct?: string;
+export interface PortfolioExposureLimits {
   /**
    * Maximum USD exposure per category.
    */
-  max_category_exposure_usd?: string;
-  /**
-   * Maximum correlated exposure in USD.
-   */
-  max_correlated_exposure_usd?: string;
+  max_category_exposure_usd: string;
   /**
    * Maximum USD exposure per event.
    */
-  max_event_exposure_usd?: string;
+  max_event_exposure_usd: string;
   /**
    * Maximum USD exposure per market.
    */
-  max_market_exposure_usd?: string;
+  max_market_exposure_usd: string;
+  /**
+   * Maximum number of simultaneously open recommendations.
+   */
+  max_open_recommendations: number;
+  /**
+   * Maximum USD exposure per model Route.
+   */
+  max_route_exposure_usd: string;
+  /**
+   * Maximum USD allocated to one recommendation.
+   */
+  max_single_recommendation_usd: string;
 }
 /**
- * Correlation-cluster estimation policy gating `max_correlated_exposure_usd`.
+ * Scenario loss, `CVaR`, drawdown, and time-weighted capital limits.
  */
-export interface CorrelationConfig {
+export interface PortfolioTailRisk {
   /**
-   * Absolute Pearson correlation at or above which two markets are clustered.
+   * Strictly increasing capital-lock buckets; every tier must terminate in a covered bucket.
    */
-  cluster_threshold?: string;
+  capital_time_buckets: CapitalTimeBucketLimit[];
   /**
-   * Whether the correlated-exposure cap is enforced. `false` ⇒ no clustering.
+   * `CVaR` confidence level in basis points, strictly between 0 and 10,000.
    */
-  enabled?: boolean;
+  cvar_confidence_bps: number;
   /**
-   * Historical mid-price lookback window for co-movement estimation, in days.
+   * Maximum allowed `CVaR` loss in USD.
    */
-  lookback_days?: number;
+  max_cvar_usd: string;
   /**
-   * Minimum paired observations before historical estimation is trusted;
-   * below this the estimator falls back to event/category proxy clusters.
+   * Maximum strategy drawdown admitted at the decision boundary.
    */
-  min_observations?: number;
+  max_drawdown_usd: string;
+  /**
+   * Maximum allowed loss in any promoted or stress scenario.
+   */
+  max_scenario_loss_usd: string;
 }
 /**
- * Kelly safety-layer knobs (edge uncertainty, aggregate cap, binding threshold).
+ * Maximum capital lock permitted through one elapsed-time boundary.
  */
-export interface KellySafetyConfig {
+export interface CapitalTimeBucketLimit {
   /**
-   * Kelly-stage binding is emitted when the dominant shrink falls below this threshold.
+   * Exclusive upper duration of the bucket from decision time.
    */
-  binding_materiality_threshold?: string;
+  end_secs: number;
   /**
-   * Floor on the edge-uncertainty shrink multiplier.
+   * Maximum capital locked inside this bucket.
    */
-  edge_uncertainty_floor?: string;
-  /**
-   * Edge-uncertainty shrink coefficient `k` in `shrink = clamp(1 − k·edge_std, floor, 1)`.
-   */
-  edge_uncertainty_k?: string;
-  /**
-   * Hard cap on total simultaneous portfolio exposure as a fraction of bankroll.
-   */
-  max_aggregate_exposure_pct?: string;
-}
-/**
- * Portfolio optimizer (`good_lp` LP/MILP) policy.
- */
-export interface PortfolioOptimizerConfig {
-  /**
-   * `true` ⇒ solve the exact binary-inclusion MILP (production primary);
-   * `false` ⇒ solve the continuous LP relaxation with deterministic integer
-   * recovery (cheaper, fully deterministic — also the fallback / backtest mode).
-   */
-  integer_inclusion?: boolean;
-  /**
-   * `λ ≥ 0`: weight on normalized expected return in the per-dollar objective
-   * weight `wᵢ = scoreᵢ · (1 + λ · ret_normᵢ)`. `0` ⇒ pure conviction weighting
-   * (semantically equivalent to the former greedy fill order).
-   */
-  objective_return_weight?: string;
-  /**
-   * LP solver backend. `highs` requires the `lp-solver-highs` build feature;
-   * when that feature is absent the planner transparently downgrades to
-   * `microlp` (recorded in the plan's optimizer metadata).
-   */
-  solver?: 'highs' | 'microlp';
-}
-/**
- * Position-sizing model.
- */
-export interface SizingModelConfig {
-  /**
-   * Confidence-driven shrinkage of the Kelly fraction (estimation
-   * uncertainty): `confidence` high → near fractional Kelly, low → compressed.
-   */
-  confidence_weighting?: 'linear' | 'step';
-  /**
-   * Drawdown-driven scaling policy.
-   */
-  drawdown_scaling?: 'conservative' | 'fixed';
-  /**
-   * Fraction of full Kelly to apply, in `(0, 1]` (half-Kelly ≈ `0.5`).
-   */
-  kelly_fraction?: string;
-  /**
-   * Maximum single-position size as a fraction of equity (`(0, 1]`).
-   */
-  max_position_pct?: string;
+  max_capital_usd: string;
 }
 /**
  * Execution reconciliation policy.
@@ -779,24 +775,24 @@ export interface ReconciliationPolicy {
   /**
    * Whether execution reconciliation is enabled.
    */
-  enabled?: boolean;
+  enabled: boolean;
   /**
    * Reconciliation sweep interval in seconds.
    */
-  interval_secs?: number;
+  interval_secs: number;
   /**
    * Seconds an order may remain unreconciled (resting open, or unreadable at
    * the venue) before the worker forces a terminal resolution: a stale
    * resting order is actively cancelled, an unreadable order is escalated to
    * `Unresolvable`. Bounds how long capital can stay in-flight.
    */
-  stale_open_secs?: number;
+  stale_open_secs: number;
 }
 /**
  * Active, shadow, and exit artifact routing.
  */
 export interface ModelRouting {
-  model?: ModelConfig;
+  model: ModelConfig;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -805,7 +801,7 @@ export interface ModelRouting {
    * in every signature. Versions are `>= 1` by convention; untrusted wire and DB
    * values are validated through [`SchemaVersion::try_new`].
    */
-  schema_version?: number;
+  schema_version: number;
 }
 /**
  * Route-owned Buy models and independent Sell model reference.
@@ -821,41 +817,95 @@ export interface ModelConfig {
    * Exact Buy-side bindings. A missing route fails closed and never falls
    * back to another route.
    */
-  buy_routes?: {
+  buy_routes: {
     crypto?: BuyRouteBinding;
     pooled?: BuyRouteBinding;
     weather?: BuyRouteBinding;
   };
-  calibration?: ModelCalibrationConfig;
+  calibration: ModelCalibrationConfig;
   /**
-   * Minimum candidate score to enter portfolio pruning.
+   * Exact scenario-model bindings. Lookup is by ordered Route-set digest;
+   * absence or ambiguity fails the entire report.
    */
-  candidate_score_floor?: string;
-  /**
-   * Minimum model confidence.
-   */
-  min_model_confidence?: string;
+  portfolio_scenario_model_bindings: PortfolioScenarioModelArtifactBinding[];
   /**
    * Shadow/live diff threshold.
    */
-  shadow_diff_threshold?: string;
+  shadow_diff_threshold: string;
 }
 /**
  * Champion plus the optional challenger bound to one exact Buy route.
  */
 export interface BuyRouteBinding {
   champion: ModelBinding;
-  shadow?: ModelBinding | null;
+  /**
+   * Optional governed challenger evaluated in shadow without serving trades.
+   */
+  shadow?: ModelBinding1 | null;
+}
+/**
+ * Active champion used for production inference on this Route.
+ */
+export interface ModelBinding {
+  /**
+   * Database decision time at which the binding became visible.
+   */
+  bound_at: string;
+  /**
+   * Policy-bundle revision atomically committed with this binding.
+   */
+  config_revision: number;
+  /**
+   * Monotonic Route-serving generation used to reject stale readers.
+   */
+  generation: number;
+  /**
+   * Immutable model version selected for this exact Route and serving role.
+   */
+  model_version_id: string;
+  /**
+   * Governance provenance that created the binding.
+   */
+  source:
+    | {
+        feedback_cycle_id: string;
+        source_kind: 'feedback';
+      }
+    | {
+        source_kind: 'bootstrap';
+      };
 }
 /**
  * One role binding inside a Buy route.
  */
-export interface ModelBinding {
+export interface ModelBinding1 {
+  /**
+   * Database decision time at which the binding became visible.
+   */
   bound_at: string;
+  /**
+   * Policy-bundle revision atomically committed with this binding.
+   */
   config_revision: number;
+  /**
+   * Monotonic Route-serving generation used to reject stale readers.
+   */
   generation: number;
+  /**
+   * Immutable model version selected for this exact Route and serving role.
+   */
   model_version_id: string;
-  source: ModelBindingSource;
+  /**
+   * Governance provenance that created the binding.
+   */
+  source:
+    | {
+        feedback_cycle_id: string;
+        source_kind: 'feedback';
+      }
+    | {
+        source_kind: 'bootstrap';
+      };
 }
 /**
  * Model-score probability-calibrator fit policy.
@@ -864,26 +914,49 @@ export interface ModelCalibrationConfig {
   /**
    * Two-sided confidence level for reliability-bin Wilson intervals.
    */
-  ci_confidence?: string;
+  ci_confidence: string;
   /**
    * Minimum embargo gap (seconds) between a model's training-dataset window
    * and its calibration-dataset window.
    */
-  embargo_secs?: number;
+  embargo_secs: number;
   /**
    * Default calibrator fitting method (`isotonic` or `platt`).
    */
-  method?: 'isotonic' | 'platt';
+  method: 'isotonic' | 'platt';
   /**
    * Minimum samples required to select isotonic (below ⇒ fit must use Platt).
    */
-  min_samples_isotonic?: number;
+  min_samples_isotonic: number;
+}
+/**
+ * Exact promoted scenario-generation model for one ordered represented Route set.
+ */
+export interface PortfolioScenarioModelArtifactBinding {
+  bound_at: string;
+  calibration_contract_digest: string;
+  /**
+   * Digest of the strictly ordered capital-time boundaries. Per-bucket USD
+   * caps remain in the frozen `ExecutionRiskPolicy` and do not require a
+   * statistical scenario-model refit when only their values change.
+   */
+  capital_time_bucket_contract_digest: string;
+  model_content_hash: string;
+  ordered_routes: BuyModelRoute[];
+  portfolio_scenario_model_artifact_id: string;
+  route_set_digest: string;
+  scenario_model_schema_version: SchemaVersion;
+  serving_contract_digest: string;
+  trade_policy_contract_digest: string;
 }
 /**
  * Durable report schedule resource, isolated from report decision semantics.
  */
 export interface ReportSchedule {
-  schedules?: ReportScheduleConfig[];
+  /**
+   * Complete governed schedule list; each entry owns cadence, `TopN`, lag, and enabled state.
+   */
+  schedules: ReportScheduleConfig[];
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -892,7 +965,7 @@ export interface ReportSchedule {
    * in every signature. Versions are `>= 1` by convention; untrusted wire and DB
    * values are validated through [`SchemaVersion::try_new`].
    */
-  schema_version?: number;
+  schema_version: number;
 }
 /**
  * One report schedule.
@@ -901,7 +974,7 @@ export interface ReportScheduleConfig {
   /**
    * How often this schedule fires (fixed interval or cron).
    */
-  cadence?:
+  cadence:
     | {
         /**
          * 6-field cron expression.
@@ -923,28 +996,28 @@ export interface ReportScheduleConfig {
   /**
    * Whether this schedule is enabled.
    */
-  enabled?: boolean;
+  enabled: boolean;
   /**
    * Global knowledge lag in seconds.
    */
-  knowledge_lag_secs?: number;
+  knowledge_lag_secs: number;
   /**
    * Stable schedule id.
    */
-  schedule_id?: string;
+  schedule_id: string;
   /**
    * `TopN` size for this schedule.
    */
-  top_n?: number;
+  top_n: number;
 }
 /**
  * Immediate operational admission controls and notification routing.
  */
-export interface OperationalControl {
-  entry_condition?: EntryConditionWorkerConfig;
-  kill_switch?: KillSwitchPolicy;
-  notifications?: NotificationPolicies;
-  outcome_reconciliation?: OutcomeReconciliationPolicy;
+export interface OperationsPolicy {
+  entry_condition: EntryConditionWorkerConfig;
+  kill_switch: KillSwitchPolicy;
+  notifications: NotificationPolicies;
+  outcome_reconciliation: OutcomeReconciliationPolicy;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -953,7 +1026,7 @@ export interface OperationalControl {
    * in every signature. Versions are `>= 1` by convention; untrusted wire and DB
    * values are validated through [`SchemaVersion::try_new`].
    */
-  schema_version?: number;
+  schema_version: number;
 }
 /**
  * Durable condition evaluator cadence, lease, and bounded-pass policy.
@@ -963,29 +1036,29 @@ export interface EntryConditionWorkerConfig {
    * Millisecond cadence of the safety backstop scan. Source notifications,
    * book wakes, and clock deadlines remain the primary wake paths.
    */
-  backstop_interval_ms?: number;
+  backstop_interval_ms: number;
   /**
    * Maximum number of expired instances transitioned in one expiry sweep.
    */
-  expiry_batch_limit?: number;
+  expiry_batch_limit: number;
   /**
    * Duration in seconds of an exclusive instance-processing lease.
    */
-  lease_duration_secs?: number;
+  lease_duration_secs: number;
   /**
    * Renewal cadence in seconds for a held lease; must remain shorter than
    * the lease duration so takeover is explicit and auditable.
    */
-  lease_renew_interval_secs?: number;
+  lease_renew_interval_secs: number;
   /**
    * Milliseconds before a still-active instance becomes eligible for its
    * next scheduled evaluation after one worker pass.
    */
-  next_evaluation_delay_ms?: number;
+  next_evaluation_delay_ms: number;
   /**
    * Maximum number of due condition instances evaluated in one worker pass.
    */
-  pass_limit?: number;
+  pass_limit: number;
 }
 /**
  * Execution kill-switch default policy.
@@ -994,7 +1067,7 @@ export interface EntryConditionWorkerConfig {
  * config only carries the policy to apply when that state escalates.
  */
 export interface KillSwitchPolicy {
-  emergency_exit?: EmergencyExitPolicy;
+  emergency_exit: EmergencyExitPolicy;
 }
 /**
  * Emergency-exit behavior for kill-switch escalation.
@@ -1003,11 +1076,11 @@ export interface EmergencyExitPolicy {
   /**
    * Emergency-exit behavior.
    */
-  kind?: 'liquidate_all' | 'manual_only';
+  kind: 'liquidate_all' | 'manual_only';
   /**
    * Maximum slippage for automated emergency liquidation, in basis points.
    */
-  max_slippage_bps?: number;
+  max_slippage_bps: number;
 }
 /**
  * Notification routing policy flags.
@@ -1016,7 +1089,7 @@ export interface NotificationPolicies {
   /**
    * Notify operators when a recommendation report is published.
    */
-  report_published?: boolean;
+  report_published: boolean;
 }
 /**
  * Runtime cadence and bounded work budget for outcome reconciliation.
@@ -1025,25 +1098,25 @@ export interface OutcomeReconciliationPolicy {
   /**
    * Maximum recommendations or intents processed by each lane per pass.
    */
-  candidate_batch_size?: number;
+  candidate_batch_size: number;
   /**
    * Whether the outcome reconciliation worker is enabled.
    */
-  enabled?: boolean;
+  enabled: boolean;
   /**
    * Maximum finalized source blocks scanned per resolution pass.
    */
-  source_block_span?: number;
+  source_block_span: number;
   /**
    * Delay between reconciliation passes in seconds.
    */
-  sweep_secs?: number;
+  sweep_secs: number;
 }
 /**
  * Explicit authorization for semi-automatic and automatic execution.
  */
-export interface ExecutionAuthorization {
-  auto_execution?: AutoExecutionConfig;
+export interface ExecutionAutomationPolicy {
+  auto_execution: AutoExecutionConfig;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -1052,8 +1125,8 @@ export interface ExecutionAuthorization {
    * in every signature. Versions are `>= 1` by convention; untrusted wire and DB
    * values are validated through [`SchemaVersion::try_new`].
    */
-  schema_version?: number;
-  semi_auto?: SemiAutoConfig;
+  schema_version: number;
+  semi_auto: SemiAutoConfig;
 }
 /**
  * Auto-execution policy.
@@ -1062,19 +1135,11 @@ export interface AutoExecutionConfig {
   /**
    * Maximum orders auto-created per report.
    */
-  max_orders_per_report?: number;
+  max_orders_per_report: number;
   /**
    * Maximum total USD auto-executed per report.
    */
-  max_total_usd_per_report?: string;
-  /**
-   * Minimum confidence for auto-execution.
-   */
-  min_confidence?: string;
-  /**
-   * Minimum score for auto-execution.
-   */
-  min_score?: string;
+  max_total_usd_per_report: string;
 }
 /**
  * Semi-auto approval policy.
@@ -1083,7 +1148,7 @@ export interface SemiAutoConfig {
   /**
    * Approval time-to-live in seconds.
    */
-  approval_ttl_secs?: number;
+  approval_ttl_secs: number;
 }
 /**
  * Typed validation evidence persisted with a validated policy revision.
@@ -1101,12 +1166,20 @@ export interface PolicyValidationEvidence {
  */
 export interface PolicyValidationIssue {
   code: PolicyValidationCode;
-  message: string;
   /**
-   * Canonical field path. A path is data, not a categorical state, so a
-   * validated string is the correct representation.
+   * Stable interpolation inputs; UI copy is localized from `code`.
    */
-  path: string;
+  message_parameters: {
+    [k: string]: string;
+  };
+  /**
+   * Canonical RFC 6901 pointer to the exact field or document boundary.
+   */
+  pointer: string;
+  /**
+   * Actionable, client-safe recovery guidance.
+   */
+  remediation: string;
   severity: PolicyValidationSeverity;
 }
 /**
@@ -1134,10 +1207,10 @@ export interface PolicyValidationSubject {
  * Revision identities frozen at a decision boundary.
  */
 export interface PolicyRevisionBundle {
-  execution_authorization?: null | string;
+  execution_automation_policy?: null | string;
   execution_risk_policy?: null | string;
   model_routing?: null | string;
-  operational_control?: null | string;
+  operations_policy?: null | string;
   recommendation_policy?: null | string;
   report_schedule?: null | string;
 }
@@ -1172,46 +1245,106 @@ export interface CurrentPolicyResourceView {
   revision?: null | PolicyRevisionView;
 }
 export interface DeploymentConfigView {
-  credential_health: CredentialHealthView[];
   environment: string;
+  fields: DeployConfigFieldProjection[];
   restart_required: boolean;
-  snapshot: DeploymentConfigSnapshotView;
 }
-export interface CredentialHealthView {
-  credential: CredentialKind;
-  status: CredentialHealthStatus;
+/**
+ * One descriptor and its exhaustive safe runtime value projection.
+ */
+export interface DeployConfigFieldProjection {
+  descriptor: DeployConfigFieldDescriptor;
+  projection: DeployProjectedValue;
 }
-export interface DeploymentConfigSnapshotView {
-  endpoints: DeploymentEndpointView[];
-  identity: DeploymentIdentityView;
-  resource_budgets: DeploymentResourceBudgetView[];
+/**
+ * Complete metadata for one static leaf or one wildcard dynamic-binding leaf.
+ */
+export interface DeployConfigFieldDescriptor {
+  apply_effect: DeployApplyEffect;
+  bounds: DeployFieldBounds;
+  constraints: string[];
+  consumer: string;
+  default?: unknown;
+  documentation_url: string;
+  dynamic: boolean;
+  enum_values: string[];
+  example?: unknown;
+  json_pointer: string;
+  operational_impact: string;
+  purpose: string;
+  required: boolean;
+  sensitivity: DeploySensitivity;
+  title: string;
+  toml_path: string;
+  unit?: DeployFieldUnit | null;
+  validation_rules: DeployValidationRuleDescriptor[];
+  value_kind: DeployValueKind;
+  variants: string[];
 }
-export interface DeploymentEndpointView {
-  /**
-   * Redacted or non-secret endpoint suitable for operator display.
-   */
-  address: string;
-  kind: DeploymentEndpointKind;
+/**
+ * Exact numeric constraints represented without a floating-point conversion.
+ */
+export interface DeployFieldBounds {
+  exclusive_maximum?: null | string;
+  exclusive_minimum?: null | string;
+  maximum?: null | string;
+  minimum?: null | string;
 }
-export interface DeploymentIdentityView {
-  deployment_id: string;
-  instance_id: string;
-}
-export interface DeploymentResourceBudgetView {
-  kind: ResourceBudgetKind;
-  limits: DeploymentResourceLimitView[];
-}
-export interface DeploymentResourceLimitView {
-  metric: ResourceBudgetMetric;
-  unit: ResourceBudgetUnit;
-  value: number;
+/**
+ * One stable validation rule exposed alongside every affected deploy leaf.
+ */
+export interface DeployValidationRuleDescriptor {
+  condition: string;
+  requirement: string;
+  rule_id: string;
 }
 export interface PolicyResourceSchemaView {
   consumers: PolicyConsumer[];
+  document_schema: unknown;
   effective_boundary: PolicyApplyBoundary;
-  json_schema: unknown;
+  fields: RuntimeFieldDescriptor[];
   kind: ConfigResourceKind;
   schema_version: SchemaVersion;
+}
+/**
+ * Complete metadata for one editable or explicitly read-only Runtime leaf.
+ */
+export interface RuntimeFieldDescriptor {
+  apply_effect: PolicyApplyBoundary;
+  bounds: RuntimeFieldBounds;
+  control: RuntimeFieldControl;
+  default?: unknown;
+  description: string;
+  documentation_url: string;
+  enum_values: string[];
+  example?: unknown;
+  format?: null | string;
+  group: string;
+  order: number;
+  pointer: string;
+  read_only: boolean;
+  required: boolean;
+  risk_level: RuntimeFieldRiskLevel;
+  title: string;
+  unit?: null | RuntimeFieldUnit;
+  visibility_condition?: null | RuntimeVisibilityCondition;
+  write_only: boolean;
+}
+/**
+ * Exact numeric bounds represented without floating-point conversion.
+ */
+export interface RuntimeFieldBounds {
+  exclusive_maximum?: null | string;
+  exclusive_minimum?: null | string;
+  maximum?: null | string;
+  minimum?: null | string;
+}
+/**
+ * Typed condition controlling whether a dependent editor is visible.
+ */
+export interface RuntimeVisibilityCondition {
+  equals: unknown;
+  pointer: string;
 }
 export interface ConfigResourcesView {
   active_bundle_generation: number;

@@ -6,7 +6,7 @@ import { computed, ref } from 'vue';
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Card, Descriptions, DescriptionsItem, Spin } from 'antdv-next';
+import { Button, Card, Descriptions, DescriptionsItem, Spin } from 'antdv-next';
 
 import { getBacktestReport, getModelQualityGate } from '#/api/research';
 import { $t } from '#/locales';
@@ -17,6 +17,7 @@ import QualityGateScorecard from '../../shared/quality-gate-scorecard.vue';
 import BacktestCategoryBreakdown from './backtest-category-breakdown.vue';
 import BacktestExpectedVsRealized from './backtest-expected-vs-realized.vue';
 import BacktestPnlChart from './backtest-pnl-chart.vue';
+import BacktestPortfolioFunnel from './backtest-portfolio-funnel.vue';
 
 defineOptions({ name: 'BacktestDetailDrawer' });
 
@@ -44,6 +45,7 @@ const pnlSimulation = computed(
 
 async function refresh(id: string) {
   loading.value = true;
+  gate.value = null;
   try {
     const fresh = await handleRequest(() => getBacktestReport(id), {
       silent: true,
@@ -54,14 +56,14 @@ async function refresh(id: string) {
   } finally {
     loading.value = false;
   }
-  await refreshGate(id);
 }
 
 // Report-scoped gate: evaluate this specific report against the `candidate`
 // gate (backtest + coverage, no shadow) — "does this backtest clear the gate?".
-async function refreshGate(id: string) {
+async function refreshGate() {
+  const id = openId.value;
   const current = report.value;
-  if (!current || openId.value !== id) {
+  if (!id || !current || gateLoading.value) {
     return;
   }
   gateLoading.value = true;
@@ -114,7 +116,26 @@ const [Drawer, drawerApi] = useVbenDrawer({
           size="small"
           :title="$t('page.research.backtests.detail.gateContribution')"
         >
+          <template #extra>
+            <Button :loading="gateLoading" size="small" @click="refreshGate">
+              {{
+                $t(
+                  gate
+                    ? 'page.research.qualityGate.reevaluate'
+                    : 'page.research.qualityGate.evaluate',
+                )
+              }}
+            </Button>
+          </template>
           <QualityGateScorecard :loading="gateLoading" :report="gate" />
+        </Card>
+
+        <Card
+          class="min-w-0"
+          size="small"
+          :title="$t('page.research.backtests.detail.portfolioFunnel')"
+        >
+          <BacktestPortfolioFunnel :value="report.portfolio_funnel" />
         </Card>
 
         <Card

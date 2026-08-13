@@ -23,6 +23,7 @@ import InputContractEditor from './input-contract-editor.vue';
 import {
   DEFAULT_MODEL_TRAINING_CONTRACT,
   normalizeModelTrainingContract,
+  trainingContractForModel,
 } from './model-training-contract';
 import TrainingContractEditor from './training-contract-editor.vue';
 
@@ -67,8 +68,12 @@ async function onSubmit(values: Record<string, unknown>) {
   }
   const inputContract =
     values.input_contract as CreateModelSpecBody['input_contract'];
+  const modelFamily = values.model_family as ModelFamily;
+  const predictionHorizonSecs = Number(values.prediction_horizon_secs);
   const trainingContract = normalizeModelTrainingContract(
     values.training_contract as ModelTrainingContract | undefined,
+    modelFamily,
+    predictionHorizonSecs,
   );
   if (!trainingContract) {
     message.error(
@@ -109,9 +114,9 @@ async function onSubmit(values: Record<string, unknown>) {
       feature_schema_version: featureSchemaVersion,
       input_contract: inputContract,
       label_schema_version: values.label_schema_version as number,
-      model_family: values.model_family as ModelFamily,
+      model_family: modelFamily,
       name: trimmed,
-      prediction_horizon_secs: values.prediction_horizon_secs as number,
+      prediction_horizon_secs: predictionHorizonSecs,
       thesis: {
         hypothesis: thesisHypothesis,
         limitations: thesisLimitations,
@@ -179,6 +184,23 @@ const [Form, formApi] = useVbenForm({
     {
       component: markRaw(TrainingContractEditor),
       defaultValue: { ...DEFAULT_MODEL_TRAINING_CONTRACT },
+      dependencies: {
+        trigger(values) {
+          const current = values.training_contract as
+            | ModelTrainingContract
+            | undefined;
+          if (!current) return;
+          const next = trainingContractForModel(
+            current,
+            values.model_family as ModelFamily,
+            Number(values.prediction_horizon_secs),
+          );
+          if (next) {
+            void formApi.setFieldValue('training_contract', next);
+          }
+        },
+        triggerFields: ['model_family', 'prediction_horizon_secs'],
+      },
       fieldName: 'training_contract',
       formItemClass: 'md:col-span-2',
       label: $t('page.research.modelSpecs.create.trainingContract'),

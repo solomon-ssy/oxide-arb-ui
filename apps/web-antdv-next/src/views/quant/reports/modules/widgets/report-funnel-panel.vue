@@ -59,20 +59,16 @@ const REASONS: ReportFunnelReason[] = [
   'score_below_floor',
   'low_confidence',
   'no_positive_signal',
-  'invalid_edge_inputs',
-  'return_model_uncalibrated',
-  'trade_policy_unavailable',
-  'below_min_size',
-  'liquidity_infeasible',
-  'budget_exhausted',
-  'market_cap_exhausted',
-  'event_cap_exhausted',
-  'category_cap_exhausted',
-  'correlation_cap_exhausted',
-  'available_cash_exhausted',
-  'aggregate_exposure_cap_exhausted',
-  'beyond_top_n',
-  'system_degraded',
+  'executable_entry_unavailable',
+  'scenario_exit_capacity_insufficient',
+  'nominal_expected_net_below_floor',
+  'robust_expected_net_below_floor',
+  'profit_probability_below_floor',
+  'probability_interval_too_wide',
+  'liquidity_buffer_insufficient',
+  'single_recommendation_exposure_exceeded',
+  'existing_structural_conflict',
+  'not_selected_by_global_optimum',
   'published',
 ];
 
@@ -89,6 +85,12 @@ const reasonOptions = REASONS.map((value) => ({
 }));
 
 const columns = computed(() => [
+  {
+    dataIndex: 'route',
+    key: 'route',
+    title: $t('page.quantReports.funnel.columns.route'),
+    width: 110,
+  },
   {
     dataIndex: 'market_id',
     ellipsis: true,
@@ -257,6 +259,13 @@ onMounted(() => void Promise.all([loadSummary(), loadRows()]));
           <Tag v-if="column.key === 'terminal_stage'">
             {{ $t(`enum.reportFunnelStage.${record.terminal_stage}`) }}
           </Tag>
+          <Tag v-else-if="column.key === 'route'">
+            {{
+              record.route
+                ? $t(`page.quantReports.routes.${record.route}`)
+                : '—'
+            }}
+          </Tag>
           <span v-else-if="column.key === 'primary_reason'">
             {{ $t(`enum.reportFunnelReason.${record.primary_reason}`) }}
           </span>
@@ -289,8 +298,15 @@ onMounted(() => void Promise.all([loadSummary(), loadRows()]));
         <DescriptionsItem label="RecommendationId">
           <span class="mono">{{ selected.recommendation_id ?? '—' }}</span>
         </DescriptionsItem>
-        <DescriptionsItem :label="$t('page.quantReports.funnel.profile')">
-          {{ selected.profile_ref.id }}@{{ selected.profile_ref.version }}
+        <DescriptionsItem label="ReportRouteRunId">
+          <span class="mono">{{ selected.report_route_run_id ?? '—' }}</span>
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.quantReports.funnel.route')">
+          {{
+            selected.route
+              ? $t(`page.quantReports.routes.${selected.route}`)
+              : '—'
+          }}
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.quantReports.funnel.rowHash')">
           <span class="mono">{{ selected.row_hash }}</span>

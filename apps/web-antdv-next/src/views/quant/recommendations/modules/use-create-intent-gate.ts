@@ -36,7 +36,6 @@ export type CreateIntentBlockReason =
   | 'recommendationStatus'
   | 'reportStatus'
   | 'riskEnvelope'
-  | 'tradePlan'
   | 'validity';
 
 export interface CreateIntentGateInput {
@@ -46,16 +45,26 @@ export interface CreateIntentGateInput {
   runtimeMode: null | QuantRuntimeMode;
   /** Live kill-switch state (`systemStore.status.kill_switch.state`), null before first paint. */
   killSwitchState: KillSwitchState | null;
-  recommendation: Pick<
-    QuantRecommendationView,
-    | 'active_order_intent_id'
-    | 'execution_eligibility'
-    | 'report_status'
-    | 'status'
-    | 'trade_plan'
-    | 'valid_from'
-    | 'valid_until'
-  >;
+  recommendation: Omit<
+    Pick<
+      QuantRecommendationView,
+      | 'active_order_intent_id'
+      | 'execution_eligibility'
+      | 'report_status'
+      | 'status'
+      | 'trade_plan'
+      | 'valid_from'
+      | 'valid_until'
+    >,
+    'trade_plan'
+  > & {
+    trade_plan: {
+      risk_envelope: Pick<
+        QuantRecommendationView['trade_plan']['risk_envelope'],
+        'max_loss_usd' | 'max_position_usd'
+      >;
+    };
+  };
   /** Evaluation instant in epoch ms (defaults to `Date.now()`); injectable for tests. */
   now?: number;
 }
@@ -107,10 +116,6 @@ export function evaluateCreateIntentGate(
 
   if (!isExecutionEligible(recommendation.execution_eligibility, runtimeMode)) {
     return { enabled: false, reason: 'eligibility' };
-  }
-
-  if (recommendation.trade_plan.kind !== 'frozen') {
-    return { enabled: false, reason: 'tradePlan' };
   }
 
   if (!isRiskEnvelopeActionable(recommendation.trade_plan.risk_envelope)) {

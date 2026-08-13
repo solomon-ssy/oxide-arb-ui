@@ -298,7 +298,10 @@ onMounted(() => void loadTruth());
           <dt class="text-muted-foreground text-xs">
             {{ $t('page.config.operationalControl.changedAt') }}
           </dt>
-          <dd class="mt-1 text-sm font-medium">
+          <dd
+            class="mt-1 w-fit font-mono text-sm font-medium"
+            data-screenshot-volatile="true"
+          >
             {{ formatDateTimeLocal(controls.changed_at) }}
           </dd>
         </div>

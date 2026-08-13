@@ -36,7 +36,7 @@ export interface TrailingStopPolicy {
 export interface ThesisInvalidationPolicy {
   min_score_retention: DecimalString;
   min_expected_return_bps: BpsString;
-  require_execution_eligibility: boolean;
+  require_route_gate_eligibility: boolean;
 }
 
 /** Policy-fitted advisory exit thresholds frozen onto recommendations/intents. */

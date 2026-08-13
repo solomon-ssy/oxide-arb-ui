@@ -1,6 +1,5 @@
 import type { Page } from 'playwright/test';
 
-import { expect, login, test } from './fixtures';
 import {
   DashboardRequestLedger,
   DashboardResponseOwner,
@@ -8,7 +7,8 @@ import {
   installControlledBrowserEnvironment,
   setControlledOnline,
   setControlledVisibility,
-} from './w4-dashboard-race-harness';
+} from './dashboard-race-harness';
+import { expect, login, test } from './fixtures';
 
 const OLD_MARKER = 910_001;
 const LATEST_MARKER = 920_001;
@@ -405,18 +405,18 @@ test('section errors retain last-good and WS faults recover without poll storms'
   const unknownWarning = page.waitForEvent('console', {
     predicate: (message) =>
       message.type() === 'warning' &&
-      message.text() === '[qp-ws] unknown message type: w4.unknown',
+      message.text() === '[qp-ws] unknown message type: dashboard.unknown',
   });
   await browserAudit.allowConsole(
     {
-      text: '[qp-ws] unknown message type: w4.unknown',
+      text: '[qp-ws] unknown message type: dashboard.unknown',
       type: 'warning',
     },
     async () => {
       websocket.send({
         data: {},
         timestamp: '2026-07-29T10:02:00Z',
-        type: 'w4.unknown',
+        type: 'dashboard.unknown',
       });
       await unknownWarning;
     },

@@ -408,7 +408,7 @@ function defaultCandidate(
         retry_cadence_ms: 1000,
       })),
       redeem_policy: 'manual',
-      require_execution_eligibility: true,
+      require_route_gate_eligibility: true,
       scale_out_targets: [],
       settlement_mode: 'exit_before_resolution',
       trailing_stop: null,

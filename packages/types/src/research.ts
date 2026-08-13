@@ -34,6 +34,7 @@ import type {
   ModelInputSpec,
   ModelSpecThesis,
 } from './generated/research-model-api';
+import type { PortfolioRejectionReason } from './quant-report';
 import type {
   ResearchProfileRef,
   SourceSliceManifestRef,
@@ -715,7 +716,7 @@ export interface CategoryMetric {
 
 /** One point of the cumulative realized-PnL curve. */
 export interface PnlCurvePoint {
-  as_of: IsoDateTime;
+  decision_at: IsoDateTime;
   cumulative_realized_pnl_usd: UsdString;
 }
 
@@ -725,6 +726,31 @@ export interface PnlSimulation {
   realized_pnl_usd: UsdString;
   gross_return: DecimalString;
   pnl_curve: PnlCurvePoint[];
+}
+
+/** One canonical economic-tier exclusion tally in an offline replay. */
+export interface BacktestTierExclusionCount {
+  reason: PortfolioRejectionReason;
+  count: number;
+}
+
+/** Count-conserving model-candidate → executable-entry replay funnel. */
+export interface BacktestPortfolioFunnel {
+  schema_version: number;
+  decision_tick_count: number;
+  emitted_candidate_count: number;
+  candidate_without_executable_tier_count: number;
+  executable_tier_count: number;
+  admission_rejected_tier_count: number;
+  admitted_tier_count: number;
+  selected_tier_count: number;
+  executed_entry_count: number;
+  resolved_allocation_count: number;
+  no_candidate_tick_count: number;
+  no_executable_tier_tick_count: number;
+  no_selection_tick_count: number;
+  selected_tick_count: number;
+  tier_exclusion_reasons: BacktestTierExclusionCount[];
 }
 
 /** Per-category rank-IC divergence between candidate and baseline. */
@@ -757,6 +783,7 @@ export interface BacktestReportView {
   liquidity_feasibility: ProbabilityString;
   category_breakdown: CategoryMetric[];
   report_pnl_simulation: PnlSimulation;
+  portfolio_funnel: BacktestPortfolioFunnel;
   report_hash: string;
   parquet_uri: null | string;
   created_at: IsoDateTime;
@@ -807,8 +834,8 @@ export interface BacktestPathSetView {
   dsr_benchmark_sharpe: DecimalString;
   pbo: DecimalString;
   min_track_record_length_secs: null | number;
-  /** DSR multiple-testing N (= trial_grid_count). Same population as V. */
-  trial_count: number;
+  /** Conservative DSR N from identified dependence, or raw M for an undefined no-trade pair. */
+  dsr_conservative_independent_trial_count: number;
   trial_grid_count: number;
   /** Audit-only production coord-search effort (not included in DSR N). */
   coord_search_effective_n: number;

@@ -29,9 +29,6 @@ import { useQpAccess } from '#/shared/composables/use-qp-access';
  * recommendation before the intent is created.
  */
 function createIntentDetails(recommendation: QuantRecommendationView) {
-  if (recommendation.trade_plan.kind !== 'frozen') {
-    return [];
-  }
   const {
     entry: entryPlan,
     risk_envelope: riskEnvelope,
@@ -93,9 +90,6 @@ export function useCreateIntentAction() {
   async function createIntent(
     recommendation: QuantRecommendationView,
   ): Promise<null | OrderIntentView> {
-    if (recommendation.trade_plan.kind !== 'frozen') {
-      return null;
-    }
     const recommendationId = recommendation.recommendation_id;
     const intent = await governed(
       (ctx) =>

@@ -181,9 +181,9 @@ onMounted(() => void loadOverview());
             <dd>{{ deployment?.environment ?? '—' }}</dd>
           </div>
           <div class="config-status-cell">
-            <dt>{{ $t('page.config.status.deploymentId') }}</dt>
-            <dd class="font-mono text-xs" data-screenshot-volatile="true">
-              {{ deployment?.snapshot.identity.deployment_id ?? '—' }}
+            <dt>{{ $t('page.config.status.deployFields') }}</dt>
+            <dd class="font-mono text-xs">
+              {{ deployment?.fields.length ?? '—' }}
             </dd>
           </div>
           <div class="config-status-cell">

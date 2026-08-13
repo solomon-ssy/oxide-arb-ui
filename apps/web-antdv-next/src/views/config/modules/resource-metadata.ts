@@ -32,16 +32,17 @@ export const CONFIG_RESOURCE_META = {
     labelKey: 'page.config.resources.reportSchedule.label',
     tone: 'cyan',
   },
-  operational_control: {
-    descriptionKey: 'page.config.resources.operationalControl.description',
+  operations_policy: {
+    descriptionKey: 'page.config.resources.operationsPolicy.description',
     icon: 'lucide:circle-stop',
-    labelKey: 'page.config.resources.operationalControl.label',
+    labelKey: 'page.config.resources.operationsPolicy.label',
     tone: 'amber',
   },
-  execution_authorization: {
-    descriptionKey: 'page.config.resources.executionAuthorization.description',
+  execution_automation_policy: {
+    descriptionKey:
+      'page.config.resources.executionAutomationPolicy.description',
     icon: 'lucide:key-round',
-    labelKey: 'page.config.resources.executionAuthorization.label',
+    labelKey: 'page.config.resources.executionAutomationPolicy.label',
     tone: 'green',
   },
 } as const satisfies Record<ConfigResourceKind, ConfigResourceMeta>;

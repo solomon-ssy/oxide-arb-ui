@@ -46,30 +46,34 @@ const [Modal, modalApi] = useVbenModal({
 
 <template>
   <Modal :title="$t('page.quantReports.run.title')">
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4" data-testid="run-report-form">
       <p class="text-muted-foreground text-sm">
         {{ $t('page.quantReports.run.summary') }}
       </p>
       <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
+        <label class="text-sm font-medium" for="run-report-top-n">
           {{ $t('page.quantReports.run.topN') }}
-        </span>
+        </label>
         <InputNumber
+          id="run-report-top-n"
           v-model:value="topN"
           :min="1"
           :placeholder="$t('page.quantReports.run.serverDefault')"
           class="w-full"
+          data-testid="run-report-top-n"
         />
       </div>
       <div class="flex flex-col gap-1">
-        <span class="text-sm font-medium">
+        <label class="text-sm font-medium" for="run-report-knowledge-lag">
           {{ $t('page.quantReports.run.knowledgeLagSecs') }}
-        </span>
+        </label>
         <InputNumber
+          id="run-report-knowledge-lag"
           v-model:value="knowledgeLagSecs"
           :min="0"
           :placeholder="$t('page.quantReports.run.serverDefault')"
           class="w-full"
+          data-testid="run-report-knowledge-lag"
         />
       </div>
     </div>

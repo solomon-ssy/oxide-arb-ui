@@ -106,32 +106,11 @@
     "empty_selection": "选池为空",
     "insufficient_data_quality": "数据质量不足",
     "no_positive_signal": "无正向信号",
-    "portfolio_budget_exhausted": "组合预算耗尽",
-    "system_degraded": "系统降级"
+    "portfolio_budget_exhausted": "组合预算耗尽"
   },
   "ineligibilityReason": {
-    "budget_exhausted": "预算耗尽",
-    "data_stale": "数据陈旧",
-    "low_confidence": "置信度过低",
-    "manually_blocked": "人工封禁",
-    "report_only_mode": "仅报告模式",
-    "risk_envelope_invalid": "风险边界无效",
-    "shadow_not_passed": "影子门未通过",
-    "return_model_uncalibrated": "收益模型未校准"
-  },
-  "rejectionReason": {
-    "available_cash_exhausted": "可用现金耗尽",
-    "below_min_size": "低于最小规模",
-    "beyond_top_n": "超出 TopN 截断",
-    "budget_exhausted": "预算耗尽",
-    "category_cap_exhausted": "类别上限耗尽",
-    "correlation_cap_exhausted": "相关性上限耗尽",
-    "event_cap_exhausted": "事件上限耗尽",
-    "invalid_edge_inputs": "边际输入无效",
-    "liquidity_infeasible": "流动性不可行",
-    "market_cap_exhausted": "单市场上限耗尽",
-    "no_positive_signal": "无正向信号",
-    "aggregate_exposure_cap_exhausted": "总敞口上限耗尽"
+    "automation_cap_exceeded": "报告自动执行上限已耗尽",
+    "report_only_mode": "仅报告模式"
   },
   "recommendationOutcome": {
     "won": "获胜",
@@ -238,24 +217,6 @@
     "resolve_unresolvable_reconciliations": "解决无法自动处理的对账",
     "acknowledge_kill_switch": "确认熔断开关",
     "verify_mode_preflight": "重新武装前校验模式预检"
-  },
-  "sizingModelKind": {
-    "kelly": "凯利"
-  },
-  "bindingConstraint": {
-    "aggregate_exposure_cap": "总敞口上限",
-    "available_cash": "可用现金",
-    "category_cap": "类别上限",
-    "confidence_cap": "置信度上限",
-    "correlation_cap": "相关性上限",
-    "drawdown_cap": "回撤上限",
-    "event_cap": "事件上限",
-    "kelly_cap": "凯利上限",
-    "liquidity_cap": "流动性上限",
-    "none": "无",
-    "portfolio_budget": "组合预算",
-    "single_market_cap": "单市场上限",
-    "single_recommendation_cap": "单条推荐上限"
   },
   "exitSettlementMode": {
     "exit_before_resolution": "结算前退出",
@@ -666,20 +627,16 @@
     "score_below_floor": "评分低于门槛",
     "low_confidence": "置信度不足",
     "no_positive_signal": "无正向信号",
-    "invalid_edge_inputs": "Edge 输入无效",
-    "return_model_uncalibrated": "收益模型未校准",
-    "trade_policy_unavailable": "交易策略不可用",
-    "below_min_size": "低于最小金额",
-    "liquidity_infeasible": "深度不可执行",
-    "budget_exhausted": "现金预算耗尽",
-    "market_cap_exhausted": "单市场上限耗尽",
-    "event_cap_exhausted": "事件上限耗尽",
-    "category_cap_exhausted": "类别上限耗尽",
-    "correlation_cap_exhausted": "相关性上限耗尽",
-    "available_cash_exhausted": "可用现金耗尽",
-    "aggregate_exposure_cap_exhausted": "总敞口上限耗尽",
-    "beyond_top_n": "超出 Top N",
-    "system_degraded": "系统降级",
+    "executable_entry_unavailable": "缺少可执行入场档位",
+    "nominal_expected_net_below_floor": "名义预期净收益低于准入下限",
+    "scenario_exit_capacity_insufficient": "压力场景下买盘退出容量不足",
+    "robust_expected_net_below_floor": "稳健预期净收益低于准入下限",
+    "profit_probability_below_floor": "盈利概率下界低于准入下限",
+    "probability_interval_too_wide": "校准概率区间过宽",
+    "liquidity_buffer_insufficient": "可执行流动性缓冲不足",
+    "single_recommendation_exposure_exceeded": "单条推荐敞口超限",
+    "existing_structural_conflict": "与既有结构性持仓冲突",
+    "not_selected_by_global_optimum": "未被全局最优组合选中",
     "published": "已发布"
   },
   "datasetPurpose": {

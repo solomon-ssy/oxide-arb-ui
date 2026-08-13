@@ -76,6 +76,25 @@ export class AuthoritativeReadCoordinator<Key, Snapshot> {
     this.resolveIdle();
   }
 
+  /**
+   * Discard queued publication and wait for active transport without aborting it.
+   *
+   * Route transitions use this before disposal so a successful HTTP request is
+   * not reported as a browser failure merely because its owner unmounted.
+   */
+  drain(): Promise<void> {
+    if (this.disposed) {
+      return Promise.resolve();
+    }
+    this.desiredGeneration += 1;
+    this.dirty = false;
+    this.clearCoalesceTimer();
+    if (this.active === null) {
+      this.setPending(false);
+    }
+    return this.whenIdle();
+  }
+
   /** Coalesce semantic invalidations at one 300ms trailing edge. */
   invalidate() {
     if (this.disposed) {

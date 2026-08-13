@@ -26,6 +26,10 @@ import {
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
 import InputContractEditor from './input-contract-editor.vue';
+import {
+  trainingTargetHorizon,
+  trainingTargetLabel,
+} from './model-training-contract';
 
 defineOptions({ name: 'ModelSpecDetailDrawer' });
 
@@ -47,6 +51,14 @@ const openId = ref<null | string>(null);
 
 const familyTag = computed(() =>
   findTagOption(familyTagOptions, spec.value?.model_family),
+);
+
+const targetLabel = computed(() =>
+  spec.value ? trainingTargetLabel(spec.value.training_contract.target) : '—',
+);
+
+const targetHorizon = computed(() =>
+  spec.value ? trainingTargetHorizon(spec.value.training_contract.target) : 0,
 );
 
 async function refresh(id: string) {
@@ -79,6 +91,14 @@ function goToTrainedModels() {
     path: '/research/models',
     query: { model_spec_id: spec.value.model_spec_id },
   });
+}
+
+function goToEvaluationPolicy() {
+  const artifactId =
+    spec.value?.training_contract.evaluation_trade_policy_artifact_id;
+  if (artifactId) {
+    void router.push(`/research/trade-policies/${artifactId}`);
+  }
 }
 
 const [Drawer, drawerApi] = useVbenDrawer({
@@ -202,19 +222,28 @@ const [Drawer, drawerApi] = useVbenDrawer({
           <Descriptions :column="1" size="small">
             <DescriptionsItem
               :label="
-                $t('page.research.modelSpecs.trainingContract.targetLabelName')
+                $t('page.research.modelSpecs.trainingContract.targetTask')
               "
             >
-              <code>{{ spec.training_contract.target_label_name }}</code>
+              {{
+                $t(
+                  `page.research.modelSpecs.trainingContract.targets.${spec.training_contract.target.kind}`,
+                )
+              }}
             </DescriptionsItem>
             <DescriptionsItem
               :label="
-                $t(
-                  'page.research.modelSpecs.trainingContract.targetLabelHorizonSecs',
-                )
+                $t('page.research.modelSpecs.trainingContract.targetLabel')
               "
             >
-              {{ spec.training_contract.target_label_horizon_secs }}s
+              <code>{{ targetLabel }}</code>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t('page.research.modelSpecs.trainingContract.targetHorizon')
+              "
+            >
+              {{ targetHorizon }}s
             </DescriptionsItem>
             <DescriptionsItem
               :label="
@@ -222,6 +251,25 @@ const [Drawer, drawerApi] = useVbenDrawer({
               "
             >
               {{ spec.training_contract.validation_folds }}
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="
+                $t(
+                  'page.research.modelSpecs.trainingContract.evaluationTradePolicy',
+                )
+              "
+            >
+              <Button
+                v-if="
+                  spec.training_contract.evaluation_trade_policy_artifact_id
+                "
+                class="h-auto p-0"
+                type="link"
+                @click="goToEvaluationPolicy"
+              >
+                {{ spec.training_contract.evaluation_trade_policy_artifact_id }}
+              </Button>
+              <span v-else>—</span>
             </DescriptionsItem>
           </Descriptions>
         </Card>

@@ -3,6 +3,7 @@ import type {
   QuantRecommendationView,
   QuantReportDetailView,
   QuantReportDiagnosticsView,
+  ReportRouteDiagnosticsView,
 } from '@vben/types';
 
 import { computed, onMounted, ref, watch } from 'vue';
@@ -33,6 +34,7 @@ import ReportDiffPanel from '../modules/widgets/report-diff-panel.vue';
 import ReportFunnelPanel from '../modules/widgets/report-funnel-panel.vue';
 import ReportOverview from '../modules/widgets/report-overview.vue';
 import ReportRecommendationsTable from '../modules/widgets/report-recommendations-table.vue';
+import ReportRouteLineageDrawer from '../modules/widgets/report-route-lineage-drawer.vue';
 import ReportTimelinePanel from '../modules/widgets/report-timeline-panel.vue';
 
 defineOptions({ name: 'QuantReportDetailPage' });
@@ -56,6 +58,10 @@ const reportId = computed(() => route.params.id as string);
 
 const [RecDrawer, recDrawerApi] = useVbenDrawer({
   connectedComponent: RecommendationDetailDrawer,
+  destroyOnClose: true,
+});
+const [RouteLineageDrawer, routeLineageDrawerApi] = useVbenDrawer({
+  connectedComponent: ReportRouteLineageDrawer,
   destroyOnClose: true,
 });
 
@@ -129,6 +135,10 @@ function openRecommendation(recommendation: QuantRecommendationView) {
   recDrawerApi.setData({ recommendation }).open();
 }
 
+function openRouteLineage(route: ReportRouteDiagnosticsView) {
+  routeLineageDrawerApi.setData({ route }).open();
+}
+
 function onRevoke() {
   if (report.value) {
     void revoke(report.value);
@@ -173,7 +183,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <Page auto-content-height>
+  <Page auto-content-height data-testid="report-detail-workspace">
     <div class="mb-4 flex items-center justify-between">
       <DetailBackNav
         :label="$t('page.quantReports.detail.back')"
@@ -231,7 +241,11 @@ onMounted(() => void load());
           key="overview"
           :tab="$t('page.quantReports.detail.tabs.overview')"
         >
-          <ReportOverview :diagnostics="diagnostics" :report="report" />
+          <ReportOverview
+            :diagnostics="diagnostics"
+            :report="report"
+            @select-route="openRouteLineage"
+          />
         </TabPane>
         <TabPane
           key="recommendations"
@@ -269,5 +283,6 @@ onMounted(() => void load());
       </Tabs>
     </AsyncState>
     <RecDrawer />
+    <RouteLineageDrawer />
   </Page>
 </template>

@@ -159,21 +159,33 @@ export interface ModelSpecThesis {
   summary: string;
 }
 /**
- * Frozen target label/horizon and CV folds. Training cannot override it.
+ * Frozen typed target, evaluation-policy binding, and CV folds.
+ * Training cannot override these semantics.
  */
 export interface ModelTrainingContract {
   /**
-   * Target horizon (`0` for horizon-independent labels).
+   * Published policy used only for OOS executable evaluation and Route
+   * readiness. It does not generate or redefine the supervised target.
    */
-  target_label_horizon_secs: number;
+  evaluation_trade_policy_artifact_id?: null | string;
   /**
-   * Governed label name materialized in the frozen dataset.
+   * Closed task whose exact label name and horizon are derived, never typed
+   * as an arbitrary string by an operator.
    */
-  target_label_name: string;
-  /**
-   * Required for executable policy-derived targets; absent for unrelated labels.
-   */
-  trade_policy_artifact_id?: null | string;
+  target:
+    | {
+        /**
+         * Exact forward-label horizon in seconds.
+         */
+        horizon_secs: number;
+        kind: 'forward_return';
+      }
+    | {
+        kind: 'hold_vs_exit_alpha';
+      }
+    | {
+        kind: 'outcome_payout';
+      };
   /**
    * Rolling validation fold count. Every fold fits its own transform.
    */
@@ -273,17 +285,28 @@ export interface ModelSpecThesis1 {
  */
 export interface ModelTrainingContract1 {
   /**
-   * Target horizon (`0` for horizon-independent labels).
+   * Published policy used only for OOS executable evaluation and Route
+   * readiness. It does not generate or redefine the supervised target.
    */
-  target_label_horizon_secs: number;
+  evaluation_trade_policy_artifact_id?: null | string;
   /**
-   * Governed label name materialized in the frozen dataset.
+   * Closed task whose exact label name and horizon are derived, never typed
+   * as an arbitrary string by an operator.
    */
-  target_label_name: string;
-  /**
-   * Required for executable policy-derived targets; absent for unrelated labels.
-   */
-  trade_policy_artifact_id?: null | string;
+  target:
+    | {
+        /**
+         * Exact forward-label horizon in seconds.
+         */
+        horizon_secs: number;
+        kind: 'forward_return';
+      }
+    | {
+        kind: 'hold_vs_exit_alpha';
+      }
+    | {
+        kind: 'outcome_payout';
+      };
   /**
    * Rolling validation fold count. Every fold fits its own transform.
    */

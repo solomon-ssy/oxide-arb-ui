@@ -35,9 +35,8 @@ function modelSpec() {
       summary: 'governed baseline',
     },
     training_contract: {
-      target_label_horizon_secs: 900,
-      target_label_name: 'policy_net_return_bps',
-      trade_policy_artifact_id: policyArtifactId,
+      evaluation_trade_policy_artifact_id: policyArtifactId,
+      target: { kind: 'outcome_payout' },
       validation_folds: 5,
     },
   };
@@ -66,9 +65,12 @@ describe('generated research-model API decoder', () => {
     expect(decoded.features[0]?.source).toBe('new_server_owned_source');
   });
 
-  it('preserves the Rust-owned trade-policy binding in model reads and writes', () => {
+  it('preserves the typed target and evaluation-policy binding', () => {
     const decoded = decodeModelSpec(modelSpec());
-    expect(decoded.training_contract.trade_policy_artifact_id).toBe(
+    expect(decoded.training_contract.target).toEqual({
+      kind: 'outcome_payout',
+    });
+    expect(decoded.training_contract.evaluation_trade_policy_artifact_id).toBe(
       policyArtifactId,
     );
 
@@ -84,7 +86,7 @@ describe('generated research-model API decoder', () => {
         reason: spec.reason,
         thesis: spec.thesis,
         training_contract: spec.training_contract,
-      }).training_contract.trade_policy_artifact_id,
+      }).training_contract.evaluation_trade_policy_artifact_id,
     ).toBe(policyArtifactId);
   });
 

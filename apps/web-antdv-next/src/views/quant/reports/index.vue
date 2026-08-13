@@ -37,7 +37,7 @@ const [RunDrawer, runDrawerApi] = useVbenDrawer({
 
 const { canRun, openRunReport, RunReportModalHost } = useRunReportAction();
 const { canRevoke, revoke } = useReportActions(() => {
-  void gridApi.query();
+  void refreshReportGrid();
 });
 
 const emptyPage = {
@@ -66,7 +66,7 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantReportView>({
               from: (range[0] as string | undefined) || undefined,
               kind: (formValues.kind as any) || undefined,
               page: page.currentPage,
-              profile_id: (formValues.profile_id as string) || undefined,
+              route: (formValues.route as any) || undefined,
               runtime_mode: (formValues.runtime_mode as any) || undefined,
               size: page.pageSize,
               status: (formValues.status as any) || undefined,
@@ -108,6 +108,13 @@ function onActionClick({ code, row }: OnActionClickParams<QuantReportView>) {
   }
 }
 
+async function refreshReportGrid() {
+  if (activeTab.value !== 'reports') return;
+  await nextTick();
+  if (activeTab.value !== 'reports') return;
+  await gridApi.query();
+}
+
 // WS `quant.report` frames are revision hints only. Re-fetch the durable list
 // and surface the committed artifact id; no build state is inferred from WS.
 watch(
@@ -121,9 +128,13 @@ watch(
         }),
       );
     }
-    void gridApi.query();
+    void refreshReportGrid();
   },
 );
+
+watch(activeTab, (tab) => {
+  if (tab === 'reports') void refreshReportGrid();
+});
 
 watch(
   () => route.query.run_id,
@@ -144,7 +155,12 @@ watch(
       <TabPane key="reports" :tab="$t('page.quantReports.tabs.reports')">
         <Grid :table-title="$t('page.quantReports.listTitle')">
           <template #toolbar-tools>
-            <Button v-if="canRun" type="primary" @click="openRunReport">
+            <Button
+              v-if="canRun"
+              data-testid="run-report-open"
+              type="primary"
+              @click="openRunReport"
+            >
               {{ $t('page.quantReports.run.title') }}
             </Button>
           </template>

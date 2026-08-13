@@ -1,6 +1,6 @@
 import { toRaw } from 'vue';
 
-import { $t, $te, i18n } from '#/locales';
+import { $t, $te } from '#/locales';
 
 export interface PolicyJsonSchema {
   $defs?: Record<string, PolicyJsonSchema>;
@@ -83,37 +83,58 @@ export function policySchemaType(schema: PolicyJsonSchema): string | undefined {
     : schema.type;
 }
 
-export function policyFieldLabel(name: string, schema: PolicyJsonSchema) {
-  const translationKey = `page.config.policyField.${name}.label`;
-  if ($te(translationKey)) {
-    return $t(translationKey);
+export function runtimeFieldLabel(
+  resource: string,
+  pointer: string,
+  fallback: string,
+) {
+  const scopedKey = runtimeTranslationKey(resource, pointer, 'label');
+  if ($te(scopedKey)) {
+    return $t(scopedKey);
   }
-  return schema.title && schema.title !== name
-    ? schema.title
-    : name
-        .split('_')
-        .map((part) =>
-          part.length > 0 ? `${part[0]?.toUpperCase()}${part.slice(1)}` : part,
-        )
-        .join(' ');
+  return fallback;
 }
 
-export function policyFieldDescription(
-  name: string,
-  schema: PolicyJsonSchema,
-): string | undefined {
-  const translationKey = `page.config.policyField.${name}.description`;
-  if ($te(translationKey)) {
-    return $t(translationKey);
+export function runtimeFieldDescription(
+  resource: string,
+  pointer: string,
+  fallback: string,
+) {
+  const scopedKey = runtimeTranslationKey(resource, pointer, 'description');
+  if ($te(scopedKey)) {
+    return $t(scopedKey);
   }
-  if (i18n.global.locale.value === 'zh-CN') {
-    return undefined;
+  return fallback;
+}
+
+export function runtimeGroupLabel(resource: string, group: string) {
+  const scopedKey = `page.config.runtimeGroup.${resource}.${group.replaceAll('/', '.')}`;
+  if ($te(scopedKey)) {
+    return $t(scopedKey);
   }
-  return schema.description
-    ?.replaceAll('`', '')
-    .replaceAll('**', '')
-    .replaceAll(/\n+/g, ' ')
-    .trim();
+  return group
+    .split('/')
+    .map((segment) => humanizePolicyName(segment))
+    .join(' / ');
+}
+
+function runtimeTranslationKey(
+  resource: string,
+  pointer: string,
+  suffix: 'description' | 'label',
+) {
+  return `page.config.runtimeField.${resource}.${pointer
+    .split('/')
+    .filter(Boolean)
+    .join('.')}.${suffix}`;
+}
+
+function humanizePolicyName(value: string) {
+  return value
+    .split('_')
+    .filter(Boolean)
+    .map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`)
+    .join(' ');
 }
 
 export function policyEnumValueLabel(value: unknown): string {

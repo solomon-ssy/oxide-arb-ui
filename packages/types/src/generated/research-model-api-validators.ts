@@ -9,7 +9,7 @@ const ucs2Length =
     ? ucs2LengthRuntime
     : ucs2LengthRuntime.default;
 ('use strict');
-export const validateCreateModelSpec = validate34;
+export const validateCreateModelSpec = validate37;
 const schema32 = {
   description:
     'Inbound body for `POST /research/model-specs`.\n\nA model spec is the **authoring root** of the offline research lifecycle:\nthe operator declares the model family, prediction horizon, and feature /\nlabel schema versions the downstream dataset build and training runs bind\nto. A spec and every trained model version are immutable; serving role is\nderived only from a governed route generation.\n\n`model_family` deserializes from its canonical wire label (`"weighted_factor"`,\n`"classical_random_forest"`, `"hold_vs_exit_weighted"`, …); an unknown label\nis rejected at the boundary with `400`.',
@@ -64,7 +64,7 @@ const schema32 = {
     },
     training_contract: {
       description:
-        'Frozen target label/horizon and CV folds. Training cannot override it.',
+        'Frozen typed target, evaluation-policy binding, and CV folds.\nTraining cannot override these semantics.',
       $ref: '#/$defs/ModelTrainingContract',
     },
   },
@@ -132,42 +132,6 @@ const schema39 = {
   },
   additionalProperties: false,
   required: ['summary', 'hypothesis', 'limitations'],
-};
-const schema40 = {
-  description:
-    'Frozen supervised-target and cross-validation policy owned by a model spec.\nTraining requests cannot override these fields.',
-  type: 'object',
-  properties: {
-    target_label_horizon_secs: {
-      description: 'Target horizon (`0` for horizon-independent labels).',
-      type: 'integer',
-      minimum: 0,
-      maximum: 9007199254740991,
-    },
-    target_label_name: {
-      description: 'Governed label name materialized in the frozen dataset.',
-      type: 'string',
-    },
-    trade_policy_artifact_id: {
-      description:
-        'Required for executable policy-derived targets; absent for unrelated labels.',
-      type: ['string', 'null'],
-      format: 'uuid',
-    },
-    validation_folds: {
-      description:
-        'Rolling validation fold count. Every fold fits its own transform.',
-      type: 'integer',
-      minimum: 0,
-      maximum: 4294967295,
-    },
-  },
-  additionalProperties: false,
-  required: [
-    'target_label_name',
-    'target_label_horizon_secs',
-    'validation_folds',
-  ],
 };
 const func1 = Object.prototype.hasOwnProperty;
 const func2 = ucs2Length;
@@ -541,8 +505,73 @@ validate22.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
+const schema40 = {
+  description:
+    'Frozen supervised-target and cross-validation policy owned by a model spec.\nTraining requests cannot override these fields.',
+  type: 'object',
+  properties: {
+    evaluation_trade_policy_artifact_id: {
+      description:
+        'Published policy used only for OOS executable evaluation and Route\nreadiness. It does not generate or redefine the supervised target.',
+      type: ['string', 'null'],
+      format: 'uuid',
+    },
+    target: {
+      description:
+        'Closed task whose exact label name and horizon are derived, never typed\nas an arbitrary string by an operator.',
+      $ref: '#/$defs/ModelTrainingTarget',
+    },
+    validation_folds: {
+      description:
+        'Rolling validation fold count. Every fold fits its own transform.',
+      type: 'integer',
+      minimum: 0,
+      maximum: 4294967295,
+    },
+  },
+  additionalProperties: false,
+  required: ['target', 'validation_folds'],
+};
+const schema41 = {
+  description:
+    "Closed supervised-task taxonomy for production model specifications.\n\nA Buy model forecasts the selected token's terminal redemption fraction.\nExecutable prices, fills, fees, exits, and capital costs belong to the\nindependently frozen Trade Policy evaluation and global portfolio layers;\nthey are never folded into this forecasting target. The sell-side scorer\nowns the only other supported task.",
+  oneOf: [
+    {
+      description:
+        'Calibrated expected terminal payout in `[0, 1]` for a canonical token.',
+      type: 'object',
+      properties: { kind: { type: 'string', const: 'outcome_payout' } },
+      additionalProperties: false,
+      required: ['kind'],
+    },
+    {
+      description:
+        'Research-only forward mark-return regression target. It is valid for\noffline model comparison but cannot become a promoted Buy Route because\nit does not provide a calibrated payout distribution.',
+      type: 'object',
+      properties: {
+        horizon_secs: {
+          description: 'Exact forward-label horizon in seconds.',
+          type: 'integer',
+          minimum: 0,
+          maximum: 9007199254740991,
+        },
+        kind: { type: 'string', const: 'forward_return' },
+      },
+      additionalProperties: false,
+      required: ['kind', 'horizon_secs'],
+    },
+    {
+      description:
+        'Executable advantage, in bps, of exiting a held lot instead of holding.',
+      type: 'object',
+      properties: { kind: { type: 'string', const: 'hold_vs_exit_alpha' } },
+      additionalProperties: false,
+      required: ['kind'],
+    },
+  ],
+};
 const formats0 = /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
-function validate34(
+function validate26(
   data,
   {
     instancePath = '',
@@ -554,7 +583,590 @@ function validate34(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate34.evaluated;
+  const evaluated0 = validate26.evaluated;
+  if (evaluated0.dynamicProps) {
+    evaluated0.props = undefined;
+  }
+  if (evaluated0.dynamicItems) {
+    evaluated0.items = undefined;
+  }
+  if (data && typeof data == 'object' && !Array.isArray(data)) {
+    if (data.target === undefined) {
+      const err0 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'target' },
+        message: "must have required property '" + 'target' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    }
+    if (data.validation_folds === undefined) {
+      const err1 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'validation_folds' },
+        message: "must have required property '" + 'validation_folds' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err1];
+      } else {
+        vErrors.push(err1);
+      }
+      errors++;
+    }
+    for (const key0 in data) {
+      if (
+        !(
+          key0 === 'evaluation_trade_policy_artifact_id' ||
+          key0 === 'target' ||
+          key0 === 'validation_folds'
+        )
+      ) {
+        const err2 = {
+          instancePath,
+          schemaPath: '#/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: key0 },
+          message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err2];
+        } else {
+          vErrors.push(err2);
+        }
+        errors++;
+      }
+    }
+    if (data.evaluation_trade_policy_artifact_id !== undefined) {
+      let data0 = data.evaluation_trade_policy_artifact_id;
+      if (typeof data0 !== 'string' && data0 !== null) {
+        const err3 = {
+          instancePath: instancePath + '/evaluation_trade_policy_artifact_id',
+          schemaPath: '#/properties/evaluation_trade_policy_artifact_id/type',
+          keyword: 'type',
+          params: {
+            type: schema40.properties.evaluation_trade_policy_artifact_id.type,
+          },
+          message: 'must be string,null',
+        };
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+      if (typeof data0 === 'string') {
+        if (!formats0.test(data0)) {
+          const err4 = {
+            instancePath: instancePath + '/evaluation_trade_policy_artifact_id',
+            schemaPath:
+              '#/properties/evaluation_trade_policy_artifact_id/format',
+            keyword: 'format',
+            params: { format: 'uuid' },
+            message: 'must match format "' + 'uuid' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err4];
+          } else {
+            vErrors.push(err4);
+          }
+          errors++;
+        }
+      }
+    }
+    if (data.target !== undefined) {
+      let data1 = data.target;
+      const _errs6 = errors;
+      let valid2 = false;
+      let passing0 = null;
+      const _errs7 = errors;
+      if (data1 && typeof data1 == 'object' && !Array.isArray(data1)) {
+        if (data1.kind === undefined) {
+          const err5 = {
+            instancePath: instancePath + '/target',
+            schemaPath: '#/$defs/ModelTrainingTarget/oneOf/0/required',
+            keyword: 'required',
+            params: { missingProperty: 'kind' },
+            message: "must have required property '" + 'kind' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err5];
+          } else {
+            vErrors.push(err5);
+          }
+          errors++;
+        }
+        for (const key1 in data1) {
+          if (!(key1 === 'kind')) {
+            const err6 = {
+              instancePath: instancePath + '/target',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/0/additionalProperties',
+              keyword: 'additionalProperties',
+              params: { additionalProperty: key1 },
+              message: 'must NOT have additional properties',
+            };
+            if (vErrors === null) {
+              vErrors = [err6];
+            } else {
+              vErrors.push(err6);
+            }
+            errors++;
+          }
+        }
+        if (data1.kind !== undefined) {
+          let data2 = data1.kind;
+          if (typeof data2 !== 'string') {
+            const err7 = {
+              instancePath: instancePath + '/target/kind',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/0/properties/kind/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err7];
+            } else {
+              vErrors.push(err7);
+            }
+            errors++;
+          }
+          if ('outcome_payout' !== data2) {
+            const err8 = {
+              instancePath: instancePath + '/target/kind',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/0/properties/kind/const',
+              keyword: 'const',
+              params: { allowedValue: 'outcome_payout' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err8];
+            } else {
+              vErrors.push(err8);
+            }
+            errors++;
+          }
+        }
+      } else {
+        const err9 = {
+          instancePath: instancePath + '/target',
+          schemaPath: '#/$defs/ModelTrainingTarget/oneOf/0/type',
+          keyword: 'type',
+          params: { type: 'object' },
+          message: 'must be object',
+        };
+        if (vErrors === null) {
+          vErrors = [err9];
+        } else {
+          vErrors.push(err9);
+        }
+        errors++;
+      }
+      var _valid0 = _errs7 === errors;
+      if (_valid0) {
+        valid2 = true;
+        passing0 = 0;
+        var props0 = true;
+      }
+      const _errs12 = errors;
+      if (data1 && typeof data1 == 'object' && !Array.isArray(data1)) {
+        if (data1.kind === undefined) {
+          const err10 = {
+            instancePath: instancePath + '/target',
+            schemaPath: '#/$defs/ModelTrainingTarget/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'kind' },
+            message: "must have required property '" + 'kind' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err10];
+          } else {
+            vErrors.push(err10);
+          }
+          errors++;
+        }
+        if (data1.horizon_secs === undefined) {
+          const err11 = {
+            instancePath: instancePath + '/target',
+            schemaPath: '#/$defs/ModelTrainingTarget/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'horizon_secs' },
+            message: "must have required property '" + 'horizon_secs' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err11];
+          } else {
+            vErrors.push(err11);
+          }
+          errors++;
+        }
+        for (const key2 in data1) {
+          if (!(key2 === 'horizon_secs' || key2 === 'kind')) {
+            const err12 = {
+              instancePath: instancePath + '/target',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/1/additionalProperties',
+              keyword: 'additionalProperties',
+              params: { additionalProperty: key2 },
+              message: 'must NOT have additional properties',
+            };
+            if (vErrors === null) {
+              vErrors = [err12];
+            } else {
+              vErrors.push(err12);
+            }
+            errors++;
+          }
+        }
+        if (data1.horizon_secs !== undefined) {
+          let data3 = data1.horizon_secs;
+          if (
+            !(
+              typeof data3 == 'number' &&
+              !(data3 % 1) &&
+              !isNaN(data3) &&
+              isFinite(data3)
+            )
+          ) {
+            const err13 = {
+              instancePath: instancePath + '/target/horizon_secs',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/1/properties/horizon_secs/type',
+              keyword: 'type',
+              params: { type: 'integer' },
+              message: 'must be integer',
+            };
+            if (vErrors === null) {
+              vErrors = [err13];
+            } else {
+              vErrors.push(err13);
+            }
+            errors++;
+          }
+          if (typeof data3 == 'number' && isFinite(data3)) {
+            if (data3 > 9007199254740991 || isNaN(data3)) {
+              const err14 = {
+                instancePath: instancePath + '/target/horizon_secs',
+                schemaPath:
+                  '#/$defs/ModelTrainingTarget/oneOf/1/properties/horizon_secs/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 9007199254740991 },
+                message: 'must be <= 9007199254740991',
+              };
+              if (vErrors === null) {
+                vErrors = [err14];
+              } else {
+                vErrors.push(err14);
+              }
+              errors++;
+            }
+            if (data3 < 0 || isNaN(data3)) {
+              const err15 = {
+                instancePath: instancePath + '/target/horizon_secs',
+                schemaPath:
+                  '#/$defs/ModelTrainingTarget/oneOf/1/properties/horizon_secs/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err15];
+              } else {
+                vErrors.push(err15);
+              }
+              errors++;
+            }
+          }
+        }
+        if (data1.kind !== undefined) {
+          let data4 = data1.kind;
+          if (typeof data4 !== 'string') {
+            const err16 = {
+              instancePath: instancePath + '/target/kind',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/1/properties/kind/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err16];
+            } else {
+              vErrors.push(err16);
+            }
+            errors++;
+          }
+          if ('forward_return' !== data4) {
+            const err17 = {
+              instancePath: instancePath + '/target/kind',
+              schemaPath:
+                '#/$defs/ModelTrainingTarget/oneOf/1/properties/kind/const',
+              keyword: 'const',
+              params: { allowedValue: 'forward_return' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err17];
+            } else {
+              vErrors.push(err17);
+            }
+            errors++;
+          }
+        }
+      } else {
+        const err18 = {
+          instancePath: instancePath + '/target',
+          schemaPath: '#/$defs/ModelTrainingTarget/oneOf/1/type',
+          keyword: 'type',
+          params: { type: 'object' },
+          message: 'must be object',
+        };
+        if (vErrors === null) {
+          vErrors = [err18];
+        } else {
+          vErrors.push(err18);
+        }
+        errors++;
+      }
+      var _valid0 = _errs12 === errors;
+      if (_valid0 && valid2) {
+        valid2 = false;
+        passing0 = [passing0, 1];
+      } else {
+        if (_valid0) {
+          valid2 = true;
+          passing0 = 1;
+          if (props0 !== true) {
+            props0 = true;
+          }
+        }
+        const _errs19 = errors;
+        if (data1 && typeof data1 == 'object' && !Array.isArray(data1)) {
+          if (data1.kind === undefined) {
+            const err19 = {
+              instancePath: instancePath + '/target',
+              schemaPath: '#/$defs/ModelTrainingTarget/oneOf/2/required',
+              keyword: 'required',
+              params: { missingProperty: 'kind' },
+              message: "must have required property '" + 'kind' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err19];
+            } else {
+              vErrors.push(err19);
+            }
+            errors++;
+          }
+          for (const key3 in data1) {
+            if (!(key3 === 'kind')) {
+              const err20 = {
+                instancePath: instancePath + '/target',
+                schemaPath:
+                  '#/$defs/ModelTrainingTarget/oneOf/2/additionalProperties',
+                keyword: 'additionalProperties',
+                params: { additionalProperty: key3 },
+                message: 'must NOT have additional properties',
+              };
+              if (vErrors === null) {
+                vErrors = [err20];
+              } else {
+                vErrors.push(err20);
+              }
+              errors++;
+            }
+          }
+          if (data1.kind !== undefined) {
+            let data5 = data1.kind;
+            if (typeof data5 !== 'string') {
+              const err21 = {
+                instancePath: instancePath + '/target/kind',
+                schemaPath:
+                  '#/$defs/ModelTrainingTarget/oneOf/2/properties/kind/type',
+                keyword: 'type',
+                params: { type: 'string' },
+                message: 'must be string',
+              };
+              if (vErrors === null) {
+                vErrors = [err21];
+              } else {
+                vErrors.push(err21);
+              }
+              errors++;
+            }
+            if ('hold_vs_exit_alpha' !== data5) {
+              const err22 = {
+                instancePath: instancePath + '/target/kind',
+                schemaPath:
+                  '#/$defs/ModelTrainingTarget/oneOf/2/properties/kind/const',
+                keyword: 'const',
+                params: { allowedValue: 'hold_vs_exit_alpha' },
+                message: 'must be equal to constant',
+              };
+              if (vErrors === null) {
+                vErrors = [err22];
+              } else {
+                vErrors.push(err22);
+              }
+              errors++;
+            }
+          }
+        } else {
+          const err23 = {
+            instancePath: instancePath + '/target',
+            schemaPath: '#/$defs/ModelTrainingTarget/oneOf/2/type',
+            keyword: 'type',
+            params: { type: 'object' },
+            message: 'must be object',
+          };
+          if (vErrors === null) {
+            vErrors = [err23];
+          } else {
+            vErrors.push(err23);
+          }
+          errors++;
+        }
+        var _valid0 = _errs19 === errors;
+        if (_valid0 && valid2) {
+          valid2 = false;
+          passing0 = [passing0, 2];
+        } else {
+          if (_valid0) {
+            valid2 = true;
+            passing0 = 2;
+            if (props0 !== true) {
+              props0 = true;
+            }
+          }
+        }
+      }
+      if (!valid2) {
+        const err24 = {
+          instancePath: instancePath + '/target',
+          schemaPath: '#/$defs/ModelTrainingTarget/oneOf',
+          keyword: 'oneOf',
+          params: { passingSchemas: passing0 },
+          message: 'must match exactly one schema in oneOf',
+        };
+        if (vErrors === null) {
+          vErrors = [err24];
+        } else {
+          vErrors.push(err24);
+        }
+        errors++;
+      } else {
+        errors = _errs6;
+        if (vErrors !== null) {
+          if (_errs6) {
+            vErrors.length = _errs6;
+          } else {
+            vErrors = null;
+          }
+        }
+      }
+    }
+    if (data.validation_folds !== undefined) {
+      let data6 = data.validation_folds;
+      if (
+        !(
+          typeof data6 == 'number' &&
+          !(data6 % 1) &&
+          !isNaN(data6) &&
+          isFinite(data6)
+        )
+      ) {
+        const err25 = {
+          instancePath: instancePath + '/validation_folds',
+          schemaPath: '#/properties/validation_folds/type',
+          keyword: 'type',
+          params: { type: 'integer' },
+          message: 'must be integer',
+        };
+        if (vErrors === null) {
+          vErrors = [err25];
+        } else {
+          vErrors.push(err25);
+        }
+        errors++;
+      }
+      if (typeof data6 == 'number' && isFinite(data6)) {
+        if (data6 > 4294967295 || isNaN(data6)) {
+          const err26 = {
+            instancePath: instancePath + '/validation_folds',
+            schemaPath: '#/properties/validation_folds/maximum',
+            keyword: 'maximum',
+            params: { comparison: '<=', limit: 4294967295 },
+            message: 'must be <= 4294967295',
+          };
+          if (vErrors === null) {
+            vErrors = [err26];
+          } else {
+            vErrors.push(err26);
+          }
+          errors++;
+        }
+        if (data6 < 0 || isNaN(data6)) {
+          const err27 = {
+            instancePath: instancePath + '/validation_folds',
+            schemaPath: '#/properties/validation_folds/minimum',
+            keyword: 'minimum',
+            params: { comparison: '>=', limit: 0 },
+            message: 'must be >= 0',
+          };
+          if (vErrors === null) {
+            vErrors = [err27];
+          } else {
+            vErrors.push(err27);
+          }
+          errors++;
+        }
+      }
+    }
+  } else {
+    const err28 = {
+      instancePath,
+      schemaPath: '#/type',
+      keyword: 'type',
+      params: { type: 'object' },
+      message: 'must be object',
+    };
+    if (vErrors === null) {
+      vErrors = [err28];
+    } else {
+      vErrors.push(err28);
+    }
+    errors++;
+  }
+  validate26.errors = vErrors;
+  return errors === 0;
+}
+validate26.evaluated = {
+  props: true,
+  dynamicProps: false,
+  dynamicItems: false,
+};
+function validate37(
+  data,
+  {
+    instancePath = '',
+    parentData,
+    parentDataProperty,
+    rootData = data,
+    dynamicAnchors = {},
+  } = {},
+) {
+  let vErrors = null;
+  let errors = 0;
+  const evaluated0 = validate37.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -1249,285 +1861,24 @@ function validate34(
       }
     }
     if (data.training_contract !== undefined) {
-      let data12 = data.training_contract;
-      if (data12 && typeof data12 == 'object' && !Array.isArray(data12)) {
-        if (data12.target_label_name === undefined) {
-          const err37 = {
-            instancePath: instancePath + '/training_contract',
-            schemaPath: '#/$defs/ModelTrainingContract/required',
-            keyword: 'required',
-            params: { missingProperty: 'target_label_name' },
-            message:
-              "must have required property '" + 'target_label_name' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err37];
-          } else {
-            vErrors.push(err37);
-          }
-          errors++;
-        }
-        if (data12.target_label_horizon_secs === undefined) {
-          const err38 = {
-            instancePath: instancePath + '/training_contract',
-            schemaPath: '#/$defs/ModelTrainingContract/required',
-            keyword: 'required',
-            params: { missingProperty: 'target_label_horizon_secs' },
-            message:
-              "must have required property '" +
-              'target_label_horizon_secs' +
-              "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err38];
-          } else {
-            vErrors.push(err38);
-          }
-          errors++;
-        }
-        if (data12.validation_folds === undefined) {
-          const err39 = {
-            instancePath: instancePath + '/training_contract',
-            schemaPath: '#/$defs/ModelTrainingContract/required',
-            keyword: 'required',
-            params: { missingProperty: 'validation_folds' },
-            message: "must have required property '" + 'validation_folds' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err39];
-          } else {
-            vErrors.push(err39);
-          }
-          errors++;
-        }
-        for (const key2 in data12) {
-          if (
-            !(
-              key2 === 'target_label_horizon_secs' ||
-              key2 === 'target_label_name' ||
-              key2 === 'trade_policy_artifact_id' ||
-              key2 === 'validation_folds'
-            )
-          ) {
-            const err40 = {
-              instancePath: instancePath + '/training_contract',
-              schemaPath: '#/$defs/ModelTrainingContract/additionalProperties',
-              keyword: 'additionalProperties',
-              params: { additionalProperty: key2 },
-              message: 'must NOT have additional properties',
-            };
-            if (vErrors === null) {
-              vErrors = [err40];
-            } else {
-              vErrors.push(err40);
-            }
-            errors++;
-          }
-        }
-        if (data12.target_label_horizon_secs !== undefined) {
-          let data13 = data12.target_label_horizon_secs;
-          if (
-            !(
-              typeof data13 == 'number' &&
-              !(data13 % 1) &&
-              !isNaN(data13) &&
-              isFinite(data13)
-            )
-          ) {
-            const err41 = {
-              instancePath:
-                instancePath + '/training_contract/target_label_horizon_secs',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/target_label_horizon_secs/type',
-              keyword: 'type',
-              params: { type: 'integer' },
-              message: 'must be integer',
-            };
-            if (vErrors === null) {
-              vErrors = [err41];
-            } else {
-              vErrors.push(err41);
-            }
-            errors++;
-          }
-          if (typeof data13 == 'number' && isFinite(data13)) {
-            if (data13 > 9007199254740991 || isNaN(data13)) {
-              const err42 = {
-                instancePath:
-                  instancePath + '/training_contract/target_label_horizon_secs',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/target_label_horizon_secs/maximum',
-                keyword: 'maximum',
-                params: { comparison: '<=', limit: 9007199254740991 },
-                message: 'must be <= 9007199254740991',
-              };
-              if (vErrors === null) {
-                vErrors = [err42];
-              } else {
-                vErrors.push(err42);
-              }
-              errors++;
-            }
-            if (data13 < 0 || isNaN(data13)) {
-              const err43 = {
-                instancePath:
-                  instancePath + '/training_contract/target_label_horizon_secs',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/target_label_horizon_secs/minimum',
-                keyword: 'minimum',
-                params: { comparison: '>=', limit: 0 },
-                message: 'must be >= 0',
-              };
-              if (vErrors === null) {
-                vErrors = [err43];
-              } else {
-                vErrors.push(err43);
-              }
-              errors++;
-            }
-          }
-        }
-        if (data12.target_label_name !== undefined) {
-          if (typeof data12.target_label_name !== 'string') {
-            const err44 = {
-              instancePath:
-                instancePath + '/training_contract/target_label_name',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/target_label_name/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err44];
-            } else {
-              vErrors.push(err44);
-            }
-            errors++;
-          }
-        }
-        if (data12.trade_policy_artifact_id !== undefined) {
-          let data15 = data12.trade_policy_artifact_id;
-          if (typeof data15 !== 'string' && data15 !== null) {
-            const err45 = {
-              instancePath:
-                instancePath + '/training_contract/trade_policy_artifact_id',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/trade_policy_artifact_id/type',
-              keyword: 'type',
-              params: {
-                type: schema40.properties.trade_policy_artifact_id.type,
-              },
-              message: 'must be string,null',
-            };
-            if (vErrors === null) {
-              vErrors = [err45];
-            } else {
-              vErrors.push(err45);
-            }
-            errors++;
-          }
-          if (typeof data15 === 'string') {
-            if (!formats0.test(data15)) {
-              const err46 = {
-                instancePath:
-                  instancePath + '/training_contract/trade_policy_artifact_id',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/trade_policy_artifact_id/format',
-                keyword: 'format',
-                params: { format: 'uuid' },
-                message: 'must match format "' + 'uuid' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err46];
-              } else {
-                vErrors.push(err46);
-              }
-              errors++;
-            }
-          }
-        }
-        if (data12.validation_folds !== undefined) {
-          let data16 = data12.validation_folds;
-          if (
-            !(
-              typeof data16 == 'number' &&
-              !(data16 % 1) &&
-              !isNaN(data16) &&
-              isFinite(data16)
-            )
-          ) {
-            const err47 = {
-              instancePath:
-                instancePath + '/training_contract/validation_folds',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/validation_folds/type',
-              keyword: 'type',
-              params: { type: 'integer' },
-              message: 'must be integer',
-            };
-            if (vErrors === null) {
-              vErrors = [err47];
-            } else {
-              vErrors.push(err47);
-            }
-            errors++;
-          }
-          if (typeof data16 == 'number' && isFinite(data16)) {
-            if (data16 > 4294967295 || isNaN(data16)) {
-              const err48 = {
-                instancePath:
-                  instancePath + '/training_contract/validation_folds',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/validation_folds/maximum',
-                keyword: 'maximum',
-                params: { comparison: '<=', limit: 4294967295 },
-                message: 'must be <= 4294967295',
-              };
-              if (vErrors === null) {
-                vErrors = [err48];
-              } else {
-                vErrors.push(err48);
-              }
-              errors++;
-            }
-            if (data16 < 0 || isNaN(data16)) {
-              const err49 = {
-                instancePath:
-                  instancePath + '/training_contract/validation_folds',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/validation_folds/minimum',
-                keyword: 'minimum',
-                params: { comparison: '>=', limit: 0 },
-                message: 'must be >= 0',
-              };
-              if (vErrors === null) {
-                vErrors = [err49];
-              } else {
-                vErrors.push(err49);
-              }
-              errors++;
-            }
-          }
-        }
-      } else {
-        const err50 = {
+      if (
+        !validate26(data.training_contract, {
           instancePath: instancePath + '/training_contract',
-          schemaPath: '#/$defs/ModelTrainingContract/type',
-          keyword: 'type',
-          params: { type: 'object' },
-          message: 'must be object',
-        };
-        if (vErrors === null) {
-          vErrors = [err50];
-        } else {
-          vErrors.push(err50);
-        }
-        errors++;
+          parentData: data,
+          parentDataProperty: 'training_contract',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate26.errors
+            : vErrors.concat(validate26.errors);
+        errors = vErrors.length;
       }
     }
   } else {
-    const err51 = {
+    const err37 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -1535,22 +1886,22 @@ function validate34(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err51];
+      vErrors = [err37];
     } else {
-      vErrors.push(err51);
+      vErrors.push(err37);
     }
     errors++;
   }
-  validate34.errors = vErrors;
+  validate37.errors = vErrors;
   return errors === 0;
 }
-validate34.evaluated = {
+validate37.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateFeatureContract = validate36;
-const schema41 = {
+export const validateFeatureContract = validate40;
+const schema42 = {
   description:
     'Active, hash-bound feature catalog used by model-spec authoring.',
   type: 'object',
@@ -1566,7 +1917,7 @@ const schema41 = {
   required: ['feature_schema_hash', 'feature_schema_version', 'features'],
 };
 const pattern4 = new RegExp('^blake3:[0-9a-f]{64}$', 'u');
-const schema43 = {
+const schema44 = {
   description: 'One raw feature available to model input contracts.',
   type: 'object',
   properties: {
@@ -1593,7 +1944,7 @@ const schema43 = {
     'staleness_policy',
   ],
 };
-const schema44 = {
+const schema45 = {
   description:
     'Supported feature families for v3 feature generation.\n\nOne family ≈ one feature-builder group. The set gates which groups the\nfeature plane computes (`features.enabled_feature_families`) and tags each\n`FeatureSpec` in the research schema registry, so config and the compute\nschema share a single, precise taxonomy.',
   oneOf: [
@@ -1633,7 +1984,7 @@ const schema44 = {
     },
   ],
 };
-const schema45 = {
+const schema46 = {
   description: "Stable wire projection of one feature's missing-value policy.",
   type: 'object',
   properties: {
@@ -1650,7 +2001,7 @@ const schema45 = {
   additionalProperties: false,
   required: ['policy'],
 };
-const schema46 = {
+const schema47 = {
   description:
     'The dimensional kind of a present feature value.\n\nCarries a stable `i8` code persisted to `quant_feature_event.value_kind`.\nAppend-only contract: never renumber an existing variant.',
   oneOf: [
@@ -1676,7 +2027,7 @@ const schema46 = {
     },
   ],
 };
-function validate28(
+function validate30(
   data,
   {
     instancePath = '',
@@ -1688,7 +2039,7 @@ function validate28(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate28.evaluated;
+  const evaluated0 = validate30.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -1832,7 +2183,7 @@ function validate28(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema43.properties, key0)) {
+      if (!func1.call(schema44.properties, key0)) {
         const err9 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -2253,7 +2604,7 @@ function validate28(
               instancePath: instancePath + '/null_policy/value',
               schemaPath: '#/$defs/FeatureNullPolicyView/properties/value/type',
               keyword: 'type',
-              params: { type: schema45.properties.value.type },
+              params: { type: schema46.properties.value.type },
               message: 'must be string,null',
             };
             if (vErrors === null) {
@@ -2675,15 +3026,15 @@ function validate28(
     }
     errors++;
   }
-  validate28.errors = vErrors;
+  validate30.errors = vErrors;
   return errors === 0;
 }
-validate28.evaluated = {
+validate30.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate36(
+function validate40(
   data,
   {
     instancePath = '',
@@ -2695,7 +3046,7 @@ function validate36(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate36.evaluated;
+  const evaluated0 = validate40.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -2869,7 +3220,7 @@ function validate36(
         const len0 = data2.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate28(data2[i0], {
+            !validate30(data2[i0], {
               instancePath: instancePath + '/features/' + i0,
               parentData: data2,
               parentDataProperty: i0,
@@ -2879,8 +3230,8 @@ function validate36(
           ) {
             vErrors =
               vErrors === null
-                ? validate28.errors
-                : vErrors.concat(validate28.errors);
+                ? validate30.errors
+                : vErrors.concat(validate30.errors);
             errors = vErrors.length;
           }
         }
@@ -2915,16 +3266,16 @@ function validate36(
     }
     errors++;
   }
-  validate36.errors = vErrors;
+  validate40.errors = vErrors;
   return errors === 0;
 }
-validate36.evaluated = {
+validate40.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateModelSpec = validate38;
-const schema47 = {
+export const validateModelSpec = validate42;
+const schema48 = {
   description:
     'Outbound projection for a model specification row (the training entry point:\nthe operator picks a spec before planning a dataset or training a version).',
   type: 'object',
@@ -2967,7 +3318,7 @@ const schema47 = {
   ],
 };
 const formats2 = fullFormats['date-time'];
-function validate38(
+function validate42(
   data,
   {
     instancePath = '',
@@ -2979,7 +3330,7 @@ function validate38(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate38.evaluated;
+  const evaluated0 = validate42.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -3185,7 +3536,7 @@ function validate38(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema47.properties, key0)) {
+      if (!func1.call(schema48.properties, key0)) {
         const err13 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -3259,7 +3610,7 @@ function validate38(
           instancePath: instancePath + '/created_by_role',
           schemaPath: '#/properties/created_by_role/type',
           keyword: 'type',
-          params: { type: schema47.properties.created_by_role.type },
+          params: { type: schema48.properties.created_by_role.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -3277,7 +3628,7 @@ function validate38(
           instancePath: instancePath + '/created_by_user_id',
           schemaPath: '#/properties/created_by_user_id/type',
           keyword: 'type',
-          params: { type: schema47.properties.created_by_user_id.type },
+          params: { type: schema48.properties.created_by_user_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -3873,285 +4224,24 @@ function validate38(
       }
     }
     if (data.training_contract !== undefined) {
-      let data18 = data.training_contract;
-      if (data18 && typeof data18 == 'object' && !Array.isArray(data18)) {
-        if (data18.target_label_name === undefined) {
-          const err49 = {
-            instancePath: instancePath + '/training_contract',
-            schemaPath: '#/$defs/ModelTrainingContract/required',
-            keyword: 'required',
-            params: { missingProperty: 'target_label_name' },
-            message:
-              "must have required property '" + 'target_label_name' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err49];
-          } else {
-            vErrors.push(err49);
-          }
-          errors++;
-        }
-        if (data18.target_label_horizon_secs === undefined) {
-          const err50 = {
-            instancePath: instancePath + '/training_contract',
-            schemaPath: '#/$defs/ModelTrainingContract/required',
-            keyword: 'required',
-            params: { missingProperty: 'target_label_horizon_secs' },
-            message:
-              "must have required property '" +
-              'target_label_horizon_secs' +
-              "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err50];
-          } else {
-            vErrors.push(err50);
-          }
-          errors++;
-        }
-        if (data18.validation_folds === undefined) {
-          const err51 = {
-            instancePath: instancePath + '/training_contract',
-            schemaPath: '#/$defs/ModelTrainingContract/required',
-            keyword: 'required',
-            params: { missingProperty: 'validation_folds' },
-            message: "must have required property '" + 'validation_folds' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err51];
-          } else {
-            vErrors.push(err51);
-          }
-          errors++;
-        }
-        for (const key2 in data18) {
-          if (
-            !(
-              key2 === 'target_label_horizon_secs' ||
-              key2 === 'target_label_name' ||
-              key2 === 'trade_policy_artifact_id' ||
-              key2 === 'validation_folds'
-            )
-          ) {
-            const err52 = {
-              instancePath: instancePath + '/training_contract',
-              schemaPath: '#/$defs/ModelTrainingContract/additionalProperties',
-              keyword: 'additionalProperties',
-              params: { additionalProperty: key2 },
-              message: 'must NOT have additional properties',
-            };
-            if (vErrors === null) {
-              vErrors = [err52];
-            } else {
-              vErrors.push(err52);
-            }
-            errors++;
-          }
-        }
-        if (data18.target_label_horizon_secs !== undefined) {
-          let data19 = data18.target_label_horizon_secs;
-          if (
-            !(
-              typeof data19 == 'number' &&
-              !(data19 % 1) &&
-              !isNaN(data19) &&
-              isFinite(data19)
-            )
-          ) {
-            const err53 = {
-              instancePath:
-                instancePath + '/training_contract/target_label_horizon_secs',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/target_label_horizon_secs/type',
-              keyword: 'type',
-              params: { type: 'integer' },
-              message: 'must be integer',
-            };
-            if (vErrors === null) {
-              vErrors = [err53];
-            } else {
-              vErrors.push(err53);
-            }
-            errors++;
-          }
-          if (typeof data19 == 'number' && isFinite(data19)) {
-            if (data19 > 9007199254740991 || isNaN(data19)) {
-              const err54 = {
-                instancePath:
-                  instancePath + '/training_contract/target_label_horizon_secs',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/target_label_horizon_secs/maximum',
-                keyword: 'maximum',
-                params: { comparison: '<=', limit: 9007199254740991 },
-                message: 'must be <= 9007199254740991',
-              };
-              if (vErrors === null) {
-                vErrors = [err54];
-              } else {
-                vErrors.push(err54);
-              }
-              errors++;
-            }
-            if (data19 < 0 || isNaN(data19)) {
-              const err55 = {
-                instancePath:
-                  instancePath + '/training_contract/target_label_horizon_secs',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/target_label_horizon_secs/minimum',
-                keyword: 'minimum',
-                params: { comparison: '>=', limit: 0 },
-                message: 'must be >= 0',
-              };
-              if (vErrors === null) {
-                vErrors = [err55];
-              } else {
-                vErrors.push(err55);
-              }
-              errors++;
-            }
-          }
-        }
-        if (data18.target_label_name !== undefined) {
-          if (typeof data18.target_label_name !== 'string') {
-            const err56 = {
-              instancePath:
-                instancePath + '/training_contract/target_label_name',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/target_label_name/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err56];
-            } else {
-              vErrors.push(err56);
-            }
-            errors++;
-          }
-        }
-        if (data18.trade_policy_artifact_id !== undefined) {
-          let data21 = data18.trade_policy_artifact_id;
-          if (typeof data21 !== 'string' && data21 !== null) {
-            const err57 = {
-              instancePath:
-                instancePath + '/training_contract/trade_policy_artifact_id',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/trade_policy_artifact_id/type',
-              keyword: 'type',
-              params: {
-                type: schema40.properties.trade_policy_artifact_id.type,
-              },
-              message: 'must be string,null',
-            };
-            if (vErrors === null) {
-              vErrors = [err57];
-            } else {
-              vErrors.push(err57);
-            }
-            errors++;
-          }
-          if (typeof data21 === 'string') {
-            if (!formats0.test(data21)) {
-              const err58 = {
-                instancePath:
-                  instancePath + '/training_contract/trade_policy_artifact_id',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/trade_policy_artifact_id/format',
-                keyword: 'format',
-                params: { format: 'uuid' },
-                message: 'must match format "' + 'uuid' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err58];
-              } else {
-                vErrors.push(err58);
-              }
-              errors++;
-            }
-          }
-        }
-        if (data18.validation_folds !== undefined) {
-          let data22 = data18.validation_folds;
-          if (
-            !(
-              typeof data22 == 'number' &&
-              !(data22 % 1) &&
-              !isNaN(data22) &&
-              isFinite(data22)
-            )
-          ) {
-            const err59 = {
-              instancePath:
-                instancePath + '/training_contract/validation_folds',
-              schemaPath:
-                '#/$defs/ModelTrainingContract/properties/validation_folds/type',
-              keyword: 'type',
-              params: { type: 'integer' },
-              message: 'must be integer',
-            };
-            if (vErrors === null) {
-              vErrors = [err59];
-            } else {
-              vErrors.push(err59);
-            }
-            errors++;
-          }
-          if (typeof data22 == 'number' && isFinite(data22)) {
-            if (data22 > 4294967295 || isNaN(data22)) {
-              const err60 = {
-                instancePath:
-                  instancePath + '/training_contract/validation_folds',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/validation_folds/maximum',
-                keyword: 'maximum',
-                params: { comparison: '<=', limit: 4294967295 },
-                message: 'must be <= 4294967295',
-              };
-              if (vErrors === null) {
-                vErrors = [err60];
-              } else {
-                vErrors.push(err60);
-              }
-              errors++;
-            }
-            if (data22 < 0 || isNaN(data22)) {
-              const err61 = {
-                instancePath:
-                  instancePath + '/training_contract/validation_folds',
-                schemaPath:
-                  '#/$defs/ModelTrainingContract/properties/validation_folds/minimum',
-                keyword: 'minimum',
-                params: { comparison: '>=', limit: 0 },
-                message: 'must be >= 0',
-              };
-              if (vErrors === null) {
-                vErrors = [err61];
-              } else {
-                vErrors.push(err61);
-              }
-              errors++;
-            }
-          }
-        }
-      } else {
-        const err62 = {
+      if (
+        !validate26(data.training_contract, {
           instancePath: instancePath + '/training_contract',
-          schemaPath: '#/$defs/ModelTrainingContract/type',
-          keyword: 'type',
-          params: { type: 'object' },
-          message: 'must be object',
-        };
-        if (vErrors === null) {
-          vErrors = [err62];
-        } else {
-          vErrors.push(err62);
-        }
-        errors++;
+          parentData: data,
+          parentDataProperty: 'training_contract',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate26.errors
+            : vErrors.concat(validate26.errors);
+        errors = vErrors.length;
       }
     }
   } else {
-    const err63 = {
+    const err49 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -4159,21 +4249,21 @@ function validate38(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err63];
+      vErrors = [err49];
     } else {
-      vErrors.push(err63);
+      vErrors.push(err49);
     }
     errors++;
   }
-  validate38.errors = vErrors;
+  validate42.errors = vErrors;
   return errors === 0;
 }
-validate38.evaluated = {
+validate42.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateRunCpcv = validate40;
+export const validateRunCpcv = validate45;
 const schema53 = {
   description:
     "Inbound body for `POST /research/models/{id}/cpcv-backtest` (the model\nversion id is taken from the path).\n\n`Serialize` is derived so the request can be frozen into a durable\nresearch job's `params_json` and replayed on execute.\n\nModel family, input contract, supervised target, and prediction horizon are\ndeliberately absent: the server resolves them from the model version's\nlinked dataset and immutable model specification.",
@@ -4207,7 +4297,7 @@ const schema53 = {
   additionalProperties: false,
   required: ['training_dataset_id', 'decision_policy_snapshot_id', 'reason'],
 };
-function validate40(
+function validate45(
   data,
   {
     instancePath = '',
@@ -4219,7 +4309,7 @@ function validate40(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate40.evaluated;
+  const evaluated0 = validate45.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -4464,10 +4554,10 @@ function validate40(
     }
     errors++;
   }
-  validate40.errors = vErrors;
+  validate45.errors = vErrors;
   return errors === 0;
 }
-validate40.evaluated = {
+validate45.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
