@@ -57,6 +57,18 @@ const THEME_COLOR_VARIABLES = [
 
 export type ThemeColorVariable = (typeof THEME_COLOR_VARIABLES)[number];
 
+function readThemeColor(cssVariable: ThemeColorVariable): string {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(cssVariable)
+    .trim();
+  const reference = /^var\((--qp-[^)]+)\)$/.exec(raw)?.[1];
+  return reference
+    ? getComputedStyle(document.documentElement)
+        .getPropertyValue(reference)
+        .trim()
+    : raw;
+}
+
 /** Resolve a product HSL token for renderers that cannot consume CSS variables. */
 export function resolveThemeColor(
   cssVariable: ThemeColorVariable,
@@ -65,9 +77,7 @@ export function resolveThemeColor(
   if (typeof document === 'undefined') {
     return 'currentColor';
   }
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(cssVariable)
-    .trim();
+  const value = readThemeColor(cssVariable);
   return value ? `hsl(${value}${alpha ? ` / ${alpha}` : ''})` : 'currentColor';
 }
 

@@ -1,8 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { DATASET_PURPOSES, TRAINING_DATASET_STATUSES } from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Prefilled filters seeded from cross-page deep links (`route.query`). */
 export interface TrainingDatasetInitialFilters {
@@ -22,25 +21,19 @@ export function useTrainingDatasetSearchSchema(
       label: $t('page.research.datasets.filters.modelSpec'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(DATASET_PURPOSES).map((value) => ({
-          label: $t(`enum.datasetPurpose.${value}`),
-          value,
-        })),
+        options: enumOptions('DatasetPurpose'),
       },
       fieldName: 'purpose',
       label: $t('page.research.datasets.filters.purpose'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(TRAINING_DATASET_STATUSES).map((value) => ({
-          label: $t(`enum.trainingDatasetStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('TrainingDatasetStatus'),
       },
       fieldName: 'status',
       label: $t('page.research.datasets.filters.status'),

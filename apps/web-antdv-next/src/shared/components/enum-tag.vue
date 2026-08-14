@@ -87,11 +87,7 @@ watch(
     :data-tone="presentation.tone"
     class="enum-tag"
   >
-    <IconifyIcon
-      v-if="presentation.icon"
-      :class="{ 'enum-running-icon': presentation.tone === 'running' }"
-      :icon="presentation.icon"
-    />
+    <IconifyIcon v-if="presentation.icon" :icon="presentation.icon" />
     <span>{{ translatedLabel }}</span>
   </Tag>
 </template>
@@ -186,15 +182,5 @@ watch(
 
 [data-category-hue='12'] {
   --enum-color: var(--qp-chart-cat-12);
-}
-
-.enum-running-icon {
-  animation: qp-spin var(--qp-motion-slow) linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .enum-running-icon {
-    animation: none;
-  }
 }
 </style>

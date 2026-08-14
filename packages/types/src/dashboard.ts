@@ -7,7 +7,10 @@ import type { IsoDateTime } from './common';
 import type { DataQualitySnapshot } from './data-quality';
 import type { QuantRecommendationView } from './quant-recommendation';
 import type { QuantReportView } from './quant-report';
-import type { RuntimeActivityView } from './runtime-activity';
+import type {
+  RuntimeActivityIndicatorView,
+  RuntimeActivityView,
+} from './runtime-activity';
 import type { SystemControlPlaneStatus } from './system';
 
 export type DashboardWindow = '7d' | '24h' | '30d';
@@ -82,9 +85,7 @@ export interface DashboardSubsystemHealthView {
 }
 
 export interface DashboardRuntimeActivityView {
-  total: number;
-  running: number;
-  attention: number;
+  indicator: RuntimeActivityIndicatorView;
   items: RuntimeActivityView[];
 }
 

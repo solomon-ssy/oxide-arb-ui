@@ -27,6 +27,7 @@ import {
 import { getMarketLinkageHistory, listBasisAlerts } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'LinkageDetailDrawer' });
@@ -314,7 +315,7 @@ async function loadBasisAlerts(marketId: string): Promise<void> {
   basisAlertsLoading.value = false;
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (!isOpen) {
@@ -338,9 +339,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.marketLinkages.detail.title')"
-    class="w-full max-w-4xl"
   >
     <div v-if="detail" class="flex flex-col gap-4">
       <Card
@@ -727,5 +728,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         />
       </Card>
     </div>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

@@ -50,6 +50,15 @@ const reportDir = evidenceRun
   : 'playwright-report';
 const retainBackendArtifacts =
   evidenceRun || process.env.CI === 'true' ? ' --retain-artifacts' : '';
+const visualLaunchOptions = {
+  args: [
+    '--deterministic-mode',
+    '--disable-gpu',
+    '--disable-lcd-text',
+    '--font-render-hinting=none',
+    '--force-color-profile=srgb',
+  ],
+};
 
 export default defineConfig({
   expect: { timeout: 10_000 },
@@ -62,6 +71,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         colorScheme: 'dark',
+        launchOptions: visualLaunchOptions,
         viewport: { height: 900, width: 1440 },
       },
     },
@@ -71,6 +81,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         colorScheme: 'light',
+        launchOptions: visualLaunchOptions,
         viewport: { height: 900, width: 1440 },
       },
     },
@@ -80,6 +91,7 @@ export default defineConfig({
       use: {
         ...devices['Pixel 7'],
         colorScheme: 'dark',
+        launchOptions: visualLaunchOptions,
         viewport: { height: 844, width: 390 },
       },
     },

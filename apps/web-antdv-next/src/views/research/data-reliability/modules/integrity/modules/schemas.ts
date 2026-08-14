@@ -3,14 +3,8 @@ import type { FeatureParityEventView, FeatureParityRunView } from '@vben/types';
 import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
-import {
-  FEATURE_PARITY_EVENT_STATUSES,
-  FEATURE_PARITY_RUN_KINDS,
-  FEATURE_PARITY_RUN_STATUSES,
-  FEATURE_PARITY_STAGES,
-} from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useParityRunColumns(
@@ -110,25 +104,19 @@ export function useParityRunColumns(
 export function useParityRunSearchSchema(): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(FEATURE_PARITY_RUN_KINDS).map((value) => ({
-          label: $t(`enum.featureParityRunKind.${value}`),
-          value,
-        })),
+        options: enumOptions('FeatureParityRunKind'),
       },
       fieldName: 'kind',
       label: $t('page.research.featureIntegrity.filters.kind'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(FEATURE_PARITY_RUN_STATUSES).map((value) => ({
-          label: $t(`enum.featureParityRunStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('FeatureParityRunStatus'),
       },
       fieldName: 'status',
       label: $t('page.research.featureIntegrity.filters.status'),
@@ -223,25 +211,19 @@ export function useParityEventSearchSchema(): VbenFormSchema[] {
       label: $t('page.research.featureIntegrity.filters.runId'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(FEATURE_PARITY_EVENT_STATUSES).map((value) => ({
-          label: $t(`enum.featureParityEventStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('FeatureParityEventStatus'),
       },
       fieldName: 'status',
       label: $t('page.research.featureIntegrity.filters.status'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(FEATURE_PARITY_STAGES).map((value) => ({
-          label: $t(`enum.featureParityStage.${value}`),
-          value,
-        })),
+        options: enumOptions('FeatureParityStage'),
       },
       fieldName: 'stage',
       label: $t('page.research.featureIntegrity.filters.stage'),

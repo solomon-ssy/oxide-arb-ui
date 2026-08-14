@@ -5,6 +5,7 @@ import { useAntdDesignTokens } from '@vben/hooks';
 import { preferences, usePreferences } from '@vben/preferences';
 
 import { App, ConfigProvider, theme } from 'antdv-next';
+import { MotionConfig } from 'motion-v';
 
 import { antdLocale } from '#/locales';
 
@@ -12,6 +13,9 @@ defineOptions({ name: 'App' });
 
 const { isDark } = usePreferences();
 const { buttonTokens, tokens } = useAntdDesignTokens();
+const deterministicMotion =
+  typeof document !== 'undefined' &&
+  document.documentElement.dataset.uiDeterministic === 'true';
 
 const tokenTheme = computed(() => {
   const algorithm = isDark.value
@@ -85,8 +89,18 @@ watch(
 
 <template>
   <ConfigProvider :locale="antdLocale" :theme="tokenTheme">
-    <App>
-      <RouterView />
-    </App>
+    <!--
+      Deterministic fixtures skip animations at the scheduler level. Using
+      `never` there avoids Motion's development-only reduced-motion warning;
+      real sessions continue to honor the user's media preference.
+    -->
+    <MotionConfig
+      :reduced-motion="deterministicMotion ? 'never' : 'user'"
+      :skip-animations="deterministicMotion"
+    >
+      <App>
+        <RouterView />
+      </App>
+    </MotionConfig>
   </ConfigProvider>
 </template>

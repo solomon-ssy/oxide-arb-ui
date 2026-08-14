@@ -1,12 +1,9 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import {
-  MARKET_CATEGORIES,
-  MARKET_CATEGORY_UNKNOWN_FILTER,
-  MARKET_STATUSES,
-} from '@vben/types';
+import { MARKET_CATEGORY_UNKNOWN_FILTER } from '@vben/types';
 
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Market catalog search filters (AND-combined; forwarded to `GET /markets`). */
 export function useMarketSearchSchema(): VbenFormSchema[] {
@@ -21,30 +18,26 @@ export function useMarketSearchSchema(): VbenFormSchema[] {
       label: $t('page.markets.search.keyword'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(MARKET_STATUSES).map((value) => ({
-          label: $t(`enum.marketStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('MarketStatus'),
       },
       fieldName: 'status',
       label: $t('page.markets.search.status'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
         options: [
           {
+            color: 'default',
             label: $t('page.markets.unknownCategory'),
+            swatch: 'hsl(var(--qp-status-neutral))',
             value: MARKET_CATEGORY_UNKNOWN_FILTER,
           },
-          ...Object.values(MARKET_CATEGORIES).map((value) => ({
-            label: $t(`enum.marketCategory.${value}`),
-            value,
-          })),
+          ...enumOptions('MarketCategory'),
         ],
       },
       fieldName: 'category',

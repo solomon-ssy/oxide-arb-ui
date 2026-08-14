@@ -40,6 +40,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.marketIntelligence.description"
+    domain="trading"
     eyebrow="page.workspace.marketIntelligence.eyebrow"
     :modules="modules"
     title="page.menu.marketIntelligence"

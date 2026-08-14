@@ -63,6 +63,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.researchLab.description"
+    domain="research"
     eyebrow="page.workspace.researchLab.eyebrow"
     :modules="modules"
     title="page.menu.researchLab"

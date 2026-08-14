@@ -1,8 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { POSITION_LEDGER_STATES } from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Prefilled filter values seeded from cross-page deep links (`route.query`). */
 export interface PositionInitialFilters {
@@ -21,13 +20,10 @@ export function usePositionSearchSchema(
 ): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(POSITION_LEDGER_STATES).map((value) => ({
-          label: $t(`enum.positionLedgerState.${value}`),
-          value,
-        })),
+        options: enumOptions('PositionLedgerState'),
       },
       defaultValue: initial.state,
       fieldName: 'state',

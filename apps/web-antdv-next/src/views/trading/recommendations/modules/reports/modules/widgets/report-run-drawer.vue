@@ -13,6 +13,7 @@ import { getReportRun, retryReportRun } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQuantReportStore } from '#/store';
@@ -114,7 +115,7 @@ async function retry() {
     },
   );
   if (result) {
-    await router.replace({
+    await router.push({
       path: '/trading/recommendations',
       query: {
         ...route.query,
@@ -128,7 +129,7 @@ async function retry() {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -143,7 +144,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       delete query.entity;
       delete query.id;
     }
-    void router.replace({ query });
+    void router.push({ query });
   },
 });
 
@@ -171,10 +172,10 @@ watch(
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :loading="loading"
     :title="$t('page.quantReports.runs.drawerTitle')"
-    class="w-full max-w-4xl"
   >
     <Alert
       v-if="loadError"
@@ -280,11 +281,11 @@ watch(
             v-if="run.output_report_id"
             mono
             :label="run.output_report_id"
-            :to="`/trading/recommendations?module=queue&entity=report&id=${run.output_report_id}`"
+            :to="`/trading/recommendations?module=reports&entity=report&id=${run.output_report_id}`"
           />
           <span v-else>—</span>
         </DescriptionsItem>
       </Descriptions>
     </div>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

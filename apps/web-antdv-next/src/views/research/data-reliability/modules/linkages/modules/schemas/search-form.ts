@@ -2,32 +2,24 @@ import type { VbenFormSchema } from '#/adapter/form';
 
 import { $t } from '#/locales';
 import { useTimeRangeSearchField } from '#/shared/components/query/time-range';
-
-const LINKAGE_STATUSES = ['resolved', 'unresolved', 'overridden'] as const;
-const DOMAIN_FAMILIES = ['crypto'] as const;
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 export function useMarketLinkageSearchSchema(): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: LINKAGE_STATUSES.map((value) => ({
-          label: $t(`enum.linkageStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('LinkageStatus'),
       },
       fieldName: 'status',
       label: $t('page.research.marketLinkages.filters.status'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: DOMAIN_FAMILIES.map((value) => ({
-          label: $t(`enum.domainFamily.${value}`),
-          value,
-        })),
+        options: enumOptions('DomainFamily'),
       },
       fieldName: 'family',
       label: $t('page.research.marketLinkages.filters.family'),

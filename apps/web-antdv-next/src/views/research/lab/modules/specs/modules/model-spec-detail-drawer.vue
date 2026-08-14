@@ -19,6 +19,7 @@ import {
 import { getModelSpec } from '#/api/research';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
@@ -100,7 +101,7 @@ function goToEvaluationPolicy() {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -117,9 +118,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.modelSpecs.detail.title')"
-    class="w-full max-w-2xl"
   >
     <Spin :spinning="loading">
       <div v-if="spec" class="flex flex-col gap-4">
@@ -322,5 +323,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

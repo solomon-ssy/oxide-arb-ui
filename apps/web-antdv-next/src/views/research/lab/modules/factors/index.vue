@@ -13,7 +13,7 @@ import { Button } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getFactor, listFactors } from '#/api/research';
 import { $t } from '#/locales';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import FactorCollinearityDrawer from './modules/factor-collinearity-drawer.vue';
@@ -39,6 +39,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: FactorDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const collinearityRef = ref<InstanceType<typeof FactorCollinearityDrawer>>();
@@ -76,14 +77,15 @@ function onActionClick({
 }: OnActionClickParams<FactorDefinitionView>) {
   switch (code) {
     case 'detail': {
-      drawerApi.setData({ factor: row }).open();
+      openInspector(row.factor_definition_id);
       break;
     }
     // No default
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'factor',
   fetch: async (id) => {
     const detail = await getFactor(id);

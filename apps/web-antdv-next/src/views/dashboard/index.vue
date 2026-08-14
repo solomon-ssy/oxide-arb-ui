@@ -312,10 +312,10 @@ const kpis = computed(() => [
   },
   {
     accent: 'sky' as const,
-    endVal: runtimeActivity.value?.running ?? null,
+    endVal: runtimeActivity.value?.indicator.running ?? null,
     footer: runtimeActivity.value
       ? $t('page.dashboard.kpi.runtimeAttentionValue', {
-          count: runtimeActivity.value.attention,
+          count: runtimeActivity.value.indicator.attention,
         })
       : $t('page.dashboard.section.unavailable'),
     icon: 'lucide:activity',
@@ -569,7 +569,6 @@ onBeforeUnmount(() => {
             class="command-rail bg-card relative overflow-hidden rounded-xl border p-4"
             aria-labelledby="dashboard-authority-title"
           >
-            <div class="pointer-events-none absolute inset-0 opacity-40"></div>
             <div
               class="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
             >
@@ -679,8 +678,9 @@ onBeforeUnmount(() => {
               "
               :decimals="kpi.decimals"
               :delay="index * 35"
-              :duration="reducedMotion === 'reduce' ? 0 : 700"
+              :duration="reducedMotion === 'reduce' ? 0 : 180"
               :end-val="kpi.endVal"
+              :featured="index === 0"
               :icon="kpi.icon"
               :prefix="kpi.prefix"
               :suffix="kpi.suffix"
@@ -1244,17 +1244,35 @@ onBeforeUnmount(() => {
   inset: 0;
   pointer-events: none;
   content: '';
+  background: var(--qp-gradient-hero);
+}
+
+.command-rail::after {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  pointer-events: none;
+  content: '';
+  background: var(--qp-gradient-brand);
+}
+
+.command-rail {
   background:
-    radial-gradient(
-      circle at 10% 0%,
-      hsl(var(--primary) / 12%),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 92% 100%,
-      hsl(var(--visual-3) / 10%),
-      transparent 30%
-    );
+    linear-gradient(
+        hsl(var(--qp-surface-raised) / 94%),
+        hsl(var(--qp-surface-raised) / 94%)
+      )
+      padding-box,
+    var(--qp-gradient-brand) border-box;
+  border-color: transparent;
+  box-shadow: var(--qp-shadow-featured);
+}
+
+.command-rail :deep(.ant-btn-primary:not(.ant-btn-dangerous)) {
+  color: white;
+  background: var(--qp-gradient-brand);
+  border-color: transparent;
+  box-shadow: var(--qp-shadow-featured);
 }
 
 .status-cell {

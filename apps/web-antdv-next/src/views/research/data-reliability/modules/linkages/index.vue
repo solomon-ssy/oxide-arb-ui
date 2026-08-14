@@ -23,7 +23,7 @@ import { $t } from '#/locales';
 import { timeRangeFromFormValues } from '#/shared/components/query/time-range';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import LinkageDetailDrawer from './modules/linkage-detail-drawer.vue';
@@ -53,6 +53,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: LinkageDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [OverrideDrawer, overrideDrawerApi] = useVbenDrawer({
@@ -158,11 +159,7 @@ async function resolveAll() {
 }
 
 function openDetail(row: MarketLinkageSummaryView) {
-  void handleRequest(() => getMarketLinkage(row.market_id)).then((detail) => {
-    if (detail) {
-      drawerApi.setData({ detail }).open();
-    }
-  });
+  openInspector(row.market_id);
 }
 
 function openOverride(row: MarketLinkageSummaryView) {
@@ -216,7 +213,8 @@ function onActionClick({
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'market-linkage',
   fetch: (id) => getMarketLinkage(id),
   open: (detail) => drawerApi.setData({ detail }).open(),

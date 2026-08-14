@@ -11,19 +11,13 @@ import { useRouter } from 'vue-router';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import {
-  Badge,
-  Button,
-  Drawer,
-  Flex,
-  Select,
-  SelectOption,
-  Tooltip,
-} from 'antdv-next';
+import { Badge, Button, Drawer, Flex, Tooltip } from 'antdv-next';
 
 import { listRuntimeActivities } from '#/api/runtime-activities';
 import { $t } from '#/locales';
 import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
+import EnumSelect from '#/shared/components/enum/enum-select.vue';
+import { enumOptions } from '#/shared/presentation/enum-options';
 import { useActivityStore } from '#/store/activity';
 
 defineOptions({ name: 'ActivityCenter' });
@@ -40,25 +34,15 @@ const page = ref<null | RuntimeActivityPageView>(null);
 let requestGeneration = 0;
 let controller: AbortController | null = null;
 
-const badgeCount = computed(() => Math.min(page.value?.summary.total ?? 0, 99));
+const badgeCount = computed(
+  () =>
+    (page.value?.indicator.running ?? 0) +
+    (page.value?.indicator.attention ?? 0),
+);
 const items = computed(() => page.value?.items ?? []);
 
-const domains: RuntimeActivityDomain[] = [
-  'research',
-  'report',
-  'execution',
-  'reconciliation',
-  'settlement',
-];
-const statuses: RuntimeActivityStatus[] = [
-  'running',
-  'pending',
-  'attention',
-  'failed',
-  'succeeded',
-  'cancelled',
-  'skipped',
-];
+const domainOptions = enumOptions('RuntimeActivityDomain');
+const statusOptions = enumOptions('RuntimeActivityStatus');
 
 async function load() {
   const generation = ++requestGeneration;
@@ -106,7 +90,12 @@ onScopeDispose(() => {
 
 <template>
   <Tooltip :title="$t('page.runtimeActivity.open')">
-    <Badge :count="badgeCount" :offset="[-7, 7]" :show-zero="false">
+    <Badge
+      :count="badgeCount"
+      :offset="[-7, 7]"
+      :overflow-count="99"
+      :show-zero="false"
+    >
       <button
         :aria-label="$t('page.runtimeActivity.open')"
         class="activity-trigger"
@@ -141,26 +130,20 @@ onScopeDispose(() => {
     </template>
 
     <Flex class="activity-filters" gap="small" wrap="wrap">
-      <Select
+      <EnumSelect
         v-model:value="domain"
         allow-clear
         :aria-label="$t('page.runtimeActivity.filter.domain')"
+        :options="domainOptions"
         :placeholder="$t('page.runtimeActivity.filter.allDomains')"
-      >
-        <SelectOption v-for="value in domains" :key="value" :value="value">
-          {{ $t(`page.runtimeActivity.domain.${value}`) }}
-        </SelectOption>
-      </Select>
-      <Select
+      />
+      <EnumSelect
         v-model:value="status"
         allow-clear
         :aria-label="$t('page.runtimeActivity.filter.status')"
+        :options="statusOptions"
         :placeholder="$t('page.runtimeActivity.filter.allStatuses')"
-      >
-        <SelectOption v-for="value in statuses" :key="value" :value="value">
-          {{ $t(`page.runtimeActivity.status.${value}`) }}
-        </SelectOption>
-      </Select>
+      />
     </Flex>
 
     <RuntimeActivityFeed :height="560" :items="items" :loading="loading" />

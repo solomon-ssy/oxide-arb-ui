@@ -12,6 +12,7 @@ import { getBacktestReport, getModelQualityGate } from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import QualityGateScorecard from '#/views/research/components/quality-gate-scorecard.vue';
 
 import BacktestCategoryBreakdown from './backtest-category-breakdown.vue';
@@ -86,7 +87,7 @@ async function refreshGate() {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -105,9 +106,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.backtests.detail.title')"
-    class="w-full max-w-3xl"
   >
     <Spin :spinning="loading">
       <div v-if="report" class="flex min-w-0 flex-col gap-4">
@@ -217,7 +218,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
               <EntityRouteLink
                 mono
                 :label="report.comparison_report_id"
-                :to="`/research/lab?module=evaluation&entity=comparison-report&id=${report.comparison_report_id}`"
+                :to="`/research/lab?module=evaluation&entity=comparison&id=${report.comparison_report_id}`"
               />
             </DescriptionsItem>
           </Descriptions>
@@ -248,5 +249,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

@@ -19,10 +19,15 @@ export const useReconciliationStore = defineStore('qp-reconciliation', () => {
     revision.value += 1;
   }
 
+  function invalidate() {
+    lastEvent.value = null;
+    revision.value += 1;
+  }
+
   function $reset() {
     revision.value = 0;
     lastEvent.value = null;
   }
 
-  return { $reset, bumpRevision, lastEvent, revision };
+  return { $reset, bumpRevision, invalidate, lastEvent, revision };
 });

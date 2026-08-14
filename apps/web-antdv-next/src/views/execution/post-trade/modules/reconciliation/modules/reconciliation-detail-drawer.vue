@@ -29,6 +29,7 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
@@ -80,7 +81,7 @@ async function refreshReconciliation(id: string) {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -105,9 +106,9 @@ useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantReconciliations.detail.title')"
-    class="w-full max-w-3xl"
   >
     <Spin :spinning="loading">
       <div v-if="reconciliation" class="flex flex-col gap-4">
@@ -246,5 +247,5 @@ useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
         </Card>
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

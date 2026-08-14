@@ -33,6 +33,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerSettlementRevisionRefresh } from '#/shared/composables/use-drawer-settlement-revision-refresh';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { positionOpenPath } from '#/shared/routes/execution-plane';
@@ -279,7 +280,7 @@ async function authorizeCurrentCanary() {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -306,9 +307,9 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantSettlementRedeems.detail.title')"
-    class="w-full max-w-4xl"
   >
     <AsyncState
       :error-message="loadError"
@@ -896,5 +897,5 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
         </Card>
       </div>
     </AsyncState>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

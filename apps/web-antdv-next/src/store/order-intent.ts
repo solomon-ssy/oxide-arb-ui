@@ -19,6 +19,11 @@ export const useOrderIntentStore = defineStore('qp-order-intent', () => {
     revision.value += 1;
   }
 
+  function invalidate() {
+    lastEvent.value = null;
+    revision.value += 1;
+  }
+
   /**
    * Suppress the lifecycle toast for the next `quant.intent` frame matching
    * `intentId` — called after a successful local governed mutation so the
@@ -46,6 +51,7 @@ export const useOrderIntentStore = defineStore('qp-order-intent', () => {
   return {
     $reset,
     bumpRevision,
+    invalidate,
     lastEvent,
     revision,
     shouldShowWsToast,

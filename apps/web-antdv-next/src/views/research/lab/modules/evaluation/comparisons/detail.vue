@@ -7,9 +7,8 @@ import type {
 import type { DecimalSign } from '#/shared/components/format';
 
 import { computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import {
@@ -36,13 +35,24 @@ import {
 } from '#/shared/components/format';
 import KpiCard from '#/shared/components/kpi-card.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 import CategoryDiffTable from './modules/category-diff-table.vue';
 
 defineOptions({ name: 'ResearchComparisonDetailPage' });
 
 const route = useRoute();
+const router = useRouter();
 const { handleRequest } = useRequestHandler();
+const inspectorOpen = computed({
+  get: () =>
+    route.query.entity === 'comparison' &&
+    typeof route.query.id === 'string' &&
+    route.query.id !== '',
+  set: (value: boolean) => {
+    if (!value) void router.push('/research/lab?module=evaluation');
+  },
+});
 
 const report = ref<ModelComparisonReportView | null>(null);
 const candidateReport = ref<BacktestReportView | null>(null);
@@ -286,7 +296,7 @@ async function loadReport(id: string) {
 watch(
   () => [route.query.entity, route.query.id] as const,
   ([entity, id]) => {
-    if (entity === 'comparison-report' && typeof id === 'string' && id) {
+    if (entity === 'comparison' && typeof id === 'string' && id) {
       void loadReport(id);
     }
   },
@@ -295,7 +305,10 @@ watch(
 </script>
 
 <template>
-  <Page auto-content-height>
+  <WorkspaceInspectorSurface
+    v-model:open="inspectorOpen"
+    :title="$t('page.research.comparisons.detail.summary')"
+  >
     <Spin :spinning="loading">
       <div v-if="report" class="flex flex-col gap-4">
         <Alert
@@ -344,7 +357,7 @@ watch(
               <EntityRouteLink
                 mono
                 :label="report.candidate_report_id"
-                :to="`/research/lab?module=evaluation&entity=backtest-report&id=${report.candidate_report_id}`"
+                :to="`/research/lab?module=evaluation&entity=backtest&id=${report.candidate_report_id}`"
               />
             </DescriptionsItem>
             <DescriptionsItem
@@ -353,7 +366,7 @@ watch(
               <EntityRouteLink
                 mono
                 :label="report.baseline_report_id"
-                :to="`/research/lab?module=evaluation&entity=backtest-report&id=${report.baseline_report_id}`"
+                :to="`/research/lab?module=evaluation&entity=backtest&id=${report.baseline_report_id}`"
               />
             </DescriptionsItem>
             <DescriptionsItem
@@ -412,5 +425,5 @@ watch(
         :description="$t('page.research.comparisons.detail.notFound')"
       />
     </Spin>
-  </Page>
+  </WorkspaceInspectorSurface>
 </template>

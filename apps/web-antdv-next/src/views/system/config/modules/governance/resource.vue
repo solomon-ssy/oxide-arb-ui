@@ -18,7 +18,6 @@ import type { PolicyClientValidationIssue } from './modules/policy-schema';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
@@ -40,6 +39,7 @@ import { getModelRouteActivation } from '#/api/feedback';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
@@ -102,16 +102,29 @@ const stage = ref<WorkflowStage>('view');
 const rollbackMode = ref(false);
 
 const resourceKind = computed<ConfigResourceKind | null>(() => {
-  const value = route.query.resource;
-  return isConfigResourceKind(value) ? value : null;
+  if (route.query.entity === 'config-activation') return 'model_routing';
+  const value = route.query.id;
+  return route.query.entity === 'config-resource' && isConfigResourceKind(value)
+    ? value
+    : null;
 });
 const linkedActivationId = computed(() => {
-  const value = route.query.activation_id;
-  return typeof value === 'string' && value !== '' ? value : null;
+  const value = route.query.id;
+  return route.query.entity === 'config-activation' &&
+    typeof value === 'string' &&
+    value !== ''
+    ? value
+    : null;
 });
 const meta = computed(() =>
   resourceKind.value ? CONFIG_RESOURCE_META[resourceKind.value] : null,
 );
+const inspectorOpen = computed({
+  get: () => resourceKind.value !== null,
+  set: (value: boolean) => {
+    if (!value) void router.push('/system/config?module=policy');
+  },
+});
 const jsonSchema = computed(() =>
   schemaView.value
     ? parsePolicyJsonSchema(schemaView.value.document_schema)
@@ -320,17 +333,6 @@ function serverValidationMessage(issue: PolicyValidationIssue) {
   return $t(key, issue.message_parameters);
 }
 
-function linkedQueryId(name: string): null | string {
-  const value = route.query[name];
-  if (value === undefined) {
-    return null;
-  }
-  if (typeof value !== 'string' || value === '') {
-    throw new Error(`invalid linked rollback query field: ${name}`);
-  }
-  return value;
-}
-
 function routeBinding(
   revision: PolicyRevisionView,
   receipt: ModelRouteActivationReceiptView,
@@ -351,13 +353,7 @@ function verifyLinkedRollback(
   activated: PolicyRevisionView,
   rollback: PolicyRevisionView,
 ) {
-  const activatedQuery = linkedQueryId('activated_revision_id');
-  const rollbackQuery = linkedQueryId('rollback_target_revision_id');
   if (
-    (activatedQuery !== null &&
-      activatedQuery !== receipt.activated_model_routing_revision_id) ||
-    (rollbackQuery !== null &&
-      rollbackQuery !== receipt.rollback_target.rollback_target_revision_id) ||
     activated.policy_revision_id !==
       receipt.activated_model_routing_revision_id ||
     rollback.policy_revision_id !==
@@ -454,7 +450,8 @@ function resetWorkflow() {
 async function loadResource() {
   const kind = resourceKind.value;
   if (!kind) {
-    void router.replace('/system/config');
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.replace({ path: '/system/config', query });
     return;
   }
   loading.value = true;
@@ -751,7 +748,11 @@ watch(
 </script>
 
 <template>
-  <Page auto-content-height data-testid="config-resource-workspace">
+  <WorkspaceInspectorSurface
+    v-model:open="inspectorOpen"
+    test-id="config-resource-workspace"
+    :title="$t('page.config.overview.resourcesTitle')"
+  >
     <div class="mx-auto flex max-w-[1280px] flex-col gap-4 pb-8">
       <header class="bg-card rounded-xl border px-5 py-4">
         <div
@@ -1504,7 +1505,7 @@ watch(
         </section>
       </template>
     </div>
-  </Page>
+  </WorkspaceInspectorSurface>
 </template>
 
 <style scoped>
@@ -1688,7 +1689,6 @@ watch(
   color: hsl(var(--success));
   background: hsl(var(--success) / 12%);
   border-radius: 999px;
-  animation: success-enter 280ms ease-out both;
 }
 
 .success-fact {
@@ -1717,13 +1717,6 @@ watch(
   border-bottom: 1px solid hsl(var(--border));
 }
 
-@keyframes success-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
 @media (max-width: 900px) {
   .workspace-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1750,12 +1743,6 @@ watch(
   .sticky-actions {
     flex-direction: column;
     align-items: stretch;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .activation-success-icon {
-    animation: none;
   }
 }
 </style>

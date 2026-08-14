@@ -356,14 +356,9 @@ function submitIssue() {
         :to="{
           path: '/system/config',
           query: {
+            entity: 'config-activation',
+            id: visibleActivationReceipt.policy_activation_id,
             module: 'policy',
-            resource: 'model_routing',
-            activated_revision_id:
-              visibleActivationReceipt.activated_model_routing_revision_id,
-            activation_id: visibleActivationReceipt.policy_activation_id,
-            rollback_target_revision_id:
-              visibleActivationReceipt.rollback_target
-                .rollback_target_revision_id,
           },
         }"
       >

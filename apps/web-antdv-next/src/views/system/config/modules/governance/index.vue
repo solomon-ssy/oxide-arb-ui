@@ -12,7 +12,6 @@ import { Page } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { usePreferredReducedMotion } from '@vueuse/core';
 import { Button, Skeleton, Tag } from 'antdv-next';
 
 import {
@@ -34,7 +33,6 @@ defineOptions({ name: 'ConfigOverviewPage' });
 const router = useRouter();
 const route = useRoute();
 const { handleRequest } = useRequestHandler();
-const reducedMotion = usePreferredReducedMotion();
 const policyMode = computed(() => route.query.module === 'policy');
 
 const loading = ref(true);
@@ -126,7 +124,7 @@ async function loadOverview() {
 function openResource(kind: string) {
   void router.push({
     path: '/system/config',
-    query: { module: 'policy', resource: kind },
+    query: { entity: 'config-resource', id: kind, module: 'policy' },
   });
 }
 
@@ -145,7 +143,6 @@ onMounted(() => void loadOverview());
     <div class="mx-auto flex max-w-[1280px] flex-col gap-5 pb-8">
       <section
         class="config-hero bg-card overflow-hidden rounded-xl border p-5"
-        :class="{ 'config-motion': reducedMotion !== 'reduce' }"
         aria-labelledby="config-overview-title"
       >
         <div
@@ -153,7 +150,7 @@ onMounted(() => void loadOverview());
         >
           <div class="max-w-2xl">
             <div class="flex items-center gap-2">
-              <span class="config-icon config-icon--blue">
+              <span class="config-icon config-icon--sky">
                 <IconifyIcon icon="lucide:sliders-horizontal" />
               </span>
               <div>
@@ -253,14 +250,12 @@ onMounted(() => void loadOverview());
         </div>
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <button
-            v-for="(resource, index) in orderedResources"
+            v-for="resource in orderedResources"
             :key="resource.kind"
             class="config-resource-card bg-card focus-visible:ring-primary group rounded-xl border p-4 text-left focus-visible:ring-2 focus-visible:outline-none"
             :class="[
               `config-resource-card--${CONFIG_RESOURCE_META[resource.kind].tone}`,
-              { 'config-motion': reducedMotion !== 'reduce' },
             ]"
-            :style="{ '--enter-index': index }"
             :data-testid="`config-resource-${resource.kind}`"
             type="button"
             @click="openResource(resource.kind)"
@@ -389,16 +384,6 @@ onMounted(() => void loadOverview());
 </template>
 
 <style scoped>
-.config-hero {
-  background-image:
-    radial-gradient(
-      circle at 85% 0%,
-      hsl(var(--primary) / 8%),
-      transparent 32%
-    ),
-    linear-gradient(135deg, hsl(var(--card)), hsl(var(--card)));
-}
-
 .config-status-cell {
   min-width: 0;
   padding: 0.75rem;
@@ -452,34 +437,14 @@ onMounted(() => void loadOverview());
   border-radius: 0.625rem;
 }
 
-.config-icon--blue {
-  color: hsl(var(--visual-1));
-  background: hsl(var(--visual-1) / 10%);
+.config-icon--sky {
+  color: hsl(var(--qp-accent-sky));
+  background: hsl(var(--qp-accent-sky) / 10%);
 }
 
-.config-icon--rose {
-  color: hsl(var(--visual-2));
-  background: hsl(var(--visual-2) / 10%);
-}
-
-.config-icon--purple {
-  color: hsl(var(--visual-3));
-  background: hsl(var(--visual-3) / 10%);
-}
-
-.config-icon--cyan {
-  color: hsl(var(--visual-4));
-  background: hsl(var(--visual-4) / 10%);
-}
-
-.config-icon--amber {
-  color: hsl(var(--visual-5));
-  background: hsl(var(--visual-5) / 10%);
-}
-
-.config-icon--green {
-  color: hsl(var(--visual-6));
-  background: hsl(var(--visual-6) / 10%);
+.config-icon--violet {
+  color: hsl(var(--qp-accent-violet));
+  background: hsl(var(--qp-accent-violet) / 10%);
 }
 
 .config-resource-card {
@@ -496,7 +461,7 @@ onMounted(() => void loadOverview());
   inset: 0 auto 0 0;
   width: 2px;
   content: '';
-  background: var(--resource-accent, hsl(var(--visual-1)));
+  background: var(--resource-accent, hsl(var(--qp-accent-sky)));
   opacity: 0;
   transition: opacity 120ms ease;
 }
@@ -510,50 +475,15 @@ onMounted(() => void loadOverview());
   opacity: 1;
 }
 
-.config-resource-card--blue {
-  --resource-accent: hsl(var(--visual-1));
+.config-resource-card--sky {
+  --resource-accent: hsl(var(--qp-accent-sky));
 }
 
-.config-resource-card--rose {
-  --resource-accent: hsl(var(--visual-2));
-}
-
-.config-resource-card--purple {
-  --resource-accent: hsl(var(--visual-3));
-}
-
-.config-resource-card--cyan {
-  --resource-accent: hsl(var(--visual-4));
-}
-
-.config-resource-card--amber {
-  --resource-accent: hsl(var(--visual-5));
-}
-
-.config-resource-card--green {
-  --resource-accent: hsl(var(--visual-6));
-}
-
-.config-motion {
-  animation: config-enter 180ms ease-out both;
-  animation-delay: min(calc(var(--enter-index, 0) * 25ms), 100ms);
-}
-
-@keyframes config-enter {
-  from {
-    transform: translateY(8px);
-  }
-
-  to {
-    transform: translateY(0);
-  }
+.config-resource-card--violet {
+  --resource-accent: hsl(var(--qp-accent-violet));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .config-motion {
-    animation: none !important;
-  }
-
   .config-resource-card,
   .config-resource-card::before {
     transition-duration: 0.01ms !important;

@@ -14,7 +14,7 @@ import { message } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getOrderIntent, listOrderIntents } from '#/api/order-intents';
 import { $t } from '#/locales';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useOrderIntentStore } from '#/store';
 
 import IntentDetailDrawer from './modules/intent-detail-drawer.vue';
@@ -42,6 +42,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: IntentDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<OrderIntentView>({
@@ -97,7 +98,7 @@ function onActionClick({ code, row }: OnActionClickParams<OrderIntentView>) {
       break;
     }
     case 'detail': {
-      drawerApi.setData({ intent: row }).open();
+      openInspector(row.order_intent_id);
       break;
     }
     case 'reject': {
@@ -108,7 +109,8 @@ function onActionClick({ code, row }: OnActionClickParams<OrderIntentView>) {
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'order-intent',
   fetch: (id) => getOrderIntent(id),
   open: (intent) => drawerApi.setData({ intent }).open(),

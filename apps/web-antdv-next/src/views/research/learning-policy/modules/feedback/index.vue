@@ -52,7 +52,6 @@ import {
   cancelFeedbackCycle,
   getFeedbackCycle,
   getFeedbackOverview,
-  getModelRouteActivation,
   issuePromotionPermit,
   listDriftReports,
   listFeedbackCycles,
@@ -67,6 +66,7 @@ import {
 } from '#/api/feedback';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import {
   FEEDBACK_RECOVERED_VISIBLE_MS,
@@ -168,9 +168,6 @@ let detailController: AbortController | null = null;
 let detailRequest: null | Promise<void> = null;
 let detailRequestCycleId: string | undefined;
 let detailRefreshQueued = false;
-let activationReceiptGeneration = 0;
-let activationReceiptController: AbortController | null = null;
-let activationReceiptRequest: null | Promise<void> = null;
 let leaving = false;
 let revealedActivationId: string | undefined;
 let triggerSelectionCycleId: string | undefined;
@@ -229,38 +226,31 @@ const triggerPending = computed(
     pendingActions.has(`trigger:${selectedTriggerProfileId.value}`),
 );
 
+const routeCycleId = computed(() =>
+  route.query.entity === 'feedback-cycle' &&
+  typeof route.query.id === 'string' &&
+  route.query.id !== ''
+    ? route.query.id
+    : undefined,
+);
+const selectedView = ref<WorkbenchView>('overview');
 const activeView = computed<WorkbenchView>({
-  get: () => {
-    if (routeCycleId.value !== undefined || route.query.view === 'cycles') {
-      return 'cycles';
-    }
-    return route.query.view === 'drift' ? 'drift' : 'overview';
-  },
+  get: () => (routeCycleId.value === undefined ? selectedView.value : 'cycles'),
   set: (view) => {
-    if (view !== 'cycles') {
-      const {
-        activation_id: _activationId,
-        cycle_id: _cycleId,
-        ...query
-      } = route.query;
-      void router.replace({ query: { ...query, view } });
-      return;
-    }
-    void router.replace({ query: { ...route.query, view } });
+    selectedView.value = view;
+    if (view === 'cycles' || route.query.entity !== 'feedback-cycle') return;
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.push({ query });
   },
 });
-
-const routeCycleId = computed(() =>
-  typeof route.query.cycle_id === 'string' && route.query.cycle_id !== ''
-    ? route.query.cycle_id
-    : undefined,
-);
-const routeActivationId = computed(() =>
-  typeof route.query.activation_id === 'string' &&
-  route.query.activation_id !== ''
-    ? route.query.activation_id
-    : undefined,
-);
+const cycleInspectorOpen = computed({
+  get: () => routeCycleId.value !== undefined,
+  set: (value: boolean) => {
+    if (value || route.query.entity !== 'feedback-cycle') return;
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.push({ query });
+  },
+});
 
 const effectiveCycleId = computed(
   () => routeCycleId.value ?? cyclePage.value.items[0]?.feedback_cycle_id,
@@ -370,13 +360,19 @@ function statusColor(status: FeedbackCycleStatus) {
 }
 
 function selectCycle(cycle: FeedbackCycleView) {
-  void router.replace({
+  void router.push({
     query: {
       ...route.query,
-      cycle_id: cycle.feedback_cycle_id,
-      view: 'cycles',
+      entity: 'feedback-cycle',
+      id: cycle.feedback_cycle_id,
+      module: 'feedback',
     },
   });
+}
+
+function retryCycleDetail() {
+  const cycleId = effectiveCycleId.value;
+  if (cycleId) void refreshCycleDetail(cycleId);
 }
 
 function applyCycleMutation(cycle: FeedbackCycleView) {
@@ -520,12 +516,7 @@ async function loadCycleDetail(cycleId: string) {
       selectedTriggerProfileId.value = snapshot.cycle.profile_ref.id;
       triggerSelectionCycleId = cycleId;
     }
-    if (
-      snapshot.activation_receipt !== null &&
-      (routeActivationId.value === undefined ||
-        routeActivationId.value ===
-          snapshot.activation_receipt.policy_activation_id)
-    ) {
+    if (snapshot.activation_receipt !== null) {
       activationReceipt.value = snapshot.activation_receipt;
       activationReceiptError.value = null;
     }
@@ -574,81 +565,9 @@ function refreshCycleDetail(cycleId: string): Promise<void> {
 }
 
 function resetActivationReceipt() {
-  activationReceiptGeneration += 1;
-  activationReceiptController?.abort();
-  activationReceiptController = null;
   activationReceipt.value = null;
   activationReceiptError.value = null;
   activationReceiptLoading.value = false;
-}
-
-async function loadActivationReceipt(activationId: string) {
-  if (!canRead.value || !canReadPermits.value) {
-    resetActivationReceipt();
-    return;
-  }
-
-  const generation = ++activationReceiptGeneration;
-  activationReceiptController?.abort();
-  const controller = new AbortController();
-  activationReceiptController = controller;
-  activationReceiptLoading.value = true;
-  activationReceiptError.value = null;
-  try {
-    const receipt = await getModelRouteActivation(activationId, {
-      signal: controller.signal,
-    });
-    if (generation !== activationReceiptGeneration) {
-      return;
-    }
-    if (receipt.policy_activation_id !== activationId) {
-      throw new Error('activation receipt identity mismatch');
-    }
-    activationReceipt.value = receipt;
-    if (
-      !leaving &&
-      (routeCycleId.value !== receipt.feedback_cycle_id ||
-        route.query.view !== 'cycles')
-    ) {
-      await router.replace({
-        query: {
-          ...route.query,
-          activation_id: activationId,
-          cycle_id: receipt.feedback_cycle_id,
-          view: 'cycles',
-        },
-      });
-    }
-  } catch (error) {
-    if (generation === activationReceiptGeneration) {
-      const apiError = normalizeApiError(error);
-      activationReceipt.value = null;
-      activationReceiptError.value = $t(
-        apiError.httpStatus === 404 || apiError.code === 404
-          ? 'page.research.feedback.actions.permit.receipt.notFound'
-          : 'page.research.feedback.actions.permit.receipt.loadError',
-        { activationId },
-      );
-    }
-  } finally {
-    if (generation === activationReceiptGeneration) {
-      activationReceiptLoading.value = false;
-    }
-  }
-}
-
-function refreshActivationReceipt(activationId: string): Promise<void> {
-  if (leaving) {
-    return Promise.resolve();
-  }
-  const request = loadActivationReceipt(activationId);
-  activationReceiptRequest = request;
-  void request.finally(() => {
-    if (activationReceiptRequest === request) {
-      activationReceiptRequest = null;
-    }
-  });
-  return request;
 }
 
 async function refreshSchedulers() {
@@ -686,13 +605,7 @@ async function refreshDrifts() {
 }
 
 async function refreshPermitEvidence() {
-  const activationId = routeActivationId.value;
-  await Promise.all([
-    refreshPermits(),
-    activationId === undefined
-      ? Promise.resolve()
-      : refreshActivationReceipt(activationId),
-  ]);
+  await refreshPermits();
 }
 
 async function triggerCycle() {
@@ -1122,12 +1035,12 @@ async function activatePermit(permit: PromotionPermitView) {
     activationReceipt.value = result.receipt;
     activationReceiptError.value = null;
     activationIdempotencyKeys.delete(permit.promotion_permit_id);
-    await router.replace({
+    await router.push({
       query: {
         ...route.query,
-        activation_id: result.receipt.policy_activation_id,
-        cycle_id: result.receipt.feedback_cycle_id,
-        view: 'cycles',
+        entity: 'feedback-cycle',
+        id: result.receipt.feedback_cycle_id,
+        module: 'feedback',
       },
     });
     message.success(
@@ -1329,28 +1242,14 @@ watch(driftCurrentPage, (page) => {
 watch(
   routeCycleId,
   (cycleId) => {
-    if (cycleId !== undefined && route.query.view !== 'cycles') {
-      void router.replace({
-        query: { ...route.query, view: 'cycles' },
-      });
-    }
-  },
-  { immediate: true },
-);
-watch(
-  routeActivationId,
-  (activationId) => {
-    if (activationId === undefined) {
-      resetActivationReceipt();
-    } else {
-      void refreshActivationReceipt(activationId);
+    if (cycleId !== undefined) {
+      selectedView.value = 'cycles';
     }
   },
   { immediate: true },
 );
 watch(
   [
-    routeActivationId,
     () => activationReceipt.value?.policy_activation_id,
     () => selectedCycle.value?.feedback_cycle_id,
     loading,
@@ -1358,24 +1257,22 @@ watch(
     activationReceiptLoading,
   ],
   async ([
-    activationId,
     receiptId,
     cycleId,
     pageIsLoading,
     detailIsLoading,
     receiptIsLoading,
   ]) => {
-    if (activationId === undefined) {
+    if (receiptId === undefined) {
       revealedActivationId = undefined;
       return;
     }
     if (
-      activationId !== receiptId ||
       cycleId !== activationReceipt.value?.feedback_cycle_id ||
       pageIsLoading ||
       detailIsLoading ||
       receiptIsLoading ||
-      revealedActivationId === activationId
+      revealedActivationId === receiptId
     ) {
       return;
     }
@@ -1394,7 +1291,7 @@ watch(
     }
     receipt.scrollIntoView({ behavior: 'instant', block: 'center' });
     receiptTitle.focus({ preventScroll: true });
-    revealedActivationId = activationId;
+    revealedActivationId = receiptId;
   },
   { flush: 'post' },
 );
@@ -1483,7 +1380,6 @@ onBeforeRouteLeave(async () => {
   stopRecoveryPolling();
   await Promise.all([
     detailRequest ?? Promise.resolve(),
-    activationReceiptRequest ?? Promise.resolve(),
     refreshCoordinator.drain(),
     driftReadCoordinator.drain(),
     permitReadCoordinator.drain(),
@@ -1503,8 +1399,6 @@ onBeforeUnmount(() => {
   schedulerReadCoordinator.dispose();
   detailGeneration += 1;
   detailController?.abort();
-  activationReceiptGeneration += 1;
-  activationReceiptController?.abort();
 });
 </script>
 
@@ -1786,10 +1680,7 @@ onBeforeUnmount(() => {
               :image="Empty.PRESENTED_IMAGE_SIMPLE"
             />
 
-            <div
-              v-else
-              class="grid min-w-0 gap-4 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.4fr)]"
-            >
+            <div v-else class="min-w-0">
               <nav
                 :aria-label="$t('page.research.feedback.cycles.listAria')"
                 class="min-w-0 space-y-2"
@@ -1825,7 +1716,10 @@ onBeforeUnmount(() => {
                 </button>
               </nav>
 
-              <div v-if="effectiveCycleId" class="min-w-0">
+              <WorkspaceInspectorSurface
+                v-model:open="cycleInspectorOpen"
+                :title="$t('page.research.feedback.tabs.cycles')"
+              >
                 <div
                   v-if="
                     canTrigger &&
@@ -1858,10 +1752,7 @@ onBeforeUnmount(() => {
                   :type="detailNotFound ? 'error' : 'warning'"
                 >
                   <template #action>
-                    <Button
-                      class="min-h-11"
-                      @click="refreshCycleDetail(effectiveCycleId)"
-                    >
+                    <Button class="min-h-11" @click="retryCycleDetail">
                       {{ $t('page.research.feedback.retry') }}
                     </Button>
                   </template>
@@ -1903,7 +1794,7 @@ onBeforeUnmount(() => {
                   :description="$t('page.research.feedback.detail.empty')"
                   :image="Empty.PRESENTED_IMAGE_SIMPLE"
                 />
-              </div>
+              </WorkspaceInspectorSurface>
             </div>
 
             <div
@@ -1924,7 +1815,7 @@ onBeforeUnmount(() => {
               :can-read="canReadPermits"
               :can-revoke="canRevokePermit"
               :activation-receipt="activationReceipt"
-              :activation-id="routeActivationId"
+              :activation-id="activationReceipt?.policy_activation_id"
               :activation-receipt-error="activationReceiptError"
               :activation-receipt-loading="activationReceiptLoading"
               :error="permitError"

@@ -58,6 +58,7 @@ import { getRuntimeControls } from '#/api/system';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useResearchStore } from '#/store';
@@ -583,7 +584,7 @@ async function evaluateReadiness() {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   closeOnPressEscape: true,
   footer: false,
   onOpenChange(isOpen) {
@@ -644,9 +645,9 @@ watch(
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.models.detail.title')"
-    class="w-full max-w-3xl"
   >
     <p aria-atomic="true" aria-live="polite" class="sr-only" role="status">
       {{ detailAnnouncement }}
@@ -818,7 +819,7 @@ watch(
                   type="link"
                   @click="
                     router.push(
-                      '/system/config?module=policy&resource=model_routing',
+                      '/system/config?module=policy&entity=config-resource&id=model_routing',
                     )
                   "
                 >
@@ -1345,7 +1346,7 @@ watch(
                       <EntityRouteLink
                         mono
                         :label="usage.feedback_cycle_id"
-                        :to="`/research/learning-policy?module=feedback&view=cycles&cycle_id=${usage.feedback_cycle_id}`"
+                        :to="`/research/learning-policy?module=feedback&entity=feedback-cycle&id=${usage.feedback_cycle_id}`"
                       />
                     </DescriptionsItem>
                     <DescriptionsItem
@@ -1731,7 +1732,7 @@ watch(
               <EntityRouteLink
                 mono
                 :label="report.backtest_report_id"
-                :to="`/research/lab?module=evaluation&entity=backtest-report&id=${report.backtest_report_id}`"
+                :to="`/research/lab?module=evaluation&entity=backtest&id=${report.backtest_report_id}`"
               />
               <span class="text-muted-foreground text-xs">
                 {{ formatDateTimeLocal(report.created_at) }}
@@ -1762,7 +1763,7 @@ watch(
     </Spin>
     <BacktestModal />
     <CpcvModal />
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>
 
 <style scoped>

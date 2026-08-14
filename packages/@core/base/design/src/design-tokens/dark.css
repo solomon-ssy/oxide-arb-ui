@@ -85,7 +85,7 @@
 
   /* Border color for inputs such as <Input />, <Select />, <Textarea /> */
   --input: 222 24% 24%;
-  --input-placeholder: 215 16% 58%;
+  --input-placeholder: 215 16% 60%;
   --input-background: 222 34% 12%;
 
   /* Used for focus ring */

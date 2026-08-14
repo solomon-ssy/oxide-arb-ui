@@ -37,7 +37,7 @@ import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useSettlementRedeemStore } from '#/store';
 
 import {
@@ -83,6 +83,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: SettlementRedeemDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [GovernedActionDrawer, governedActionDrawerApi] = useVbenDrawer({
@@ -128,11 +129,12 @@ function onActionClick({
   row,
 }: OnActionClickParams<SettlementRedeemView>) {
   if (code === 'detail') {
-    drawerApi.setData({ onChanged: refreshSettlementPage, redeem: row }).open();
+    openInspector(row.settlement_redeem_id);
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'settlement-redeem',
   fetch: (id) => getSettlementRedeem(id),
   open: (redeem) =>

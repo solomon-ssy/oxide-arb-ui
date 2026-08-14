@@ -6,13 +6,13 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import {
   isActiveResearchJobStatus,
   isTerminalResearchJobStatus,
-  RESEARCH_JOB_KINDS,
   RESEARCH_JOB_RESULT_KINDS,
   RESEARCH_JOB_STATUSES,
 } from '@vben/types';
 
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import { enumOptions } from '#/shared/presentation/enum-options';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Human-readable progress cell: phase + completion percent. */
@@ -62,7 +62,7 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
       return `/research/lab?module=models&entity=model-version&id=${modelVersionId}&path_set_id=${row.result.id}`;
     }
     case RESEARCH_JOB_RESULT_KINDS.backtestReport: {
-      return `/research/lab?module=evaluation&entity=backtest-report&id=${row.result.id}`;
+      return `/research/lab?module=evaluation&entity=backtest&id=${row.result.id}`;
     }
     case RESEARCH_JOB_RESULT_KINDS.calibrationArtifact: {
       return `/research/learning-policy?module=calibration&entity=calibration-artifact&id=${row.result.id}`;
@@ -186,25 +186,19 @@ export function useResearchJobSearchSchema(): VbenFormSchema[] {
       label: $t('page.research.jobs.filters.resultRef'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(RESEARCH_JOB_KINDS).map((value) => ({
-          label: $t(`enum.researchJobKind.${value}`),
-          value,
-        })),
+        options: enumOptions('ResearchJobKind'),
       },
       fieldName: 'kind',
       label: $t('page.research.jobs.filters.kind'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(RESEARCH_JOB_STATUSES).map((value) => ({
-          label: $t(`enum.researchJobStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('ResearchJobStatus'),
       },
       fieldName: 'status',
       label: $t('page.research.jobs.filters.status'),

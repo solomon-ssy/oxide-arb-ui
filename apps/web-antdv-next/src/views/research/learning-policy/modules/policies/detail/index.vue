@@ -16,7 +16,6 @@ import type {
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import {
@@ -56,6 +55,7 @@ import {
   formatPrice,
   formatUsd,
 } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 
 defineOptions({ name: 'TradePolicyDetailPage' });
@@ -91,6 +91,14 @@ const loading = ref(false);
 const artifactId = computed(() =>
   typeof route.query.id === 'string' ? route.query.id : '',
 );
+const inspectorOpen = computed({
+  get: () => route.query.entity === 'trade-policy' && artifactId.value !== '',
+  set: (value: boolean) => {
+    if (!value) {
+      void router.push('/research/learning-policy?module=policies');
+    }
+  },
+});
 const publicationBlocked = computed(
   () => (detail.value?.publication_blockers.length ?? 0) > 0,
 );
@@ -448,12 +456,15 @@ onMounted(load);
 </script>
 
 <template>
-  <Page
-    :description="$t('page.research.tradePolicies.detail.subtitle')"
+  <WorkspaceInspectorSurface
+    v-model:open="inspectorOpen"
     :loading="loading"
     :title="$t('page.research.tradePolicies.detail.title')"
   >
-    <template #extra>
+    <p class="mb-4 text-sm text-muted-foreground">
+      {{ $t('page.research.tradePolicies.detail.subtitle') }}
+    </p>
+    <div class="mb-4 flex justify-end">
       <Space>
         <Button
           @click="router.push('/research/learning-policy?module=policies')"
@@ -482,7 +493,7 @@ onMounted(load);
           {{ $t('page.research.tradePolicies.governance.retire') }}
         </Button>
       </Space>
-    </template>
+    </div>
 
     <Empty v-if="!loading && !detail" />
 
@@ -1079,7 +1090,7 @@ onMounted(load);
         />
       </Card>
     </div>
-  </Page>
+  </WorkspaceInspectorSurface>
 </template>
 
 <style scoped>

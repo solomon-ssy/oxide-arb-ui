@@ -23,6 +23,7 @@ import { getFactor } from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import CopyableHash from '#/views/research/components/copyable-hash.vue';
 
@@ -77,7 +78,7 @@ async function refresh(id: string) {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   closeOnPressEscape: true,
   footer: false,
   onOpenChange(isOpen) {
@@ -104,9 +105,9 @@ watch(usagePage, () => {
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.factors.detail.title')"
-    class="w-full max-w-2xl"
   >
     <Spin :spinning="loading">
       <div v-if="factor" class="flex flex-col gap-4">
@@ -272,5 +273,5 @@ watch(usagePage, () => {
         </Card>
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

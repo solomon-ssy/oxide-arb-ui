@@ -12,8 +12,8 @@ import { useRequestHandler } from '@vben/request/qp';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getPosition, listPositions } from '#/api/positions';
 import { $t } from '#/locales';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
-import { useOrderIntentStore } from '#/store';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
+import { useExecutionOrderStore, useSettlementRedeemStore } from '#/store';
 
 import PositionDetailDrawer from './modules/position-detail-drawer.vue';
 import { usePositionColumns, usePositionSearchSchema } from './modules/schemas';
@@ -22,7 +22,8 @@ defineOptions({ name: 'PositionsPage' });
 
 const route = useRoute();
 const { handleRequest } = useRequestHandler();
-const orderIntentStore = useOrderIntentStore();
+const executionOrderStore = useExecutionOrderStore();
+const settlementRedeemStore = useSettlementRedeemStore();
 
 const query = route.query;
 const initialFilters = {
@@ -43,6 +44,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: PositionDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<PositionView>({
@@ -84,19 +86,20 @@ const [Grid, gridApi] = useVbenVxeGrid<PositionView>({
 
 function onActionClick({ code, row }: OnActionClickParams<PositionView>) {
   if (code === 'detail') {
-    drawerApi.setData({ position: row }).open();
+    openInspector(row.position_id);
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'position',
   fetch: (id) => getPosition(id),
   open: (detail) => drawerApi.setData({ position: detail }).open(),
 });
 
-// Fills / exits / redeems land via `quant.intent`; refresh the ledger on a bump.
+// Order fills/exits and settlement redemption independently invalidate positions.
 watch(
-  () => orderIntentStore.revision,
+  () => [executionOrderStore.revision, settlementRedeemStore.revision],
   () => void gridApi.query(),
 );
 </script>

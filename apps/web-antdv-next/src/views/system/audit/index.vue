@@ -34,6 +34,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.systemAudit.description"
+    domain="governance"
     eyebrow="page.workspace.systemAudit.eyebrow"
     :modules="modules"
     title="page.menu.systemAudit"

@@ -1,8 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { RECONCILIATION_RESULTS } from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Prefilled filter values seeded from cross-page deep links (`route.query`). */
 export interface ReconciliationInitialFilters {
@@ -19,13 +18,10 @@ export function useReconciliationSearchSchema(
 ): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(RECONCILIATION_RESULTS).map((value) => ({
-          label: $t(`enum.reconciliationResult.${value}`),
-          value,
-        })),
+        options: enumOptions('ReconciliationResult'),
       },
       fieldName: 'result',
       label: $t('page.quantReconciliations.filters.result'),

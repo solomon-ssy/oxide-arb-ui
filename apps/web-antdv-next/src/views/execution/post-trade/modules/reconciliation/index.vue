@@ -14,7 +14,7 @@ import { Segmented } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getReconciliation, listReconciliations } from '#/api/reconciliations';
 import { $t } from '#/locales';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useOrderIntentStore, useReconciliationStore } from '#/store';
 
 import ReconciliationDetailDrawer from './modules/reconciliation-detail-drawer.vue';
@@ -74,6 +74,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: ReconciliationDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<ReconciliationView>({
@@ -121,7 +122,7 @@ function onResolvedChange(value: number | string) {
 function onActionClick({ code, row }: OnActionClickParams<ReconciliationView>) {
   switch (code) {
     case 'detail': {
-      drawerApi.setData({ reconciliation: row }).open();
+      openInspector(row.reconciliation_id);
       break;
     }
     case 'resolve': {
@@ -132,7 +133,8 @@ function onActionClick({ code, row }: OnActionClickParams<ReconciliationView>) {
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'reconciliation',
   fetch: (id) => getReconciliation(id),
   open: (reconciliation) => drawerApi.setData({ reconciliation }).open(),

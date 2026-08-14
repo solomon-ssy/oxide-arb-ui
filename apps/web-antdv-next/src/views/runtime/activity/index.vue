@@ -14,16 +14,7 @@ import { Page, useVbenDrawer } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import {
-  Alert,
-  Button,
-  Card,
-  Flex,
-  message,
-  Select,
-  SelectOption,
-  Statistic,
-} from 'antdv-next';
+import { Alert, Button, Card, Flex, message, Statistic } from 'antdv-next';
 
 import { retryReportRun } from '#/api/quant-reports';
 import { getReconciliation } from '#/api/reconciliations';
@@ -35,7 +26,9 @@ import {
 import { listRuntimeActivities } from '#/api/runtime-activities';
 import { $t } from '#/locales';
 import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
+import EnumSelect from '#/shared/components/enum/enum-select.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { enumOptions } from '#/shared/presentation/enum-options';
 import { useActivityStore } from '#/store/activity';
 import { useReconciliationActions } from '#/views/execution/post-trade/modules/reconciliation/modules/use-reconciliation-actions';
 
@@ -61,6 +54,8 @@ const STATUS_FILTERS: RuntimeActivityStatus[] = [
 ];
 const DOMAINS = new Set(DOMAIN_FILTERS);
 const STATUSES = new Set(STATUS_FILTERS);
+const domainOptions = enumOptions('RuntimeActivityDomain');
+const statusOptions = enumOptions('RuntimeActivityStatus');
 
 const route = useRoute();
 const router = useRouter();
@@ -348,34 +343,20 @@ onScopeDispose(() => {
           wrap="wrap"
         >
           <Flex gap="small" wrap="wrap">
-            <Select
+            <EnumSelect
               v-model:value="domain"
               allow-clear
               :aria-label="$t('page.runtimeActivity.filter.domain')"
+              :options="domainOptions"
               :placeholder="$t('page.runtimeActivity.filter.allDomains')"
-            >
-              <SelectOption
-                v-for="value in DOMAIN_FILTERS"
-                :key="value"
-                :value="value"
-              >
-                {{ $t(`page.runtimeActivity.domain.${value}`) }}
-              </SelectOption>
-            </Select>
-            <Select
+            />
+            <EnumSelect
               v-model:value="status"
               allow-clear
               :aria-label="$t('page.runtimeActivity.filter.status')"
+              :options="statusOptions"
               :placeholder="$t('page.runtimeActivity.filter.allStatuses')"
-            >
-              <SelectOption
-                v-for="value in STATUS_FILTERS"
-                :key="value"
-                :value="value"
-              >
-                {{ $t(`page.runtimeActivity.status.${value}`) }}
-              </SelectOption>
-            </Select>
+            />
           </Flex>
           <span class="activity-authority">
             <IconifyIcon icon="lucide:shield-check" />
@@ -428,7 +409,7 @@ onScopeDispose(() => {
   position: relative;
   padding: var(--qp-density-card-padding);
   overflow: hidden;
-  background: var(--qp-gradient-surface), hsl(var(--qp-surface-raised));
+  background: var(--qp-gradient-hero), hsl(var(--qp-surface-raised));
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
 }
@@ -438,10 +419,8 @@ onScopeDispose(() => {
   inset: 0;
   pointer-events: none;
   content: '';
-  background: var(--qp-gradient-scan);
-  opacity: 0.16;
-  transform: translateX(-110%);
-  animation: qp-scan 2400ms linear infinite;
+  background: var(--qp-gradient-brand);
+  opacity: 0.08;
 }
 
 .activity-eyebrow {

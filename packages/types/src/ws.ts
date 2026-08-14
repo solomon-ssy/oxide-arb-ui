@@ -4,6 +4,8 @@ import type {
   AlertCategory,
   AlertLevel,
   AlertSource,
+  ExecutionOrderPhase,
+  ExecutionOrderState,
   MaterializationRunKind,
   MaterializationRunStatus,
   OrderIntentStatus,
@@ -13,7 +15,9 @@ import type {
   ReportKind,
   ReportRunStatus,
   ReportRunTerminalReason,
+  SettlementAuthorizationState,
   SettlementCaseState,
+  SettlementReadinessStatus,
 } from './enums';
 import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { SystemControlPlaneStatus } from './system';
@@ -28,6 +32,7 @@ export const WS_CHANNELS = {
   marketResolved: 'market.resolved',
   materializationRunUpdate: 'materialization.run_update',
   quantCondition: 'quant.condition',
+  quantExecutionOrder: 'quant.execution_order',
   quantIntent: 'quant.intent',
   quantReconciliation: 'quant.reconciliation',
   quantReport: 'quant.report',
@@ -135,6 +140,27 @@ export interface IntentLifecycleEvent {
   occurred_at: IsoDateTime;
 }
 
+/** Committed execution-order lifecycle transition hint. */
+export interface ExecutionOrderLifecycleEvent {
+  event:
+    | 'accepted'
+    | 'ambiguous'
+    | 'cancel_requested'
+    | 'cancelled'
+    | 'created'
+    | 'failed'
+    | 'filled'
+    | 'partially_filled'
+    | 'planned'
+    | 'submitted';
+  execution_order_id: UuidString;
+  order_intent_id: UuidString;
+  order_phase: ExecutionOrderPhase;
+  market_id: MarketId;
+  state: ExecutionOrderState;
+  occurred_at: IsoDateTime;
+}
+
 /** Lean `quant.condition` revision hint; full evidence is fetched over REST. */
 export interface EntryConditionLifecycleEvent {
   condition_instance_id: UuidString;
@@ -182,6 +208,9 @@ export interface SettlementRedeemLifecycleEvent {
   settlement_redeem_id: UuidString;
   market_id: MarketId;
   state: SettlementCaseState;
+  readiness_status: SettlementReadinessStatus;
+  authorization_state: SettlementAuthorizationState;
+  occurred_at: IsoDateTime;
 }
 
 /** Closed subject taxonomy for durable feedback invalidation hints. */
@@ -219,6 +248,7 @@ export interface WsChannelPayloads {
   'market.resolved': MarketResolvedEvent;
   'materialization.run_update': MaterializationRunEvent;
   'quant.condition': EntryConditionLifecycleEvent;
+  'quant.execution_order': ExecutionOrderLifecycleEvent;
   'quant.intent': IntentLifecycleEvent;
   'quant.reconciliation': ReconciliationLifecycleEvent;
   'quant.report': ReportLifecycleEvent;

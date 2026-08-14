@@ -55,6 +55,19 @@ describe('application locale contract', () => {
     expect(leafKeys(enPage).filter((key) => !chineseKeys.has(key))).toEqual([]);
   });
 
+  it('keeps the English enum catalog free of Chinese copy', () => {
+    expect(
+      localeLeaves(enEnum).filter(([, value]) => /\p{Script=Han}/u.test(value)),
+    ).toEqual([]);
+  });
+
+  it('does not retain removed enum members as orphan locale keys', () => {
+    const keys = leafKeys(enEnum);
+    expect(keys).not.toContain('featureParityStage.domain_crypto');
+    expect(keys).not.toContain('featureParityStage.domain_weather');
+    expect(keys).not.toContain('resourceType.config_lifecycle');
+  });
+
   it.each([
     ['en-US', enEnum, enPage],
     ['zh-CN', zhEnum, zhPage],
@@ -100,6 +113,7 @@ describe('application locale contract', () => {
         color: 'error',
         enumName: 'MarketStatus',
         label,
+        swatch: 'hsl(var(--qp-status-danger))',
         value: 'venue_added_without_ui_release',
       });
     },

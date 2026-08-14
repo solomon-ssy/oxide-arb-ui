@@ -26,7 +26,7 @@ import {
 import { $t } from '#/locales';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import ModelBacktestModal from './modules/model-backtest-modal.vue';
@@ -68,6 +68,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: ModelDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 const [TrainModal, trainModalApi] = useVbenModal({
   connectedComponent: ModelTrainModal,
@@ -249,14 +250,15 @@ function onActionClick({ code, row }: OnActionClickParams<TrainedModelView>) {
       break;
     }
     case 'detail': {
-      drawerApi.setData({ model: row }).open();
+      openInspector(row.model_version_id);
       break;
     }
     // No default
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'model-version',
   fetch: (id) => getModel(id),
   open: (model) => drawerApi.setData({ model }).open(),

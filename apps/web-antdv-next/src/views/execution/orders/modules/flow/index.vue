@@ -6,7 +6,7 @@ import type {
   ObjectInspectorTimelineItem,
 } from '#/shared/components/object-inspector';
 
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
@@ -17,12 +17,12 @@ import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import {
-  ObjectInspector,
   ObjectInspectorActions,
   ObjectInspectorHeader,
   ObjectInspectorSection,
   ObjectInspectorTimeline,
 } from '#/shared/components/object-inspector';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 import { useExecutionFlow } from './use-execution-flow';
 
@@ -30,7 +30,6 @@ defineOptions({ name: 'ExecutionFlowRail' });
 
 const route = useRoute();
 const router = useRouter();
-const inspectorOpen = ref(false);
 const { load, loading, partialError, stages } = useExecutionFlow();
 
 const selectedStage = computed(() => {
@@ -41,6 +40,14 @@ const selectedStage = computed(() => {
   return stages.value.find(
     (stage) => stage.entity === entity && stage.entityId === id,
   );
+});
+const inspectorOpen = computed({
+  get: () => selectedStage.value !== undefined,
+  set: (value: boolean) => {
+    if (value) return;
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.push({ query });
+  },
 });
 const inspectorSections = computed<ObjectInspectorSectionModel[]>(() => {
   const stage = selectedStage.value;
@@ -115,105 +122,94 @@ function openOwningLedger() {
 </script>
 
 <template>
-  <ObjectInspector
+  <div class="execution-flow-workspace">
+    <InsightPanel
+      accent="cyan"
+      :description="$t('page.execution.flow.description')"
+      icon="lucide:git-branch"
+      :title="$t('page.execution.flow.title')"
+    >
+      <template #actions>
+        <Button :loading="loading" size="small" @click="load">
+          <IconifyIcon class="mr-1 size-4" icon="lucide:refresh-cw" />
+          {{ $t('page.execution.flow.refresh') }}
+        </Button>
+      </template>
+
+      <Alert
+        v-if="partialError"
+        class="mb-3"
+        :message="$t('page.execution.flow.partialError')"
+        show-icon
+        type="warning"
+      />
+      <Skeleton
+        v-if="loading && stages.every((stage) => !stage.entityId)"
+        active
+      />
+      <Empty
+        v-else-if="stages.every((stage) => !stage.entityId)"
+        :description="$t('page.execution.flow.empty')"
+      />
+      <ol v-else class="execution-flow-rail">
+        <li
+          v-for="(stage, index) in stages"
+          :key="stage.key"
+          class="execution-flow-stage"
+        >
+          <button
+            :aria-label="
+              $t('page.execution.flow.openStage', {
+                stage: $t(stage.labelKey),
+              })
+            "
+            class="execution-flow-stage-card"
+            :disabled="!stage.entityId"
+            type="button"
+            @click="selectStage(stage)"
+          >
+            <span class="execution-flow-index">
+              {{ String(index + 1).padStart(2, '0') }}
+            </span>
+            <span class="execution-flow-label">{{ $t(stage.labelKey) }}</span>
+            <EnumTag
+              context="execution-flow"
+              :name="stage.status.name"
+              :value="stage.status.value"
+            />
+            <span class="execution-flow-metric">
+              <IconifyIcon icon="lucide:timer" />
+              {{ stage.duration }}
+            </span>
+            <span class="execution-flow-scope">{{ $t(stage.scopeKey) }}</span>
+            <span class="execution-flow-count">
+              {{ $t('page.execution.flow.records', { count: stage.count }) }}
+            </span>
+          </button>
+          <span
+            v-if="index < stages.length - 1"
+            aria-hidden="true"
+            class="execution-flow-connector"
+            :class="[{ 'qp-scan-motion': stage.active }]"
+          >
+            <IconifyIcon icon="lucide:chevron-right" />
+          </span>
+        </li>
+      </ol>
+      <p class="execution-flow-footnote">
+        {{ $t('page.execution.flow.authorityNote') }}
+      </p>
+    </InsightPanel>
+  </div>
+
+  <WorkspaceInspectorSurface
     v-model:open="inspectorOpen"
-    :entity="selectedStage?.entity ?? ''"
-    :id="selectedStage?.entityId"
-    storage-key="qp.execution-flow.inspector.width"
     :title="
       selectedStage
         ? $t(selectedStage.labelKey)
         : $t('page.execution.flow.inspector.title')
     "
   >
-    <template #workspace>
-      <div class="execution-flow-workspace">
-        <InsightPanel
-          accent="cyan"
-          :description="$t('page.execution.flow.description')"
-          icon="lucide:git-branch"
-          :title="$t('page.execution.flow.title')"
-        >
-          <template #actions>
-            <Button :loading="loading" size="small" @click="load">
-              <IconifyIcon class="mr-1 size-4" icon="lucide:refresh-cw" />
-              {{ $t('page.execution.flow.refresh') }}
-            </Button>
-          </template>
-
-          <Alert
-            v-if="partialError"
-            class="mb-3"
-            :message="$t('page.execution.flow.partialError')"
-            show-icon
-            type="warning"
-          />
-          <Skeleton
-            v-if="loading && stages.every((stage) => !stage.entityId)"
-            active
-          />
-          <Empty
-            v-else-if="stages.every((stage) => !stage.entityId)"
-            :description="$t('page.execution.flow.empty')"
-          />
-          <ol v-else class="execution-flow-rail">
-            <li
-              v-for="(stage, index) in stages"
-              :key="stage.key"
-              class="execution-flow-stage"
-            >
-              <button
-                :aria-label="
-                  $t('page.execution.flow.openStage', {
-                    stage: $t(stage.labelKey),
-                  })
-                "
-                class="execution-flow-stage-card"
-                :disabled="!stage.entityId"
-                type="button"
-                @click="selectStage(stage)"
-              >
-                <span class="execution-flow-index">
-                  {{ String(index + 1).padStart(2, '0') }}
-                </span>
-                <span class="execution-flow-label">{{
-                  $t(stage.labelKey)
-                }}</span>
-                <EnumTag
-                  context="execution-flow"
-                  :name="stage.status.name"
-                  :value="stage.status.value"
-                />
-                <span class="execution-flow-metric">
-                  <IconifyIcon icon="lucide:timer" />
-                  {{ stage.duration }}
-                </span>
-                <span class="execution-flow-scope">{{
-                  $t(stage.scopeKey)
-                }}</span>
-                <span class="execution-flow-count">
-                  {{
-                    $t('page.execution.flow.records', { count: stage.count })
-                  }}
-                </span>
-              </button>
-              <span
-                v-if="index < stages.length - 1"
-                aria-hidden="true"
-                class="execution-flow-connector"
-                :class="[{ 'qp-scan-motion': stage.active }]"
-              >
-                <IconifyIcon icon="lucide:chevron-right" />
-              </span>
-            </li>
-          </ol>
-          <p class="execution-flow-footnote">
-            {{ $t('page.execution.flow.authorityNote') }}
-          </p>
-        </InsightPanel>
-      </div>
-    </template>
-
     <template v-if="selectedStage">
       <ObjectInspectorHeader
         :entity-id="selectedStage.entityId"
@@ -239,7 +235,7 @@ function openOwningLedger() {
         @select="openOwningLedger"
       />
     </template>
-  </ObjectInspector>
+  </WorkspaceInspectorSurface>
 </template>
 
 <style scoped>

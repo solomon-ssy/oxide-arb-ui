@@ -6,7 +6,6 @@ import type { CreateModelSpecBody } from './modules/model-spec-create-modal.vue'
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
 import { watch } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -18,7 +17,7 @@ import { createModelSpec, getModelSpec, listModelSpecs } from '#/api/research';
 import { $t } from '#/locales';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import ModelSpecCreateModal from './modules/model-spec-create-modal.vue';
@@ -30,7 +29,6 @@ import {
 
 defineOptions({ name: 'ResearchModelSpecsPage' });
 
-const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
@@ -49,6 +47,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: ModelSpecDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 const [CreateModal, createModalApi] = useVbenModal({
   connectedComponent: ModelSpecCreateModal,
@@ -103,25 +102,18 @@ async function submitCreate(body: CreateModelSpecBody): Promise<boolean> {
     $t('page.research.modelSpecs.create.feedbackNamed', { name: result.name }),
   );
   void gridApi.query();
-  drawerApi.setData({ spec: result }).open();
-  await router.replace({
-    path: '/research/lab',
-    query: {
-      entity: 'model-spec',
-      id: result.model_spec_id,
-      module: 'specs',
-    },
-  });
+  openInspector(result.model_spec_id);
   return true;
 }
 
 function onActionClick({ code, row }: OnActionClickParams<QuantModelSpecView>) {
   if (code === 'detail') {
-    drawerApi.setData({ spec: row }).open();
+    openInspector(row.model_spec_id);
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'model-spec',
   fetch: (id) => getModelSpec(id),
   open: (spec) => drawerApi.setData({ spec }).open(),

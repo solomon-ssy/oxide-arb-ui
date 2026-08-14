@@ -12,7 +12,7 @@ import { useRequestHandler } from '@vben/request/qp';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getBacktestReport, listBacktestReports } from '#/api/research';
 import { $t } from '#/locales';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import BacktestDetailDrawer from './modules/backtest-detail-drawer.vue';
@@ -42,6 +42,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: BacktestDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<BacktestReportView>({
@@ -77,12 +78,13 @@ const [Grid, gridApi] = useVbenVxeGrid<BacktestReportView>({
 
 function onActionClick({ code, row }: OnActionClickParams<BacktestReportView>) {
   if (code === 'detail') {
-    drawerApi.setData({ report: row }).open();
+    openInspector(row.backtest_report_id);
   }
 }
 
-useQueryEntityDrawer({
-  entity: 'backtest-report',
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
+  entity: 'backtest',
   fetch: (id) => getBacktestReport(id),
   open: (report) => drawerApi.setData({ report }).open(),
 });

@@ -12,6 +12,10 @@ import { Empty } from 'antdv-next';
 import { $t } from '#/locales';
 import { formatPercent, formatUsd } from '#/shared/components/format';
 import InsightPanel from '#/shared/components/insight-panel.vue';
+import {
+  resolveThemeColor,
+  themeColors,
+} from '#/shared/components/theme-color';
 
 defineOptions({ name: 'DashboardEquityDrawdownChart' });
 
@@ -31,6 +35,13 @@ const values = computed(() =>
 function render() {
   const rows = values.value;
   if (rows.length === 0) return;
+  const deterministic =
+    document.documentElement.dataset.uiDeterministic === 'true';
+  const timeAxis = rows.map((row, index) =>
+    deterministic
+      ? `T−${rows.length - index - 1}`
+      : new Date(row.as_of).toLocaleString(),
+  );
   void renderEcharts({
     animationDuration: reducedMotion.value === 'reduce' ? 0 : 220,
     aria: {
@@ -43,9 +54,32 @@ function render() {
     legend: { bottom: 0 },
     series: [
       {
-        areaStyle: { opacity: 0.14 },
+        areaStyle: {
+          color: {
+            colorStops: [
+              {
+                color: resolveThemeColor('--qp-chart-cat-1', '30%'),
+                offset: 0,
+              },
+              {
+                color: resolveThemeColor('--qp-chart-cat-2', '16%'),
+                offset: 0.58,
+              },
+              {
+                color: resolveThemeColor('--qp-chart-cat-2', '0%'),
+                offset: 1,
+              },
+            ],
+            type: 'linear',
+            x: 0,
+            x2: 0,
+            y: 0,
+            y2: 1,
+          },
+        },
         data: rows.map((row) => Number(row.venue_net_liquidation_usd)),
         emphasis: { focus: 'series' },
+        lineStyle: { color: themeColors.categorical[0], width: 2 },
         name: $t('page.dashboard.kpi.netLiq'),
         showSymbol: false,
         smooth: true,
@@ -53,9 +87,12 @@ function render() {
         yAxisIndex: 0,
       },
       {
-        areaStyle: { opacity: 0.1 },
+        areaStyle: {
+          color: resolveThemeColor('--qp-status-danger', '10%'),
+        },
         data: rows.map((row) => Number(row.drawdown_pct) * 100),
         emphasis: { focus: 'series' },
+        lineStyle: { color: themeColors.status.danger, width: 1.5 },
         name: $t('page.dashboard.kpi.drawdown'),
         showSymbol: false,
         smooth: true,
@@ -70,7 +107,7 @@ function render() {
     xAxis: {
       axisLabel: { hideOverlap: true },
       boundaryGap: false,
-      data: rows.map((row) => new Date(row.as_of).toLocaleString()),
+      data: timeAxis,
       type: 'category',
     },
     yAxis: [
@@ -96,8 +133,9 @@ watch([values, reducedMotion], render, { immediate: true });
 <template>
   <InsightPanel
     :title="$t('page.dashboard.equity.title')"
+    featured
     icon="lucide:chart-no-axes-combined"
-    tone="teal"
+    tone="sky"
   >
     <EchartsUI v-if="values.length > 0" ref="chartRef" height="330px" />
     <Empty

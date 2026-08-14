@@ -20,6 +20,7 @@ const props = withDefaults(
     delay?: number;
     duration?: number;
     endVal?: null | number;
+    featured?: boolean;
     icon?: string;
     loading?: boolean;
     prefix?: string;
@@ -35,6 +36,7 @@ const props = withDefaults(
     delay: 0,
     duration: 800,
     endVal: null,
+    featured: false,
     icon: undefined,
     loading: false,
     prefix: '',
@@ -78,7 +80,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <article :data-accent="accent" class="kpi-card">
+  <article
+    :data-accent="accent"
+    :data-featured="featured ? 'true' : undefined"
+    class="kpi-card"
+  >
     <header class="kpi-header">
       <div class="kpi-title">
         <span class="truncate">{{ title }}</span>
@@ -124,6 +130,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .kpi-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -132,6 +139,25 @@ onBeforeUnmount(() => {
   background: hsl(var(--qp-surface-raised));
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
+  isolation: isolate;
+}
+
+.kpi-card[data-featured='true'] {
+  background:
+    linear-gradient(
+        hsl(var(--qp-surface-raised)),
+        hsl(var(--qp-surface-raised))
+      )
+      padding-box,
+    var(--qp-gradient-brand) border-box;
+  border-color: transparent;
+  box-shadow: var(--qp-shadow-featured);
+}
+
+.kpi-card[data-featured='true'] .kpi-value {
+  color: transparent;
+  background: var(--qp-gradient-brand);
+  background-clip: text;
 }
 
 .kpi-header {
@@ -187,7 +213,7 @@ onBeforeUnmount(() => {
 }
 
 [data-accent='sky'] {
-  --kpi-accent: var(--qp-accent-realtime);
+  --kpi-accent: var(--qp-accent-sky-ink);
 }
 
 [data-accent='violet'] {

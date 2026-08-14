@@ -9,12 +9,13 @@ import { Descriptions, DescriptionsItem } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'OperationLogDetailDrawer' });
 
 const row = ref<null | OperationLogView>(null);
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     row.value = isOpen
@@ -25,9 +26,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.operationLog.detail.title')"
-    class="w-full max-w-4xl"
   >
     <template v-if="row">
       <Descriptions :column="1" bordered size="small">
@@ -59,5 +60,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         <pre>{{ JSON.stringify(row.detail, null, 2) }}</pre>
       </div>
     </template>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

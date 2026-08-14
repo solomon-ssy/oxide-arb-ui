@@ -9,8 +9,7 @@ import type {
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
-import { IconifyIcon } from '@vben/icons';
+import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { Alert, Button, TabPane, Tabs } from 'antdv-next';
@@ -24,10 +23,10 @@ import {
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useOrderIntentStore, useQuantReportStore } from '#/store';
-import RecommendationDetailDrawer from '#/views/trading/recommendations/modules/recommendations/modules/recommendation-detail-drawer.vue';
 
 import { useReportActions } from '../modules/use-report-actions';
 import ReportDiffPanel from '../modules/widgets/report-diff-panel.vue';
@@ -65,10 +64,11 @@ const reportId = computed(() => {
   const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
   return entity === 'report' && typeof id === 'string' ? id : '';
 });
-
-const [RecDrawer, recDrawerApi] = useVbenDrawer({
-  connectedComponent: RecommendationDetailDrawer,
-  destroyOnClose: true,
+const inspectorOpen = computed({
+  get: () => reportId.value !== '',
+  set: (value: boolean) => {
+    if (!value) goBack();
+  },
 });
 const [RouteLineageDrawer, routeLineageDrawerApi] = useVbenDrawer({
   connectedComponent: ReportRouteLineageDrawer,
@@ -142,7 +142,14 @@ function goBack() {
 }
 
 function openRecommendation(recommendation: QuantRecommendationView) {
-  recDrawerApi.setData({ recommendation }).open();
+  void router.push({
+    path: '/trading/recommendations',
+    query: {
+      entity: 'recommendation',
+      id: recommendation.recommendation_id,
+      module: 'queue',
+    },
+  });
 }
 
 function openRouteLineage(route: ReportRouteDiagnosticsView) {
@@ -197,12 +204,12 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <Page auto-content-height data-testid="report-detail-workspace">
-    <div class="mb-4 flex items-center justify-between">
-      <Button type="link" @click="goBack">
-        <IconifyIcon class="mr-1 size-4" icon="lucide:arrow-left" />
-        {{ $t('page.quantReports.detail.back') }}
-      </Button>
+  <WorkspaceInspectorSurface
+    v-model:open="inspectorOpen"
+    test-id="report-detail-workspace"
+    :title="$t('page.quantReports.listTitle')"
+  >
+    <div class="mb-4 flex items-center justify-end">
       <div class="flex gap-2">
         <Button v-if="report?.run" @click="openRun">
           {{ $t('page.quantReports.detail.openRun') }}
@@ -238,13 +245,13 @@ onMounted(() => void load());
                 v-if="report.predecessor_report_id"
                 class="!text-inherit underline"
                 :label="$t('page.quantReports.detail.predecessor')"
-                :to="`/trading/recommendations?module=queue&entity=report&id=${report.predecessor_report_id}`"
+                :to="`/trading/recommendations?module=reports&entity=report&id=${report.predecessor_report_id}`"
               />
               <EntityRouteLink
                 v-if="report.successor_report_id"
                 class="!text-inherit underline"
                 :label="$t('page.quantReports.detail.successor')"
-                :to="`/trading/recommendations?module=queue&entity=report&id=${report.successor_report_id}`"
+                :to="`/trading/recommendations?module=reports&entity=report&id=${report.successor_report_id}`"
               />
             </div>
           </template>
@@ -296,7 +303,6 @@ onMounted(() => void load());
         </TabPane>
       </Tabs>
     </AsyncState>
-    <RecDrawer />
     <RouteLineageDrawer />
-  </Page>
+  </WorkspaceInspectorSurface>
 </template>

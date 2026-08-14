@@ -22,7 +22,17 @@ import { message, notification } from 'antdv-next';
 import { getFeedbackRevisionApi, issueWsTicketApi } from '#/api';
 import { $t } from '#/locales';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useFeedbackStore, useSystemStore, useWsStore } from '#/store';
+import {
+  useActivityStore,
+  useExecutionOrderStore,
+  useFeedbackStore,
+  useOrderIntentStore,
+  useQuantReportStore,
+  useReconciliationStore,
+  useSettlementRedeemStore,
+  useSystemStore,
+  useWsStore,
+} from '#/store';
 
 import { authorizedGlobalChannels } from './ws/ws-channel-permissions';
 import { dispatchWsEnvelope } from './ws/ws-dispatch';
@@ -67,6 +77,12 @@ function createQpWs(): QpWsApi {
   const api = scope.run(() => {
     const accessStore = useAccessStore();
     const feedbackStore = useFeedbackStore();
+    const activityStore = useActivityStore();
+    const executionOrderStore = useExecutionOrderStore();
+    const orderIntentStore = useOrderIntentStore();
+    const quantReportStore = useQuantReportStore();
+    const reconciliationStore = useReconciliationStore();
+    const settlementRedeemStore = useSettlementRedeemStore();
     const systemStore = useSystemStore();
     const wsStore = useWsStore();
     const { hasAccessByCodes } = useQpAccess();
@@ -178,6 +194,15 @@ function createQpWs(): QpWsApi {
           });
         }
       }
+    }
+
+    function invalidateRestLedgers() {
+      activityStore.invalidate();
+      executionOrderStore.invalidate();
+      orderIntentStore.invalidate();
+      quantReportStore.invalidate();
+      reconciliationStore.invalidate();
+      settlementRedeemStore.invalidate();
     }
 
     function handleEnvelope(event: MessageEvent) {
@@ -312,6 +337,7 @@ function createQpWs(): QpWsApi {
           socketState.value = 'OPEN';
           reconnectAttempts = 0;
           startHeartbeat(ws);
+          invalidateRestLedgers();
           replaySubscriptions();
         });
         ws.addEventListener('message', handleEnvelope);

@@ -1,8 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { EXECUTION_ORDER_PHASES, EXECUTION_ORDER_STATES } from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Prefilled filter values seeded from cross-page deep links (`route.query`). */
 export interface ExecutionOrderInitialFilters {
@@ -22,26 +21,20 @@ export function useExecutionOrderSearchSchema(
 ): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(EXECUTION_ORDER_STATES).map((value) => ({
-          label: $t(`enum.executionOrderState.${value}`),
-          value,
-        })),
+        options: enumOptions('ExecutionOrderState'),
       },
       defaultValue: initial.state,
       fieldName: 'state',
       label: $t('page.quantExecutionOrders.filters.state'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(EXECUTION_ORDER_PHASES).map((value) => ({
-          label: $t(`enum.executionOrderPhase.${value}`),
-          value,
-        })),
+        options: enumOptions('ExecutionOrderPhase'),
       },
       fieldName: 'order_phase',
       label: $t('page.quantExecutionOrders.filters.phase'),

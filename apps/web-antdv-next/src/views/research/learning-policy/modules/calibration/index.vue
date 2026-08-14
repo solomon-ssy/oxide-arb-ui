@@ -25,7 +25,7 @@ import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import CalibrationArtifactDetailDrawer from './modules/calibration-artifact-detail-drawer.vue';
@@ -62,6 +62,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: CalibrationArtifactDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [CalibratorModal, calibratorModalApi] = useVbenModal({
@@ -173,13 +174,7 @@ async function activate(row: CalibrationArtifactSummaryView) {
 }
 
 function openDetail(row: CalibrationArtifactSummaryView) {
-  void handleRequest(() => getCalibrationArtifact(row.artifact_id)).then(
-    (detail) => {
-      if (detail) {
-        drawerApi.setData({ detail }).open();
-      }
-    },
-  );
+  openInspector(row.artifact_id);
 }
 
 function onActionClick({
@@ -199,7 +194,8 @@ function onActionClick({
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'calibration-artifact',
   fetch: (id) => getCalibrationArtifact(id),
   open: (detail) => drawerApi.setData({ detail }).open(),

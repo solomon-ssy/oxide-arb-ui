@@ -1,20 +1,33 @@
 <script lang="ts" setup>
-import type { WorkspaceModule } from './workspace-shell.types';
+import type { WorkspaceDomain, WorkspaceModule } from './workspace-shell.types';
 
-import { computed, onMounted, watch } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  readonly,
+  ref,
+  watch,
+} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
 
 import { Alert, Flex, TabPane, Tabs } from 'antdv-next';
-import { motion, useReducedMotion } from 'motion-v';
+import { AnimatePresence, motion, useReducedMotion } from 'motion-v';
 
 import { $t } from '#/locales';
+
+import { WORKSPACE_INSPECTOR_HOST_KEY } from './workspace-inspector-host.types';
+import WorkspaceInspectorHost from './workspace-inspector-host.vue';
+import { inspectorModule } from './workspace-inspector-registry';
 
 defineOptions({ name: 'WorkspaceShell' });
 
 const props = defineProps<{
   description: string;
+  domain: WorkspaceDomain;
   eyebrow: string;
   modules: WorkspaceModule[];
   title: string;
@@ -23,6 +36,12 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 const reducedMotion = useReducedMotion();
+const inspectorActiveId = ref<null | string>(null);
+const inspectorDesktop = ref(false);
+const inspectorTarget = ref<HTMLElement | null>(null);
+const inspectorWidth = ref(520);
+let activeInspectorClose: (() => void) | undefined;
+let inspectorMedia: MediaQueryList | undefined;
 
 const fallbackModule = computed(() => props.modules[0]);
 const moduleKeys = computed(
@@ -47,6 +66,32 @@ const activeModule = computed(() =>
   props.modules.find((item) => item.key === activeKey.value),
 );
 
+function activateInspector(id: string, close: () => void) {
+  if (inspectorActiveId.value !== null && inspectorActiveId.value !== id) {
+    activeInspectorClose?.();
+  }
+  inspectorActiveId.value = id;
+  activeInspectorClose = close;
+}
+
+function deactivateInspector(id: string) {
+  if (inspectorActiveId.value !== id) return;
+  inspectorActiveId.value = null;
+  activeInspectorClose = undefined;
+}
+
+function syncInspectorViewport() {
+  inspectorDesktop.value = inspectorMedia?.matches ?? false;
+}
+
+provide(WORKSPACE_INSPECTOR_HOST_KEY, {
+  activeId: readonly(inspectorActiveId),
+  activate: activateInspector,
+  deactivate: deactivateInspector,
+  desktop: readonly(inspectorDesktop),
+  target: inspectorTarget,
+});
+
 function canonicalizeModule() {
   const raw = Array.isArray(route.query.module)
     ? route.query.module[0]
@@ -55,18 +100,74 @@ function canonicalizeModule() {
   if (!fallback || raw === fallback || moduleKeys.value.has(String(raw))) {
     return;
   }
+  const entity = Array.isArray(route.query.entity)
+    ? route.query.entity[0]
+    : route.query.entity;
+  const inspectorFallback =
+    typeof entity === 'string'
+      ? inspectorModule(route.path, entity)
+      : undefined;
   void router.replace({
-    query: { ...route.query, module: fallback },
+    query: {
+      ...route.query,
+      module:
+        inspectorFallback && moduleKeys.value.has(inspectorFallback)
+          ? inspectorFallback
+          : fallback,
+    },
   });
 }
 
+function canonicalizeInspector() {
+  const entity = Array.isArray(route.query.entity)
+    ? route.query.entity[0]
+    : route.query.entity;
+  const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
+  if (entity === undefined && id === undefined) return;
+
+  const requestedModuleValue = Array.isArray(route.query.module)
+    ? route.query.module[0]
+    : route.query.module;
+  const requestedModule =
+    typeof requestedModuleValue === 'string' ? requestedModuleValue : undefined;
+  const module =
+    typeof entity === 'string' && typeof id === 'string' && id.length > 0
+      ? inspectorModule(route.path, entity, requestedModule)
+      : undefined;
+  if (!module) {
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.replace({ query });
+    return;
+  }
+  if (requestedModule !== module) {
+    void router.replace({ query: { ...route.query, module } });
+  }
+}
+
 watch(() => route.query.module, canonicalizeModule);
-onMounted(canonicalizeModule);
+watch(() => [route.query.entity, route.query.id], canonicalizeInspector);
+onMounted(() => {
+  const savedWidth = Number(
+    localStorage.getItem('qp.workspace-inspector.width'),
+  );
+  if (Number.isFinite(savedWidth) && savedWidth >= 360 && savedWidth <= 760) {
+    inspectorWidth.value = savedWidth;
+  }
+  inspectorMedia = window.matchMedia('(min-width: 1280px)');
+  syncInspectorViewport();
+  inspectorMedia.addEventListener('change', syncInspectorViewport);
+  canonicalizeModule();
+  canonicalizeInspector();
+});
+onBeforeUnmount(() => {
+  inspectorMedia?.removeEventListener('change', syncInspectorViewport);
+});
 </script>
 
 <template>
   <Flex
     class="workspace-shell"
+    :data-domain="domain"
     :data-ui-ready="activeModule ? 'true' : 'false'"
     data-testid="workspace-shell"
     gap="middle"
@@ -89,38 +190,156 @@ onMounted(canonicalizeModule);
       </TabPane>
     </Tabs>
 
-    <Alert
-      v-if="!activeModule"
-      :message="$t('page.workspace.invalidModule')"
-      show-icon
-      type="error"
-    />
-    <motion.div
-      v-else
-      :key="activeModule.key"
-      :animate="reducedMotion ? undefined : { opacity: 1, y: 0 }"
-      :initial="reducedMotion ? false : { opacity: 0, y: 8 }"
-      :transition="{ duration: reducedMotion ? 0 : 0.2 }"
+    <WorkspaceInspectorHost
+      v-model:target="inspectorTarget"
+      v-model:width="inspectorWidth"
+      :active="inspectorActiveId !== null"
+      :desktop="inspectorDesktop"
     >
-      <component :is="activeModule.component" />
-    </motion.div>
+      <Alert
+        v-if="!activeModule"
+        :message="$t('page.workspace.invalidModule')"
+        show-icon
+        type="error"
+      />
+      <AnimatePresence v-else :initial="false" mode="wait">
+        <motion.div
+          :key="activeModule.key"
+          :animate="reducedMotion ? undefined : { y: 0 }"
+          :exit="reducedMotion ? undefined : { y: -4 }"
+          :initial="reducedMotion ? false : { y: 8 }"
+          :transition="{ duration: reducedMotion ? 0 : 0.18 }"
+        >
+          <component :is="activeModule.component" />
+        </motion.div>
+      </AnimatePresence>
+    </WorkspaceInspectorHost>
   </Flex>
 </template>
 
 <style scoped>
 .workspace-shell {
+  --workspace-accent: var(--qp-accent-sky);
+  --workspace-aurora-medium: 7%;
+  --workspace-aurora-soft: 6%;
+  --workspace-aurora-strong: 8%;
+  --workspace-gradient: var(--qp-gradient-trading);
+  --workspace-hero:
+    radial-gradient(
+      circle at 8% 0%,
+      hsl(var(--qp-accent-sky) / var(--workspace-aurora-strong)),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 58% -22%,
+      hsl(var(--qp-accent-violet) / var(--workspace-aurora-medium)),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 96% 10%,
+      hsl(var(--qp-accent-pink) / var(--workspace-aurora-soft)),
+      transparent 42%
+    );
+  --qp-shadow-inspector: var(--qp-glow-sky);
+  --qp-shadow-workspace: var(--qp-glow-sky);
+
   max-width: 1600px;
   padding: 16px 16px 28px;
   margin-inline: auto;
+}
+
+.workspace-shell[data-domain='execution'] {
+  --workspace-accent: var(--qp-accent-orange);
+  --workspace-gradient: var(--qp-gradient-execution);
+  --workspace-hero:
+    radial-gradient(
+      circle at 8% 0%,
+      hsl(var(--qp-accent-violet) / var(--workspace-aurora-strong)),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 58% -22%,
+      hsl(var(--qp-accent-pink) / var(--workspace-aurora-medium)),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 96% 10%,
+      hsl(var(--qp-accent-orange) / var(--workspace-aurora-soft)),
+      transparent 42%
+    );
+  --qp-shadow-inspector: var(--qp-glow-orange);
+  --qp-shadow-workspace: var(--qp-glow-orange);
+}
+
+.workspace-shell[data-domain='research'] {
+  --workspace-accent: var(--qp-accent-pink);
+  --workspace-gradient: var(--qp-gradient-research);
+  --workspace-hero:
+    radial-gradient(
+      circle at 8% 0%,
+      hsl(var(--qp-accent-violet) / var(--workspace-aurora-strong)),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 70% -22%,
+      hsl(var(--qp-accent-pink) / var(--workspace-aurora-medium)),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      hsl(var(--qp-accent-violet) / var(--workspace-aurora-soft)),
+      transparent 38%
+    );
+  --qp-shadow-inspector: var(--qp-glow-pink);
+  --qp-shadow-workspace: var(--qp-glow-pink);
+}
+
+.workspace-shell[data-domain='governance'] {
+  --workspace-accent: var(--qp-accent-violet);
+  --workspace-gradient: var(--qp-gradient-governance);
+  --workspace-hero:
+    radial-gradient(
+      circle at 8% 0%,
+      hsl(var(--qp-accent-sky) / var(--workspace-aurora-strong)),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 72% -22%,
+      hsl(var(--qp-accent-violet) / var(--workspace-aurora-medium)),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      hsl(var(--qp-accent-sky) / var(--workspace-aurora-soft)),
+      transparent 38%
+    );
+  --qp-shadow-inspector: var(--qp-glow-violet);
+  --qp-shadow-workspace: var(--qp-glow-violet);
 }
 
 .workspace-hero {
   position: relative;
   padding: var(--qp-density-card-padding);
   overflow: hidden;
-  background: var(--qp-gradient-surface), hsl(var(--qp-surface-raised));
+  background: var(--workspace-hero), hsl(var(--qp-surface-raised));
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
+  box-shadow: var(--qp-shadow-subtle);
+}
+
+:global(.dark) .workspace-shell {
+  --workspace-aurora-medium: 12%;
+  --workspace-aurora-soft: 10%;
+  --workspace-aurora-strong: 14%;
+}
+
+.workspace-hero::before {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 2px;
+  content: '';
+  background: var(--qp-gradient-brand);
 }
 
 .workspace-hero::after {
@@ -129,13 +348,14 @@ onMounted(canonicalizeModule);
   inset-inline-start: 0;
   width: 3px;
   content: '';
-  background: var(--qp-gradient-brand);
+  background: var(--workspace-gradient);
+  box-shadow: var(--qp-shadow-workspace);
 }
 
 .workspace-eyebrow {
   font-size: 11px;
   font-weight: 750;
-  color: hsl(var(--qp-accent-realtime));
+  color: hsl(var(--workspace-accent));
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -157,6 +377,38 @@ onMounted(canonicalizeModule);
 
 .workspace-tabs {
   margin-bottom: -16px;
+}
+
+.workspace-tabs :deep(.ant-tabs-ink-bar) {
+  height: 2px;
+  background: var(--workspace-gradient);
+  box-shadow: var(--qp-shadow-workspace);
+}
+
+.workspace-tabs :deep(.ant-tabs-tab-active) {
+  background: hsl(var(--workspace-accent) / 6%);
+  border-radius: var(--qp-radius-sm) var(--qp-radius-sm) 0 0;
+}
+
+.workspace-tabs :deep(.ant-tabs-tab:focus-visible) {
+  outline: 2px solid hsl(var(--workspace-accent));
+  outline-offset: 2px;
+  box-shadow: var(--qp-shadow-focus);
+}
+
+.workspace-shell :deep(.ant-btn-primary:not(.ant-btn-dangerous)),
+.workspace-shell
+  :deep(.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-dangerous)) {
+  color: white;
+  background: var(--workspace-gradient);
+  border-color: transparent;
+  box-shadow: var(--qp-shadow-subtle);
+}
+
+.workspace-shell :deep(.ant-btn:focus-visible) {
+  outline: 2px solid hsl(var(--workspace-accent));
+  outline-offset: 2px;
+  box-shadow: var(--qp-shadow-focus);
 }
 
 .workspace-tab {

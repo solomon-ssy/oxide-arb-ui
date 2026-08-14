@@ -30,12 +30,18 @@ export function useAntdDesignTokens() {
     colorErrorActive: '',
     colorErrorHover: '',
     colorInfo: '',
+    colorLink: '',
+    colorLinkActive: '',
+    colorLinkHover: '',
     colorPrimary: '',
     colorSuccess: '',
+    colorText: '',
     colorTextBase: '',
     colorTextDescription: '',
     colorTextLightSolid: '',
     colorTextPlaceholder: '',
+    colorTextQuaternary: '',
+    colorTextSecondary: '',
     colorTextTertiary: '',
     colorWarning: '',
     zIndexPopupBase: 2000, // 调整基础弹层层级，避免下拉等组件被弹窗或者最大化状态下的表格遮挡
@@ -66,6 +72,13 @@ export function useAntdDesignTokens() {
 
       tokens.colorInfo = getCssVariableValue('--primary');
 
+      // Link text is rendered directly on both canvas and raised surfaces.
+      // Keep the solid-control seed separate from the accessible brand ink so
+      // dark mode never inherits the low-contrast 600 interaction shade.
+      tokens.colorLink = getCssVariableValue('--qp-accent-sky-ink');
+      tokens.colorLinkActive = getCssVariableValue('--qp-accent-violet');
+      tokens.colorLinkHover = getCssVariableValue('--qp-accent-violet');
+
       // The customizable destructive seed is intentionally vivid, but its 500
       // shade cannot meet 4.5:1 as outlined-button text on either surface.
       // Select mode-specific palette shades so destructive controls remain
@@ -85,12 +98,19 @@ export function useAntdDesignTokens() {
       tokens.colorSuccess = getCssVariableValue('--success');
 
       tokens.colorTextBase = getCssVariableValue('--foreground');
-      tokens.colorTextDescription = getCssVariableValue('--muted-foreground');
+      tokens.colorText = getCssVariableValue('--qp-text-primary');
+      tokens.colorTextDescription = getCssVariableValue('--qp-text-secondary');
       tokens.colorTextLightSolid = getCssVariableValue(
         '--destructive-foreground',
       );
-      tokens.colorTextPlaceholder = getCssVariableValue('--muted-foreground');
-      tokens.colorTextTertiary = getCssVariableValue('--muted-foreground');
+      // Antdv otherwise derives tertiary/quaternary text through alpha
+      // blending. On the terminal's deep surfaces that produces 2.5-3.3:1
+      // labels, placeholders, and table headers. Use the audited opaque text
+      // tokens for every normal-sized text tier.
+      tokens.colorTextPlaceholder = getCssVariableValue('--qp-text-muted');
+      tokens.colorTextQuaternary = getCssVariableValue('--qp-text-muted');
+      tokens.colorTextSecondary = getCssVariableValue('--qp-text-secondary');
+      tokens.colorTextTertiary = getCssVariableValue('--qp-text-muted');
 
       tokens.colorBorderSecondary = tokens.colorBorder =
         getCssVariableValue('--border');

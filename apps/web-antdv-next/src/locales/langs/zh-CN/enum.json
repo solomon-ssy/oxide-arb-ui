@@ -423,8 +423,6 @@
     "capture": "决策证据捕获",
     "feature_cell": "特征单元",
     "data_quality": "数据质量准入",
-    "domain_crypto": "加密域输入",
-    "domain_weather": "天气域输入",
     "factor": "因子",
     "model_input": "模型输入",
     "prediction": "业务预测"
@@ -473,7 +471,6 @@
     "system": "系统",
     "market": "市场",
     "config": "配置治理",
-    "config_lifecycle": "配置生命周期",
     "publication": "发布",
     "materialization": "物化",
     "replay": "回放",

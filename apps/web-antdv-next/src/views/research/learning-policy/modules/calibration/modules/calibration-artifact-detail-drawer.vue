@@ -24,6 +24,7 @@ import {
 import { $t } from '#/locales';
 import { formatDateTimeLocal, formatPercent } from '#/shared/components/format';
 import ReliabilityChart from '#/shared/components/reliability-chart.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'CalibrationArtifactDetailDrawer' });
 
@@ -148,7 +149,7 @@ const reliabilityBinColumns = computed(() => [
   },
 ]);
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     detail.value = isOpen ? drawerApi.getData<DrawerData>().detail : null;
@@ -157,8 +158,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
-    class="w-full max-w-4xl"
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.calibrationArtifacts.detail.title')"
   >
     <div v-if="detail" class="flex flex-col gap-4">
@@ -399,5 +400,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Card>
       </template>
     </div>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

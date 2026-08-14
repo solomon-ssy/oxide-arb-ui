@@ -47,6 +47,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.learningPolicy.description"
+    domain="research"
     eyebrow="page.workspace.learningPolicy.eyebrow"
     :modules="modules"
     title="page.menu.researchLearningPolicy"

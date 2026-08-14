@@ -12,9 +12,15 @@ import { RouterLink } from 'vue-router';
 import { IconifyIcon } from '@vben/icons';
 
 import { Button, Empty, Listy, Progress, Skeleton, Tag } from 'antdv-next';
-import { motion, useReducedMotion } from 'motion-v';
+import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from 'motion-v';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 
 defineOptions({ name: 'RuntimeActivityFeed' });
@@ -55,7 +61,7 @@ const STATUS_CLASS: Record<RuntimeActivityStatus, string> = {
   failed: 'is-danger',
   pending: 'is-queued',
   running: 'is-running',
-  skipped: 'is-warning',
+  skipped: 'is-neutral',
   succeeded: 'is-success',
 };
 
@@ -146,83 +152,89 @@ function domainIcon(item: RuntimeActivityView) {
       :description="$t('page.runtimeActivity.empty')"
       class="activity-empty"
     />
-    <Listy
-      v-else
-      :group="group"
-      :height="height"
-      :items="items"
-      :row-key="(item: RuntimeActivityView) => item.activity_id"
-      root-class="qp-activity-list"
-      sticky
-      virtual
-    >
-      <template #itemRender="item">
-        <motion.div
-          :animate="reducedMotion ? undefined : { opacity: 1, y: 0 }"
-          class="activity-row"
-          :class="[
-            statusClass(item),
-            { 'qp-running-motion': item.status === 'running' },
-          ]"
-          :initial="reducedMotion ? false : { opacity: 0, y: 8 }"
-          :layout="!reducedMotion"
-          :transition="{ duration: reducedMotion ? 0 : 0.3 }"
-        >
-          <span class="status-rail" aria-hidden="true"></span>
-          <span class="activity-icon" :class="statusClass(item)">
-            <IconifyIcon
-              :class="{ 'motion-safe:animate-spin': item.status === 'running' }"
-              :icon="statusIcon(item)"
-            />
-          </span>
-          <div class="activity-body">
-            <div class="activity-heading">
-              <RouterLink class="activity-title" :to="item.target_route">
-                {{ activityKind(item) }}
-              </RouterLink>
-              <time :datetime="item.updated_at" class="activity-time">
-                {{ formatDateTimeLocal(item.updated_at) }}
-              </time>
-            </div>
-            <div class="activity-meta">
-              <Tag class="domain-tag">
-                <IconifyIcon :icon="domainIcon(item)" />
-                {{ $t(`page.runtimeActivity.domain.${item.domain}`) }}
-              </Tag>
-              <Tag class="status-tag" :class="[statusClass(item)]">
-                {{ $t(`page.runtimeActivity.status.${item.status}`) }}
-              </Tag>
-              <code>{{ item.source_status }}</code>
-            </div>
-            <Progress
-              v-if="item.progress_pct !== null"
-              :aria-label="$t('page.runtimeActivity.progress')"
-              class="activity-progress"
-              :percent="progress(item)"
-              size="small"
-              status="active"
-            />
-            <p v-if="item.detail" class="activity-detail">{{ item.detail }}</p>
-            <div
-              v-if="showActions && item.available_actions.length > 0"
-              class="activity-actions"
+    <LayoutGroup v-else>
+      <Listy
+        :group="group"
+        :height="height"
+        :items="items"
+        :row-key="(item: RuntimeActivityView) => item.activity_id"
+        root-class="qp-activity-list"
+        sticky
+        virtual
+      >
+        <template #itemRender="item">
+          <AnimatePresence :initial="false">
+            <motion.div
+              :key="item.activity_id"
+              :animate="reducedMotion ? undefined : { opacity: 1, y: 0 }"
+              class="activity-row"
+              :class="[
+                statusClass(item),
+                { 'qp-running-motion': item.status === 'running' },
+              ]"
+              :exit="reducedMotion ? undefined : { opacity: 0, y: -4 }"
+              :initial="reducedMotion ? false : { opacity: 0, y: 8 }"
+              :layout="reducedMotion ? false : 'position'"
+              :transition="{ duration: reducedMotion ? 0 : 0.18 }"
             >
-              <Button
-                v-for="action in item.available_actions"
-                :key="action.kind"
-                size="small"
-                :danger="action.kind === 'cancel_research_job'"
-                @click="emit('action', action.kind, item)"
-              >
-                {{ actionLabel(action.kind) }}
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      </template>
-    </Listy>
+              <span class="status-rail" aria-hidden="true"></span>
+              <span class="activity-icon" :class="statusClass(item)">
+                <IconifyIcon :icon="statusIcon(item)" />
+              </span>
+              <div class="activity-body">
+                <div class="activity-heading">
+                  <RouterLink class="activity-title" :to="item.target_route">
+                    {{ activityKind(item) }}
+                  </RouterLink>
+                  <time :datetime="item.updated_at" class="activity-time">
+                    {{ formatDateTimeLocal(item.updated_at) }}
+                  </time>
+                </div>
+                <div class="activity-meta">
+                  <Tag class="domain-tag" :class="`domain-${item.domain}`">
+                    <IconifyIcon :icon="domainIcon(item)" />
+                    {{ $t(`page.runtimeActivity.domain.${item.domain}`) }}
+                  </Tag>
+                  <EnumTag
+                    context="runtime-activity"
+                    name="RuntimeActivityStatus"
+                    :value="item.status"
+                  />
+                  <code>{{ item.source_status }}</code>
+                </div>
+                <Progress
+                  v-if="item.progress_pct !== null"
+                  :aria-label="$t('page.runtimeActivity.progress')"
+                  class="activity-progress"
+                  :percent="progress(item)"
+                  size="small"
+                  status="active"
+                />
+                <p v-if="item.detail" class="activity-detail">
+                  {{ item.detail }}
+                </p>
+                <div
+                  v-if="showActions && item.available_actions.length > 0"
+                  class="activity-actions"
+                >
+                  <Button
+                    v-for="action in item.available_actions"
+                    :key="action.kind"
+                    size="small"
+                    :danger="action.kind === 'cancel_research_job'"
+                    @click="emit('action', action.kind, item)"
+                  >
+                    {{ actionLabel(action.kind) }}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </template>
+      </Listy>
+    </LayoutGroup>
     <div v-if="loading && hasItems" class="activity-refreshing" role="status">
-      <IconifyIcon class="animate-spin" icon="lucide:loader-circle" />
+      <IconifyIcon class="qp-running-motion" icon="lucide:loader-circle" />
       {{ $t('page.runtimeActivity.refreshing') }}
     </div>
   </div>
@@ -402,35 +414,31 @@ function domainIcon(item: RuntimeActivityView) {
 }
 
 .domain-tag {
+  --domain-accent: var(--qp-accent-sky);
+
   display: inline-flex;
   gap: 4px;
   align-items: center;
+  color: hsl(var(--domain-accent));
+  background: hsl(var(--domain-accent) / 10%);
+  border-color: hsl(var(--domain-accent) / 34%);
 }
 
-.status-tag.is-success {
-  color: hsl(var(--qp-status-success));
-  background: hsl(var(--qp-status-success-soft));
+.domain-execution,
+.domain-settlement {
+  --domain-accent: var(--qp-accent-orange);
 }
 
-.status-tag.is-running {
-  color: hsl(var(--qp-status-running));
-  background: hsl(var(--qp-status-running-soft));
+.domain-reconciliation {
+  --domain-accent: var(--qp-accent-violet);
 }
 
-.status-tag.is-queued {
-  color: hsl(var(--qp-status-queued));
-  background: hsl(var(--qp-status-queued-soft));
+.domain-report {
+  --domain-accent: var(--qp-accent-sky);
 }
 
-.status-tag.is-warning,
-.status-tag.is-attention {
-  color: hsl(var(--qp-status-warning));
-  background: hsl(var(--qp-status-warning-soft));
-}
-
-.status-tag.is-danger {
-  color: hsl(var(--qp-status-danger));
-  background: hsl(var(--qp-status-danger-soft));
+.domain-research {
+  --domain-accent: var(--qp-accent-pink);
 }
 
 .activity-progress {
@@ -443,8 +451,17 @@ function domainIcon(item: RuntimeActivityView) {
   overflow: hidden;
   -webkit-line-clamp: 2;
   font-size: 12px;
-  color: hsl(var(--qp-status-danger));
+  color: hsl(var(--qp-text-secondary));
   -webkit-box-orient: vertical;
+}
+
+.activity-row.is-danger .activity-detail {
+  color: hsl(var(--qp-status-danger));
+}
+
+.activity-row.is-attention .activity-detail,
+.activity-row.is-warning .activity-detail {
+  color: hsl(var(--qp-status-warning));
 }
 
 .activity-actions {

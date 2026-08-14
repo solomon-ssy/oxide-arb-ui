@@ -6,7 +6,7 @@ interface MarketRow {
   question: string;
 }
 
-test('market intelligence opens the real live-market surface from the catalog', async ({
+test('market intelligence opens the real live-market inspector from the catalog', async ({
   adminApi,
   authenticatedPage: page,
   browserAudit,
@@ -29,12 +29,13 @@ test('market intelligence opens the real live-market surface from the catalog', 
   await expect(page).toHaveURL((url) => {
     return (
       url.pathname === '/trading/market-intelligence' &&
-      url.searchParams.get('module') === 'live' &&
+      url.searchParams.get('module') === 'overview' &&
       url.searchParams.get('entity') === 'market' &&
       url.searchParams.get('id') === market.market_id
     );
   });
   await waitForUiReady(page, browserAudit);
-  await expect(page.getByText(market.question, { exact: true })).toBeVisible();
+  const inspector = page.locator('aside.workspace-inspector-surface');
+  await expect(inspector).toContainText(market.question);
   await expectReleaseQuality(page);
 });

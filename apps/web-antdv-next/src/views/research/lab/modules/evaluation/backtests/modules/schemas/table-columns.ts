@@ -15,7 +15,7 @@ export function useBacktestReportColumns(
         props: {
           mono: true,
           to: (row: BacktestReportView) =>
-            `/research/lab?module=evaluation&entity=backtest-report&id=${row.backtest_report_id}`,
+            `/research/lab?module=evaluation&entity=backtest&id=${row.backtest_report_id}`,
         },
       },
       field: 'backtest_report_id',

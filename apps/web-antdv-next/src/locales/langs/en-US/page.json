@@ -123,15 +123,6 @@
       "reconciliation": "Reconciliation",
       "settlement": "Settlement"
     },
-    "status": {
-      "pending": "Pending",
-      "running": "Running",
-      "succeeded": "Succeeded",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "attention": "Needs attention",
-      "skipped": "Skipped"
-    },
     "kind": {
       "research-job": "Research job",
       "report-run": "Report run",
@@ -938,8 +929,6 @@
           "receipt": {
             "title": "Route activation receipt",
             "loading": "Loading the immutable route activation receipt.",
-            "loadError": "The route activation receipt could not be loaded.",
-            "notFound": "Route activation receipt {activationId} was not found.",
             "activated": "Activated",
             "activationId": "Activation receipt ID",
             "route": "Route generation",
@@ -3687,7 +3676,6 @@
       }
     },
     "detail": {
-      "back": "Back to reports",
       "notFound": "Report not found",
       "openRun": "Open Build Run",
       "publicationRetry": "Retry Publication",
@@ -3906,7 +3894,6 @@
   },
   "quantRecommendations": {
     "title": "Recommendation",
-    "back": "Back",
     "notFound": "Recommendation not found",
     "sections": {
       "identity": "Identity",
@@ -4521,6 +4508,7 @@
       "title": "Config Activity",
       "description": "Cross-resource Draft, approval, and activation timeline.",
       "empty": "No config activity",
+      "reason": "Reason",
       "event": {
         "revision": "Draft created",
         "approval": "Approval recorded",
@@ -5121,7 +5109,9 @@
       "actor": "Actor",
       "http": "HTTP",
       "resource": "Resource",
-      "auditEvent": "Audit Event"
+      "auditEvent": "Audit Event",
+      "receiptCount": "Receipt count",
+      "receiptsEmpty": "No receipts found for this governance audit event"
     }
   }
 }

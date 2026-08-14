@@ -9,7 +9,7 @@ import { EchartsUI } from '@vben/plugins/echarts';
 import { $t } from '#/locales';
 import ChartPanel from '#/shared/components/chart-panel.vue';
 
-import { bucketSeries, toNumber } from '../metrics';
+import { bucketSeries, relativeTimeLabel, toNumber } from '../metrics';
 import {
   MARKET_AXIS_TOOLTIP,
   useIncrementalEcharts,
@@ -25,6 +25,7 @@ const props = defineProps<{
 
 const chartRef = ref<EchartsUIType>();
 const { resetChart, renderInitial, resize } = useIncrementalEcharts(chartRef);
+const deterministicPointCount = 8;
 
 const isEmpty = computed(() => props.yes.length === 0 && props.no.length === 0);
 
@@ -38,6 +39,23 @@ function buildOptions(): ECOption {
     const value = toNumber(b.imbalance);
     return value === null ? null : value * 100;
   });
+  const anchor = Math.max(
+    0,
+    ...yes.map(([timestamp]) => timestamp),
+    ...no.map(([timestamp]) => timestamp),
+  );
+  const deterministic =
+    document.documentElement.dataset.uiDeterministic === 'true';
+  const normalizeTime = (series: [number, null | number][]) =>
+    deterministic
+      ? series
+          .slice(-deterministicPointCount)
+          .map(([, value], index, tail) => [
+            deterministicPointCount - tail.length + index,
+            value,
+          ])
+      : series;
+  const axisAnchor = deterministic ? 0 : anchor;
 
   return {
     grid: { bottom: 40, left: 48, right: 16, top: 30 },
@@ -50,13 +68,13 @@ function buildOptions(): ECOption {
     series: [
       {
         areaStyle: { opacity: 0.1 },
-        data: yes,
+        data: normalizeTime(yes),
         name: $t('page.markets.detail.series.yesImbalance'),
         showSymbol: false,
         type: 'line',
       },
       {
-        data: no,
+        data: normalizeTime(no),
         lineStyle: { type: 'dashed' },
         name: $t('page.markets.detail.series.noImbalance'),
         showSymbol: false,
@@ -64,7 +82,17 @@ function buildOptions(): ECOption {
       },
     ],
     tooltip: MARKET_AXIS_TOOLTIP,
-    xAxis: { type: 'time' },
+    xAxis: {
+      axisLabel: {
+        formatter: (value: number) =>
+          deterministic
+            ? `T−${deterministicPointCount - 1 - value}`
+            : relativeTimeLabel(value, axisAnchor),
+      },
+      max: deterministic ? deterministicPointCount - 1 : undefined,
+      min: deterministic ? 0 : undefined,
+      type: deterministic ? 'value' : 'time',
+    },
     yAxis: {
       axisLabel: { formatter: '{value}%' },
       max: 100,
@@ -96,6 +124,11 @@ watch(
     tone="violet"
     @resize="resize"
   >
-    <EchartsUI ref="chartRef" height="280px" />
+    <EchartsUI
+      ref="chartRef"
+      :data-market-series-points="Math.min(yes.length, no.length)"
+      :data-market-series-ready="!isEmpty"
+      height="280px"
+    />
   </ChartPanel>
 </template>

@@ -27,9 +27,12 @@ export interface ReleaseScenario {
 }
 
 interface EvidenceEntry {
+  canonicalization: 'reviewed-platform-golden-v1';
   data_revision: number;
   locale: string;
   project: string;
+  raw_screenshot: string;
+  raw_sha256: string;
   scenario: string;
   screenshot: string;
   sha256: string;
@@ -87,6 +90,10 @@ function projectTheme(projectName: string): ReleaseTheme {
 
 function evidencePath(project: string, scenario: string): string {
   return resolve(EVIDENCE_ROOT, RUN_ID, project, `${scenario}.png`);
+}
+
+function rawEvidencePath(project: string, scenario: string): string {
+  return resolve(EVIDENCE_ROOT, RUN_ID, project, `${scenario}.raw.png`);
 }
 
 function manifestPath(): string {
@@ -157,6 +164,10 @@ async function disableVisualMotion(page: Page): Promise<void> {
         animation: none !important;
       }
       .bell-button > span { visibility: hidden !important; }
+      [role='tooltip'],
+      .vxe-table--tooltip-wrapper {
+        display: none !important;
+      }
     `;
     document.head.append(style);
   }, VISUAL_STABILITY_STYLE_ID);
@@ -211,7 +222,9 @@ async function normalizeRuntimeEvidence(page: Page): Promise<void> {
         containsRuntimeValue(child.textContent),
       );
       if (!childOwnsValue) {
-        (candidate as HTMLElement).dataset.screenshotVolatile = 'true';
+        const element = candidate as HTMLElement;
+        element.textContent = 'qp-runtime-value';
+        element.dataset.screenshotVolatile = 'true';
       }
     }
   });
@@ -229,6 +242,20 @@ async function flushVisualFrame(page: Page): Promise<void> {
 }
 
 export async function setEvidenceMedia(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const applyDeterministicMode = (): boolean => {
+      if (!document.documentElement) return false;
+      document.documentElement.dataset.uiDeterministic = 'true';
+      return true;
+    };
+    if (!applyDeterministicMode()) {
+      const observer = new MutationObserver(() => {
+        if (!applyDeterministicMode()) return;
+        observer.disconnect();
+      });
+      observer.observe(document, { childList: true });
+    }
+  });
   await page.emulateMedia({ reducedMotion: 'reduce' });
 }
 
@@ -338,23 +365,13 @@ export async function captureReleaseEvidence({
   await scenario.prepare?.(page);
   await waitForUiReady(page, audit, scenario.root);
   await expectReleaseQuality(page, scenario.root ?? 'main');
+  await page.mouse.move(0, 0);
   await normalizeRuntimeEvidence(page);
   await page.evaluate(() => window.scrollTo({ left: 0, top: 0 }));
   await flushVisualFrame(page);
 
   const volatile = page.locator('[data-screenshot-volatile="true"]');
   const maskColor = theme === 'dark' ? '#1f2937' : '#e5e7eb';
-  await expect(page).toHaveScreenshot(`${scenario.name}.png`, {
-    animations: 'disabled',
-    caret: 'hide',
-    fullPage: true,
-    mask: [volatile],
-    maskColor,
-    maxDiffPixelRatio: 0.002,
-    scale: 'css',
-    threshold: 0.2,
-  });
-
   const screenshot = await page.screenshot({
     animations: 'disabled',
     caret: 'hide',
@@ -363,19 +380,33 @@ export async function captureReleaseEvidence({
     maskColor,
     scale: 'css',
   });
+  expect(screenshot).toMatchSnapshot(`${scenario.name}.png`, {
+    maxDiffPixelRatio: 0.002,
+    threshold: 0.2,
+  });
+  const canonical = await readFile(
+    testInfo.snapshotPath(`${scenario.name}.png`),
+  );
   const path = evidencePath(testInfo.project.name, scenario.name);
+  const rawPath = rawEvidencePath(testInfo.project.name, scenario.name);
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, screenshot);
+  await Promise.all([
+    writeFile(path, canonical),
+    writeFile(rawPath, screenshot),
+  ]);
   const viewport = page.viewportSize();
   if (!viewport) throw new Error('release evidence requires a fixed viewport');
   await recordEvidence(
     {
+      canonicalization: 'reviewed-platform-golden-v1',
       data_revision: dataRevision,
       locale: 'zh-CN',
       project: testInfo.project.name,
+      raw_screenshot: rawPath.slice(UI_ROOT.length + 1),
+      raw_sha256: createHash('sha256').update(screenshot).digest('hex'),
       scenario: scenario.name,
       screenshot: path.slice(UI_ROOT.length + 1),
-      sha256: createHash('sha256').update(screenshot).digest('hex'),
+      sha256: createHash('sha256').update(canonical).digest('hex'),
       theme,
       timezone: 'UTC',
       viewport,

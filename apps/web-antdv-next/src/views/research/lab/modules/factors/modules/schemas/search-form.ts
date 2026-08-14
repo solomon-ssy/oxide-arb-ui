@@ -1,32 +1,25 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { FACTOR_DEFINITION_SCOPES, FACTOR_FAMILIES } from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Factor-definition catalog filters (`GET /research/factors`). */
 export function useFactorDefinitionSearchSchema(): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(FACTOR_FAMILIES).map((value) => ({
-          label: $t(`enum.factorFamily.${value}`),
-          value,
-        })),
+        options: enumOptions('FactorFamily'),
       },
       fieldName: 'factor_family',
       label: $t('page.research.factors.filters.family'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(FACTOR_DEFINITION_SCOPES).map((value) => ({
-          label: $t(`enum.factorScope.${value}`),
-          value,
-        })),
+        options: enumOptions('FactorDefinitionScope'),
       },
       fieldName: 'scope',
       label: $t('page.research.factors.filters.scope'),

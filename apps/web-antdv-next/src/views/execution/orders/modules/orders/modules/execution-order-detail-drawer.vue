@@ -21,6 +21,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 import { reconciliationQueuePath } from '#/shared/routes/execution-plane';
 
@@ -84,7 +85,7 @@ async function refreshOrder(id: string) {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -105,9 +106,9 @@ useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantExecutionOrders.detail.title')"
-    class="w-full max-w-3xl"
   >
     <AsyncState
       :error-message="loadError"
@@ -251,5 +252,5 @@ useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
         </Card>
       </div>
     </AsyncState>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

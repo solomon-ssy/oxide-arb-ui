@@ -112,25 +112,19 @@ export class VxeGridApi<
     if (!this.isMounted && instance) {
       this.grid = instance;
       this.formApi = formApi;
-      this.stateHandler.setConditionTrue();
       this.isMounted = true;
+      this.stateHandler.setConditionTrue();
     }
   }
 
   async query(params: Record<string, any> = {}) {
-    try {
-      await this.grid.commitProxy('query', toRaw(params));
-    } catch (error) {
-      console.error('Error occurred while querying:', error);
-    }
+    const grid = await this.getGrid();
+    await grid.commitProxy('query', toRaw(params));
   }
 
   async reload(params: Record<string, any> = {}) {
-    try {
-      await this.grid.commitProxy('reload', toRaw(params));
-    } catch (error) {
-      console.error('Error occurred while reloading:', error);
-    }
+    const grid = await this.getGrid();
+    await grid.commitProxy('reload', toRaw(params));
   }
 
   /**
@@ -182,6 +176,16 @@ export class VxeGridApi<
     this.isMounted = false;
     this.stateHandler.reset();
     this.viewedRowHelper = null;
+  }
+
+  private async getGrid() {
+    if (!this.isMounted) {
+      await this.stateHandler.waitForCondition();
+    }
+    if (!this.isMounted || typeof this.grid.commitProxy !== 'function') {
+      throw new Error('<VxeGrid /> is not mounted');
+    }
+    return this.grid;
   }
 }
 

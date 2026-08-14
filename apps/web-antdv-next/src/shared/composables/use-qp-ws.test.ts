@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     recoveryRequired: false,
     revision: 17,
   },
+  invalidate: vi.fn(),
   getFeedbackRevisionApi: vi.fn(),
   issueWsTicketApi: vi.fn(),
   setStatus: vi.fn(),
@@ -49,7 +50,13 @@ vi.mock('#/shared/composables/use-qp-access', () => ({
   useQpAccess: () => ({ hasAccessByCodes: () => true }),
 }));
 vi.mock('#/store', () => ({
+  useActivityStore: () => ({ invalidate: mocks.invalidate }),
+  useExecutionOrderStore: () => ({ invalidate: mocks.invalidate }),
   useFeedbackStore: () => mocks.feedbackStore,
+  useOrderIntentStore: () => ({ invalidate: mocks.invalidate }),
+  useQuantReportStore: () => ({ invalidate: mocks.invalidate }),
+  useReconciliationStore: () => ({ invalidate: mocks.invalidate }),
+  useSettlementRedeemStore: () => ({ invalidate: mocks.invalidate }),
   useSystemStore: () => ({
     clearActionEligibility: mocks.clearActionEligibility,
   }),

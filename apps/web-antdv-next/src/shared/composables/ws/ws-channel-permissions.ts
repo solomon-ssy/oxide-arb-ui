@@ -14,6 +14,7 @@ export const WS_CHANNEL_PERMISSIONS: Record<WsChannel, string> = {
   [WS_CHANNELS.marketResolved]: 'market:read',
   [WS_CHANNELS.materializationRunUpdate]: 'materialization:read',
   [WS_CHANNELS.quantCondition]: 'quant_report:read',
+  [WS_CHANNELS.quantExecutionOrder]: 'execution_order:read',
   [WS_CHANNELS.quantIntent]: 'order_intent:read',
   [WS_CHANNELS.quantReconciliation]: 'reconciliation:read',
   [WS_CHANNELS.quantReport]: 'quant_report:read',

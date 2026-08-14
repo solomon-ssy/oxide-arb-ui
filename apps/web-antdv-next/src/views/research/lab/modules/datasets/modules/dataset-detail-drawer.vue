@@ -28,6 +28,7 @@ import {
   formatDurationSecs,
 } from '#/shared/components/format';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { usePolling } from '#/shared/composables/use-polling';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
@@ -145,7 +146,7 @@ usePolling(
   { enabled: polling, intervalMs: 4000 },
 );
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -168,9 +169,9 @@ function onTrain() {
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.datasets.detail.title')"
-    class="w-full max-w-3xl"
   >
     <Spin :spinning="loading">
       <div v-if="dataset" class="flex min-w-0 flex-col gap-4">
@@ -846,5 +847,5 @@ function onTrain() {
         </Collapse>
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

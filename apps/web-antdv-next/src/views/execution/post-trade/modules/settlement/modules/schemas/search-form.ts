@@ -1,8 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import { SETTLEMENT_CASE_STATES } from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 /** Prefilled filter values seeded from cross-page deep links (`route.query`). */
 export interface SettlementRedeemInitialFilters {
@@ -17,13 +16,10 @@ export function useSettlementRedeemSearchSchema(
 ): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(SETTLEMENT_CASE_STATES).map((value) => ({
-          label: $t(`enum.settlementCaseState.${value}`),
-          value,
-        })),
+        options: enumOptions('SettlementCaseState'),
       },
       fieldName: 'state',
       label: $t('page.quantSettlementRedeems.filters.state'),

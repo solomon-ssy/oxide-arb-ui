@@ -43,6 +43,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.executionPortfolio.description"
+    domain="execution"
     eyebrow="page.workspace.executionPortfolio.eyebrow"
     :modules="modules"
     title="page.menu.executionPortfolio"

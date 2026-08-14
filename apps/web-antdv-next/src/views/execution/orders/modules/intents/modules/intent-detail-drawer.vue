@@ -9,6 +9,7 @@ import { useRequestHandler } from '@vben/request/qp';
 import { getOrderIntent } from '#/api/order-intents';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useOrderIntentStore } from '#/store';
 
 import IntentDetailPanel from './intent-detail-panel.vue';
@@ -56,7 +57,7 @@ async function refreshIntent(id: string) {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -101,9 +102,9 @@ watch(
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantIntents.detail.title')"
-    class="w-full max-w-5xl"
   >
     <AsyncState
       :error-message="loadError"
@@ -114,5 +115,5 @@ watch(
     >
       <IntentDetailPanel v-if="intent" :intent="intent" @changed="onChanged" />
     </AsyncState>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

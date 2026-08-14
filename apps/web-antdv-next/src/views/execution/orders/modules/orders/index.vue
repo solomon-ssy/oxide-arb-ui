@@ -12,8 +12,8 @@ import { useRequestHandler } from '@vben/request/qp';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { getExecutionOrder, listExecutionOrders } from '#/api/execution-orders';
 import { $t } from '#/locales';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
-import { useOrderIntentStore } from '#/store';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
+import { useExecutionOrderStore } from '#/store';
 
 import ExecutionOrderDetailDrawer from './modules/execution-order-detail-drawer.vue';
 import {
@@ -25,7 +25,7 @@ defineOptions({ name: 'ExecutionOrdersPage' });
 
 const route = useRoute();
 const { handleRequest } = useRequestHandler();
-const orderIntentStore = useOrderIntentStore();
+const executionOrderStore = useExecutionOrderStore();
 
 const query = route.query;
 const initialFilters = {
@@ -46,6 +46,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: ExecutionOrderDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [Grid, gridApi] = useVbenVxeGrid<ExecutionOrderView>({
@@ -88,19 +89,20 @@ const [Grid, gridApi] = useVbenVxeGrid<ExecutionOrderView>({
 
 function onActionClick({ code, row }: OnActionClickParams<ExecutionOrderView>) {
   if (code === 'detail') {
-    drawerApi.setData({ order: row }).open();
+    openInspector(row.execution_order_id);
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'execution-order',
   fetch: (id) => getExecutionOrder(id),
   open: (order) => drawerApi.setData({ order }).open(),
 });
 
-// Submission completes over `quant.intent`; refresh the ledger on any bump.
+// The execution-order channel is the authoritative REST invalidation hint.
 watch(
-  () => orderIntentStore.revision,
+  () => executionOrderStore.revision,
   () => void gridApi.query(),
 );
 </script>

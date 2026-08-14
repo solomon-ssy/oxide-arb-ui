@@ -8,7 +8,7 @@ import type {
   ObjectInspectorTimelineItem,
 } from '#/shared/components/object-inspector';
 
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
@@ -20,12 +20,12 @@ import { Alert, Button, Skeleton } from 'antdv-next';
 import { $t } from '#/locales';
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import {
-  ObjectInspector,
   ObjectInspectorActions,
   ObjectInspectorHeader,
   ObjectInspectorSection,
   ObjectInspectorTimeline,
 } from '#/shared/components/object-inspector';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 import { useResearchLineage } from './use-research-lineage';
 
@@ -37,7 +37,6 @@ defineOptions({ name: 'ResearchLineageGraph' });
 const router = useRouter();
 const route = useRoute();
 const { isMobile } = usePreferences();
-const inspectorOpen = ref(false);
 const { animated, error, load, loading, runningJobs, stages } =
   useResearchLineage();
 
@@ -75,9 +74,22 @@ const selectedStage = computed(() => {
     ? route.query.entity[0]
     : route.query.entity;
   const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
+
+  if (typeof entity !== 'string' || typeof id !== 'string' || !entity || !id) {
+    return undefined;
+  }
+
   return stages.value.find(
     (stage) => stage.entity === entity && stage.entityId === id,
   );
+});
+const inspectorOpen = computed({
+  get: () => selectedStage.value !== undefined,
+  set: (value: boolean) => {
+    if (value) return;
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.push({ query });
+  },
 });
 const inspectorSections = computed<ObjectInspectorSectionModel[]>(() => {
   const stage = selectedStage.value;
@@ -126,11 +138,13 @@ const inspectorTimeline = computed<ObjectInspectorTimelineItem[]>(() => {
 
 function openStage(event: NodeMouseEvent) {
   const stage = event.node.data as ResearchLineageStage;
-  const query: Record<string, string> = { module: 'lineage' };
-  if (stage.entity && stage.entityId) {
-    query.entity = stage.entity;
-    query.id = stage.entityId;
-  }
+  if (!stage.entity || !stage.entityId) return;
+
+  const query: Record<string, string> = {
+    entity: stage.entity,
+    id: stage.entityId,
+    module: 'lineage',
+  };
   void router.push({ path: stage.workspace, query });
 }
 
@@ -147,78 +161,75 @@ function openOwningWorkspace() {
 </script>
 
 <template>
-  <ObjectInspector
+  <div class="lineage-workspace">
+    <InsightPanel
+      accent="violet"
+      :description="$t('page.research.lineage.description')"
+      icon="lucide:workflow"
+      :title="$t('page.research.lineage.title')"
+    >
+      <template #actions>
+        <Button :loading="loading" size="small" @click="load">
+          <IconifyIcon class="mr-1 size-4" icon="lucide:refresh-cw" />
+          {{ $t('page.research.lineage.refresh') }}
+        </Button>
+      </template>
+
+      <Alert
+        v-if="error"
+        :message="$t('page.research.lineage.partialError')"
+        show-icon
+        type="warning"
+      />
+      <Skeleton
+        v-if="loading && stages.every((stage) => stage.count === 0)"
+        active
+      />
+      <div v-else class="lineage-canvas">
+        <VueFlow
+          :edges="edges"
+          :fit-view-on-init="true"
+          :max-zoom="1.25"
+          :min-zoom="0.55"
+          :nodes="nodes"
+          :nodes-connectable="false"
+          :nodes-draggable="false"
+          @node-click="openStage"
+        >
+          <template #node-default="{ data }">
+            <button
+              class="lineage-node"
+              :disabled="!data.entity || !data.entityId"
+              type="button"
+            >
+              <span class="lineage-node-label">{{ $t(data.labelKey) }}</span>
+              <span class="lineage-node-count">{{ data.count }}</span>
+              <span class="lineage-node-action">
+                {{ $t('page.research.lineage.openStage') }}
+                <IconifyIcon icon="lucide:arrow-up-right" />
+              </span>
+            </button>
+          </template>
+        </VueFlow>
+      </div>
+      <p class="lineage-footnote">
+        {{
+          runningJobs > 0
+            ? $t('page.research.lineage.running', { count: runningJobs })
+            : $t('page.research.lineage.idle')
+        }}
+      </p>
+    </InsightPanel>
+  </div>
+
+  <WorkspaceInspectorSurface
     v-model:open="inspectorOpen"
-    :entity="selectedStage?.entity ?? ''"
-    :id="selectedStage?.entityId"
-    storage-key="qp.research-lineage.inspector.width"
     :title="
       selectedStage
         ? $t(selectedStage.labelKey)
         : $t('page.research.lineage.inspector.title')
     "
   >
-    <template #workspace>
-      <div class="lineage-workspace">
-        <InsightPanel
-          accent="violet"
-          :description="$t('page.research.lineage.description')"
-          icon="lucide:workflow"
-          :title="$t('page.research.lineage.title')"
-        >
-          <template #actions>
-            <Button :loading="loading" size="small" @click="load">
-              <IconifyIcon class="mr-1 size-4" icon="lucide:refresh-cw" />
-              {{ $t('page.research.lineage.refresh') }}
-            </Button>
-          </template>
-
-          <Alert
-            v-if="error"
-            :message="$t('page.research.lineage.partialError')"
-            show-icon
-            type="warning"
-          />
-          <Skeleton
-            v-if="loading && stages.every((stage) => stage.count === 0)"
-            active
-          />
-          <div v-else class="lineage-canvas">
-            <VueFlow
-              :edges="edges"
-              :fit-view-on-init="true"
-              :max-zoom="1.25"
-              :min-zoom="0.55"
-              :nodes="nodes"
-              :nodes-connectable="false"
-              :nodes-draggable="false"
-              @node-click="openStage"
-            >
-              <template #node-default="{ data }">
-                <button class="lineage-node" type="button">
-                  <span class="lineage-node-label">{{
-                    $t(data.labelKey)
-                  }}</span>
-                  <span class="lineage-node-count">{{ data.count }}</span>
-                  <span class="lineage-node-action">
-                    {{ $t('page.research.lineage.openStage') }}
-                    <IconifyIcon icon="lucide:arrow-up-right" />
-                  </span>
-                </button>
-              </template>
-            </VueFlow>
-          </div>
-          <p class="lineage-footnote">
-            {{
-              runningJobs > 0
-                ? $t('page.research.lineage.running', { count: runningJobs })
-                : $t('page.research.lineage.idle')
-            }}
-          </p>
-        </InsightPanel>
-      </div>
-    </template>
-
     <template v-if="selectedStage">
       <ObjectInspectorHeader
         :entity-id="selectedStage.entityId"
@@ -243,7 +254,7 @@ function openOwningWorkspace() {
         @select="openOwningWorkspace"
       />
     </template>
-  </ObjectInspector>
+  </WorkspaceInspectorSurface>
 </template>
 
 <style scoped>

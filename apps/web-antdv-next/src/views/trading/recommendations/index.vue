@@ -43,6 +43,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.recommendations.description"
+    domain="trading"
     eyebrow="page.workspace.recommendations.eyebrow"
     :modules="modules"
     title="page.menu.recommendations"

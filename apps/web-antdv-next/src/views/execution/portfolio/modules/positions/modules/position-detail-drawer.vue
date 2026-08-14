@@ -23,6 +23,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 import {
   reconciliationQueuePath,
@@ -93,7 +94,7 @@ async function refreshPosition(id: string) {
   }
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -121,9 +122,9 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantPositions.detail.title')"
-    class="w-full max-w-3xl"
   >
     <AsyncState
       :error-message="loadError"
@@ -257,5 +258,5 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
         />
       </div>
     </AsyncState>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

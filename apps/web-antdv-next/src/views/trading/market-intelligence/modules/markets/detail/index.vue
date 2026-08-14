@@ -8,7 +8,6 @@ import type {
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { Empty, Spin } from 'antdv-next';
@@ -18,6 +17,8 @@ import {
   getMarketById,
   getMarketMicrostructure,
 } from '#/api/markets';
+import { $t } from '#/locales';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useMarketStore } from '#/store';
 
@@ -70,6 +71,12 @@ const marketId = computed(() => {
     : route.query.entity;
   const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
   return entity === 'market' && typeof id === 'string' ? id : '';
+});
+const inspectorOpen = computed({
+  get: () => marketId.value !== '',
+  set: (value: boolean) => {
+    if (!value) goBack();
+  },
 });
 
 const market = ref<MarketView | null>(null);
@@ -253,7 +260,10 @@ onUnmounted(() => teardown(marketId.value));
 </script>
 
 <template>
-  <Page auto-content-height>
+  <WorkspaceInspectorSurface
+    v-model:open="inspectorOpen"
+    :title="$t('page.menu.marketIntelligence')"
+  >
     <Spin :spinning="marketLoading && !market">
       <div v-if="market" class="flex flex-col gap-4 pb-4">
         <MarketDetailHeader
@@ -310,5 +320,5 @@ onUnmounted(() => teardown(marketId.value));
       <Empty v-else-if="!marketLoading" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
     </Spin>
     <UnblockModalHost />
-  </Page>
+  </WorkspaceInspectorSurface>
 </template>

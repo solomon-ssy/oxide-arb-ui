@@ -5,6 +5,7 @@ defineOptions({ name: 'InsightPanel' });
 
 withDefaults(
   defineProps<{
+    featured?: boolean;
     fill?: boolean;
     gap?: 'md' | 'sm';
     icon?: string;
@@ -12,6 +13,7 @@ withDefaults(
     tone?: InsightTone;
   }>(),
   {
+    featured: false,
     fill: false,
     gap: 'md',
     icon: undefined,
@@ -31,6 +33,7 @@ export type InsightTone =
 <template>
   <section
     :class="{ 'h-full': fill, 'panel-gap-sm': gap === 'sm' }"
+    :data-featured="featured ? 'true' : undefined"
     :data-tone="tone"
     class="insight-panel"
   >
@@ -52,6 +55,7 @@ export type InsightTone =
 <style scoped>
 .insight-panel {
   --panel-accent: var(--qp-accent-command);
+  --panel-feature-gradient: var(--qp-gradient-governance);
 
   display: flex;
   flex-direction: column;
@@ -61,6 +65,42 @@ export type InsightTone =
   background: hsl(var(--qp-surface-raised));
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
+}
+
+.insight-panel[data-featured='true'] {
+  background:
+    radial-gradient(
+        circle at 4% 0%,
+        hsl(var(--panel-accent) / 9%),
+        transparent 38%
+      )
+      padding-box,
+    linear-gradient(
+        hsl(var(--qp-surface-raised) / 98%),
+        hsl(var(--qp-surface-raised) / 98%)
+      )
+      padding-box,
+    var(--panel-feature-gradient) border-box;
+  border-color: transparent;
+  box-shadow: var(--qp-shadow-featured);
+}
+
+.insight-panel[data-featured='true'] .panel-icon {
+  color: white;
+  background: var(--panel-feature-gradient);
+  box-shadow: var(--qp-shadow-featured);
+}
+
+.insight-panel[data-featured='true'][data-tone='cyan'],
+.insight-panel[data-featured='true'][data-tone='sky'],
+.insight-panel[data-featured='true'][data-tone='cyan'] .panel-icon,
+.insight-panel[data-featured='true'][data-tone='sky'] .panel-icon {
+  box-shadow: var(--qp-shadow-featured-sky);
+}
+
+.insight-panel[data-featured='true'][data-tone='violet'],
+.insight-panel[data-featured='true'][data-tone='violet'] .panel-icon {
+  box-shadow: var(--qp-shadow-featured-pink);
 }
 
 .panel-gap-sm {
@@ -124,6 +164,7 @@ export type InsightTone =
 [data-tone='cyan'],
 [data-tone='sky'] {
   --panel-accent: var(--qp-accent-realtime);
+  --panel-feature-gradient: var(--qp-gradient-trading);
 }
 
 [data-tone='teal'] {
@@ -132,5 +173,6 @@ export type InsightTone =
 
 [data-tone='violet'] {
   --panel-accent: var(--qp-accent-research);
+  --panel-feature-gradient: var(--qp-gradient-execution);
 }
 </style>

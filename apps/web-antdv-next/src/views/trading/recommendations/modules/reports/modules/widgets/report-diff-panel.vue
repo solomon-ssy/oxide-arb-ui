@@ -344,7 +344,12 @@ onMounted(async () => {
         size="small"
         :title="`${$t(`page.quantReports.detail.diff.${group.key}`)} (${group.rows.length})`"
       >
+        <Empty
+          v-if="group.rows.length === 0"
+          :image="Empty.PRESENTED_IMAGE_SIMPLE"
+        />
         <Table
+          v-else
           :columns="deltaColumns"
           :data-source="group.rows"
           :pagination="false"

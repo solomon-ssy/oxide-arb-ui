@@ -1,6 +1,7 @@
 import type {
   ConfigActivatedEvent,
   EntryConditionLifecycleEvent,
+  ExecutionOrderLifecycleEvent,
   IntentLifecycleEvent,
   MarketBookView,
   MarketResolvedEvent,
@@ -20,6 +21,7 @@ import type { FeedbackRecoveryReason } from '#/store/feedback';
 
 import { useActivityStore } from '#/store/activity';
 import { useEntryConditionStore } from '#/store/entry-condition';
+import { useExecutionOrderStore } from '#/store/execution-order';
 import { useFeedbackStore } from '#/store/feedback';
 // Direct module imports (not the `#/store` barrel) keep this reducer free of
 // the auth/api dependency chain, so unit tests can drive it with bare Pinia.
@@ -144,6 +146,13 @@ export function dispatchWsEnvelope(
       useEntryConditionStore().bumpRevision(
         envelope.data as EntryConditionLifecycleEvent,
       );
+      break;
+    }
+    case 'quant.execution_order': {
+      useExecutionOrderStore().bumpRevision(
+        envelope.data as ExecutionOrderLifecycleEvent,
+      );
+      useActivityStore().invalidate();
       break;
     }
     case 'quant.intent': {

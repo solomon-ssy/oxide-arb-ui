@@ -27,6 +27,13 @@ export const useQuantReportStore = defineStore('qp-quant-report', () => {
     runRevision.value += 1;
   }
 
+  function invalidate() {
+    lastEvent.value = null;
+    lastRunEvent.value = null;
+    revision.value += 1;
+    runRevision.value += 1;
+  }
+
   function $reset() {
     revision.value = 0;
     lastEvent.value = null;
@@ -38,6 +45,7 @@ export const useQuantReportStore = defineStore('qp-quant-report', () => {
     $reset,
     bumpRevision,
     bumpRunRevision,
+    invalidate,
     lastEvent,
     lastRunEvent,
     revision,

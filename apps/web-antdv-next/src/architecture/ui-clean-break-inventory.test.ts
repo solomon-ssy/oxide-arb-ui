@@ -364,6 +364,19 @@ describe('ui fresh-boot clean-break inventory', () => {
     ).toEqual([]);
   }, 30_000);
 
+  it('routes generated enum filters through EnumSelect and enumOptions', () => {
+    const violations = productionSources()
+      .filter(({ content }) =>
+        /component:\s*'Select'[\s\S]{0,320}options:\s*(?:Object\.values|enumOptions\()/m.test(
+          content,
+        ),
+      )
+      .map(({ path }) => path.slice(APP_ROOT.length + 1))
+      .toSorted();
+
+    expect(violations).toEqual([]);
+  });
+
   it('keeps page locales symmetric and free of dead keys', () => {
     const localeRoot = join(APP_ROOT, 'src/locales/langs');
     const english = localeLeaves(loadJson(join(localeRoot, 'en-US/page.json')));

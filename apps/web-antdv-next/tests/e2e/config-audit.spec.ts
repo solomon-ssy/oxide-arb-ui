@@ -32,7 +32,7 @@ interface EntityRow {
 
 async function openConfigResource(page: Page) {
   await page.goto(
-    '/system/config?module=policy&resource=recommendation_policy',
+    '/system/config?module=policy&entity=config-resource&id=recommendation_policy',
   );
   const workspace = page.getByTestId('config-resource-workspace');
   await expect(workspace).toBeVisible();
@@ -123,7 +123,14 @@ test('motion contract preserves timing and collapses under reduced motion', asyn
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/runtime/activity');
   await waitForUiReady(page, browserAudit);
-  const regular = await page.locator('.activity-hero').evaluate((element) => {
+  await page.locator('body').evaluate((body) => {
+    const probe = document.createElement('div');
+    probe.className = 'qp-scan-motion';
+    probe.dataset.testid = 'motion-scan-probe';
+    body.append(probe);
+  });
+  const scanProbe = page.getByTestId('motion-scan-probe');
+  const regular = await scanProbe.evaluate((element) => {
     const style = getComputedStyle(element, '::after');
     return {
       duration: style.animationDuration,
@@ -138,7 +145,7 @@ test('motion contract preserves timing and collapses under reduced motion', asyn
   });
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  const reduced = await page.locator('.activity-hero').evaluate((element) => {
+  const reduced = await scanProbe.evaluate((element) => {
     const style = getComputedStyle(element, '::after');
     return {
       duration: style.animationDuration,
@@ -239,6 +246,24 @@ test('@visual release closure captures the exact 50-state matrix', async ({
     {
       name: 'state-market-live',
       path: `/trading/market-intelligence?module=live&entity=market&id=${market.market_id}`,
+      prepare: async (currentPage) => {
+        const series = currentPage.locator('[data-market-series-points]');
+        await expect(series).toHaveCount(3, { timeout: 30_000 });
+        await expect
+          .poll(
+            async () =>
+              series.evaluateAll((elements) =>
+                elements.every(
+                  (element) =>
+                    Number(
+                      (element as HTMLElement).dataset.marketSeriesPoints,
+                    ) >= 8,
+                ),
+              ),
+            { timeout: 30_000 },
+          )
+          .toBe(true);
+      },
     },
     {
       name: 'state-report-detail',
@@ -282,7 +307,7 @@ test('@visual release closure captures the exact 50-state matrix', async ({
       prepare: async (currentPage) => {
         await currentPage.locator('.lineage-node').first().click();
         await expect(
-          currentPage.locator('.object-inspector-panel'),
+          currentPage.locator('.workspace-inspector-surface'),
         ).toBeVisible();
       },
     },
@@ -296,7 +321,7 @@ test('@visual release closure captures the exact 50-state matrix', async ({
     },
     {
       name: 'state-config-policy',
-      path: '/system/config?module=policy&resource=recommendation_policy',
+      path: '/system/config?module=policy&entity=config-resource&id=recommendation_policy',
     },
   ];
   for (const scenario of criticalScenarios) {

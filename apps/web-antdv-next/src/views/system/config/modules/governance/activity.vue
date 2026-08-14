@@ -1,25 +1,79 @@
 <script lang="ts" setup>
 import type { ConfigActivityView } from '@vben/types/config-api';
 
-import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Button, Empty, Skeleton, Tag } from 'antdv-next';
+import {
+  Button,
+  Descriptions,
+  DescriptionsItem,
+  Empty,
+  Skeleton,
+  Tag,
+} from 'antdv-next';
 
 import { getConfigActivity } from '#/api/config';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'ConfigActivityPage' });
 
+const route = useRoute();
 const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const loading = ref(true);
 const activity = ref<ConfigActivityView[]>([]);
+
+const inspectorIdentity = computed(() => {
+  const entity = Array.isArray(route.query.entity)
+    ? route.query.entity[0]
+    : route.query.entity;
+  const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
+  return typeof id === 'string' &&
+    (entity === 'config-activation' || entity === 'config-version')
+    ? { entity, id }
+    : null;
+});
+const selectedActivity = computed(() => {
+  const identity = inspectorIdentity.value;
+  if (!identity) return null;
+  return (
+    activity.value.find((item) => {
+      if (
+        identity.entity === 'config-activation' &&
+        item.event_type === 'activation'
+      ) {
+        return item.event.policy_activation_id === identity.id;
+      }
+      if (
+        identity.entity === 'config-version' &&
+        item.event_type === 'revision'
+      ) {
+        return item.event.policy_revision_id === identity.id;
+      }
+      return false;
+    }) ?? null
+  );
+});
+const inspectorOpen = computed({
+  get: () => inspectorIdentity.value !== null,
+  set: (value: boolean) => {
+    if (value) return;
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.push({ query });
+  },
+});
+const inspectorTitle = computed(() =>
+  selectedActivity.value
+    ? $t(`page.config.activity.event.${selectedActivity.value.event_type}`)
+    : $t('page.config.activity.title'),
+);
 
 function timestamp(item: ConfigActivityView) {
   switch (item.event_type) {
@@ -53,6 +107,30 @@ function resource(item: ConfigActivityView) {
   return item.event.resource_kind;
 }
 
+function eventIdentity(item: ConfigActivityView) {
+  if (item.event_type === 'activation') {
+    return {
+      entity: 'config-activation',
+      id: item.event.policy_activation_id,
+    } as const;
+  }
+  if (item.event_type === 'revision') {
+    return {
+      entity: 'config-version',
+      id: item.event.policy_revision_id,
+    } as const;
+  }
+  return null;
+}
+
+function openActivity(item: ConfigActivityView) {
+  const identity = eventIdentity(item);
+  if (!identity) return;
+  void router.push({
+    query: { ...route.query, ...identity, module: 'history' },
+  });
+}
+
 async function loadActivity() {
   loading.value = true;
   const result = await handleRequest(() => getConfigActivity(100));
@@ -61,6 +139,15 @@ async function loadActivity() {
 }
 
 onMounted(() => void loadActivity());
+
+watch(
+  [loading, inspectorIdentity, selectedActivity],
+  ([isLoading, identity, selected]) => {
+    if (isLoading || !identity || selected) return;
+    const { entity: _entity, id: _id, ...query } = route.query;
+    void router.replace({ query });
+  },
+);
 </script>
 
 <template>
@@ -99,6 +186,16 @@ onMounted(() => void loadActivity());
           <li
             v-for="item in activity"
             :key="`${item.event_type}:${timestamp(item)}`"
+            :aria-label="
+              eventIdentity(item)
+                ? $t(`page.config.activity.event.${item.event_type}`)
+                : undefined
+            "
+            :role="eventIdentity(item) ? 'button' : undefined"
+            :tabindex="eventIdentity(item) ? 0 : undefined"
+            @click="openActivity(item)"
+            @keydown.enter="openActivity(item)"
+            @keydown.space.prevent="openActivity(item)"
           >
             <span class="activity-icon">
               <IconifyIcon
@@ -135,6 +232,35 @@ onMounted(() => void loadActivity());
         <Empty v-else :description="$t('page.config.activity.empty')" />
       </section>
     </div>
+
+    <WorkspaceInspectorSurface
+      v-model:open="inspectorOpen"
+      :loading="loading"
+      :title="inspectorTitle"
+    >
+      <Descriptions v-if="selectedActivity" :column="1" bordered size="small">
+        <DescriptionsItem :label="$t('page.config.resource.status')">
+          {{ $t(`page.config.activity.event.${selectedActivity.event_type}`) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.config.resource.title')">
+          {{ $t(`page.config.resources.kind.${resource(selectedActivity)}`) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.config.resource.revision')">
+          <span class="font-mono">
+            {{ selectedActivity.event.policy_revision_id }}
+          </span>
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.config.resource.createdBy')">
+          {{ actor(selectedActivity) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.config.resource.createdAt')">
+          {{ formatDateTimeLocal(timestamp(selectedActivity)) }}
+        </DescriptionsItem>
+        <DescriptionsItem :label="$t('page.config.activity.reason')">
+          {{ selectedActivity.event.reason }}
+        </DescriptionsItem>
+      </Descriptions>
+    </WorkspaceInspectorSurface>
   </Page>
 </template>
 
@@ -165,6 +291,21 @@ onMounted(() => void loadActivity());
   gap: 0.9rem;
   align-items: flex-start;
   padding: 0.9rem 0;
+}
+
+.activity-list li[role='button'] {
+  cursor: pointer;
+  border-radius: var(--qp-radius-md);
+}
+
+.activity-list li[role='button']:hover {
+  background: hsl(var(--workspace-accent) / 6%);
+}
+
+.activity-list li[role='button']:focus-visible {
+  outline: 2px solid hsl(var(--workspace-accent));
+  outline-offset: 2px;
+  box-shadow: var(--qp-shadow-focus);
 }
 
 .activity-list li + li {

@@ -10,6 +10,7 @@ import { Alert, Card, Descriptions, DescriptionsItem, Tag } from 'antdv-next';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'FeatureParityRunDrawer' });
@@ -26,7 +27,7 @@ function display(value: null | string | undefined): string {
   return value === null || value === undefined || value === '' ? '—' : value;
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     run.value = isOpen ? drawerApi.getData<DrawerData>().run : null;
@@ -35,9 +36,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.featureIntegrity.run.title')"
-    class="w-full max-w-4xl"
   >
     <div v-if="run" class="flex flex-col gap-4">
       <div class="flex flex-wrap gap-2">
@@ -222,5 +223,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </Descriptions>
       </Card>
     </div>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

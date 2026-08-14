@@ -34,3 +34,8 @@ export async function fetchOperationLogPage(
     params,
   });
 }
+
+/** `GET /operation-logs/{id}` — one immutable redacted audit row. */
+export async function getOperationLog(id: UuidString) {
+  return requestClient.get<OperationLogView>(`${OperationLogsApi.base}/${id}`);
+}

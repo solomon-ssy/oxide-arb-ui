@@ -4,15 +4,12 @@ import type { QuantRecommendationView } from '@vben/types';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Page } from '@vben/common-ui';
-import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
-
-import { Button } from 'antdv-next';
 
 import { getRecommendation } from '#/api/quant-recommendations';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useOrderIntentStore } from '#/store';
 
 import RecommendationDetailPanel from './modules/recommendation-detail-panel.vue';
@@ -36,6 +33,12 @@ const recommendationId = computed(() => {
   return entity === 'recommendation' && typeof id === 'string' ? id : '';
 });
 const initialTab = computed(() => (route.query.tab as string) || undefined);
+const inspectorOpen = computed({
+  get: () => recommendationId.value !== '',
+  set: (value: boolean) => {
+    if (!value) goBack();
+  },
+});
 
 async function load() {
   if (!recommendationId.value) {
@@ -74,11 +77,10 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <Page auto-content-height>
-    <Button class="mb-4" type="link" @click="goBack">
-      <IconifyIcon class="mr-1 size-4" icon="lucide:arrow-left" />
-      {{ $t('page.quantRecommendations.back') }}
-    </Button>
+  <WorkspaceInspectorSurface
+    v-model:open="inspectorOpen"
+    :title="$t('page.quantRecommendations.title')"
+  >
     <AsyncState
       :error-message="loadError"
       :loading="loading"
@@ -92,5 +94,5 @@ onMounted(() => void load());
         :recommendation="recommendation"
       />
     </AsyncState>
-  </Page>
+  </WorkspaceInspectorSurface>
 </template>

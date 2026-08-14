@@ -341,7 +341,7 @@
     "retry_scheduled": "Retry Scheduled",
     "reconciliation_required": "Reconciliation Required",
     "manual_required": "Manual Required",
-    "not_required": "无需批准"
+    "not_required": "Not Required"
   },
   "settlementEffectivePolicy": {
     "automatic_eligible": "Automatic Eligible",
@@ -423,8 +423,6 @@
     "capture": "Decision capture",
     "feature_cell": "Feature cell",
     "data_quality": "Data quality admission",
-    "domain_crypto": "Crypto domain inputs",
-    "domain_weather": "Weather domain inputs",
     "factor": "Factor",
     "model_input": "Model input",
     "prediction": "Prediction"
@@ -473,7 +471,6 @@
     "system": "System",
     "market": "Market",
     "config": "Config",
-    "config_lifecycle": "Config Lifecycle",
     "publication": "Publication",
     "materialization": "Materialization",
     "replay": "Replay",
@@ -709,8 +706,8 @@
     "calibrated_return_model": "Calibrated Return Model"
   },
   "admissionOutcome": {
-    "allow": "允许",
-    "deny": "拒绝",
+    "allow": "Allow",
+    "deny": "Deny",
     "defer": "Defer"
   },
   "approvalInvalidation": {
@@ -758,9 +755,9 @@
   },
   "capitalAllocationState": {
     "allocated": "Allocated",
-    "locked": "已锁定",
+    "locked": "Locked",
     "spent": "Spent",
-    "released": "已释放",
+    "released": "Released",
     "impaired": "Impaired"
   },
   "catalogChangeType": {
@@ -774,8 +771,8 @@
     "cursor": "Cursor"
   },
   "catalogFilterReason": {
-    "inactive": "非活跃",
-    "closed": "已关闭",
+    "inactive": "Inactive",
+    "closed": "Closed",
     "clob_disabled": "CLOB Disabled",
     "orders_not_accepted": "Orders Not Accepted"
   },
@@ -800,17 +797,17 @@
     "reconcile": "Reconcile"
   },
   "catalogSyncStatus": {
-    "committed": "已提交",
-    "failed": "失败"
+    "committed": "Committed",
+    "failed": "Failed"
   },
   "catalogTimestampQuality": {
     "source": "Source",
     "commit_time_fallback": "Commit Time Fallback"
   },
   "checkOutcome": {
-    "passed": "通过",
-    "failed": "失败",
-    "not_applicable": "不适用"
+    "passed": "Passed",
+    "failed": "Failed",
+    "not_applicable": "Not Applicable"
   },
   "classicalKind": {
     "gradient_boosted_trees": "Gradient Boosted Trees",
@@ -839,10 +836,10 @@
     "execution_automation_policy": "Execution Automation Policy"
   },
   "dataQualityStatus": {
-    "fresh": "新鲜",
-    "acceptable": "可接受",
-    "degraded": "已降级",
-    "stale": "陈旧",
+    "fresh": "Fresh",
+    "acceptable": "Acceptable",
+    "degraded": "Degraded",
+    "stale": "Stale",
     "insufficient": "Insufficient"
   },
   "decisionPolicySnapshotSource": {
@@ -854,10 +851,10 @@
     "close": "Close"
   },
   "eventStatus": {
-    "active": "活跃",
-    "closed": "已关闭",
-    "archived": "已归档",
-    "unknown": "未知"
+    "active": "Active",
+    "closed": "Closed",
+    "archived": "Archived",
+    "unknown": "Unknown"
   },
   "executionAttemptNoFillReason": {
     "venue_rejected": "Venue Rejected",
@@ -867,7 +864,7 @@
   },
   "executionAttemptTerminalState": {
     "unfilled": "Unfilled",
-    "partially_filled": "部分成交",
+    "partially_filled": "Partially Filled",
     "fully_filled": "Fully Filled"
   },
   "executionWalletKind": {
@@ -883,7 +880,7 @@
     "domain_weather": "Domain Weather"
   },
   "featureParityLatchState": {
-    "open": "开放",
+    "open": "Open",
     "clear": "Clear"
   },
   "featureParityStateTransition": {
@@ -893,11 +890,11 @@
     "governed_acknowledge": "Governed Acknowledge"
   },
   "feedbackCycleStatus": {
-    "queued": "排队中",
-    "running": "运行中",
-    "succeeded": "成功",
-    "failed": "失败",
-    "cancelled": "已取消",
+    "queued": "Queued",
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
     "quarantined": "Quarantined"
   },
   "feedbackDecision": {
@@ -930,9 +927,9 @@
     "promotion_comparison": "Promotion Comparison"
   },
   "feedbackRecipeTemplateStatus": {
-    "draft": "草稿",
-    "approved": "已批准",
-    "retired": "已退役"
+    "draft": "Draft",
+    "approved": "Approved",
+    "retired": "Retired"
   },
   "feedbackSchedulerFailureKind": {
     "materialization": "Materialization",
@@ -959,14 +956,14 @@
     "triggered": "Triggered",
     "job_linked": "Job Linked",
     "started": "Started",
-    "succeeded": "成功",
-    "failed": "失败",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
     "cancellation_requested": "Cancellation Requested",
-    "cancelled": "已取消",
+    "cancelled": "Cancelled",
     "lease_recovered": "Lease Recovered"
   },
   "feedbackTriggerFamily": {
-    "scheduled": "已调度",
+    "scheduled": "Scheduled",
     "manual": "Manual"
   },
   "fillRequirement": {
@@ -983,7 +980,7 @@
     "button": "Button"
   },
   "modeDenialReason": {
-    "report_only": "仅报告",
+    "report_only": "Report Only",
     "recommendation_ineligible": "Recommendation Ineligible",
     "risk_envelope_invalid": "Risk Envelope Invalid",
     "kill_switch_blocks_entry": "Kill Switch Blocks Entry",
@@ -1015,10 +1012,10 @@
     "live_inference": "Live Inference"
   },
   "modelRunStatus": {
-    "running": "运行中",
-    "succeeded": "成功",
-    "failed": "失败",
-    "cancelled": "已取消"
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
   },
   "modelSerializationFormat": {
     "json": "JSON",
@@ -1040,10 +1037,10 @@
     "SYSTEM": "System"
   },
   "outcomeReconciliationTaskStatus": {
-    "pending": "待处理",
+    "pending": "Pending",
     "delivering": "Delivering",
-    "retrying": "重试中",
-    "completed": "已完成"
+    "retrying": "Retrying",
+    "completed": "Completed"
   },
   "paritySubjectKind": {
     "recommendation_report": "Recommendation Report",
@@ -1073,8 +1070,8 @@
     "execution_automation_policy_admission": "Execution Automation Policy Admission"
   },
   "policyApprovalDecision": {
-    "approved": "已批准",
-    "rejected": "已拒绝"
+    "approved": "Approved",
+    "rejected": "Rejected"
   },
   "policyConsumer": {
     "market_selection": "Market Selection",
@@ -1109,8 +1106,8 @@
     "consumer_preparation_failed": "Consumer Preparation Failed"
   },
   "policyRevisionStatus": {
-    "draft": "草稿",
-    "validated": "已验证"
+    "draft": "Draft",
+    "validated": "Validated"
   },
   "policyValidationCode": {
     "schema_version_mismatch": "Schema Version Mismatch",
@@ -1123,8 +1120,8 @@
     "authorization_denied": "Authorization Denied"
   },
   "policyValidationSeverity": {
-    "error": "错误",
-    "warning": "警告"
+    "error": "Error",
+    "warning": "Warning"
   },
   "profileArtifactKind": {
     "feature": "Feature",
@@ -1137,12 +1134,12 @@
     "split_payout": "Split Payout"
   },
   "reportFactDeliveryStatus": {
-    "pending": "待处理",
+    "pending": "Pending",
     "delivering": "Delivering",
-    "retrying": "重试中",
-    "failed": "失败",
+    "retrying": "Retrying",
+    "failed": "Failed",
     "verified": "Verified",
-    "cancelled": "已取消"
+    "cancelled": "Cancelled"
   },
   "researchJobErrorCode": {
     "execution_failed": "Execution Failed",
@@ -1150,7 +1147,7 @@
     "execution_retry_exhausted": "Execution Retry Exhausted",
     "interrupted_by_restart": "Interrupted By Restart",
     "interrupted_exceeded_attempts": "Interrupted Exceeded Attempts",
-    "cancelled": "已取消"
+    "cancelled": "Cancelled"
   },
   "researchJobResultKind": {
     "training_dataset": "Training Dataset",
@@ -1185,9 +1182,9 @@
     "unexpected_transient": "Unexpected Transient"
   },
   "resolutionProjectionStatus": {
-    "pending": "待处理",
+    "pending": "Pending",
     "delivering": "Delivering",
-    "retry_scheduled": "已安排重试",
+    "retry_scheduled": "Retry Scheduled",
     "mapping_blocked": "Mapping Blocked",
     "quarantined": "Quarantined",
     "excluded": "Excluded",
@@ -1202,8 +1199,8 @@
     "custom": "Custom"
   },
   "roleStatus": {
-    "enabled": "已启用",
-    "disabled": "已禁用"
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "runtimeActivityActionKind": {
     "cancel_research_job": "Cancel Research Job",
@@ -1219,21 +1216,21 @@
     "settlement": "Settlement"
   },
   "runtimeActivityStatus": {
-    "pending": "待处理",
-    "running": "运行中",
-    "succeeded": "成功",
-    "failed": "失败",
-    "cancelled": "已取消",
+    "pending": "Pending",
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
     "attention": "Attention",
-    "skipped": "已跳过"
+    "skipped": "Skipped"
   },
   "settlementAuthorizationState": {
-    "not_required": "无需批准",
-    "pending": "待处理",
-    "approved": "已批准",
-    "revoked": "已撤销",
+    "not_required": "Not Required",
+    "pending": "Pending",
+    "approved": "Approved",
+    "revoked": "Revoked",
     "consumed": "Consumed",
-    "expired": "已过期"
+    "expired": "Expired"
   },
   "settlementFailureCode": {
     "route_not_ready": "Route Not Ready",
@@ -1260,20 +1257,20 @@
   },
   "settlementGovernedActionState": {
     "authorized": "Authorized",
-    "retry_scheduled": "已安排重试",
+    "retry_scheduled": "Retry Scheduled",
     "consumed": "Consumed",
-    "revoked": "已撤销",
-    "expired": "已过期",
-    "reconciliation_required": "需要对账",
-    "failed": "失败"
+    "revoked": "Revoked",
+    "expired": "Expired",
+    "reconciliation_required": "Reconciliation Required",
+    "failed": "Failed"
   },
   "settlementReadinessStatus": {
-    "unchecked": "未检查",
-    "ready": "就绪",
-    "blocked": "已阻断"
+    "unchecked": "Unchecked",
+    "ready": "Ready",
+    "blocked": "Blocked"
   },
   "settlementReconciliationState": {
-    "not_required": "无需批准",
+    "not_required": "Not Required",
     "awaiting_relayer_hash": "Awaiting Relayer Hash",
     "awaiting_receipt": "Awaiting Receipt",
     "evidence_mismatch": "Evidence Mismatch",
@@ -1290,29 +1287,29 @@
     "redeem": "Redeem"
   },
   "settlementSubmissionState": {
-    "prepared": "已准备",
+    "prepared": "Prepared",
     "dispatching": "Dispatching",
     "awaiting_chain_hash": "Awaiting Chain Hash",
     "awaiting_finality": "Awaiting Finality",
-    "confirmed": "已确认",
-    "failed": "失败"
+    "confirmed": "Confirmed",
+    "failed": "Failed"
   },
   "shadowBindingStatus": {
-    "active": "活跃",
-    "rejected": "已拒绝",
+    "active": "Active",
+    "rejected": "Rejected",
     "promoted": "Promoted",
-    "cancelled": "已取消"
+    "cancelled": "Cancelled"
   },
   "sourceSliceStatus": {
     "materializing": "Materializing",
-    "ready": "就绪",
-    "failed": "失败"
+    "ready": "Ready",
+    "failed": "Failed"
   },
   "stalenessLevel": {
-    "fresh": "新鲜",
-    "acceptable": "可接受",
-    "stale": "陈旧",
-    "expired": "已过期"
+    "fresh": "Fresh",
+    "acceptable": "Acceptable",
+    "stale": "Stale",
+    "expired": "Expired"
   },
   "tickSize": {
     "0": {
@@ -1330,10 +1327,10 @@
     "retire": "Retire"
   },
   "tradePolicyStatus": {
-    "draft": "草稿",
-    "validated": "已验证",
-    "published": "已发布",
-    "retired": "已退役"
+    "draft": "Draft",
+    "validated": "Validated",
+    "published": "Published",
+    "retired": "Retired"
   },
   "tradePolicyTrialScope": {
     "candidate": "Candidate",
@@ -1342,25 +1339,25 @@
     "latency_stress": "Latency Stress"
   },
   "tradePolicyTrialStatus": {
-    "succeeded": "成功",
-    "failed": "失败",
-    "cancelled": "已取消"
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
   },
   "tradePolicyValidationStatus": {
-    "running": "运行中",
-    "succeeded": "成功",
-    "failed": "失败",
-    "cancelled": "已取消"
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
   },
   "userStatus": {
-    "active": "活跃",
-    "disabled": "已禁用"
+    "active": "Active",
+    "disabled": "Disabled"
   },
   "venueTradeStatus": {
-    "matched": "已匹配",
+    "matched": "Matched",
     "mined": "Mined",
-    "confirmed": "已确认",
-    "retrying": "重试中",
-    "failed": "失败"
+    "confirmed": "Confirmed",
+    "retrying": "Retrying",
+    "failed": "Failed"
   }
 }

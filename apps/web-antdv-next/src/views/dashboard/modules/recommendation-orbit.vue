@@ -8,6 +8,12 @@ import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { usePreferences } from '@vben/preferences';
 
 import { Button, Empty, Tag } from 'antdv-next';
+import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from 'motion-v';
 
 import { $t } from '#/locales';
 import { formatBps, formatUsd } from '#/shared/components/format';
@@ -25,6 +31,7 @@ const emit = defineEmits<{
 }>();
 
 const chartRef = ref<EchartsUIType>();
+const reducedMotion = useReducedMotion();
 const { isDark } = usePreferences();
 const { getChartInstance, renderEcharts } = useEcharts(chartRef);
 
@@ -151,36 +158,51 @@ onUnmounted(() => {
 <template>
   <InsightPanel
     :title="$t('page.dashboard.orbit.title')"
+    featured
     icon="lucide:orbit"
     tone="violet"
   >
     <div v-if="recommendations.length > 0">
       <EchartsUI ref="chartRef" class="hidden md:block" height="330px" />
-      <ol class="mt-2 grid gap-2" :aria-label="$t('page.dashboard.orbit.list')">
-        <li
-          v-for="recommendation in recommendations"
-          :key="recommendation.recommendation_id"
+      <LayoutGroup>
+        <ol
+          class="mt-2 grid gap-2"
+          :aria-label="$t('page.dashboard.orbit.list')"
         >
-          <button
-            class="hover:bg-accent focus-visible:ring-primary flex min-h-11 w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs focus-visible:ring-2 focus-visible:outline-none"
-            data-orbit-kind="recommendation"
-            data-testid="dashboard-orbit-action"
-            type="button"
-            @click="select(recommendation)"
-          >
-            <span class="text-muted-foreground w-6">
-              #{{ recommendation.rank }}
-            </span>
-            <span class="min-w-0 flex-1 truncate">{{
-              recommendation.identity.question
-            }}</span>
-            <Tag>{{ recommendation.identity.outcome_name }}</Tag>
-            <span class="tabular-nums">
-              {{ formatUsd(recommendation.trade_plan.sizing.suggested_usd) }}
-            </span>
-          </button>
-        </li>
-      </ol>
+          <AnimatePresence :initial="false">
+            <motion.li
+              v-for="recommendation in recommendations"
+              :key="recommendation.recommendation_id"
+              :animate="reducedMotion ? undefined : { opacity: 1, y: 0 }"
+              :exit="reducedMotion ? undefined : { opacity: 0, y: -4 }"
+              :initial="reducedMotion ? false : { opacity: 0, y: 4 }"
+              :layout="reducedMotion ? false : 'position'"
+              :transition="{ duration: reducedMotion ? 0 : 0.18 }"
+            >
+              <button
+                class="hover:bg-accent focus-visible:ring-primary flex min-h-11 w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs focus-visible:ring-2 focus-visible:outline-none"
+                data-orbit-kind="recommendation"
+                data-testid="dashboard-orbit-action"
+                type="button"
+                @click="select(recommendation)"
+              >
+                <span class="text-muted-foreground w-6">
+                  #{{ recommendation.rank }}
+                </span>
+                <span class="min-w-0 flex-1 truncate">{{
+                  recommendation.identity.question
+                }}</span>
+                <Tag>{{ recommendation.identity.outcome_name }}</Tag>
+                <span class="tabular-nums">
+                  {{
+                    formatUsd(recommendation.trade_plan.sizing.suggested_usd)
+                  }}
+                </span>
+              </button>
+            </motion.li>
+          </AnimatePresence>
+        </ol>
+      </LayoutGroup>
     </div>
     <Empty
       v-else

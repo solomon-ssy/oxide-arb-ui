@@ -24,7 +24,7 @@ import {
 import { $t as translate } from '#/locales';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { useQueryEntityDrawer } from '#/shared/composables/use-route-query-sync';
+import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
 import { useResearchStore } from '#/store';
 
 import DatasetDetailDrawer from './modules/dataset-detail-drawer.vue';
@@ -64,6 +64,7 @@ const emptyPage = {
 const [Drawer, drawerApi] = useVbenDrawer({
   connectedComponent: DatasetDetailDrawer,
   destroyOnClose: true,
+  onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
 const [FormModal, formModalApi] = useVbenModal({
@@ -150,7 +151,7 @@ function onActionClick({
 }: OnActionClickParams<TrainingDatasetView>) {
   switch (code) {
     case 'detail': {
-      drawerApi.setData({ dataset: row }).open();
+      openInspector(row.training_dataset_id);
       break;
     }
     case 'train': {
@@ -161,7 +162,8 @@ function onActionClick({
   }
 }
 
-useQueryEntityDrawer({
+const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
+  close: () => drawerApi.close?.(),
   entity: 'training-dataset',
   fetch: (id) => getTrainingDataset(id),
   open: (dataset) => drawerApi.setData({ dataset }).open(),

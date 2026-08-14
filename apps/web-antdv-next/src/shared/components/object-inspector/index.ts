@@ -10,4 +10,3 @@ export type {
   ObjectInspectorStatus,
   ObjectInspectorTimelineItem,
 } from './object-inspector.types';
-export { default as ObjectInspector } from './object-inspector.vue';

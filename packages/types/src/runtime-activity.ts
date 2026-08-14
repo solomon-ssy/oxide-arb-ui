@@ -65,8 +65,15 @@ export interface RuntimeActivitySummaryView {
   total: number;
 }
 
+export interface RuntimeActivityIndicatorView {
+  attention: number;
+  running: number;
+  total: number;
+}
+
 export interface RuntimeActivityPageView {
   has_more: boolean;
+  indicator: RuntimeActivityIndicatorView;
   items: RuntimeActivityView[];
   next_cursor: null | string;
   summary: RuntimeActivitySummaryView;

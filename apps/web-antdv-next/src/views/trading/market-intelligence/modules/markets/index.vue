@@ -5,7 +5,7 @@ import type { MarketRow } from './modules/schemas/table-columns';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { computed, watch } from 'vue';
+import { computed, defineAsyncComponent, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -26,6 +26,7 @@ defineOptions({ name: 'MarketsPage' });
 const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const marketStore = useMarketStore();
+const MarketDetail = defineAsyncComponent(() => import('./detail/index.vue'));
 
 const { block, canUpdate, setSubscription, unblock, UnblockModalHost } =
   useMarketActions(() => {
@@ -109,7 +110,7 @@ watch(
 function openDetail(row: MarketView) {
   void router.push({
     path: '/trading/market-intelligence',
-    query: { entity: 'market', id: row.market_id, module: 'live' },
+    query: { entity: 'market', id: row.market_id, module: 'overview' },
   });
 }
 
@@ -135,6 +136,7 @@ function onActionClick({ code, row }: OnActionClickParams<MarketRow>) {
 <template>
   <Page auto-content-height>
     <Grid :table-title="$t('page.markets.title')" />
+    <MarketDetail />
     <UnblockModalHost />
   </Page>
 </template>

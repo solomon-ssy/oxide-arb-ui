@@ -39,6 +39,7 @@ const columns: VxeTableGridOptions<TradePolicySummaryView>['columns'] = [
     title: $t('page.research.tradePolicies.columns.artifactId'),
   },
   {
+    cellRender: { name: 'CellEnumTag', props: { enum: 'TradePolicyStatus' } },
     field: 'status',
     width: 120,
     title: $t('page.research.tradePolicies.columns.status'),

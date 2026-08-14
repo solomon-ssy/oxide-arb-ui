@@ -47,6 +47,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.dataReliability.description"
+    domain="research"
     eyebrow="page.workspace.dataReliability.eyebrow"
     :modules="modules"
     title="page.menu.researchDataReliability"

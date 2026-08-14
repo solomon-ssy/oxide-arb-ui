@@ -98,6 +98,12 @@ function durationBetween(
   const startMs = Date.parse(start);
   const endMs = end ? Date.parse(end) : Date.now();
   if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return '—';
+  if (
+    typeof document !== 'undefined' &&
+    document.documentElement.dataset.uiDeterministic === 'true'
+  ) {
+    return '0s';
+  }
   return formatDurationSecs(Math.max(0, Math.round((endMs - startMs) / 1000)));
 }
 

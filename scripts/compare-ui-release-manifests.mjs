@@ -26,18 +26,24 @@ async function readManifest(runId) {
   return manifest;
 }
 
+function stableEntry(entry) {
+  return {
+    canonicalization: entry.canonicalization,
+    data_revision: entry.data_revision,
+    locale: entry.locale,
+    project: entry.project,
+    scenario: entry.scenario,
+    sha256: entry.sha256,
+    theme: entry.theme,
+    timezone: entry.timezone,
+    viewport: entry.viewport,
+  };
+}
+
 function stableContract(manifest) {
   return {
     backend_build_id: manifest.backend_build_id,
-    entries: manifest.entries.map((entry) => ({
-      data_revision: entry.data_revision,
-      locale: entry.locale,
-      project: entry.project,
-      scenario: entry.scenario,
-      theme: entry.theme,
-      timezone: entry.timezone,
-      viewport: entry.viewport,
-    })),
+    entries: manifest.entries.map((entry) => stableEntry(entry)),
     frontend_build_id: manifest.frontend_build_id,
     git_hash: manifest.git_hash,
     schema_version: manifest.schema_version,
@@ -51,11 +57,27 @@ const [first, second] = await Promise.all(
 const firstContract = JSON.stringify(stableContract(first));
 const secondContract = JSON.stringify(stableContract(second));
 if (firstContract !== secondContract) {
+  const secondEntries = new Map(
+    second.entries.map((entry) => [
+      `${entry.project}/${entry.scenario}`,
+      entry,
+    ]),
+  );
+  const differingEntries = first.entries
+    .filter((entry) => {
+      const candidate = secondEntries.get(`${entry.project}/${entry.scenario}`);
+      return (
+        !candidate ||
+        JSON.stringify(stableEntry(entry)) !==
+          JSON.stringify(stableEntry(candidate))
+      );
+    })
+    .map((entry) => `${entry.project}/${entry.scenario}`);
   throw new Error(
-    'fresh-boot UI release manifests differ in scenario or data revision',
+    `fresh-boot UI release manifests differ in scenario, data revision, or canonical screenshot SHA-256: ${differingEntries.join(', ')}`,
   );
 }
 
 process.stdout.write(
-  'UI release manifests contain the same 50 scenarios and data revision.\n',
+  'UI release manifests contain the same 50 scenarios, data revision, and canonical screenshot SHA-256 values.\n',
 );

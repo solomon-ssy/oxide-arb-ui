@@ -55,6 +55,17 @@ const SEMANTIC_ENUM_TONES = {
   'CapitalAllocationState.spent': 'success',
   'CapitalAllocationState.released': 'neutral',
   'CapitalAllocationState.impaired': 'danger',
+  'CapabilityReason.control_plane_not_ready': 'danger',
+  'CapabilityReason.catalog_baseline_missing': 'danger',
+  'CapabilityReason.operational_phase_blocks_reports': 'warning',
+  'CapabilityReason.runtime_mode_report_only': 'neutral',
+  'CapabilityReason.kill_switch_blocks_entries': 'danger',
+  'CapabilityReason.operational_phase_blocks_submission': 'warning',
+  'CapabilityReason.no_serving_evidence': 'danger',
+  'CatalogFilterReason.inactive': 'neutral',
+  'CatalogFilterReason.closed': 'neutral',
+  'CatalogFilterReason.clob_disabled': 'warning',
+  'CatalogFilterReason.orders_not_accepted': 'warning',
   'CatalogSyncStatus.committed': 'success',
   'CatalogSyncStatus.failed': 'danger',
   'DataQualityStatus.fresh': 'success',
@@ -130,6 +141,11 @@ const SEMANTIC_ENUM_TONES = {
   'MarketStatus.manually_blocked': 'danger',
   'MarketStatus.settled': 'success',
   'MarketStatus.delisted': 'neutral',
+  'ModeDenialReason.report_only': 'danger',
+  'ModeDenialReason.recommendation_ineligible': 'danger',
+  'ModeDenialReason.risk_envelope_invalid': 'danger',
+  'ModeDenialReason.kill_switch_blocks_entry': 'danger',
+  'ModeDenialReason.auto_execution_not_allowed': 'danger',
   'OrderIntentStatus.draft': 'queued',
   'OrderIntentStatus.pending_approval': 'queued',
   'OrderIntentStatus.approved': 'success',
@@ -150,6 +166,14 @@ const SEMANTIC_ENUM_TONES = {
   'OutcomeReconciliationTaskStatus.completed': 'success',
   'PolicyRevisionStatus.draft': 'queued',
   'PolicyRevisionStatus.validated': 'success',
+  'PolicyValidationCode.schema_version_mismatch': 'danger',
+  'PolicyValidationCode.resource_kind_mismatch': 'danger',
+  'PolicyValidationCode.semantic_constraint': 'danger',
+  'PolicyValidationCode.dependency_unavailable': 'danger',
+  'PolicyValidationCode.artifact_incompatible': 'danger',
+  'PolicyValidationCode.credential_unavailable': 'danger',
+  'PolicyValidationCode.schedule_invalid': 'danger',
+  'PolicyValidationCode.authorization_denied': 'danger',
   'PositionLedgerState.open': 'running',
   'PositionLedgerState.closing': 'running',
   'PositionLedgerState.closed': 'success',
@@ -187,6 +211,11 @@ const SEMANTIC_ENUM_TONES = {
   'ResolutionProjectionStatus.quarantined': 'warning',
   'ResolutionProjectionStatus.excluded': 'neutral',
   'ResolutionProjectionStatus.verified': 'success',
+  'ResolutionProjectionErrorCode.catalog_mapping_unavailable': 'danger',
+  'ResolutionProjectionErrorCode.invalid_observation': 'danger',
+  'ResolutionProjectionErrorCode.persistence_unavailable': 'danger',
+  'ResolutionProjectionErrorCode.external_dependency_unavailable': 'danger',
+  'ResolutionProjectionErrorCode.unexpected_transient': 'danger',
   'RuntimeActivityStatus.pending': 'queued',
   'RuntimeActivityStatus.running': 'running',
   'RuntimeActivityStatus.succeeded': 'success',
@@ -208,6 +237,22 @@ const SEMANTIC_ENUM_TONES = {
   'SettlementCaseState.reconciliation_required': 'warning',
   'SettlementCaseState.manual_required': 'warning',
   'SettlementCaseState.not_required': 'neutral',
+  'SettlementFailureCode.route_not_ready': 'danger',
+  'SettlementFailureCode.balance_mismatch': 'danger',
+  'SettlementFailureCode.simulation_reverted': 'danger',
+  'SettlementFailureCode.transport_uncertain': 'danger',
+  'SettlementFailureCode.submission_rejected': 'danger',
+  'SettlementFailureCode.relayer_terminal_failure': 'danger',
+  'SettlementFailureCode.on_chain_reverted': 'danger',
+  'SettlementFailureCode.receipt_evidence_mismatch': 'danger',
+  'SettlementFailureCode.payout_mismatch': 'danger',
+  'SettlementFailureCode.deployment_changed': 'danger',
+  'SettlementFailureCode.authorization_invalid': 'danger',
+  'SettlementFailureCode.execution_not_quiescent': 'danger',
+  'SettlementFailureCode.lease_lost': 'danger',
+  'SettlementFailureCode.ledger_unavailable': 'danger',
+  'SettlementFailureCode.local_invariant': 'danger',
+  'SettlementFailureCode.external_evidence_incomplete': 'danger',
   'SettlementGovernedActionState.authorized': 'success',
   'SettlementGovernedActionState.retry_scheduled': 'warning',
   'SettlementGovernedActionState.consumed': 'success',
@@ -267,7 +312,7 @@ function semanticPresentations() {
  * compilation until every new member receives an intentional presentation;
  * lifecycle/result members are then overridden by the semantic map above.
  */
-const BASE_ENUM_PRESENTATION = {
+const GENERATED_ENUM_PRESENTATION = {
   'AccountSource.polymarket': { categoryHue: 8, tone: 'category' },
   'AccountSource.historical_replay': { categoryHue: 10, tone: 'category' },
   'AdmissionCheckId.intent_state': { categoryHue: 8, tone: 'category' },
@@ -2435,9 +2480,17 @@ const BASE_ENUM_PRESENTATION = {
   },
 } as const satisfies Record<EnumMemberKey, EnumPresentation>;
 
+export const SEMANTIC_ENUM_PRESENTATION = semanticPresentations();
+
+export const CATEGORY_ENUM_PRESENTATION = Object.fromEntries(
+  Object.entries(GENERATED_ENUM_PRESENTATION).filter(
+    ([key]) => !(key in SEMANTIC_ENUM_PRESENTATION),
+  ),
+) as Partial<Record<EnumMemberKey, EnumPresentation>>;
+
 export const ENUM_PRESENTATION = {
-  ...BASE_ENUM_PRESENTATION,
-  ...semanticPresentations(),
+  ...GENERATED_ENUM_PRESENTATION,
+  ...SEMANTIC_ENUM_PRESENTATION,
 } as const satisfies Record<EnumMemberKey, EnumPresentation>;
 
 export function enumMemberKey<Name extends EnumName>(

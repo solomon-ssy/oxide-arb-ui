@@ -4,14 +4,22 @@
   --qp-surface-raised: 0 0% 100%;
   --qp-surface-inset: 220 30% 96%;
   --qp-surface-overlay: 0 0% 100%;
+  --qp-surface-glass: 0 0% 100%;
+  --qp-surface-sunken: 220 30% 94%;
   --qp-border-subtle: 220 18% 86%;
+  --qp-border-strong: 215 24% 62%;
   --qp-border-active: 189 82% 36%;
   --qp-text-primary: 222 47% 11%;
   --qp-text-secondary: 215 25% 32%;
   --qp-text-muted: 215 16% 43%;
-  --qp-accent-command: 239 84% 58%;
-  --qp-accent-research: 258 82% 57%;
-  --qp-accent-realtime: 189 88% 34%;
+  --qp-accent-sky: 199 89% 48%;
+  --qp-accent-sky-ink: 199 89% 37%;
+  --qp-accent-violet: 263 70% 50%;
+  --qp-accent-pink: 330 81% 52%;
+  --qp-accent-orange: 24 95% 50%;
+  --qp-accent-command: var(--qp-accent-violet);
+  --qp-accent-research: var(--qp-accent-pink);
+  --qp-accent-realtime: var(--qp-accent-sky);
   --qp-status-success: 152 69% 36%;
   --qp-status-running: 189 88% 34%;
   --qp-status-queued: 217 82% 49%;
@@ -26,10 +34,10 @@
   --qp-status-danger-soft: 0 84% 60% / 14%;
   --qp-status-neutral-soft: 215 16% 52% / 14%;
   --qp-status-paused-soft: 215 25% 65% / 14%;
-  --qp-chart-cat-1: 239 78% 56%;
-  --qp-chart-cat-2: 258 77% 55%;
-  --qp-chart-cat-3: 189 86% 34%;
-  --qp-chart-cat-4: 326 72% 48%;
+  --qp-chart-cat-1: var(--qp-accent-sky);
+  --qp-chart-cat-2: var(--qp-accent-violet);
+  --qp-chart-cat-3: var(--qp-accent-pink);
+  --qp-chart-cat-4: var(--qp-accent-orange);
   --qp-chart-cat-5: 217 82% 49%;
   --qp-chart-cat-6: 152 69% 36%;
   --qp-chart-cat-7: 28 89% 48%;
@@ -50,10 +58,51 @@
   --qp-chart-diverging-positive: 152 69% 36%;
   --qp-gradient-brand: linear-gradient(
     110deg,
-    hsl(var(--qp-accent-command)),
-    hsl(var(--qp-accent-research)) 52%,
-    hsl(var(--qp-accent-realtime))
+    hsl(var(--qp-accent-sky)) 0%,
+    hsl(var(--qp-accent-violet)) 42%,
+    hsl(var(--qp-accent-pink)) 72%,
+    hsl(var(--qp-accent-orange)) 100%
   );
+  --qp-gradient-trading: linear-gradient(
+    112deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet)) 64%,
+    hsl(var(--qp-accent-pink))
+  );
+  --qp-gradient-execution: linear-gradient(
+    112deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink)) 58%,
+    hsl(var(--qp-accent-orange))
+  );
+  --qp-gradient-research: linear-gradient(
+    112deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink))
+  );
+  --qp-gradient-governance: linear-gradient(
+    112deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet))
+  );
+  --qp-gradient-active: var(--qp-gradient-brand);
+  --qp-gradient-hero:
+    radial-gradient(
+      circle at 10% 0%,
+      hsl(var(--qp-accent-sky) / 8%),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 62% -18%,
+      hsl(var(--qp-accent-violet) / 7%),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 96% 10%,
+      hsl(var(--qp-accent-pink) / 6%) 0%,
+      hsl(var(--qp-accent-orange) / 5%) 22%,
+      transparent 42%
+    );
   --qp-gradient-surface: linear-gradient(
     135deg,
     hsl(var(--qp-accent-command) / 10%),
@@ -73,6 +122,18 @@
   );
   --qp-shadow-low: 0 8px 24px -16px hsl(222deg 47% 11% / 28%);
   --qp-shadow-medium: 0 18px 48px -24px hsl(222deg 47% 11% / 38%);
+  --qp-shadow-subtle: 0 12px 34px -24px hsl(222deg 47% 11% / 34%);
+  --qp-shadow-focus: 0 0 0 3px hsl(var(--qp-accent-sky) / 24%);
+  --qp-shadow-featured: var(--qp-shadow-subtle), var(--qp-glow-violet);
+  --qp-shadow-featured-sky: var(--qp-shadow-subtle), var(--qp-glow-sky);
+  --qp-shadow-featured-pink: var(--qp-shadow-subtle), var(--qp-glow-pink);
+  --qp-shadow-inspector: var(--qp-glow-violet);
+  --qp-shadow-swatch: 0 0 0 1px hsl(var(--qp-border-subtle));
+  --qp-shadow-workspace: var(--qp-glow-sky);
+  --qp-glow-sky: 0 0 32px hsl(var(--qp-accent-sky) / 18%);
+  --qp-glow-violet: 0 0 32px hsl(var(--qp-accent-violet) / 18%);
+  --qp-glow-pink: 0 0 32px hsl(var(--qp-accent-pink) / 18%);
+  --qp-glow-orange: 0 0 32px hsl(var(--qp-accent-orange) / 18%);
   --qp-glow-success: 0 0 24px hsl(var(--qp-status-success) / 22%);
   --qp-glow-danger: 0 0 24px hsl(var(--qp-status-danger) / 22%);
   --qp-glow-realtime: 0 0 28px hsl(var(--qp-status-running) / 24%);
@@ -84,6 +145,7 @@
   --qp-radius-md: 10px;
   --qp-radius-lg: 14px;
   --qp-layer-base: 0;
+  --qp-layer-raised: 1;
   --qp-layer-sticky: 20;
   --qp-layer-dropdown: 1000;
   --qp-layer-overlay: 1100;
@@ -103,14 +165,22 @@
   --qp-surface-raised: 222 34% 12%;
   --qp-surface-inset: 222 44% 7%;
   --qp-surface-overlay: 222 40% 14%;
+  --qp-surface-glass: 222 38% 13%;
+  --qp-surface-sunken: 222 52% 5%;
   --qp-border-subtle: 222 24% 20%;
+  --qp-border-strong: 215 25% 46%;
   --qp-border-active: 189 94% 43%;
   --qp-text-primary: 213 31% 95%;
   --qp-text-secondary: 215 20% 72%;
-  --qp-text-muted: 215 16% 58%;
-  --qp-accent-command: 239 84% 67%;
-  --qp-accent-research: 258 90% 66%;
-  --qp-accent-realtime: 189 94% 43%;
+  --qp-text-muted: 215 16% 60%;
+  --qp-accent-sky: 198 93% 60%;
+  --qp-accent-sky-ink: var(--qp-accent-sky);
+  --qp-accent-violet: 258 90% 66%;
+  --qp-accent-pink: 330 81% 64%;
+  --qp-accent-orange: 27 96% 61%;
+  --qp-accent-command: var(--qp-accent-violet);
+  --qp-accent-research: var(--qp-accent-pink);
+  --qp-accent-realtime: var(--qp-accent-sky);
   --qp-status-success: 152 69% 41%;
   --qp-status-running: 189 94% 43%;
   --qp-status-queued: 217 91% 60%;
@@ -118,10 +188,17 @@
   --qp-status-danger: 0 84% 64%;
   --qp-status-neutral: 215 16% 58%;
   --qp-status-paused: 215 25% 65%;
-  --qp-chart-cat-1: 239 84% 67%;
-  --qp-chart-cat-2: 258 90% 66%;
-  --qp-chart-cat-3: 189 94% 43%;
-  --qp-chart-cat-4: 326 85% 66%;
+  --qp-status-success-soft: 152 69% 41% / 18%;
+  --qp-status-running-soft: 189 94% 43% / 18%;
+  --qp-status-queued-soft: 217 91% 60% / 18%;
+  --qp-status-warning-soft: 38 92% 50% / 20%;
+  --qp-status-danger-soft: 0 84% 60% / 18%;
+  --qp-status-neutral-soft: 215 16% 58% / 18%;
+  --qp-status-paused-soft: 215 25% 65% / 18%;
+  --qp-chart-cat-1: var(--qp-accent-sky);
+  --qp-chart-cat-2: var(--qp-accent-violet);
+  --qp-chart-cat-3: var(--qp-accent-pink);
+  --qp-chart-cat-4: var(--qp-accent-orange);
   --qp-chart-cat-5: 217 91% 67%;
   --qp-chart-cat-6: 152 69% 55%;
   --qp-chart-cat-7: 28 95% 61%;
@@ -142,6 +219,25 @@
   --qp-chart-diverging-positive: 152 69% 55%;
   --qp-shadow-low: 0 10px 30px -18px hsl(222deg 80% 2% / 54%);
   --qp-shadow-medium: 0 22px 60px -28px hsl(222deg 80% 2% / 72%);
+  --qp-shadow-subtle: 0 14px 38px -24px hsl(222deg 80% 2% / 64%);
+  --qp-shadow-focus: 0 0 0 3px hsl(var(--qp-accent-sky) / 30%);
+  --qp-gradient-hero:
+    radial-gradient(
+      circle at 10% 0%,
+      hsl(var(--qp-accent-sky) / 14%),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 62% -18%,
+      hsl(var(--qp-accent-violet) / 12%),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 96% 10%,
+      hsl(var(--qp-accent-pink) / 10%) 0%,
+      hsl(var(--qp-accent-orange) / 9%) 22%,
+      transparent 42%
+    );
 }
 
 html[data-density='compact'] {

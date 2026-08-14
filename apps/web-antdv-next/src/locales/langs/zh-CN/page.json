@@ -123,15 +123,6 @@
       "reconciliation": "对账",
       "settlement": "结算"
     },
-    "status": {
-      "pending": "等待中",
-      "running": "运行中",
-      "succeeded": "已成功",
-      "failed": "已失败",
-      "cancelled": "已取消",
-      "attention": "需要处理",
-      "skipped": "已跳过"
-    },
     "kind": {
       "research-job": "研究任务",
       "report-run": "报告运行",
@@ -938,8 +929,6 @@
           "receipt": {
             "title": "路由激活回执",
             "loading": "正在加载不可变路由激活回执。",
-            "loadError": "无法加载路由激活回执。",
-            "notFound": "未找到路由激活回执 {activationId}。",
             "activated": "已激活",
             "activationId": "激活回执 ID",
             "route": "路由代次",
@@ -2668,7 +2657,7 @@
       "aria": "所选窗口内净清算价值和回撤的时间序列图。"
     },
     "orbit": {
-      "title": "Recommendation Orbit",
+      "title": "推荐轨道",
       "aria": "最新报告的 TopN 推荐，按类别、排名、信心和建议金额组织。",
       "list": "可键盘操作的 TopN 推荐列表",
       "drawerTitle": "推荐操作摘要",
@@ -3687,7 +3676,6 @@
       }
     },
     "detail": {
-      "back": "返回报告列表",
       "notFound": "报告不存在",
       "openRun": "打开构建运行",
       "publicationRetry": "重试发布",
@@ -3906,7 +3894,6 @@
   },
   "quantRecommendations": {
     "title": "推荐",
-    "back": "返回",
     "notFound": "推荐不存在",
     "sections": {
       "identity": "标识",
@@ -4521,6 +4508,7 @@
       "title": "配置活动",
       "description": "跨资源的 Draft、审批与激活时间线。",
       "empty": "暂无配置活动",
+      "reason": "原因",
       "event": {
         "revision": "创建 Draft",
         "approval": "记录审批",
@@ -5121,7 +5109,9 @@
       "actor": "操作人",
       "http": "HTTP",
       "resource": "资源",
-      "auditEvent": "审计事件"
+      "auditEvent": "审计事件",
+      "receiptCount": "回执数量",
+      "receiptsEmpty": "该治理审计事件没有可用回执"
     }
   }
 }

@@ -27,7 +27,13 @@ function toNumber(value: string): number {
 }
 
 function render() {
-  const axis = props.snapshots.map((row) => row.as_of);
+  const deterministic =
+    document.documentElement.dataset.uiDeterministic === 'true';
+  const axis = props.snapshots.map((row, index) =>
+    deterministic
+      ? `T−${props.snapshots.length - index - 1}`
+      : row.as_of.slice(5, 16),
+  );
   const equity = props.snapshots.map((row) =>
     toNumber(row.venue_net_liquidation_usd),
   );
@@ -44,7 +50,6 @@ function render() {
     },
     tooltip: { axisPointer: { type: 'cross' }, trigger: 'axis' },
     xAxis: {
-      axisLabel: { formatter: (value: string) => value.slice(5, 16) },
       boundaryGap: false,
       data: axis,
       type: 'category',

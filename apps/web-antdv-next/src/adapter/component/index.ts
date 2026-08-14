@@ -626,6 +626,7 @@ export type ComponentType =
   | 'DatePicker'
   | 'DefaultButton'
   | 'Divider'
+  | 'EnumSelect'
   | 'IconPicker'
   | 'Input'
   | 'InputNumber'
@@ -662,6 +663,7 @@ export interface ComponentPropsMap {
   DatePicker: DatePickerProps;
   DefaultButton: ButtonProps;
   Divider: DividerProps;
+  EnumSelect: SelectProps;
   IconPicker: IconPickerProps;
   Input: InputProps;
   InputNumber: InputNumberProps;
@@ -689,6 +691,9 @@ export interface ComponentPropsMap {
 
 const JsonEditor = defineAsyncComponent(
   () => import('#/shared/components/json-editor/json-editor-shell.vue'),
+);
+const EnumSelect = defineAsyncComponent(
+  () => import('#/shared/components/enum/enum-select.vue'),
 );
 
 async function initComponentAdapter() {
@@ -728,6 +733,7 @@ async function initComponentAdapter() {
       return h(Button, { ...props, attrs, type: 'default' }, slots);
     },
     Divider,
+    EnumSelect: withDefaultPlaceholder(EnumSelect, 'select'),
     IconPicker: withDefaultPlaceholder(IconPicker, 'select', {
       iconSlot: 'addonAfter',
       inputComponent: Input,

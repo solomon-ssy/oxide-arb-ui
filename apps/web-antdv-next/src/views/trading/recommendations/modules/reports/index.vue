@@ -3,7 +3,7 @@ import type { QuantReportView } from '@vben/types';
 
 import type { OnActionClickParams } from '#/adapter/vxe-table';
 
-import { nextTick, ref, watch } from 'vue';
+import { defineAsyncComponent, nextTick, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
@@ -29,6 +29,7 @@ const route = useRoute();
 const { handleRequest } = useRequestHandler();
 const quantReportStore = useQuantReportStore();
 const activeTab = ref('reports');
+const ReportDetail = defineAsyncComponent(() => import('./detail/index.vue'));
 
 const [RunDrawer, runDrawerApi] = useVbenDrawer({
   connectedComponent: ReportRunDrawer,
@@ -85,7 +86,7 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantReportView>({
 function openDetail(id: string) {
   void router.push({
     path: '/trading/recommendations',
-    query: { entity: 'report', id, module: 'queue' },
+    query: { entity: 'report', id, module: 'reports' },
   });
 }
 
@@ -175,5 +176,6 @@ watch(
     </Tabs>
     <RunReportModalHost />
     <RunDrawer />
+    <ReportDetail />
   </Page>
 </template>

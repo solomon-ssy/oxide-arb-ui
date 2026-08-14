@@ -1,12 +1,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 
-import {
-  APPROVAL_STATUSES,
-  ORDER_INTENT_STATUSES,
-  QUANT_RUNTIME_MODES,
-} from '@vben/types';
-
 import { $t } from '#/locales';
+import { enumOptions } from '#/shared/presentation/enum-options';
 
 export interface IntentSearchInitialValues {
   approval_status?: string;
@@ -18,38 +13,29 @@ export function useIntentSearchSchema(
 ): VbenFormSchema[] {
   return [
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(ORDER_INTENT_STATUSES).map((value) => ({
-          label: $t(`enum.orderIntentStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('OrderIntentStatus'),
       },
       fieldName: 'status',
       label: $t('page.quantIntents.filters.status'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(APPROVAL_STATUSES).map((value) => ({
-          label: $t(`enum.approvalStatus.${value}`),
-          value,
-        })),
+        options: enumOptions('ApprovalStatus'),
       },
       defaultValue: initial.approval_status,
       fieldName: 'approval_status',
       label: $t('page.quantIntents.filters.approvalStatus'),
     },
     {
-      component: 'Select',
+      component: 'EnumSelect',
       componentProps: {
         allowClear: true,
-        options: Object.values(QUANT_RUNTIME_MODES).map((value) => ({
-          label: $t(`enum.quantRuntimeMode.${value}`),
-          value,
-        })),
+        options: enumOptions('QuantRuntimeMode'),
       },
       fieldName: 'runtime_mode',
       label: $t('page.quantIntents.filters.runtimeMode'),

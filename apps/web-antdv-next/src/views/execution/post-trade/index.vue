@@ -37,6 +37,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.executionPostTrade.description"
+    domain="execution"
     eyebrow="page.workspace.executionPostTrade.eyebrow"
     :modules="modules"
     title="page.menu.executionPostTrade"

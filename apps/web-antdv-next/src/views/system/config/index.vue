@@ -49,6 +49,7 @@ const modules = [
 <template>
   <WorkspaceShell
     description="page.workspace.systemConfig.description"
+    domain="governance"
     eyebrow="page.workspace.systemConfig.eyebrow"
     :modules="modules"
     title="page.menu.systemConfig"
