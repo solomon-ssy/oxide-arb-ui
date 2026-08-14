@@ -9,8 +9,9 @@ import type {
   QuantRecommendationView,
 } from '@vben/types';
 
-import type { FeedbackProfileReadinessState } from '../research/feedback/modules/feedback-profile-presentation';
 import type { DashboardSnapshot } from './modules/dashboard-snapshot';
+
+import type { FeedbackProfileReadinessState } from '#/views/research/learning-policy/modules/feedback/modules/feedback-profile-presentation';
 
 import {
   computed,
@@ -46,7 +47,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
-import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
 import {
   formatBps,
   formatDateTimeLocal,
@@ -55,17 +56,14 @@ import {
   parseDecimal,
   toAnimatorNumber,
 } from '#/shared/components/format';
-import {
-  findTagOption,
-  useKillSwitchStateTagOptions,
-  useQuantRuntimeModeTagOptions,
-} from '#/shared/components/format/tag-options';
-import KpiStatCard from '#/shared/components/kpi-stat-card.vue';
+import InsightPanel from '#/shared/components/insight-panel.vue';
+import KpiCard from '#/shared/components/kpi-card.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
+import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import {
   useFeedbackStore,
   useQuantReportStore,
@@ -165,16 +163,23 @@ const account = computed(() => valueOf(overview.value?.account));
 const quality = computed(() => valueOf(overview.value?.data_quality));
 const health = computed(() => valueOf(overview.value?.subsystem_health));
 const latestReport = computed(() => valueOf(overview.value?.latest_report));
+const runtimeActivity = computed(() =>
+  valueOf(overview.value?.runtime_activity),
+);
+const reportRuntime = computed(() => valueOf(overview.value?.report_runtime));
+const executionRuntime = computed(() =>
+  valueOf(overview.value?.execution_runtime),
+);
 
 const runtimeModeTag = computed(() =>
-  findTagOption(
-    useQuantRuntimeModeTagOptions(),
+  enumOption(
+    enumOptions('QuantRuntimeMode'),
     authority.value?.system.quant_runtime_mode,
   ),
 );
 const killSwitchTag = computed(() =>
-  findTagOption(
-    useKillSwitchStateTagOptions(),
+  enumOption(
+    enumOptions('KillSwitchState'),
     authority.value?.system.kill_switch.state,
   ),
 );
@@ -304,6 +309,17 @@ const kpis = computed(() => [
     icon: 'lucide:database-zap',
     suffix: '%',
     title: $t('page.dashboard.kpi.dataUsableTitle'),
+  },
+  {
+    accent: 'sky' as const,
+    endVal: runtimeActivity.value?.running ?? null,
+    footer: runtimeActivity.value
+      ? $t('page.dashboard.kpi.runtimeAttentionValue', {
+          count: runtimeActivity.value.attention,
+        })
+      : $t('page.dashboard.section.unavailable'),
+    icon: 'lucide:activity',
+    title: $t('page.dashboard.kpi.runtimeRunning'),
   },
 ]);
 
@@ -437,7 +453,7 @@ const { pause: pauseFallback, resume: resumeFallback } = useIntervalFn(
 function executePrimaryAction() {
   const action = authority.value?.primary_action;
   if (action === 'resolve_reconciliation') {
-    void router.push('/quant/reconciliations');
+    void router.push('/execution/post-trade?module=reconciliation');
   } else if (action === 'run_report' && canRunReport) {
     openRunReport();
   } else {
@@ -451,19 +467,26 @@ function navigate(path: string) {
 
 function openFeedbackCycle(cycleId: null | string) {
   if (cycleId === null) {
-    navigate('/research/feedback');
+    navigate('/research/learning-policy?module=feedback');
     return;
   }
   void router.push({
-    path: '/research/feedback',
-    query: { cycle_id: cycleId, view: 'cycles' },
+    path: '/research/learning-policy',
+    query: { entity: 'feedback-cycle', id: cycleId, module: 'feedback' },
   });
 }
 
 function openSelectedRecommendation() {
   const recommendation = selectedRecommendation.value;
   if (!recommendation) return;
-  navigate(`/quant/recommendations/${recommendation.recommendation_id}`);
+  void router.push({
+    path: '/trading/recommendations',
+    query: {
+      entity: 'recommendation',
+      id: recommendation.recommendation_id,
+      module: 'reports',
+    },
+  });
 }
 
 function severityStatus(severity: DashboardActionItemView['severity']) {
@@ -518,7 +541,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <Page auto-content-height data-testid="dashboard-command-center">
+  <Page
+    auto-content-height
+    :data-ui-ready="!initialLoading && overview ? 'true' : 'false'"
+    data-testid="dashboard-command-center"
+  >
     <div class="flex flex-col gap-5 pb-6">
       <Alert
         v-if="loadError"
@@ -640,8 +667,8 @@ onBeforeUnmount(() => {
             </dl>
           </section>
 
-          <div class="grid grid-cols-2 gap-4 xl:grid-cols-5">
-            <KpiStatCard
+          <div class="grid grid-cols-2 gap-4 xl:grid-cols-6">
+            <KpiCard
               v-for="(kpi, index) in kpis"
               :key="kpi.title"
               :accent="kpi.accent"
@@ -660,7 +687,7 @@ onBeforeUnmount(() => {
               :title="kpi.title"
             >
               <template #footer>{{ kpi.footer }}</template>
-            </KpiStatCard>
+            </KpiCard>
           </div>
 
           <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
@@ -670,7 +697,9 @@ onBeforeUnmount(() => {
             <div class="xl:col-span-5">
               <RecommendationOrbit
                 :recommendations="latestReport?.recommendations ?? []"
-                @open-reports="navigate('/quant/reports')"
+                @open-reports="
+                  navigate('/trading/recommendations?module=reports')
+                "
                 @select="selectedRecommendation = $event"
               />
             </div>
@@ -684,13 +713,104 @@ onBeforeUnmount(() => {
               <ExposureTreemap :section="overview.exposures" />
             </div>
           </div>
+
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+            <div class="xl:col-span-7">
+              <InsightPanel
+                :title="$t('page.dashboard.runtimeActivity.title')"
+                icon="lucide:activity"
+                tone="sky"
+              >
+                <template #extra>
+                  <Button
+                    size="small"
+                    type="text"
+                    @click="navigate('/runtime/activity')"
+                  >
+                    {{ $t('page.dashboard.runtimeActivity.open') }}
+                  </Button>
+                </template>
+                <RuntimeActivityFeed
+                  v-if="runtimeActivity"
+                  :height="360"
+                  :items="runtimeActivity.items"
+                />
+                <Empty
+                  v-else
+                  :description="$t('page.dashboard.runtimeActivity.empty')"
+                  :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                />
+              </InsightPanel>
+            </div>
+            <div class="grid gap-5 xl:col-span-5">
+              <InsightPanel
+                :title="$t('page.dashboard.reportRuntime.title')"
+                icon="lucide:file-chart-column"
+                tone="violet"
+              >
+                <dl v-if="reportRuntime" class="runtime-metrics">
+                  <div>
+                    <dt>{{ $t('page.dashboard.reportRuntime.queued') }}</dt>
+                    <dd>{{ reportRuntime.queued }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ $t('page.dashboard.reportRuntime.running') }}</dt>
+                    <dd>{{ reportRuntime.running }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ $t('page.dashboard.reportRuntime.failed') }}</dt>
+                    <dd>
+                      {{ reportRuntime.failed + reportRuntime.abandoned }}
+                    </dd>
+                  </div>
+                </dl>
+                <Empty
+                  v-else
+                  :description="$t('page.dashboard.reportRuntime.empty')"
+                  :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                />
+              </InsightPanel>
+              <InsightPanel
+                :title="$t('page.dashboard.executionRuntime.title')"
+                icon="lucide:route"
+                tone="teal"
+              >
+                <dl v-if="executionRuntime" class="runtime-metrics">
+                  <div>
+                    <dt>{{ $t('page.dashboard.executionRuntime.pending') }}</dt>
+                    <dd>{{ executionRuntime.pending_intents }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ $t('page.dashboard.executionRuntime.active') }}</dt>
+                    <dd>{{ executionRuntime.active_orders }}</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      {{ $t('page.dashboard.executionRuntime.attention') }}
+                    </dt>
+                    <dd>
+                      {{
+                        executionRuntime.ambiguous_orders +
+                        executionRuntime.unresolved_reconciliations
+                      }}
+                    </dd>
+                  </div>
+                </dl>
+                <Empty
+                  v-else
+                  :description="$t('page.dashboard.executionRuntime.empty')"
+                  :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                />
+              </InsightPanel>
+            </div>
+          </div>
         </template>
 
         <div
           class="grid grid-cols-1 gap-5"
           :class="{ 'lg:grid-cols-3': overview }"
         >
-          <DashboardPanel
+          <InsightPanel
             v-if="overview"
             :title="$t('page.dashboard.dataQuality.title')"
             icon="lucide:gauge"
@@ -736,9 +856,9 @@ onBeforeUnmount(() => {
               :description="$t('page.dashboard.section.unavailable')"
               :image="Empty.PRESENTED_IMAGE_SIMPLE"
             />
-          </DashboardPanel>
+          </InsightPanel>
 
-          <DashboardPanel
+          <InsightPanel
             v-if="overview"
             :title="$t('page.dashboard.health.title')"
             icon="lucide:heart-pulse"
@@ -775,9 +895,9 @@ onBeforeUnmount(() => {
               :description="$t('page.dashboard.section.unavailable')"
               :image="Empty.PRESENTED_IMAGE_SIMPLE"
             />
-          </DashboardPanel>
+          </InsightPanel>
 
-          <DashboardPanel
+          <InsightPanel
             :title="$t('page.dashboard.feedback.title')"
             icon="lucide:refresh-cw"
             tone="violet"
@@ -788,7 +908,7 @@ onBeforeUnmount(() => {
                 class="min-h-11"
                 size="small"
                 type="text"
-                @click="navigate('/research/feedback')"
+                @click="navigate('/research/learning-policy?module=feedback')"
               >
                 {{ $t('page.dashboard.feedback.open') }}
               </Button>
@@ -948,11 +1068,11 @@ onBeforeUnmount(() => {
                 }}
               </p>
             </template>
-          </DashboardPanel>
+          </InsightPanel>
         </div>
 
         <template v-if="overview">
-          <DashboardPanel
+          <InsightPanel
             :title="$t('page.dashboard.inbox.title')"
             icon="lucide:inbox"
             tone="amber"
@@ -988,7 +1108,7 @@ onBeforeUnmount(() => {
               :description="$t('page.dashboard.inbox.clear')"
               :image="Empty.PRESENTED_IMAGE_SIMPLE"
             />
-          </DashboardPanel>
+          </InsightPanel>
 
           <p
             class="text-muted-foreground text-right text-xs"
@@ -1105,8 +1225,11 @@ onBeforeUnmount(() => {
           :description="$t('page.dashboard.section.unavailable')"
           :image="Empty.PRESENTED_IMAGE_SIMPLE"
         />
-        <Button class="mt-4 w-full" @click="navigate('/quant/reports')">
-          {{ $t('page.menu.quantReports') }}
+        <Button
+          class="mt-4 w-full"
+          @click="navigate('/trading/recommendations?module=reports')"
+        >
+          {{ $t('page.menu.recommendations') }}
         </Button>
       </Drawer>
 
@@ -1153,6 +1276,37 @@ onBeforeUnmount(() => {
   font-family: var(--font-family-mono);
   font-weight: 600;
   white-space: nowrap;
+}
+
+.runtime-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.runtime-metrics > div {
+  min-width: 0;
+  padding: 12px;
+  background: hsl(var(--qp-surface-inset));
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-md);
+}
+
+.runtime-metrics dt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: hsl(var(--qp-text-muted));
+  white-space: nowrap;
+}
+
+.runtime-metrics dd {
+  margin-top: 4px;
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--qp-text-primary));
 }
 
 @media (prefers-reduced-motion: reduce) {

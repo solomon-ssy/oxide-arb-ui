@@ -54,8 +54,12 @@ export function useRunReportAction() {
         }),
       );
       void router.push({
-        path: '/quant/reports',
-        query: { run_id: accepted.report_run_id },
+        path: '/trading/recommendations',
+        query: {
+          entity: 'report-run',
+          id: accepted.report_run_id,
+          module: 'reports',
+        },
       });
     }
     return accepted;

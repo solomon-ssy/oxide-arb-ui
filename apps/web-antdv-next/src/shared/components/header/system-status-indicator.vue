@@ -10,16 +10,10 @@ import { IconifyIcon } from '@vben/icons';
 import { Popover, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
-import CatalogStateTag from '#/shared/components/catalog-state-tag.vue';
 import {
   formatDateTimeLocal,
   formatDurationSecs,
 } from '#/shared/components/format';
-import {
-  findTagOption,
-  useKillSwitchStateTagOptions,
-  useQuantRuntimeModeTagOptions,
-} from '#/shared/components/format/tag-options';
 import { useLiveUptime } from '#/shared/composables/use-live-uptime';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import {
@@ -30,6 +24,7 @@ import {
   deriveSystemIndicator,
   marketDataShardConnected,
 } from '#/shared/composables/ws/ws-indicators';
+import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'SystemStatusIndicator' });
@@ -96,15 +91,22 @@ const runtimeMode = computed(() => status.value?.quant_runtime_mode ?? null);
 const killSwitch = computed(() => status.value?.kill_switch ?? null);
 
 const runtimeModeTag = computed(() =>
-  findTagOption(useQuantRuntimeModeTagOptions(), runtimeMode.value),
+  enumOption(enumOptions('QuantRuntimeMode'), runtimeMode.value),
 );
 const killSwitchTag = computed(() =>
-  findTagOption(useKillSwitchStateTagOptions(), killSwitch.value?.state),
+  enumOption(enumOptions('KillSwitchState'), killSwitch.value?.state),
 );
 
 const marketDataReady = computed(
   () => status.value?.market_data.ready ?? false,
 );
+const catalogLabel = computed(() => {
+  const catalog = status.value?.catalog;
+  if (!catalog) return '—';
+  return catalog.state === 'ready'
+    ? $t('page.system.catalog.ready', { markets: catalog.markets })
+    : $t('page.system.catalog.warming');
+});
 
 const degradedReasons = computed(() => {
   const operationalPhase = status.value?.operational_phase;
@@ -193,7 +195,13 @@ function degradeReasonLabel(reason: OperationalDegradeReason): string {
               {{ $t('page.system.field.catalog') }}
             </span>
             <div class="flex justify-end">
-              <CatalogStateTag :catalog="status?.catalog" />
+              <Tag
+                :color="
+                  status?.catalog?.state === 'ready' ? 'success' : 'processing'
+                "
+              >
+                {{ catalogLabel }}
+              </Tag>
             </div>
             <span class="text-muted-foreground">
               {{ $t('page.system.field.marketData') }}

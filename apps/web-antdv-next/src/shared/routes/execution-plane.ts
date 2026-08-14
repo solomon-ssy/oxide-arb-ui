@@ -1,4 +1,4 @@
-/** Cross-page deep-link paths for the quant execution plane. */
+/** Canonical workspace deep links for the execution plane. */
 
 export interface ReconciliationQueuePathParams {
   execution_order_id?: string;
@@ -10,14 +10,14 @@ export function reconciliationQueuePath(
   params: ReconciliationQueuePathParams = {},
 ): string {
   const search = new URLSearchParams();
+  search.set('module', 'reconciliation');
   if (params.execution_order_id) {
     search.set('execution_order_id', params.execution_order_id);
   }
   if (params.order_intent_id) {
     search.set('order_intent_id', params.order_intent_id);
   }
-  const query = search.toString();
-  return query ? `/quant/reconciliations?${query}` : '/quant/reconciliations';
+  return `/execution/post-trade?${search.toString()}`;
 }
 
 export interface SettlementRedeemsPathParams {
@@ -29,35 +29,38 @@ export function settlementRedeemsPath(
   params: SettlementRedeemsPathParams = {},
 ): string {
   const search = new URLSearchParams();
+  search.set('module', 'settlement');
   if (params.market_id) {
     search.set('market_id', params.market_id);
   }
-  const query = search.toString();
-  return query
-    ? `/quant/settlement-redeems?${query}`
-    : '/quant/settlement-redeems';
+  return `/execution/post-trade?${search.toString()}`;
 }
 
 /** Open an execution-order detail drawer on the ledger page. */
 export function executionOrderOpenPath(executionOrderId: string): string {
-  return `/quant/execution-orders?open=${encodeURIComponent(executionOrderId)}`;
+  return `/execution/orders?module=orders&entity=execution-order&id=${encodeURIComponent(executionOrderId)}`;
 }
 
 /** Open a position detail drawer on the ledger page. */
 export function positionOpenPath(positionId: string): string {
-  return `/quant/positions?open=${encodeURIComponent(positionId)}`;
+  return `/execution/portfolio?module=positions&entity=position&id=${encodeURIComponent(positionId)}`;
 }
 
 /** Open a settlement-redeem detail drawer on the batch list page. */
 export function settlementRedeemOpenPath(settlementRedeemId: string): string {
-  return `/quant/settlement-redeems?open=${encodeURIComponent(settlementRedeemId)}`;
+  return `/execution/post-trade?module=settlement&entity=settlement-redeem&id=${encodeURIComponent(settlementRedeemId)}`;
 }
 
-/** Whether a reactive `?open=` query still targets the id we fetched. */
-export function queryOpenIdMatches(
+/** Whether the current workspace query still targets the entity being fetched. */
+export function queryEntityIdMatches(
+  entityKind: string,
   requestedId: string,
+  currentEntity: unknown,
   currentRaw: unknown,
 ): boolean {
-  const openId = Array.isArray(currentRaw) ? currentRaw[0] : currentRaw;
-  return typeof openId === 'string' && openId !== '' && openId === requestedId;
+  const currentKind = Array.isArray(currentEntity)
+    ? currentEntity[0]
+    : currentEntity;
+  const currentId = Array.isArray(currentRaw) ? currentRaw[0] : currentRaw;
+  return currentKind === entityKind && currentId === requestedId;
 }

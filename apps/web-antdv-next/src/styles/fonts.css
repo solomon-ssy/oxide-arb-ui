@@ -1,0 +1,27 @@
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+
+:root {
+  --qp-font-mono:
+    'JetBrains Mono Variable', 'SFMono-Regular', consolas, 'Liberation Mono',
+    monospace;
+  --qp-font-sans:
+    'Inter Variable', inter, -apple-system, blinkmacsystemfont, 'Segoe UI',
+    sans-serif;
+}
+
+body {
+  font-family: var(--qp-font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+code,
+kbd,
+pre,
+samp,
+.qp-mono,
+.qp-numeric {
+  font-family: var(--qp-font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}

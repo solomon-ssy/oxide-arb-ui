@@ -40,6 +40,23 @@ export const useAuthStore = defineStore('auth', () => {
   const meRoles = ref<RoleView[]>([]);
   let restorePromise: null | Promise<void> = null;
 
+  function loginDestination(userInfo: UserInfo) {
+    const query = router.currentRoute.value.query.return_to;
+    const raw = Array.isArray(query) ? query[0] : query;
+    if (typeof raw === 'string') {
+      let decoded: string;
+      try {
+        decoded = decodeURIComponent(raw);
+      } catch {
+        return userInfo.homePath || preferences.app.defaultHomePath;
+      }
+      if (decoded.startsWith('/') && !decoded.startsWith('//')) {
+        return decoded;
+      }
+    }
+    return userInfo.homePath || preferences.app.defaultHomePath;
+  }
+
   async function applyMeResponse(me: MeResponse) {
     const userInfo = mapMeToUserInfo(me);
     userStore.setUserInfo(userInfo);
@@ -104,9 +121,7 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         onSuccess
           ? await onSuccess?.()
-          : await router.push(
-              userInfo.homePath || preferences.app.defaultHomePath,
-            );
+          : await router.push(loginDestination(userInfo));
       }
 
       if (userInfo.realName) {
@@ -140,7 +155,7 @@ export const useAuthStore = defineStore('auth', () => {
       path: LOGIN_PATH,
       query: redirect
         ? {
-            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+            return_to: encodeURIComponent(router.currentRoute.value.fullPath),
           }
         : {},
     });

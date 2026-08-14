@@ -79,7 +79,13 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
     if (!el) {
       return;
     }
-    chartInstance = echarts.init(el, t || isDark.value ? 'dark' : null);
+    chartInstance = echarts.init(el, t ?? (isDark.value ? 'dark' : null));
+    el.dataset.echartsReady = 'false';
+    chartInstance.on('finished', () => {
+      if (chartInstance?.getDom() === el) {
+        el.dataset.echartsReady = 'true';
+      }
+    });
 
     return chartInstance;
   };
@@ -88,10 +94,10 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
     options: EChartsOption,
     clear = true,
   ): Promise<Nullable<echarts.ECharts>> => {
+    cacheOptions = options;
     if (!unref(isActiveRef)) {
       return Promise.resolve(null);
     }
-    cacheOptions = options;
     const currentOptions = {
       ...options,
       ...getOptions.value,
@@ -117,6 +123,9 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
             const instance = initCharts();
             if (!instance) return;
             chartInstance = instance;
+          }
+          if (chartInstance) {
+            chartInstance.getDom().dataset.echartsReady = 'false';
           }
           clear && chartInstance?.clear();
           chartInstance?.setOption(currentOptions);
@@ -145,6 +154,7 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
           ...getOptions.value,
         };
 
+        chartInstance.getDom().dataset.echartsReady = 'false';
         chartInstance.setOption(finalOption, {
           notMerge,
           lazyUpdate,
@@ -176,12 +186,10 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
   useResizeObserver(chartRef as never, resizeHandler);
 
   watch([isDark, isActiveRef], () => {
-    if (chartInstance && unref(isActiveRef)) {
-      chartInstance.dispose();
-      initCharts();
-      renderEcharts(cacheOptions);
-      resize();
-    }
+    if (!unref(isActiveRef) || Object.keys(cacheOptions).length === 0) return;
+    chartInstance?.dispose();
+    chartInstance = null;
+    void renderEcharts(cacheOptions).then(resize);
   });
 
   tryOnUnmounted(() => {

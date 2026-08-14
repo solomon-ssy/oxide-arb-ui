@@ -2,6 +2,8 @@ import type {
   ActivateModelRouteRequest,
   BootstrapModelRouteRequest,
   CancelFeedbackCycleRequest,
+  DriftReportListQuery,
+  DriftReportView,
   FeedbackCycleDetailView,
   FeedbackCycleListQuery,
   FeedbackCycleMutationView,
@@ -42,7 +44,19 @@ export namespace FeedbackApi {
   export const shadowBindings = '/research/model-route-shadow-bindings';
   export const resolutionProjections = '/research/resolution-projections';
   export const cycles = '/research/feedback-cycles';
+  export const driftReports = '/research/drift-reports';
   export const schedulers = '/research/feedback-schedulers';
+}
+
+/** Page immutable drift evidence across feedback cycles and profiles. */
+export async function listDriftReports(
+  query: DriftReportListQuery = {},
+  options: FeedbackReadOptions = {},
+) {
+  return requestClient.get<Paginated<DriftReportView>>(
+    FeedbackApi.driftReports,
+    withSilentError({ params: query, signal: options.signal }),
+  );
 }
 
 export interface FeedbackReadOptions {

@@ -29,66 +29,46 @@ function node(
   };
 }
 
-describe('feature-integrity backend menu adaptation', () => {
-  it('registers the real page route and governed permission without a button route', () => {
-    const govern = node({
+describe('workspace backend menu adaptation', () => {
+  it('registers one workspace route and collects action permissions', () => {
+    const publish = node({
       kind: 'button',
-      name: 'feature_integrity:govern',
-      permission_code: 'materialization:create',
+      name: 'publication:publish',
+      permission_code: 'publication:publish',
     });
     const page = node({
-      children: [govern],
-      component: 'research/feature-integrity/index',
+      children: [publish],
+      component: 'research/lab/index',
       kind: 'menu',
-      name: 'research-feature-integrity',
-      path: '/research/feature-integrity',
+      name: 'research-lab',
+      path: '/research/lab',
       permission_code: 'materialization:read',
     });
 
     const result = adaptMenuTree([page]);
 
     expect(result.permissionCodes.toSorted()).toEqual([
-      'materialization:create',
       'materialization:read',
+      'publication:publish',
     ]);
     expect(result.routes).toHaveLength(1);
     expect(result.routes[0]).toMatchObject({
       children: undefined,
-      component: 'research/feature-integrity/index',
+      component: 'research/lab/index',
       meta: { fullPathKey: false },
-      name: 'research-feature-integrity',
-      path: '/research/feature-integrity',
-    });
-  });
-
-  it('keeps feedback cycle selection in one permission-gated tab', () => {
-    const page = node({
-      component: 'research/feedback/index',
-      kind: 'menu',
-      name: 'research-feedback',
-      path: '/research/feedback',
-      permission_code: 'materialization:read',
-    });
-
-    const result = adaptMenuTree([page]);
-
-    expect(result.permissionCodes).toEqual(['materialization:read']);
-    expect(result.routes[0]).toMatchObject({
-      component: 'research/feedback/index',
-      meta: { fullPathKey: false },
-      name: 'research-feedback',
-      path: '/research/feedback',
+      name: 'research-lab',
+      path: '/research/lab',
     });
   });
 
   it('contains an unregistered backend icon without a runtime fetch', () => {
     const page = node({
-      component: 'research/feedback/index',
+      component: 'runtime/activity/index',
       icon: 'lucide:server-controlled-unknown',
       kind: 'menu',
-      name: 'research-feedback',
-      path: '/research/feedback',
-      permission_code: 'materialization:read',
+      name: 'runtime-activity',
+      path: '/runtime/activity',
+      permission_code: 'system:read',
     });
 
     expect(adaptMenuTree([page]).routes[0]).toMatchObject({
@@ -97,13 +77,20 @@ describe('feature-integrity backend menu adaptation', () => {
   });
 
   it.each([
-    ['execution-orders', '/quant/execution-orders'],
-    ['positions', '/quant/positions'],
-    ['reconciliations', '/quant/reconciliations'],
-    ['settlement-redeems', '/quant/settlement-redeems'],
-  ])('keeps the %s query drawer in one path-keyed tab', (name, path) => {
+    ['market-intelligence', '/trading/market-intelligence'],
+    ['recommendations', '/trading/recommendations'],
+    ['execution-orders', '/execution/orders'],
+    ['execution-portfolio', '/execution/portfolio'],
+    ['execution-post-trade', '/execution/post-trade'],
+    ['research-lab', '/research/lab'],
+    ['research-learning-policy', '/research/learning-policy'],
+    ['research-data-reliability', '/research/data-reliability'],
+    ['runtime-activity', '/runtime/activity'],
+    ['system-audit', '/system/audit'],
+    ['system-config', '/system/config'],
+  ])('keeps %s state in one path-keyed tab', (name, path) => {
     const page = node({
-      component: `quant/${name}/index`,
+      component: `${name}/index`,
       kind: 'menu',
       name,
       path,
@@ -114,6 +101,20 @@ describe('feature-integrity backend menu adaptation', () => {
       meta: { fullPathKey: false },
       name,
       path,
+    });
+  });
+
+  it('leaves the affixed dashboard on the default full-path tab contract', () => {
+    const dashboard = node({
+      affix_tab: true,
+      component: 'dashboard/index',
+      kind: 'menu',
+      name: 'dashboard',
+      path: '/dashboard',
+    });
+
+    expect(adaptMenuTree([dashboard]).routes[0]).toMatchObject({
+      meta: { affixTab: true, fullPathKey: undefined },
     });
   });
 });

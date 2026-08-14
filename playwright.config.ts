@@ -57,13 +57,43 @@ export default defineConfig({
   fullyParallel: false,
   projects: [
     {
-      name: 'protected-chromium',
+      grep: /@visual/,
+      name: 'visual-desktop-dark',
       use: {
         ...devices['Desktop Chrome'],
+        colorScheme: 'dark',
+        viewport: { height: 900, width: 1440 },
+      },
+    },
+    {
+      grep: /@visual/,
+      name: 'visual-desktop-light',
+      use: {
+        ...devices['Desktop Chrome'],
+        colorScheme: 'light',
+        viewport: { height: 900, width: 1440 },
+      },
+    },
+    {
+      grep: /@visual/,
+      name: 'visual-mobile-dark',
+      use: {
+        ...devices['Pixel 7'],
+        colorScheme: 'dark',
+        viewport: { height: 844, width: 390 },
+      },
+    },
+    {
+      grepInvert: /@visual/,
+      name: 'functional-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        colorScheme: 'dark',
         viewport: { height: 900, width: 1440 },
       },
     },
   ],
+  globalSetup: './apps/web-antdv-next/tests/e2e/release-closure.ts',
   outputDir,
   reporter: [
     ['list'],
@@ -83,10 +113,8 @@ export default defineConfig({
   use: {
     actionTimeout: 10_000,
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:6099',
-    colorScheme: 'light',
     locale: 'zh-CN',
     navigationTimeout: 30_000,
-    reducedMotion: 'reduce',
     screenshot: 'only-on-failure',
     timezoneId: 'UTC',
     trace: 'retain-on-failure',

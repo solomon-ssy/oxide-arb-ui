@@ -11,22 +11,16 @@
     "retryCountdown": "Retrying automatically in {seconds} seconds"
   },
   "common": {
-    "underConstruction": "This page is under construction and will land in a later phase",
-    "comingInPhase": "Coming in Phase {phase}",
-    "reportOnlyNote": "report_only is not dry-run: report sizing runs against the real venue account (CLOB collateral + venue positions). Credentials are required; missing credentials fail closed.",
+    "close": "Close",
     "yes": "Yes",
     "no": "No",
     "deepLinkNotFound": "The linked record was not found or is no longer available."
   },
   "shared": {
-    "detailBack": "Back",
     "asyncState": {
       "loadError": "Failed to load",
       "retry": "Retry",
       "notFound": "Record not found"
-    },
-    "jsonDiffList": {
-      "noChange": "No effective change"
     },
     "marketFreshness": {
       "unknown": "Book age unknown",
@@ -46,42 +40,213 @@
   "menu": {
     "group": {
       "commandCenter": "Command Center",
-      "trading": "Trading",
-      "execution": "Execution",
-      "research": "Research",
-      "governance": "Governance",
-      "audit": "Audit"
+      "tradingSignals": "Trading & Signals",
+      "executionCapital": "Execution & Capital",
+      "researchModels": "Research & Models",
+      "systemGovernance": "System & Governance"
     },
     "dashboard": "Dashboard",
-    "markets": "Markets",
-    "marketDetail": "Market Detail",
-    "quantReports": "Reports",
-    "reportDetail": "Report Detail",
-    "recommendationDetail": "Recommendation Detail",
-    "structuralMonitor": "Structural Alpha",
-    "orderIntents": "Order Intents",
-    "orderIntentDetail": "Intent Detail",
-    "executionOrders": "Execution Orders",
-    "positions": "Positions",
-    "reconciliations": "Reconciliations",
-    "settlementRedeems": "Settlement Redeems",
-    "account": "Account",
-    "researchDatasets": "Training Datasets",
-    "researchModelSpecs": "Model Specs",
-    "researchModels": "Trained Models",
-    "researchTradePolicies": "Trade Policies",
-    "researchBacktests": "Backtests",
-    "researchJobs": "Task Center",
-    "researchFeatureIntegrity": "Feature Integrity",
-    "researchFeedback": "Feedback & Retraining",
-    "researchFactors": "Factors",
-    "researchCalibrationArtifacts": "Calibration Artifacts",
-    "researchMarketLinkages": "Market Linkages",
-    "researchDomainSources": "Domain Sources",
-    "researchBasisAlerts": "Basis Alerts",
-    "researchComparisonDetail": "Comparison Report",
-    "config": "Config Center",
-    "operationLog": "Operation Log"
+    "runtimeActivity": "Runtime Activity",
+    "marketIntelligence": "Market Intelligence",
+    "recommendations": "Recommendation Workbench",
+    "executionOrders": "Order Execution",
+    "executionPortfolio": "Capital & Positions",
+    "executionPostTrade": "Post-trade Operations",
+    "researchLab": "Research Lab",
+    "researchLearningPolicy": "Learning & Policy",
+    "researchDataReliability": "Data Reliability",
+    "systemConfig": "Configuration Governance",
+    "systemAudit": "Audit Trail",
+    "action": {
+      "switchRuntimeMode": "Switch runtime mode",
+      "halt": "Halt execution",
+      "resume": "Resume execution",
+      "emergencyHalt": "Emergency halt",
+      "updateMarket": "Subscribe or block market",
+      "runReport": "Run ad-hoc report",
+      "revokeReport": "Revoke report",
+      "createIntent": "Create order intent",
+      "approveIntent": "Approve order intent",
+      "rejectIntent": "Reject order intent",
+      "cancelIntent": "Cancel order intent",
+      "resolveReconciliation": "Resolve reconciliation",
+      "createSettlement": "Create settlement action",
+      "approveSettlement": "Approve settlement batch",
+      "revokeSettlement": "Revoke settlement action",
+      "createResearchArtifact": "Create research artifact",
+      "runBacktest": "Run backtest",
+      "publishModel": "Publish model",
+      "rollbackModel": "Roll back model",
+      "retireModel": "Retire model",
+      "fitPolicy": "Fit policy or calibration",
+      "publishPolicy": "Publish policy",
+      "authorizeCandidate": "Authorize candidate",
+      "activateCandidate": "Activate candidate",
+      "rejectCandidate": "Reject candidate",
+      "retirePolicy": "Retire policy",
+      "recoverReliability": "Recover data reliability",
+      "createConfigDraft": "Create configuration draft",
+      "approveConfigRevision": "Approve configuration revision",
+      "activateConfigRevision": "Activate configuration revision",
+      "rollbackConfigRevision": "Roll back configuration revision"
+    }
+  },
+  "runtimeActivity": {
+    "title": "Activity Center",
+    "eyebrow": "Live runtime ledger",
+    "description": "Permission-scoped research, report, execution, reconciliation, and settlement facts. WebSocket events only invalidate; REST remains authoritative.",
+    "open": "Open Activity Center",
+    "refresh": "Refresh activity",
+    "refreshing": "Synchronizing authoritative state",
+    "viewAll": "View all activity",
+    "loadMore": "Load more",
+    "loadError": "Failed to read activity",
+    "empty": "No activity matches these filters. New runtime work will appear here when it starts.",
+    "permissionScoped": "Only domains visible to the current role are included",
+    "total": "{count} visible activities",
+    "totalLabel": "Visible activity",
+    "progress": "Activity completion progress",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "unknownDate": "Unknown date",
+    "actionAccepted": "Action accepted; reading the latest state",
+    "filter": {
+      "domain": "Filter by domain",
+      "status": "Filter by status",
+      "allDomains": "All domains",
+      "allStatuses": "All statuses"
+    },
+    "domain": {
+      "research": "Research",
+      "report": "Reports",
+      "execution": "Execution",
+      "reconciliation": "Reconciliation",
+      "settlement": "Settlement"
+    },
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "attention": "Needs attention",
+      "skipped": "Skipped"
+    },
+    "kind": {
+      "research-job": "Research job",
+      "report-run": "Report run",
+      "execution-order": "Execution order",
+      "reconciliation": "Trade reconciliation",
+      "settlement-redeem": "Settlement redeem"
+    },
+    "action": {
+      "cancel_research_job": "Cancel research job",
+      "retry_research_job": "Retry research job",
+      "retry_report_run": "Retry report run",
+      "resolve_reconciliation": "Resolve reconciliation"
+    },
+    "actionSummary": {
+      "cancel": "Cancel research job {id}. Running work will enter cooperative cancellation.",
+      "retryResearch": "Create a governed retry from terminal research job {id}.",
+      "retryReport": "Create a new ad-hoc retry from report run {id}."
+    }
+  },
+  "commandPalette": {
+    "open": "Open command palette",
+    "placeholder": "Search workspaces, modules, or authorized actions…",
+    "empty": "No result matches your current permission scope",
+    "navigation": "Page navigation",
+    "permissionHint": "Results are scoped to the current role",
+    "navigateHint": "to select",
+    "type": {
+      "page": "Page",
+      "module": "Module",
+      "action": "Action"
+    },
+    "module": {
+      "overview": "Overview",
+      "live": "Live market",
+      "structure": "Market structure",
+      "reports": "Reports",
+      "queue": "Run queue",
+      "funnel": "Recommendation funnel",
+      "diff": "Report comparison",
+      "intents": "Order intents",
+      "approvals": "Approval queue",
+      "orders": "Execution orders",
+      "flow": "Execution flow",
+      "account": "Capital account",
+      "positions": "Positions",
+      "exposure": "Risk exposure",
+      "equity": "Equity curve",
+      "reconciliation": "Trade reconciliation",
+      "settlement": "Settlement redeem",
+      "actions": "Governed actions",
+      "lineage": "Model lineage",
+      "specs": "Model specs",
+      "datasets": "Training datasets",
+      "factors": "Factors",
+      "models": "Model versions",
+      "evaluation": "Model evaluation",
+      "policies": "Trade policies",
+      "fits": "Policy fits",
+      "feedback": "Feedback loop",
+      "calibration": "Calibration artifacts",
+      "sources": "Domain sources",
+      "linkages": "Market linkages",
+      "basis-alerts": "Basis alerts",
+      "feature-integrity": "Feature integrity",
+      "runtime": "Runtime configuration",
+      "deploy": "Deployment configuration",
+      "policy": "Decision policy",
+      "history": "Configuration history",
+      "operations": "Operation log",
+      "receipts": "Governance receipts",
+      "entity-timeline": "Entity timeline"
+    }
+  },
+  "workspace": {
+    "invalidModule": "The module URL is invalid and has been restored to this workspace's default.",
+    "marketIntelligence": {
+      "eyebrow": "Trading & Signals",
+      "description": "Explore the market catalog, live books, and structural signals while preserving inspection context in one workspace."
+    },
+    "recommendations": {
+      "eyebrow": "Trading & Signals",
+      "description": "Close the auditable recommendation loop from report runs and funnels through diff evidence and execution eligibility."
+    },
+    "executionOrders": {
+      "eyebrow": "Execution & Capital",
+      "description": "Unify order intents, approvals, admission, submission, and fill facts into one execution flow."
+    },
+    "executionPortfolio": {
+      "eyebrow": "Execution & Capital",
+      "description": "Show capital, positions, exposure, and equity from the real venue account, with no simulated-budget fallback."
+    },
+    "executionPostTrade": {
+      "eyebrow": "Execution & Capital",
+      "description": "Resolve trade reconciliation, settlement redeem, and governed recovery in one fail-closed workspace."
+    },
+    "researchLab": {
+      "eyebrow": "Research & Models",
+      "description": "Organize reproducible research around the Spec → Dataset → Factor → Model → Evaluation lineage."
+    },
+    "learningPolicy": {
+      "eyebrow": "Research & Models",
+      "description": "Connect trade policy, fitting, feedback cycles, drift evidence, and calibration artifacts into a continuous-learning loop."
+    },
+    "dataReliability": {
+      "eyebrow": "Research & Models",
+      "description": "Observe domain sources, market linkages, cross-source basis, and durable/live feature integrity together."
+    },
+    "systemConfig": {
+      "eyebrow": "System & Governance",
+      "description": "Manage runtime, deployment, and decision-policy revisions with evidence-backed approval, activation, and rollback."
+    },
+    "systemAudit": {
+      "eyebrow": "System & Governance",
+      "description": "Trace operations, governance receipts, and entity lifecycles across workspaces with an auditable chain of responsibility."
+    }
   },
   "structuralAlpha": {
     "title": "Structural Alpha",
@@ -100,12 +265,10 @@
     "coverage": {
       "title": "On-chain Trade Tape Coverage",
       "source": "Source",
-      "onChainSource": "On-chain OrderFilled",
       "decisionAt": "Decision time",
       "knowledgeCutoff": "Knowledge cutoff",
       "enabled": "Enabled",
       "disabled": "Disabled",
-      "cursors": "Cursors",
       "marketCursors": "Market cursors",
       "health": "Cursor health",
       "bootstrap": "Bootstrap",
@@ -159,7 +322,6 @@
       "marketId": "Market ID",
       "participant": "Participant",
       "role": "Role",
-      "fillParticipant": "Maker",
       "trades": "Trades",
       "notional": "Notional",
       "share": "Share"
@@ -173,7 +335,75 @@
       "legs": "legs"
     }
   },
+  "execution": {
+    "flow": {
+      "authorityNote": "The rail is anchored to the newest order intent. Orders, positions, and reconciliations are intent-bound; settlement is explicitly market-scoped because the settlement ledger has no intent foreign key.",
+      "description": "Follow the newest durable execution chain from intent through governed approval, admission, venue execution, inventory, reconciliation, and settlement.",
+      "empty": "No durable order intent exists yet. Create an intent from an eligible recommendation to start the execution chain.",
+      "inspector": {
+        "duration": "Stage duration",
+        "entity": "Entity kind",
+        "entityId": "Entity ID",
+        "eyebrow": "Execution chain evidence",
+        "identity": "Authoritative stage snapshot",
+        "openLedger": "Open owning ledger",
+        "scope": "Evidence scope",
+        "stage": "Stage",
+        "status": "Status",
+        "title": "Execution stage"
+      },
+      "openStage": "Open {stage} evidence",
+      "partialError": "Some execution ledgers are unavailable. Loaded stages remain authoritative and navigable.",
+      "records": "{count} scoped record(s)",
+      "refresh": "Refresh flow",
+      "scope": {
+        "intentBound": "Bound to the newest intent",
+        "latestIntent": "Newest intent in the durable ledger",
+        "marketBound": "Bound by market; not an intent foreign key",
+        "orderBound": "Bound to the newest execution order"
+      },
+      "stage": {
+        "admission": "Admission",
+        "approval": "Approval",
+        "fill": "Fill",
+        "intent": "Intent",
+        "position": "Position",
+        "reconciliation": "Reconciliation",
+        "settlement": "Settlement",
+        "submission": "Submission"
+      },
+      "title": "Execution flow rail"
+    }
+  },
   "research": {
+    "lineage": {
+      "description": "Navigate the durable Spec → Dataset → Model → Backtest → Calibration → Publication chain. Counts and latest entities come from authoritative research ledgers.",
+      "idle": "No research materialization is currently running.",
+      "inspector": {
+        "count": "Durable records",
+        "entity": "Entity kind",
+        "entityId": "Latest entity ID",
+        "eyebrow": "Research lineage evidence",
+        "latest": "Latest durable artifact in this stage",
+        "openWorkspace": "Open owning workspace",
+        "snapshot": "Authoritative stage snapshot",
+        "stage": "Stage",
+        "title": "Research artifact"
+      },
+      "openStage": "Open latest",
+      "partialError": "Some lineage ledgers are unavailable. Available stages remain navigable.",
+      "refresh": "Refresh lineage",
+      "running": "{count} research materialization job(s) are running; active edges show live flow.",
+      "stage": {
+        "backtests": "Backtest",
+        "calibration": "Calibration",
+        "datasets": "Dataset",
+        "models": "Model",
+        "publication": "Publication",
+        "specs": "Spec"
+      },
+      "title": "Research lineage"
+    },
     "common": {
       "timeRangeStart": "From",
       "timeRangeEnd": "To"
@@ -216,7 +446,38 @@
       },
       "tabs": {
         "overview": "Overview",
-        "cycles": "Cycles"
+        "cycles": "Cycles",
+        "drift": "Drift evidence"
+      },
+      "drift": {
+        "title": "Immutable drift evidence",
+        "description": "Review durable data, concept, and label drift facts across feedback cycles. Values, thresholds, and assessments come from persisted reports.",
+        "loadError": "Failed to load drift evidence",
+        "empty": "No drift evidence has been produced.",
+        "report": "Report ID",
+        "kind": "Kind",
+        "metric": "Metric",
+        "assessment": "Assessment",
+        "observed": "Observed",
+        "threshold": "Threshold",
+        "samples": "Samples",
+        "observedAt": "Observed at",
+        "kindValue": {
+          "data": "Data drift",
+          "concept": "Concept drift",
+          "label": "Label drift"
+        },
+        "metricValue": {
+          "population_stability_index": "Population stability index",
+          "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p-value",
+          "rank_ic_drop": "Rank IC drop",
+          "jensen_shannon_divergence": "Jensen–Shannon divergence"
+        },
+        "assessmentValue": {
+          "within_threshold": "Within threshold",
+          "threshold_exceeded": "Threshold exceeded",
+          "insufficient_evidence": "Insufficient evidence"
+        }
       },
       "queue": {
         "queued": "Queued cycles",
@@ -436,16 +697,7 @@
             "policyOutcomes": "Policy counterfactual outcomes"
           },
           "qualityGate": {
-            "title": "Unique validation quality gate",
-            "passed": "All hard gates passed",
-            "observed": "Observed",
-            "threshold": "Threshold"
-          },
-          "gateStatus": {
-            "pass": "Pass",
-            "fail": "Fail",
-            "warn": "Warning",
-            "not_applicable": "Not applicable"
+            "title": "Unique validation quality gate"
           },
           "evidence": {
             "title": "Immutable evidence hashes",
@@ -721,15 +973,7 @@
       },
       "cycles": {
         "empty": "No durable feedback cycle matches this page.",
-        "listAria": "Feedback cycles",
-        "selected": "Selected cycle",
-        "cycleId": "Cycle ID",
-        "profile": "Profile",
-        "trigger": "Trigger",
-        "status": "Status",
-        "decision": "Decision",
-        "labelCutoff": "Label cutoff",
-        "updatedAt": "Updated"
+        "listAria": "Feedback cycles"
       },
       "status": {
         "queued": "Queued",
@@ -757,30 +1001,15 @@
         "action": "Fit policy",
         "title": "Fit trade policy",
         "summary": "Queue a deterministic trade-policy fit from a frozen executable-trajectory dataset.",
-        "hint": "The source dataset, fit window, embargo, notional tiers, and quality floor are frozen into the content-addressed artifact.",
         "dataset": "Ready source dataset",
         "window": "Policy fit window",
-        "embargoSecs": "Post-fit embargo (seconds)",
-        "notionalTiers": "Notional tiers (USD)",
-        "notionalTiersHelp": "Comma-separated positive USD amounts, for example 25,100,500.",
-        "maxScaleOutTargets": "Maximum scale-out targets",
-        "minimumCoverage": "Minimum executable coverage",
         "pitCutoff": "PIT cutoff",
-        "min_full_l2_coverage": "Minimum full-L2 coverage",
-        "max_ambiguous_touch_rate": "Maximum ambiguous-touch rate",
-        "max_depth_failure_rate": "Maximum depth-failure rate",
-        "min_dsr": "Minimum DSR",
-        "max_pbo": "Maximum PBO",
-        "min_cohort_samples": "Minimum cohort samples",
-        "min_cpcv_paths": "Minimum CPCV paths",
-        "min_utility_bps": "Minimum utility lower bound (bps)",
         "incomplete": "Complete the dataset, window, and notional tiers.",
         "preflight": "Run preflight",
         "enqueue": "Queue fit",
         "queued": "Trade-policy fit queued.",
         "publishable": "The source evidence is eligible for a publishable fit.",
         "blocked": "Fit enqueue is blocked until every data and methodology readiness gate passes.",
-        "readinessCapability": "Preflight verifies the frozen Runtime v1 methodology, continuous L2, reconciled fees/trades, and a signed production latency profile before any fit can be queued.",
         "contractValid": "Contract valid",
         "datasetReady": "Dataset Ready",
         "datasetPurpose": "PolicyFit purpose",
@@ -789,8 +1018,7 @@
         "latencyProfile": "Signed 24-hour latency profile",
         "profileQualityGate": "Immutable profile quality gate",
         "profileFitterAvailable": "Policy fitter implemented",
-        "methodologyHash": "Frozen methodology hash",
-        "effectiveGates": "Effective quality gates"
+        "methodologyHash": "Frozen methodology hash"
       },
       "workbench": {
         "title": "Trade-policy fit workbench",
@@ -845,51 +1073,19 @@
         "cancelFit": "Cancel fit job",
         "cancelSummary": "Cooperatively cancel this trade-policy fit. Attempted trials remain in the append-only ledger.",
         "next": "Next",
-        "frozen": "Frozen fit boundary",
-        "activation": "Activation target",
-        "runtime": "Decision-policy snapshot",
-        "model": "Model specification",
         "candidates": "Condition candidates",
         "addCandidate": "Add conditional candidate",
-        "editor": "Typed condition editor",
-        "inspector": "Canonical inspector",
         "candidateId": "Candidate ID",
         "confirmation": "Continuous confirmation (ms)",
         "observationGap": "Maximum observation gap (ms)",
-        "entryExecution": "Entry execution",
         "orderKind": "Order kind",
         "maxBookAge": "Maximum book age (ms)",
-        "fillRequirement": "Fill requirement",
         "maxSlippage": "Maximum slippage (bps)",
-        "passivePlacement": "Passive placement",
-        "improveTicks": "Improve ticks",
-        "goodTil": "Good-til duration (seconds)",
-        "exitPolicy": "Exit policy",
         "upperBarrier": "Upper barrier (bps)",
         "lowerBarrier": "Lower barrier (bps)",
         "verticalBarrier": "Vertical barrier (seconds)",
-        "scoreRetention": "Minimum score retention",
-        "expectedReturn": "Minimum expected return (bps)",
-        "settlementMode": "Settlement mode",
-        "redeemPolicy": "Redeem policy",
-        "executionEligibility": "Require execution eligibility",
-        "scaleOut": "Scale-out targets",
-        "addScaleOut": "Add scale-out target",
-        "trailingStop": "Trailing stop",
-        "trailingActivation": "Trailing activation return (bps)",
-        "trailingDistance": "Trailing distance (bps)",
-        "sellConfidence": "Opportunistic-exit minimum confidence",
-        "sellAlpha": "Opportunistic-exit minimum alpha (bps)",
-        "sellProbability": "Minimum probability exit is better",
-        "sellCap": "Maximum cumulative opportunistic exit ratio",
-        "sellMinClip": "Minimum incremental opportunistic exit ratio",
-        "exitExecution": "Reason-specific FAK execution",
-        "candidateCount": "Candidate count",
-        "nodeCount": "Node count",
-        "naturalLanguage": "Condition meaning",
         "candidateHash": "Server candidate-set hash",
         "canonicalJson": "Canonical candidate JSON",
-        "preflight": "PIT and source preflight",
         "result": "Asynchronous fit result",
         "jobId": "Job ID",
         "jobStatus": "Job status",
@@ -899,7 +1095,6 @@
         "failureDetail": "Terminal diagnostic",
         "openJob": "Open research job",
         "immediateFixed": "Immediate is the mandatory baseline and cannot be edited or removed.",
-        "immediateDescription": "Proceed directly to admission using the frozen order policy.",
         "anchor": {
           "decision": "Recommendation decision",
           "marketStart": "Market start",
@@ -1000,8 +1195,6 @@
         "readyTitle": "Publication evidence is complete",
         "hash": "Content Hash",
         "fitWindow": "Fit Window",
-        "pitCutoff": "PIT Cutoff",
-        "fillSimulator": "Fill Simulator",
         "entryBasis": "Executable Entry Basis",
         "exitBasis": "Executable Exit Basis",
         "fullL2Coverage": "Full L2 Coverage",
@@ -1036,8 +1229,6 @@
         "result": "Result",
         "pass": "Pass",
         "fail": "Fail",
-        "example": "Example",
-        "market": "Market",
         "decisionAt": "Decision Time",
         "diagnostic": "Diagnostic / Row Hash",
         "sourceSliceObjects": "Verified Source Slice Objects",
@@ -1243,7 +1434,6 @@
       }
     },
     "jobs": {
-      "listTitle": "Task Center",
       "columns": {
         "jobId": "Job ID",
         "kind": "Kind",
@@ -1252,7 +1442,6 @@
         "submittedBy": "Acting role",
         "createdAt": "Created",
         "finishedAt": "Finished",
-        "result": "Result",
         "operation": "Actions"
       },
       "filters": {
@@ -1273,38 +1462,23 @@
         "evidenceAt": "Recheck evidence at {time}",
         "retryScheduled": "Retry scheduled",
         "retryAt": "Retry at {time}",
-        "pending": "Pending start",
-        "phase": "Phase"
+        "pending": "Pending start"
       },
       "recovery": {
-        "badge": "Auto-requeued {count}x",
-        "hint": "This job was auto-requeued after a service interruption"
+        "badge": "Auto-requeued {count}x"
       },
       "detail": {
         "title": "Job Detail",
         "params": "Request params",
         "progress": "Live progress",
         "coverage": "Coverage diagnostics",
-        "error": "Failure",
         "lineage": "Retried from",
         "recoveryAttempt": "Auto-recovery attempts",
         "nextAttemptAt": "Next retry",
-        "maxRecoveryAttempts": "Max auto-recovery",
         "leaseExpiresAt": "Lease expires",
         "heartbeatAt": "Last heartbeat",
         "startedAt": "Started",
         "acting": "Acting role"
-      },
-      "cancel": {
-        "title": "Cancel job",
-        "summary": "Cancel this research job. A queued job stops immediately; a running job stops cooperatively.",
-        "confirmWord": "CANCEL",
-        "feedback": "Cancellation requested"
-      },
-      "retry": {
-        "title": "Retry job",
-        "summary": "Re-enqueue a fresh job with the same frozen params (records retry lineage).",
-        "feedback": "Re-enqueued"
       }
     },
     "datasets": {
@@ -1337,7 +1511,6 @@
       "plan": {
         "title": "Plan training dataset",
         "summary": "Dry-run the sample grid; no artifact or ledger row is written.",
-        "feedback": "Plan complete: {samples} planned samples.",
         "reviewSummary": "Review the dry-run result, then build reusing this dataset id.",
         "plannedSamples": "Planned Samples (upper bound)",
         "spineUpperBound": "Historical spine upper bound",
@@ -1390,7 +1563,6 @@
         "feedbackCohort": "Feedback cohort",
         "datasetHash": "Dataset Hash",
         "parquetUri": "Parquet URI",
-        "coverage": "Build Coverage",
         "coverageRaw": "Raw build evidence",
         "integrity": "Integrity Gate Evidence",
         "parity": "Training-serving Parity",
@@ -1442,8 +1614,6 @@
         "cohortArtifactHash": "Cohort artifact hash",
         "cohortSourceHash": "Cohort source hash",
         "cohortSchemaHash": "Cohort schema hash",
-        "cohortReason": "Reason",
-        "cohortCount": "Count",
         "manifestHash": "Manifest hash",
         "artifactBytesHash": "Artifact bytes hash",
         "gateStatus": "Integrity gate status",
@@ -1500,9 +1670,7 @@
         "thesisLimitations": "Known limitations",
         "thesisLimitationsHelp": "Enter one limitation per line (1–16 unique entries). Intended-use boundaries and observed version metrics belong in the trained model card.",
         "thesisValidationError": "Provide a summary, a falsifiable hypothesis, and 1–16 unique limitations (one per line).",
-        "incomplete": "Provide a name; prediction horizon must be >= 1.",
         "duplicateName": "Name \"{name}\" already exists — choose another or open the existing spec.",
-        "feedback": "Model spec created.",
         "feedbackNamed": "Model spec \"{name}\" created."
       },
       "detail": {
@@ -1564,7 +1732,6 @@
         "modelVersionId": "Model Version ID",
         "modelSpec": "Model Spec",
         "version": "Version",
-        "status": "Status",
         "artifactHash": "Artifact Hash",
         "dataset": "Dataset",
         "createdAt": "Created",
@@ -1572,7 +1739,6 @@
       },
       "filters": {
         "modelSpec": "Model Spec",
-        "status": "Status",
         "createdAt": "Created"
       },
       "actions": {
@@ -1614,7 +1780,6 @@
         "summary": "Train a candidate version from an integrity-gated frozen dataset.",
         "frozenContractHint": "Family, target, prediction horizon, runtime config, and raw inputs are derived from the dataset and its model spec; this request cannot override them.",
         "trainingDataset": "Training Dataset ID",
-        "incomplete": "Select a trainable Ready dataset.",
         "feedback": "Training job submitted.",
         "noPermission": "You lack permission to train models (materialization:create).",
         "modalUnavailable": "The train form is not ready yet; try again in a moment."
@@ -1628,7 +1793,6 @@
         "decisionPolicyDerived": "Derived from the selected Evaluation dataset",
         "comparisonModel": "Comparison baseline model",
         "comparisonPlaceholder": "Optional — select a same-spec baseline for pair mode",
-        "incomplete": "Select an eligible Evaluation dataset.",
         "feedback": "Backtest submitted."
       },
       "cpcv": {
@@ -1645,7 +1809,6 @@
         "frozenContractTitle": "Server-owned frozen training contract",
         "frozenContractHint": "CPCV retrains every fold from the model version's linked frozen dataset. The request cannot override model family, input contract, target label, label horizon, or prediction horizon.",
         "contractUnavailable": "The frozen model contract could not be loaded. CPCV submission is blocked.",
-        "incomplete": "The linked training dataset and runtime config are required.",
         "feedback": "CPCV validation submitted.",
         "action": "Run CPCV",
         "dualTrackHint": "CandidateReady requires a single-path backtest (turnover / tail loss / max drawdown) and a CPCV path set (median rank IC / DSR / PBO).",
@@ -1970,7 +2133,6 @@
         "title": "Fit model calibrator",
         "summary": "Fit a held-out probability calibrator and derive a new immutable calibrated ModelVersion through the sole governance service.",
         "feedback": "Calibrated ModelVersion derivation enqueued",
-        "validation": "Select a model version and calibration dataset.",
         "model": "Model version",
         "modelPlaceholder": "Select model version",
         "calibrationDataset": "Calibration dataset",
@@ -2090,7 +2252,6 @@
         "supersedeWarning": "This linkage already has a resolved/overridden binding. Submitting appends a new resolver_tier=override row that supersedes it going forward — the prior binding stays in history, never deleted.",
         "summary": "Audited operator override for market {marketId}. Appends a resolver_tier=override ledger row; history is never mutated.",
         "feedback": "Override recorded",
-        "invalidSubjectJson": "Subject JSON is invalid",
         "instrumentKeyHint": "Canonical feature-source instrument key — always the Binance kline key for the selected asset, per the frozen resolver ruleset, regardless of which oracle settles the market. Auto-derived; not independently editable.",
         "sections": {
           "cryptoSubject": "Crypto subject",
@@ -2109,7 +2270,6 @@
           "marketId": "Market ID",
           "overrideDetails": "Override details",
           "instrumentKey": "Instrument key",
-          "subjectJson": "Subject JSON",
           "asset": "Asset",
           "quote": "Quote",
           "comparator": "Price comparator",
@@ -2134,8 +2294,7 @@
           "assetEvidenceRequired": "A literal citation for the asset is required.",
           "oracleEvidenceRequired": "A literal citation for the resolution oracle is required.",
           "strikeEvidenceRequired": "A literal citation for the strike is required."
-        },
-        "submit": "Submit override"
+        }
       },
       "detail": {
         "title": "Market linkage",
@@ -2204,11 +2363,9 @@
           "empty": "No basis exceedances recorded for this market.",
           "notApplicable": "Basis cross-check does not apply — settlement oracle is not Chainlink Data Streams."
         }
-      },
-      "emptyInstrument": "—"
+      }
     },
     "domainSources": {
-      "listTitle": "Domain ingest cursors",
       "refresh": "Refresh",
       "retry": "Retry",
       "loadingAnnouncement": "Loading domain source health.",
@@ -2379,20 +2536,10 @@
       "pathRankIc": "Rank IC",
       "pathMaxDrawdown": "Max DD",
       "pathTailLoss": "Tail loss",
-      "publishBound": "Publish-bound path set",
-      "publishBoundOther": "Another path set is publish-bound",
-      "publishUnbound": "No path set bound for publish",
-      "selectionNotBound": "Browsing a path set that is not publish-bound. Gate pass/fail tags are hidden — pin this set to evaluate it for publish.",
-      "bindRequiredHint": "No path set is publish-bound yet. Pin the selected set before publish gates can use these CPCV metrics.",
-      "bindPublish": "Set as publish path set",
-      "bindTitle": "Bind CPCV path set",
-      "bindSummary": "Pin path set {id}… for publish gate evaluation",
-      "bindFeedback": "Publish path set bound.",
       "gatePass": "Pass",
       "gateFail": "Fail",
       "thresholdMin": "≥",
       "thresholdMax": "≤",
-      "threshold": "≥",
       "distribution": {
         "min": "Min",
         "p25": "P25",
@@ -2418,8 +2565,7 @@
       "critical": "Critical Alert",
       "emergency": "Emergency Alert"
     },
-    "configActivated": "Runtime config activated: {version}",
-    "marketResolved": "Market resolved: {market}"
+    "configActivated": "Runtime config activated: {version}"
   },
   "system": {
     "indicator": {
@@ -2483,7 +2629,6 @@
     }
   },
   "dashboard": {
-    "viewAll": "View",
     "commandCenter": {
       "title": "Quant Command Center",
       "subtitle": "Assess system safety from one authoritative snapshot and execute the single next action.",
@@ -2507,18 +2652,13 @@
     },
     "status": {
       "runtimeMode": "Runtime Mode",
-      "bootstrap": "Bootstrap",
       "killSwitch": "Kill Switch",
       "ws": "Realtime",
       "bookFreshness": "Book Freshness",
       "latestReport": "Latest Report"
     },
     "section": {
-      "ready": "Live",
-      "stale": "Stale",
       "unavailable": "Unavailable",
-      "forbidden": "Forbidden",
-      "blocked": "Blocked by capability gates",
       "noSamples": "No real samples in this window",
       "noReport": "No published recommendation report yet",
       "noTrend": "Not enough data to calculate a window trend"
@@ -2550,6 +2690,25 @@
       "title": "Exposure Concentration",
       "aria": "Account risk exposure aggregated by category as a treemap.",
       "none": "The live account has no real exposure"
+    },
+    "runtimeActivity": {
+      "title": "Live Runtime Activity",
+      "open": "Open Activity Center",
+      "empty": "No durable runtime activity is visible to this role yet. Start research, report, or execution work to track it here."
+    },
+    "reportRuntime": {
+      "title": "Report Runtime",
+      "queued": "Queued",
+      "running": "Running",
+      "failed": "Exceptions",
+      "empty": "No report-run evidence exists in this window. Start an ad-hoc report from the recommendation workbench."
+    },
+    "executionRuntime": {
+      "title": "Execution Runtime",
+      "pending": "Pending intents",
+      "active": "Active orders",
+      "attention": "Needs attention",
+      "empty": "No execution activity exists in this window. This is expected in ReportOnly mode."
     },
     "feedback": {
       "title": "Feedback & Retraining",
@@ -2589,59 +2748,11 @@
         "policy_revision_awaiting_activation": "An approved policy revision awaits activation"
       }
     },
-    "actions": {
-      "runReport": "Run Report"
-    },
-    "cards": {
-      "ws": "Realtime"
-    },
     "loadError": {
-      "overview": "Command center snapshot failed to load",
-      "report": "Latest report failed to load",
-      "dataQuality": "Data quality failed to load",
-      "account": "Live account failed to load",
-      "equity": "Equity snapshot failed to load"
+      "overview": "Command center snapshot failed to load"
     },
     "bootstrap": {
-      "title": "System Activation and Capabilities",
-      "phase": "Bootstrap phase",
-      "blockedCount": "Blocked",
-      "nextAction": "Next action",
-      "next": {
-        "activate": "Approve and explicitly activate the runtime revision",
-        "operational": "All runtime capability gates are satisfied"
-      },
-      "group": {
-        "critical": "Critical control",
-        "collecting": "Data and evidence",
-        "trading": "Reports and trading risk"
-      },
-      "phaseValue": {
-        "initializing": "Initializing",
-        "collecting_baseline": "Collecting baseline",
-        "awaiting_activation": "Awaiting activation",
-        "active": "Active"
-      },
-      "enabled": "Available",
-      "blocked": "Blocked",
-      "activate": "Activate system",
-      "activateTitle": "Activate cold-start system",
-      "activateSummary": "Approve the selected immutable runtime configuration and enter active. The system remains ReportOnlyForced; this action does not release trading risk.",
-      "activated": "System explicitly activated",
-      "noConfig": "No runtime configuration revision is available for approval",
-      "configRevision": "Runtime configuration revision",
-      "ackLabel": "ReportOnlyForced acknowledgement",
-      "ackHelp": "I acknowledge the system remains ReportOnlyForced after activation and trading requires a separate governed action.",
       "reportBlocked": "Report generation is blocked by the current system state",
-      "capability": {
-        "control_plane_ready": "Control plane",
-        "catalog_baseline_ready": "Catalog baseline",
-        "research_capture_enabled": "Research capture",
-        "report_generation_eligible": "Report generation",
-        "automatic_parity_eligible": "Automatic parity replay",
-        "entry_admission_eligible": "Entry admission",
-        "order_submission_eligible": "Order submission"
-      },
       "reason": {
         "bootstrap_initializing": "Bootstrap state is still initializing",
         "control_plane_not_ready": "Control plane is not ready",
@@ -2657,67 +2768,27 @@
     },
     "kpi": {
       "netLiq": "Net Liquidation",
-      "netLiqTip": "Venue net liquidation from the latest live account read.",
       "available": "Available",
-      "availableTip": "Collateral available for sizing after reservations.",
       "drawdown": "Drawdown",
-      "drawdownTip": "Drawdown from the latest persisted equity snapshot high-water mark.",
       "activeMarkets": "Active Markets",
-      "activeMarketsTip": "Markets currently tracked by the runtime catalog.",
-      "budgetCap": "Budget cap",
-      "reserved": "Reserved",
-      "capitalBase": "Capital base",
-      "positions": "{count} positions",
-      "highWaterMark": "HWM",
-      "unrealizedPnl": "Unrealized PnL",
       "noEquitySnapshot": "No equity snapshot persisted yet",
-      "catalogMarkets": "{count} catalog markets",
-      "dataUsable": "{usable}/{total} usable books",
       "windowTrend": "{window} window trend {value}",
       "reservedValue": "Reserved {value}",
       "highWaterValue": "High-water mark {value}",
       "usableBooks": "{usable}/{total} books usable",
-      "dataUsableTitle": "Data Usable"
-    },
-    "latestReport": {
-      "title": "Latest Report",
-      "none": "No report generated yet",
-      "published": "Recommendations",
-      "suggested": "Total Suggested"
-    },
-    "account": {
-      "title": "Live Account",
-      "netLiq": "Net Liquidation",
-      "available": "Available",
-      "reserved": "Reserved",
-      "budgetCap": "Budget Cap",
-      "drawdown": "Drawdown",
-      "checkedAt": "Checked At",
-      "unavailable": "Account unavailable"
-    },
-    "pendingIntents": {
-      "title": "Pending Intents",
-      "awaiting": "awaiting approval"
+      "dataUsableTitle": "Data Usable",
+      "runtimeRunning": "Running Work",
+      "runtimeAttentionValue": "{count} activities need attention"
     },
     "dataQuality": {
       "title": "Data Quality",
       "progressAria": "Usable order-book data percentage",
-      "totalTokens": "Tracked Tokens",
       "fresh": "Fresh",
       "acceptable": "Acceptable",
       "degraded": "Degraded",
-      "stale": "Stale",
-      "insufficient": "Insufficient",
-      "worstBookAge": "Worst Book Age / Threshold",
-      "worstIngestLag": "Worst Ingest Lag / Threshold"
-    },
-    "alerts": {
-      "title": "System Alerts",
-      "none": "No recent alerts"
+      "stale": "Stale"
     },
     "reportLifecycle": {
-      "title": "Report Activity",
-      "none": "No report lifecycle events yet",
       "event": {
         "prepared": "Prepared",
         "published": "Published",
@@ -2734,51 +2805,17 @@
         "reconciliation_unresolved": "Reconciliation unresolved"
       }
     },
-    "pipeline": {
-      "title": "Execution Pipeline",
-      "pendingIntents": "Pending intents",
-      "inFlightOrders": "In-flight orders",
-      "unresolvedReconciliations": "Unresolved reconciliations",
-      "loading": "Refreshing counts…"
-    },
-    "exposureTopN": {
-      "title": "Top Exposures",
-      "none": "No exposure data",
-      "byCategory": "By category",
-      "byMarket": "By market"
-    },
     "health": {
       "title": "Subsystem Health",
       "ready": "All dependencies ready",
       "degraded": "Dependencies degraded",
       "ok": "Healthy",
       "failed": "Failed"
-    },
-    "recovery": {
-      "title": "Execution Recovery",
-      "loadFailed": "Unable to load recovery status. Retry or check system access.",
-      "refresh": "Refresh",
-      "clear": "No recovery blockers",
-      "autoExecutionBlocked": "Auto-execution is blocked pending recovery",
-      "unresolvable": "Unresolvable reconciliations",
-      "nextSteps": "Next Steps",
-      "blocking": "Blocking Reconciliations",
-      "none": "None",
-      "killSwitch": "Kill Switch",
-      "requiresAck": "Requires operator acknowledgement",
-      "ack": "Acknowledge kill switch",
-      "lastReason": "Last reason",
-      "resolve": "Resolve",
-      "resolveHint": "Resolve blocking reconciliations from the reconciliation queue; unblocking is credential-gated and never fabricated here."
     }
   },
   "systemAdmin": {
-    "refresh": "Refresh",
     "mode": {
-      "title": "Runtime Mode",
-      "current": "Current",
       "switchTitle": "Switch Runtime Mode",
-      "switchTo": "Switch to {mode}",
       "summary": "Switch runtime mode from {from} to {to}.",
       "switched": "Runtime mode switched from {from} to {to}",
       "preflightPassed": "Preflight passed",
@@ -2788,14 +2825,7 @@
       "checkFailed": "Failed"
     },
     "killSwitch": {
-      "title": "Kill Switch",
-      "current": "Current",
-      "reason": "Last Reason",
-      "changedBy": "Changed By",
-      "changedAt": "Changed At",
-      "requiresAck": "Kill switch is latched and requires operator acknowledgement.",
       "setTitle": "Set Kill Switch",
-      "setTo": "Set {state}",
       "summary": "Transition kill switch from {from} to {to}.",
       "ackSummary": "This clears a latched state and requires acknowledgement.",
       "updated": "Kill switch set to {state}"
@@ -2804,21 +2834,6 @@
       "switchTitle": "Switch Settlement Write Policy",
       "summary": "Switch settlement write policy from {from} to {to}.",
       "switched": "Settlement write policy switched to {policy}"
-    },
-    "health": {
-      "title": "Subsystem Health",
-      "overallHealthy": "All subsystems healthy",
-      "overallUnhealthy": "One or more subsystems unhealthy",
-      "healthy": "Healthy",
-      "unhealthy": "Unhealthy",
-      "skipped": "Skipped",
-      "checkedAt": "Checked at",
-      "messageAgeMs": "Last msg {ms}ms"
-    },
-    "deployConfig": {
-      "title": "Deploy Config",
-      "masked": "Credential-masked deploy configuration snapshot.",
-      "view": "View Config"
     }
   },
   "markets": {
@@ -2850,8 +2865,6 @@
     },
     "actions": {
       "detail": "Detail",
-      "subscribe": "Subscribe",
-      "unsubscribe": "Unsubscribe",
       "block": "Block",
       "unblock": "Unblock"
     },
@@ -2869,20 +2882,10 @@
       "unblocked": "Market unblocked"
     },
     "detail": {
-      "title": "Market Detail",
+      "back": "Back to markets",
       "marketId": "Market ID",
       "eventId": "Event ID",
-      "slug": "Slug",
-      "tickSize": "Tick Size",
-      "negRisk": "Neg Risk",
-      "outcome": "Outcome",
-      "endDate": "End Date",
-      "resolvedAt": "Resolved At",
-      "yes": "Yes",
-      "no": "No",
       "book": "Order Book",
-      "yesBook": "YES Book",
-      "noBook": "NO Book",
       "bidPrice": "Bid",
       "askPrice": "Ask",
       "size": "Size",
@@ -3008,13 +3011,6 @@
       "recommendationId": "Recommendation ID",
       "createdAt": "Created"
     },
-    "queue": {
-      "all": "All",
-      "pendingApproval": "Pending Approval",
-      "awaitingSubmit": "Armed",
-      "inFlight": "In Flight",
-      "terminal": "Terminal"
-    },
     "columns": {
       "intentId": "Intent",
       "status": "Status",
@@ -3022,7 +3018,6 @@
       "runtimeMode": "Mode",
       "side": "Side",
       "limitPrice": "Limit",
-      "shares": "Shares",
       "amount": "Amount",
       "recommendationId": "Recommendation",
       "createdAt": "Created",
@@ -3092,10 +3087,7 @@
     },
     "detail": {
       "title": "Order Intent",
-      "back": "Back to Intents",
       "notFound": "Order intent not found.",
-      "loadError": "Failed to load the order intent.",
-      "retry": "Retry",
       "viewAllOrders": "View all execution orders",
       "noExecutionOrders": "No execution orders yet.",
       "sections": {
@@ -3109,7 +3101,6 @@
         "recommendationId": "Recommendation",
         "decisionPolicySnapshot": "Decision Policy Snapshot",
         "modelVersion": "Model Version",
-        "modelRun": "Model Run",
         "policyId": "Policy ID",
         "policyHash": "Policy Hash",
         "riskEnvelopeHash": "Risk Envelope Hash",
@@ -3125,26 +3116,13 @@
       },
       "entry": {
         "amount": "Amount",
-        "triggerState": "Trigger State",
-        "trigger": "Frozen Trigger",
-        "immediate": "Immediate after arm",
-        "confirmingSince": "Confirming Since",
-        "lastObservedAt": "Last Observed At",
-        "currentPrice": "Current Executable Price",
-        "conditionSatisfied": "Condition Satisfied",
-        "confirmationRemaining": "Confirmation Remaining",
-        "bookFreshness": "Book Freshness",
-        "bookObservedAt": "Book Observed At",
-        "admissionBlocker": "Admission Blocker",
         "fresh": "Fresh",
         "stale": "Stale / Unavailable",
         "token": "Token",
-        "primaryToken": "Primary model token",
         "side": "Side",
         "orderType": "Order Type",
         "postOnly": "Post Only",
         "limitPrice": "Limit Price",
-        "shares": "Shares",
         "maxSlippage": "Max Slippage",
         "validUntil": "Valid Until"
       },
@@ -3171,7 +3149,6 @@
     "nextEvaluationAt": "Next Backstop Evaluation",
     "evaluationHash": "Evaluation Hash",
     "inputFingerprint": "Input Fingerprint",
-    "artifact": "Frozen Artifact",
     "canonicalTree": "Canonical Condition Tree",
     "authoritativeEvaluation": "Latest Authoritative Evaluation",
     "copyHash": "Copy hash",
@@ -3571,7 +3548,6 @@
     }
   },
   "quantReports": {
-    "title": "Recommendation Reports",
     "listTitle": "Reports",
     "tabs": {
       "reports": "Reports",
@@ -3595,9 +3571,7 @@
       "route": "Route",
       "status": "Status",
       "kind": "Kind",
-      "triggerKind": "Trigger",
-      "runtimeMode": "Runtime Mode",
-      "all": "All"
+      "runtimeMode": "Runtime Mode"
     },
     "columns": {
       "reportId": "Report",
@@ -3615,7 +3589,6 @@
       "publishedAt": "Published",
       "revokedAt": "Revoked",
       "expiredAt": "Expired",
-      "createdAt": "Created",
       "operation": "Actions"
     },
     "actions": {
@@ -3671,9 +3644,6 @@
       "lastPublished": "Last Published",
       "failuresAndGaps": "Failures / Gaps (24h)",
       "queuedPrepared": "Queued Runs / Prepared Backlog",
-      "queued": "Queued Runs",
-      "failures24h": "Failures / Abandoned (24h)",
-      "missed24h": "Missed Occurrences (24h)",
       "schedules": "Schedule State",
       "enabled": "Enabled",
       "nextFire": "Next Fire",
@@ -3709,15 +3679,14 @@
       "diagnostics": "Secondary diagnostics",
       "columns": {
         "market": "Market",
+        "primaryToken": "Primary token ID",
         "route": "Route",
         "stage": "Terminal stage",
         "reason": "Primary reason",
-        "token": "Token",
         "lineage": "Lineage"
       }
     },
     "detail": {
-      "title": "Report Detail",
       "back": "Back to reports",
       "notFound": "Report not found",
       "openRun": "Open Build Run",
@@ -3742,17 +3711,10 @@
       },
       "factDelivery": {
         "bundleHash": "Bundle hash",
-        "nextAttemptAt": "Next attempt",
         "title": "Report Fact Delivery",
         "status": "Delivery Status",
-        "attempts": "Attempts",
         "recommendationRows": "Recommendation Rows",
         "funnelRows": "Funnel Rows",
-        "recommendationHash": "Recommendation Row-chain Hash",
-        "funnelHash": "Funnel Row-chain Hash",
-        "verifiedAt": "Verified At",
-        "announcedAt": "Committed Event At",
-        "lastError": "Terminal Diagnostic",
         "missing": "Missing",
         "notVerified": "Report facts are not verified",
         "pendingDescription": "This report remains administrative-only. It cannot become current, actionable, or create an OrderIntent until both ClickHouse fact commitments are verified.",
@@ -3774,9 +3736,6 @@
         "identity": "Identity",
         "reportId": "Report ID",
         "kind": "Kind",
-        "triggerKind": "Trigger",
-        "triggerKey": "Trigger Key",
-        "triggerTime": "Trigger Time",
         "status": "Status",
         "runtimeMode": "Runtime Mode",
         "routes": "Represented Routes",
@@ -3786,18 +3745,11 @@
         "decisionAt": "Decision Time",
         "knowledgeLag": "Knowledge Lag",
         "knowledgeCutoff": "Knowledge Cutoff",
-        "topN": "Top N",
         "capitalBase": "Capital Base",
-        "accountSource": "Account Source",
         "accountSnapshotRef": "Account Snapshot Ref",
         "decisionPolicySnapshot": "Decision Policy Snapshot",
         "portfolioPlan": "Global Portfolio Plan",
-        "marketSelection": "Market Selection",
-        "statusReason": "Status Reason",
-        "publishedAt": "Published At",
-        "revokedAt": "Revoked At",
-        "expiredAt": "Expired At",
-        "createdAt": "Created At"
+        "marketSelection": "Market Selection"
       },
       "parity": {
         "title": "Training-serving Parity"
@@ -3805,26 +3757,12 @@
       "servingAudit": {
         "title": "Serving Decision Audit",
         "incomplete": "Durable evidence is incomplete through the report's executed stage. Unavailable diagnostics are shown as unavailable, never as zero.",
-        "preInference": "Report stopped before model inference",
-        "preInferenceDescription": "The last executed stage was {stage}. No model run or encoded input is fabricated for this report.",
-        "subject": "Evidence subject",
-        "subjects": {
-          "model_run": "Model run",
-          "pre_inference_report": "Pre-inference report"
-        },
         "stageCeiling": "Executed stage ceiling",
-        "modelFamily": "Actual model family",
         "selectionCount": "Selected markets",
         "captureCount": "Decision captures",
         "featureVectors": "Feature vectors",
         "featureCells": "FeatureCell rows",
-        "modelInputs": "Encoded input rows",
-        "contractHash": "Input-contract hash",
-        "transformHash": "Transform hash",
-        "trainingInputHash": "Training-input hash",
-        "sourceCutoffs": "Per-source cutoffs",
-        "featureStates": "Feature admission states",
-        "inputStates": "Model-input / imputation states"
+        "modelInputs": "Encoded input rows"
       },
       "portfolio": {
         "title": "Global Portfolio Economics",
@@ -3884,29 +3822,12 @@
         }
       },
       "summary": {
-        "title": "Summary",
-        "marketSelectionCount": "Markets Selected",
-        "candidateCount": "Candidates",
         "rejectedTierCount": "Rejected Economic Tiers",
         "publishedCount": "Published",
         "totalSuggested": "Total Suggested",
-        "maxSingle": "Max Single Rec",
-        "dataQuality": "Data Quality",
-        "dqFresh": "Fresh",
-        "dqAcceptable": "Acceptable",
-        "dqDegraded": "Degraded",
-        "dqStale": "Stale",
-        "dqInsufficient": "Insufficient",
-        "eligibility": "Execution Eligibility",
-        "eligibleReportOnly": "Report Only",
-        "eligibleSemiAuto": "Semi Auto",
-        "eligibleAutoExecution": "Auto Execution",
-        "topRejections": "Top Rejection Reasons",
         "categoryAllocation": "Category Allocation",
         "eventAllocation": "Event Allocation",
-        "routeAllocation": "Route Allocation",
-        "warnings": "Warnings",
-        "count": "Count"
+        "routeAllocation": "Route Allocation"
       },
       "recommendations": {
         "empty": "No recommendations in this report.",
@@ -4014,15 +3935,11 @@
       "routeRunId": "Route Run ID",
       "portfolioPlanId": "Portfolio Plan ID",
       "economicTierId": "Economic Tier ID",
-      "rank": "Rank",
       "market": "Market",
       "event": "Event",
       "token": "Token",
-      "side": "Outcome Side",
       "category": "Category",
-      "question": "Question",
       "outcome": "Outcome",
-      "status": "Status",
       "validFrom": "Valid From",
       "validUntil": "Valid Until",
       "activeIntent": "Active Intent"
@@ -4112,8 +4029,7 @@
       "minScoreRetention": "Minimum Score Retention",
       "minExpectedReturn": "Minimum Expected Return",
       "requireEligibility": "Require Execution Eligibility",
-      "reason": "Exit Reason",
-      "invalidation": "Thesis Invalidation Policy"
+      "reason": "Exit Reason"
     },
     "riskEnvelope": {
       "title": "Risk Envelope",
@@ -4159,7 +4075,6 @@
       }
     },
     "evidence": {
-      "title": "Replay Handles",
       "signalCandidate": "Signal Candidate",
       "featureVector": "Feature Vector",
       "modelRun": "Model Run",
@@ -4234,8 +4149,7 @@
     "readOnly": "Your role has read-only access. Create, approve, activate, and rollback are independently authorized.",
     "nav": {
       "back": "Back to Config Center",
-      "deployment": "Deployment Snapshot",
-      "lifecycle": "Lifecycle"
+      "deployment": "Deployment Snapshot"
     },
     "overview": {
       "title": "Config Center",
@@ -4355,11 +4269,9 @@
       }
     },
     "editor": {
-      "variant": "Variant",
       "addItem": "Add item",
       "item": "Item {index}",
       "removeItem": "Remove item",
-      "emptyList": "No items",
       "changed": "{count} fields changed",
       "unit": "Unit",
       "applyEffect": "Apply boundary",
@@ -4430,9 +4342,6 @@
       "activeExit": "Active exit model",
       "loadError": "The model evidence catalog could not be loaded. Current routing remains read-only.",
       "retry": "Retry",
-      "artifactHash": "Artifact hash",
-      "evidence": "Publication evidence",
-      "published": "Validated artifact",
       "champion": "Champion",
       "shadow": "Shadow",
       "shadowAvailable": "The governed Shadow slot is available.",
@@ -4450,17 +4359,6 @@
       "side": {
         "buy": "Buy",
         "sell": "Sell"
-      },
-      "family": {
-        "weighted_factor": "Weighted factor",
-        "classical_gradient_boosted_trees": "Gradient-boosted trees",
-        "classical_random_forest": "Random forest",
-        "classical_extra_trees": "Extra Trees",
-        "classical_logistic_regression": "Logistic regression",
-        "classical_ridge": "Ridge",
-        "classical_lasso": "Lasso",
-        "classical_elastic_net": "Elastic Net",
-        "hold_vs_exit_weighted": "Hold vs exit scorer"
       }
     },
     "reportSchedulePreview": {
@@ -4512,10 +4410,29 @@
       }
     },
     "enumValue": {
+      "Cron": "Cron schedule",
+      "FixedInterval": "Fixed interval",
+      "auto_execution": "Auto execution",
+      "crypto": "Crypto",
+      "culture": "Culture",
+      "economics": "Economics",
+      "finance": "Finance",
+      "fixed_interval": "Fixed interval",
+      "geopolitics": "Geopolitics",
       "interval": "Fixed interval",
       "cron": "Cron schedule",
       "isotonic": "Isotonic regression",
-      "platt": "Platt scaling"
+      "other": "Other",
+      "platt": "Platt scaling",
+      "politics": "Politics",
+      "reject_stale_required": "Reject stale required features",
+      "report_only": "Report only",
+      "semi_auto": "Semi-auto execution",
+      "sports": "Sports",
+      "store_and_notify": "Store and notify",
+      "store_only": "Store only",
+      "tech": "Technology",
+      "weather": "Weather"
     },
     "review": {
       "title": "Field-level review",

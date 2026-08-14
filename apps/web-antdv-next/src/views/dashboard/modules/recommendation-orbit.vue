@@ -10,8 +10,8 @@ import { usePreferences } from '@vben/preferences';
 import { Button, Empty, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
-import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import { formatBps, formatUsd } from '#/shared/components/format';
+import InsightPanel from '#/shared/components/insight-panel.vue';
 import { themeColors } from '#/shared/components/theme-color';
 
 defineOptions({ name: 'DashboardRecommendationOrbit' });
@@ -30,7 +30,7 @@ const { getChartInstance, renderEcharts } = useEcharts(chartRef);
 
 const chartData = computed(() => {
   void isDark.value;
-  const orbitPalette = themeColors.visual;
+  const orbitPalette = themeColors.categorical;
   return props.recommendations.map((recommendation) => {
     const profitProbability =
       Number(recommendation.economics.profit_probability_bps) / 10_000;
@@ -55,13 +55,13 @@ async function render() {
     animation: false,
     angleAxis: {
       axisLabel: {
-        color: themeColors.foreground,
+        color: themeColors.text.primary,
         fontWeight: 600,
         formatter: (_value: string, index: number) =>
           `#${props.recommendations[index]?.rank ?? index + 1}`,
         interval: 0,
       },
-      axisLine: { lineStyle: { color: themeColors.border } },
+      axisLine: { lineStyle: { color: themeColors.border.subtle } },
       axisTick: { show: false },
       data: props.recommendations.map(
         (recommendation) => recommendation.identity.outcome_name,
@@ -83,7 +83,7 @@ async function render() {
       min: 0,
       splitLine: {
         lineStyle: {
-          color: [themeColors.muted, themeColors.border],
+          color: [themeColors.text.muted, themeColors.border.subtle],
           type: 'dashed',
         },
       },
@@ -149,7 +149,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <DashboardPanel
+  <InsightPanel
     :title="$t('page.dashboard.orbit.title')"
     icon="lucide:orbit"
     tone="violet"
@@ -196,5 +196,5 @@ onUnmounted(() => {
         {{ $t('page.dashboard.orbit.openReports') }}
       </Button>
     </Empty>
-  </DashboardPanel>
+  </InsightPanel>
 </template>

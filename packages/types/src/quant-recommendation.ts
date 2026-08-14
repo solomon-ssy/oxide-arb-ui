@@ -38,7 +38,7 @@ import type {
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
 } from './exit-plan';
-import type { BuyModelRoute } from './feedback';
+import type { BuyModelRoute } from './generated/config-api';
 import type { ResearchProfileRef } from './research-profile';
 
 export interface RecommendationIdentity {

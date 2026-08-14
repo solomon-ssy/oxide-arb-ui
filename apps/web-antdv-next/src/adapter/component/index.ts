@@ -72,8 +72,6 @@ import { isEmpty } from '@vben/utils';
 
 import { message, Modal, notification } from 'antdv-next';
 
-import { upload_file } from '#/api';
-
 type AdapterUploadProps = UploadProps & {
   aspectRatio?: string;
   crop?: boolean;
@@ -750,27 +748,7 @@ async function initComponentAdapter() {
     RadioGroup,
     RangePicker,
     Rate,
-    RichEditor: withDefaultPlaceholder(VbenTiptap, 'input', {
-      imageUpload: {
-        upload: (file: File, onProgress?: (percent: number) => void) => {
-          return new Promise((resolve, reject) => {
-            upload_file({
-              file,
-              onProgress({ percent }: { percent: number }) {
-                onProgress?.(percent);
-              },
-              onSuccess(response: { data?: { url?: string }; url?: string }) {
-                // 从响应中提取图片URL
-                resolve(response?.data?.url ?? response?.url ?? '');
-              },
-              onError() {
-                reject(new Error($t('ui.tiptap.upload.uploadFailed')));
-              },
-            });
-          });
-        },
-      },
-    }),
+    RichEditor: withDefaultPlaceholder(VbenTiptap, 'input'),
     Select: withDefaultPlaceholder(Select, 'select'),
     Space,
     Switch,

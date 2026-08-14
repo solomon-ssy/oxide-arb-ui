@@ -38,24 +38,6 @@ export async function listCalibrationArtifacts(
   );
 }
 
-/** Read the complete filtered calibration catalog for bounded selectors. */
-export async function listAllCalibrationArtifacts(
-  query: CalibrationArtifactListQuery = {},
-  page = 1,
-  accumulated: CalibrationArtifactSummaryView[] = [],
-): Promise<CalibrationArtifactSummaryView[]> {
-  const result = await listCalibrationArtifacts({ ...query, page, size: 100 });
-  if (result.items.length === 0 && result.has_next) {
-    throw new Error(
-      'calibration pagination returned an empty non-terminal page',
-    );
-  }
-  const items = [...accumulated, ...result.items];
-  return result.has_next
-    ? listAllCalibrationArtifacts(query, page + 1, items)
-    : items;
-}
-
 /** `GET /research/calibration-artifacts/{id}` — full artifact detail. */
 export async function getCalibrationArtifact(id: string) {
   return requestClient.get<CalibrationArtifactDetailView>(

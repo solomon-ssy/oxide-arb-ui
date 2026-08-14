@@ -39,12 +39,6 @@ export async function listTradePolicyProfiles() {
   return requestClient.get<ResearchProfileArtifact[]>(profileBase);
 }
 
-export async function getTradePolicyProfile(id: string, version: number) {
-  return requestClient.get<ResearchProfileArtifact>(
-    `${profileBase}/${encodeURIComponent(id)}/${version}`,
-  );
-}
-
 export async function listTradePolicies(query: TradePolicyListQuery = {}) {
   return requestClient.get<Paginated<TradePolicySummaryView>>(base, {
     params: query,
@@ -138,12 +132,6 @@ export async function listTradePolicyValidations(
   return requestClient.get<Paginated<TradePolicyValidationRunView>>(
     `${base}/${id}/validations`,
     { params: query },
-  );
-}
-
-export async function getTradePolicyValidation(id: string) {
-  return requestClient.get<TradePolicyValidationRunView>(
-    `/research/trade-policy-validations/${id}`,
   );
 }
 

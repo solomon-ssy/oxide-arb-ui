@@ -5,6 +5,7 @@ import type {
   ModelFamily,
   QuantRuntimeMode,
 } from './enums';
+import type { BuyModelRoute } from './generated/config-api';
 import type { DatasetCohortCounts, QualityGateReportView } from './research';
 import type {
   ResearchEvaluationTrack,
@@ -28,8 +29,6 @@ export type FeedbackDecision =
 export type FeedbackTriggerFamily = 'manual' | 'scheduled';
 
 export type FeedbackEvaluationMode = 'conditional' | 'forced_retraining';
-
-export type BuyModelRoute = 'crypto' | 'pooled' | 'weather';
 
 export type FeedbackCoverageDecision = 'advance' | 'no_action';
 
@@ -79,6 +78,13 @@ export interface FeedbackCycleListQuery extends PageQuery {
   profile_id?: string;
   status?: FeedbackCycleStatus;
   trigger_family?: FeedbackTriggerFamily;
+}
+
+export interface DriftReportListQuery extends PageQuery {
+  feedback_cycle_id?: string;
+  profile_id?: string;
+  kind?: FeedbackDriftKind;
+  metric?: FeedbackDriftMetric;
 }
 
 export type PromotionPermitStatus = 'active' | 'expired' | 'revoked';

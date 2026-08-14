@@ -11,7 +11,6 @@ import type {
   ReportFactDeliveryView,
   ReportFunnelMarketListQuery,
   ReportFunnelMarketView,
-  ReportKind,
   ReportRunListQuery,
   ReportRunView,
   ReportScheduleGapListQuery,
@@ -29,7 +28,6 @@ import { requestClient } from '#/api/request';
 
 export namespace QuantReportApi {
   export const base = '/quant/reports';
-  export const current = `${base}/current`;
   export const run = `${base}/run`;
   export const runs = '/quant/report-runs';
   export const runDetail = (id: string) => `${runs}/${id}`;
@@ -55,34 +53,6 @@ export async function listQuantReports(query: QuantReportListQuery = {}) {
   return requestClient.get<Paginated<QuantReportView>>(QuantReportApi.base, {
     params: query,
   });
-}
-
-/** `GET /quant/reports/current` — exact profile/kind authority. */
-export async function getCurrentQuantReport(
-  profileId: string,
-  kind: ReportKind,
-) {
-  return requestClient.get<QuantReportDetailView>(QuantReportApi.current, {
-    params: { kind, profile_id: profileId },
-  });
-}
-
-/**
- * Dashboard projection: select the most recently published row from the set of
- * current scope authorities, then load its durable detail. This never revives a
- * superseded report and does not invent a cross-scope entry authority.
- */
-export async function getMostRecentCurrentReportOptional(): Promise<null | QuantReportDetailView> {
-  const page = await listQuantReports({
-    page: 1,
-    size: 1,
-    status: 'published',
-  });
-  const current = page.items[0];
-  if (!current) {
-    return null;
-  }
-  return getQuantReport(current.recommendation_report_id);
 }
 
 /** `GET /quant/reports/{id}` — full report detail with summary. */

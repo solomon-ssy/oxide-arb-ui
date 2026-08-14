@@ -6,12 +6,9 @@ import { computed } from 'vue';
 import { KILL_SWITCH_STATES } from '@vben/types';
 
 import { $t } from '#/locales';
-import {
-  findTagOption,
-  useKillSwitchStateTagOptions,
-} from '#/shared/components/format/tag-options';
 import GovernedStatePickerPopover from '#/shared/components/header/governed-state-picker-popover.vue';
 import { useKillSwitchAction } from '#/shared/composables/use-system-actions';
+import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'KillSwitchIndicator' });
@@ -22,9 +19,9 @@ const killSwitchAction = useKillSwitchAction();
 const killSwitch = computed(() => systemStore.status?.kill_switch ?? null);
 const currentState = computed(() => killSwitch.value?.state ?? null);
 
-const killSwitchTagOptions = useKillSwitchStateTagOptions();
+const killSwitchTagOptions = enumOptions('KillSwitchState');
 const currentTag = computed(() =>
-  findTagOption(killSwitchTagOptions, currentState.value),
+  enumOption(killSwitchTagOptions, currentState.value),
 );
 
 const allStates = computed(() => Object.values(KILL_SWITCH_STATES));
@@ -42,7 +39,7 @@ const visible = computed(() => {
 
 const pickerOptions = computed(() =>
   allStates.value.map((state) => {
-    const tag = findTagOption(killSwitchTagOptions, state);
+    const tag = enumOption(killSwitchTagOptions, state);
     const current = currentState.value;
     const hidden =
       current !== null &&

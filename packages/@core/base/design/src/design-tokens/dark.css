@@ -2,25 +2,25 @@
 .dark[data-theme='custom'],
 .dark[data-theme='default'] {
   /* Default background color of <body />...etc */
-  --background: 222.34deg 10.43% 12.27%;
+  --background: 222 40% 9%;
 
   /* 主体区域背景色 */
-  --background-deep: 220deg 13.06% 9%;
-  --foreground: 0 0% 95%;
+  --background-deep: 222 47% 6%;
+  --foreground: 213 31% 95%;
 
   /* Background color for <Card /> */
-  --card: 222.34deg 10.43% 12.27%;
+  --card: 222 34% 12%;
 
   /* --card: 222.2 84% 4.9%; */
-  --card-foreground: 210 40% 98%;
+  --card-foreground: 213 31% 95%;
 
   /* Background color for popovers such as <DropdownMenu />, <HoverCard />, <Popover /> */
 
   /* --popover: 222.82deg 8.43% 12.27%; */
 
   /* 弹出层的背景色与主题区域背景色太过接近  */
-  --popover: 0 0% 14.2%;
-  --popover-foreground: 210 40% 98%;
+  --popover: 222 40% 14%;
+  --popover-foreground: 213 31% 95%;
 
   /* Muted backgrounds such as <TabsList />, <Skeleton /> and <Switch /> */
 
@@ -28,8 +28,8 @@
 
   /* --muted-foreground: 215 20.2% 65.1%; */
 
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+  --muted: 222 44% 7%;
+  --muted-foreground: 215 20% 72%;
 
   /* 主题颜色 */
 
@@ -38,7 +38,7 @@
 
   /* Used for destructive actions such as <Button variant="destructive"> */
 
-  --destructive: 359.21 68.47% 56.47%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
   /* Used for success actions such as <message> */
@@ -48,48 +48,48 @@
 
   /* Used for success actions such as <message> */
 
-  --success: 144 57% 58%;
+  --success: 152 69% 41%;
   --success-foreground: 0 0% 98%;
 
   /* Used for warning actions such as <message> */
 
-  --warning: 42 84% 61%;
+  --warning: 38 92% 50%;
   --warning-foreground: 0 0% 98%;
 
   /* Product data-visualization colors. */
-  --visual-1: 217 91% 68%;
-  --visual-2: 347 77% 68%;
-  --visual-3: 263 70% 70%;
-  --visual-4: 189 94% 62%;
-  --visual-5: 38 92% 60%;
-  --visual-6: 160 72% 55%;
+  --visual-1: 239 84% 67%;
+  --visual-2: 258 90% 66%;
+  --visual-3: 189 94% 43%;
+  --visual-4: 326 85% 66%;
+  --visual-5: 217 91% 67%;
+  --visual-6: 152 69% 55%;
 
   /* 颜色次要 */
-  --secondary: 240 5% 17%;
+  --secondary: 222 28% 16%;
   --secondary-foreground: 0 0% 98%;
 
   /* Used for accents such as hover effects on <DropdownMenuItem>, <SelectItem>...etc */
-  --accent: 216 5% 19%;
-  --accent-dark: 240 0% 22%;
-  --accent-darker: 240 0% 26%;
-  --accent-lighter: 216 5% 12%;
-  --accent-hover: 216 5% 24%;
+  --accent: 222 30% 17%;
+  --accent-dark: 222 28% 20%;
+  --accent-darker: 222 26% 24%;
+  --accent-lighter: 222 34% 12%;
+  --accent-hover: 222 26% 23%;
   --accent-foreground: 0 0% 98%;
 
   /* Darker color */
-  --heavy: 216 5% 24%;
+  --heavy: 222 26% 23%;
   --heavy-foreground: var(--accent-foreground);
 
   /* Default border color */
-  --border: 240 3.7% 22%;
+  --border: 222 24% 20%;
 
   /* Border color for inputs such as <Input />, <Select />, <Textarea /> */
-  --input: 0deg 0% 100% / 10%;
-  --input-placeholder: 218deg 11% 65%;
-  --input-background: 0deg 0% 100% / 5%;
+  --input: 222 24% 24%;
+  --input-placeholder: 215 16% 58%;
+  --input-background: 222 34% 12%;
 
   /* Used for focus ring */
-  --ring: 222.2 84% 4.9%;
+  --ring: 189 94% 43%;
 
   /* 基本圆角大小 */
   --radius: 0.5rem;
@@ -105,12 +105,12 @@
 
   /* =============component & UI============= */
 
-  --sidebar: 222.34deg 10.43% 12.27%;
-  --sidebar-deep: 220deg 13.06% 9%;
+  --sidebar: 222 40% 9%;
+  --sidebar-deep: 222 47% 6%;
   --menu: var(--sidebar);
 
   /* header */
-  --header: 222.34deg 10.43% 12.27%;
+  --header: 222 40% 9%;
 
   color-scheme: dark;
 }

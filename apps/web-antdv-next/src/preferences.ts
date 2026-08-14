@@ -27,7 +27,10 @@ export const overridesPreferences = defineOverridesPreferences({
     source: '/static/logo.png',
   },
   theme: {
-    builtinType: 'orange',
-    colorPrimary: 'hsl(18 89% 40%)',
+    builtinType: 'custom',
+    colorDestructive: 'hsl(0 84% 60%)',
+    colorPrimary: 'hsl(239 84% 67%)',
+    colorSuccess: 'hsl(152 69% 41%)',
+    colorWarning: 'hsl(38 92% 50%)',
   },
 });

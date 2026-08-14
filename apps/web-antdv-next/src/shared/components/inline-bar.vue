@@ -31,10 +31,10 @@ const props = withDefaults(
 );
 
 const TONE_COLOR: Record<string, () => string> = {
-  destructive: () => themeColors.destructive,
-  primary: () => themeColors.primary,
-  success: () => themeColors.success,
-  warning: () => themeColors.warning,
+  destructive: () => themeColors.status.danger,
+  primary: () => themeColors.accent.command,
+  success: () => themeColors.status.success,
+  warning: () => themeColors.status.warning,
 };
 
 const linearPercent = computed(() => {

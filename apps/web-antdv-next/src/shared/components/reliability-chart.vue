@@ -73,8 +73,8 @@ function render() {
   if (!hasPoints.value) {
     return;
   }
-  const primary = resolveThemeColor('--primary');
-  const muted = resolveThemeColor('--muted-foreground');
+  const primary = resolveThemeColor('--qp-accent-command');
+  const muted = resolveThemeColor('--qp-text-muted');
   const maxN = Math.max(...points.value.map((point) => point.n), 1);
 
   void renderEcharts({

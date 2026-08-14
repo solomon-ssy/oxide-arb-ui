@@ -1,8 +1,8 @@
 import type { FeedbackOverviewView, IsoDateTime } from '@vben/types';
 
-import type { FeedbackProfilePresentation } from '../../research/feedback/modules/feedback-profile-presentation';
+import type { FeedbackProfilePresentation } from '../../research/learning-policy/modules/feedback/modules/feedback-profile-presentation';
 
-import { feedbackProfilePresentation } from '../../research/feedback/modules/feedback-profile-presentation';
+import { feedbackProfilePresentation } from '../../research/learning-policy/modules/feedback/modules/feedback-profile-presentation';
 
 export interface DashboardFeedbackSummary {
   generatedAt: IsoDateTime;

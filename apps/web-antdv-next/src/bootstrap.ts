@@ -16,6 +16,12 @@ import { initSetupVbenForm } from './adapter/form';
 import App from './app.vue';
 import { router } from './router';
 
+import '#/styles/index.css';
+
+function syncPageVisibility() {
+  document.documentElement.dataset.pageVisibility = document.visibilityState;
+}
+
 async function bootstrap(namespace: string) {
   // 初始化组件适配器
   await initComponentAdapter();
@@ -27,6 +33,9 @@ async function bootstrap(namespace: string) {
   await import('./adapter/vxe-table');
 
   const app = createApp(App);
+
+  syncPageVisibility();
+  document.addEventListener('visibilitychange', syncPageVisibility);
 
   // 注册v-loading指令
   registerLoadingDirective(app, {
@@ -49,10 +58,6 @@ async function bootstrap(namespace: string) {
 
   // 配置路由及路由守卫
   app.use(router);
-
-  // 配置Motion插件
-  const { MotionPlugin } = await import('@vben/plugins/motion');
-  app.use(MotionPlugin);
 
   // 动态更新标题
   watchEffect(() => {

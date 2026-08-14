@@ -44,9 +44,9 @@ const readinessUrl = computed(() => {
 });
 
 function recoveryTarget(): string {
-  const raw = Array.isArray(route.query.redirect)
-    ? route.query.redirect[0]
-    : route.query.redirect;
+  const raw = Array.isArray(route.query.return_to)
+    ? route.query.return_to[0]
+    : route.query.return_to;
   return typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')
     ? raw
     : preferences.app.defaultHomePath;

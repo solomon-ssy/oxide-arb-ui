@@ -1,5 +1,5 @@
 import type { VxeTableGridOptions } from '@vben/plugins/vxe-table';
-import type { Recordable } from '@vben/types';
+import type { EnumName, Recordable } from '@vben/types';
 
 import type { ComponentPropsMap, ComponentType } from './component';
 
@@ -28,6 +28,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   decimalSign,
   EMPTY_PLACEHOLDER,
@@ -190,6 +191,25 @@ setupVbenVxeTable({
           },
           { default: () => tagItem?.label ?? value },
         );
+      },
+    });
+
+    vxeUI.renderer.add('CellEnumTag', {
+      renderTableDefault({ props }, { column, row }) {
+        const value = get(row, column.field) as null | string | undefined;
+        const name = props?.enum as EnumName | undefined;
+        if (!name || value === null || value === undefined || value === '') {
+          return h('span', {}, EMPTY_PLACEHOLDER);
+        }
+        return h(EnumTag, {
+          context: `vxe:${String(column.field)}`,
+          label:
+            typeof props?.label === 'function'
+              ? props.label(value, row)
+              : undefined,
+          name,
+          value,
+        });
       },
     });
 

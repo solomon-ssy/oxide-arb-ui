@@ -10,8 +10,8 @@ import { usePreferredReducedMotion } from '@vueuse/core';
 import { Empty, Progress } from 'antdv-next';
 
 import { $t } from '#/locales';
-import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import { formatUsd } from '#/shared/components/format';
+import InsightPanel from '#/shared/components/insight-panel.vue';
 
 defineOptions({ name: 'DashboardExposureTreemap' });
 
@@ -67,7 +67,7 @@ watch([categories, reducedMotion], render, { deep: true, immediate: true });
 </script>
 
 <template>
-  <DashboardPanel
+  <InsightPanel
     :title="$t('page.dashboard.exposure.title')"
     icon="lucide:blocks"
     tone="amber"
@@ -93,5 +93,5 @@ watch([categories, reducedMotion], render, { deep: true, immediate: true });
         <span class="tabular-nums">{{ formatUsd(item.raw) }}</span>
       </li>
     </ul>
-  </DashboardPanel>
+  </InsightPanel>
 </template>

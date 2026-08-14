@@ -20,7 +20,9 @@ describe('dashboard static contract', () => {
     expect(dashboard).not.toContain('MotionGroup');
     expect(dashboard).not.toContain('motionVariants');
     expect(dashboard).toContain('feedbackStore.refreshGeneration');
-    expect(dashboard).toContain("navigate('/research/feedback')");
+    expect(dashboard).toContain(
+      "navigate('/research/learning-policy?module=feedback')",
+    );
   });
 
   it('does not watch heartbeat activity or poll while WS is healthy', () => {
@@ -51,6 +53,9 @@ describe('dashboard static contract', () => {
     expect(orbit).toContain('data-testid="dashboard-orbit-action"');
     expect(orbit).toContain('data-orbit-kind="empty"');
     expect(orbit).toContain("emit('openReports')");
-    expect(dashboard).toContain('@open-reports="navigate(\'/quant/reports\')"');
+    expect(dashboard).toContain('@open-reports=');
+    expect(dashboard).toContain(
+      "navigate('/trading/recommendations?module=reports')",
+    );
   });
 });

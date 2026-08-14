@@ -1,5 +1,5 @@
 /**
- * Reactive `?open=<id>` deep-link → detail drawer binding.
+ * Reactive `?entity=<kind>&id=<id>` deep-link → detail drawer binding.
  *
  * Client-side navigation reuses the page component instance, so reading
  * `route.query.open` once in `onMounted` misses a subsequent `?open=` change
@@ -15,42 +15,53 @@ import { useRequestHandler } from '@vben/request/qp';
 import { message } from 'antdv-next';
 
 import { $t } from '#/locales';
-import { queryOpenIdMatches } from '#/shared/routes/execution-plane';
+import { queryEntityIdMatches } from '#/shared/routes/execution-plane';
 
-export interface QueryOpenDrawerOptions<T> {
+export interface QueryEntityDrawerOptions<T> {
+  /** Closed entity discriminator for this drawer. */
+  entity: string;
   /** Fetch the authoritative entity for the deep-linked id. */
   fetch: (id: string) => Promise<null | T>;
   /** Open the drawer with the fetched entity (page-specific `setData`). */
   open: (entity: T) => void;
-  /** Query key carrying the id (defaults to `open`). */
-  key?: string;
   /** Toast when the entity is missing; defaults to `page.common.deepLinkNotFound`. */
   notFoundMessage?: string;
 }
 
-/** Open a detail drawer reactively from an `?open=<id>` deep link. */
-export function useQueryOpenDrawer<T>(
-  options: QueryOpenDrawerOptions<T>,
+/** Open a detail drawer reactively from a canonical workspace deep link. */
+export function useQueryEntityDrawer<T>(
+  options: QueryEntityDrawerOptions<T>,
 ): void {
   const route = useRoute();
   const { handleRequest } = useRequestHandler();
-  const key = options.key ?? 'open';
 
   watch(
-    () => route.query[key],
-    async (raw) => {
+    () => [route.query.entity, route.query.id] as const,
+    async ([entityRaw, raw]) => {
+      const entityKind = Array.isArray(entityRaw) ? entityRaw[0] : entityRaw;
       const openId = Array.isArray(raw) ? raw[0] : raw;
-      if (typeof openId !== 'string' || openId === '') {
+      if (
+        entityKind !== options.entity ||
+        typeof openId !== 'string' ||
+        openId === ''
+      ) {
         return;
       }
-      const entity = await handleRequest(() => options.fetch(openId), {
+      const result = await handleRequest(() => options.fetch(openId), {
         silent: true,
       });
-      if (!queryOpenIdMatches(openId, route.query[key])) {
+      if (
+        !queryEntityIdMatches(
+          options.entity,
+          openId,
+          route.query.entity,
+          route.query.id,
+        )
+      ) {
         return;
       }
-      if (entity) {
-        options.open(entity);
+      if (result) {
+        options.open(result);
         return;
       }
       message.warning(

@@ -61,7 +61,8 @@
     "ad_hoc": "手动"
   },
   "accountSource": {
-    "polymarket": "Polymarket"
+    "polymarket": "Polymarket",
+    "historical_replay": "历史回放"
   },
   "recommendationReportStatus": {
     "prepared": "已准备",
@@ -99,7 +100,8 @@
   "reportScheduleGapReason": {
     "coalesced_by_newer_occurrence": "被更新触发合并",
     "restart_coalesced": "重启后合并",
-    "schedule_reconfigured": "调度已重配置"
+    "schedule_reconfigured": "调度已重配置",
+    "coordinator_lag": "协调器延迟"
   },
   "emptyReportReason": {
     "available_cash_exhausted": "可用现金耗尽",
@@ -338,7 +340,8 @@
     "confirmed": "已确认",
     "retry_scheduled": "等待重试",
     "reconciliation_required": "需要对账",
-    "manual_required": "需人工处理"
+    "manual_required": "需人工处理",
+    "not_required": "无需批准"
   },
   "settlementEffectivePolicy": {
     "automatic_eligible": "允许自动赎回",
@@ -385,7 +388,22 @@
     "bias_table_fit": "偏差表拟合",
     "feature_parity": "特征一致性重放",
     "model_calibration_fit": "模型校准器拟合",
-    "trade_policy_fit": "交易策略拟合"
+    "trade_policy_fit": "交易策略拟合",
+    "feedback_truth_freeze": "反馈真值冻结",
+    "feedback_coverage": "反馈覆盖率",
+    "feedback_attribution": "反馈归因",
+    "feedback_drift": "反馈漂移",
+    "feedback_recipe_plan": "反馈配方计划",
+    "feedback_dataset_seal": "反馈数据集封存",
+    "feedback_training": "反馈训练",
+    "feedback_calibration": "反馈校准",
+    "feedback_cpcv": "反馈CPCV",
+    "feedback_validation": "反馈验证",
+    "feedback_comparison": "反馈对比",
+    "feedback_shadow_bind": "反馈影子绑定",
+    "feedback_shadow": "反馈影子",
+    "feedback_decision": "反馈决策",
+    "trade_policy_validation": "交易策略验证"
   },
   "featureParityRunKind": {
     "sampled": "抽样重放",
@@ -424,7 +442,8 @@
   },
   "calibrationKind": {
     "model_score": "模型分数",
-    "market_price_bias": "市场价格偏差"
+    "market_price_bias": "市场价格偏差",
+    "weather_station_lead_bias": "天气站点提前量偏差"
   },
   "calibrationMethod": {
     "isotonic": "Isotonic",
@@ -648,7 +667,8 @@
   "feedbackCohort": {
     "model_learning": "模型学习",
     "execution_learning": "执行学习",
-    "policy_evaluation": "策略评估"
+    "policy_evaluation": "策略评估",
+    "model_score_learning": "模型评分学习"
   },
   "cohortExclusionReason": {
     "recommendation_not_published": "推荐未发布",
@@ -660,5 +680,687 @@
   "cohortCensorReason": {
     "resolution_unavailable_at_cutoff": "截止时尚无结算事实",
     "execution_outcome_unavailable_at_cutoff": "截止时尚无执行结果"
+  },
+  "admissionCheckId": {
+    "intent_state": "意图状态",
+    "recommendation_freshness": "推荐新鲜度",
+    "report_status": "报告状态",
+    "runtime_mode": "runtime模式",
+    "settlement_recovery": "结算恢复",
+    "model_route_binding": "模型路由绑定",
+    "data_quality": "数据质量",
+    "book_freshness": "订单簿新鲜度",
+    "venue_metadata": "交易场所元数据",
+    "entry_condition": "入场条件",
+    "risk_envelope_hash": "风险边界哈希",
+    "capital_budget": "资金预算",
+    "max_open_intents": "最大开放意图",
+    "max_reserved_capital": "最大预留资金",
+    "market_exposure": "市场敞口",
+    "event_exposure": "事件敞口",
+    "category_exposure": "类别敞口",
+    "liquidity_depth": "流动性深度",
+    "slippage": "滑点",
+    "manual_block": "人工阻断",
+    "kill_switch": "停机开关",
+    "venue_guard": "交易场所保护",
+    "credential_readiness": "凭据就绪度",
+    "exit_monitor_readiness": "退出监控就绪度",
+    "calibrated_return_model": "已校准收益模型"
+  },
+  "admissionOutcome": {
+    "allow": "允许",
+    "deny": "拒绝",
+    "defer": "延后"
+  },
+  "approvalInvalidation": {
+    "recommendation_expired": "推荐已过期",
+    "report_superseded": "报告已取代",
+    "report_revoked": "报告已撤销",
+    "model_version_retired": "模型版本已退役",
+    "runtime_config_changed": "runtime配置已变更",
+    "risk_envelope_mismatch": "风险边界不匹配",
+    "data_quality_degraded": "数据质量已降级",
+    "kill_switch_opened": "停机开关已开启",
+    "intent_expired": "意图已过期",
+    "operator_cancelled": "操作员已取消"
+  },
+  "attributionArtifactKind": {
+    "prediction_explanation": "预测解释",
+    "decision_intervention_replay": "决策干预回放",
+    "resolution_outcome_association": "结算结果结果关联",
+    "execution_outcome_association": "执行结果关联",
+    "execution_trajectory": "执行轨迹",
+    "policy_counterfactual_outcome": "策略反事实结果"
+  },
+  "attributionCohort": {
+    "training": "训练",
+    "evaluation": "评估",
+    "shadow": "影子"
+  },
+  "capabilityId": {
+    "control_plane_ready": "控制平面就绪",
+    "catalog_baseline_ready": "目录基线就绪",
+    "research_capture_enabled": "研究捕获已启用",
+    "report_generation_eligible": "报告生成符合条件",
+    "entry_admission_eligible": "入场准入符合条件",
+    "order_submission_eligible": "订单提交符合条件",
+    "automatic_parity_eligible": "自动一致性符合条件"
+  },
+  "capabilityReason": {
+    "control_plane_not_ready": "控制平面不就绪",
+    "catalog_baseline_missing": "目录基线缺失",
+    "operational_phase_blocks_reports": "运行阶段阻断报告",
+    "runtime_mode_report_only": "runtime模式报告仅",
+    "kill_switch_blocks_entries": "停机开关阻断入场项",
+    "operational_phase_blocks_submission": "运行阶段阻断提交",
+    "no_serving_evidence": "否服务证据"
+  },
+  "capitalAllocationState": {
+    "allocated": "已分配",
+    "locked": "已锁定",
+    "spent": "已花费",
+    "released": "已释放",
+    "impaired": "受损"
+  },
+  "catalogChangeType": {
+    "gamma_scan_upsert": "Gamma扫描写入或更新",
+    "gamma_id_recheck_upsert": "GammaID复查写入或更新",
+    "gamma_confirmed_tombstone": "Gamma已确认墓碑"
+  },
+  "catalogEntityKind": {
+    "event": "事件",
+    "market": "市场",
+    "cursor": "游标"
+  },
+  "catalogFilterReason": {
+    "inactive": "非活跃",
+    "closed": "已关闭",
+    "clob_disabled": "CLOB已禁用",
+    "orders_not_accepted": "订单不accepted"
+  },
+  "catalogRejectionReason": {
+    "empty_condition_id": "空条件ID",
+    "missing_clob_token_ids": "缺失CLOB令牌ID 集合",
+    "not_binary": "不二元",
+    "invalid_token_pair": "无效令牌pair",
+    "unsupported_tick_size": "不支持报价步长规模",
+    "duplicate_entity_id": "重复实体ID",
+    "malformed_entity": "格式错误实体",
+    "cursor_protocol_violation": "游标协议违规"
+  },
+  "catalogSyncFailureStage": {
+    "fetch": "拉取",
+    "normalize": "规范化",
+    "persist": "持久化",
+    "recovery": "恢复"
+  },
+  "catalogSyncKind": {
+    "baseline": "基线",
+    "reconcile": "对账"
+  },
+  "catalogSyncStatus": {
+    "committed": "已提交",
+    "failed": "失败"
+  },
+  "catalogTimestampQuality": {
+    "source": "来源",
+    "commit_time_fallback": "提交时间回退"
+  },
+  "checkOutcome": {
+    "passed": "通过",
+    "failed": "失败",
+    "not_applicable": "不适用"
+  },
+  "classicalKind": {
+    "gradient_boosted_trees": "梯度提升树",
+    "random_forest": "随机森林",
+    "extra_trees": "极端树",
+    "logistic_regression": "逻辑回归",
+    "ridge": "岭回归",
+    "lasso": "Lasso",
+    "elastic_net": "弹性净额"
+  },
+  "configAuditAction": {
+    "config": {
+      "approval_recorded": "配置批准已记录",
+      "draft_created": "配置草稿已创建",
+      "draft_validated": "配置草稿已验证",
+      "revision_activated": "配置修订已激活",
+      "revision_rolled_back": "配置修订已回滚"
+    }
+  },
+  "configResourceKind": {
+    "recommendation_policy": "推荐策略",
+    "execution_risk_policy": "执行风险策略",
+    "model_routing": "模型路由",
+    "report_schedule": "报告计划",
+    "operations_policy": "运维策略",
+    "execution_automation_policy": "执行自动化策略"
+  },
+  "dataQualityStatus": {
+    "fresh": "新鲜",
+    "acceptable": "可接受",
+    "degraded": "已降级",
+    "stale": "陈旧",
+    "insufficient": "不足"
+  },
+  "decisionPolicySnapshotSource": {
+    "bootstrap": "引导",
+    "activation": "激活",
+    "rollback": "回滚"
+  },
+  "domainMetric": {
+    "close": "关闭"
+  },
+  "eventStatus": {
+    "active": "活跃",
+    "closed": "已关闭",
+    "archived": "已归档",
+    "unknown": "未知"
+  },
+  "executionAttemptNoFillReason": {
+    "venue_rejected": "交易场所已拒绝",
+    "venue_cancelled": "交易场所已取消",
+    "venue_expired": "交易场所已过期",
+    "reconciled_not_filled": "已对账不已成交"
+  },
+  "executionAttemptTerminalState": {
+    "unfilled": "未成交",
+    "partially_filled": "部分成交",
+    "fully_filled": "完全已成交"
+  },
+  "executionWalletKind": {
+    "eoa": "EOA",
+    "proxy": "代理",
+    "gnosis_safe": "gnosis安全",
+    "deposit_wallet": "充值钱包"
+  },
+  "factorDefinitionScope": {
+    "generic": "通用",
+    "structural": "结构性",
+    "domain_crypto": "领域加密市场",
+    "domain_weather": "领域天气"
+  },
+  "featureParityLatchState": {
+    "open": "开放",
+    "clear": "清除"
+  },
+  "featureParityStateTransition": {
+    "bootstrap_proof": "引导证明",
+    "deterministic_mismatch": "确定性不匹配",
+    "integrity_failure": "完整性失败",
+    "governed_acknowledge": "受治理确认"
+  },
+  "feedbackCycleStatus": {
+    "queued": "排队中",
+    "running": "运行中",
+    "succeeded": "成功",
+    "failed": "失败",
+    "cancelled": "已取消",
+    "quarantined": "已隔离"
+  },
+  "feedbackDecision": {
+    "no_action": "否动作",
+    "challenger_rejected": "挑战者已拒绝",
+    "candidate_ready": "候选就绪",
+    "promoted": "已晋升"
+  },
+  "feedbackDriftAssessment": {
+    "within_threshold": "范围内阈值",
+    "threshold_exceeded": "阈值超限",
+    "insufficient_evidence": "不足证据"
+  },
+  "feedbackDriftKind": {
+    "data": "数据",
+    "concept": "概念",
+    "label": "标签"
+  },
+  "feedbackDriftMetric": {
+    "population_stability_index": "总体稳定性索引",
+    "kolmogorov_smirnov_p_value": "kolmogorovsmirnovp值",
+    "rank_ic_drop": "排名IC丢弃",
+    "jensen_shannon_divergence": "jensenshannon背离"
+  },
+  "feedbackEvaluationMode": {
+    "conditional": "条件式",
+    "forced_retraining": "强制再训练"
+  },
+  "feedbackEvaluationPurpose": {
+    "promotion_comparison": "晋升对比"
+  },
+  "feedbackRecipeTemplateStatus": {
+    "draft": "草稿",
+    "approved": "已批准",
+    "retired": "已退役"
+  },
+  "feedbackSchedulerFailureKind": {
+    "materialization": "物化",
+    "settlement": "结算"
+  },
+  "feedbackStage": {
+    "trigger": "触发器",
+    "truth_freeze": "真值冻结",
+    "coverage": "覆盖率",
+    "attribution": "归因",
+    "drift": "漂移",
+    "recipe_plan": "配方计划",
+    "dataset_seal": "数据集封存",
+    "training": "训练",
+    "calibration": "校准",
+    "cpcv": "CPCV",
+    "validation": "验证",
+    "comparison": "对比",
+    "shadow_bind": "影子绑定",
+    "shadow": "影子",
+    "decision": "决策"
+  },
+  "feedbackStageEventKind": {
+    "triggered": "已触发",
+    "job_linked": "任务已关联",
+    "started": "已开始",
+    "succeeded": "成功",
+    "failed": "失败",
+    "cancellation_requested": "取消已请求",
+    "cancelled": "已取消",
+    "lease_recovered": "租约已恢复"
+  },
+  "feedbackTriggerFamily": {
+    "scheduled": "已调度",
+    "manual": "人工"
+  },
+  "fillRequirement": {
+    "all_or_nothing": "全部或无操作",
+    "allow_partial": "允许部分"
+  },
+  "klineInterval": {
+    "1m": "1m",
+    "1h": "1h"
+  },
+  "menuKind": {
+    "directory": "目录",
+    "menu": "菜单",
+    "button": "按钮"
+  },
+  "modeDenialReason": {
+    "report_only": "仅报告",
+    "recommendation_ineligible": "推荐不符合条件",
+    "risk_envelope_invalid": "风险边界无效",
+    "kill_switch_blocks_entry": "停机开关阻断入场",
+    "auto_execution_not_allowed": "自动执行不allowed"
+  },
+  "modelGovernanceAction": {
+    "bootstrap_route": "引导路由",
+    "promote_route": "晋升路由",
+    "seal_calibration": "封存校准"
+  },
+  "modelRunErrorCode": {
+    "active_inference_failed": "active推理失败",
+    "shadow_inference_failed": "影子推理失败",
+    "feature_plane_failed": "特征平面失败",
+    "factor_plane_failed": "因子平面失败",
+    "selection_failed": "筛选失败",
+    "artifact_load_failed": "产物加载失败",
+    "schema_binding_failed": "模式绑定失败",
+    "training_failed": "训练失败",
+    "calibration_failed": "校准失败",
+    "cancelled_by_operator": "已取消by操作员"
+  },
+  "modelRunKind": {
+    "training": "训练",
+    "backtest": "回测",
+    "calibration": "校准",
+    "cpcv": "CPCV",
+    "shadow": "影子",
+    "live_inference": "实时推理"
+  },
+  "modelRunStatus": {
+    "running": "运行中",
+    "succeeded": "成功",
+    "failed": "失败",
+    "cancelled": "已取消"
+  },
+  "modelSerializationFormat": {
+    "json": "JSON",
+    "bincode": "bincode"
+  },
+  "modelVersionDerivationKind": {
+    "training": "训练",
+    "return_calibration": "收益校准"
+  },
+  "modelWeightSource": {
+    "artifact": "产物"
+  },
+  "operationHttpMethod": {
+    "GET": "读取",
+    "POST": "后置",
+    "PUT": "更新",
+    "PATCH": "补丁",
+    "DELETE": "删除",
+    "SYSTEM": "系统"
+  },
+  "outcomeReconciliationTaskStatus": {
+    "pending": "待处理",
+    "delivering": "投递中",
+    "retrying": "重试中",
+    "completed": "已完成"
+  },
+  "paritySubjectKind": {
+    "recommendation_report": "推荐报告",
+    "model_run": "模型运行",
+    "model_version": "模型版本"
+  },
+  "policyActivationKind": {
+    "initial": "初始",
+    "promote": "晋升",
+    "model_bootstrap": "模型引导",
+    "model_shadow_binding": "模型影子绑定",
+    "model_shadow_cancellation": "模型影子取消",
+    "model_shadow_rejection": "模型影子拒绝",
+    "model_promotion": "模型晋升",
+    "rollback": "回滚"
+  },
+  "policyActorKind": {
+    "operator": "操作员",
+    "system": "系统"
+  },
+  "policyApplyBoundary": {
+    "report_run_claim": "报告运行申领",
+    "order_intent_creation": "订单意图创建",
+    "model_evaluation_claim": "模型评估申领",
+    "future_report_run_reconcile": "未来报告运行对账",
+    "operational_admission": "运行准入",
+    "execution_automation_policy_admission": "执行自动化策略准入"
+  },
+  "policyApprovalDecision": {
+    "approved": "已批准",
+    "rejected": "已拒绝"
+  },
+  "policyConsumer": {
+    "market_selection": "市场筛选",
+    "report_coordinator": "报告协调器",
+    "recommendation_composer": "推荐组合器",
+    "data_quality_gate": "数据质量门禁",
+    "portfolio_optimizer": "组合优化器",
+    "order_intent_service": "订单意图服务",
+    "execution_admission": "执行准入",
+    "exit_monitor": "退出监控",
+    "model_runner": "模型运行器",
+    "report_scheduler": "报告调度器",
+    "worker_admission": "工作器准入",
+    "alert_dispatcher": "告警分发器",
+    "runtime_mode_gate": "runtime模式门禁"
+  },
+  "policyPreflightCheckKind": {
+    "typed_schema": "类型化模式",
+    "semantic_validation": "语义验证",
+    "consumer_preparation": "消费者准备",
+    "artifact_compatibility": "产物兼容性",
+    "credential_availability": "凭据可用性",
+    "schedule_preview": "计划预览",
+    "execution_capability": "执行能力"
+  },
+  "policyPreflightDetailCode": {
+    "typed_document_decoded": "类型化文档已解码",
+    "semantic_validation_passed": "语义验证通过",
+    "semantic_validation_failed": "语义验证失败",
+    "consumer_preparation_passed": "消费者准备通过",
+    "consumer_preparation_skipped": "消费者准备已跳过",
+    "consumer_preparation_failed": "消费者准备失败"
+  },
+  "policyRevisionStatus": {
+    "draft": "草稿",
+    "validated": "已验证"
+  },
+  "policyValidationCode": {
+    "schema_version_mismatch": "模式版本不匹配",
+    "resource_kind_mismatch": "资源类型不匹配",
+    "semantic_constraint": "语义约束",
+    "dependency_unavailable": "依赖不可用",
+    "artifact_incompatible": "产物不兼容",
+    "credential_unavailable": "凭据不可用",
+    "schedule_invalid": "计划无效",
+    "authorization_denied": "授权已拒绝"
+  },
+  "policyValidationSeverity": {
+    "error": "错误",
+    "warning": "警告"
+  },
+  "profileArtifactKind": {
+    "feature": "特征",
+    "scoring": "评分",
+    "domain": "领域",
+    "research_method": "研究方法"
+  },
+  "recommendationResolutionKind": {
+    "winner_take_all": "获胜方接管全部",
+    "split_payout": "切分兑付"
+  },
+  "reportFactDeliveryStatus": {
+    "pending": "待处理",
+    "delivering": "投递中",
+    "retrying": "重试中",
+    "failed": "失败",
+    "verified": "已核验",
+    "cancelled": "已取消"
+  },
+  "researchJobErrorCode": {
+    "execution_failed": "执行失败",
+    "execution_retry_scheduled": "执行重试已调度",
+    "execution_retry_exhausted": "执行重试耗尽",
+    "interrupted_by_restart": "已中断by重启",
+    "interrupted_exceeded_attempts": "已中断超限尝试",
+    "cancelled": "已取消"
+  },
+  "researchJobResultKind": {
+    "training_dataset": "训练数据集",
+    "model_version": "模型版本",
+    "backtest_report": "回测报告",
+    "backtest_path_set": "回测路径设置",
+    "calibration_artifact": "校准产物",
+    "feature_parity_run": "特征一致性运行",
+    "feedback_truth_freeze_artifact": "反馈真值冻结产物",
+    "feedback_coverage_artifact": "反馈覆盖率产物",
+    "feedback_attribution_manifest": "反馈归因清单",
+    "feedback_drift_artifact": "反馈漂移产物",
+    "candidate_recipe_plan_artifact": "候选配方计划产物",
+    "feedback_learning_stage_artifact": "反馈学习阶段产物",
+    "feedback_validation_artifact": "反馈验证产物",
+    "feedback_comparison_artifact": "反馈对比产物",
+    "shadow_binding_artifact": "影子绑定产物",
+    "feedback_shadow_artifact": "反馈影子产物",
+    "feedback_decision_artifact": "反馈决策产物",
+    "trade_policy_artifact": "交易策略产物",
+    "trade_policy_validation_run": "交易策略验证运行"
+  },
+  "researchReadinessEvidenceKind": {
+    "retention_runway": "保留可运行窗口",
+    "shadow_latency_profile": "影子时延画像"
+  },
+  "resolutionProjectionErrorCode": {
+    "catalog_mapping_unavailable": "目录映射不可用",
+    "invalid_observation": "无效观测",
+    "persistence_unavailable": "持久化不可用",
+    "external_dependency_unavailable": "外部依赖不可用",
+    "unexpected_transient": "意外瞬时"
+  },
+  "resolutionProjectionStatus": {
+    "pending": "待处理",
+    "delivering": "投递中",
+    "retry_scheduled": "已安排重试",
+    "mapping_blocked": "映射已阻断",
+    "quarantined": "已隔离",
+    "excluded": "已排除",
+    "verified": "已核验"
+  },
+  "resolutionRemediationAction": {
+    "requeue": "重新排队",
+    "exclude": "排除"
+  },
+  "roleKind": {
+    "builtin": "内置",
+    "custom": "自定义"
+  },
+  "roleStatus": {
+    "enabled": "已启用",
+    "disabled": "已禁用"
+  },
+  "runtimeActivityActionKind": {
+    "cancel_research_job": "取消研究任务",
+    "retry_research_job": "重试研究任务",
+    "retry_report_run": "重试报告运行",
+    "resolve_reconciliation": "解析对账"
+  },
+  "runtimeActivityDomain": {
+    "research": "研究",
+    "report": "报告",
+    "execution": "执行",
+    "reconciliation": "对账",
+    "settlement": "结算"
+  },
+  "runtimeActivityStatus": {
+    "pending": "待处理",
+    "running": "运行中",
+    "succeeded": "成功",
+    "failed": "失败",
+    "cancelled": "已取消",
+    "attention": "关注",
+    "skipped": "已跳过"
+  },
+  "settlementAuthorizationState": {
+    "not_required": "无需批准",
+    "pending": "待处理",
+    "approved": "已批准",
+    "revoked": "已撤销",
+    "consumed": "已消费",
+    "expired": "已过期"
+  },
+  "settlementFailureCode": {
+    "route_not_ready": "路由不就绪",
+    "balance_mismatch": "余额不匹配",
+    "simulation_reverted": "模拟已回滚",
+    "transport_uncertain": "传输不确定",
+    "submission_rejected": "提交已拒绝",
+    "relayer_terminal_failure": "中继器终态失败",
+    "on_chain_reverted": "开启链上已回滚",
+    "receipt_evidence_mismatch": "回执证据不匹配",
+    "payout_mismatch": "兑付不匹配",
+    "deployment_changed": "部署已变更",
+    "authorization_invalid": "授权无效",
+    "execution_not_quiescent": "执行不静默",
+    "lease_lost": "租约丢失",
+    "ledger_unavailable": "账本不可用",
+    "local_invariant": "本地不变量",
+    "external_evidence_incomplete": "外部证据不完整"
+  },
+  "settlementGovernedActionKind": {
+    "outcome_token_approval": "结果令牌批准",
+    "outcome_token_revocation": "结果令牌撤销",
+    "canary_grant": "金丝雀授予"
+  },
+  "settlementGovernedActionState": {
+    "authorized": "已授权",
+    "retry_scheduled": "已安排重试",
+    "consumed": "已消费",
+    "revoked": "已撤销",
+    "expired": "已过期",
+    "reconciliation_required": "需要对账",
+    "failed": "失败"
+  },
+  "settlementReadinessStatus": {
+    "unchecked": "未检查",
+    "ready": "就绪",
+    "blocked": "已阻断"
+  },
+  "settlementReconciliationState": {
+    "not_required": "无需批准",
+    "awaiting_relayer_hash": "等待中继器哈希",
+    "awaiting_receipt": "等待回执",
+    "evidence_mismatch": "证据不匹配",
+    "operator_review_required": "操作员复核必需",
+    "reconciled": "已对账"
+  },
+  "settlementRoute": {
+    "standard_v2": "标准V2",
+    "neg_risk_v2": "负向风险V2"
+  },
+  "settlementSubmissionPurpose": {
+    "outcome_token_approval": "结果令牌批准",
+    "outcome_token_revocation": "结果令牌撤销",
+    "redeem": "赎回"
+  },
+  "settlementSubmissionState": {
+    "prepared": "已准备",
+    "dispatching": "分发中",
+    "awaiting_chain_hash": "等待链上哈希",
+    "awaiting_finality": "等待最终性",
+    "confirmed": "已确认",
+    "failed": "失败"
+  },
+  "shadowBindingStatus": {
+    "active": "活跃",
+    "rejected": "已拒绝",
+    "promoted": "已晋升",
+    "cancelled": "已取消"
+  },
+  "sourceSliceStatus": {
+    "materializing": "物化中",
+    "ready": "就绪",
+    "failed": "失败"
+  },
+  "stalenessLevel": {
+    "fresh": "新鲜",
+    "acceptable": "可接受",
+    "stale": "陈旧",
+    "expired": "已过期"
+  },
+  "tickSize": {
+    "0": {
+      "0001": "0.0001",
+      "001": "0.001",
+      "0025": "0.0025",
+      "005": "0.005",
+      "01": "0.01",
+      "1": "0.1"
+    }
+  },
+  "tradePolicyGovernanceAction": {
+    "validate": "验证",
+    "publish": "发布",
+    "retire": "退役"
+  },
+  "tradePolicyStatus": {
+    "draft": "草稿",
+    "validated": "已验证",
+    "published": "已发布",
+    "retired": "已退役"
+  },
+  "tradePolicyTrialScope": {
+    "candidate": "候选",
+    "fold": "折",
+    "path": "路径",
+    "latency_stress": "时延压力"
+  },
+  "tradePolicyTrialStatus": {
+    "succeeded": "成功",
+    "failed": "失败",
+    "cancelled": "已取消"
+  },
+  "tradePolicyValidationStatus": {
+    "running": "运行中",
+    "succeeded": "成功",
+    "failed": "失败",
+    "cancelled": "已取消"
+  },
+  "userStatus": {
+    "active": "活跃",
+    "disabled": "已禁用"
+  },
+  "venueTradeStatus": {
+    "matched": "已匹配",
+    "mined": "已上链",
+    "confirmed": "已确认",
+    "retrying": "重试中",
+    "failed": "失败"
   }
 }

@@ -11,27 +11,22 @@ const ENABLED = 'enabled';
 const FALLBACK_MENU_ICON = 'lucide:circle-help';
 
 /**
- * Catalog pages deep-link via ephemeral query params (`?open=`, `?train=`). Use
- * path-only tab/component keys so stripping those params after handoff does not
- * remount the page (which would tear down connected modals mid-open).
+ * Workspaces own query-param state such as selected records, filters, and views.
+ * Path-only tab keys keep that state inside one mounted workspace instead of
+ * creating a new application tab for every inspection context.
  */
 const PATH_KEY_ROUTE_NAMES = new Set([
   'execution-orders',
-  'positions',
-  'reconciliations',
-  'research-backtests',
-  'research-calibration-artifacts',
-  'research-datasets',
-  'research-domain-sources',
-  'research-factors',
-  'research-feature-integrity',
-  'research-feedback',
-  'research-jobs',
-  'research-market-linkages',
-  'research-model-specs',
-  'research-models',
-  'research-trade-policies',
-  'settlement-redeems',
+  'execution-portfolio',
+  'execution-post-trade',
+  'market-intelligence',
+  'recommendations',
+  'research-data-reliability',
+  'research-lab',
+  'research-learning-policy',
+  'runtime-activity',
+  'system-audit',
+  'system-config',
 ]);
 
 function collectPermissionCode(

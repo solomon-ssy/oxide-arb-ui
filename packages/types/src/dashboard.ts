@@ -7,6 +7,7 @@ import type { IsoDateTime } from './common';
 import type { DataQualitySnapshot } from './data-quality';
 import type { QuantRecommendationView } from './quant-recommendation';
 import type { QuantReportView } from './quant-report';
+import type { RuntimeActivityView } from './runtime-activity';
 import type { SystemControlPlaneStatus } from './system';
 
 export type DashboardWindow = '7d' | '24h' | '30d';
@@ -80,6 +81,32 @@ export interface DashboardSubsystemHealthView {
   checks: DashboardDependencyCheck[];
 }
 
+export interface DashboardRuntimeActivityView {
+  total: number;
+  running: number;
+  attention: number;
+  items: RuntimeActivityView[];
+}
+
+export interface DashboardReportRuntimeView {
+  queued: number;
+  running: number;
+  failed: number;
+  abandoned: number;
+}
+
+export interface DashboardExecutionRuntimeView {
+  pending_intents: number;
+  active_orders: number;
+  ambiguous_orders: number;
+  unresolved_reconciliations: number;
+}
+
+export interface DashboardDataPlaneView {
+  quality: DataQualitySnapshot;
+  degraded: boolean;
+}
+
 export type DashboardActionSeverity = 'critical' | 'info' | 'warning';
 
 export type DashboardActionReasonCode =
@@ -120,4 +147,8 @@ export interface DashboardOverviewView {
   research_readiness: DashboardSection<DashboardResearchReadinessView>;
   subsystem_health: DashboardSection<DashboardSubsystemHealthView>;
   action_inbox: DashboardSection<DashboardActionItemView[]>;
+  runtime_activity: DashboardSection<DashboardRuntimeActivityView>;
+  report_runtime: DashboardSection<DashboardReportRuntimeView>;
+  execution_runtime: DashboardSection<DashboardExecutionRuntimeView>;
+  data_plane: DashboardSection<DashboardDataPlaneView>;
 }

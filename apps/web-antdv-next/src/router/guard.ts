@@ -27,9 +27,22 @@ function loginRoute(target: string): RouteLocationRaw {
     query:
       target === preferences.app.defaultHomePath
         ? {}
-        : { redirect: encodeURIComponent(target) },
+        : { return_to: encodeURIComponent(target) },
     replace: true,
   };
+}
+
+function returnTarget(value: unknown, fallback: string): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== 'string') return fallback;
+  try {
+    const decoded = decodeURIComponent(raw);
+    return decoded.startsWith('/') && !decoded.startsWith('//')
+      ? decoded
+      : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function isChunkTransportFailure(error: unknown): boolean {
@@ -57,7 +70,7 @@ function failureRoute(
   ) {
     return {
       name: 'Offline',
-      query: { redirect: target },
+      query: { return_to: target },
       replace: true,
     };
   }
@@ -114,12 +127,18 @@ function setupAccessGuard(router: Router) {
     const userStore = useUserStore();
     const authStore = useAuthStore();
 
+    if (to.name === 'Root') {
+      return preferences.app.defaultHomePath;
+    }
+    if (to.name === 'Authentication') {
+      return LOGIN_PATH;
+    }
+
     if (PUBLIC_CORE_ROUTE_NAMES.has(to.name as string)) {
       if (to.path === LOGIN_PATH && accessStore.accessToken) {
-        return decodeURIComponent(
-          (to.query.redirect as string) ||
-            userStore.userInfo?.homePath ||
-            preferences.app.defaultHomePath,
+        return returnTarget(
+          to.query.return_to,
+          userStore.userInfo?.homePath || preferences.app.defaultHomePath,
         );
       }
       return true;
@@ -167,13 +186,14 @@ function setupAccessGuard(router: Router) {
       return failureRoute(error, to.fullPath);
     }
 
-    const redirectPath = (from.query.redirect ??
+    const redirectPath =
+      from.query.return_to ??
       (to.path === preferences.app.defaultHomePath
         ? userInfo.homePath || preferences.app.defaultHomePath
-        : to.fullPath)) as string;
+        : to.fullPath);
 
     return {
-      ...router.resolve(decodeURIComponent(redirectPath)),
+      ...router.resolve(returnTarget(redirectPath, to.fullPath)),
       replace: true,
     };
   });

@@ -10,8 +10,8 @@ import { usePreferredReducedMotion } from '@vueuse/core';
 import { Empty } from 'antdv-next';
 
 import { $t } from '#/locales';
-import DashboardPanel from '#/shared/components/dashboard-panel.vue';
 import { formatPercent, formatUsd } from '#/shared/components/format';
+import InsightPanel from '#/shared/components/insight-panel.vue';
 
 defineOptions({ name: 'DashboardEquityDrawdownChart' });
 
@@ -94,7 +94,7 @@ watch([values, reducedMotion], render, { immediate: true });
 </script>
 
 <template>
-  <DashboardPanel
+  <InsightPanel
     :title="$t('page.dashboard.equity.title')"
     icon="lucide:chart-no-axes-combined"
     tone="teal"
@@ -112,5 +112,5 @@ watch([values, reducedMotion], render, { immediate: true });
         {{ formatPercent(row.drawdown_pct) }}
       </li>
     </ol>
-  </DashboardPanel>
+  </InsightPanel>
 </template>

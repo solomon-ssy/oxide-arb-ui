@@ -13,6 +13,7 @@ export type * from './execution-order';
 export type * from './execution-recovery';
 export type * from './exit-plan';
 export type * from './feedback';
+export * from './generated/enum-catalog';
 // Pure intent-FSM predicates (runtime functions) mirroring backend guards.
 export * from './intent-fsm';
 // `market` carries the search sentinel `MARKET_CATEGORY_UNKNOWN_FILTER`.
@@ -27,6 +28,7 @@ export type * from './rbac';
 export * from './reconciliation';
 export * from './research';
 export type * from './research-profile';
+export * from './runtime-activity';
 export type * from './settlement-redeem';
 export type * from './system';
 export type * from './trade-policy';

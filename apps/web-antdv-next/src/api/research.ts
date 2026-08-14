@@ -5,7 +5,6 @@ import type {
   BacktestReportListQuery,
   BacktestReportView,
   BuildTrainingDatasetRequest,
-  ComparisonReportListQuery,
   CreateModelSpecRequest,
   FactorCollinearityQuery,
   FactorCollinearityView,
@@ -257,16 +256,6 @@ export async function listModelRouteCandidates(
 export async function listBacktestReports(query: BacktestReportListQuery = {}) {
   return requestClient.get<Paginated<BacktestReportView>>(
     ResearchApi.backtestReports,
-    { params: query },
-  );
-}
-
-/** `GET /research/comparison-reports` — paginated comparison-report catalog. */
-export async function listComparisonReports(
-  query: ComparisonReportListQuery = {},
-) {
-  return requestClient.get<Paginated<ModelComparisonReportView>>(
-    ResearchApi.comparisonReports,
     { params: query },
   );
 }

@@ -49,7 +49,10 @@ export function useAntdDesignTokens() {
   watch(
     () => [preferences.theme, isDark.value] as const,
     () => {
-      tokens.colorPrimary = getCssVariableValue('--primary');
+      // Antdv renders normal-sized solid controls with light foreground text.
+      // The 500 seed is reserved for the app's expressive accents; the 600
+      // interaction shade is the canonical Antdv primary and clears WCAG AA.
+      tokens.colorPrimary = getCssVariableValue('--primary-600');
 
       // Antdv's generated orange hover shade is lighter than the configured
       // brand seed and cannot retain 4.5:1 against a solid-button label.

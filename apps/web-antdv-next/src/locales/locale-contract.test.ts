@@ -1,9 +1,9 @@
-import type { ColoredTagOption } from '#/shared/components/format/tag-options';
+import { ENUM_CATALOG } from '@vben/types';
 
 import { describe, expect, it } from 'vitest';
 
 import { i18n } from '#/locales';
-import * as tagOptions from '#/shared/components/format/tag-options';
+import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 import enEnum from './langs/en-US/enum.json';
 import enPage from './langs/en-US/page.json';
@@ -40,15 +40,10 @@ function installAppLocale(locale: 'en-US' | 'zh-CN') {
   i18n.global.locale.value = locale;
 }
 
-const factories = Object.entries(tagOptions)
-  .filter(
-    ([name, candidate]) =>
-      /^use.+TagOptions$/.test(name) && typeof candidate === 'function',
-  )
-  .map(
-    ([name, candidate]) =>
-      [name, candidate as () => ColoredTagOption[]] as const,
-  );
+const factories = Object.keys(ENUM_CATALOG).map(
+  (name) =>
+    [name, () => enumOptions(name as keyof typeof ENUM_CATALOG)] as const,
+);
 
 describe('application locale contract', () => {
   it('keeps canonical enum translation keys identical in both locales', () => {
@@ -97,12 +92,13 @@ describe('application locale contract', () => {
     (locale, label) => {
       installAppLocale(locale);
       expect(
-        tagOptions.findTagOption(
-          tagOptions.useMarketStatusTagOptions(),
+        enumOption(
+          enumOptions('MarketStatus'),
           'venue_added_without_ui_release',
         ),
       ).toEqual({
         color: 'error',
+        enumName: 'MarketStatus',
         label,
         value: 'venue_added_without_ui_release',
       });

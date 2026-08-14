@@ -43,6 +43,13 @@ const tokenTheme = computed(() => {
       motionDurationMid: '0s',
       primaryColor: buttonTokens.primaryColor,
     },
+    Segmented: {
+      // Unselected labels are normal-sized interactive text. Antdv's derived
+      // tertiary gray misses 4.5:1 on the track in light mode.
+      itemColor: tokens.colorTextBase,
+      itemHoverColor: tokens.colorTextBase,
+      itemSelectedColor: tokens.colorTextBase,
+    },
     Tabs: {
       // The ink bar already communicates selection. Using body text for tab
       // labels avoids low-contrast brand-color text, including hover states.
@@ -66,6 +73,14 @@ watch(
   },
   { immediate: true },
 );
+
+watch(
+  () => preferences.app.compact,
+  (compact) => {
+    document.documentElement.dataset.density = compact ? 'compact' : 'default';
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -75,21 +90,3 @@ watch(
     </App>
   </ConfigProvider>
 </template>
-
-<style>
-.dark .ant-btn-link {
-  color: hsl(var(--foreground)) !important;
-}
-
-.ant-tag-filled:not(.ant-tag-default) {
-  color: hsl(var(--foreground)) !important;
-}
-
-.vben-link,
-.vben-link:hover,
-.vben-link:active {
-  color: hsl(var(--foreground));
-  text-decoration-line: underline;
-  text-underline-offset: 2px;
-}
-</style>

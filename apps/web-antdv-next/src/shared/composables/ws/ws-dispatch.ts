@@ -18,6 +18,7 @@ import type {
 
 import type { FeedbackRecoveryReason } from '#/store/feedback';
 
+import { useActivityStore } from '#/store/activity';
 import { useEntryConditionStore } from '#/store/entry-condition';
 import { useFeedbackStore } from '#/store/feedback';
 // Direct module imports (not the `#/store` barrel) keep this reducer free of
@@ -132,6 +133,7 @@ export function dispatchWsEnvelope(
     }
     case 'materialization.run_update': {
       useResearchStore().bumpRevision(envelope.data as MaterializationRunEvent);
+      useActivityStore().invalidate();
       break;
     }
     case 'pong': {
@@ -146,28 +148,33 @@ export function dispatchWsEnvelope(
     }
     case 'quant.intent': {
       useOrderIntentStore().bumpRevision(envelope.data as IntentLifecycleEvent);
+      useActivityStore().invalidate();
       break;
     }
     case 'quant.reconciliation': {
       useReconciliationStore().bumpRevision(
         envelope.data as ReconciliationLifecycleEvent,
       );
+      useActivityStore().invalidate();
       break;
     }
     case 'quant.report': {
       useQuantReportStore().bumpRevision(envelope.data as ReportLifecycleEvent);
+      useActivityStore().invalidate();
       break;
     }
     case 'quant.report_run': {
       useQuantReportStore().bumpRunRevision(
         envelope.data as ReportRunLifecycleEvent,
       );
+      useActivityStore().invalidate();
       break;
     }
     case 'quant.settlement': {
       useSettlementRedeemStore().bumpRevision(
         envelope.data as SettlementRedeemLifecycleEvent,
       );
+      useActivityStore().invalidate();
       break;
     }
     case 'research.feedback': {

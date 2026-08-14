@@ -304,6 +304,7 @@ function syncScrollableRegions() {
       region.scrollHeight > region.clientHeight;
     if (!scrollable) {
       region.removeAttribute('aria-label');
+      region.removeAttribute('role');
       region.removeAttribute('tabindex');
       continue;
     }
@@ -318,6 +319,7 @@ function syncScrollableRegions() {
           : 'common.scrollableTableBody',
       ),
     );
+    region.setAttribute('role', 'region');
     region.tabIndex = 0;
   }
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onUnmounted, watch } from 'vue';
+import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -15,6 +15,8 @@ import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { $t } from '#/locales';
+import ActivityCenter from '#/shared/components/header/activity-center.vue';
+import CommandPalette from '#/shared/components/header/command-palette.vue';
 import KillSwitchIndicator from '#/shared/components/header/kill-switch-indicator.vue';
 import RuntimeModeIndicator from '#/shared/components/header/runtime-mode-indicator.vue';
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
@@ -24,7 +26,7 @@ import { resolveThemeColor } from '#/shared/components/theme-color';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useSystemStatusBootstrap } from '#/shared/composables/use-system-status';
-import { useAuthStore } from '#/store';
+import { useActivityStore, useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const { GovernedActionHost } = useGovernedAction();
@@ -37,6 +39,7 @@ const notifications = qpWs.notifications;
 const router = useRouter();
 const userStore = useUserStore();
 const authStore = useAuthStore();
+const activityStore = useActivityStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
 const { isDark } = usePreferences();
@@ -59,7 +62,18 @@ watch(
   { immediate: true },
 );
 
-onUnmounted(() => qpWs.disconnect());
+function syncPageVisibility() {
+  activityStore.setPageVisible(document.visibilityState === 'visible');
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', syncPageVisibility);
+  syncPageVisibility();
+});
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', syncPageVisibility);
+  qpWs.disconnect();
+});
 
 const menus = computed(() => [
   {
@@ -110,7 +124,7 @@ watch(
   }),
   async ({ enable, content }) => {
     if (enable) {
-      const watermarkColor = resolveThemeColor('--foreground', '12%');
+      const watermarkColor = resolveThemeColor('--qp-text-primary', '12%');
 
       await updateWatermark({
         advancedStyle: {
@@ -142,6 +156,14 @@ watch(
 
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
+    <template #header-right-2>
+      <div class="hidden md:contents">
+        <CommandPalette />
+      </div>
+    </template>
+    <template #header-right-5>
+      <ActivityCenter />
+    </template>
     <template #header-right-10>
       <div class="hidden md:contents">
         <WsStatusBadge />

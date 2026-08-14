@@ -19,6 +19,8 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/jetbrains-mono": "catalog:",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -33,6 +35,7 @@
     "@vben/styles": "workspace:*",
     "@vben/types": "workspace:*",
     "@vben/utils": "workspace:*",
+    "@vue-flow/core": "catalog:",
     "@vueuse/core": "catalog:",
     "ajv": "catalog:",
     "antdv-next": "catalog:",
@@ -40,6 +43,7 @@
     "decimal.js": "catalog:",
     "echarts": "catalog:",
     "json-editor-vue": "catalog:",
+    "motion-v": "catalog:",
     "pinia": "catalog:",
     "vanilla-jsoneditor": "catalog:",
     "vue": "catalog:",

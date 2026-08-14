@@ -1,0 +1,20 @@
+diff --git a/dist/BaseSelect/index.js b/dist/BaseSelect/index.js
+index b0ffdf2..a262509 100644
+--- a/dist/BaseSelect/index.js
++++ b/dist/BaseSelect/index.js
+@@ -13,6 +13,7 @@ import { Fragment, computed, createVNode, defineComponent, isVNode, mergeDefault
+ import { clsx } from "@v-c/util";
+ import { KeyCodeStr } from "@v-c/util/dist/KeyCode";
+ import omit from "@v-c/util/dist/omit";
++import pickAttrs from "@v-c/util/dist/pickAttrs";
+ import { getDOM } from "@v-c/util/dist/Dom/findDOMNode";
+ //#region src/BaseSelect/index.tsx
+ /**
+@@ -269,6 +270,7 @@ export default defineComponent({
+ 	useBaseSelectProvider(computed(() => {
+ 		return {
+ 			...props,
++			...pickAttrs(attrs, { aria: true }),
+ 			notFoundContent: mergedNotFoundContent.value,
+ 			open: mergedOpen.value,
+ 			triggerOpen: mergedOpen.value,

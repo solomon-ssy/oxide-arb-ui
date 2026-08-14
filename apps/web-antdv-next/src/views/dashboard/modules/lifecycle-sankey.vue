@@ -10,7 +10,7 @@ import { usePreferredReducedMotion } from '@vueuse/core';
 import { Empty, Steps } from 'antdv-next';
 
 import { $t } from '#/locales';
-import DashboardPanel from '#/shared/components/dashboard-panel.vue';
+import InsightPanel from '#/shared/components/insight-panel.vue';
 
 defineOptions({ name: 'DashboardLifecycleSankey' });
 
@@ -95,7 +95,7 @@ watch([lifecycle, reducedMotion], render, { immediate: true });
 </script>
 
 <template>
-  <DashboardPanel
+  <InsightPanel
     :title="$t('page.dashboard.lifecycle.title')"
     icon="lucide:workflow"
     tone="sky"
@@ -119,5 +119,5 @@ watch([lifecycle, reducedMotion], render, { immediate: true });
       size="small"
       type="dot"
     />
-  </DashboardPanel>
+  </InsightPanel>
 </template>

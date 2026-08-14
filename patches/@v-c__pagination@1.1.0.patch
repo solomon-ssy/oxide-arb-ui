@@ -1,0 +1,144 @@
+diff --git a/dist/Pager.js b/dist/Pager.js
+--- a/dist/Pager.js
++++ b/dist/Pager.js
+@@ -1,5 +1,6 @@
+-import { createVNode, defineComponent } from "vue";
++import { createVNode, defineComponent, isVNode } from "vue";
+ import { classNames } from "@v-c/util";
++import { cloneElement } from "@v-c/util/dist/vnode";
+ //#region src/Pager.tsx
+ var Pager = /* @__PURE__ */ defineComponent((props) => {
+ 	const handleClick = () => {
+@@ -25,16 +26,25 @@ var Pager = /* @__PURE__ */ defineComponent((props) => {
+ 			"rel": "nofollow"
+ 		}, [page]));
+ 		const pagerLabel = `${pageLabel ?? ""} ${page}`.trim();
++		const interactivePager = isVNode(pager) ? cloneElement(pager, {
++			"onClick": handleClick,
++			"onKeydown": handleKeyPress,
++			"tabindex": 0,
++			"role": "button",
++			"aria-hidden": void 0,
++			"aria-label": pagerLabel,
++			"aria-current": active ? "page" : void 0
++		}) : createVNode("button", {
++			"type": "button",
++			"onClick": handleClick,
++			"onKeydown": handleKeyPress,
++			"aria-label": pagerLabel,
++			"aria-current": active ? "page" : void 0
++		}, [pager]);
+ 		return pager ? createVNode("li", {
+ 			"title": showTitle ? String(page) : void 0,
+ 			"class": cls,
+-			"style": style,
+-			"onClick": handleClick,
+-			"onKeydown": handleKeyPress,
+-			"tabindex": 0,
+-			"role": "button",
+-			"aria-label": pagerLabel,
+-			"aria-current": active ? "page" : void 0
+-		}, [pager]) : null;
++			"style": style
++		}, [interactivePager]) : null;
+ 	};
+ }, { props: {
+diff --git a/dist/Pagination.js b/dist/Pagination.js
+--- a/dist/Pagination.js
++++ b/dist/Pagination.js
+@@ -86,6 +86,16 @@ var Pagination = /* @__PURE__ */ defineComponent((props, { attrs }) => {
+ 		if (typeof icon === "function") iconNode = h(icon, { ...props });
+ 		return iconNode;
+ 	}
++	function interactiveItem(content, interactiveProps) {
++		const childProps = {
++			...interactiveProps,
++			"aria-hidden": void 0
++		};
++		return isVNode(content) ? cloneElement(content, childProps) : createVNode("button", {
++			"type": "button",
++			...childProps
++		}, [content]);
++	}
+ 	const prevPage = computed(() => current.value - 1 > 0 ? current.value - 1 : 0);
+ 	const nextPage = computed(() => current.value + 1 < allPages.value ? current.value + 1 : allPages.value);
+ 	const jumpPrevPage = computed(() => Math.max(1, current.value - (props.showLessItems ? 3 : 5)));
+@@ -218,15 +228,16 @@ var Pagination = /* @__PURE__ */ defineComponent((props, { attrs }) => {
+ 				return prev;
+ 			})();
+ 			prev = createVNode("li", {
+-				"onClick": prevHandle,
+-				"tabindex": prevDisabled ? void 0 : 0,
+-				"onKeydown": runIfEnterPrev,
+ 				"class": classNames(`${prefixCls}-prev`, itemClassName, { [`${prefixCls}-disabled`]: prevDisabled }),
+-				"style": itemStyle,
++				"style": itemStyle
++			}, [interactiveItem(prev, {
++				"onClick": prevHandle,
++				"tabindex": prevDisabled ? void 0 : 0,
++				"onKeydown": runIfEnterPrev,
+ 				"aria-disabled": prevDisabled,
+ 				"role": "button",
+ 				"aria-label": locale?.prev_page
+-			}, [prev]);
++			})]);
+ 		}
+ 		let next = renderNext(nextPage.value);
+ 		if (next) {
+@@ -246,15 +257,16 @@ var Pagination = /* @__PURE__ */ defineComponent((props, { attrs }) => {
+ 				return next;
+ 			})();
+ 			next = createVNode("li", {
+-				"onClick": nextHandle,
+-				"tabindex": nextTabIndex ?? void 0,
+-				"onKeydown": runIfEnterNext,
+ 				"class": classNames(`${prefixCls}-next`, itemClassName, { [`${prefixCls}-disabled`]: nextDisabled }),
+-				"style": itemStyle,
++				"style": itemStyle
++			}, [interactiveItem(next, {
++				"onClick": nextHandle,
++				"tabindex": nextTabIndex ?? void 0,
++				"onKeydown": runIfEnterNext,
+ 				"aria-disabled": nextDisabled,
+ 				"role": "button",
+ 				"aria-label": locale?.next_page
+-			}, [next]);
++			})]);
+ 		}
+ 		const totalText = showTotal && createVNode("li", { "class": `${prefixCls}-total-text` }, [showTotal(total, [total === 0 ? 0 : (current.value - 1) * pageSize.value + 1, current.value * pageSize.value > total ? total : current.value * pageSize.value])]);
+ 		const isReadOnly = typeof simple === "object" ? simple.readOnly : !simple;
+@@ -326,22 +338,24 @@ var Pagination = /* @__PURE__ */ defineComponent((props, { attrs }) => {
+ 			if (showPrevNextJumpers) {
+ 				jumpPrev = jumpPrevContent ? createVNode("li", {
+ 					"key": "prev",
+-					"onClick": jumpPrevHandle,
+-					"tabindex": 0,
+-					"onKeydown": runIfEnterJumpPrev,
+-					"class": classNames(`${prefixCls}-jump-prev`, { [`${prefixCls}-jump-prev-custom-icon`]: !!jumpPrevIcon }),
++					"class": classNames(`${prefixCls}-jump-prev`, { [`${prefixCls}-jump-prev-custom-icon`]: !!jumpPrevIcon })
++				}, [interactiveItem(jumpPrevContent, {
++					"onClick": jumpPrevHandle,
++					"tabindex": 0,
++					"onKeydown": runIfEnterJumpPrev,
+ 					"role": "button",
+ 					"aria-label": prevItemTitle
+-				}, [jumpPrevContent]) : null;
++				})]) : null;
+ 				jumpNext = jumpNextContent ? createVNode("li", {
+ 					"key": "next",
+-					"onClick": jumpNextHandle,
+-					"tabindex": 0,
+-					"onKeydown": runIfEnterJumpNext,
+-					"class": classNames(`${prefixCls}-jump-next`, { [`${prefixCls}-jump-next-custom-icon`]: !!jumpNextIcon }),
++					"class": classNames(`${prefixCls}-jump-next`, { [`${prefixCls}-jump-next-custom-icon`]: !!jumpNextIcon })
++				}, [interactiveItem(jumpNextContent, {
++					"onClick": jumpNextHandle,
++					"tabindex": 0,
++					"onKeydown": runIfEnterJumpNext,
+ 					"role": "button",
+ 					"aria-label": nextItemTitle
+-				}, [jumpNextContent]) : null;
++				})]) : null;
+ 			}
+ 			let left = Math.max(1, current.value - pageBufferSize);
+ 			let right = Math.min(current.value + pageBufferSize, allPages.value);

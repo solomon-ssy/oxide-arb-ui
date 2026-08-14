@@ -22,15 +22,11 @@ import { getRuntimeControls, getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import {
-  findTagOption,
-  useKillSwitchStateTagOptions,
-  useQuantRuntimeModeTagOptions,
-} from '#/shared/components/format/tag-options';
-import {
   useKillSwitchAction,
   useQuantModeAction,
   useSettlementWritePolicyAction,
 } from '#/shared/composables/use-system-actions';
+import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'RuntimeControlPanel' });
@@ -104,16 +100,13 @@ const killSwitch = computed<KillSwitchView | null>(() => {
   };
 });
 const modeTag = computed(() =>
-  findTagOption(
-    useQuantRuntimeModeTagOptions(),
+  enumOption(
+    enumOptions('QuantRuntimeMode'),
     controls.value?.quant_runtime_mode,
   ),
 );
 const killSwitchTag = computed(() =>
-  findTagOption(
-    useKillSwitchStateTagOptions(),
-    controls.value?.kill_switch_state,
-  ),
+  enumOption(enumOptions('KillSwitchState'), controls.value?.kill_switch_state),
 );
 const settlementPolicyColor = computed(() => {
   switch (controls.value?.settlement_write_policy) {

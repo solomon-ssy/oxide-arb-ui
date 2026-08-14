@@ -1,8 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { LOGIN_PATH } from '@vben/constants';
-import { preferences } from '@vben/preferences';
-
 import { $t } from '#/locales';
 
 const BasicLayout = () => import('#/layouts/basic.vue');
@@ -65,7 +62,6 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Root',
     path: '/',
-    redirect: preferences.app.defaultHomePath,
     children: [
       {
         name: 'Profile',
@@ -74,27 +70,6 @@ const coreRoutes: RouteRecordRaw[] = [
         meta: {
           hideInMenu: true,
           title: $t('page.auth.profile'),
-        },
-      },
-      {
-        name: 'TradePolicyFitWorkbench',
-        path: '/research/trade-policy-fits/new',
-        component: () =>
-          import('#/views/research/trade-policy-fits/workbench.vue'),
-        meta: {
-          authority: ['materialization:create'],
-          hideInMenu: true,
-          title: $t('page.research.tradePolicies.workbench.title'),
-        },
-      },
-      {
-        name: 'TradePolicyDetail',
-        path: '/research/trade-policies/:id',
-        component: () =>
-          import('#/views/research/trade-policies/detail/index.vue'),
-        meta: {
-          hideInMenu: true,
-          title: $t('page.research.tradePolicies.detail.title'),
         },
       },
     ],
@@ -107,7 +82,6 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Authentication',
     path: '/auth',
-    redirect: LOGIN_PATH,
     children: [
       {
         name: 'Login',

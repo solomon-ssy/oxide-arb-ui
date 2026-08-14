@@ -11,22 +11,16 @@
     "retryCountdown": "{seconds} 秒后自动重试"
   },
   "common": {
-    "underConstruction": "该页面建设中，将在后续 phase 交付",
-    "comingInPhase": "将在 Phase {phase} 交付",
-    "reportOnlyNote": "report_only 不是 dry-run：报告 sizing 基于真实 venue account（CLOB 抵押 + venue 持仓）计算，需要凭证；缺凭证将 fail-closed。",
+    "close": "关闭",
     "yes": "是",
     "no": "否",
     "deepLinkNotFound": "深链记录不存在或已不可用。"
   },
   "shared": {
-    "detailBack": "返回",
     "asyncState": {
       "loadError": "加载失败",
       "retry": "重试",
       "notFound": "记录不存在"
-    },
-    "jsonDiffList": {
-      "noChange": "无实际变化"
     },
     "marketFreshness": {
       "unknown": "订单簿年龄未知",
@@ -46,42 +40,213 @@
   "menu": {
     "group": {
       "commandCenter": "指挥中心",
-      "trading": "交易",
-      "execution": "执行",
-      "research": "研究",
-      "governance": "治理",
-      "audit": "审计"
+      "tradingSignals": "交易与信号",
+      "executionCapital": "执行与资金",
+      "researchModels": "研究与模型",
+      "systemGovernance": "系统与治理"
     },
     "dashboard": "总览",
-    "markets": "市场",
-    "marketDetail": "市场详情",
-    "quantReports": "推荐报告",
-    "reportDetail": "报告详情",
-    "recommendationDetail": "推荐详情",
-    "structuralMonitor": "结构性 Alpha",
-    "orderIntents": "订单意图",
-    "orderIntentDetail": "意图详情",
-    "executionOrders": "执行订单",
-    "positions": "持仓",
-    "reconciliations": "对账",
-    "settlementRedeems": "结算赎回",
-    "account": "账户",
-    "researchDatasets": "训练数据集",
-    "researchModelSpecs": "模型规格",
-    "researchModels": "已训练模型",
-    "researchTradePolicies": "交易策略",
-    "researchBacktests": "回测",
-    "researchJobs": "任务中心",
-    "researchFeatureIntegrity": "特征完整性",
-    "researchFeedback": "反馈与再训练",
-    "researchFactors": "因子",
-    "researchCalibrationArtifacts": "校准产物",
-    "researchMarketLinkages": "市场联动",
-    "researchDomainSources": "域数据源",
-    "researchBasisAlerts": "基差告警",
-    "researchComparisonDetail": "对比报告",
-    "config": "配置中心",
-    "operationLog": "操作日志"
+    "runtimeActivity": "运行活动",
+    "marketIntelligence": "市场情报",
+    "recommendations": "推荐工作台",
+    "executionOrders": "订单执行",
+    "executionPortfolio": "资金与持仓",
+    "executionPostTrade": "交易后处理",
+    "researchLab": "研究实验室",
+    "researchLearningPolicy": "学习与策略",
+    "researchDataReliability": "数据可靠性",
+    "systemConfig": "配置治理",
+    "systemAudit": "审计追踪",
+    "action": {
+      "switchRuntimeMode": "切换运行模式",
+      "halt": "停止执行",
+      "resume": "恢复执行",
+      "emergencyHalt": "紧急停止",
+      "updateMarket": "订阅或屏蔽市场",
+      "runReport": "运行临时报告",
+      "revokeReport": "撤销报告",
+      "createIntent": "创建订单意图",
+      "approveIntent": "批准订单意图",
+      "rejectIntent": "拒绝订单意图",
+      "cancelIntent": "取消订单意图",
+      "resolveReconciliation": "处理对账异常",
+      "createSettlement": "创建结算动作",
+      "approveSettlement": "批准结算批次",
+      "revokeSettlement": "撤销结算动作",
+      "createResearchArtifact": "创建研究产物",
+      "runBacktest": "运行回测",
+      "publishModel": "发布模型",
+      "rollbackModel": "回滚模型",
+      "retireModel": "退役模型",
+      "fitPolicy": "拟合策略或校准",
+      "publishPolicy": "发布策略",
+      "authorizeCandidate": "授权候选版本",
+      "activateCandidate": "激活候选版本",
+      "rejectCandidate": "拒绝候选版本",
+      "retirePolicy": "退役策略",
+      "recoverReliability": "恢复数据可靠性",
+      "createConfigDraft": "创建配置草稿",
+      "approveConfigRevision": "批准配置修订",
+      "activateConfigRevision": "激活配置修订",
+      "rollbackConfigRevision": "回滚配置修订"
+    }
+  },
+  "runtimeActivity": {
+    "title": "活动中心",
+    "eyebrow": "实时运行账本",
+    "description": "按权限汇总研究、报告、执行、对账与结算事实。WebSocket 只触发失效，列表始终以 REST 权威快照为准。",
+    "open": "打开活动中心",
+    "refresh": "刷新活动",
+    "refreshing": "正在同步权威状态",
+    "viewAll": "查看全部活动",
+    "loadMore": "加载更多",
+    "loadError": "活动读取失败",
+    "empty": "当前筛选范围内没有活动。系统启动任务或执行流程后会显示在这里。",
+    "permissionScoped": "仅显示当前角色有权读取的领域",
+    "total": "共 {count} 条可见活动",
+    "totalLabel": "可见活动",
+    "progress": "活动完成进度",
+    "today": "今天",
+    "yesterday": "昨天",
+    "unknownDate": "时间未知",
+    "actionAccepted": "动作已受理，正在读取最新状态",
+    "filter": {
+      "domain": "领域筛选",
+      "status": "状态筛选",
+      "allDomains": "全部领域",
+      "allStatuses": "全部状态"
+    },
+    "domain": {
+      "research": "研究",
+      "report": "报告",
+      "execution": "执行",
+      "reconciliation": "对账",
+      "settlement": "结算"
+    },
+    "status": {
+      "pending": "等待中",
+      "running": "运行中",
+      "succeeded": "已成功",
+      "failed": "已失败",
+      "cancelled": "已取消",
+      "attention": "需要处理",
+      "skipped": "已跳过"
+    },
+    "kind": {
+      "research-job": "研究任务",
+      "report-run": "报告运行",
+      "execution-order": "执行订单",
+      "reconciliation": "交易对账",
+      "settlement-redeem": "结算赎回"
+    },
+    "action": {
+      "cancel_research_job": "取消研究任务",
+      "retry_research_job": "重试研究任务",
+      "retry_report_run": "重试报告运行",
+      "resolve_reconciliation": "处理对账异常"
+    },
+    "actionSummary": {
+      "cancel": "取消研究任务 {id}。运行中的任务将进入协作取消流程。",
+      "retryResearch": "从终态研究任务 {id} 创建一次受治理的重试。",
+      "retryReport": "从报告运行 {id} 创建一次新的 ad-hoc 重试。"
+    }
+  },
+  "commandPalette": {
+    "open": "打开命令面板",
+    "placeholder": "搜索工作区、模块或有权执行的动作…",
+    "empty": "没有匹配当前权限范围的结果",
+    "navigation": "页面导航",
+    "permissionHint": "结果已按当前角色权限裁剪",
+    "navigateHint": "选择",
+    "type": {
+      "page": "页面",
+      "module": "模块",
+      "action": "动作"
+    },
+    "module": {
+      "overview": "总览",
+      "live": "实时市场",
+      "structure": "市场结构",
+      "reports": "报告",
+      "queue": "运行队列",
+      "funnel": "推荐漏斗",
+      "diff": "报告对比",
+      "intents": "订单意图",
+      "approvals": "审批队列",
+      "orders": "执行订单",
+      "flow": "执行流程",
+      "account": "资金账户",
+      "positions": "持仓",
+      "exposure": "风险敞口",
+      "equity": "权益曲线",
+      "reconciliation": "交易对账",
+      "settlement": "结算赎回",
+      "actions": "治理动作",
+      "lineage": "模型谱系",
+      "specs": "模型规格",
+      "datasets": "训练数据集",
+      "factors": "因子",
+      "models": "模型版本",
+      "evaluation": "模型评估",
+      "policies": "交易策略",
+      "fits": "策略拟合",
+      "feedback": "反馈闭环",
+      "calibration": "校准产物",
+      "sources": "领域数据源",
+      "linkages": "市场映射",
+      "basis-alerts": "基差告警",
+      "feature-integrity": "特征完整性",
+      "runtime": "运行配置",
+      "deploy": "部署配置",
+      "policy": "决策策略",
+      "history": "配置历史",
+      "operations": "操作日志",
+      "receipts": "治理回执",
+      "entity-timeline": "实体时间线"
+    }
+  },
+  "workspace": {
+    "invalidModule": "模块地址无效，已恢复到工作区默认模块。",
+    "marketIntelligence": {
+      "eyebrow": "交易与信号",
+      "description": "统一浏览市场目录、实时盘口与结构性信号；详情保持在同一工作区上下文中。"
+    },
+    "recommendations": {
+      "eyebrow": "交易与信号",
+      "description": "从报告运行、推荐漏斗、差异证据到执行资格，形成可审计的推荐决策闭环。"
+    },
+    "executionOrders": {
+      "eyebrow": "执行与资金",
+      "description": "将订单意图、审批、准入、提交与成交事实组织为单一执行流程。"
+    },
+    "executionPortfolio": {
+      "eyebrow": "执行与资金",
+      "description": "基于真实 venue account 展示资金、持仓、风险敞口与权益变化，不使用模拟预算回退。"
+    },
+    "executionPostTrade": {
+      "eyebrow": "执行与资金",
+      "description": "集中处理交易对账、结算赎回与受治理恢复动作，异常路径默认 fail-closed。"
+    },
+    "researchLab": {
+      "eyebrow": "研究与模型",
+      "description": "以 Spec → Dataset → Factor → Model → Evaluation 谱系组织研究产物与可复现实验。"
+    },
+    "learningPolicy": {
+      "eyebrow": "研究与模型",
+      "description": "连接交易策略、拟合、反馈周期、漂移证据与校准产物，闭合持续学习链路。"
+    },
+    "dataReliability": {
+      "eyebrow": "研究与模型",
+      "description": "统一观测数据源、市场映射、跨源基差与 durable/live 特征一致性。"
+    },
+    "systemConfig": {
+      "eyebrow": "系统与治理",
+      "description": "管理运行、部署与决策策略修订；审批、激活和回滚均保留治理证据。"
+    },
+    "systemAudit": {
+      "eyebrow": "系统与治理",
+      "description": "跨工作区追踪操作日志、治理回执与实体生命周期，保持责任链可审计。"
+    }
   },
   "structuralAlpha": {
     "title": "Structural Alpha",
@@ -100,12 +265,10 @@
     "coverage": {
       "title": "链上 Trade tape 覆盖",
       "source": "数据源",
-      "onChainSource": "链上 OrderFilled",
       "decisionAt": "决策时间",
       "knowledgeCutoff": "知识截止时间",
       "enabled": "启用",
       "disabled": "停用",
-      "cursors": "Cursor 数",
       "marketCursors": "市场 cursor",
       "health": "Cursor 健康态",
       "bootstrap": "引导",
@@ -159,7 +322,6 @@
       "marketId": "Market ID",
       "participant": "参与者",
       "role": "角色",
-      "fillParticipant": "Maker",
       "trades": "成交数",
       "notional": "名义金额",
       "share": "占比"
@@ -173,7 +335,75 @@
       "legs": "legs"
     }
   },
+  "execution": {
+    "flow": {
+      "authorityNote": "流程轨以最新订单意图为锚点。订单、持仓与对账按意图精确关联；结算账本没有意图外键，因此明确按市场范围关联。",
+      "description": "沿最新持久化执行链查看订单意图、受治理审批、准入、场所执行、持仓、对账与结算事实。",
+      "empty": "尚无持久化订单意图。请从具备执行资格的推荐创建意图以启动执行链。",
+      "inspector": {
+        "duration": "阶段耗时",
+        "entity": "实体类型",
+        "entityId": "实体 ID",
+        "eyebrow": "执行链证据",
+        "identity": "权威阶段快照",
+        "openLedger": "打开归属账本",
+        "scope": "证据范围",
+        "stage": "阶段",
+        "status": "状态",
+        "title": "执行阶段"
+      },
+      "openStage": "打开{stage}证据",
+      "partialError": "部分执行账本暂不可用；已加载阶段仍是权威事实并可导航。",
+      "records": "范围内 {count} 条记录",
+      "refresh": "刷新流程",
+      "scope": {
+        "intentBound": "精确关联最新意图",
+        "latestIntent": "持久化账本中的最新意图",
+        "marketBound": "按市场关联，并非意图外键",
+        "orderBound": "精确关联最新执行订单"
+      },
+      "stage": {
+        "admission": "执行准入",
+        "approval": "审批",
+        "fill": "成交",
+        "intent": "订单意图",
+        "position": "持仓",
+        "reconciliation": "对账",
+        "settlement": "结算",
+        "submission": "提交"
+      },
+      "title": "执行流程轨"
+    }
+  },
   "research": {
+    "lineage": {
+      "description": "沿持久化的 Spec → Dataset → Model → Backtest → Calibration → Publication 链路导航；数量与最新实体均来自权威研究账本。",
+      "idle": "当前没有运行中的研究物化任务。",
+      "inspector": {
+        "count": "持久化记录数",
+        "entity": "实体类型",
+        "entityId": "最新实体 ID",
+        "eyebrow": "研究血缘证据",
+        "latest": "该阶段最新持久化产物",
+        "openWorkspace": "打开归属工作区",
+        "snapshot": "权威阶段快照",
+        "stage": "阶段",
+        "title": "研究产物"
+      },
+      "openStage": "打开最新实体",
+      "partialError": "部分血缘账本暂不可用，已加载阶段仍可导航。",
+      "refresh": "刷新血缘",
+      "running": "有 {count} 个研究物化任务运行中；动态连线表示实时流转。",
+      "stage": {
+        "backtests": "回测",
+        "calibration": "校准",
+        "datasets": "数据集",
+        "models": "模型",
+        "publication": "发布",
+        "specs": "规格"
+      },
+      "title": "研究血缘"
+    },
     "common": {
       "timeRangeStart": "起始",
       "timeRangeEnd": "结束"
@@ -216,7 +446,38 @@
       },
       "tabs": {
         "overview": "概览",
-        "cycles": "周期"
+        "cycles": "周期",
+        "drift": "漂移证据"
+      },
+      "drift": {
+        "title": "不可变漂移证据",
+        "description": "跨反馈周期审阅数据、概念与标签漂移事实；数值、阈值与判定均来自持久化报告。",
+        "loadError": "漂移证据加载失败",
+        "empty": "尚未生成漂移证据。",
+        "report": "报告 ID",
+        "kind": "类型",
+        "metric": "指标",
+        "assessment": "判定",
+        "observed": "观测值",
+        "threshold": "阈值",
+        "samples": "样本数",
+        "observedAt": "观测时间",
+        "kindValue": {
+          "data": "数据漂移",
+          "concept": "概念漂移",
+          "label": "标签漂移"
+        },
+        "metricValue": {
+          "population_stability_index": "总体稳定性指数",
+          "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p 值",
+          "rank_ic_drop": "Rank IC 下降",
+          "jensen_shannon_divergence": "Jensen–Shannon 散度"
+        },
+        "assessmentValue": {
+          "within_threshold": "阈值内",
+          "threshold_exceeded": "超过阈值",
+          "insufficient_evidence": "证据不足"
+        }
       },
       "queue": {
         "queued": "排队周期",
@@ -436,16 +697,7 @@
             "policyOutcomes": "策略反事实结果"
           },
           "qualityGate": {
-            "title": "唯一 Validation 质量门",
-            "passed": "全部硬门禁通过",
-            "observed": "观测值",
-            "threshold": "阈值"
-          },
-          "gateStatus": {
-            "pass": "通过",
-            "fail": "失败",
-            "warn": "警告",
-            "not_applicable": "不适用"
+            "title": "唯一 Validation 质量门"
           },
           "evidence": {
             "title": "不可变证据哈希",
@@ -721,15 +973,7 @@
       },
       "cycles": {
         "empty": "本页没有匹配的持久化反馈周期。",
-        "listAria": "反馈周期",
-        "selected": "已选周期",
-        "cycleId": "周期 ID",
-        "profile": "画像",
-        "trigger": "触发方式",
-        "status": "状态",
-        "decision": "决策",
-        "labelCutoff": "标签截止时间",
-        "updatedAt": "更新时间"
+        "listAria": "反馈周期"
       },
       "status": {
         "queued": "排队中",
@@ -757,30 +1001,15 @@
         "action": "拟合策略",
         "title": "拟合交易策略",
         "summary": "从冻结的可执行轨迹数据集排队运行确定性交易策略拟合。",
-        "hint": "来源数据集、拟合窗口、embargo、名义金额分层和质量下限会冻结进内容寻址 artifact。",
         "dataset": "Ready 来源数据集",
         "window": "策略拟合窗口",
-        "embargoSecs": "拟合后 embargo（秒）",
-        "notionalTiers": "名义金额分层（USD）",
-        "notionalTiersHelp": "使用逗号分隔的正 USD 金额，例如 25,100,500。",
-        "maxScaleOutTargets": "最多分批退出档数",
-        "minimumCoverage": "最低可执行覆盖率",
         "pitCutoff": "PIT 截止时间",
-        "min_full_l2_coverage": "最低完整 L2 覆盖率",
-        "max_ambiguous_touch_rate": "最大同桶双穿越率",
-        "max_depth_failure_rate": "最大深度失败率",
-        "min_dsr": "最低 DSR",
-        "max_pbo": "最大 PBO",
-        "min_cohort_samples": "最少 cohort 样本数",
-        "min_cpcv_paths": "最少 CPCV 路径数",
-        "min_utility_bps": "最低效用置信下界（bps）",
         "incomplete": "请完整选择数据集、窗口并填写名义金额分层。",
         "preflight": "运行预检",
         "enqueue": "排队拟合",
         "queued": "交易策略拟合已排队。",
         "publishable": "来源证据满足可发布拟合的输入要求。",
         "blocked": "所有数据与方法论准备度门禁通过前，禁止排队运行拟合。",
-        "readinessCapability": "预检会验证冻结的 Runtime v1 方法论、连续 L2、费用/成交对账以及签名的生产延迟画像，全部通过后才允许排队拟合。",
         "contractValid": "契约有效",
         "datasetReady": "数据集 Ready",
         "datasetPurpose": "PolicyFit 用途",
@@ -789,8 +1018,7 @@
         "latencyProfile": "已签名的 24 小时延迟画像",
         "profileQualityGate": "不可变 Profile 质量门槛",
         "profileFitterAvailable": "Policy fitter 已实现",
-        "methodologyHash": "冻结方法论哈希",
-        "effectiveGates": "生效质量门禁"
+        "methodologyHash": "冻结方法论哈希"
       },
       "workbench": {
         "title": "交易策略拟合工作台",
@@ -845,51 +1073,19 @@
         "cancelFit": "取消拟合任务",
         "cancelSummary": "协作取消当前交易策略拟合任务；已写入的 trial 仍保留在 append-only ledger。",
         "next": "下一步",
-        "frozen": "冻结拟合边界",
-        "activation": "激活目标",
-        "runtime": "Runtime-config 版本",
-        "model": "模型规格",
         "candidates": "条件候选集",
         "addCandidate": "新增条件候选",
-        "editor": "类型化条件编辑器",
-        "inspector": "Canonical 检查器",
         "candidateId": "候选 ID",
         "confirmation": "连续确认时长（毫秒）",
         "observationGap": "最大观测间隔（毫秒）",
-        "entryExecution": "入场执行",
         "orderKind": "订单类型",
         "maxBookAge": "最大盘口年龄（毫秒）",
-        "fillRequirement": "成交要求",
         "maxSlippage": "最大滑点（bps）",
-        "passivePlacement": "Passive 挂单位置",
-        "improveTicks": "改善 tick 数",
-        "goodTil": "有效时长（秒）",
-        "exitPolicy": "退出策略",
         "upperBarrier": "上障碍（bps）",
         "lowerBarrier": "下障碍（bps）",
         "verticalBarrier": "垂直障碍（秒）",
-        "scoreRetention": "最低评分保留率",
-        "expectedReturn": "最低预期收益（bps）",
-        "settlementMode": "结算模式",
-        "redeemPolicy": "赎回策略",
-        "executionEligibility": "要求执行资格",
-        "scaleOut": "分批退出目标",
-        "addScaleOut": "新增分批退出目标",
-        "trailingStop": "移动止损",
-        "trailingActivation": "移动止损激活收益（bps）",
-        "trailingDistance": "移动止损距离（bps）",
-        "sellConfidence": "机会退出最低置信度",
-        "sellAlpha": "机会退出最低 alpha（bps）",
-        "sellProbability": "退出更优的最低概率",
-        "sellCap": "机会退出累计比例上限",
-        "sellMinClip": "机会退出单次最小增量比例",
-        "exitExecution": "按退出原因冻结的 FAK 执行",
-        "candidateCount": "候选数量",
-        "nodeCount": "节点数量",
-        "naturalLanguage": "条件语义",
         "candidateHash": "服务端候选集哈希",
         "canonicalJson": "Canonical 候选集 JSON",
-        "preflight": "PIT 与来源预检",
         "result": "异步拟合结果",
         "jobId": "任务 ID",
         "jobStatus": "任务状态",
@@ -899,7 +1095,6 @@
         "failureDetail": "终态诊断",
         "openJob": "打开研究任务",
         "immediateFixed": "Immediate 是不可编辑、不可删除的强制基线。",
-        "immediateDescription": "按冻结的订单策略直接进入 admission。",
         "anchor": {
           "decision": "Recommendation 决策时刻",
           "marketStart": "市场开始时刻",
@@ -1000,8 +1195,6 @@
         "readyTitle": "发布前置证据完整",
         "hash": "内容哈希",
         "fitWindow": "拟合窗口",
-        "pitCutoff": "PIT 截止时间",
-        "fillSimulator": "成交模拟器",
         "entryBasis": "可执行入场基准",
         "exitBasis": "可执行退出基准",
         "fullL2Coverage": "完整 L2 覆盖率",
@@ -1036,8 +1229,6 @@
         "result": "结果",
         "pass": "通过",
         "fail": "失败",
-        "example": "样本",
-        "market": "市场",
         "decisionAt": "决策时间",
         "diagnostic": "诊断 / 行哈希",
         "sourceSliceObjects": "已验证 Source Slice 对象",
@@ -1243,7 +1434,6 @@
       }
     },
     "jobs": {
-      "listTitle": "任务中心",
       "columns": {
         "jobId": "任务 ID",
         "kind": "类型",
@@ -1252,7 +1442,6 @@
         "submittedBy": "提交角色",
         "createdAt": "创建时间",
         "finishedAt": "结束时间",
-        "result": "结果",
         "operation": "操作"
       },
       "filters": {
@@ -1273,38 +1462,23 @@
         "evidenceAt": "将于 {time} 重新检查证据",
         "retryScheduled": "已安排重试",
         "retryAt": "将于 {time} 重试",
-        "pending": "等待开始",
-        "phase": "阶段"
+        "pending": "等待开始"
       },
       "recovery": {
-        "badge": "已自动重排 {count} 次",
-        "hint": "该任务曾因服务中断被自动重排"
+        "badge": "已自动重排 {count} 次"
       },
       "detail": {
         "title": "任务详情",
         "params": "请求参数",
         "progress": "实时进度",
         "coverage": "覆盖率诊断",
-        "error": "失败信息",
         "lineage": "重试来源",
         "recoveryAttempt": "自动重排次数",
         "nextAttemptAt": "下次重试时间",
-        "maxRecoveryAttempts": "最大自动重排",
         "leaseExpiresAt": "租约到期",
         "heartbeatAt": "最近心跳",
         "startedAt": "开始时间",
         "acting": "提交角色"
-      },
-      "cancel": {
-        "title": "取消任务",
-        "summary": "取消该研究任务。排队中的任务立即终止；运行中的任务将协作式停止。",
-        "confirmWord": "CANCEL",
-        "feedback": "已请求取消"
-      },
-      "retry": {
-        "title": "重试任务",
-        "summary": "以相同的冻结参数重新入队一个新任务（记录重试来源）。",
-        "feedback": "已重新入队"
       }
     },
     "datasets": {
@@ -1337,7 +1511,6 @@
       "plan": {
         "title": "试算训练数据集",
         "summary": "试算样本网格；不写入产物或台账行。",
-        "feedback": "试算完成：预计 {samples} 个样本。",
         "reviewSummary": "确认试算结果后，将复用此数据集 ID 进行构建。",
         "plannedSamples": "预计样本数（上界）",
         "spineUpperBound": "历史样本上界",
@@ -1390,7 +1563,6 @@
         "feedbackCohort": "反馈 cohort",
         "datasetHash": "数据集哈希",
         "parquetUri": "Parquet URI",
-        "coverage": "构建覆盖率",
         "coverageRaw": "原始构建证据",
         "integrity": "完整性门禁证据",
         "parity": "训练—服务一致性",
@@ -1442,8 +1614,6 @@
         "cohortArtifactHash": "Cohort 产物哈希",
         "cohortSourceHash": "Cohort 来源哈希",
         "cohortSchemaHash": "Cohort Schema 哈希",
-        "cohortReason": "原因",
-        "cohortCount": "数量",
         "manifestHash": "Manifest 哈希",
         "artifactBytesHash": "产物字节哈希",
         "gateStatus": "完整性门禁状态",
@@ -1500,9 +1670,7 @@
         "thesisLimitations": "已知局限",
         "thesisLimitationsHelp": "每行一项，填写 1–16 条不重复局限。适用范围和版本实测指标归入训练版本的模型卡。",
         "thesisValidationError": "请填写摘要、可证伪假设和 1–16 条不重复局限（每行一项）。",
-        "incomplete": "请填写名称，且预测地平线需 ≥ 1。",
         "duplicateName": "名称「{name}」已存在，请更换或打开已有规格。",
-        "feedback": "模型规格已创建。",
         "feedbackNamed": "模型规格「{name}」已创建。"
       },
       "detail": {
@@ -1564,7 +1732,6 @@
         "modelVersionId": "模型版本 ID",
         "modelSpec": "模型规格",
         "version": "版本",
-        "status": "状态",
         "artifactHash": "产物哈希",
         "dataset": "数据集",
         "createdAt": "创建时间",
@@ -1572,7 +1739,6 @@
       },
       "filters": {
         "modelSpec": "模型规格",
-        "status": "状态",
         "createdAt": "创建时间"
       },
       "actions": {
@@ -1614,7 +1780,6 @@
         "summary": "从已通过完整性门禁的冻结数据集训练候选版本。",
         "frozenContractHint": "模型族、目标标签、预测周期、运行配置与输入契约均从数据集及其模型规格冻结推导，本次请求不可覆盖。",
         "trainingDataset": "训练数据集 ID",
-        "incomplete": "请选择可训练的 Ready 数据集。",
         "feedback": "训练任务已提交。",
         "noPermission": "你没有训练模型的权限（materialization:create）。",
         "modalUnavailable": "训练表单尚未就绪，请稍后重试。"
@@ -1628,7 +1793,6 @@
         "decisionPolicyDerived": "由所选 Evaluation 数据集自动派生",
         "comparisonModel": "对比基线模型",
         "comparisonPlaceholder": "可选 — 选择同规格的 pair 模式基线模型",
-        "incomplete": "请选择合格的 Evaluation 数据集。",
         "feedback": "回测已提交。"
       },
       "cpcv": {
@@ -1645,7 +1809,6 @@
         "frozenContractTitle": "服务端持有的冻结训练契约",
         "frozenContractHint": "CPCV 每个 fold 都从模型版本绑定的冻结数据集重新训练。请求不能覆盖模型家族、输入契约、目标标签、标签 horizon 或预测 horizon。",
         "contractUnavailable": "无法加载冻结模型契约，已阻止提交 CPCV。",
-        "incomplete": "必须具备模型绑定的训练数据集并选择运行配置。",
         "feedback": "CPCV 验证已提交。",
         "action": "运行 CPCV",
         "dualTrackHint": "进入 CandidateReady 需要单路径回测（换手 / 尾部损失 / 最大回撤）与 CPCV 路径集（中位 rank IC / DSR / PBO）。",
@@ -1970,7 +2133,6 @@
         "title": "拟合模型校准器",
         "summary": "使用独立 held-out 校准集拟合概率校准器，并通过唯一治理服务派生新的 immutable calibrated ModelVersion。",
         "feedback": "校准模型版本派生任务已入队",
-        "validation": "请选择模型版本与校准数据集。",
         "model": "模型版本",
         "modelPlaceholder": "选择模型版本",
         "calibrationDataset": "校准数据集",
@@ -2090,7 +2252,6 @@
         "supersedeWarning": "该联动已存在已解析/已覆盖的绑定。提交后会追加一条新的 resolver_tier=override 台账行，自此以后取代原绑定 —— 原绑定仍保留在历史中，绝不删除。",
         "summary": "对市场 {marketId} 的审计操作员覆盖。追加 resolver_tier=override 台账行；历史绝不改写。",
         "feedback": "覆盖已记录",
-        "invalidSubjectJson": "Subject JSON 无效",
         "instrumentKeyHint": "规范特征源 instrument key —— 无论选择哪个结算 oracle，按冻结的解析规则集，始终是所选资产的 Binance K 线键。自动推导，不可单独编辑。",
         "sections": {
           "cryptoSubject": "Crypto subject",
@@ -2109,7 +2270,6 @@
           "marketId": "市场 ID",
           "overrideDetails": "覆盖详情",
           "instrumentKey": "Instrument key",
-          "subjectJson": "Subject JSON",
           "asset": "资产",
           "quote": "报价货币",
           "comparator": "价格比较语义",
@@ -2134,8 +2294,7 @@
           "assetEvidenceRequired": "资产的原文引用必填。",
           "oracleEvidenceRequired": "结算 oracle 的原文引用必填。",
           "strikeEvidenceRequired": "行权价的原文引用必填。"
-        },
-        "submit": "提交覆盖"
+        }
       },
       "detail": {
         "title": "市场联动",
@@ -2204,11 +2363,9 @@
           "empty": "该市场暂无基差越界记录。",
           "notApplicable": "不适用基差交叉核验 —— 结算 oracle 非 Chainlink Data Streams。"
         }
-      },
-      "emptyInstrument": "—"
+      }
     },
     "domainSources": {
-      "listTitle": "域摄取 cursor",
       "refresh": "刷新",
       "retry": "重试",
       "loadingAnnouncement": "正在加载 Domain 数据源健康度。",
@@ -2379,20 +2536,10 @@
       "pathRankIc": "Rank IC",
       "pathMaxDrawdown": "最大回撤",
       "pathTailLoss": "尾部损失",
-      "publishBound": "已绑定为发布路径集",
-      "publishBoundOther": "已绑定其他路径集用于发布",
-      "publishUnbound": "尚未绑定发布路径集",
-      "selectionNotBound": "当前浏览的路径集未绑定发布。门禁通过/失败标签已隐藏——如需用于发布请先绑定。",
-      "bindRequiredHint": "尚未绑定发布路径集。请先绑定所选路径集，发布门禁才会使用这些 CPCV 指标。",
-      "bindPublish": "设为发布路径集",
-      "bindTitle": "绑定 CPCV 路径集",
-      "bindSummary": "将路径集 {id}… 绑定为发布门禁评估对象",
-      "bindFeedback": "发布路径集已绑定。",
       "gatePass": "通过",
       "gateFail": "未过",
       "thresholdMin": "≥",
       "thresholdMax": "≤",
-      "threshold": "≥",
       "distribution": {
         "min": "最小",
         "p25": "P25",
@@ -2418,8 +2565,7 @@
       "critical": "严重告警",
       "emergency": "紧急告警"
     },
-    "configActivated": "运行配置已激活：{version}",
-    "marketResolved": "市场已结算：{market}"
+    "configActivated": "运行配置已激活：{version}"
   },
   "system": {
     "indicator": {
@@ -2483,7 +2629,6 @@
     }
   },
   "dashboard": {
-    "viewAll": "查看",
     "commandCenter": {
       "title": "量化作战台",
       "subtitle": "用同一权威快照判断系统安全状态，并执行唯一的下一步操作。",
@@ -2507,18 +2652,13 @@
     },
     "status": {
       "runtimeMode": "运行模式",
-      "bootstrap": "启动阶段",
       "killSwitch": "熔断开关",
       "ws": "实时连接",
       "bookFreshness": "盘口新鲜度",
       "latestReport": "最新报告"
     },
     "section": {
-      "ready": "实时可用",
-      "stale": "数据已陈旧",
       "unavailable": "暂不可用",
-      "forbidden": "无权查看",
-      "blocked": "被能力门禁阻断",
       "noSamples": "当前窗口尚无真实样本",
       "noReport": "尚无已发布推荐报告",
       "noTrend": "当前窗口不足以计算趋势"
@@ -2550,6 +2690,25 @@
       "title": "风险敞口集中度",
       "aria": "账户按类别聚合的风险敞口树图。",
       "none": "当前账户没有真实敞口"
+    },
+    "runtimeActivity": {
+      "title": "实时运行活动",
+      "open": "打开活动中心",
+      "empty": "当前角色可见范围内尚无持久化运行活动。启动研究、报告或执行任务后可在此追踪。"
+    },
+    "reportRuntime": {
+      "title": "报告运行态",
+      "queued": "排队",
+      "running": "运行",
+      "failed": "异常",
+      "empty": "当前窗口没有报告运行证据。可从推荐工作台发起临时报告。"
+    },
+    "executionRuntime": {
+      "title": "执行运行态",
+      "pending": "待审意图",
+      "active": "活跃订单",
+      "attention": "需要处理",
+      "empty": "当前窗口没有执行活动。ReportOnly 模式下这是正常状态。"
     },
     "feedback": {
       "title": "反馈与再训练",
@@ -2589,59 +2748,11 @@
         "policy_revision_awaiting_activation": "已批准的策略修订等待激活"
       }
     },
-    "actions": {
-      "runReport": "运行报告"
-    },
-    "cards": {
-      "ws": "实时"
-    },
     "loadError": {
-      "overview": "作战台快照加载失败",
-      "report": "最新报告加载失败",
-      "dataQuality": "数据质量加载失败",
-      "account": "实时账户加载失败",
-      "equity": "权益快照加载失败"
+      "overview": "作战台快照加载失败"
     },
     "bootstrap": {
-      "title": "系统启用与能力",
-      "phase": "启动阶段",
-      "blockedCount": "阻断项",
-      "nextAction": "下一步",
-      "next": {
-        "activate": "审批并显式启用当前运行配置",
-        "operational": "所有运行能力门槛均已满足"
-      },
-      "group": {
-        "critical": "关键控制",
-        "collecting": "数据与证据",
-        "trading": "报告与交易风险"
-      },
-      "phaseValue": {
-        "initializing": "初始化",
-        "collecting_baseline": "采集基线",
-        "awaiting_activation": "等待启用",
-        "active": "已启用"
-      },
-      "enabled": "可用",
-      "blocked": "阻断",
-      "activate": "启用系统",
-      "activateTitle": "启用冷启动系统",
-      "activateSummary": "批准所选不可变运行配置并进入 active。系统仍保持 ReportOnlyForced，交易风险不会因本操作自动放开。",
-      "activated": "系统已显式启用",
-      "noConfig": "没有可批准的决策策略快照",
-      "configRevision": "决策策略快照",
-      "ackLabel": "ReportOnlyForced 确认",
-      "ackHelp": "我确认启用后系统仍处于 ReportOnlyForced，放开交易需要独立治理操作。",
       "reportBlocked": "报告生成能力当前被系统状态阻断",
-      "capability": {
-        "control_plane_ready": "控制面",
-        "catalog_baseline_ready": "目录基线",
-        "research_capture_enabled": "研究采集",
-        "report_generation_eligible": "报告生成",
-        "automatic_parity_eligible": "自动一致性重放",
-        "entry_admission_eligible": "入场准入",
-        "order_submission_eligible": "订单提交"
-      },
       "reason": {
         "bootstrap_initializing": "启动状态仍在初始化",
         "control_plane_not_ready": "控制面尚未就绪",
@@ -2657,67 +2768,27 @@
     },
     "kpi": {
       "netLiq": "净清算价值",
-      "netLiqTip": "来自最新实时账户读取的 venue 净清算价值。",
       "available": "可用资金",
-      "availableTip": "扣除预留后可用于 sizing 的 collateral。",
       "drawdown": "回撤",
-      "drawdownTip": "相对最新持久化 equity snapshot 高水位的回撤。",
       "activeMarkets": "活跃市场",
-      "activeMarketsTip": "运行 catalog 当前跟踪的市场数量。",
-      "budgetCap": "预算上限",
-      "reserved": "已预留",
-      "capitalBase": "资本基准",
-      "positions": "{count} 个持仓",
-      "highWaterMark": "高水位",
-      "unrealizedPnl": "未实现盈亏",
       "noEquitySnapshot": "尚无持久化 equity snapshot",
-      "catalogMarkets": "catalog {count} 个市场",
-      "dataUsable": "{usable}/{total} 可用盘口",
       "windowTrend": "{window} 窗口趋势 {value}",
       "reservedValue": "已预留 {value}",
       "highWaterValue": "高水位 {value}",
       "usableBooks": "{usable}/{total} 个盘口可用",
-      "dataUsableTitle": "数据可用率"
-    },
-    "latestReport": {
-      "title": "最新报告",
-      "none": "尚未生成报告",
-      "published": "推荐数",
-      "suggested": "建议总额"
-    },
-    "account": {
-      "title": "实时账户",
-      "netLiq": "净清算价值",
-      "available": "可用",
-      "reserved": "已预留",
-      "budgetCap": "预算上限",
-      "drawdown": "回撤",
-      "checkedAt": "更新于",
-      "unavailable": "账户不可用"
-    },
-    "pendingIntents": {
-      "title": "待审意图",
-      "awaiting": "等待审批"
+      "dataUsableTitle": "数据可用率",
+      "runtimeRunning": "运行中任务",
+      "runtimeAttentionValue": "{count} 条活动需要处理"
     },
     "dataQuality": {
       "title": "数据质量",
       "progressAria": "可用盘口数据比例",
-      "totalTokens": "跟踪 Token",
       "fresh": "新鲜",
       "acceptable": "可接受",
       "degraded": "降级",
-      "stale": "陈旧",
-      "insufficient": "不足",
-      "worstBookAge": "最差盘口年龄/阈值",
-      "worstIngestLag": "最差入库滞后/阈值"
-    },
-    "alerts": {
-      "title": "系统告警",
-      "none": "暂无近期告警"
+      "stale": "陈旧"
     },
     "reportLifecycle": {
-      "title": "报告活动",
-      "none": "暂无报告生命周期事件",
       "event": {
         "prepared": "已准备",
         "published": "已发布",
@@ -2734,51 +2805,17 @@
         "reconciliation_unresolved": "对账待消解"
       }
     },
-    "pipeline": {
-      "title": "执行管道",
-      "pendingIntents": "待审意图",
-      "inFlightOrders": "在途订单",
-      "unresolvedReconciliations": "未解决对账",
-      "loading": "刷新计数中…"
-    },
-    "exposureTopN": {
-      "title": "主要敞口",
-      "none": "暂无敞口数据",
-      "byCategory": "按类别",
-      "byMarket": "按市场"
-    },
     "health": {
       "title": "子系统健康",
       "ready": "依赖全部就绪",
       "degraded": "存在异常依赖",
       "ok": "健康",
       "failed": "异常"
-    },
-    "recovery": {
-      "title": "执行恢复",
-      "loadFailed": "无法加载恢复状态，请重试或检查系统访问权限。",
-      "refresh": "刷新",
-      "clear": "无恢复阻塞项",
-      "autoExecutionBlocked": "自动执行因恢复阻塞而暂停",
-      "unresolvable": "不可自动消解的对账",
-      "nextSteps": "后续步骤",
-      "blocking": "阻塞对账",
-      "none": "无",
-      "killSwitch": "熔断开关",
-      "requiresAck": "需要操作员确认",
-      "ack": "确认熔断开关",
-      "lastReason": "最近原因",
-      "resolve": "消解",
-      "resolveHint": "请在 reconciliation 队列中消解阻塞项；解阻塞需凭证且不会在此伪造。"
     }
   },
   "systemAdmin": {
-    "refresh": "刷新",
     "mode": {
-      "title": "运行模式",
-      "current": "当前",
       "switchTitle": "切换运行模式",
-      "switchTo": "切换到 {mode}",
       "summary": "将运行模式从 {from} 切换到 {to}。",
       "switched": "运行模式已从 {from} 切换到 {to}",
       "preflightPassed": "预检通过",
@@ -2788,14 +2825,7 @@
       "checkFailed": "失败"
     },
     "killSwitch": {
-      "title": "熔断开关",
-      "current": "当前",
-      "reason": "最近原因",
-      "changedBy": "变更人",
-      "changedAt": "变更时间",
-      "requiresAck": "熔断开关已锁存，需要操作员确认。",
       "setTitle": "设置熔断开关",
-      "setTo": "设为 {state}",
       "summary": "将熔断开关从 {from} 切换到 {to}。",
       "ackSummary": "此操作将清除锁存状态，需要确认。",
       "updated": "熔断开关已设为 {state}"
@@ -2804,21 +2834,6 @@
       "switchTitle": "切换结算资金写策略",
       "summary": "将结算资金写策略从 {from} 切换到 {to}。",
       "switched": "结算资金写策略已切换为 {policy}"
-    },
-    "health": {
-      "title": "子系统健康",
-      "overallHealthy": "所有子系统健康",
-      "overallUnhealthy": "存在不健康的子系统",
-      "healthy": "健康",
-      "unhealthy": "不健康",
-      "skipped": "已跳过",
-      "checkedAt": "检查于",
-      "messageAgeMs": "末消息 {ms}ms"
-    },
-    "deployConfig": {
-      "title": "部署配置",
-      "masked": "凭证已脱敏的部署配置快照。",
-      "view": "查看配置"
     }
   },
   "markets": {
@@ -2850,8 +2865,6 @@
     },
     "actions": {
       "detail": "详情",
-      "subscribe": "订阅",
-      "unsubscribe": "退订",
       "block": "屏蔽",
       "unblock": "解除屏蔽"
     },
@@ -2869,20 +2882,10 @@
       "unblocked": "已解除屏蔽"
     },
     "detail": {
-      "title": "市场详情",
+      "back": "返回市场列表",
       "marketId": "市场 ID",
       "eventId": "事件 ID",
-      "slug": "Slug",
-      "tickSize": "最小价格步长",
-      "negRisk": "负风险",
-      "outcome": "结果",
-      "endDate": "截止日期",
-      "resolvedAt": "结算时间",
-      "yes": "是",
-      "no": "否",
       "book": "订单簿",
-      "yesBook": "YES 盘口",
-      "noBook": "NO 盘口",
       "bidPrice": "买价",
       "askPrice": "卖价",
       "size": "数量",
@@ -3008,13 +3011,6 @@
       "recommendationId": "推荐 ID",
       "createdAt": "创建时间"
     },
-    "queue": {
-      "all": "全部",
-      "pendingApproval": "待审批",
-      "awaitingSubmit": "已 Arm",
-      "inFlight": "执行中",
-      "terminal": "终态"
-    },
     "columns": {
       "intentId": "意图",
       "status": "状态",
@@ -3022,7 +3018,6 @@
       "runtimeMode": "模式",
       "side": "方向",
       "limitPrice": "限价",
-      "shares": "份额",
       "amount": "金额/份额",
       "recommendationId": "推荐",
       "createdAt": "创建时间",
@@ -3092,10 +3087,7 @@
     },
     "detail": {
       "title": "订单意图",
-      "back": "返回意图列表",
       "notFound": "未找到订单意图。",
-      "loadError": "加载订单意图失败。",
-      "retry": "重试",
       "viewAllOrders": "查看全部执行订单",
       "noExecutionOrders": "暂无执行订单。",
       "sections": {
@@ -3109,7 +3101,6 @@
         "recommendationId": "推荐",
         "decisionPolicySnapshot": "决策策略快照",
         "modelVersion": "模型版本",
-        "modelRun": "模型运行",
         "policyId": "策略 ID",
         "policyHash": "策略哈希",
         "riskEnvelopeHash": "风险敞口哈希",
@@ -3125,26 +3116,13 @@
       },
       "entry": {
         "amount": "金额/份额",
-        "triggerState": "触发状态",
-        "trigger": "冻结触发条件",
-        "immediate": "Arm 后立即执行",
-        "confirmingSince": "连续确认开始",
-        "lastObservedAt": "最近观察时间",
-        "currentPrice": "当前可执行价格",
-        "conditionSatisfied": "当前满足条件",
-        "confirmationRemaining": "确认剩余时间",
-        "bookFreshness": "盘口新鲜度",
-        "bookObservedAt": "盘口观察时间",
-        "admissionBlocker": "准入阻断原因",
         "fresh": "新鲜",
         "stale": "陈旧 / 不可用",
         "token": "Token",
-        "primaryToken": "模型主 Token",
         "side": "方向",
         "orderType": "订单类型",
         "postOnly": "仅挂单（Post Only）",
         "limitPrice": "限价",
-        "shares": "份额",
         "maxSlippage": "最大滑点",
         "validUntil": "有效期至"
       },
@@ -3171,7 +3149,6 @@
     "nextEvaluationAt": "下次兜底求值",
     "evaluationHash": "求值哈希",
     "inputFingerprint": "输入指纹",
-    "artifact": "冻结 Artifact",
     "canonicalTree": "Canonical 条件树",
     "authoritativeEvaluation": "最新权威求值",
     "copyHash": "复制哈希",
@@ -3571,7 +3548,6 @@
     }
   },
   "quantReports": {
-    "title": "推荐报告",
     "listTitle": "报告",
     "tabs": {
       "reports": "报告",
@@ -3595,9 +3571,7 @@
       "route": "Route",
       "status": "状态",
       "kind": "类型",
-      "triggerKind": "触发",
-      "runtimeMode": "运行模式",
-      "all": "全部"
+      "runtimeMode": "运行模式"
     },
     "columns": {
       "reportId": "报告",
@@ -3615,7 +3589,6 @@
       "publishedAt": "发布时间",
       "revokedAt": "撤销时间",
       "expiredAt": "过期时间",
-      "createdAt": "创建时间",
       "operation": "操作"
     },
     "actions": {
@@ -3671,9 +3644,6 @@
       "lastPublished": "最近发布时间",
       "failuresAndGaps": "失败 / 缺口（24 小时）",
       "queuedPrepared": "排队运行 / Prepared 积压",
-      "queued": "排队运行",
-      "failures24h": "失败 / 放弃（24 小时）",
-      "missed24h": "错过触发（24 小时）",
       "schedules": "调度状态",
       "enabled": "启用",
       "nextFire": "下次触发",
@@ -3709,15 +3679,14 @@
       "diagnostics": "Secondary diagnostics",
       "columns": {
         "market": "市场",
+        "primaryToken": "主要 Token ID",
         "route": "Route",
         "stage": "Terminal stage",
         "reason": "Primary reason",
-        "token": "Token",
         "lineage": "血缘"
       }
     },
     "detail": {
-      "title": "报告详情",
       "back": "返回报告列表",
       "notFound": "报告不存在",
       "openRun": "打开构建运行",
@@ -3742,17 +3711,10 @@
       },
       "factDelivery": {
         "bundleHash": "事实包哈希",
-        "nextAttemptAt": "下次重试",
         "title": "报告事实投递",
         "status": "投递状态",
-        "attempts": "尝试次数",
         "recommendationRows": "推荐事实行",
         "funnelRows": "漏斗事实行",
-        "recommendationHash": "推荐事实行链哈希",
-        "funnelHash": "漏斗事实行链哈希",
-        "verifiedAt": "核验时间",
-        "announcedAt": "Committed 事件时间",
-        "lastError": "终态诊断",
         "missing": "缺失",
         "notVerified": "报告事实尚未核验",
         "pendingDescription": "该报告目前仅供管理员查看；两类 ClickHouse 事实承诺全部核验前，不能成为 current/actionable 报告，也不能创建 OrderIntent。",
@@ -3774,9 +3736,6 @@
         "identity": "标识",
         "reportId": "报告 ID",
         "kind": "类型",
-        "triggerKind": "触发",
-        "triggerKey": "触发键",
-        "triggerTime": "触发时间",
         "status": "状态",
         "runtimeMode": "运行模式",
         "routes": "覆盖 Route",
@@ -3786,18 +3745,11 @@
         "decisionAt": "决策时间",
         "knowledgeLag": "知识延迟",
         "knowledgeCutoff": "知识截止时间",
-        "topN": "Top N",
         "capitalBase": "资本基数",
-        "accountSource": "账户来源",
         "accountSnapshotRef": "账户快照引用",
         "decisionPolicySnapshot": "决策策略快照",
         "portfolioPlan": "全局组合计划",
-        "marketSelection": "市场选池",
-        "statusReason": "状态原因",
-        "publishedAt": "发布时间",
-        "revokedAt": "撤销时间",
-        "expiredAt": "过期时间",
-        "createdAt": "创建时间"
+        "marketSelection": "市场选池"
       },
       "parity": {
         "title": "训练—服务一致性"
@@ -3805,26 +3757,12 @@
       "servingAudit": {
         "title": "服务决策审计",
         "incomplete": "该报告在实际执行阶段内的持久化证据不完整；不可用诊断明确显示为不可用，绝不以 0 代替。",
-        "preInference": "报告在模型推理前终止",
-        "preInferenceDescription": "最后执行阶段为 {stage}；本报告不会伪造模型运行或编码输入。",
-        "subject": "证据主体",
-        "subjects": {
-          "model_run": "模型运行",
-          "pre_inference_report": "推理前报告"
-        },
         "stageCeiling": "实际执行阶段上限",
-        "modelFamily": "实际模型族",
         "selectionCount": "选中市场数",
         "captureCount": "决策快照数",
         "featureVectors": "特征向量数",
         "featureCells": "FeatureCell 行数",
-        "modelInputs": "编码输入行数",
-        "contractHash": "输入契约哈希",
-        "transformHash": "转换哈希",
-        "trainingInputHash": "训练输入哈希",
-        "sourceCutoffs": "各来源截止时间",
-        "featureStates": "特征准入状态",
-        "inputStates": "模型输入 / 插补状态"
+        "modelInputs": "编码输入行数"
       },
       "portfolio": {
         "title": "全局组合经济性",
@@ -3884,29 +3822,12 @@
         }
       },
       "summary": {
-        "title": "汇总",
-        "marketSelectionCount": "选中市场",
-        "candidateCount": "候选数",
         "rejectedTierCount": "被拒经济档位",
         "publishedCount": "已发布",
         "totalSuggested": "建议总额",
-        "maxSingle": "单条最大",
-        "dataQuality": "数据质量",
-        "dqFresh": "新鲜",
-        "dqAcceptable": "可接受",
-        "dqDegraded": "降级",
-        "dqStale": "陈旧",
-        "dqInsufficient": "不足",
-        "eligibility": "执行资格",
-        "eligibleReportOnly": "仅报告",
-        "eligibleSemiAuto": "半自动",
-        "eligibleAutoExecution": "全自动",
-        "topRejections": "主要被拒原因",
         "categoryAllocation": "类别分配",
         "eventAllocation": "事件分配",
-        "routeAllocation": "Route 分配",
-        "warnings": "告警",
-        "count": "数量"
+        "routeAllocation": "Route 分配"
       },
       "recommendations": {
         "empty": "该报告没有推荐。",
@@ -4014,15 +3935,11 @@
       "routeRunId": "Route 运行 ID",
       "portfolioPlanId": "组合计划 ID",
       "economicTierId": "经济档位 ID",
-      "rank": "排名",
       "market": "市场",
       "event": "事件",
       "token": "Token",
-      "side": "结果方向",
       "category": "类别",
-      "question": "问题",
       "outcome": "结果",
-      "status": "状态",
       "validFrom": "生效自",
       "validUntil": "生效至",
       "activeIntent": "进行中意图"
@@ -4112,8 +4029,7 @@
       "minScoreRetention": "最低分数保留率",
       "minExpectedReturn": "最低预期收益",
       "requireEligibility": "要求执行资格",
-      "reason": "退出原因",
-      "invalidation": "论点失效策略"
+      "reason": "退出原因"
     },
     "riskEnvelope": {
       "title": "风险边界",
@@ -4159,7 +4075,6 @@
       }
     },
     "evidence": {
-      "title": "回放句柄",
       "signalCandidate": "信号候选",
       "featureVector": "特征向量",
       "modelRun": "模型运行",
@@ -4234,8 +4149,7 @@
     "readOnly": "当前角色仅可查看配置。创建、审批、激活和回滚分别受独立权限控制。",
     "nav": {
       "back": "返回配置中心",
-      "deployment": "部署快照",
-      "lifecycle": "生命周期"
+      "deployment": "部署快照"
     },
     "overview": {
       "title": "配置中心",
@@ -4355,11 +4269,9 @@
       }
     },
     "editor": {
-      "variant": "变体",
       "addItem": "添加条目",
       "item": "条目 {index}",
       "removeItem": "删除条目",
-      "emptyList": "暂无条目",
       "changed": "已修改 {count} 个字段",
       "unit": "单位",
       "applyEffect": "生效点",
@@ -4430,9 +4342,6 @@
       "activeExit": "生效退出模型",
       "loadError": "无法加载模型证据目录；当前路由保持只读。",
       "retry": "重试",
-      "artifactHash": "产物哈希",
-      "evidence": "发布证据",
-      "published": "已验证产物",
       "champion": "Champion",
       "shadow": "Shadow",
       "shadowAvailable": "受治理的 Shadow 槽位当前可用。",
@@ -4450,17 +4359,6 @@
       "side": {
         "buy": "Buy",
         "sell": "Sell"
-      },
-      "family": {
-        "weighted_factor": "加权因子",
-        "classical_gradient_boosted_trees": "梯度提升树",
-        "classical_random_forest": "随机森林",
-        "classical_extra_trees": "Extra Trees",
-        "classical_logistic_regression": "逻辑回归",
-        "classical_ridge": "Ridge",
-        "classical_lasso": "Lasso",
-        "classical_elastic_net": "Elastic Net",
-        "hold_vs_exit_weighted": "持有/退出评分"
       }
     },
     "reportSchedulePreview": {

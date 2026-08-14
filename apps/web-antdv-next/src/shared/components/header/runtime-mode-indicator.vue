@@ -6,14 +6,11 @@ import { computed } from 'vue';
 import { QUANT_RUNTIME_MODE_OPTIONS } from '@vben/types';
 
 import { $t } from '#/locales';
-import {
-  findTagOption,
-  useQuantRuntimeModeTagOptions,
-} from '#/shared/components/format/tag-options';
 import GovernedStatePickerPopover from '#/shared/components/header/governed-state-picker-popover.vue';
 import { usePreflightResult } from '#/shared/composables/use-preflight-result';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQuantModeAction } from '#/shared/composables/use-system-actions';
+import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'RuntimeModeIndicator' });
@@ -33,14 +30,14 @@ const visible = computed(
   () => hasAccessByCodes(['system:switch_mode']) && currentMode.value !== null,
 );
 
-const modeTagOptions = useQuantRuntimeModeTagOptions();
+const modeTagOptions = enumOptions('QuantRuntimeMode');
 const currentTag = computed(() =>
-  findTagOption(modeTagOptions, currentMode.value),
+  enumOption(modeTagOptions, currentMode.value),
 );
 
 const pickerOptions = computed(() =>
   QUANT_RUNTIME_MODE_OPTIONS.map((mode) => {
-    const tag = findTagOption(modeTagOptions, mode);
+    const tag = enumOption(modeTagOptions, mode);
     return {
       disabled: mode === currentMode.value,
       label: tag?.label ?? mode,

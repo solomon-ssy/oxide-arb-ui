@@ -25,7 +25,7 @@ import type {
   ReportScheduleGapReason,
   ReportTriggerKind,
 } from './enums';
-import type { BuyModelRoute } from './feedback';
+import type { BuyModelRoute } from './generated/config-api';
 import type {
   ExecutionEligibility,
   FactorBreakdownEntry,

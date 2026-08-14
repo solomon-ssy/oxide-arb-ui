@@ -1,7 +1,5 @@
 import type {
   ActionEligibilityView,
-  ExecutionRecoveryView,
-  HealthReport,
   KillSwitchView,
   QuantModeTransitionReport,
   RuntimeControlSnapshot,
@@ -20,12 +18,10 @@ export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
   export const actionEligibility = `${base}/action-eligibility`;
-  export const health = `${base}/health`;
   export const runtimeControls = `${base}/runtime-controls`;
   export const quantMode = `${runtimeControls}/quant-mode`;
   export const settlementWritePolicy = `${runtimeControls}/settlement-write-policy`;
   export const killSwitch = `${runtimeControls}/kill-switch`;
-  export const executionRecovery = `${base}/execution-recovery`;
 }
 
 /** `GET /system/status` — the operator system snapshot. */
@@ -38,19 +34,9 @@ export async function getActionEligibility() {
   return requestClient.get<ActionEligibilityView>(SystemApi.actionEligibility);
 }
 
-/** `GET /system/health` — per-subsystem health report. */
-export async function getSystemHealth() {
-  return requestClient.get<HealthReport>(SystemApi.health);
-}
-
 /** Atomic operational controls and their shared CAS revision. */
 export async function getRuntimeControls() {
   return requestClient.get<RuntimeControlSnapshot>(SystemApi.runtimeControls);
-}
-
-/** `GET /system/execution-recovery` — recovery detail with blocking rows. */
-export async function getExecutionRecovery() {
-  return requestClient.get<ExecutionRecoveryView>(SystemApi.executionRecovery);
 }
 
 /**
