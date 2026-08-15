@@ -48,5 +48,13 @@ export default defineConfig({
             ],
           ]
         : ['default'],
+    server: {
+      deps: {
+        // @v-c/picker ships ESM with extensionless dayjs plugin imports.
+        // Native Node externalization rejects those paths; Vite's resolver
+        // correctly completes the `.js` extension when the package is inlined.
+        inline: ['@v-c/picker'],
+      },
+    },
   },
 });

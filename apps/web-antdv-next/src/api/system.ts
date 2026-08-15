@@ -1,9 +1,14 @@
 import type {
   ActionEligibilityView,
+  FreshBootProgressView,
+  FreshBootRunDetailView,
+  FreshBootRunProgressView,
   KillSwitchView,
   QuantModeTransitionReport,
+  RetryFreshBootRunRequest,
   RuntimeControlSnapshot,
   SetKillSwitchRequest,
+  SupersedeFreshBootRunRequest,
   SwitchQuantModeRequest,
   SwitchSettlementWritePolicyRequest,
   SystemControlPlaneStatus,
@@ -18,6 +23,7 @@ export namespace SystemApi {
   export const base = '/system';
   export const status = `${base}/status`;
   export const actionEligibility = `${base}/action-eligibility`;
+  export const freshBoot = `${base}/fresh-boot`;
   export const runtimeControls = `${base}/runtime-controls`;
   export const quantMode = `${runtimeControls}/quant-mode`;
   export const settlementWritePolicy = `${runtimeControls}/settlement-write-policy`;
@@ -32,6 +38,50 @@ export async function getSystemStatus() {
 /** User-scoped RBAC and runtime-capability decisions for guarded actions. */
 export async function getActionEligibility() {
   return requestClient.get<ActionEligibilityView>(SystemApi.actionEligibility);
+}
+
+/** Durable L2-free cold-start progress and first-report readiness. */
+export async function getFreshBootProgress(
+  options: { signal?: AbortSignal } = {},
+) {
+  return requestClient.get<FreshBootProgressView>(SystemApi.freshBoot, options);
+}
+
+/** Immutable run projection and append-only transition timeline. */
+export async function getFreshBootRun(
+  runId: string,
+  options: { signal?: AbortSignal } = {},
+) {
+  return requestClient.get<FreshBootRunDetailView>(
+    `${SystemApi.freshBoot}/${runId}`,
+    options,
+  );
+}
+
+/** Accelerate a retryable wait without bypassing its current stage gate. */
+export async function retryFreshBootRun(
+  runId: string,
+  body: RetryFreshBootRunRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<FreshBootRunProgressView>(
+    `${SystemApi.freshBoot}/${runId}/retry-now`,
+    body,
+    ctx,
+  );
+}
+
+/** Replace an immutable terminal run with a governed fresh lineage. */
+export async function supersedeFreshBootRun(
+  runId: string,
+  body: SupersedeFreshBootRunRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<FreshBootRunProgressView>(
+    `${SystemApi.freshBoot}/${runId}/supersede`,
+    body,
+    ctx,
+  );
 }
 
 /** Atomic operational controls and their shared CAS revision. */

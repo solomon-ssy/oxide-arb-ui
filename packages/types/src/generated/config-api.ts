@@ -412,6 +412,11 @@ export interface DataQualityConfig {
    */
   max_domain_observation_age_secs: number;
   /**
+   * Maximum acceptable age (seconds) of the freshest finalized execution at
+   * decision time (`StalenessRule::MaxExecutionAge`).
+   */
+  max_execution_age_secs: number;
+  /**
    * Maximum acceptable age (seconds) of the freshest materialized feature
    * bucket at decision time. Governs offline/online feature staleness
    * (`StalenessRule::MaxFeatureBucketAge`) — independent of live ingest lag.
@@ -432,11 +437,6 @@ export interface DataQualityConfig {
    * frozen admission input at build time so checks never read config directly.
    */
   max_stale_book_ratio_bps: number;
-  /**
-   * Maximum acceptable age (seconds) of the freshest trade-tape print at
-   * decision time (`StalenessRule::MaxTradeTapeAge`).
-   */
-  max_trade_tape_age_secs: number;
   /**
    * Reject crossed books before feature generation.
    */
@@ -944,10 +944,10 @@ export interface PortfolioScenarioModelArtifactBinding {
   model_content_hash: string;
   ordered_routes: BuyModelRoute[];
   portfolio_scenario_model_artifact_id: string;
+  recommendation_contract_digest: string;
   route_set_digest: string;
   scenario_model_schema_version: SchemaVersion;
   serving_contract_digest: string;
-  trade_policy_contract_digest: string;
 }
 /**
  * Durable report schedule resource, isolated from report decision semantics.

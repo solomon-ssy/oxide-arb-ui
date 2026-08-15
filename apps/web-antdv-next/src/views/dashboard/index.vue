@@ -6,6 +6,9 @@ import type {
   DashboardWindow,
   FeedbackCycleStatus,
   FeedbackOverviewView,
+  FreshBootProfileProgressView,
+  FreshBootProgressView,
+  FreshBootRunDetailView,
   QuantRecommendationView,
 } from '@vben/types';
 
@@ -46,6 +49,11 @@ import {
   Tag,
 } from 'antdv-next';
 
+import {
+  getFreshBootRun,
+  retryFreshBootRun,
+  supersedeFreshBootRun,
+} from '#/api/system';
 import { $t } from '#/locales';
 import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
 import {
@@ -60,6 +68,7 @@ import InsightPanel from '#/shared/components/insight-panel.vue';
 import KpiCard from '#/shared/components/kpi-card.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
+import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
@@ -86,6 +95,13 @@ import {
 import { getDashboardSnapshot } from './modules/dashboard-snapshot';
 import EquityDrawdownChart from './modules/equity-drawdown-chart.vue';
 import ExposureTreemap from './modules/exposure-treemap.vue';
+import {
+  activationPercent,
+  retentionPercent as calculateRetentionPercent,
+  profileStatusColor,
+  reduceFreshBootRead,
+  summarizeFreshBoot,
+} from './modules/fresh-boot-presentation';
 import LifecycleSankey from './modules/lifecycle-sankey.vue';
 import RecommendationOrbit from './modules/recommendation-orbit.vue';
 
@@ -100,6 +116,7 @@ const reportStore = useQuantReportStore();
 const wsStore = useWsStore();
 const qpWs = useQpWs();
 const { hasAccessByCodes } = useQpAccess();
+const { governed } = useGovernedAction();
 const {
   canRun: canRunReport,
   openRunReport,
@@ -111,6 +128,12 @@ const visibility = useDocumentVisibility();
 const windowValue = ref<DashboardWindow>('7d');
 const overview = ref<DashboardOverviewView | null>(null);
 const feedbackOverview = ref<FeedbackOverviewView | null>(null);
+const freshBoot = ref<FreshBootProgressView | null>(null);
+const freshBootError = ref(false);
+const freshBootDetail = ref<FreshBootRunDetailView | null>(null);
+const freshBootDetailError = ref(false);
+const freshBootDetailLoading = ref(false);
+const freshBootDetailOpen = ref(false);
 const initialLoading = ref(true);
 const refreshing = ref(false);
 const refreshPending = ref(false);
@@ -150,6 +173,110 @@ const feedbackState = computed(() => {
     ? 'blocked'
     : 'ready';
 });
+const freshBootPercent = computed(() =>
+  activationPercent(freshBoot.value?.exchange_history),
+);
+const retentionPercent = computed(() =>
+  calculateRetentionPercent(freshBoot.value?.exchange_history),
+);
+const freshBootSummary = computed(() =>
+  summarizeFreshBoot(
+    freshBoot.value?.profiles ?? [],
+    freshBoot.value?.exchange_history.stage,
+  ),
+);
+const freshBootStatusColor = computed(() => freshBootSummary.value.color);
+const freshBootStatus = computed(() => freshBootSummary.value.status);
+
+function canRetryFreshBoot(profile: FreshBootProfileProgressView) {
+  return (
+    hasAccessByCodes(['system:update']) &&
+    (profile.run.status === 'retry_scheduled' ||
+      profile.run.status === 'waiting_evidence')
+  );
+}
+
+function canSupersedeFreshBoot(profile: FreshBootProfileProgressView) {
+  return (
+    hasAccessByCodes(['system:resolve']) &&
+    profile.run.status === 'blocked_terminal'
+  );
+}
+
+async function openFreshBootTimeline(profile: FreshBootProfileProgressView) {
+  freshBootDetailOpen.value = true;
+  freshBootDetailLoading.value = true;
+  freshBootDetailError.value = false;
+  freshBootDetail.value = null;
+  try {
+    freshBootDetail.value = await getFreshBootRun(profile.run.run_id);
+  } catch {
+    freshBootDetailError.value = true;
+  } finally {
+    freshBootDetailLoading.value = false;
+  }
+}
+
+async function retryFreshBoot(profile: FreshBootProfileProgressView) {
+  const result = await governed(
+    (ctx) =>
+      retryFreshBootRun(
+        profile.run.run_id,
+        {
+          expected_revision: profile.run.revision,
+          reason: ctx.reason,
+        },
+        ctx,
+      ),
+    {
+      details: [
+        {
+          label: $t('page.dashboard.bootstrap.routeLabel'),
+          value: $t(`page.dashboard.bootstrap.route.${profile.run.route}`),
+        },
+        {
+          label: $t('page.dashboard.bootstrap.runId'),
+          mono: true,
+          value: profile.run.run_id,
+        },
+      ],
+      summary: $t('page.dashboard.bootstrap.retrySummary'),
+      title: $t('page.dashboard.bootstrap.retryNow'),
+    },
+  );
+  if (result) refreshCoordinator.invalidate();
+}
+
+async function supersedeFreshBoot(profile: FreshBootProfileProgressView) {
+  const result = await governed(
+    (ctx) =>
+      supersedeFreshBootRun(
+        profile.run.run_id,
+        {
+          expected_revision: profile.run.revision,
+          reason: ctx.reason,
+        },
+        ctx,
+      ),
+    {
+      danger: true,
+      details: [
+        {
+          label: $t('page.dashboard.bootstrap.routeLabel'),
+          value: $t(`page.dashboard.bootstrap.route.${profile.run.route}`),
+        },
+        {
+          label: $t('page.dashboard.bootstrap.runId'),
+          mono: true,
+          value: profile.run.run_id,
+        },
+      ],
+      summary: $t('page.dashboard.bootstrap.supersedeSummary'),
+      title: $t('page.dashboard.bootstrap.supersede'),
+    },
+  );
+  if (result) refreshCoordinator.invalidate();
+}
 
 function valueOf<T>(section: DashboardSection<T> | undefined): null | T {
   if (section?.state === 'ready' || section?.state === 'stale') {
@@ -375,6 +502,13 @@ const refreshCoordinator = new AuthoritativeReadCoordinator<
     } else {
       feedbackError.value = $t('page.dashboard.feedback.invalidRevision');
     }
+
+    const nextFreshBoot = reduceFreshBootRead(
+      freshBoot.value,
+      snapshot.freshBoot,
+    );
+    freshBoot.value = nextFreshBoot.value;
+    freshBootError.value = nextFreshBoot.stale || nextFreshBoot.value === null;
   },
 });
 
@@ -808,7 +942,7 @@ onBeforeUnmount(() => {
 
         <div
           class="grid grid-cols-1 gap-5"
-          :class="{ 'lg:grid-cols-3': overview }"
+          :class="{ 'lg:grid-cols-2 xl:grid-cols-4': overview }"
         >
           <InsightPanel
             v-if="overview"
@@ -854,6 +988,361 @@ onBeforeUnmount(() => {
             <Empty
               v-else
               :description="$t('page.dashboard.section.unavailable')"
+              :image="Empty.PRESENTED_IMAGE_SIMPLE"
+            />
+          </InsightPanel>
+
+          <InsightPanel
+            v-if="overview"
+            class="fresh-boot-panel lg:col-span-2 xl:col-span-4"
+            :title="$t('page.dashboard.bootstrap.title')"
+            icon="lucide:rocket"
+            tone="violet"
+          >
+            <Alert
+              v-if="freshBootError && freshBoot === null"
+              :message="$t('page.dashboard.bootstrap.unavailable')"
+              show-icon
+              type="error"
+            />
+            <template v-else-if="freshBoot">
+              <div aria-live="polite" class="sr-only" role="status">
+                {{ $t(`page.dashboard.bootstrap.status.${freshBootStatus}`) }}
+              </div>
+              <Alert
+                v-if="freshBootError"
+                class="mb-4"
+                :description="
+                  $t('page.dashboard.bootstrap.staleDescription', {
+                    time: formatDateTimeLocal(freshBoot.observed_at),
+                  })
+                "
+                :message="$t('page.dashboard.bootstrap.stale')"
+                show-icon
+                type="warning"
+              />
+              <div class="fresh-boot-layout">
+                <section
+                  class="fresh-boot-history"
+                  aria-labelledby="fresh-boot-history-title"
+                >
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 id="fresh-boot-history-title" class="font-semibold">
+                      {{ $t('page.dashboard.bootstrap.historyTitle') }}
+                    </h3>
+                    <Tag :color="freshBootStatusColor">
+                      {{
+                        $t(`page.dashboard.bootstrap.status.${freshBootStatus}`)
+                      }}
+                    </Tag>
+                    <Tag>
+                      {{
+                        $t(
+                          `page.dashboard.bootstrap.historyStage.${freshBoot.exchange_history.stage}`,
+                        )
+                      }}
+                    </Tag>
+                  </div>
+
+                  <div class="fresh-boot-frontier">
+                    <div
+                      class="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <strong>{{
+                        $t('page.dashboard.bootstrap.activation')
+                      }}</strong>
+                      <span class="font-mono tabular-nums">
+                        {{ freshBootPercent }}%
+                      </span>
+                    </div>
+                    <Progress
+                      :aria-label="
+                        $t('page.dashboard.bootstrap.activationProgressAria')
+                      "
+                      :percent="freshBootPercent"
+                      :status="
+                        freshBoot.exchange_history.stage === 'quarantined'
+                          ? 'exception'
+                          : 'active'
+                      "
+                    />
+                    <p class="text-muted-foreground text-xs">
+                      {{
+                        $t('page.dashboard.bootstrap.activationCoverage', {
+                          accepted:
+                            freshBoot.exchange_history.accepted_through_block ??
+                            '—',
+                          from:
+                            freshBoot.exchange_history.activation_from_block ??
+                            '—',
+                          target:
+                            freshBoot.exchange_history.target_block ?? '—',
+                        })
+                      }}
+                    </p>
+                  </div>
+
+                  <div class="fresh-boot-frontier">
+                    <div
+                      class="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <strong>{{
+                        $t('page.dashboard.bootstrap.retention')
+                      }}</strong>
+                      <span class="font-mono tabular-nums">
+                        {{ retentionPercent }}%
+                      </span>
+                    </div>
+                    <Progress
+                      :aria-label="
+                        $t('page.dashboard.bootstrap.retentionProgressAria')
+                      "
+                      :percent="retentionPercent"
+                      :status="
+                        freshBoot.exchange_history.stage === 'quarantined'
+                          ? 'exception'
+                          : 'active'
+                      "
+                    />
+                    <p class="text-muted-foreground text-xs">
+                      {{
+                        freshBoot.exchange_history
+                          .retention_accepted_from_block === null
+                          ? $t('page.dashboard.bootstrap.retentionPending')
+                          : $t('page.dashboard.bootstrap.retentionCoverage', {
+                              from: freshBoot.exchange_history
+                                .retention_accepted_from_block,
+                            })
+                      }}
+                    </p>
+                  </div>
+
+                  <dl class="fresh-boot-history-metrics">
+                    <div>
+                      <dt>{{ $t('page.dashboard.bootstrap.acceptedLogs') }}</dt>
+                      <dd>{{ freshBoot.exchange_history.logs_accepted }}</dd>
+                    </div>
+                    <div>
+                      <dt>
+                        {{ $t('page.dashboard.bootstrap.quarantineCount') }}
+                      </dt>
+                      <dd>{{ freshBoot.exchange_history.quarantine_count }}</dd>
+                    </div>
+                  </dl>
+                  <p
+                    v-if="freshBoot.exchange_history.projected_completion_at"
+                    class="text-muted-foreground text-xs"
+                  >
+                    {{
+                      $t('page.dashboard.bootstrap.projectedCompletion', {
+                        time: formatDateTimeLocal(
+                          freshBoot.exchange_history.projected_completion_at,
+                        ),
+                      })
+                    }}
+                  </p>
+                </section>
+
+                <section aria-labelledby="fresh-boot-routes-title">
+                  <h3 id="fresh-boot-routes-title" class="mb-3 font-semibold">
+                    {{ $t('page.dashboard.bootstrap.routesTitle') }}
+                  </h3>
+                  <ul v-if="freshBoot.profiles.length > 0" class="grid gap-3">
+                    <li
+                      v-for="profile in freshBoot.profiles"
+                      :key="profile.run.run_id"
+                      class="fresh-boot-profile"
+                    >
+                      <div class="fresh-boot-profile-grid">
+                        <div>
+                          <span class="fresh-boot-label">{{
+                            $t('page.dashboard.bootstrap.routeLabel')
+                          }}</span>
+                          <strong>{{
+                            $t(
+                              `page.dashboard.bootstrap.route.${profile.run.route}`,
+                            )
+                          }}</strong>
+                          <Tag
+                            class="mt-1 w-fit"
+                            :color="profileStatusColor(profile.run.status)"
+                          >
+                            {{
+                              $t(
+                                `page.dashboard.bootstrap.status.${profile.run.status}`,
+                              )
+                            }}
+                          </Tag>
+                        </div>
+                        <div>
+                          <span class="fresh-boot-label">{{
+                            $t('page.dashboard.bootstrap.sourceCoverage')
+                          }}</span>
+                          <strong>
+                            {{
+                              profile.run.source_coverage_manifest
+                                ? $t(
+                                    'page.dashboard.bootstrap.coverageSealed',
+                                    {
+                                      count:
+                                        profile.run.source_coverage_manifest
+                                          .requirements.length,
+                                    },
+                                  )
+                                : $t('page.dashboard.bootstrap.coverageWaiting')
+                            }}
+                          </strong>
+                          <span
+                            v-if="profile.run.next_attempt_at"
+                            class="text-muted-foreground text-xs"
+                          >
+                            {{
+                              $t('page.dashboard.bootstrap.nextRetry', {
+                                time: formatDateTimeLocal(
+                                  profile.run.next_attempt_at,
+                                ),
+                              })
+                            }}
+                          </span>
+                        </div>
+                        <div>
+                          <span class="fresh-boot-label">{{
+                            $t('page.dashboard.bootstrap.currentStage')
+                          }}</span>
+                          <strong>{{
+                            $t(
+                              `page.dashboard.bootstrap.stage.${profile.run.stage}`,
+                            )
+                          }}</strong>
+                          <span class="text-muted-foreground text-xs">
+                            {{
+                              formatDateTimeLocal(profile.run.stage_entered_at)
+                            }}
+                          </span>
+                        </div>
+                        <div>
+                          <span class="fresh-boot-label">{{
+                            $t('page.dashboard.bootstrap.lastEvent')
+                          }}</span>
+                          <strong>
+                            {{
+                              profile.last_event
+                                ? $t(
+                                    `page.dashboard.bootstrap.event.${profile.last_event.event}`,
+                                  )
+                                : $t('page.dashboard.bootstrap.notObserved')
+                            }}
+                          </strong>
+                          <span
+                            v-if="profile.last_event"
+                            class="text-muted-foreground text-xs"
+                          >
+                            {{
+                              formatDateTimeLocal(
+                                profile.last_event.occurred_at,
+                              )
+                            }}
+                          </span>
+                        </div>
+                        <div>
+                          <span class="fresh-boot-label">{{
+                            $t('page.dashboard.bootstrap.job')
+                          }}</span>
+                          <strong class="fresh-boot-id">
+                            {{
+                              profile.run.active_job_id ??
+                              profile.run.last_job_id ??
+                              '—'
+                            }}
+                          </strong>
+                        </div>
+                        <div>
+                          <span class="fresh-boot-label">{{
+                            $t('page.dashboard.bootstrap.firstReport')
+                          }}</span>
+                          <strong>
+                            {{
+                              profile.manual_report_ready
+                                ? $t('page.dashboard.bootstrap.ready')
+                                : $t('page.dashboard.bootstrap.pending')
+                            }}
+                          </strong>
+                          <span
+                            v-if="profile.run.first_report_id"
+                            class="fresh-boot-id text-xs"
+                          >
+                            {{ profile.run.first_report_id }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Alert
+                        v-if="profile.run.blocker"
+                        class="mt-3"
+                        :description="profile.run.blocker.detail"
+                        :message="
+                          profile.run.blocker.code.kind === 'terminal'
+                            ? $t(
+                                `page.dashboard.bootstrap.blockedReason.${profile.run.blocker.code.code}`,
+                              )
+                            : $t(
+                                `page.dashboard.bootstrap.retryReason.${profile.run.blocker.code.code}`,
+                              )
+                        "
+                        show-icon
+                        :type="
+                          profile.run.blocker.retryable ? 'warning' : 'error'
+                        "
+                      />
+
+                      <div
+                        class="mt-3 flex flex-wrap items-center justify-end gap-2"
+                      >
+                        <Button
+                          size="small"
+                          @click="openFreshBootTimeline(profile)"
+                        >
+                          {{ $t('page.dashboard.bootstrap.timeline') }}
+                        </Button>
+                        <Button
+                          v-if="canRetryFreshBoot(profile)"
+                          size="small"
+                          @click="retryFreshBoot(profile)"
+                        >
+                          {{ $t('page.dashboard.bootstrap.retryNow') }}
+                        </Button>
+                        <Button
+                          v-if="canSupersedeFreshBoot(profile)"
+                          danger
+                          size="small"
+                          @click="supersedeFreshBoot(profile)"
+                        >
+                          {{ $t('page.dashboard.bootstrap.supersede') }}
+                        </Button>
+                        <Button
+                          v-if="profile.manual_report_ready"
+                          size="small"
+                          type="primary"
+                          @click="
+                            navigate('/trading/recommendations?module=reports')
+                          "
+                        >
+                          {{ $t('page.dashboard.bootstrap.openReport') }}
+                        </Button>
+                      </div>
+                    </li>
+                  </ul>
+                  <Empty
+                    v-else
+                    :description="$t('page.dashboard.bootstrap.noProfiles')"
+                    :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                  />
+                </section>
+              </div>
+            </template>
+            <Empty
+              v-else
+              :description="$t('page.dashboard.bootstrap.unavailable')"
               :image="Empty.PRESENTED_IMAGE_SIMPLE"
             />
           </InsightPanel>
@@ -1125,6 +1614,91 @@ onBeforeUnmount(() => {
       </template>
 
       <Drawer
+        :open="freshBootDetailOpen"
+        :title="$t('page.dashboard.bootstrap.timelineTitle')"
+        root-class-name="fresh-boot-timeline-drawer"
+        size="large"
+        @close="freshBootDetailOpen = false"
+      >
+        <Skeleton v-if="freshBootDetailLoading" active />
+        <Alert
+          v-else-if="freshBootDetailError"
+          :message="$t('page.dashboard.bootstrap.timelineError')"
+          show-icon
+          type="error"
+        />
+        <template v-else-if="freshBootDetail">
+          <div class="mb-4 grid gap-1">
+            <span class="text-muted-foreground text-xs">
+              {{ $t('page.dashboard.bootstrap.runId') }}
+            </span>
+            <strong class="fresh-boot-id">
+              {{ freshBootDetail.run.run_id }}
+            </strong>
+          </div>
+          <ol
+            v-if="freshBootDetail.events.length > 0"
+            aria-live="polite"
+            class="grid gap-3"
+          >
+            <li
+              v-for="event in freshBootDetail.events"
+              :key="event.event_id"
+              class="rounded-lg border p-3"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <strong>
+                  {{ $t(`page.dashboard.bootstrap.event.${event.event}`) }}
+                </strong>
+                <span class="text-muted-foreground text-xs">
+                  {{ formatDateTimeLocal(event.occurred_at) }}
+                </span>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                <span>#{{ event.sequence }}</span>
+                <span>
+                  {{
+                    $t('page.dashboard.bootstrap.attempt', {
+                      value: event.attempt,
+                    })
+                  }}
+                </span>
+                <span>{{ event.actor }}</span>
+              </div>
+              <dl class="mt-2 grid gap-2 text-xs">
+                <div v-if="event.research_job_id">
+                  <dt class="text-muted-foreground">
+                    {{ $t('page.dashboard.bootstrap.job') }}
+                  </dt>
+                  <dd class="fresh-boot-id">{{ event.research_job_id }}</dd>
+                </div>
+                <div v-if="event.result_ref">
+                  <dt class="text-muted-foreground">
+                    {{ $t('page.dashboard.bootstrap.resultRef') }}
+                  </dt>
+                  <dd class="fresh-boot-id">{{ event.result_ref }}</dd>
+                </div>
+                <div v-if="event.evidence_ref">
+                  <dt class="text-muted-foreground">
+                    {{ $t('page.dashboard.bootstrap.evidenceRef') }}
+                  </dt>
+                  <dd class="fresh-boot-id">{{ event.evidence_ref }}</dd>
+                </div>
+              </dl>
+              <p v-if="event.detail" class="mt-2 text-sm">
+                {{ event.detail }}
+              </p>
+            </li>
+          </ol>
+          <Empty
+            v-else
+            :description="$t('page.dashboard.bootstrap.timelineEmpty')"
+            :image="Empty.PRESENTED_IMAGE_SIMPLE"
+          />
+        </template>
+      </Drawer>
+
+      <Drawer
         :open="selectedRecommendation !== null"
         :size="520"
         :title="$t('page.dashboard.orbit.drawerTitle')"
@@ -1325,6 +1899,104 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--qp-text-primary));
+}
+
+.fresh-boot-panel {
+  min-width: 0;
+}
+
+.fresh-boot-layout {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 2.2fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.fresh-boot-history,
+.fresh-boot-profile {
+  min-width: 0;
+  padding: 1rem;
+  background: hsl(var(--qp-surface-inset));
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-md);
+}
+
+.fresh-boot-frontier {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.fresh-boot-history-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+.fresh-boot-history-metrics > div {
+  min-width: 0;
+  padding: 0.75rem;
+  background: hsl(var(--qp-surface-raised));
+  border-radius: var(--qp-radius-sm);
+}
+
+.fresh-boot-history-metrics dt,
+.fresh-boot-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  color: hsl(var(--qp-text-muted));
+}
+
+.fresh-boot-history-metrics dd {
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fresh-boot-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+.fresh-boot-profile-grid > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fresh-boot-id {
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+:global(.fresh-boot-timeline-drawer .ant-drawer-content-wrapper) {
+  width: min(45rem, 100vw) !important;
+}
+
+@media (max-width: 1279px) {
+  .fresh-boot-profile-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .fresh-boot-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .fresh-boot-profile-grid,
+  .fresh-boot-history-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

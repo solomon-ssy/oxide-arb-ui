@@ -155,7 +155,7 @@ test('motion contract preserves timing and collapses under reduced motion', asyn
   expect(reduced).toEqual({ duration: '0.001s', iterations: '1' });
 });
 
-test('@visual release closure captures the exact 50-state matrix', async ({
+test('@visual release closure captures the platform state matrix', async ({
   adminApi,
   authenticatedPage: page,
   browserAudit,
@@ -199,7 +199,11 @@ test('@visual release closure captures the exact 50-state matrix', async ({
     },
   ];
 
-  for (const scenario of baseScenarios) {
+  const visualScenarios =
+    project === 'visual-tablet-dark'
+      ? baseScenarios.filter(({ name }) => name === 'page-dashboard')
+      : baseScenarios;
+  for (const scenario of visualScenarios) {
     await captureReleaseEvidence({
       audit: browserAudit,
       dataRevision: seedRevision,

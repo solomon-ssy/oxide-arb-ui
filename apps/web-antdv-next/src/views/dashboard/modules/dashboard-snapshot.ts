@@ -2,10 +2,12 @@ import type {
   DashboardOverviewView,
   DashboardWindow,
   FeedbackOverviewView,
+  FreshBootProgressView,
 } from '@vben/types';
 
 import { getDashboardOverview } from '#/api/dashboard';
 import { getFeedbackOverview } from '#/api/feedback';
+import { getFreshBootProgress } from '#/api/system';
 
 export type DashboardReadResult<T> =
   | { state: 'error' }
@@ -17,6 +19,7 @@ export type DashboardFeedbackResult =
 
 export interface DashboardSnapshot {
   feedback: DashboardFeedbackResult;
+  freshBoot: DashboardReadResult<FreshBootProgressView>;
   overview: DashboardReadResult<DashboardOverviewView>;
 }
 
@@ -43,9 +46,10 @@ export async function getDashboardSnapshot(
   const feedbackRead: Promise<DashboardFeedbackResult> = canReadFeedback
     ? captureRead(() => getFeedbackOverview({ signal }))
     : Promise.resolve({ state: 'forbidden' });
-  const [overview, feedback] = await Promise.all([
+  const [overview, feedback, freshBoot] = await Promise.all([
     captureRead(() => getDashboardOverview(window, { signal })),
     feedbackRead,
+    captureRead(() => getFreshBootProgress({ signal })),
   ]);
-  return { feedback, overview };
+  return { feedback, freshBoot, overview };
 }

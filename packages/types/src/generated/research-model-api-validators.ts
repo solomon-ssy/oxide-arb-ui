@@ -1966,6 +1966,12 @@ const schema45 = {
     },
     {
       description:
+        'Finalized execution-derived price, flow, intensity, and participant features.',
+      type: 'string',
+      const: 'trade',
+    },
+    {
+      description:
         'Order-flow microstructure (quote rate, churn, queue depletion, …).',
       type: 'string',
       const: 'microstructure',
@@ -2393,12 +2399,12 @@ function validate30(
             }
             errors++;
           }
-          if ('microstructure' !== data1) {
+          if ('trade' !== data1) {
             const err20 = {
               instancePath: instancePath + '/family',
               schemaPath: '#/$defs/FeatureFamily/oneOf/3/const',
               keyword: 'const',
-              params: { allowedValue: 'microstructure' },
+              params: { allowedValue: 'trade' },
               message: 'must be equal to constant',
             };
             if (vErrors === null) {
@@ -2433,12 +2439,12 @@ function validate30(
               }
               errors++;
             }
-            if ('structural' !== data1) {
+            if ('microstructure' !== data1) {
               const err22 = {
                 instancePath: instancePath + '/family',
                 schemaPath: '#/$defs/FeatureFamily/oneOf/4/const',
                 keyword: 'const',
-                params: { allowedValue: 'structural' },
+                params: { allowedValue: 'microstructure' },
                 message: 'must be equal to constant',
               };
               if (vErrors === null) {
@@ -2473,12 +2479,12 @@ function validate30(
                 }
                 errors++;
               }
-              if ('domain' !== data1) {
+              if ('structural' !== data1) {
                 const err24 = {
                   instancePath: instancePath + '/family',
                   schemaPath: '#/$defs/FeatureFamily/oneOf/5/const',
                   keyword: 'const',
-                  params: { allowedValue: 'domain' },
+                  params: { allowedValue: 'structural' },
                   message: 'must be equal to constant',
                 };
                 if (vErrors === null) {
@@ -2497,13 +2503,54 @@ function validate30(
                   valid2 = true;
                   passing0 = 5;
                 }
+                const _errs19 = errors;
+                if (typeof data1 !== 'string') {
+                  const err25 = {
+                    instancePath: instancePath + '/family',
+                    schemaPath: '#/$defs/FeatureFamily/oneOf/6/type',
+                    keyword: 'type',
+                    params: { type: 'string' },
+                    message: 'must be string',
+                  };
+                  if (vErrors === null) {
+                    vErrors = [err25];
+                  } else {
+                    vErrors.push(err25);
+                  }
+                  errors++;
+                }
+                if ('domain' !== data1) {
+                  const err26 = {
+                    instancePath: instancePath + '/family',
+                    schemaPath: '#/$defs/FeatureFamily/oneOf/6/const',
+                    keyword: 'const',
+                    params: { allowedValue: 'domain' },
+                    message: 'must be equal to constant',
+                  };
+                  if (vErrors === null) {
+                    vErrors = [err26];
+                  } else {
+                    vErrors.push(err26);
+                  }
+                  errors++;
+                }
+                var _valid0 = _errs19 === errors;
+                if (_valid0 && valid2) {
+                  valid2 = false;
+                  passing0 = [passing0, 6];
+                } else {
+                  if (_valid0) {
+                    valid2 = true;
+                    passing0 = 6;
+                  }
+                }
               }
             }
           }
         }
       }
       if (!valid2) {
-        const err25 = {
+        const err27 = {
           instancePath: instancePath + '/family',
           schemaPath: '#/$defs/FeatureFamily/oneOf',
           keyword: 'oneOf',
@@ -2511,9 +2558,9 @@ function validate30(
           message: 'must match exactly one schema in oneOf',
         };
         if (vErrors === null) {
-          vErrors = [err25];
+          vErrors = [err27];
         } else {
-          vErrors.push(err25);
+          vErrors.push(err27);
         }
         errors++;
       } else {
@@ -2529,7 +2576,7 @@ function validate30(
     }
     if (data.name !== undefined) {
       if (typeof data.name !== 'string') {
-        const err26 = {
+        const err28 = {
           instancePath: instancePath + '/name',
           schemaPath: '#/properties/name/type',
           keyword: 'type',
@@ -2537,9 +2584,9 @@ function validate30(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err26];
+          vErrors = [err28];
         } else {
-          vErrors.push(err26);
+          vErrors.push(err28);
         }
         errors++;
       }
@@ -2548,7 +2595,7 @@ function validate30(
       let data3 = data.null_policy;
       if (data3 && typeof data3 == 'object' && !Array.isArray(data3)) {
         if (data3.policy === undefined) {
-          const err27 = {
+          const err29 = {
             instancePath: instancePath + '/null_policy',
             schemaPath: '#/$defs/FeatureNullPolicyView/required',
             keyword: 'required',
@@ -2556,56 +2603,20 @@ function validate30(
             message: "must have required property '" + 'policy' + "'",
           };
           if (vErrors === null) {
-            vErrors = [err27];
+            vErrors = [err29];
           } else {
-            vErrors.push(err27);
+            vErrors.push(err29);
           }
           errors++;
         }
         for (const key1 in data3) {
           if (!(key1 === 'policy' || key1 === 'value')) {
-            const err28 = {
+            const err30 = {
               instancePath: instancePath + '/null_policy',
               schemaPath: '#/$defs/FeatureNullPolicyView/additionalProperties',
               keyword: 'additionalProperties',
               params: { additionalProperty: key1 },
               message: 'must NOT have additional properties',
-            };
-            if (vErrors === null) {
-              vErrors = [err28];
-            } else {
-              vErrors.push(err28);
-            }
-            errors++;
-          }
-        }
-        if (data3.policy !== undefined) {
-          if (typeof data3.policy !== 'string') {
-            const err29 = {
-              instancePath: instancePath + '/null_policy/policy',
-              schemaPath:
-                '#/$defs/FeatureNullPolicyView/properties/policy/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err29];
-            } else {
-              vErrors.push(err29);
-            }
-            errors++;
-          }
-        }
-        if (data3.value !== undefined) {
-          let data5 = data3.value;
-          if (typeof data5 !== 'string' && data5 !== null) {
-            const err30 = {
-              instancePath: instancePath + '/null_policy/value',
-              schemaPath: '#/$defs/FeatureNullPolicyView/properties/value/type',
-              keyword: 'type',
-              params: { type: schema46.properties.value.type },
-              message: 'must be string,null',
             };
             if (vErrors === null) {
               vErrors = [err30];
@@ -2615,47 +2626,49 @@ function validate30(
             errors++;
           }
         }
+        if (data3.policy !== undefined) {
+          if (typeof data3.policy !== 'string') {
+            const err31 = {
+              instancePath: instancePath + '/null_policy/policy',
+              schemaPath:
+                '#/$defs/FeatureNullPolicyView/properties/policy/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err31];
+            } else {
+              vErrors.push(err31);
+            }
+            errors++;
+          }
+        }
+        if (data3.value !== undefined) {
+          let data5 = data3.value;
+          if (typeof data5 !== 'string' && data5 !== null) {
+            const err32 = {
+              instancePath: instancePath + '/null_policy/value',
+              schemaPath: '#/$defs/FeatureNullPolicyView/properties/value/type',
+              keyword: 'type',
+              params: { type: schema46.properties.value.type },
+              message: 'must be string,null',
+            };
+            if (vErrors === null) {
+              vErrors = [err32];
+            } else {
+              vErrors.push(err32);
+            }
+            errors++;
+          }
+        }
       } else {
-        const err31 = {
+        const err33 = {
           instancePath: instancePath + '/null_policy',
           schemaPath: '#/$defs/FeatureNullPolicyView/type',
           keyword: 'type',
           params: { type: 'object' },
           message: 'must be object',
-        };
-        if (vErrors === null) {
-          vErrors = [err31];
-        } else {
-          vErrors.push(err31);
-        }
-        errors++;
-      }
-    }
-    if (data.point_in_time_rule !== undefined) {
-      if (typeof data.point_in_time_rule !== 'string') {
-        const err32 = {
-          instancePath: instancePath + '/point_in_time_rule',
-          schemaPath: '#/properties/point_in_time_rule/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err32];
-        } else {
-          vErrors.push(err32);
-        }
-        errors++;
-      }
-    }
-    if (data.source !== undefined) {
-      if (typeof data.source !== 'string') {
-        const err33 = {
-          instancePath: instancePath + '/source',
-          schemaPath: '#/properties/source/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err33];
@@ -2665,11 +2678,11 @@ function validate30(
         errors++;
       }
     }
-    if (data.staleness_policy !== undefined) {
-      if (typeof data.staleness_policy !== 'string') {
+    if (data.point_in_time_rule !== undefined) {
+      if (typeof data.point_in_time_rule !== 'string') {
         const err34 = {
-          instancePath: instancePath + '/staleness_policy',
-          schemaPath: '#/properties/staleness_policy/type',
+          instancePath: instancePath + '/point_in_time_rule',
+          schemaPath: '#/properties/point_in_time_rule/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -2682,11 +2695,11 @@ function validate30(
         errors++;
       }
     }
-    if (data.unit !== undefined) {
-      if (typeof data.unit !== 'string') {
+    if (data.source !== undefined) {
+      if (typeof data.source !== 'string') {
         const err35 = {
-          instancePath: instancePath + '/unit',
-          schemaPath: '#/properties/unit/type',
+          instancePath: instancePath + '/source',
+          schemaPath: '#/properties/source/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -2699,16 +2712,11 @@ function validate30(
         errors++;
       }
     }
-    if (data.value_kind !== undefined) {
-      let data10 = data.value_kind;
-      const _errs39 = errors;
-      let valid6 = false;
-      let passing1 = null;
-      const _errs40 = errors;
-      if (typeof data10 !== 'string') {
+    if (data.staleness_policy !== undefined) {
+      if (typeof data.staleness_policy !== 'string') {
         const err36 = {
-          instancePath: instancePath + '/value_kind',
-          schemaPath: '#/$defs/FeatureValueKind/oneOf/0/type',
+          instancePath: instancePath + '/staleness_policy',
+          schemaPath: '#/properties/staleness_policy/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -2720,13 +2728,15 @@ function validate30(
         }
         errors++;
       }
-      if ('decimal' !== data10) {
+    }
+    if (data.unit !== undefined) {
+      if (typeof data.unit !== 'string') {
         const err37 = {
-          instancePath: instancePath + '/value_kind',
-          schemaPath: '#/$defs/FeatureValueKind/oneOf/0/const',
-          keyword: 'const',
-          params: { allowedValue: 'decimal' },
-          message: 'must be equal to constant',
+          instancePath: instancePath + '/unit',
+          schemaPath: '#/properties/unit/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err37];
@@ -2735,16 +2745,17 @@ function validate30(
         }
         errors++;
       }
-      var _valid1 = _errs40 === errors;
-      if (_valid1) {
-        valid6 = true;
-        passing1 = 0;
-      }
+    }
+    if (data.value_kind !== undefined) {
+      let data10 = data.value_kind;
+      const _errs41 = errors;
+      let valid6 = false;
+      let passing1 = null;
       const _errs42 = errors;
       if (typeof data10 !== 'string') {
         const err38 = {
           instancePath: instancePath + '/value_kind',
-          schemaPath: '#/$defs/FeatureValueKind/oneOf/1/type',
+          schemaPath: '#/$defs/FeatureValueKind/oneOf/0/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -2756,12 +2767,12 @@ function validate30(
         }
         errors++;
       }
-      if ('probability' !== data10) {
+      if ('decimal' !== data10) {
         const err39 = {
           instancePath: instancePath + '/value_kind',
-          schemaPath: '#/$defs/FeatureValueKind/oneOf/1/const',
+          schemaPath: '#/$defs/FeatureValueKind/oneOf/0/const',
           keyword: 'const',
-          params: { allowedValue: 'probability' },
+          params: { allowedValue: 'decimal' },
           message: 'must be equal to constant',
         };
         if (vErrors === null) {
@@ -2772,6 +2783,42 @@ function validate30(
         errors++;
       }
       var _valid1 = _errs42 === errors;
+      if (_valid1) {
+        valid6 = true;
+        passing1 = 0;
+      }
+      const _errs44 = errors;
+      if (typeof data10 !== 'string') {
+        const err40 = {
+          instancePath: instancePath + '/value_kind',
+          schemaPath: '#/$defs/FeatureValueKind/oneOf/1/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err40];
+        } else {
+          vErrors.push(err40);
+        }
+        errors++;
+      }
+      if ('probability' !== data10) {
+        const err41 = {
+          instancePath: instancePath + '/value_kind',
+          schemaPath: '#/$defs/FeatureValueKind/oneOf/1/const',
+          keyword: 'const',
+          params: { allowedValue: 'probability' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err41];
+        } else {
+          vErrors.push(err41);
+        }
+        errors++;
+      }
+      var _valid1 = _errs44 === errors;
       if (_valid1 && valid6) {
         valid6 = false;
         passing1 = [passing1, 1];
@@ -2780,9 +2827,9 @@ function validate30(
           valid6 = true;
           passing1 = 1;
         }
-        const _errs44 = errors;
+        const _errs46 = errors;
         if (typeof data10 !== 'string') {
-          const err40 = {
+          const err42 = {
             instancePath: instancePath + '/value_kind',
             schemaPath: '#/$defs/FeatureValueKind/oneOf/2/type',
             keyword: 'type',
@@ -2790,14 +2837,14 @@ function validate30(
             message: 'must be string',
           };
           if (vErrors === null) {
-            vErrors = [err40];
+            vErrors = [err42];
           } else {
-            vErrors.push(err40);
+            vErrors.push(err42);
           }
           errors++;
         }
         if ('bps' !== data10) {
-          const err41 = {
+          const err43 = {
             instancePath: instancePath + '/value_kind',
             schemaPath: '#/$defs/FeatureValueKind/oneOf/2/const',
             keyword: 'const',
@@ -2805,13 +2852,13 @@ function validate30(
             message: 'must be equal to constant',
           };
           if (vErrors === null) {
-            vErrors = [err41];
+            vErrors = [err43];
           } else {
-            vErrors.push(err41);
+            vErrors.push(err43);
           }
           errors++;
         }
-        var _valid1 = _errs44 === errors;
+        var _valid1 = _errs46 === errors;
         if (_valid1 && valid6) {
           valid6 = false;
           passing1 = [passing1, 2];
@@ -2820,9 +2867,9 @@ function validate30(
             valid6 = true;
             passing1 = 2;
           }
-          const _errs46 = errors;
+          const _errs48 = errors;
           if (typeof data10 !== 'string') {
-            const err42 = {
+            const err44 = {
               instancePath: instancePath + '/value_kind',
               schemaPath: '#/$defs/FeatureValueKind/oneOf/3/type',
               keyword: 'type',
@@ -2830,14 +2877,14 @@ function validate30(
               message: 'must be string',
             };
             if (vErrors === null) {
-              vErrors = [err42];
+              vErrors = [err44];
             } else {
-              vErrors.push(err42);
+              vErrors.push(err44);
             }
             errors++;
           }
           if ('usd' !== data10) {
-            const err43 = {
+            const err45 = {
               instancePath: instancePath + '/value_kind',
               schemaPath: '#/$defs/FeatureValueKind/oneOf/3/const',
               keyword: 'const',
@@ -2845,13 +2892,13 @@ function validate30(
               message: 'must be equal to constant',
             };
             if (vErrors === null) {
-              vErrors = [err43];
+              vErrors = [err45];
             } else {
-              vErrors.push(err43);
+              vErrors.push(err45);
             }
             errors++;
           }
-          var _valid1 = _errs46 === errors;
+          var _valid1 = _errs48 === errors;
           if (_valid1 && valid6) {
             valid6 = false;
             passing1 = [passing1, 3];
@@ -2860,9 +2907,9 @@ function validate30(
               valid6 = true;
               passing1 = 3;
             }
-            const _errs48 = errors;
+            const _errs50 = errors;
             if (typeof data10 !== 'string') {
-              const err44 = {
+              const err46 = {
                 instancePath: instancePath + '/value_kind',
                 schemaPath: '#/$defs/FeatureValueKind/oneOf/4/type',
                 keyword: 'type',
@@ -2870,14 +2917,14 @@ function validate30(
                 message: 'must be string',
               };
               if (vErrors === null) {
-                vErrors = [err44];
+                vErrors = [err46];
               } else {
-                vErrors.push(err44);
+                vErrors.push(err46);
               }
               errors++;
             }
             if ('count' !== data10) {
-              const err45 = {
+              const err47 = {
                 instancePath: instancePath + '/value_kind',
                 schemaPath: '#/$defs/FeatureValueKind/oneOf/4/const',
                 keyword: 'const',
@@ -2885,13 +2932,13 @@ function validate30(
                 message: 'must be equal to constant',
               };
               if (vErrors === null) {
-                vErrors = [err45];
+                vErrors = [err47];
               } else {
-                vErrors.push(err45);
+                vErrors.push(err47);
               }
               errors++;
             }
-            var _valid1 = _errs48 === errors;
+            var _valid1 = _errs50 === errors;
             if (_valid1 && valid6) {
               valid6 = false;
               passing1 = [passing1, 4];
@@ -2900,9 +2947,9 @@ function validate30(
                 valid6 = true;
                 passing1 = 4;
               }
-              const _errs50 = errors;
+              const _errs52 = errors;
               if (typeof data10 !== 'string') {
-                const err46 = {
+                const err48 = {
                   instancePath: instancePath + '/value_kind',
                   schemaPath: '#/$defs/FeatureValueKind/oneOf/5/type',
                   keyword: 'type',
@@ -2910,14 +2957,14 @@ function validate30(
                   message: 'must be string',
                 };
                 if (vErrors === null) {
-                  vErrors = [err46];
+                  vErrors = [err48];
                 } else {
-                  vErrors.push(err46);
+                  vErrors.push(err48);
                 }
                 errors++;
               }
               if ('bool' !== data10) {
-                const err47 = {
+                const err49 = {
                   instancePath: instancePath + '/value_kind',
                   schemaPath: '#/$defs/FeatureValueKind/oneOf/5/const',
                   keyword: 'const',
@@ -2925,13 +2972,13 @@ function validate30(
                   message: 'must be equal to constant',
                 };
                 if (vErrors === null) {
-                  vErrors = [err47];
+                  vErrors = [err49];
                 } else {
-                  vErrors.push(err47);
+                  vErrors.push(err49);
                 }
                 errors++;
               }
-              var _valid1 = _errs50 === errors;
+              var _valid1 = _errs52 === errors;
               if (_valid1 && valid6) {
                 valid6 = false;
                 passing1 = [passing1, 5];
@@ -2940,9 +2987,9 @@ function validate30(
                   valid6 = true;
                   passing1 = 5;
                 }
-                const _errs52 = errors;
+                const _errs54 = errors;
                 if (typeof data10 !== 'string') {
-                  const err48 = {
+                  const err50 = {
                     instancePath: instancePath + '/value_kind',
                     schemaPath: '#/$defs/FeatureValueKind/oneOf/6/type',
                     keyword: 'type',
@@ -2950,14 +2997,14 @@ function validate30(
                     message: 'must be string',
                   };
                   if (vErrors === null) {
-                    vErrors = [err48];
+                    vErrors = [err50];
                   } else {
-                    vErrors.push(err48);
+                    vErrors.push(err50);
                   }
                   errors++;
                 }
                 if ('category' !== data10) {
-                  const err49 = {
+                  const err51 = {
                     instancePath: instancePath + '/value_kind',
                     schemaPath: '#/$defs/FeatureValueKind/oneOf/6/const',
                     keyword: 'const',
@@ -2965,13 +3012,13 @@ function validate30(
                     message: 'must be equal to constant',
                   };
                   if (vErrors === null) {
-                    vErrors = [err49];
+                    vErrors = [err51];
                   } else {
-                    vErrors.push(err49);
+                    vErrors.push(err51);
                   }
                   errors++;
                 }
-                var _valid1 = _errs52 === errors;
+                var _valid1 = _errs54 === errors;
                 if (_valid1 && valid6) {
                   valid6 = false;
                   passing1 = [passing1, 6];
@@ -2987,7 +3034,7 @@ function validate30(
         }
       }
       if (!valid6) {
-        const err50 = {
+        const err52 = {
           instancePath: instancePath + '/value_kind',
           schemaPath: '#/$defs/FeatureValueKind/oneOf',
           keyword: 'oneOf',
@@ -2995,16 +3042,16 @@ function validate30(
           message: 'must match exactly one schema in oneOf',
         };
         if (vErrors === null) {
-          vErrors = [err50];
+          vErrors = [err52];
         } else {
-          vErrors.push(err50);
+          vErrors.push(err52);
         }
         errors++;
       } else {
-        errors = _errs39;
+        errors = _errs41;
         if (vErrors !== null) {
-          if (_errs39) {
-            vErrors.length = _errs39;
+          if (_errs41) {
+            vErrors.length = _errs41;
           } else {
             vErrors = null;
           }
@@ -3012,7 +3059,7 @@ function validate30(
       }
     }
   } else {
-    const err51 = {
+    const err53 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -3020,9 +3067,9 @@ function validate30(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err51];
+      vErrors = [err53];
     } else {
-      vErrors.push(err51);
+      vErrors.push(err53);
     }
     errors++;
   }

@@ -3,6 +3,7 @@ import type {
   BasisAlertListQuery,
   BasisAlertView,
   DomainSourcesSnapshot,
+  ExecutionHistoryCoverageView,
   LinkageResolveSummaryView,
   MarketLinkageDetailView,
   MarketLinkageHistoryEntryView,
@@ -14,7 +15,6 @@ import type {
   ParticipantConcentrationDetailView,
   ParticipantConcentrationSummaryView,
   ResolveLinkagesRequest,
-  TradeTapeCoverageView,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
@@ -32,7 +32,8 @@ export {
 
 export namespace VerticalAlphaApi {
   export const negRiskEvents = '/quant/structural/negrisk-events';
-  export const tradeTapeCoverage = '/quant/structural/trade-tape/coverage';
+  export const executionHistoryCoverage =
+    '/quant/structural/execution-history/coverage';
   export const participantConcentration =
     '/quant/structural/participant-concentration';
   export const participantConcentrationMarket = (marketId: string) =>
@@ -135,10 +136,10 @@ export async function listNegRiskEvents() {
   );
 }
 
-/** `GET /quant/structural/trade-tape/coverage` — source coverage and lag. */
-export async function getTradeTapeCoverage() {
-  return requestClient.get<TradeTapeCoverageView>(
-    VerticalAlphaApi.tradeTapeCoverage,
+/** `GET /quant/structural/execution-history/coverage` — attested history coverage and lag. */
+export async function getExecutionHistoryCoverage() {
+  return requestClient.get<ExecutionHistoryCoverageView>(
+    VerticalAlphaApi.executionHistoryCoverage,
   );
 }
 

@@ -33,6 +33,7 @@ const zhLabels = {
   cvar_confidence_bps: 'CVaR 置信水平（基点）',
   generation: 'Route Generation',
   liquidity_buffer_bps: '流动性缓冲（基点）',
+  max_execution_age_secs: '最终确认成交最大延迟（秒）',
   max_cvar_usd: 'CVaR 损失上限（USD）',
   max_drawdown_usd: '最大回撤上限（USD）',
   max_open_capital_usd: '最大开放资本（USD）',
@@ -67,6 +68,8 @@ const zhDescriptions = {
     '该 Route 服务绑定的单调 generation，报告运行期间会被冻结，防止中途激活造成模型污染。',
   liquidity_buffer_bps:
     '在准入时额外扣除的流动性安全缓冲，用于覆盖报价陈旧、深度衰减与成交不确定性。',
+  max_execution_age_secs:
+    '最终确认成交在决策时允许的最大年龄（秒）；超过该边界时依赖成交历史的特征必须 fail closed。',
   max_cvar_usd:
     '全局组合在指定置信水平下可接受的最大 CVaR 尾部损失（USD），作为 MILP 硬约束而非目标权重。',
   max_drawdown_usd:

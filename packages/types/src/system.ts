@@ -3,8 +3,10 @@ import type {
   KillSwitchState,
   QuantRuntimeMode,
   SettlementWritePolicy,
+  TrainingDatasetStatus,
 } from './enums';
 import type { ExecutionRecoverySummary } from './execution-recovery';
+import type { BuyModelRoute } from './generated/config-api';
 import type { ReconciliationView } from './reconciliation';
 
 /**
@@ -62,6 +64,289 @@ export interface ExecutionRecoveryView {
   summary: ExecutionRecoverySummary;
   blocking_reconciliations: ReconciliationView[];
   kill_switch: KillSwitchView;
+}
+
+export type ExchangeHistoryStage =
+  | 'activation_ready'
+  | 'attesting'
+  | 'extracting'
+  | 'identity_sync'
+  | 'projecting'
+  | 'quarantined'
+  | 'startup_probe';
+
+export type ColdStartSloStatus = 'on_track' | 'violation' | 'warning';
+
+export interface ExchangeHistoryFrontierProgress {
+  stage: ExchangeHistoryStage;
+  slo_status: ColdStartSloStatus;
+  started_at: IsoDateTime;
+  activation_from_block: null | number;
+  accepted_through_block: null | number;
+  target_block: null | number;
+  retention_from_block: null | number;
+  retention_accepted_from_block: null | number;
+  retention_through_block: null | number;
+  crypto_required_from_block: null | number;
+  weather_required_from_block: null | number;
+  blocks_processed: number;
+  logs_accepted: number;
+  block_rate_milli: number;
+  hypersync_retry_count: number;
+  attestor_retry_count: number;
+  unresolved_count: number;
+  quarantine_count: number;
+  projected_completion_at: IsoDateTime | null;
+  updated_at: IsoDateTime;
+}
+
+export type FreshBootStage =
+  | 'awaiting_source_coverage'
+  | 'bootstrap_committed'
+  | 'bootstrap_preflight'
+  | 'calibration_dataset_queued'
+  | 'calibration_dataset_ready'
+  | 'calibration_dataset_running'
+  | 'calibration_queued'
+  | 'calibration_ready'
+  | 'calibration_running'
+  | 'cpcv_queued'
+  | 'cpcv_ready'
+  | 'cpcv_running'
+  | 'dataset_queued'
+  | 'dataset_ready'
+  | 'dataset_running'
+  | 'first_report_published'
+  | 'parity_ready'
+  | 'report_eligible'
+  | 'scenario_ready'
+  | 'training_queued'
+  | 'training_ready'
+  | 'training_running';
+
+export type FreshBootStatus =
+  | 'blocked_terminal'
+  | 'retry_scheduled'
+  | 'running'
+  | 'succeeded'
+  | 'superseded'
+  | 'waiting_evidence';
+
+export type FreshBootRetryReason =
+  | 'dependency_unavailable'
+  | 'job_retry_scheduled'
+  | 'preflight_stale'
+  | 'provider_unavailable'
+  | 'report_pending'
+  | 'source_coverage_incomplete'
+  | 'storage_transient';
+
+export type FreshBootBlockedReason =
+  | 'bootstrap_conflict'
+  | 'calibration_failed'
+  | 'cpcv_failed'
+  | 'dataset_build_failed'
+  | 'decode_failure'
+  | 'history_quarantined'
+  | 'insufficient_mature_labels'
+  | 'model_training_failed'
+  | 'parity_failed'
+  | 'policy_unavailable'
+  | 'provider_mismatch'
+  | 'quality_gate_failed'
+  | 'report_enqueue_failed'
+  | 'report_publication_failed'
+  | 'retry_budget_exhausted'
+  | 'scenario_binding_failed'
+  | 'source_coverage_invalid'
+  | 'source_slice_mismatch'
+  | 'unknown_token';
+
+export type ResearchReadinessSource =
+  | 'aviation_weather'
+  | 'binance_market_data'
+  | 'catalog_ledger'
+  | 'clob_l2'
+  | 'clob_market_info'
+  | 'domain_observation'
+  | 'execution_participant'
+  | 'gamma_market_identity'
+  | 'gefs_ensemble'
+  | 'ghcnh_calibration'
+  | 'market_execution'
+  | 'polymarket_resolution'
+  | 'polymarket_rtds';
+
+export interface FreshBootSourceCoverage {
+  source: ResearchReadinessSource;
+  object: string;
+  earliest_event_time: IsoDateTime;
+  latest_event_time: IsoDateTime;
+  row_count: number;
+}
+
+export interface FreshBootSourceCoverageManifest {
+  history_plan_id: string;
+  history_policy_hash: string;
+  availability_policy_hash: string;
+  readiness_evidence_id: string;
+  source_registry_hash: string;
+  window_start: IsoDateTime;
+  window_end: IsoDateTime;
+  pit_cutoff: IsoDateTime;
+  history_from_block: number;
+  history_through_block: number;
+  requirements: FreshBootSourceCoverage[];
+  sealed_at: IsoDateTime;
+}
+
+export type FreshBootRecommendedAction =
+  | 'inspect_running_job'
+  | 'resolve_and_supersede'
+  | 'retry_now'
+  | 'view_first_report'
+  | 'wait_for_evidence';
+
+export type FreshBootBlockerScope =
+  | 'bootstrap_governance'
+  | 'report_publication'
+  | 'research_job'
+  | 'source_coverage';
+
+export type FreshBootBlockerCode =
+  | { code: FreshBootBlockedReason; kind: 'terminal' }
+  | { code: FreshBootRetryReason; kind: 'retryable' };
+
+export interface FreshBootBlockerView {
+  code: FreshBootBlockerCode;
+  scope: FreshBootBlockerScope;
+  evidence_ref: null | string;
+  retryable: boolean;
+  next_retry_at: IsoDateTime | null;
+  detail: string;
+  recommended_action: FreshBootRecommendedAction;
+}
+
+export interface FreshBootRunProgressView {
+  run_id: string;
+  supersedes_run_id: null | string;
+  research_profile_artifact_id: string;
+  profile_hash: string;
+  route: BuyModelRoute;
+  stage: FreshBootStage;
+  status: FreshBootStatus;
+  source_coverage_manifest: FreshBootSourceCoverageManifest | null;
+  source_coverage_hash: null | string;
+  source_slice_id: null | string;
+  source_slice_hash: null | string;
+  decision_policy_snapshot_id: string;
+  model_spec_id: null | string;
+  training_dataset_id: null | string;
+  calibration_dataset_id: null | string;
+  source_model_version_id: null | string;
+  model_version_id: null | string;
+  path_set_id: null | string;
+  calibration_id: null | string;
+  parity_run_id: null | string;
+  scenario_artifact_id: null | string;
+  scenario_artifact_hash: null | string;
+  bootstrap_preflight_hash: null | string;
+  active_job_id: null | string;
+  last_job_id: null | string;
+  bootstrap_policy_activation_id: null | string;
+  manual_report_ready_at: IsoDateTime | null;
+  first_report_run_id: null | string;
+  first_report_id: null | string;
+  next_scheduled_report_at: IsoDateTime | null;
+  blocker: FreshBootBlockerView | null;
+  retry_count: number;
+  next_attempt_at: IsoDateTime | null;
+  revision: number;
+  stage_entered_at: IsoDateTime;
+  started_at: IsoDateTime;
+  completed_at: IsoDateTime | null;
+  updated_at: IsoDateTime;
+}
+
+export type FreshBootEventKind =
+  | 'bootstrap_committed'
+  | 'bootstrap_prepared'
+  | 'calibration_completed'
+  | 'calibration_dataset_completed'
+  | 'calibration_dataset_enqueued'
+  | 'calibration_dataset_started'
+  | 'calibration_enqueued'
+  | 'calibration_started'
+  | 'cpcv_completed'
+  | 'cpcv_enqueued'
+  | 'cpcv_started'
+  | 'dataset_completed'
+  | 'dataset_started'
+  | 'evidence_wait_scheduled'
+  | 'parity_verified'
+  | 'preflight_refreshed'
+  | 'report_enabled'
+  | 'report_published'
+  | 'report_retried'
+  | 'retry_accelerated'
+  | 'retry_scheduled'
+  | 'retry_started'
+  | 'run_created'
+  | 'scenario_bound'
+  | 'source_coverage_satisfied'
+  | 'superseded'
+  | 'terminal_blocked'
+  | 'training_completed'
+  | 'training_enqueued'
+  | 'training_started';
+
+export interface FreshBootRunEventView {
+  event_id: string;
+  sequence: number;
+  from_stage: FreshBootStage;
+  to_stage: FreshBootStage;
+  from_status: FreshBootStatus;
+  to_status: FreshBootStatus;
+  event: FreshBootEventKind;
+  research_job_id: null | string;
+  result_ref: null | string;
+  evidence_ref: null | string;
+  attempt: number;
+  actor: string;
+  detail: null | string;
+  occurred_at: IsoDateTime;
+}
+
+export interface FreshBootRunDetailView {
+  run: FreshBootRunProgressView;
+  events: FreshBootRunEventView[];
+}
+
+export interface RetryFreshBootRunRequest {
+  expected_revision: number;
+  reason: string;
+}
+
+export interface SupersedeFreshBootRunRequest {
+  expected_revision: number;
+  reason: string;
+}
+
+export interface FreshBootProfileProgressView {
+  run: FreshBootRunProgressView;
+  last_event: FreshBootRunEventView | null;
+  training_dataset_status: null | TrainingDatasetStatus;
+  training_sample_count: null | number;
+  calibration_dataset_status: null | TrainingDatasetStatus;
+  calibration_sample_count: null | number;
+  manual_report_ready: boolean;
+}
+
+/** `GET /system/fresh-boot` — L2-free activation and first-report progress. */
+export interface FreshBootProgressView {
+  observed_at: IsoDateTime;
+  exchange_history: ExchangeHistoryFrontierProgress;
+  profiles: FreshBootProfileProgressView[];
 }
 
 /** `GET /system/status` — the operator system snapshot. */

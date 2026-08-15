@@ -66,13 +66,6 @@ export interface DashboardExposureView {
   position_count: number;
 }
 
-export interface DashboardResearchReadinessView {
-  required_history_days: number;
-  observed_history_days: null | number;
-  factor_gate_ready: boolean;
-  model_gate_ready: boolean;
-}
-
 export interface DashboardDependencyCheck {
   name: string;
   ok: boolean;
@@ -145,7 +138,6 @@ export interface DashboardOverviewView {
   report_lifecycle: DashboardSection<DashboardLifecycleView>;
   exposures: DashboardSection<DashboardExposureView>;
   data_quality: DashboardSection<DataQualitySnapshot>;
-  research_readiness: DashboardSection<DashboardResearchReadinessView>;
   subsystem_health: DashboardSection<DashboardSubsystemHealthView>;
   action_inbox: DashboardSection<DashboardActionItemView[]>;
   runtime_activity: DashboardSection<DashboardRuntimeActivityView>;

@@ -8,7 +8,9 @@ const snapshotDirectory = resolve(
   uiRoot,
   'apps/web-antdv-next/tests/e2e/config-audit.spec.ts-snapshots',
 );
-const expectedPerPlatform = 50;
+// The release matrix contains 50 desktop/mobile snapshots plus the dedicated
+// 768px Dashboard operational breakpoint on every supported CI platform.
+const expectedPerPlatform = 51;
 const supportedPlatforms = ['darwin', 'linux'];
 
 const files = readdirSync(snapshotDirectory)

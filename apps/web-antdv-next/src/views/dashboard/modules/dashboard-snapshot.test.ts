@@ -5,6 +5,7 @@ import { getDashboardSnapshot } from './dashboard-snapshot';
 const mocks = vi.hoisted(() => ({
   getDashboardOverview: vi.fn(),
   getFeedbackOverview: vi.fn(),
+  getFreshBootProgress: vi.fn(),
 }));
 
 vi.mock('#/api/dashboard', () => ({
@@ -13,11 +14,16 @@ vi.mock('#/api/dashboard', () => ({
 vi.mock('#/api/feedback', () => ({
   getFeedbackOverview: mocks.getFeedbackOverview,
 }));
+vi.mock('#/api/system', () => ({
+  getFreshBootProgress: mocks.getFreshBootProgress,
+}));
 
 describe('dashboard snapshot', () => {
   beforeEach(() => {
     mocks.getDashboardOverview.mockReset();
     mocks.getFeedbackOverview.mockReset();
+    mocks.getFreshBootProgress.mockReset();
+    mocks.getFreshBootProgress.mockResolvedValue({ revision: 'fresh-boot' });
   });
 
   it('keeps dashboard and feedback failures section-local', async () => {
@@ -28,6 +34,10 @@ describe('dashboard snapshot', () => {
 
     await expect(getDashboardSnapshot('7d', signal, true)).resolves.toEqual({
       feedback: { state: 'error' },
+      freshBoot: {
+        state: 'ready',
+        value: { revision: 'fresh-boot' },
+      },
       overview: { state: 'ready', value: overview },
     });
 
@@ -35,6 +45,10 @@ describe('dashboard snapshot', () => {
     mocks.getFeedbackOverview.mockResolvedValue({ revision: 44 });
     await expect(getDashboardSnapshot('7d', signal, true)).resolves.toEqual({
       feedback: { state: 'ready', value: { revision: 44 } },
+      freshBoot: {
+        state: 'ready',
+        value: { revision: 'fresh-boot' },
+      },
       overview: { state: 'error' },
     });
   });
@@ -45,12 +59,17 @@ describe('dashboard snapshot', () => {
 
     await expect(getDashboardSnapshot('24h', signal, false)).resolves.toEqual({
       feedback: { state: 'forbidden' },
+      freshBoot: {
+        state: 'ready',
+        value: { revision: 'fresh-boot' },
+      },
       overview: {
         state: 'ready',
         value: { revision: 'dashboard' },
       },
     });
     expect(mocks.getFeedbackOverview).not.toHaveBeenCalled();
+    expect(mocks.getFreshBootProgress).toHaveBeenCalledWith({ signal });
   });
 
   it('forwards one abort signal to both authoritative reads', async () => {
@@ -62,5 +81,6 @@ describe('dashboard snapshot', () => {
 
     expect(mocks.getDashboardOverview).toHaveBeenCalledWith('30d', { signal });
     expect(mocks.getFeedbackOverview).toHaveBeenCalledWith({ signal });
+    expect(mocks.getFreshBootProgress).toHaveBeenCalledWith({ signal });
   });
 });

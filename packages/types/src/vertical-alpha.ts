@@ -49,29 +49,25 @@ export interface MissingReasonCountView {
   count: number;
 }
 
-export interface TradeTapeSourceHealthView {
-  source: string;
+export interface ExchangeHistorySourceView {
+  extractor: string;
+  attestor: string;
   enabled: boolean;
-  token_cursor_count: number;
-  bootstrap_count: number;
-  catching_up_count: number;
-  live_count: number;
-  empty_count: number;
-  error_count: number;
-  worst_lag_blocks: null | number;
+  state: string;
+  accepted_through_block: null | number;
+  effective_through_at: IsoDateTime | null;
+  quarantine_count: number;
   last_updated_at: IsoDateTime | null;
 }
 
-export interface TradeTapeCoverageView {
+export interface ExecutionHistoryCoverageView {
   decision_at: IsoDateTime;
   knowledge_cutoff: IsoDateTime;
   window_secs: number;
   knowledge_lag_secs: number;
   active_market_count: number;
-  token_cursor_count: number;
-  market_cursor_count: number;
   covered_market_ratio: DecimalString;
-  source_health: TradeTapeSourceHealthView[];
+  source_health: ExchangeHistorySourceView[];
   missing_reason_breakdown: MissingReasonCountView[];
 }
 

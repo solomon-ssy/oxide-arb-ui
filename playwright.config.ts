@@ -52,12 +52,15 @@ const retainBackendArtifacts =
   evidenceRun || process.env.CI === 'true' ? ' --retain-artifacts' : '';
 const visualLaunchOptions = {
   args: [
-    '--deterministic-mode',
     '--disable-gpu',
     '--disable-lcd-text',
     '--font-render-hinting=none',
     '--force-color-profile=srgb',
   ],
+};
+const visualUse = {
+  launchOptions: visualLaunchOptions,
+  reducedMotion: 'reduce' as const,
 };
 
 export default defineConfig({
@@ -71,7 +74,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         colorScheme: 'dark',
-        launchOptions: visualLaunchOptions,
+        ...visualUse,
         viewport: { height: 900, width: 1440 },
       },
     },
@@ -81,7 +84,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         colorScheme: 'light',
-        launchOptions: visualLaunchOptions,
+        ...visualUse,
         viewport: { height: 900, width: 1440 },
       },
     },
@@ -91,8 +94,18 @@ export default defineConfig({
       use: {
         ...devices['Pixel 7'],
         colorScheme: 'dark',
-        launchOptions: visualLaunchOptions,
+        ...visualUse,
         viewport: { height: 844, width: 390 },
+      },
+    },
+    {
+      grep: /@visual/,
+      name: 'visual-tablet-dark',
+      use: {
+        ...devices['Desktop Chrome'],
+        colorScheme: 'dark',
+        ...visualUse,
+        viewport: { height: 1024, width: 768 },
       },
     },
     {

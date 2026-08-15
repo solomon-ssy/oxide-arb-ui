@@ -432,16 +432,16 @@ export interface ReportFunnelMarketView {
 
 export type NullReason =
   | 'domain_source_unavailable'
+  | 'finalized_execution_unavailable'
+  | 'insufficient_execution_history'
   | 'insufficient_history'
   | 'insufficient_role_coverage'
-  | 'insufficient_trade_tape'
   | 'leg_book_missing'
   | 'linkage_unresolved'
   | 'not_applicable'
   | 'out_of_valid_range'
   | 'source_unavailable'
-  | 'stale_beyond_policy'
-  | 'trade_tape_unavailable';
+  | 'stale_beyond_policy';
 
 export type ReportFunnelDiagnostics =
   | { detail: string; kind: 'planner_rejection' }

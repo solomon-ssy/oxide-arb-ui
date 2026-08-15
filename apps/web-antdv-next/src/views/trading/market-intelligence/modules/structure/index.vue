@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
 import type {
+  ExecutionHistoryCoverageView,
   NegRiskEventDriftView,
   ParticipantConcentrationDetailView,
   ParticipantConcentrationMarketView,
   ParticipantConcentrationSummaryView,
-  TradeTapeCoverageView,
 } from '@vben/types';
 
 import { computed, ref, watch } from 'vue';
@@ -29,9 +29,9 @@ import {
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
+  getExecutionHistoryCoverage,
   getParticipantConcentration,
   getParticipantConcentrationMarket,
-  getTradeTapeCoverage,
   listNegRiskEvents,
 } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
@@ -51,7 +51,7 @@ const { handleRequest } = useRequestHandler();
 
 const loading = ref(false);
 const pollingEnabled = ref(true);
-const coverage = ref<null | TradeTapeCoverageView>(null);
+const coverage = ref<ExecutionHistoryCoverageView | null>(null);
 const concentration = ref<null | ParticipantConcentrationSummaryView>(null);
 const negRiskEvents = ref<NegRiskEventDriftView[]>([]);
 const detailLoading = ref(false);
@@ -258,7 +258,7 @@ async function refresh() {
   try {
     const [coverageResult, concentrationResult, negRiskResult] =
       await Promise.all([
-        handleRequest(() => getTradeTapeCoverage()),
+        handleRequest(() => getExecutionHistoryCoverage()),
         handleRequest(() => getParticipantConcentration()),
         handleRequest(() => listNegRiskEvents()),
       ]);
@@ -407,8 +407,8 @@ watch(topMarkets, () => {
       </Card>
       <Card size="small">
         <Statistic
-          :title="$t('page.structuralAlpha.kpi.worstLag')"
-          :value="formatLagBlocks(coverageHealth?.worst_lag_blocks)"
+          :title="$t('page.structuralAlpha.kpi.acceptedThroughBlock')"
+          :value="formatOptionalCount(coverageHealth?.accepted_through_block)"
         />
       </Card>
       <Card size="small">
@@ -449,9 +449,9 @@ watch(topMarkets, () => {
           <Card size="small" :title="$t('page.structuralAlpha.coverage.title')">
             <Descriptions bordered size="small" :column="1">
               <DescriptionsItem
-                :label="$t('page.structuralAlpha.coverage.source')"
+                :label="$t('page.structuralAlpha.coverage.extractor')"
               >
-                {{ coverageHealth?.source ?? '—' }}
+                {{ coverageHealth?.extractor ?? '—' }}
                 <Tag
                   v-if="typeof coverageHealth?.enabled === 'boolean'"
                   :color="coverageHealth.enabled ? 'success' : 'default'"
@@ -465,23 +465,33 @@ watch(topMarkets, () => {
                 <span v-else>—</span>
               </DescriptionsItem>
               <DescriptionsItem
-                :label="$t('page.structuralAlpha.coverage.marketCursors')"
+                :label="$t('page.structuralAlpha.coverage.attestor')"
               >
-                {{ formatOptionalCount(coverage?.market_cursor_count) }}
+                {{ coverageHealth?.attestor ?? '—' }}
               </DescriptionsItem>
               <DescriptionsItem
-                :label="$t('page.structuralAlpha.coverage.health')"
+                :label="$t('page.structuralAlpha.coverage.state')"
               >
-                {{ $t('page.structuralAlpha.coverage.bootstrap') }}:
-                {{ formatOptionalCount(coverageHealth?.bootstrap_count) }} ·
-                {{ $t('page.structuralAlpha.coverage.catchingUp') }}:
-                {{ formatOptionalCount(coverageHealth?.catching_up_count) }} ·
-                {{ $t('page.structuralAlpha.coverage.live') }}:
-                {{ formatOptionalCount(coverageHealth?.live_count) }} ·
-                {{ $t('page.structuralAlpha.coverage.empty') }}:
-                {{ formatOptionalCount(coverageHealth?.empty_count) }} ·
-                {{ $t('page.structuralAlpha.coverage.error') }}:
-                {{ formatOptionalCount(coverageHealth?.error_count) }}
+                {{ coverageHealth?.state ?? '—' }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="
+                  $t('page.structuralAlpha.coverage.acceptedThroughBlock')
+                "
+              >
+                {{
+                  formatOptionalCount(coverageHealth?.accepted_through_block)
+                }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.structuralAlpha.coverage.effectiveThroughAt')"
+              >
+                {{ formatDateTimeLocal(coverageHealth?.effective_through_at) }}
+              </DescriptionsItem>
+              <DescriptionsItem
+                :label="$t('page.structuralAlpha.coverage.quarantineCount')"
+              >
+                {{ formatOptionalCount(coverageHealth?.quarantine_count) }}
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.structuralAlpha.coverage.window')"

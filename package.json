@@ -70,7 +70,7 @@
     "reinstall": "pnpm run clean -- --del-lock && pnpm install",
     "test:unit": "vitest run --dom",
     "test:e2e": "playwright test",
-    "test:e2e:ui-release-closure": "cross-env PLAYWRIGHT_EVIDENCE_RUN=run-1 PLAYWRIGHT_PRODUCTION_FIXTURE=governed-feedback playwright test --project=visual-desktop-dark --project=visual-desktop-light --project=visual-mobile-dark --project=functional-chromium && cross-env PLAYWRIGHT_EVIDENCE_RUN=run-2 PLAYWRIGHT_PRODUCTION_FIXTURE=governed-feedback playwright test --project=visual-desktop-dark --project=visual-desktop-light --project=visual-mobile-dark --project=functional-chromium && node scripts/compare-ui-release-manifests.mjs run-1 run-2",
+    "test:e2e:ui-release-closure": "cross-env PLAYWRIGHT_EVIDENCE_RUN=run-1 PLAYWRIGHT_PRODUCTION_FIXTURE=governed-feedback playwright test --project=visual-desktop-dark --project=visual-desktop-light --project=visual-mobile-dark --project=visual-tablet-dark --project=functional-chromium && cross-env PLAYWRIGHT_EVIDENCE_RUN=run-2 PLAYWRIGHT_PRODUCTION_FIXTURE=governed-feedback playwright test --project=visual-desktop-dark --project=visual-desktop-light --project=visual-mobile-dark --project=visual-tablet-dark --project=functional-chromium && node scripts/compare-ui-release-manifests.mjs run-1 run-2",
     "update:deps": "npx taze -r -w",
     "version": "pnpm exec changeset version && pnpm install --no-frozen-lockfile",
     "catalog": "pnpm dlx codemod pnpm/catalog"

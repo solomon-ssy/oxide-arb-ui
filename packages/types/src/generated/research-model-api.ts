@@ -26,7 +26,8 @@ export type FeatureFamily =
   | 'microstructure'
   | 'price_book'
   | 'structural'
-  | 'time_series';
+  | 'time_series'
+  | 'trade';
 /**
  * The dimensional kind of a present feature value.
  *

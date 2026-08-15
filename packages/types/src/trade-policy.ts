@@ -526,13 +526,14 @@ export type SourceSliceObjectKind =
   | 'clob_market_info'
   | 'crypto_price_report'
   | 'domain_observation'
-  | 'l2_checkpoint'
-  | 'l2_event'
+  | 'execution_participant'
+  | 'gamma_market_identity'
   | 'l2_gap'
+  | 'l2_ledger'
   | 'l2_session'
+  | 'market_execution'
   | 'market_linkage'
   | 'resolution'
-  | 'trade_tape'
   | 'weather_forecast'
   | 'weather_observation';
 
