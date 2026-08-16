@@ -1665,7 +1665,7 @@ const schema54 = {
     high_water_mark_usd: { $ref: '#/$defs/Usd' },
     incentive_credit_cumulative_usd: {
       description:
-        'Wallet-confirmed incentive credits, shown for attribution only.\nThis amount is already reflected in venue NLV and must not be added to\ncapital base, available cash, or realized PnL a second time.',
+        'Wallet-confirmed incentive credits, shown for attribution only.\nThis amount is already reflected in venue NLV and must not be added to\ncapital base, available cash, or realized `PnL` a second time.',
       $ref: '#/$defs/Usd',
     },
     realized_pnl_cumulative_usd: { $ref: '#/$defs/Usd' },
