@@ -1,5 +1,7 @@
 import type {
   ActionEligibilityView,
+  ExchangeHistoryQuarantinePageView,
+  ExchangeHistoryQuarantineQuery,
   FreshBootProgressView,
   FreshBootRunDetailView,
   FreshBootRunProgressView,
@@ -24,6 +26,7 @@ export namespace SystemApi {
   export const status = `${base}/status`;
   export const actionEligibility = `${base}/action-eligibility`;
   export const freshBoot = `${base}/fresh-boot`;
+  export const exchangeHistoryQuarantines = `${base}/exchange-history/quarantines`;
   export const runtimeControls = `${base}/runtime-controls`;
   export const quantMode = `${runtimeControls}/quant-mode`;
   export const settlementWritePolicy = `${runtimeControls}/settlement-write-policy`;
@@ -45,6 +48,17 @@ export async function getFreshBootProgress(
   options: { signal?: AbortSignal } = {},
 ) {
   return requestClient.get<FreshBootProgressView>(SystemApi.freshBoot, options);
+}
+
+/** Immutable typed quarantine evidence and governed replacement resolution. */
+export async function getExchangeHistoryQuarantines(
+  query: ExchangeHistoryQuarantineQuery = {},
+  options: { signal?: AbortSignal } = {},
+) {
+  return requestClient.get<ExchangeHistoryQuarantinePageView>(
+    SystemApi.exchangeHistoryQuarantines,
+    { params: query, signal: options.signal },
+  );
 }
 
 /** Immutable run projection and append-only transition timeline. */

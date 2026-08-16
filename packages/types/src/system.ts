@@ -75,7 +75,11 @@ export type ExchangeHistoryStage =
   | 'quarantined'
   | 'startup_probe';
 
-export type ColdStartSloStatus = 'on_track' | 'violation' | 'warning';
+export type ColdStartSloStatus =
+  | 'on_track'
+  | 'violation'
+  | 'warming_up'
+  | 'warning';
 
 export interface ExchangeHistoryFrontierProgress {
   stage: ExchangeHistoryStage;
@@ -117,8 +121,8 @@ export type FreshBootStage =
   | 'dataset_ready'
   | 'dataset_running'
   | 'first_report_published'
+  | 'first_report_queued'
   | 'parity_ready'
-  | 'report_eligible'
   | 'scenario_ready'
   | 'training_queued'
   | 'training_ready'
@@ -189,6 +193,8 @@ export interface FreshBootSourceCoverageManifest {
   history_plan_id: string;
   history_policy_hash: string;
   availability_policy_hash: string;
+  fit_seal_id: string;
+  fit_seal_hash: string;
   readiness_evidence_id: string;
   source_registry_hash: string;
   window_start: IsoDateTime;
@@ -254,7 +260,6 @@ export interface FreshBootRunProgressView {
   active_job_id: null | string;
   last_job_id: null | string;
   bootstrap_policy_activation_id: null | string;
-  manual_report_ready_at: IsoDateTime | null;
   first_report_run_id: null | string;
   first_report_id: null | string;
   next_scheduled_report_at: IsoDateTime | null;
@@ -339,14 +344,116 @@ export interface FreshBootProfileProgressView {
   training_sample_count: null | number;
   calibration_dataset_status: null | TrainingDatasetStatus;
   calibration_sample_count: null | number;
-  manual_report_ready: boolean;
+}
+
+export type FreshBootCapabilityState =
+  | 'all_routes_ready'
+  | 'awaiting_history'
+  | 'blocked'
+  | 'bootstrapping'
+  | 'first_report_queued'
+  | 'first_report_ready'
+  | 'partial_blocked';
+
+export interface FreshBootCapabilitySummary {
+  state: FreshBootCapabilityState;
+  pooled_first_report_id: null | string;
+  first_report_ready: boolean;
+  all_routes_ready: boolean;
+  blocked_routes: BuyModelRoute[];
 }
 
 /** `GET /system/fresh-boot` — L2-free activation and first-report progress. */
 export interface FreshBootProgressView {
   observed_at: IsoDateTime;
   exchange_history: ExchangeHistoryFrontierProgress;
+  capability: FreshBootCapabilitySummary;
   profiles: FreshBootProfileProgressView[];
+}
+
+export type ExchangeHistoryFrontier = 'activation' | 'retention';
+
+export type ExchangeHistoryQuarantineStatus = 'active' | 'all' | 'resolved';
+
+export type ExchangeHistoryQuarantineKind =
+  | 'archive_probe_failure'
+  | 'continuity_mismatch'
+  | 'contract_mismatch'
+  | 'decode_failure'
+  | 'missing_correlation'
+  | 'parent_hash_mismatch'
+  | 'provider_mismatch'
+  | 'unknown_token';
+
+export type ExchangeHistoryQuarantineEvidence =
+  | {
+      actual: string;
+      block_number: number;
+      kind: 'archive_probe_failure';
+      provider_id: string;
+    }
+  | {
+      actual: string;
+      contract_address: null | string;
+      expected: null | string;
+      kind: 'projection_failure';
+      log_index: null | number;
+      token_id: null | string;
+      transaction_hash: null | string;
+      version: null | string;
+    }
+  | {
+      actual: string;
+      expected: string;
+      from_block: number;
+      kind: 'continuity_mismatch';
+      to_block: number;
+    }
+  | {
+      attestor_count: number;
+      attestor_digest: string;
+      extractor_count: number;
+      extractor_digest: string;
+      kind: 'provider_mismatch';
+    };
+
+export type ExchangeHistoryQuarantineDisposition =
+  | 'accepted_replacement'
+  | 'canonical_supersession';
+
+export interface ExchangeHistoryQuarantineResolutionView {
+  resolution_id: string;
+  disposition: ExchangeHistoryQuarantineDisposition;
+  replacement_chunk_id: string;
+  evidence_hash: string;
+  actor: string;
+  resolved_at: IsoDateTime;
+}
+
+export interface ExchangeHistoryQuarantineView {
+  quarantine_id: string;
+  chunk_id: string;
+  frontier: ExchangeHistoryFrontier;
+  from_block: number;
+  to_block: number;
+  kind: ExchangeHistoryQuarantineKind;
+  evidence: ExchangeHistoryQuarantineEvidence;
+  evidence_hash: string;
+  quarantined_at: IsoDateTime;
+  resolution: ExchangeHistoryQuarantineResolutionView | null;
+}
+
+export interface ExchangeHistoryQuarantinePageView {
+  items: ExchangeHistoryQuarantineView[];
+  next_after: null | string;
+}
+
+export interface ExchangeHistoryQuarantineQuery {
+  after?: string;
+  frontier?: ExchangeHistoryFrontier;
+  kind?: ExchangeHistoryQuarantineKind;
+  limit?: number;
+  status?: ExchangeHistoryQuarantineStatus;
 }
 
 /** `GET /system/status` — the operator system snapshot. */

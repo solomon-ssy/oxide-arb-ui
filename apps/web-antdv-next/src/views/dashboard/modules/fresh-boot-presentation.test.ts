@@ -1,8 +1,6 @@
 import type {
   ExchangeHistoryFrontierProgress,
-  FreshBootProfileProgressView,
   FreshBootProgressView,
-  FreshBootStatus,
 } from '@vben/types';
 
 import { describe, expect, it } from 'vitest';
@@ -14,10 +12,6 @@ import {
   retentionPercent,
   summarizeFreshBoot,
 } from './fresh-boot-presentation';
-
-function profile(status: FreshBootStatus): FreshBootProfileProgressView {
-  return { run: { status } } as FreshBootProfileProgressView;
-}
 
 function history(): ExchangeHistoryFrontierProgress {
   return {
@@ -33,11 +27,11 @@ function history(): ExchangeHistoryFrontierProgress {
 
 describe('fresh-boot presentation', () => {
   it('distinguishes waiting and running states', () => {
-    expect(summarizeFreshBoot([], 'startup_probe')).toEqual({
+    expect(summarizeFreshBoot('awaiting_history')).toEqual({
       color: 'processing',
       status: 'waiting',
     });
-    expect(summarizeFreshBoot([profile('running')], 'extracting')).toEqual({
+    expect(summarizeFreshBoot('bootstrapping')).toEqual({
       color: 'processing',
       status: 'running',
     });
@@ -46,31 +40,32 @@ describe('fresh-boot presentation', () => {
   it('keeps retryable states visible', () => {
     expect(profileStatusColor('waiting_evidence')).toBe('warning');
     expect(profileStatusColor('retry_scheduled')).toBe('warning');
-    expect(
-      summarizeFreshBoot([profile('retry_scheduled')], 'extracting'),
-    ).toEqual({ color: 'processing', status: 'running' });
+    expect(summarizeFreshBoot('first_report_queued')).toEqual({
+      color: 'processing',
+      status: 'running',
+    });
   });
 
   it('prioritizes terminal blockers', () => {
-    expect(
-      summarizeFreshBoot([profile('blocked_terminal')], 'extracting'),
-    ).toEqual({ color: 'error', status: 'blocked' });
-    expect(summarizeFreshBoot([profile('running')], 'quarantined')).toEqual({
+    expect(summarizeFreshBoot('blocked')).toEqual({
       color: 'error',
       status: 'blocked',
     });
   });
 
-  it('requires all three routes for global success', () => {
-    expect(
-      summarizeFreshBoot(
-        [profile('succeeded'), profile('succeeded'), profile('succeeded')],
-        'activation_ready',
-      ),
-    ).toEqual({ color: 'success', status: 'succeeded' });
-    expect(
-      summarizeFreshBoot([profile('succeeded')], 'activation_ready').status,
-    ).toBe('running');
+  it('does not let a vertical-route blocker negate a published pooled report', () => {
+    expect(summarizeFreshBoot('partial_blocked', true)).toEqual({
+      color: 'success',
+      status: 'succeeded',
+    });
+    expect(summarizeFreshBoot('partial_blocked', false)).toEqual({
+      color: 'error',
+      status: 'blocked',
+    });
+    expect(summarizeFreshBoot('all_routes_ready')).toEqual({
+      color: 'success',
+      status: 'succeeded',
+    });
   });
 
   it('preserves last good data as explicitly stale', () => {

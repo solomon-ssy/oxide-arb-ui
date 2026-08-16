@@ -23,6 +23,14 @@ interface ApiEnvelope<T> {
   message: string;
 }
 
+interface FeedbackSchedulerList {
+  items: Array<{
+    pause_revision: number;
+    paused: boolean;
+    research_profile_id: string;
+  }>;
+}
+
 interface ApiPage<T> {
   has_next: boolean;
   items: T[];
@@ -87,7 +95,14 @@ export const test = base.extend<BrowserFixtures, WorkerFixtures>({
     },
     { scope: 'worker' },
   ],
-  authenticatedPage: async ({ browserAudit, page }, use) => {
+  authenticatedPage: async (
+    { adminApi, browserAudit, page },
+    use,
+    testInfo,
+  ) => {
+    if (testInfo.project.name === 'functional-chromium') {
+      await resumeFeedbackSchedulers(adminApi.context);
+    }
     await browserAudit.track(page);
     await login(page);
     await use(page);
@@ -115,6 +130,29 @@ export const test = base.extend<BrowserFixtures, WorkerFixtures>({
     { scope: 'worker' },
   ],
 });
+
+async function resumeFeedbackSchedulers(context: APIRequestContext) {
+  const schedulers = await readApiData<FeedbackSchedulerList>(
+    context,
+    '/api/research/feedback-schedulers',
+  );
+  for (const scheduler of schedulers.items) {
+    if (!scheduler.paused) continue;
+    const response = await context.post(
+      `/api/research/feedback-schedulers/${encodeURIComponent(scheduler.research_profile_id)}/resume`,
+      {
+        data: {
+          expected_pause_revision: scheduler.pause_revision,
+          note: 'Functional Playwright scenarios exercise the real autonomous scheduler.',
+          reason_code: 'playwright_functional_scheduler',
+        },
+        headers: { 'x-acting-role': 'super_admin' },
+      },
+    );
+    const body = await response.text();
+    expect(response.ok(), body).toBeTruthy();
+  }
+}
 
 export { expect } from 'playwright/test';
 

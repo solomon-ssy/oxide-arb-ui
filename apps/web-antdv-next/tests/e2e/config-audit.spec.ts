@@ -1,5 +1,6 @@
 import type { Locator, Page } from 'playwright/test';
 
+import type { RuntimeActivityPageView } from '@vben/types';
 import type { CurrentPolicyResourceView } from '@vben/types/config-api';
 
 import type { ReleaseScenario } from './release-closure';
@@ -155,14 +156,49 @@ test('motion contract preserves timing and collapses under reduced motion', asyn
   expect(reduced).toEqual({ duration: '0.001s', iterations: '1' });
 });
 
+test('dashboard preserves FreshBoot reflow at 320px', async ({
+  authenticatedPage: page,
+  browserAudit,
+}) => {
+  await page.setViewportSize({ height: 720, width: 320 });
+  await page.goto('/dashboard');
+  await waitForUiReady(page, browserAudit);
+  const panel = page.locator('.fresh-boot-panel');
+  await expect(panel).toBeVisible();
+  await expectReleaseQuality(page);
+  const overflow = await panel.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
+});
+
 test('@visual release closure captures the platform state matrix', async ({
   adminApi,
   authenticatedPage: page,
   browserAudit,
 }, testInfo) => {
   test.setTimeout(1_200_000);
-  await setEvidenceMedia(page);
+  const systemStatus = await readApiData<{ checked_at: string }>(
+    adminApi.context,
+    '/api/system/status',
+  );
+  await setEvidenceMedia(page, systemStatus.checked_at);
   const seedRevision = await waitForSeedRevision(adminApi.context);
+  const activity = await readApiData<RuntimeActivityPageView>(
+    adminApi.context,
+    '/api/runtime/activities?limit=50',
+  );
+  expect(activity.summary).toEqual({
+    by_domain: [
+      { count: 7, domain: 'research' },
+      { count: 2, domain: 'report' },
+      { count: 1, domain: 'execution' },
+      { count: 1, domain: 'reconciliation' },
+      { count: 1, domain: 'settlement' },
+    ],
+    total: 12,
+  });
   const theme = releaseTheme(testInfo);
   const project = testInfo.project.name;
 
@@ -322,6 +358,11 @@ test('@visual release closure captures the platform state matrix', async ({
     {
       name: 'state-feedback-loop',
       path: '/research/learning-policy?module=feedback',
+      prepare: async (currentPage) => {
+        await expect(
+          currentPage.getByTestId('feedback-overview-revision'),
+        ).toHaveText(String(seedRevision));
+      },
     },
     {
       name: 'state-config-policy',

@@ -18,9 +18,9 @@ async function readManifest(runId) {
     'manifest.json',
   );
   const manifest = JSON.parse(await readFile(path, 'utf8'));
-  if (manifest.entries.length !== 50) {
+  if (manifest.entries.length !== 51) {
     throw new Error(
-      `${runId} contains ${manifest.entries.length} screenshots, expected 50`,
+      `${runId} contains ${manifest.entries.length} screenshots, expected 51`,
     );
   }
   return manifest;
@@ -79,5 +79,5 @@ if (firstContract !== secondContract) {
 }
 
 process.stdout.write(
-  'UI release manifests contain the same 50 scenarios, data revision, and canonical screenshot SHA-256 values.\n',
+  'UI release manifests contain the same 51 scenarios, data revision, and canonical screenshot SHA-256 values.\n',
 );

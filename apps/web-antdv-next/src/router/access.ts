@@ -28,19 +28,23 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
   return await generateAccessible(preferences.app.accessMode, {
     ...options,
     fetchMenuListAsync: async () => {
-      message.loading({
+      const closeLoading = message.loading({
         content: `${$t('common.loadingMenu')}...`,
-        duration: 1.5,
+        duration: 0,
       });
 
-      const authStore = useAuthStore();
-      if (!authStore.cachedMenus) {
-        await authStore.fetchUserInfo();
+      try {
+        const authStore = useAuthStore();
+        if (!authStore.cachedMenus) {
+          await authStore.fetchUserInfo();
+        }
+        const menus = authStore.cachedMenus ?? [];
+        const { routes, permissionCodes } = adaptMenuTree(menus);
+        useAccessStore().setAccessCodes(permissionCodes);
+        return routes;
+      } finally {
+        closeLoading();
       }
-      const menus = authStore.cachedMenus ?? [];
-      const { routes, permissionCodes } = adaptMenuTree(menus);
-      useAccessStore().setAccessCodes(permissionCodes);
-      return routes;
     },
     forbiddenComponent,
     layoutMap,

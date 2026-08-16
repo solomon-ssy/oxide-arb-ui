@@ -20,11 +20,6 @@ export type ResearchInformationRegime =
   | 'pooled_binary_market'
   | 'weather_forecast';
 
-export type ResearchMarketSelector =
-  | 'all_eligible'
-  | 'crypto_price_contract'
-  | 'weather_contract';
-
 export type ResearchDecisionTrigger =
   | 'every_five_minutes'
   | 'hourly'
@@ -58,9 +53,8 @@ export type ResearchLabelContract = 'final_token_payout_ratio';
 
 export type ResearchCohortContract =
   | 'all_eligible'
-  | 'crypto_price'
-  | 'non_vertical_pooled'
-  | 'weather_forecast';
+  | 'crypto_resolved'
+  | 'weather_resolved';
 
 export type ResearchAvailabilityPolicy =
   | { basis: 'finalized_block_confirmation'; confirmation_blocks: number }
@@ -125,7 +119,6 @@ export interface ResearchProfileArtifact {
     fit_span_days: number;
     information_regime: ResearchInformationRegime;
     label_contract: ResearchLabelContract;
-    market_selector: ResearchMarketSelector;
     max_feature_lookback_secs: number;
     max_holding_secs: number;
     policy_fitter: null | ResearchPolicyFitter;

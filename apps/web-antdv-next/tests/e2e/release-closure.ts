@@ -241,7 +241,10 @@ async function flushVisualFrame(page: Page): Promise<void> {
   );
 }
 
-export async function setEvidenceMedia(page: Page): Promise<void> {
+export async function setEvidenceMedia(
+  page: Page,
+  checkedAt: string,
+): Promise<void> {
   await page.addInitScript(() => {
     const applyDeterministicMode = (): boolean => {
       if (!document.documentElement) return false;
@@ -256,36 +259,69 @@ export async function setEvidenceMedia(page: Page): Promise<void> {
       observer.observe(document, { childList: true });
     }
   });
+  const evidenceTime = new Date(checkedAt);
+  if (Number.isNaN(evidenceTime.valueOf())) {
+    throw new TypeError(
+      `system status returned invalid checked_at ${checkedAt}`,
+    );
+  }
+  await page.clock.setFixedTime(evidenceTime);
   await page.emulateMedia({ reducedMotion: 'reduce' });
 }
 
-async function readFeedbackRevision(
+async function readFeedbackState(
   context: APIRequestContext,
-): Promise<number> {
-  const overview = await readApiData<{ revision: number }>(
-    context,
-    '/api/research/feedback-overview',
-  );
-  return overview.revision;
+): Promise<{ normalized: string; revision: number }> {
+  const overview = await readApiData<
+    Record<string, unknown> & { revision: number }
+  >(context, '/api/research/feedback-overview');
+  const stableOverview = structuredClone(overview);
+  delete stableOverview.generated_at;
+  const truthOperations = stableOverview.truth_operations;
+  if (
+    truthOperations &&
+    typeof truthOperations === 'object' &&
+    !Array.isArray(truthOperations)
+  ) {
+    const stableTruthOperations = truthOperations as Record<string, unknown>;
+    delete stableTruthOperations.observed_at;
+    if (stableTruthOperations.resolution_unresolved_count === 0) {
+      delete stableTruthOperations.resolution_terminal_through;
+    }
+    if (stableTruthOperations.execution_attempt_unsealed_count === 0) {
+      delete stableTruthOperations.execution_attempt_sealed_through;
+    }
+    if (stableTruthOperations.recommendation_rollup_unsealed_count === 0) {
+      delete stableTruthOperations.recommendation_rollup_sealed_through;
+    }
+  }
+  const normalized = JSON.stringify(stableOverview);
+  return { normalized, revision: overview.revision };
 }
 
 export async function waitForSeedRevision(
   context: APIRequestContext,
 ): Promise<number> {
   const deadline = Date.now() + SEED_STABILITY_TIMEOUT_MS;
-  let stableRevision = await readFeedbackRevision(context);
+  let stableState = await readFeedbackState(context);
   let stableSince = Date.now();
+  let consecutiveReads = 1;
 
   while (Date.now() < deadline) {
     await delay(500);
-    const revision = await readFeedbackRevision(context);
-    if (revision !== stableRevision) {
-      stableRevision = revision;
+    const state = await readFeedbackState(context);
+    if (state.normalized !== stableState.normalized) {
+      stableState = state;
       stableSince = Date.now();
+      consecutiveReads = 1;
       continue;
     }
-    if (Date.now() - stableSince >= SEED_STABILITY_MS) {
-      return stableRevision;
+    consecutiveReads += 1;
+    if (
+      consecutiveReads >= 2 &&
+      Date.now() - stableSince >= SEED_STABILITY_MS
+    ) {
+      return stableState.revision;
     }
   }
 

@@ -52,6 +52,8 @@ export type KpiAccent = 'amber' | 'emerald' | 'sky' | 'violet';
 const hasNumericValue = computed(
   () => props.endVal !== null && props.endVal !== undefined,
 );
+const deterministic =
+  document.documentElement.dataset.uiDeterministic === 'true';
 const animateFirstArrival = ref(false);
 let hasAnimatedRealValue = false;
 let animationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -64,7 +66,7 @@ watch(
       return;
     }
     hasAnimatedRealValue = true;
-    if (props.duration <= 0) return;
+    if (deterministic || props.duration <= 0) return;
     animateFirstArrival.value = true;
     animationTimer = setTimeout(() => {
       animateFirstArrival.value = false;

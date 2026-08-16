@@ -17,6 +17,7 @@ import { listRuntimeActivities } from '#/api/runtime-activities';
 import { $t } from '#/locales';
 import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
 import EnumSelect from '#/shared/components/enum/enum-select.vue';
+import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { enumOptions } from '#/shared/presentation/enum-options';
 import { useActivityStore } from '#/store/activity';
 
@@ -31,8 +32,6 @@ const loading = ref(false);
 const domain = ref<RuntimeActivityDomain>();
 const status = ref<RuntimeActivityStatus>();
 const page = ref<null | RuntimeActivityPageView>(null);
-let requestGeneration = 0;
-let controller: AbortController | null = null;
 
 const badgeCount = computed(
   () =>
@@ -44,25 +43,37 @@ const items = computed(() => page.value?.items ?? []);
 const domainOptions = enumOptions('RuntimeActivityDomain');
 const statusOptions = enumOptions('RuntimeActivityStatus');
 
-async function load() {
-  const generation = ++requestGeneration;
-  controller?.abort();
-  controller = new AbortController();
-  loading.value = true;
-  const result = await handleRequest(
-    () =>
-      listRuntimeActivities(
-        { domain: domain.value, limit: 25, status: status.value },
-        controller?.signal,
-      ),
-    { silent: true },
-  );
-  if (generation === requestGeneration && result !== null) {
-    page.value = result;
-  }
-  if (generation === requestGeneration) {
-    loading.value = false;
-  }
+function readKey() {
+  return `${domain.value ?? ''}\u0000${status.value ?? ''}`;
+}
+
+const readCoordinator = new AuthoritativeReadCoordinator<
+  string,
+  null | RuntimeActivityPageView
+>({
+  fetchSnapshot: (_key, signal) =>
+    handleRequest(
+      () =>
+        listRuntimeActivities(
+          { domain: domain.value, limit: 25, status: status.value },
+          signal,
+        ),
+      { silent: true },
+    ),
+  initialKey: readKey(),
+  onError: (error) => {
+    void handleRequest(() => Promise.reject(error), { silent: true });
+  },
+  onPendingChange: (pending) => {
+    loading.value = pending;
+  },
+  onSnapshot: (snapshot) => {
+    if (snapshot !== null) page.value = snapshot;
+  },
+});
+
+function load() {
+  return readCoordinator.refresh();
 }
 
 function viewAll() {
@@ -76,15 +87,14 @@ function viewAll() {
   });
 }
 
-watch([domain, status], () => void load());
+watch([domain, status], () => readCoordinator.changeKey(readKey()));
 watch(
   () => activityStore.refreshGeneration,
-  () => void load(),
+  () => readCoordinator.invalidate(),
 );
 onMounted(() => void load());
 onScopeDispose(() => {
-  requestGeneration += 1;
-  controller?.abort();
+  void readCoordinator.drain().finally(() => readCoordinator.dispose());
 });
 </script>
 

@@ -86,6 +86,7 @@ export interface SelectionExclusionSummary {
   stale_book_count: number;
   insufficient_liquidity_count: number;
   excluded_by_operator_count: number;
+  route_not_activated_count: number;
   other_count: number;
 }
 

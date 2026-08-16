@@ -36,8 +36,14 @@ export function useIncrementalEcharts(
 
   async function renderInitial(options: ECOption) {
     pendingOptions = options;
+    const deterministic =
+      document.documentElement.dataset.uiDeterministic === 'true';
     const instance = await renderEcharts(
-      { ...MARKET_CHART_BASE, ...options },
+      {
+        ...MARKET_CHART_BASE,
+        ...options,
+        ...(deterministic ? { animation: false } : {}),
+      },
       true,
     );
     ready.value = instance !== null && instance !== undefined;
@@ -53,7 +59,17 @@ export function useIncrementalEcharts(
       await renderInitial(options);
       return;
     }
-    await updateData({ ...MARKET_CHART_BASE, ...options }, false, lazyUpdate);
+    const deterministic =
+      document.documentElement.dataset.uiDeterministic === 'true';
+    await updateData(
+      {
+        ...MARKET_CHART_BASE,
+        ...options,
+        ...(deterministic ? { animation: false } : {}),
+      },
+      false,
+      lazyUpdate,
+    );
   }
 
   function resetChart() {

@@ -1,6 +1,6 @@
 import type {
   ExchangeHistoryFrontierProgress,
-  FreshBootProfileProgressView,
+  FreshBootCapabilityState,
   FreshBootProgressView,
   FreshBootStatus,
 } from '@vben/types';
@@ -64,21 +64,23 @@ export function retentionPercent(
 }
 
 export function summarizeFreshBoot(
-  profiles: FreshBootProfileProgressView[],
-  historyStage: ExchangeHistoryFrontierProgress['stage'] | undefined,
+  capability: FreshBootCapabilityState | undefined,
+  pooledFirstReportReady = false,
 ): FreshBootSummary {
-  if (
-    profiles.some((profile) => profile.run.status === 'blocked_terminal') ||
-    historyStage === 'quarantined'
-  ) {
+  if (capability === 'blocked') {
     return { color: 'error', status: 'blocked' };
   }
-  if (profiles.length === 0) {
+  if (capability === 'partial_blocked') {
+    return pooledFirstReportReady
+      ? { color: 'success', status: 'succeeded' }
+      : { color: 'error', status: 'blocked' };
+  }
+  if (!capability || capability === 'awaiting_history') {
     return { color: 'processing', status: 'waiting' };
   }
   if (
-    profiles.length === 3 &&
-    profiles.every((profile) => profile.run.status === 'succeeded')
+    capability === 'first_report_ready' ||
+    capability === 'all_routes_ready'
   ) {
     return { color: 'success', status: 'succeeded' };
   }
