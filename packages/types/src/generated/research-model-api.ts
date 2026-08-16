@@ -43,16 +43,7 @@ export type FeatureValueKind =
   | 'probability'
   | 'usd';
 export type ModelFamily =
-  | (
-      | 'classical_elastic_net'
-      | 'classical_extra_trees'
-      | 'classical_gradient_boosted_trees'
-      | 'classical_lasso'
-      | 'classical_logistic_regression'
-      | 'classical_random_forest'
-      | 'classical_ridge'
-      | 'weighted_factor'
-    )
+  | ('classical_logistic_regression' | 'weighted_factor')
   | 'hold_vs_exit_weighted';
 
 /**
@@ -78,8 +69,8 @@ export interface ResearchModelApiContractSchema {
  * derived only from a governed route generation.
  *
  * `model_family` deserializes from its canonical wire label (`"weighted_factor"`,
- * `"classical_random_forest"`, `"hold_vs_exit_weighted"`, …); an unknown label
- * is rejected at the boundary with `400`.
+ * `"classical_logistic_regression"`, or `"hold_vs_exit_weighted"`); an unknown
+ * label is rejected at the boundary with `400`.
  */
 export interface CreateModelSpecRequest {
   /**
@@ -95,16 +86,7 @@ export interface CreateModelSpecRequest {
    * Model family this spec authors (Buy ranker, Sell/exit scorer, classical).
    */
   model_family:
-    | (
-        | 'classical_elastic_net'
-        | 'classical_extra_trees'
-        | 'classical_gradient_boosted_trees'
-        | 'classical_lasso'
-        | 'classical_logistic_regression'
-        | 'classical_random_forest'
-        | 'classical_ridge'
-        | 'weighted_factor'
-      )
+    | ('classical_logistic_regression' | 'weighted_factor')
     | 'hold_vs_exit_weighted';
   /**
    * Human-facing spec name (unique-ish label shown in the catalog picker).
@@ -174,13 +156,6 @@ export interface ModelTrainingContract {
    * as an arbitrary string by an operator.
    */
   target:
-    | {
-        /**
-         * Exact forward-label horizon in seconds.
-         */
-        horizon_secs: number;
-        kind: 'forward_return';
-      }
     | {
         kind: 'hold_vs_exit_alpha';
       }
@@ -295,13 +270,6 @@ export interface ModelTrainingContract1 {
    * as an arbitrary string by an operator.
    */
   target:
-    | {
-        /**
-         * Exact forward-label horizon in seconds.
-         */
-        horizon_secs: number;
-        kind: 'forward_return';
-      }
     | {
         kind: 'hold_vs_exit_alpha';
       }

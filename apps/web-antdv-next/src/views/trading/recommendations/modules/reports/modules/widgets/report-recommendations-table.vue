@@ -132,8 +132,10 @@ const columns = [
   },
   {
     align: 'right' as const,
-    key: 'suggested',
-    title: $t('page.quantReports.detail.recommendations.columns.suggested'),
+    key: 'hardReservedCash',
+    title: $t(
+      'page.quantReports.detail.recommendations.columns.hardReservedCash',
+    ),
     width: 120,
   },
   {
@@ -233,9 +235,9 @@ const columns = [
           formatScore(record.economics.capital_occupancy_usd_hours)
         }}</span>
       </template>
-      <template v-else-if="column.key === 'suggested'">
+      <template v-else-if="column.key === 'hardReservedCash'">
         <span class="font-mono">
-          {{ formatUsd(record.trade_plan.sizing.suggested_usd) }}
+          {{ formatUsd(record.trade_plan.sizing.hard_reserved_cash_usd) }}
         </span>
       </template>
       <template v-else-if="column.key === 'eligibility'">

@@ -52,7 +52,7 @@ const driftKindsByMetric = new Map([
   ['jensen_shannon_divergence', 'label'],
   ['kolmogorov_smirnov_p_value', 'data'],
   ['population_stability_index', 'data'],
-  ['rank_ic_drop', 'concept'],
+  ['target_rank_ic_drop', 'concept'],
 ]);
 
 const knownDriftAssessments = new Set([

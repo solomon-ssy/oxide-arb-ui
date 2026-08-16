@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type {
   QuantReportDetailView,
-  RecommendationChangedField,
+  RecommendationChangedFieldView,
   RecommendationDeltaView,
   RecommendationDiffSnapshotView,
   ReportDiffView,
@@ -93,8 +93,8 @@ const deltaColumns = [
   },
   {
     align: 'right' as const,
-    dataIndex: 'suggested_usd_delta',
-    key: 'suggested_usd_delta',
+    dataIndex: 'hard_reserved_cash_usd_delta',
+    key: 'hard_reserved_cash_usd_delta',
     title: $t('page.quantReports.detail.diff.columns.delta'),
     width: 120,
   },
@@ -123,18 +123,18 @@ function deltaRowKey(row: RecommendationDeltaView): string {
   return `${row.market_id}:${row.outcome_side}`;
 }
 
-function suggestedUsd(
-  snapshot: null | RecommendationDiffSnapshotView,
+function hardReservedCashUsd(
+  snapshot: null | RecommendationDiffSnapshotView | undefined,
 ): null | string {
-  return snapshot?.trade_plan.sizing.suggested_usd ?? null;
+  return snapshot?.trade_plan.sizing.hard_reserved_cash_usd ?? null;
 }
 
-function changedFieldLabel(field: RecommendationChangedField): string {
+function changedFieldLabel(field: RecommendationChangedFieldView): string {
   return $t(`page.quantReports.detail.diff.fields.${field}`);
 }
 
 function economicsSummary(
-  snapshot: null | RecommendationDiffSnapshotView,
+  snapshot: null | RecommendationDiffSnapshotView | undefined,
 ): string {
   if (!snapshot) return EMPTY_PLACEHOLDER;
   const economics = snapshot.economics;
@@ -148,14 +148,16 @@ function economicsSummary(
 }
 
 function validitySummary(
-  snapshot: null | RecommendationDiffSnapshotView,
+  snapshot: null | RecommendationDiffSnapshotView | undefined,
 ): string {
   return snapshot
     ? `${formatDateTimeLocal(snapshot.valid_from)} → ${formatDateTimeLocal(snapshot.valid_until)}`
     : EMPTY_PLACEHOLDER;
 }
 
-function entrySummary(snapshot: null | RecommendationDiffSnapshotView): string {
+function entrySummary(
+  snapshot: null | RecommendationDiffSnapshotView | undefined,
+): string {
   if (!snapshot) {
     return EMPTY_PLACEHOLDER;
   }
@@ -163,16 +165,20 @@ function entrySummary(snapshot: null | RecommendationDiffSnapshotView): string {
   return `${entry.order_policy.kind} · ${entry.entry_reason}`;
 }
 
-function exitSummary(snapshot: null | RecommendationDiffSnapshotView): string {
+function exitSummary(
+  snapshot: null | RecommendationDiffSnapshotView | undefined,
+): string {
   if (!snapshot) {
     return EMPTY_PLACEHOLDER;
   }
   const { exit } = snapshot.trade_plan;
-  return `${exit.settlement_mode} · ${exit.exit_reason}`;
+  return exit.kind === 'executable'
+    ? `${exit.plan.settlement_mode} · ${exit.plan.exit_reason}`
+    : `bootstrap_advisory · ${exit.guidance.guidance}`;
 }
 
 function eligibilitySummary(
-  snapshot: null | RecommendationDiffSnapshotView,
+  snapshot: null | RecommendationDiffSnapshotView | undefined,
 ): string {
   if (!snapshot) return EMPTY_PLACEHOLDER;
   const eligibility = snapshot.execution_eligibility;
@@ -295,19 +301,19 @@ onMounted(async () => {
           :label="$t('page.quantReports.detail.diff.baseTotal')"
         >
           <span class="font-mono">{{
-            formatUsd(diff.base_total_suggested_usd)
+            formatUsd(diff.base_total_hard_reserved_cash_usd)
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.diff.compareTotal')"
         >
           <span class="font-mono">{{
-            formatUsd(diff.compare_total_suggested_usd)
+            formatUsd(diff.compare_total_hard_reserved_cash_usd)
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem :label="$t('page.quantReports.detail.diff.delta')">
           <span class="font-mono">{{
-            formatUsd(diff.total_suggested_usd_delta)
+            formatUsd(diff.total_hard_reserved_cash_usd_delta)
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem
@@ -385,9 +391,9 @@ onMounted(async () => {
                   : EMPTY_PLACEHOLDER
               }}</span>
             </template>
-            <template v-else-if="column.key === 'suggested_usd_delta'">
+            <template v-else-if="column.key === 'hard_reserved_cash_usd_delta'">
               <span class="font-mono">{{
-                formatUsd(record.suggested_usd_delta)
+                formatUsd(record.hard_reserved_cash_usd_delta)
               }}</span>
             </template>
             <template v-else-if="column.key === 'changed_fields'">
@@ -412,8 +418,8 @@ onMounted(async () => {
               <DescriptionsItem
                 :label="$t('page.quantReports.detail.diff.details.sizing')"
               >
-                {{ formatUsd(suggestedUsd(record.base)) }} →
-                {{ formatUsd(suggestedUsd(record.compare)) }}
+                {{ formatUsd(hardReservedCashUsd(record.base)) }} →
+                {{ formatUsd(hardReservedCashUsd(record.compare)) }}
               </DescriptionsItem>
               <DescriptionsItem
                 :label="$t('page.quantReports.detail.diff.details.validity')"

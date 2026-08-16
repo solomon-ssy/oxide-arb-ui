@@ -235,10 +235,10 @@ function openDecisionPolicyActivity() {
           </span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.summary.totalSuggested')"
+          :label="$t('page.quantReports.detail.summary.totalHardReservedCash')"
         >
           <span class="font-mono">{{
-            formatUsd(summary.total_suggested_usd)
+            formatUsd(summary.total_hard_reserved_cash_usd)
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem

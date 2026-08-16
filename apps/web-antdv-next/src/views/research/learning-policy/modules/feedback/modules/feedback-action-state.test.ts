@@ -80,7 +80,7 @@ function cycle(
     champion_serving_contract_hash: 'blake3:serving',
     champion_model_spec_id: 'model-spec-1',
     champion_model_spec_definition_hash: 'blake3:model-spec',
-    champion_model_family: 'classical_gradient_boosted_trees',
+    champion_model_family: 'classical_logistic_regression',
     route: 'crypto',
     decision_policy_snapshot_id: 'snapshot-1',
     decision_policy_snapshot_hash: 'blake3:snapshot',

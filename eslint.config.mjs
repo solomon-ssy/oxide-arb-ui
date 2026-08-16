@@ -5,6 +5,7 @@ import quantPivotDesignTokens from './scripts/eslint-rules/quant-pivot-design-to
 export default defineConfig([
   {
     ignores: [
+      'packages/types/src/generated/quant-operator-api-validators.ts',
       'packages/types/src/generated/research-model-api-validators.ts',
       'playwright-report/**',
       'test-results/**',

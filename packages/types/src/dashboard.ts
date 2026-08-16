@@ -1,12 +1,12 @@
+import type { IsoDateTime } from './common';
+import type { DataQualitySnapshot } from './data-quality';
 import type {
   EquitySnapshotView,
   ExposureBreakdown,
   LiveAccountView,
-} from './account';
-import type { IsoDateTime } from './common';
-import type { DataQualitySnapshot } from './data-quality';
-import type { QuantRecommendationView } from './quant-recommendation';
-import type { QuantReportView } from './quant-report';
+  QuantRecommendationView,
+  QuantReportView,
+} from './generated/quant-operator-api';
 import type {
   RuntimeActivityIndicatorView,
   RuntimeActivityView,

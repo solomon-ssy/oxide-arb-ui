@@ -363,6 +363,7 @@ function defaultPrice(): TradePolicyConditionTemplateNodeV1 {
 function defaultCandidate(
   candidateId: string,
   entryCondition: TradePolicyCandidateSpec['entry_condition'],
+  entryRoute: TradePolicyCandidateSpec['entry_execution']['kind'],
 ): TradePolicyCandidateSpec {
   const reasons: ExitReason[] = [
     'take_profit',
@@ -382,12 +383,20 @@ function defaultCandidate(
   return {
     candidate_id: candidateId,
     entry_condition: entryCondition,
-    entry_execution: {
-      fill_requirement: 'all_or_nothing',
-      kind: 'aggressive',
-      max_book_age_ms: 2000,
-      max_slippage_bps: '100',
-    },
+    entry_execution:
+      entryRoute === 'aggressive'
+        ? {
+            fill_requirement: 'all_or_nothing',
+            kind: 'aggressive',
+            max_book_age_ms: 2000,
+            max_slippage_bps: '100',
+          }
+        : {
+            good_til_secs: 30,
+            kind: 'passive_post_only',
+            max_book_age_ms: 2000,
+            placement: { kind: 'join_best_bid' },
+          },
     exit: {
       lower_barrier_bps: '-500',
       min_expected_return_bps: '0',
@@ -419,13 +428,12 @@ function defaultCandidate(
 }
 
 const candidates = ref<TradePolicyCandidateSpec[]>([
-  defaultCandidate('immediate', { kind: 'immediate' }),
-  defaultCandidate('conditional-1', {
-    confirmation_ms: 2000,
-    kind: 'conditional',
-    max_observation_gap_ms: 1000,
-    root: defaultPrice(),
-  }),
+  defaultCandidate('immediate-aggressive', { kind: 'immediate' }, 'aggressive'),
+  defaultCandidate(
+    'immediate-passive',
+    { kind: 'immediate' },
+    'passive_post_only',
+  ),
 ]);
 
 const selectedCandidate = computed(() =>
@@ -449,10 +457,13 @@ const candidateBlockers = computed(() => {
       $t('page.research.tradePolicies.workbench.blocker.candidateIds'),
     );
   }
+  const immediateRoutes = candidates.value
+    .filter((candidate) => candidate.entry_condition.kind === 'immediate')
+    .map((candidate) => candidate.entry_execution.kind);
   if (
-    candidates.value.filter(
-      (candidate) => candidate.entry_condition.kind === 'immediate',
-    ).length !== 1
+    immediateRoutes.filter((route) => route === 'aggressive').length !== 1 ||
+    immediateRoutes.filter((route) => route === 'passive_post_only').length !==
+      1
   ) {
     blockers.push(
       $t('page.research.tradePolicies.workbench.blocker.immediate'),
@@ -603,12 +614,16 @@ function addCandidate() {
     id = `conditional-${ordinal}`;
   }
   candidates.value.push(
-    defaultCandidate(id, {
-      confirmation_ms: 2000,
-      kind: 'conditional',
-      max_observation_gap_ms: 1000,
-      root: defaultPrice(),
-    }),
+    defaultCandidate(
+      id,
+      {
+        confirmation_ms: 2000,
+        kind: 'conditional',
+        max_observation_gap_ms: 1000,
+        root: defaultPrice(),
+      },
+      'aggressive',
+    ),
   );
   selectedCandidateId.value = id;
 }

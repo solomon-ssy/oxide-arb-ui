@@ -7,7 +7,7 @@ import type {
 import type {
   ExecutionEligibility,
   RiskEnvelope,
-} from './quant-recommendation';
+} from './generated/quant-operator-api';
 
 /**
  * Pure execution-gate predicates mirroring the backend intent-creation guards.

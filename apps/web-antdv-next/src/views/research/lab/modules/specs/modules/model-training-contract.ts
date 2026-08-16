@@ -16,9 +16,6 @@ export const DEFAULT_MODEL_TRAINING_CONTRACT: ModelTrainingContract = {
 /** Resolve the immutable Dataset label owned by a typed target. */
 export function trainingTargetLabel(target: ModelTrainingTarget): string {
   switch (target.kind) {
-    case 'forward_return': {
-      return 'return_to_horizon';
-    }
     case 'hold_vs_exit_alpha': {
       return 'hold_vs_exit_alpha_bps';
     }
@@ -30,7 +27,8 @@ export function trainingTargetLabel(target: ModelTrainingTarget): string {
 
 /** Resolve the immutable label horizon owned by a typed target. */
 export function trainingTargetHorizon(target: ModelTrainingTarget): number {
-  return target.kind === 'forward_return' ? target.horizon_secs : 0;
+  void target;
+  return 0;
 }
 
 /** Derive the only target compatible with one estimator family. */
@@ -53,7 +51,7 @@ export function modelTrainingTarget(
   ) {
     return { kind: 'outcome_payout' };
   }
-  return { horizon_secs: predictionHorizonSecs, kind: 'forward_return' };
+  return null;
 }
 
 /** Preserve editable governance fields while replacing a derived target. */
@@ -71,12 +69,7 @@ function sameTarget(
   left: ModelTrainingTarget,
   right: ModelTrainingTarget,
 ): boolean {
-  if (left.kind !== right.kind) return false;
-  return (
-    left.kind !== 'forward_return' ||
-    (right.kind === 'forward_return' &&
-      left.horizon_secs === right.horizon_secs)
-  );
+  return left.kind === right.kind;
 }
 
 /** Validate the complete typed contract against its owning model semantics. */

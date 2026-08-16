@@ -86,8 +86,8 @@ export function useReportColumns(
     },
     {
       cellRender: { name: 'CellUsd' },
-      field: 'total_suggested_usd',
-      title: $t('page.quantReports.columns.suggested'),
+      field: 'total_hard_reserved_cash_usd',
+      title: $t('page.quantReports.columns.hardReservedCash'),
       width: 130,
     },
     {

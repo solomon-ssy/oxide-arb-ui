@@ -1,9 +1,7 @@
 import type {
-  DecimalString,
   IsoDateTime,
   PageQuery,
   TimeRangeQuery,
-  UsdString,
   UuidString,
 } from './common';
 import type {
@@ -11,74 +9,19 @@ import type {
   ModelRouteEvidenceView,
 } from './decision-evidence';
 import type {
-  AccountSource,
-  EmptyReportReason,
   FeatureParityStage,
-  MarketCategory,
-  OutcomeSide,
   QuantRuntimeMode,
   RecommendationReportStatus,
-  ReportFactDeliveryStatus,
   ReportKind,
   ReportRunStatus,
-  ReportRunTerminalReason,
   ReportScheduleGapReason,
   ReportTriggerKind,
 } from './enums';
 import type { BuyModelRoute } from './generated/config-api';
-import type {
-  ExecutionEligibility,
-  FactorBreakdownEntry,
-  RecommendationEconomics,
-  RecommendationTradePlan,
-} from './quant-recommendation';
+import type { ReportRunView } from './generated/quant-operator-api';
 import type { ResearchProfileRef } from './research-profile';
 
-export interface RepresentedRouteSet {
-  routes: BuyModelRoute[];
-  digest: string;
-}
-
-/** Report header row (`GET /quant/reports`). */
-export interface QuantReportView {
-  recommendation_report_id: UuidString;
-  represented_routes: RepresentedRouteSet;
-  scenario_artifact_id: null | UuidString;
-  report_kind: ReportKind;
-  status: RecommendationReportStatus;
-  runtime_mode: QuantRuntimeMode;
-  decision_at: IsoDateTime;
-  top_n: number;
-  account_source: AccountSource;
-  capital_base_usd: UsdString;
-  published_recommendation_count: number;
-  total_suggested_usd: UsdString;
-  empty_reason: EmptyReportReason | null;
-  published_at: IsoDateTime | null;
-  valid_until: IsoDateTime | null;
-  successor_report_id: null | UuidString;
-  superseded_at: IsoDateTime | null;
-  obsoleted_at: IsoDateTime | null;
-  revoked_at: IsoDateTime | null;
-  expired_at: IsoDateTime | null;
-  status_reason: null | string;
-  created_at: IsoDateTime;
-}
-
-export interface DataQualitySummary {
-  fresh_count: number;
-  acceptable_count: number;
-  degraded_count: number;
-  stale_count: number;
-  insufficient_count: number;
-}
-
-export interface RejectionReasonCount {
-  reason: PortfolioRejectionReason;
-  count: number;
-}
-
-/** Stable global-portfolio admission/selection reason returned by report summaries. */
+/** Stable global-portfolio admission and selection reason. */
 export type PortfolioRejectionReason =
   | 'existing_structural_conflict'
   | 'liquidity_buffer'
@@ -90,264 +33,101 @@ export type PortfolioRejectionReason =
   | 'scenario_exit_capacity'
   | 'single_recommendation_exposure';
 
-export interface EligibilitySummary {
-  eligible_report_only: number;
-  eligible_semi_auto: number;
-  eligible_auto_execution: number;
-}
-
-/** Aggregated report summary embedded in {@link QuantReportDetailView}. */
-export interface ReportSummary {
-  market_selection_count: number;
-  represented_route_count: number;
-  candidate_count: number;
-  rejected_tier_count: number;
-  published_recommendation_count: number;
-  total_suggested_usd: UsdString;
-  max_single_recommendation_usd: UsdString;
-  robust_expected_net_usd: UsdString;
-  nominal_expected_net_usd: UsdString;
-  cvar_usd: UsdString;
-  maximum_scenario_loss_usd: UsdString;
-  capital_occupancy_usd_hours: DecimalString;
-  category_allocation: Partial<Record<MarketCategory, UsdString>>;
-  event_allocation: Record<string, UsdString>;
-  route_allocation: Partial<Record<BuyModelRoute, UsdString>>;
-  data_quality_summary: DataQualitySummary;
-  top_rejection_reasons: RejectionReasonCount[];
-  execution_eligibility_summary: EligibilitySummary;
-  empty_reason: EmptyReportReason | null;
-  warnings: string[];
-}
-
-export interface PortfolioObjectiveEvidence {
-  robust_expected_net_usd: UsdString;
-  nominal_expected_net_usd: UsdString;
-  cvar_usd: UsdString;
-  capital_occupancy_usd_hours: DecimalString;
-  stable_tie_break_stages: number;
-}
-
-export interface PortfolioConstraintEvidence {
-  available_cash_used_usd: UsdString;
-  open_capital_usd: UsdString;
-  selected_recommendation_count: number;
-  maximum_scenario_loss_usd: UsdString;
-  checked_constraint_count: number;
-  evidence_hash: string;
-}
-
-export interface SolverEvidence {
-  backend: string;
-  lexicographic_model_build_count: number;
-  lexicographic_solve_count: number;
-  tie_break_proof_count: number;
-  lexicographic_warm_start_count: number;
-  marginal_model_build_count: number;
-  marginal_solve_count: number;
-  marginal_model_reuse_count: number;
-  configured_deadline_secs: number;
-  deterministic_threads: number;
-  coefficient_scale: number;
-  bound_scale_exponent: number;
-  optimal: boolean;
-}
-
-export interface ExactVerificationEvidence {
-  passed: boolean;
-  selected_tier_digest: string;
-  recomputed_economics_hash: string;
-}
-
-export interface GlobalPortfolioPlan {
-  portfolio_plan_id: UuidString;
-  selected_tier_ids: UuidString[];
-  objectives: PortfolioObjectiveEvidence;
-  constraints: PortfolioConstraintEvidence;
-  solver: SolverEvidence;
-  exact_verification: ExactVerificationEvidence;
-  content_hash: string;
-}
-
-export type PortfolioDecisionResult =
-  | {
-      evidence_hash: string;
-      outcome: 'zero_candidates';
-      rejected_tier_count: number;
-    }
-  | {
-      outcome: 'optimized';
-      plan: GlobalPortfolioPlan;
-    };
-
-/** Report detail (`GET /quant/reports/{id}`). */
-export interface QuantReportDetailView {
-  recommendation_report_id: UuidString;
-  report_run_id: UuidString;
-  report_kind: ReportKind;
-  decision_at: IsoDateTime;
-  runtime_mode: QuantRuntimeMode;
-  top_n: number;
-  status: RecommendationReportStatus;
-  account_source: AccountSource;
-  capital_base_usd: UsdString;
-  account_snapshot_ref: UuidString;
-  decision_policy_snapshot_id: UuidString;
-  market_selection_id: UuidString;
-  portfolio_plan_id: UuidString;
-  portfolio_decision: PortfolioDecisionResult;
-  represented_routes: RepresentedRouteSet;
-  scenario_artifact_id: null | UuidString;
-  scenario_artifact_hash: null | string;
-  summary: ReportSummary;
-  fact_delivery: null | ReportFactDeliveryView;
-  run: null | ReportRunView;
-  published_at: IsoDateTime | null;
-  valid_until: IsoDateTime | null;
-  successor_report_id: null | UuidString;
-  predecessor_report_id: null | UuidString;
-  superseded_at: IsoDateTime | null;
-  obsoleted_at: IsoDateTime | null;
-  revoked_at: IsoDateTime | null;
-  expired_at: IsoDateTime | null;
-  status_reason: null | string;
-  created_at: IsoDateTime;
-}
-
-export interface ReportFactDeliveryView {
-  status: ReportFactDeliveryStatus;
-  bundle_hash: string;
-  recommendation_row_count: number;
-  recommendation_row_chain_hash: string;
-  funnel_row_count: number;
-  funnel_row_chain_hash: string;
-  attempt_count: number;
-  next_attempt_at: IsoDateTime | null;
-  last_error: null | string;
-  verified_at: IsoDateTime | null;
-  announced_at: IsoDateTime | null;
-}
-
-export interface ReportRunView {
-  report_run_id: UuidString;
-  trigger_kind: ReportTriggerKind;
-  trigger_key: string;
-  schedule_id: null | string;
-  request_id: null | string;
-  retry_of_run_id: null | UuidString;
-  scheduled_for: IsoDateTime | null;
-  requested_at: IsoDateTime;
-  status: ReportRunStatus;
-  started_at: IsoDateTime | null;
-  decision_at: IsoDateTime | null;
-  heartbeat_at: IsoDateTime | null;
-  lease_expires_at: IsoDateTime | null;
-  lease_owner: null | UuidString;
-  finished_at: IsoDateTime | null;
-  decision_policy_snapshot_id: null | UuidString;
-  top_n: null | number;
-  knowledge_lag_secs: null | number;
-  output_report_id: null | UuidString;
-  terminal_reason: null | ReportRunTerminalReason;
-  error_code: null | string;
-  error_summary: null | string;
-}
-
 export interface ReportRunListQuery extends PageQuery, TimeRangeQuery {
+  schedule_id?: string;
   status?: ReportRunStatus;
   trigger_kind?: ReportTriggerKind;
-  schedule_id?: string;
 }
 
 export interface ReportScheduleStateView {
-  schedule_id: string;
   decision_policy_snapshot_id: UuidString;
-  spec_hash: string;
-  next_scheduled_for: IsoDateTime;
-  last_materialized_for: IsoDateTime | null;
   enabled: boolean;
+  last_materialized_for: IsoDateTime | null;
+  next_scheduled_for: IsoDateTime;
+  schedule_id: string;
+  spec_hash: string;
   updated_at: IsoDateTime;
 }
 
 export interface ReportScheduleHealthView {
-  observed_at: IsoDateTime;
   active_run: null | ReportRunView;
-  queued_run_count: number;
+  current_reports: ReportCurrentHealthView[];
   failed_run_count_24h: number;
   gap_count_24h: number;
   missed_occurrence_count_24h: number;
+  observed_at: IsoDateTime;
   prepared_report_count: number;
-  current_reports: ReportCurrentHealthView[];
+  queued_run_count: number;
   schedules: ReportScheduleStateView[];
 }
 
 export interface ReportCurrentHealthView {
+  published_at: IsoDateTime | null;
   recommendation_report_id: UuidString;
   report_kind: ReportKind;
-  published_at: IsoDateTime | null;
   valid_until: IsoDateTime | null;
 }
 
 export interface ReportScheduleGapView {
-  gap_id: UuidString;
-  schedule_id: string;
   decision_policy_snapshot_id: UuidString;
-  reason: ReportScheduleGapReason;
+  detail: null | string;
+  detected_at: IsoDateTime;
   first_scheduled_for: IsoDateTime;
+  gap_id: UuidString;
   last_scheduled_for: IsoDateTime;
   missed_count: number;
-  detected_at: IsoDateTime;
-  detail: null | string;
+  reason: ReportScheduleGapReason;
+  schedule_id: string;
 }
 
 export interface ReportScheduleGapListQuery extends PageQuery, TimeRangeQuery {
-  schedule_id?: string;
   reason?: ReportScheduleGapReason;
+  schedule_id?: string;
 }
 
 export interface ReportEvidenceDiagnosticsView {
-  stage_ceiling: FeatureParityStage;
+  decision_capture_count: null | number;
   evidence_complete: boolean;
+  feature_cell_count: null | number;
+  feature_state_counts: null | Record<string, number>;
+  feature_vector_count: null | number;
+  model_input_count: null | number;
+  model_input_state_counts: null | Record<string, number>;
   model_route: ModelRouteEvidenceView | null;
   selection_count: number;
-  decision_capture_count: null | number;
-  feature_vector_count: null | number;
-  feature_state_counts: null | Record<string, number>;
-  feature_cell_count: null | number;
-  model_input_state_counts: null | Record<string, number>;
-  model_input_count: null | number;
+  stage_ceiling: FeatureParityStage;
 }
 
 export type RouteRunOutcome = 'failed' | 'ready' | 'zero_candidates';
 
 export interface RouteModelLineage {
-  model_version_id: UuidString;
-  model_run_id: null | UuidString;
   calibration_artifact_id: UuidString;
-  trade_policy_artifact_id: UuidString;
+  feature_contract_digest: string;
+  model_run_id: null | UuidString;
+  model_version_id: UuidString;
+  pit_lineage_digest: string;
+  prediction_horizon_secs: number;
   research_profile_artifact_id: string;
   research_profile_ref: ResearchProfileRef;
-  prediction_horizon_secs: number;
-  feature_contract_digest: string;
-  pit_lineage_digest: string;
   serving_contract_digest: string;
+  trade_policy_artifact_id: UuidString;
 }
 
 export interface RouteCandidateFunnel {
+  admitted_economic_tiers: number;
+  calibrated_candidates: number;
   eligible_markets: number;
   feature_complete_markets: number;
-  calibrated_candidates: number;
-  admitted_economic_tiers: number;
   selected_recommendations: number;
 }
 
 export interface ReportRouteDiagnosticsView {
+  evidence: ReportEvidenceDiagnosticsView;
+  funnel: RouteCandidateFunnel;
+  lineage: null | RouteModelLineage;
+  outcome: RouteRunOutcome;
   report_route_run_id: UuidString;
   route: BuyModelRoute;
-  outcome: RouteRunOutcome;
-  lineage: null | RouteModelLineage;
-  funnel: RouteCandidateFunnel;
-  evidence: ReportEvidenceDiagnosticsView;
 }
 
 export interface QuantReportDiagnosticsView {
@@ -411,20 +191,20 @@ export interface QuantReportFunnelView {
 }
 
 export interface ReportFunnelMarketView {
+  decision_policy_snapshot_id: UuidString;
   event_id: string;
   feature_vector_id: null | UuidString;
   market_id: string;
   market_selection_id: UuidString;
-  report_route_run_id: null | UuidString;
-  route: BuyModelRoute | null;
   model_run_id: null | UuidString;
   model_version_id: null | UuidString;
   primary_reason: ReportFunnelReason;
+  primary_token_id: string;
   recommendation_id: null | UuidString;
   recommendation_report_id: UuidString;
+  report_route_run_id: null | UuidString;
+  route: BuyModelRoute | null;
   row_hash: string;
-  decision_policy_snapshot_id: UuidString;
-  primary_token_id: string;
   secondary_diagnostics: ReportFunnelDiagnostics;
   signal_candidate_id: null | UuidString;
   terminal_stage: ReportFunnelStage;
@@ -459,81 +239,25 @@ export interface ReportFunnelMarketListQuery extends PageQuery {
   terminal_stage?: ReportFunnelStage;
 }
 
-/** One recommendation delta between two reports. */
-export interface RecommendationDeltaView {
-  market_id: string;
-  outcome_side: OutcomeSide;
-  base: null | RecommendationDiffSnapshotView;
-  compare: null | RecommendationDiffSnapshotView;
-  changed_fields: RecommendationChangedField[];
-  suggested_usd_delta: UsdString;
-}
-
-export type RecommendationChangedField =
-  | 'capital_occupancy_usd_hours'
-  | 'cvar_contribution_usd'
-  | 'eligibility'
-  | 'entry'
-  | 'exit'
-  | 'factor_breakdown'
-  | 'marginal_portfolio_value_usd'
-  | 'maximum_loss_usd'
-  | 'nominal_expected_net_usd'
-  | 'profit_probability'
-  | 'rank'
-  | 'robust_expected_net_usd'
-  | 'sizing'
-  | 'trade_plan_availability'
-  | 'validity';
-
-export interface RecommendationDiffSnapshotView {
-  recommendation_id: UuidString;
-  rank: number;
-  economics: RecommendationEconomics;
-  valid_from: IsoDateTime;
-  valid_until: IsoDateTime;
-  execution_eligibility: ExecutionEligibility;
-  trade_plan: RecommendationTradePlan;
-  factor_breakdown: FactorBreakdownEntry[];
-}
-
-/** `GET /quant/reports/{id}/diff/{other_id}` response. */
-export interface ReportDiffView {
-  base_report_id: UuidString;
-  compare_report_id: UuidString;
-  added: RecommendationDeltaView[];
-  removed: RecommendationDeltaView[];
-  retained: RecommendationDeltaView[];
-  base_total_suggested_usd: UsdString;
-  compare_total_suggested_usd: UsdString;
-  total_suggested_usd_delta: UsdString;
-  base_eligibility: EligibilitySummary;
-  compare_eligibility: EligibilitySummary;
-}
-
-/** Filter + pagination for `GET /quant/reports`. */
 export interface QuantReportListQuery extends PageQuery, TimeRangeQuery {
-  route?: BuyModelRoute;
   kind?: ReportKind;
-  status?: RecommendationReportStatus;
+  route?: BuyModelRoute;
   runtime_mode?: QuantRuntimeMode;
+  status?: RecommendationReportStatus;
 }
 
-/** `POST /quant/reports/run` governed request body. */
 export interface RunReportRequest {
+  knowledge_lag_secs?: number;
   reason: string;
-  /** Caller idempotency key (`ad_hoc:{request_id}` trigger key on the server). */
   request_id: string;
   top_n?: number;
-  knowledge_lag_secs?: number;
 }
 
-/** `POST /quant/reports/{id}/revoke` governed request body. */
 export interface RevokeReportRequest {
   reason: string;
 }
 
 export interface RetryReportRequest {
-  request_id: string;
   reason: string;
+  request_id: string;
 }

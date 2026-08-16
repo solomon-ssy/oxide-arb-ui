@@ -16,7 +16,7 @@ import type {
   RedeemPolicy,
   TrainingDatasetStatus,
 } from './enums';
-import type { OpportunisticExitPolicy } from './exit-plan';
+import type { OpportunisticExitPolicy } from './generated/quant-operator-api';
 import type {
   ResearchEvaluationTrack,
   ResearchPolicyFitter,
@@ -61,12 +61,14 @@ export interface TradePolicyTrialMetrics {
   depth_failure_rate: DecimalString;
   effective_sample_size: DecimalString;
   executable_coverage: DecimalString;
+  expected_net_return_bps: DecimalString;
+  expected_sharpe_ratio: DecimalString | null;
   fee_catalog_coverage: DecimalString;
   full_l2_coverage: DecimalString;
   latency_stress_multiplier: DecimalString;
-  net_return_bps: DecimalString;
+  rebate_evidence_coverage: DecimalString;
+  risk_net_return_bps: DecimalString;
   sample_count: number;
-  sharpe_ratio: DecimalString | null;
 }
 
 export interface TradePolicyTrialAttemptView {
@@ -267,6 +269,7 @@ export interface TradePolicyCohortView {
   parameter_source: TradePolicyParameterSource;
   passive_reconciled_trade_coverage: DecimalString | null;
   probability_of_backtest_overfitting: DecimalString;
+  rebate_evidence_coverage: DecimalString;
   redeem_policy: RedeemPolicy;
   require_route_gate_eligibility: boolean;
   sample_count: number;
@@ -468,6 +471,7 @@ export interface TradePolicyDetailView {
       eligible_market_coverage: DecimalString | null;
       fee_catalog_coverage: DecimalString | null;
       probability_of_backtest_overfitting: DecimalString | null;
+      rebate_evidence_coverage: DecimalString | null;
       trial_ledger_cutoff: IsoDateTime | null;
       trial_ledger_hash: null | string;
     };

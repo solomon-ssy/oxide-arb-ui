@@ -2,9 +2,9 @@ import type {
   EntryConditionAuditView,
   EntryConditionDetailView,
   QuantEvidenceView,
-  QuantRecommendationView,
 } from '@vben/types';
 
+import { decodeRecommendation } from '#/api/quant-operator-contract';
 import { requestClient } from '#/api/request';
 
 export namespace QuantRecommendationApi {
@@ -33,9 +33,10 @@ export async function getRecommendationEntryConditionAudits(id: string) {
 
 /** `GET /quant/recommendations/{id}` — one scored recommendation. */
 export async function getRecommendation(id: string) {
-  return requestClient.get<QuantRecommendationView>(
+  const response = await requestClient.get<unknown>(
     QuantRecommendationApi.detail(id),
   );
+  return decodeRecommendation(response);
 }
 
 /** `GET /quant/recommendations/{id}/evidence` — replay-handle references. */

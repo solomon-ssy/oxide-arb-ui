@@ -32,9 +32,18 @@ const props = defineProps<{ recommendation: QuantRecommendationView }>();
 
 const entry = computed(() => props.recommendation.trade_plan.entry);
 const sizing = computed(() => props.recommendation.trade_plan.sizing);
-const exit = computed(() => props.recommendation.trade_plan.exit);
+const exitAuthority = computed(() => props.recommendation.trade_plan.exit);
+const exit = computed(() =>
+  exitAuthority.value.kind === 'executable' ? exitAuthority.value.plan : null,
+);
+const bootstrapGuidance = computed(() =>
+  exitAuthority.value.kind === 'bootstrap_advisory'
+    ? exitAuthority.value.guidance
+    : null,
+);
 const risk = computed(() => props.recommendation.trade_plan.risk_envelope);
 const tier = computed(() => props.recommendation.economic_tier);
+const tierEntry = computed(() => tier.value.entry_execution);
 
 const scenarioColumns = [
   {
@@ -49,6 +58,12 @@ const scenarioColumns = [
     key: 'discounted_net_usd',
     title: $t('page.quantRecommendations.economicTier.discountedNet'),
   },
+  {
+    align: 'right' as const,
+    dataIndex: 'risk_net_usd',
+    key: 'risk_net_usd',
+    title: $t('page.quantRecommendations.economicTier.riskNet'),
+  },
 ];
 const occupancyColumns = [
   {
@@ -58,13 +73,16 @@ const occupancyColumns = [
   },
   {
     align: 'right' as const,
-    dataIndex: 'locked_usd',
-    key: 'locked_usd',
-    title: $t('page.quantRecommendations.economicTier.lockedUsd'),
+    dataIndex: 'reserved_cash_usd',
+    key: 'reserved_cash_usd',
+    title: $t('page.quantRecommendations.economicTier.reservedCash'),
   },
 ];
 
 const trailingStopLabel = computed(() => {
+  if (!exit.value) {
+    return EMPTY_PLACEHOLDER;
+  }
   const stop = exit.value.trailing_stop;
   if (!stop) {
     return EMPTY_PLACEHOLDER;
@@ -89,7 +107,10 @@ function millis(value: number): string {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+  <div
+    class="grid grid-cols-1 gap-4 xl:grid-cols-2"
+    data-testid="recommendation-plans"
+  >
     <Card size="small" :title="$t('page.quantRecommendations.entryPlan.title')">
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem
@@ -178,14 +199,38 @@ function millis(value: number): string {
     >
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.suggested')"
+          :label="$t('page.quantRecommendations.sizingPlan.hardReservedCash')"
         >
-          {{ formatUsd(sizing.suggested_usd) }}
+          {{ formatUsd(sizing.hard_reserved_cash_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.suggestedShares')"
+          :label="$t('page.quantRecommendations.sizingPlan.requestedShares')"
         >
-          {{ formatShares(sizing.suggested_shares) }}
+          {{ formatShares(sizing.requested_shares) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.quantRecommendations.sizingPlan.expectedFilledShares')
+          "
+        >
+          {{ formatShares(sizing.expected_filled_shares) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.immediateFee')"
+        >
+          {{ formatUsd(sizing.immediate_fee_usd) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.quantRecommendations.sizingPlan.expectedMakerRebate')
+          "
+        >
+          <div class="flex flex-col gap-1">
+            <span>{{ formatUsd(sizing.expected_maker_rebate_usd) }}</span>
+            <span class="text-warning text-xs">
+              {{ $t('page.quantRecommendations.sizingPlan.rebateNotice') }}
+            </span>
+          </div>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.economicTierId')"
@@ -195,9 +240,11 @@ function millis(value: number): string {
           }}</span>
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.sizingPlan.entryVwap')"
+          :label="
+            $t('page.quantRecommendations.sizingPlan.referenceEntryPrice')
+          "
         >
-          {{ formatPrice(sizing.entry_vwap) }}
+          {{ formatPrice(sizing.reference_entry_price) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.sizingPlan.portfolioWeight')"
@@ -248,24 +295,48 @@ function millis(value: number): string {
     >
       <Descriptions :column="1" bordered size="small">
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.economicTier.entryNotional')"
+          :label="$t('page.quantRecommendations.economicTier.route')"
         >
-          {{ formatUsd(tier.entry.notional_usd) }}
+          {{
+            $t(
+              `page.quantRecommendations.entryPlan.orderPolicyKind.${tierEntry.kind}`,
+            )
+          }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.economicTier.fee')"
+          :label="$t('page.quantRecommendations.economicTier.requestedShares')"
         >
-          {{ formatUsd(tier.entry.fee_usd) }}
+          {{ formatShares(tierEntry.requested_shares) }}
         </DescriptionsItem>
         <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.limitPrice')"
+        >
+          {{ formatPrice(tierEntry.limit_price) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.postOnly')"
+        >
+          {{ boolLabel(tierEntry.kind === 'passive') }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.economicTier.ttl')"
+        >
+          {{
+            tierEntry.kind === 'passive'
+              ? formatDurationSecs(tierEntry.good_til_secs)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          v-if="tierEntry.kind === 'aggressive'"
           :label="$t('page.quantRecommendations.economicTier.slippage')"
         >
-          {{ formatUsd(tier.entry.slippage_usd) }}
+          {{ formatUsd(tierEntry.slippage_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.economicTier.visibleLiquidity')"
         >
-          {{ formatUsd(tier.entry.visible_liquidity_usd) }}
+          {{ formatUsd(tierEntry.visible_liquidity_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantRecommendations.economicTier.lineageHash')"
@@ -288,11 +359,14 @@ function millis(value: number): string {
             <span v-if="column.key === 'discounted_net_usd'" class="font-mono">
               {{ formatUsd(record.discounted_net_usd) }}
             </span>
+            <span v-else-if="column.key === 'risk_net_usd'" class="font-mono">
+              {{ formatUsd(record.risk_net_usd) }}
+            </span>
           </template>
         </Table>
         <Table
           :columns="occupancyColumns"
-          :data-source="tier.capital_occupancy"
+          :data-source="tier.hard_reservation_envelope"
           :pagination="false"
           row-key="end_secs"
           size="small"
@@ -302,8 +376,11 @@ function millis(value: number): string {
             <span v-if="column.key === 'end_secs'">
               {{ formatDurationSecs(record.end_secs) }}
             </span>
-            <span v-else-if="column.key === 'locked_usd'" class="font-mono">
-              {{ formatUsd(record.locked_usd) }}
+            <span
+              v-else-if="column.key === 'reserved_cash_usd'"
+              class="font-mono"
+            >
+              {{ formatUsd(record.reserved_cash_usd) }}
             </span>
           </template>
         </Table>
@@ -311,7 +388,7 @@ function millis(value: number): string {
     </Card>
 
     <Card size="small" :title="$t('page.quantRecommendations.exitPlan.title')">
-      <Descriptions :column="1" bordered size="small">
+      <Descriptions v-if="exit" :column="1" bordered size="small">
         <DescriptionsItem
           :label="$t('page.quantRecommendations.exitPlan.takeProfitPrice')"
         >
@@ -369,7 +446,7 @@ function millis(value: number): string {
         </DescriptionsItem>
       </Descriptions>
 
-      <Timeline v-if="exit.scale_out_targets.length > 0" class="mt-4">
+      <Timeline v-if="exit && exit.scale_out_targets.length > 0" class="mt-4">
         <TimelineItem
           v-for="target in exit.scale_out_targets"
           :key="target.target_id"
@@ -385,7 +462,7 @@ function millis(value: number): string {
           </div>
         </TimelineItem>
       </Timeline>
-      <Descriptions class="mt-3" :column="1" bordered size="small">
+      <Descriptions v-if="exit" class="mt-3" :column="1" bordered size="small">
         <DescriptionsItem
           :label="$t('page.quantRecommendations.exitPlan.minScoreRetention')"
         >
@@ -402,6 +479,28 @@ function millis(value: number): string {
           {{
             boolLabel(exit.thesis_invalidation.require_route_gate_eligibility)
           }}
+        </DescriptionsItem>
+      </Descriptions>
+      <Descriptions
+        v-else-if="bootstrapGuidance"
+        :column="1"
+        bordered
+        size="small"
+      >
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.exitPlan.bootstrapAdvisory')"
+        >
+          {{ bootstrapGuidance.guidance }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.exitPlan.manualReviewAt')"
+        >
+          {{ formatDateTimeLocal(bootstrapGuidance.manual_review_at) }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.exitPlan.referenceHorizon')"
+        >
+          {{ formatDurationSecs(bootstrapGuidance.reference_horizon_secs) }}
         </DescriptionsItem>
       </Descriptions>
     </Card>

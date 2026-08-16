@@ -110,6 +110,7 @@ export const ENUM_CATALOG = {
     'not_binary',
     'invalid_token_pair',
     'unsupported_tick_size',
+    'invalid_fee_schedule',
     'duplicate_entity_id',
     'malformed_entity',
     'cursor_protocol_violation',
@@ -119,15 +120,7 @@ export const ENUM_CATALOG = {
   CatalogSyncStatus: ['committed', 'failed'],
   CatalogTimestampQuality: ['source', 'commit_time_fallback'],
   CheckOutcome: ['passed', 'failed', 'not_applicable'],
-  ClassicalKind: [
-    'gradient_boosted_trees',
-    'random_forest',
-    'extra_trees',
-    'logistic_regression',
-    'ridge',
-    'lasso',
-    'elastic_net',
-  ],
+  ClassicalKind: ['logistic_regression'],
   CohortCensorReason: [
     'resolution_unavailable_at_cutoff',
     'execution_outcome_unavailable_at_cutoff',
@@ -316,6 +309,12 @@ export const ENUM_CATALOG = {
     'integrity_failure',
     'governed_acknowledge',
   ],
+  FeeLiquidityRole: ['taker', 'maker'],
+  FeeMeasurementStage: [
+    'prepared_expected',
+    'authenticated_trade_derived',
+    'on_chain_settled',
+  ],
   FeedbackCohort: [
     'model_learning',
     'model_score_learning',
@@ -345,7 +344,7 @@ export const ENUM_CATALOG = {
   FeedbackDriftMetric: [
     'population_stability_index',
     'kolmogorov_smirnov_p_value',
-    'rank_ic_drop',
+    'target_rank_ic_drop',
     'jensen_shannon_divergence',
   ],
   FeedbackEvaluationMode: ['conditional', 'forced_retraining'],
@@ -522,13 +521,7 @@ export const ENUM_CATALOG = {
   ],
   ModelFamily: [
     'weighted_factor',
-    'classical_gradient_boosted_trees',
-    'classical_random_forest',
-    'classical_extra_trees',
     'classical_logistic_regression',
-    'classical_ridge',
-    'classical_lasso',
-    'classical_elastic_net',
     'hold_vs_exit_weighted',
   ],
   ModelGovernanceAction: [
@@ -695,6 +688,7 @@ export const ENUM_CATALOG = {
   ReconciliationEvidenceKind: [
     'clob_order_status',
     'clob_trades',
+    'on_chain_settlement',
     'token_balance_delta',
     'account_balance_delta',
     'book_context',
@@ -962,6 +956,13 @@ export const ENUM_CATALOG = {
     'failed',
   ],
   UserStatus: ['active', 'disabled'],
+  VenueIncentiveKind: ['maker_rebate', 'taker_rebate'],
+  VenueIncentiveReconciliationScanStatus: ['succeeded', 'failed'],
+  VenueIncentiveStage: [
+    'estimated_accrual',
+    'venue_awarded',
+    'wallet_credited',
+  ],
   VenueOrderStatus: [
     'filled',
     'partially_filled',
@@ -1205,6 +1206,14 @@ export const ENUM_METADATA = {
   FeatureParityStateTransition: {
     kind: 'postgres',
     module: 'quant',
+  },
+  FeeLiquidityRole: {
+    kind: 'postgres',
+    module: 'fee',
+  },
+  FeeMeasurementStage: {
+    kind: 'postgres',
+    module: 'fee',
   },
   FeedbackCohort: {
     kind: 'postgres',
@@ -1653,6 +1662,18 @@ export const ENUM_METADATA = {
   UserStatus: {
     kind: 'postgres',
     module: 'rbac',
+  },
+  VenueIncentiveKind: {
+    kind: 'postgres',
+    module: 'fee',
+  },
+  VenueIncentiveReconciliationScanStatus: {
+    kind: 'postgres',
+    module: 'fee',
+  },
+  VenueIncentiveStage: {
+    kind: 'postgres',
+    module: 'fee',
   },
   VenueOrderStatus: {
     kind: 'postgres',

@@ -8,7 +8,7 @@ import type {
   UuidString,
 } from './common';
 import type { PositionLedgerState, PositionPlane } from './enums';
-import type { ExitMonitorObservationView } from './order-intent';
+import type { ExitMonitorObservationView } from './generated/quant-operator-api';
 
 /** `GET /quant/positions/{id}` — a system-lot position ledger row. */
 export interface PositionView {

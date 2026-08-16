@@ -1402,10 +1402,13 @@ onBeforeUnmount(() => {
                 )
               }}
             </DescriptionsItem>
-            <DescriptionsItem :label="$t('page.dashboard.orbit.suggested')">
+            <DescriptionsItem
+              :label="$t('page.dashboard.orbit.hardReservedCash')"
+            >
               {{
                 formatUsd(
-                  selectedRecommendation.trade_plan.sizing.suggested_usd,
+                  selectedRecommendation.trade_plan.sizing
+                    .hard_reserved_cash_usd,
                 )
               }}
             </DescriptionsItem>

@@ -1,13 +1,10 @@
 import type {
   OperationLogView,
   Paginated,
-  QuantRecommendationView,
-  QuantReportDetailView,
   QuantReportDiagnosticsView,
   QuantReportFunnelView,
   QuantReportListQuery,
   QuantReportView,
-  ReportDiffView,
   ReportFactDeliveryView,
   ReportFunnelMarketListQuery,
   ReportFunnelMarketView,
@@ -24,6 +21,13 @@ import type {
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
 import { governedPost } from '#/api/governed-request';
+import {
+  decodeMany,
+  decodeRecommendation,
+  decodeReportDetail,
+  decodeReportDiff,
+  decodeReportListRow,
+} from '#/api/quant-operator-contract';
 import { requestClient } from '#/api/request';
 
 export namespace QuantReportApi {
@@ -50,21 +54,30 @@ export namespace QuantReportApi {
 
 /** `GET /quant/reports` — paginated, filtered report list. */
 export async function listQuantReports(query: QuantReportListQuery = {}) {
-  return requestClient.get<Paginated<QuantReportView>>(QuantReportApi.base, {
-    params: query,
-  });
+  const response = await requestClient.get<Paginated<unknown>>(
+    QuantReportApi.base,
+    {
+      params: query,
+    },
+  );
+  return {
+    ...response,
+    items: decodeMany(response.items, decodeReportListRow),
+  } satisfies Paginated<QuantReportView>;
 }
 
 /** `GET /quant/reports/{id}` — full report detail with summary. */
 export async function getQuantReport(id: string) {
-  return requestClient.get<QuantReportDetailView>(QuantReportApi.detail(id));
+  const response = await requestClient.get<unknown>(QuantReportApi.detail(id));
+  return decodeReportDetail(response);
 }
 
 /** `GET /quant/reports/{id}/recommendations` — the report's ranked TopN. */
 export async function listReportRecommendations(id: string) {
-  return requestClient.get<QuantRecommendationView[]>(
+  const response = await requestClient.get<unknown[]>(
     QuantReportApi.recommendations(id),
   );
+  return decodeMany(response, decodeRecommendation);
 }
 
 /** `GET /quant/reports/{id}/diagnostics` — durable serving evidence summary. */
@@ -92,7 +105,10 @@ export async function listQuantReportFunnelMarkets(
 
 /** `GET /quant/reports/{id}/diff/{other_id}` — recommendation-level diff. */
 export async function getReportDiff(id: string, otherId: string) {
-  return requestClient.get<ReportDiffView>(QuantReportApi.diff(id, otherId));
+  const response = await requestClient.get<unknown>(
+    QuantReportApi.diff(id, otherId),
+  );
+  return decodeReportDiff(response);
 }
 
 /** `POST /quant/reports/run` — governed ad-hoc report enqueue (202). */
@@ -164,9 +180,10 @@ export async function revokeQuantReport(
   body: RevokeReportRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<QuantReportDetailView>(
+  const response = await governedPost<unknown>(
     QuantReportApi.revoke(id),
     body,
     ctx,
   );
+  return decodeReportDetail(response);
 }

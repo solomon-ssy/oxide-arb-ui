@@ -331,7 +331,8 @@
     "token_balance_delta": "Token Balance Delta",
     "account_balance_delta": "Account Balance Delta",
     "book_context": "Book Context",
-    "operator_note": "Operator Note"
+    "operator_note": "Operator Note",
+    "on_chain_settlement": "On-chain Settlement"
   },
   "settlementCaseState": {
     "discovered": "Discovered",
@@ -350,13 +351,7 @@
   "modelFamily": {
     "weighted_factor": "Weighted factor (Buy ranker)",
     "hold_vs_exit_weighted": "Hold vs exit (Sell scorer)",
-    "classical_gradient_boosted_trees": "Classical: gradient-boosted trees",
-    "classical_random_forest": "Classical: random forest",
-    "classical_extra_trees": "Classical: extra trees",
-    "classical_logistic_regression": "Classical: logistic regression",
-    "classical_ridge": "Classical: ridge",
-    "classical_lasso": "Classical: lasso",
-    "classical_elastic_net": "Classical: elastic net"
+    "classical_logistic_regression": "Classical: logistic regression"
   },
   "publicationStatus": {
     "candidate": "Candidate",
@@ -784,7 +779,8 @@
     "unsupported_tick_size": "Unsupported Tick Size",
     "duplicate_entity_id": "Duplicate Entity ID",
     "malformed_entity": "Malformed Entity",
-    "cursor_protocol_violation": "Cursor Protocol Violation"
+    "cursor_protocol_violation": "Cursor Protocol Violation",
+    "invalid_fee_schedule": "Invalid Fee and Rebate Schedule"
   },
   "catalogSyncFailureStage": {
     "fetch": "Fetch",
@@ -810,13 +806,7 @@
     "not_applicable": "Not Applicable"
   },
   "classicalKind": {
-    "gradient_boosted_trees": "Gradient Boosted Trees",
-    "random_forest": "Random Forest",
-    "extra_trees": "Extra Trees",
-    "logistic_regression": "Logistic Regression",
-    "ridge": "Ridge",
-    "lasso": "Lasso",
-    "elastic_net": "Elastic Net"
+    "logistic_regression": "Logistic Regression"
   },
   "configAuditAction": {
     "config": {
@@ -916,7 +906,7 @@
   "feedbackDriftMetric": {
     "population_stability_index": "Population Stability Index",
     "kolmogorov_smirnov_p_value": "Kolmogorov Smirnov P Value",
-    "rank_ic_drop": "Rank IC Drop",
+    "target_rank_ic_drop": "Target Rank IC Drop",
     "jensen_shannon_divergence": "Jensen Shannon Divergence"
   },
   "feedbackEvaluationMode": {
@@ -965,6 +955,15 @@
   "feedbackTriggerFamily": {
     "scheduled": "Scheduled",
     "manual": "Manual"
+  },
+  "feeLiquidityRole": {
+    "maker": "Maker",
+    "taker": "Taker"
+  },
+  "feeMeasurementStage": {
+    "prepared_expected": "Prepared Expected Value",
+    "authenticated_trade_derived": "Authenticated Trade-derived Value",
+    "on_chain_settled": "On-chain Settled Value"
   },
   "fillRequirement": {
     "all_or_nothing": "All Or Nothing",
@@ -1446,6 +1445,19 @@
   "userStatus": {
     "active": "Active",
     "disabled": "Disabled"
+  },
+  "venueIncentiveKind": {
+    "maker_rebate": "Maker Rebate",
+    "taker_rebate": "Taker Rebate"
+  },
+  "venueIncentiveReconciliationScanStatus": {
+    "succeeded": "Succeeded",
+    "failed": "Failed"
+  },
+  "venueIncentiveStage": {
+    "estimated_accrual": "Estimated Accrual",
+    "venue_awarded": "Venue Awarded",
+    "wallet_credited": "Wallet Credited"
   },
   "venueTradeStatus": {
     "matched": "Matched",

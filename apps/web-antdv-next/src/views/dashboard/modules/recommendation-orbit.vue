@@ -195,7 +195,9 @@ onUnmounted(() => {
                 <Tag>{{ recommendation.identity.outcome_name }}</Tag>
                 <span class="tabular-nums">
                   {{
-                    formatUsd(recommendation.trade_plan.sizing.suggested_usd)
+                    formatUsd(
+                      recommendation.trade_plan.sizing.hard_reserved_cash_usd,
+                    )
                   }}
                 </span>
               </button>

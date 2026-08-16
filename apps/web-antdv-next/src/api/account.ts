@@ -1,10 +1,14 @@
 import type {
   EquitySnapshotQuery,
   EquitySnapshotView,
-  LiveAccountView,
   Paginated,
 } from '@vben/types';
 
+import {
+  decodeEquitySnapshot,
+  decodeLiveAccount,
+  decodeMany,
+} from '#/api/quant-operator-contract';
 import { requestClient } from '#/api/request';
 
 export namespace AccountApi {
@@ -15,13 +19,18 @@ export namespace AccountApi {
 
 /** `GET /quant/account/live` — the freshly-fetched venue account. */
 export async function getLiveAccount() {
-  return requestClient.get<LiveAccountView>(AccountApi.live);
+  const response = await requestClient.get<unknown>(AccountApi.live);
+  return decodeLiveAccount(response);
 }
 
 /** `GET /quant/account/equity-snapshots` — paginated equity history. */
 export async function listEquitySnapshots(query: EquitySnapshotQuery = {}) {
-  return requestClient.get<Paginated<EquitySnapshotView>>(
+  const response = await requestClient.get<Paginated<unknown>>(
     AccountApi.equitySnapshots,
     { params: query },
   );
+  return {
+    ...response,
+    items: decodeMany(response.items, decodeEquitySnapshot),
+  } satisfies Paginated<EquitySnapshotView>;
 }

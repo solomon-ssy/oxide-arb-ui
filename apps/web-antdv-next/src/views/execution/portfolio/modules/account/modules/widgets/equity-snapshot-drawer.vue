@@ -63,6 +63,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
       <DescriptionsItem :label="$t('page.quantAccount.fields.realizedPnl')">
         {{ formatUsd(snapshot.realized_pnl_cumulative_usd) }}
       </DescriptionsItem>
+      <DescriptionsItem :label="$t('page.quantAccount.fields.incentiveCredit')">
+        {{ formatUsd(snapshot.incentive_credit_cumulative_usd) }}
+      </DescriptionsItem>
       <DescriptionsItem :label="$t('page.quantAccount.fields.unrealizedPnl')">
         {{ formatUsd(snapshot.unrealized_pnl_usd) }}
       </DescriptionsItem>

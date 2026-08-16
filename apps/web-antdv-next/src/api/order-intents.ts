@@ -1,15 +1,19 @@
 import type {
   ApproveOrderIntentRequest,
-  CreateOrderIntentRequest,
+  CreateIntentRequest,
   IntentActionRequest,
   OrderIntentListQuery,
-  OrderIntentView,
   Paginated,
 } from '@vben/types';
 
 import type { GovernedContext } from '#/shared/composables/use-governed-action';
 
 import { governedPost } from '#/api/governed-request';
+import {
+  decodeCreateIntentRequest,
+  decodeExecutionConfirmation,
+  decodeMany,
+} from '#/api/quant-operator-contract';
 import { requestClient } from '#/api/request';
 
 export namespace OrderIntentApi {
@@ -22,22 +26,36 @@ export namespace OrderIntentApi {
 
 /** `GET /quant/intents` — paginated, filtered intent list. */
 export async function listOrderIntents(query: OrderIntentListQuery = {}) {
-  return requestClient.get<Paginated<OrderIntentView>>(OrderIntentApi.base, {
-    params: query,
-  });
+  const response = await requestClient.get<Paginated<unknown>>(
+    OrderIntentApi.base,
+    {
+      params: query,
+    },
+  );
+  return {
+    ...response,
+    items: decodeMany(response.items, decodeExecutionConfirmation),
+  };
 }
 
 /** `GET /quant/intents/{id}` — a single order intent. */
 export async function getOrderIntent(id: string) {
-  return requestClient.get<OrderIntentView>(OrderIntentApi.detail(id));
+  const response = await requestClient.get<unknown>(OrderIntentApi.detail(id));
+  return decodeExecutionConfirmation(response);
 }
 
 /** `POST /quant/intents` — governed intent creation from a recommendation. */
 export async function createOrderIntent(
-  body: CreateOrderIntentRequest,
+  body: CreateIntentRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<OrderIntentView>(OrderIntentApi.base, body, ctx);
+  const request = decodeCreateIntentRequest(body);
+  const response = await governedPost<unknown>(
+    OrderIntentApi.base,
+    request,
+    ctx,
+  );
+  return decodeExecutionConfirmation(response);
 }
 
 /** `POST /quant/intents/{id}/approve` — governed approval (optional overrides). */
@@ -46,7 +64,12 @@ export async function approveOrderIntent(
   body: ApproveOrderIntentRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<OrderIntentView>(OrderIntentApi.approve(id), body, ctx);
+  const response = await governedPost<unknown>(
+    OrderIntentApi.approve(id),
+    body,
+    ctx,
+  );
+  return decodeExecutionConfirmation(response);
 }
 
 /** `POST /quant/intents/{id}/reject` — governed rejection. */
@@ -55,7 +78,12 @@ export async function rejectOrderIntent(
   body: IntentActionRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<OrderIntentView>(OrderIntentApi.reject(id), body, ctx);
+  const response = await governedPost<unknown>(
+    OrderIntentApi.reject(id),
+    body,
+    ctx,
+  );
+  return decodeExecutionConfirmation(response);
 }
 
 /** `POST /quant/intents/{id}/cancel` — governed cancellation. */
@@ -64,5 +92,10 @@ export async function cancelOrderIntent(
   body: IntentActionRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<OrderIntentView>(OrderIntentApi.cancel(id), body, ctx);
+  const response = await governedPost<unknown>(
+    OrderIntentApi.cancel(id),
+    body,
+    ctx,
+  );
+  return decodeExecutionConfirmation(response);
 }

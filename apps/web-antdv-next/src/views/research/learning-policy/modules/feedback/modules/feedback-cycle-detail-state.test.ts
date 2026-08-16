@@ -32,7 +32,7 @@ function cycle(
     idempotency_hash: 'blake3:idempotency',
     label_cutoff: '2026-07-01T00:00:00Z',
     lease_expires_at: status === 'running' ? '2026-07-01T00:04:00Z' : null,
-    champion_model_family: 'classical_gradient_boosted_trees',
+    champion_model_family: 'classical_logistic_regression',
     champion_model_spec_definition_hash: 'blake3:model-spec',
     champion_model_spec_id: '00000000-0000-0000-0000-000000000501',
     route: 'crypto',

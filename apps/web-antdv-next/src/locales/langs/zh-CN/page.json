@@ -459,7 +459,7 @@
         "metricValue": {
           "population_stability_index": "总体稳定性指数",
           "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p 值",
-          "rank_ic_drop": "Rank IC 下降",
+          "target_rank_ic_drop": "训练目标 Rank IC 下降",
           "jensen_shannon_divergence": "Jensen–Shannon 散度"
         },
         "assessmentValue": {
@@ -717,7 +717,7 @@
           "metric": {
             "population_stability_index": "总体稳定性指数",
             "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p 值",
-            "rank_ic_drop": "Rank IC 下降",
+            "target_rank_ic_drop": "训练目标 Rank IC 下降",
             "jensen_shannon_divergence": "Jensen–Shannon 散度"
           },
           "assessment": {
@@ -1113,7 +1113,7 @@
         "blocker": {
           "candidateLimit": "完整候选数量最多为 32。",
           "candidateIds": "候选 ID 必须非空且唯一。",
-          "immediate": "必须且只能保留一个 Immediate 基线。"
+          "immediate": "Aggressive 与 Passive 入场路线必须各有且仅有一个 Immediate 基线。"
         }
       },
       "preflightBlocker": {
@@ -1703,7 +1703,6 @@
         "targetHorizon": "标签地平线",
         "targets": {
           "outcome_payout": "预期终局兑付比例",
-          "forward_return": "远期可执行收益（仅研究）",
           "hold_vs_exit_alpha": "持有相对退出优势"
         },
         "evaluationTradePolicy": "评估 Trade Policy",
@@ -2664,7 +2663,7 @@
       "outcome": "方向",
       "confidence": "盈利概率",
       "expectedReturn": "稳健预期净 USD",
-      "suggested": "建议金额",
+      "hardReservedCash": "硬现金预留",
       "evidence": "主要因子与证据置信度",
       "openDetail": "打开完整证据与执行资格",
       "openReports": "查看推荐报告"
@@ -3138,6 +3137,7 @@
       "available": "可用",
       "reserved": "已预留",
       "realizedPnl": "已实现盈亏",
+      "incentiveCredit": "钱包已入账激励（累计）",
       "unrealizedPnl": "未实现盈亏",
       "highWaterMark": "历史高点",
       "drawdown": "回撤",
@@ -3178,6 +3178,27 @@
     "equity": {
       "title": "权益快照",
       "range": "时间范围"
+    },
+    "incentives": {
+      "title": "激励对账",
+      "attributionOnly": "估算与 venue award 仅用于归因；只有 wallet credit 已进入账户净值。此区域不会把激励再次计入余额、资本基数或可用现金。",
+      "estimated": "预计 Maker 激励",
+      "awarded": "Venue 已核定 Maker",
+      "makerCredited": "钱包已入账 Maker",
+      "takerCredited": "钱包已入账 Taker",
+      "estimateAwardDelta": "估算 → 核定差额",
+      "awardCreditDelta": "核定 → 入账差额",
+      "lastSuccess": "最近成功扫描",
+      "incompleteDays": "不完整日期数",
+      "oldestIncomplete": "最早",
+      "unavailable": "暂无可用对账证据",
+      "belowThreshold": "待入账 Maker 激励尚低于官方 payout 门槛 {threshold}，不能视为可用现金。",
+      "health": {
+        "healthy": "健康",
+        "stale": "已过期",
+        "incomplete": "不完整",
+        "unavailable": "不可用"
+      }
     },
     "snapshotDetail": {
       "title": "权益快照",
@@ -3767,7 +3788,7 @@
       "topN": "Top N",
       "published": "已发布数",
       "capitalBase": "资本基数",
-      "suggested": "建议 USD",
+      "hardReservedCash": "硬现金预留",
       "emptyReason": "空原因",
       "publishedAt": "发布时间",
       "revokedAt": "撤销时间",
@@ -4006,7 +4027,7 @@
       "summary": {
         "rejectedTierCount": "被拒经济档位",
         "publishedCount": "已发布",
-        "totalSuggested": "建议总额",
+        "totalHardReservedCash": "硬现金预留总额",
         "categoryAllocation": "类别分配",
         "eventAllocation": "事件分配",
         "routeAllocation": "Route 分配"
@@ -4026,7 +4047,7 @@
           "maxLoss": "最大损失",
           "cvar": "CVaR 贡献",
           "capitalTime": "资本 USD·h",
-          "suggested": "建议额",
+          "hardReservedCash": "硬现金预留",
           "eligibility": "可执行模式",
           "status": "状态",
           "open": "详情页"
@@ -4169,10 +4190,14 @@
     },
     "sizingPlan": {
       "title": "仓位计划",
-      "suggested": "建议 USD",
-      "suggestedShares": "建议份额",
+      "hardReservedCash": "硬预留现金",
+      "requestedShares": "请求份额",
+      "expectedFilledShares": "预计成交份额",
+      "immediateFee": "即时费用",
+      "expectedMakerRebate": "预计 Maker 激励",
+      "rebateNotice": "仅为预计 Maker 激励；不是可用现金，且绝不抵扣风险。",
       "economicTierId": "经济档位 ID",
-      "entryVwap": "入场 VWAP",
+      "referenceEntryPrice": "参考入场价格",
       "portfolioWeight": "组合权重",
       "marketExposureAfter": "市场敞口(后)",
       "eventExposureAfter": "事件敞口(后)",
@@ -4183,8 +4208,11 @@
     },
     "economicTier": {
       "title": "可执行经济档位证据",
-      "entryNotional": "入场名义金额",
-      "fee": "费用",
+      "route": "入场路线",
+      "requestedShares": "请求份额",
+      "limitPrice": "限价",
+      "postOnly": "仅挂单",
+      "ttl": "有效时长",
       "slippage": "滑点",
       "visibleLiquidity": "可见流动性",
       "lineageHash": "血缘哈希",
@@ -4192,8 +4220,9 @@
       "occupancy": "资本占用时间桶",
       "scenario": "场景",
       "discountedNet": "贴现净 USD",
+      "riskNet": "风险口径净 USD",
       "bucketEnd": "时间桶终点",
-      "lockedUsd": "锁定 USD"
+      "reservedCash": "预留现金"
     },
     "exitPlan": {
       "title": "退出计划",
@@ -4206,6 +4235,8 @@
       "settlementMode": "结算模式",
       "redeemPolicy": "赎回策略",
       "manualReviewAt": "人工复核",
+      "bootstrapAdvisory": "Bootstrap 建议（不可执行）",
+      "referenceHorizon": "参考期限",
       "trailingStop": "移动止损",
       "minScoreRetention": "最低分数保留率",
       "minExpectedReturn": "最低预期收益",
@@ -4305,8 +4336,14 @@
       "details": {
         "entryTrigger": "入场触发",
         "limitPrice": "限价",
-        "suggestedUsd": "建议金额 (USD)",
-        "suggestedShares": "建议份额",
+        "hardReservedCash": "硬预留现金",
+        "requestedShares": "请求份额",
+        "expectedFilledShares": "预计成交份额",
+        "immediateFee": "即时费用",
+        "expectedMakerRebate": "预计 Maker 激励",
+        "route": "入场路线",
+        "postOnly": "仅挂单",
+        "ttl": "有效时长",
         "envelopeHash": "风险边界哈希",
         "validUntil": "有效至",
         "maxLoss": "最大亏损",

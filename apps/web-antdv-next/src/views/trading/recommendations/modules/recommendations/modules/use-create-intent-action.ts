@@ -16,6 +16,7 @@ import { createOrderIntent } from '#/api/order-intents';
 import { $t } from '#/locales';
 import {
   formatDateTimeLocal,
+  formatDurationSecs,
   formatPrice,
   formatShares,
   formatUsd,
@@ -34,6 +35,7 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
     risk_envelope: riskEnvelope,
     sizing: sizingPlan,
   } = recommendation.trade_plan;
+  const tierEntry = recommendation.economic_tier.entry_execution;
   return [
     {
       label: $t('page.quantRecommendations.createIntent.details.entryTrigger'),
@@ -51,14 +53,52 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
       ),
     },
     {
-      label: $t('page.quantRecommendations.createIntent.details.suggestedUsd'),
-      value: formatUsd(sizingPlan.suggested_usd),
+      label: $t(
+        'page.quantRecommendations.createIntent.details.hardReservedCash',
+      ),
+      value: formatUsd(sizingPlan.hard_reserved_cash_usd),
     },
     {
       label: $t(
-        'page.quantRecommendations.createIntent.details.suggestedShares',
+        'page.quantRecommendations.createIntent.details.requestedShares',
       ),
-      value: formatShares(sizingPlan.suggested_shares),
+      value: formatShares(sizingPlan.requested_shares),
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.expectedFilledShares',
+      ),
+      value: formatShares(sizingPlan.expected_filled_shares),
+    },
+    {
+      label: $t('page.quantRecommendations.createIntent.details.immediateFee'),
+      value: formatUsd(sizingPlan.immediate_fee_usd),
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.expectedMakerRebate',
+      ),
+      value: `${formatUsd(sizingPlan.expected_maker_rebate_usd)} · ${$t('page.quantRecommendations.sizingPlan.rebateNotice')}`,
+    },
+    {
+      label: $t('page.quantRecommendations.createIntent.details.route'),
+      value: $t(
+        `page.quantRecommendations.entryPlan.orderPolicyKind.${entryPlan.order_policy.kind}`,
+      ),
+    },
+    {
+      label: $t('page.quantRecommendations.createIntent.details.postOnly'),
+      value:
+        entryPlan.order_policy.kind === 'passive'
+          ? $t('common.yes')
+          : $t('common.no'),
+    },
+    {
+      label: $t('page.quantRecommendations.createIntent.details.ttl'),
+      value:
+        tierEntry.kind === 'passive'
+          ? formatDurationSecs(tierEntry.good_til_secs)
+          : '—',
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.envelopeHash'),

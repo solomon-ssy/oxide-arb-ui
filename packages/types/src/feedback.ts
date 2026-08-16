@@ -65,7 +65,7 @@ export type FeedbackDriftMetric =
   | 'jensen_shannon_divergence'
   | 'kolmogorov_smirnov_p_value'
   | 'population_stability_index'
-  | 'rank_ic_drop';
+  | 'target_rank_ic_drop';
 
 export type FeedbackDriftAssessment =
   | 'insufficient_evidence'

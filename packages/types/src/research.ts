@@ -520,13 +520,7 @@ export interface TrainingObjectiveSpec {
   pseudo_top_n: number;
 }
 
-export type ClassicalKind =
-  | 'elastic_net'
-  | 'extra_trees'
-  | 'lasso'
-  | 'logistic_regression'
-  | 'random_forest'
-  | 'ridge';
+export type ClassicalKind = 'logistic_regression';
 
 export type ModelTrainingObjectiveDefinition =
   | {

@@ -84,10 +84,6 @@ describe('model-spec authoring', () => {
     expect(
       modelTrainingTarget(MODEL_FAMILIES.classicalLogisticRegression, 3600),
     ).toEqual({ kind: 'outcome_payout' });
-    expect(modelTrainingTarget(MODEL_FAMILIES.classicalRidge, 3600)).toEqual({
-      horizon_secs: 3600,
-      kind: 'forward_return',
-    });
     expect(
       modelTrainingTarget(MODEL_FAMILIES.holdVsExitWeighted, 3600),
     ).toEqual({ kind: 'hold_vs_exit_alpha' });
@@ -98,7 +94,7 @@ describe('model-spec authoring', () => {
       normalizeModelTrainingContract(
         {
           ...DEFAULT_MODEL_TRAINING_CONTRACT,
-          target: { horizon_secs: 86_400, kind: 'forward_return' },
+          target: { kind: 'hold_vs_exit_alpha' },
         },
         MODEL_FAMILIES.weightedFactor,
         86_400,
@@ -121,6 +117,6 @@ describe('model-spec authoring', () => {
         86_400,
       ),
     ).toBeNull();
-    expect(modelTrainingTarget(MODEL_FAMILIES.classicalRidge, -1)).toBeNull();
+    expect(modelTrainingTarget(MODEL_FAMILIES.weightedFactor, -1)).toBeNull();
   });
 });

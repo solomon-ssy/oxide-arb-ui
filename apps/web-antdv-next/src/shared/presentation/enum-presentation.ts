@@ -643,6 +643,11 @@ const GENERATED_ENUM_PRESENTATION = {
     categoryHue: 3,
     tone: 'category',
   },
+  'CatalogRejectionReason.invalid_fee_schedule': {
+    emphasis: 'solid',
+    icon: 'lucide:circle-x',
+    tone: 'danger',
+  },
   'CatalogSyncFailureStage.fetch': { categoryHue: 10, tone: 'category' },
   'CatalogSyncFailureStage.normalize': { categoryHue: 3, tone: 'category' },
   'CatalogSyncFailureStage.persist': { categoryHue: 6, tone: 'category' },
@@ -670,13 +675,7 @@ const GENERATED_ENUM_PRESENTATION = {
     icon: 'lucide:circle-minus',
     tone: 'neutral',
   },
-  'ClassicalKind.gradient_boosted_trees': { categoryHue: 10, tone: 'category' },
-  'ClassicalKind.random_forest': { categoryHue: 12, tone: 'category' },
-  'ClassicalKind.extra_trees': { categoryHue: 7, tone: 'category' },
   'ClassicalKind.logistic_regression': { categoryHue: 9, tone: 'category' },
-  'ClassicalKind.ridge': { categoryHue: 2, tone: 'category' },
-  'ClassicalKind.lasso': { categoryHue: 9, tone: 'category' },
-  'ClassicalKind.elastic_net': { categoryHue: 2, tone: 'category' },
   'CohortCensorReason.resolution_unavailable_at_cutoff': {
     icon: 'lucide:circle-check',
     tone: 'success',
@@ -1168,7 +1167,10 @@ const GENERATED_ENUM_PRESENTATION = {
     categoryHue: 7,
     tone: 'category',
   },
-  'FeedbackDriftMetric.rank_ic_drop': { categoryHue: 1, tone: 'category' },
+  'FeedbackDriftMetric.target_rank_ic_drop': {
+    categoryHue: 1,
+    tone: 'category',
+  },
   'FeedbackDriftMetric.jensen_shannon_divergence': {
     categoryHue: 8,
     tone: 'category',
@@ -1251,6 +1253,23 @@ const GENERATED_ENUM_PRESENTATION = {
     icon: 'lucide:triangle-alert',
     tone: 'warning',
   },
+  'FeeLiquidityRole.maker': {
+    icon: 'lucide:badge-dollar-sign',
+    tone: 'success',
+  },
+  'FeeLiquidityRole.taker': { categoryHue: 7, tone: 'category' },
+  'FeeMeasurementStage.prepared_expected': {
+    icon: 'lucide:clock-3',
+    tone: 'queued',
+  },
+  'FeeMeasurementStage.authenticated_trade_derived': {
+    categoryHue: 4,
+    tone: 'category',
+  },
+  'FeeMeasurementStage.on_chain_settled': {
+    icon: 'lucide:circle-check',
+    tone: 'success',
+  },
   'IneligibilityReason.report_only_mode': { categoryHue: 7, tone: 'category' },
   'IneligibilityReason.automation_cap_exceeded': {
     categoryHue: 2,
@@ -1327,19 +1346,10 @@ const GENERATED_ENUM_PRESENTATION = {
     tone: 'success',
   },
   'ModelFamily.weighted_factor': { categoryHue: 2, tone: 'category' },
-  'ModelFamily.classical_gradient_boosted_trees': {
-    categoryHue: 10,
-    tone: 'category',
-  },
-  'ModelFamily.classical_random_forest': { categoryHue: 4, tone: 'category' },
-  'ModelFamily.classical_extra_trees': { categoryHue: 3, tone: 'category' },
   'ModelFamily.classical_logistic_regression': {
     categoryHue: 9,
     tone: 'category',
   },
-  'ModelFamily.classical_ridge': { categoryHue: 2, tone: 'category' },
-  'ModelFamily.classical_lasso': { categoryHue: 1, tone: 'category' },
-  'ModelFamily.classical_elastic_net': { categoryHue: 10, tone: 'category' },
   'ModelFamily.hold_vs_exit_weighted': { categoryHue: 3, tone: 'category' },
   'ModelGovernanceAction.bootstrap_route': { categoryHue: 3, tone: 'category' },
   'ModelGovernanceAction.promote_route': { categoryHue: 5, tone: 'category' },
@@ -1794,6 +1804,10 @@ const GENERATED_ENUM_PRESENTATION = {
   'ReconciliationEvidenceKind.operator_note': {
     categoryHue: 5,
     tone: 'category',
+  },
+  'ReconciliationEvidenceKind.on_chain_settlement': {
+    icon: 'lucide:circle-check',
+    tone: 'success',
   },
   'ReconciliationResult.pending': { icon: 'lucide:clock-3', tone: 'queued' },
   'ReconciliationResult.filled': {
@@ -2533,6 +2547,33 @@ const GENERATED_ENUM_PRESENTATION = {
   },
   'UserStatus.active': { icon: 'lucide:circle-check', tone: 'success' },
   'UserStatus.disabled': { icon: 'lucide:circle-minus', tone: 'neutral' },
+  'VenueIncentiveKind.maker_rebate': {
+    icon: 'lucide:badge-dollar-sign',
+    tone: 'success',
+  },
+  'VenueIncentiveKind.taker_rebate': { categoryHue: 7, tone: 'category' },
+  'VenueIncentiveReconciliationScanStatus.succeeded': {
+    icon: 'lucide:circle-check',
+    tone: 'success',
+  },
+  'VenueIncentiveReconciliationScanStatus.failed': {
+    emphasis: 'solid',
+    icon: 'lucide:circle-x',
+    tone: 'danger',
+  },
+  'VenueIncentiveStage.estimated_accrual': {
+    icon: 'lucide:clock-3',
+    tone: 'queued',
+  },
+  'VenueIncentiveStage.venue_awarded': {
+    emphasis: 'solid',
+    icon: 'lucide:badge-check',
+    tone: 'warning',
+  },
+  'VenueIncentiveStage.wallet_credited': {
+    icon: 'lucide:circle-check',
+    tone: 'success',
+  },
   'VenueOrderStatus.filled': { icon: 'lucide:circle-check', tone: 'success' },
   'VenueOrderStatus.partially_filled': {
     emphasis: 'solid',

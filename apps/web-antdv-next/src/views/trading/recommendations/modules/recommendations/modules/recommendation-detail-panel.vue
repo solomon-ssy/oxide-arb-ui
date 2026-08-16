@@ -73,7 +73,15 @@ const context = computed(() => props.recommendation.market_context);
 const eligibility = computed(() => props.recommendation.execution_eligibility);
 const entry = computed(() => props.recommendation.trade_plan.entry);
 const sizing = computed(() => props.recommendation.trade_plan.sizing);
-const exit = computed(() => props.recommendation.trade_plan.exit);
+const exitAuthority = computed(() => props.recommendation.trade_plan.exit);
+const executableExit = computed(() =>
+  exitAuthority.value.kind === 'executable' ? exitAuthority.value.plan : null,
+);
+const bootstrapGuidance = computed(() =>
+  exitAuthority.value.kind === 'bootstrap_advisory'
+    ? exitAuthority.value.guidance
+    : null,
+);
 
 const entryPrice = computed(() =>
   entry.value.order_policy.kind === 'passive'
@@ -104,7 +112,7 @@ function onCreateIntent() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4" data-testid="recommendation-detail-panel">
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
@@ -186,9 +194,11 @@ function onCreateIntent() {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.decisionSummary.notional')"
         >
-          <span class="font-mono">{{ formatUsd(sizing.suggested_usd) }}</span>
+          <span class="font-mono">{{
+            formatUsd(sizing.hard_reserved_cash_usd)
+          }}</span>
           <span class="text-muted-foreground ml-2">
-            {{ sizing.suggested_shares }}
+            {{ sizing.requested_shares }}
             {{ $t('page.quantRecommendations.decisionSummary.shares') }}
           </span>
         </DescriptionsItem>
@@ -207,38 +217,50 @@ function onCreateIntent() {
         <DescriptionsItem
           :label="$t('page.quantRecommendations.decisionSummary.exit')"
         >
-          <div class="flex flex-wrap items-center gap-2">
-            <Tag v-if="exit.take_profit_price" color="green">
+          <div v-if="executableExit" class="flex flex-wrap items-center gap-2">
+            <Tag v-if="executableExit.take_profit_price" color="green">
               {{ $t('page.quantRecommendations.exitPlan.takeProfitPrice') }}
-              {{ formatPrice(exit.take_profit_price) }}
+              {{ formatPrice(executableExit.take_profit_price) }}
             </Tag>
-            <Tag v-if="exit.stop_loss_price" color="red">
+            <Tag v-if="executableExit.stop_loss_price" color="red">
               {{ $t('page.quantRecommendations.exitPlan.stopLossPrice') }}
-              {{ formatPrice(exit.stop_loss_price) }}
+              {{ formatPrice(executableExit.stop_loss_price) }}
             </Tag>
-            <Tag v-if="exit.scale_out_targets.length > 0" color="blue">
+            <Tag
+              v-if="executableExit.scale_out_targets.length > 0"
+              color="blue"
+            >
               {{
                 $t(
                   'page.quantRecommendations.decisionSummary.scaleOutTargets',
                   {
-                    count: exit.scale_out_targets.length,
+                    count: executableExit.scale_out_targets.length,
                   },
                 )
               }}
             </Tag>
-            <Tag v-if="exit.trailing_stop" color="orange">
+            <Tag v-if="executableExit.trailing_stop" color="orange">
               {{ $t('page.quantRecommendations.decisionSummary.trailingStop') }}
-              {{ formatBps(exit.trailing_stop.trail_bps) }}
+              {{ formatBps(executableExit.trailing_stop.trail_bps) }}
             </Tag>
             <span
               v-if="
-                !exit.take_profit_price &&
-                !exit.stop_loss_price &&
-                exit.scale_out_targets.length === 0 &&
-                !exit.trailing_stop
+                !executableExit.take_profit_price &&
+                !executableExit.stop_loss_price &&
+                executableExit.scale_out_targets.length === 0 &&
+                !executableExit.trailing_stop
               "
             >
               {{ EMPTY_PLACEHOLDER }}
+            </span>
+          </div>
+          <div v-else-if="bootstrapGuidance" class="flex flex-col gap-1">
+            <Tag color="gold">
+              {{ $t('page.quantRecommendations.exitPlan.bootstrapAdvisory') }}
+            </Tag>
+            <span>{{ bootstrapGuidance.guidance }}</span>
+            <span class="text-muted-foreground text-xs">
+              {{ formatDateTimeLocal(bootstrapGuidance.manual_review_at) }}
             </span>
           </div>
         </DescriptionsItem>

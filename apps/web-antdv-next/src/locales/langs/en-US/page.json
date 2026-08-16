@@ -459,7 +459,7 @@
         "metricValue": {
           "population_stability_index": "Population stability index",
           "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p-value",
-          "rank_ic_drop": "Rank IC drop",
+          "target_rank_ic_drop": "Target Rank IC drop",
           "jensen_shannon_divergence": "Jensen–Shannon divergence"
         },
         "assessmentValue": {
@@ -717,7 +717,7 @@
           "metric": {
             "population_stability_index": "Population stability index",
             "kolmogorov_smirnov_p_value": "Kolmogorov–Smirnov p-value",
-            "rank_ic_drop": "Rank IC drop",
+            "target_rank_ic_drop": "Target Rank IC drop",
             "jensen_shannon_divergence": "Jensen–Shannon divergence"
           },
           "assessment": {
@@ -1113,7 +1113,7 @@
         "blocker": {
           "candidateLimit": "At most 32 complete candidates are allowed.",
           "candidateIds": "Candidate IDs must be non-empty and unique.",
-          "immediate": "Exactly one Immediate baseline is required."
+          "immediate": "Exactly one Immediate baseline is required for each aggressive and passive entry route."
         }
       },
       "preflightBlocker": {
@@ -1703,7 +1703,6 @@
         "targetHorizon": "Label horizon",
         "targets": {
           "outcome_payout": "Expected terminal payout",
-          "forward_return": "Forward executable return (research only)",
           "hold_vs_exit_alpha": "Hold-vs-exit alpha"
         },
         "evaluationTradePolicy": "Evaluation Trade Policy",
@@ -2656,7 +2655,7 @@
     },
     "orbit": {
       "title": "Recommendation Orbit",
-      "aria": "Top recommendations from the latest report, organized by category, rank, confidence and suggested amount.",
+      "aria": "Top recommendations from the latest report, organized by category, rank, confidence and hard-reserved cash.",
       "list": "Keyboard-operable TopN recommendation list",
       "drawerTitle": "Recommendation Action Brief",
       "rank": "Rank",
@@ -2664,7 +2663,7 @@
       "outcome": "Outcome",
       "confidence": "Profit Probability",
       "expectedReturn": "Robust Expected Net USD",
-      "suggested": "Suggested Amount",
+      "hardReservedCash": "Hard Reserved Cash",
       "evidence": "Leading factors and evidence confidence",
       "openDetail": "Open Full Evidence & Eligibility",
       "openReports": "Open recommendation reports"
@@ -3138,6 +3137,7 @@
       "available": "Available",
       "reserved": "Reserved",
       "realizedPnl": "Realized PnL",
+      "incentiveCredit": "Wallet-Credited Incentives (Cumulative)",
       "unrealizedPnl": "Unrealized PnL",
       "highWaterMark": "High Water Mark",
       "drawdown": "Drawdown",
@@ -3178,6 +3178,27 @@
     "equity": {
       "title": "Equity Snapshots",
       "range": "Time Range"
+    },
+    "incentives": {
+      "title": "Incentive Reconciliation",
+      "attributionOnly": "Estimates and venue awards are attribution only. Only wallet credits are already reflected in account NLV; this panel never adds incentives again to balance, capital base, or available cash.",
+      "estimated": "Estimated Maker Incentive",
+      "awarded": "Venue-Awarded Maker",
+      "makerCredited": "Wallet-Credited Maker",
+      "takerCredited": "Wallet-Credited Taker",
+      "estimateAwardDelta": "Estimate → Award Delta",
+      "awardCreditDelta": "Award → Credit Delta",
+      "lastSuccess": "Last Successful Scan",
+      "incompleteDays": "Incomplete Days",
+      "oldestIncomplete": "Oldest",
+      "unavailable": "No reconciliation evidence is available",
+      "belowThreshold": "Outstanding maker incentive is below the official {threshold} payout threshold and is not available cash.",
+      "health": {
+        "healthy": "Healthy",
+        "stale": "Stale",
+        "incomplete": "Incomplete",
+        "unavailable": "Unavailable"
+      }
     },
     "snapshotDetail": {
       "title": "Equity Snapshot",
@@ -3767,7 +3788,7 @@
       "topN": "Top N",
       "published": "Published",
       "capitalBase": "Capital Base",
-      "suggested": "Suggested USD",
+      "hardReservedCash": "Hard Reserved Cash",
       "emptyReason": "Empty Reason",
       "publishedAt": "Published",
       "revokedAt": "Revoked",
@@ -4006,7 +4027,7 @@
       "summary": {
         "rejectedTierCount": "Rejected Economic Tiers",
         "publishedCount": "Published",
-        "totalSuggested": "Total Suggested",
+        "totalHardReservedCash": "Total Hard Reserved Cash",
         "categoryAllocation": "Category Allocation",
         "eventAllocation": "Event Allocation",
         "routeAllocation": "Route Allocation"
@@ -4026,7 +4047,7 @@
           "maxLoss": "Maximum Loss",
           "cvar": "CVaR Contribution",
           "capitalTime": "Capital USD·h",
-          "suggested": "Suggested",
+          "hardReservedCash": "Hard Reserved Cash",
           "eligibility": "Eligible Modes",
           "status": "Status",
           "open": "Full Page"
@@ -4169,10 +4190,14 @@
     },
     "sizingPlan": {
       "title": "Sizing Plan",
-      "suggested": "Suggested USD",
-      "suggestedShares": "Suggested Shares",
+      "hardReservedCash": "Hard-reserved Cash",
+      "requestedShares": "Requested Shares",
+      "expectedFilledShares": "Expected Filled Shares",
+      "immediateFee": "Immediate Fee",
+      "expectedMakerRebate": "Expected Maker Rebate",
+      "rebateNotice": "Estimated maker incentive only; it is not available cash and never offsets risk.",
       "economicTierId": "Economic Tier ID",
-      "entryVwap": "Entry VWAP",
+      "referenceEntryPrice": "Reference Entry Price",
       "portfolioWeight": "Portfolio Weight",
       "marketExposureAfter": "Market Exposure After",
       "eventExposureAfter": "Event Exposure After",
@@ -4183,8 +4208,11 @@
     },
     "economicTier": {
       "title": "Executable Economic Tier Evidence",
-      "entryNotional": "Entry Notional",
-      "fee": "Fee",
+      "route": "Entry Route",
+      "requestedShares": "Requested Shares",
+      "limitPrice": "Limit Price",
+      "postOnly": "Post-only",
+      "ttl": "Time to Live",
       "slippage": "Slippage",
       "visibleLiquidity": "Visible Liquidity",
       "lineageHash": "Lineage Hash",
@@ -4192,8 +4220,9 @@
       "occupancy": "Capital-occupancy Buckets",
       "scenario": "Scenario",
       "discountedNet": "Discounted Net USD",
+      "riskNet": "Risk Net USD",
       "bucketEnd": "Bucket End",
-      "lockedUsd": "Locked USD"
+      "reservedCash": "Reserved Cash"
     },
     "exitPlan": {
       "title": "Exit Plan",
@@ -4206,6 +4235,8 @@
       "settlementMode": "Settlement Mode",
       "redeemPolicy": "Redeem Policy",
       "manualReviewAt": "Manual Review At",
+      "bootstrapAdvisory": "Bootstrap Advisory (not executable)",
+      "referenceHorizon": "Reference Horizon",
       "trailingStop": "Trailing Stop",
       "minScoreRetention": "Minimum Score Retention",
       "minExpectedReturn": "Minimum Expected Return",
@@ -4305,8 +4336,14 @@
       "details": {
         "entryTrigger": "Entry Trigger",
         "limitPrice": "Limit Price",
-        "suggestedUsd": "Suggested USD",
-        "suggestedShares": "Suggested Shares",
+        "hardReservedCash": "Hard-reserved Cash",
+        "requestedShares": "Requested Shares",
+        "expectedFilledShares": "Expected Filled Shares",
+        "immediateFee": "Immediate Fee",
+        "expectedMakerRebate": "Expected Maker Rebate",
+        "route": "Entry Route",
+        "postOnly": "Post-only",
+        "ttl": "Time to Live",
         "envelopeHash": "Envelope Hash",
         "validUntil": "Valid Until",
         "maxLoss": "Max Loss",

@@ -12,7 +12,7 @@ const ucs2Length =
 export const validateCreateModelSpec = validate37;
 const schema32 = {
   description:
-    'Inbound body for `POST /research/model-specs`.\n\nA model spec is the **authoring root** of the offline research lifecycle:\nthe operator declares the model family, prediction horizon, and feature /\nlabel schema versions the downstream dataset build and training runs bind\nto. A spec and every trained model version are immutable; serving role is\nderived only from a governed route generation.\n\n`model_family` deserializes from its canonical wire label (`"weighted_factor"`,\n`"classical_random_forest"`, `"hold_vs_exit_weighted"`, …); an unknown label\nis rejected at the boundary with `400`.',
+    'Inbound body for `POST /research/model-specs`.\n\nA model spec is the **authoring root** of the offline research lifecycle:\nthe operator declares the model family, prediction horizon, and feature /\nlabel schema versions the downstream dataset build and training runs bind\nto. A spec and every trained model version are immutable; serving role is\nderived only from a governed route generation.\n\n`model_family` deserializes from its canonical wire label (`"weighted_factor"`,\n`"classical_logistic_regression"`, or `"hold_vs_exit_weighted"`); an unknown\nlabel is rejected at the boundary with `400`.',
   type: 'object',
   properties: {
     feature_schema_version: {
@@ -90,16 +90,7 @@ const schema38 = {
   oneOf: [
     {
       type: 'string',
-      enum: [
-        'weighted_factor',
-        'classical_gradient_boosted_trees',
-        'classical_random_forest',
-        'classical_extra_trees',
-        'classical_logistic_regression',
-        'classical_ridge',
-        'classical_lasso',
-        'classical_elastic_net',
-      ],
+      enum: ['weighted_factor', 'classical_logistic_regression'],
     },
     {
       description:
@@ -546,22 +537,6 @@ const schema41 = {
     },
     {
       description:
-        'Research-only forward mark-return regression target. It is valid for\noffline model comparison but cannot become a promoted Buy Route because\nit does not provide a calibrated payout distribution.',
-      type: 'object',
-      properties: {
-        horizon_secs: {
-          description: 'Exact forward-label horizon in seconds.',
-          type: 'integer',
-          minimum: 0,
-          maximum: 9007199254740991,
-        },
-        kind: { type: 'string', const: 'forward_return' },
-      },
-      additionalProperties: false,
-      required: ['kind', 'horizon_secs'],
-    },
-    {
-      description:
         'Executable advantage, in bps, of exiting a held lot instead of holding.',
       type: 'object',
       properties: { kind: { type: 'string', const: 'hold_vs_exit_alpha' } },
@@ -795,24 +770,9 @@ function validate26(
           }
           errors++;
         }
-        if (data1.horizon_secs === undefined) {
-          const err11 = {
-            instancePath: instancePath + '/target',
-            schemaPath: '#/$defs/ModelTrainingTarget/oneOf/1/required',
-            keyword: 'required',
-            params: { missingProperty: 'horizon_secs' },
-            message: "must have required property '" + 'horizon_secs' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err11];
-          } else {
-            vErrors.push(err11);
-          }
-          errors++;
-        }
         for (const key2 in data1) {
-          if (!(key2 === 'horizon_secs' || key2 === 'kind')) {
-            const err12 = {
+          if (!(key2 === 'kind')) {
+            const err11 = {
               instancePath: instancePath + '/target',
               schemaPath:
                 '#/$defs/ModelTrainingTarget/oneOf/1/additionalProperties',
@@ -821,77 +781,17 @@ function validate26(
               message: 'must NOT have additional properties',
             };
             if (vErrors === null) {
-              vErrors = [err12];
+              vErrors = [err11];
             } else {
-              vErrors.push(err12);
+              vErrors.push(err11);
             }
             errors++;
-          }
-        }
-        if (data1.horizon_secs !== undefined) {
-          let data3 = data1.horizon_secs;
-          if (
-            !(
-              typeof data3 == 'number' &&
-              !(data3 % 1) &&
-              !isNaN(data3) &&
-              isFinite(data3)
-            )
-          ) {
-            const err13 = {
-              instancePath: instancePath + '/target/horizon_secs',
-              schemaPath:
-                '#/$defs/ModelTrainingTarget/oneOf/1/properties/horizon_secs/type',
-              keyword: 'type',
-              params: { type: 'integer' },
-              message: 'must be integer',
-            };
-            if (vErrors === null) {
-              vErrors = [err13];
-            } else {
-              vErrors.push(err13);
-            }
-            errors++;
-          }
-          if (typeof data3 == 'number' && isFinite(data3)) {
-            if (data3 > 9007199254740991 || isNaN(data3)) {
-              const err14 = {
-                instancePath: instancePath + '/target/horizon_secs',
-                schemaPath:
-                  '#/$defs/ModelTrainingTarget/oneOf/1/properties/horizon_secs/maximum',
-                keyword: 'maximum',
-                params: { comparison: '<=', limit: 9007199254740991 },
-                message: 'must be <= 9007199254740991',
-              };
-              if (vErrors === null) {
-                vErrors = [err14];
-              } else {
-                vErrors.push(err14);
-              }
-              errors++;
-            }
-            if (data3 < 0 || isNaN(data3)) {
-              const err15 = {
-                instancePath: instancePath + '/target/horizon_secs',
-                schemaPath:
-                  '#/$defs/ModelTrainingTarget/oneOf/1/properties/horizon_secs/minimum',
-                keyword: 'minimum',
-                params: { comparison: '>=', limit: 0 },
-                message: 'must be >= 0',
-              };
-              if (vErrors === null) {
-                vErrors = [err15];
-              } else {
-                vErrors.push(err15);
-              }
-              errors++;
-            }
           }
         }
         if (data1.kind !== undefined) {
-          let data4 = data1.kind;
-          if (typeof data4 !== 'string') {
-            const err16 = {
+          let data3 = data1.kind;
+          if (typeof data3 !== 'string') {
+            const err12 = {
               instancePath: instancePath + '/target/kind',
               schemaPath:
                 '#/$defs/ModelTrainingTarget/oneOf/1/properties/kind/type',
@@ -900,31 +800,31 @@ function validate26(
               message: 'must be string',
             };
             if (vErrors === null) {
-              vErrors = [err16];
+              vErrors = [err12];
             } else {
-              vErrors.push(err16);
+              vErrors.push(err12);
             }
             errors++;
           }
-          if ('forward_return' !== data4) {
-            const err17 = {
+          if ('hold_vs_exit_alpha' !== data3) {
+            const err13 = {
               instancePath: instancePath + '/target/kind',
               schemaPath:
                 '#/$defs/ModelTrainingTarget/oneOf/1/properties/kind/const',
               keyword: 'const',
-              params: { allowedValue: 'forward_return' },
+              params: { allowedValue: 'hold_vs_exit_alpha' },
               message: 'must be equal to constant',
             };
             if (vErrors === null) {
-              vErrors = [err17];
+              vErrors = [err13];
             } else {
-              vErrors.push(err17);
+              vErrors.push(err13);
             }
             errors++;
           }
         }
       } else {
-        const err18 = {
+        const err14 = {
           instancePath: instancePath + '/target',
           schemaPath: '#/$defs/ModelTrainingTarget/oneOf/1/type',
           keyword: 'type',
@@ -932,9 +832,9 @@ function validate26(
           message: 'must be object',
         };
         if (vErrors === null) {
-          vErrors = [err18];
+          vErrors = [err14];
         } else {
-          vErrors.push(err18);
+          vErrors.push(err14);
         }
         errors++;
       }
@@ -950,107 +850,9 @@ function validate26(
             props0 = true;
           }
         }
-        const _errs19 = errors;
-        if (data1 && typeof data1 == 'object' && !Array.isArray(data1)) {
-          if (data1.kind === undefined) {
-            const err19 = {
-              instancePath: instancePath + '/target',
-              schemaPath: '#/$defs/ModelTrainingTarget/oneOf/2/required',
-              keyword: 'required',
-              params: { missingProperty: 'kind' },
-              message: "must have required property '" + 'kind' + "'",
-            };
-            if (vErrors === null) {
-              vErrors = [err19];
-            } else {
-              vErrors.push(err19);
-            }
-            errors++;
-          }
-          for (const key3 in data1) {
-            if (!(key3 === 'kind')) {
-              const err20 = {
-                instancePath: instancePath + '/target',
-                schemaPath:
-                  '#/$defs/ModelTrainingTarget/oneOf/2/additionalProperties',
-                keyword: 'additionalProperties',
-                params: { additionalProperty: key3 },
-                message: 'must NOT have additional properties',
-              };
-              if (vErrors === null) {
-                vErrors = [err20];
-              } else {
-                vErrors.push(err20);
-              }
-              errors++;
-            }
-          }
-          if (data1.kind !== undefined) {
-            let data5 = data1.kind;
-            if (typeof data5 !== 'string') {
-              const err21 = {
-                instancePath: instancePath + '/target/kind',
-                schemaPath:
-                  '#/$defs/ModelTrainingTarget/oneOf/2/properties/kind/type',
-                keyword: 'type',
-                params: { type: 'string' },
-                message: 'must be string',
-              };
-              if (vErrors === null) {
-                vErrors = [err21];
-              } else {
-                vErrors.push(err21);
-              }
-              errors++;
-            }
-            if ('hold_vs_exit_alpha' !== data5) {
-              const err22 = {
-                instancePath: instancePath + '/target/kind',
-                schemaPath:
-                  '#/$defs/ModelTrainingTarget/oneOf/2/properties/kind/const',
-                keyword: 'const',
-                params: { allowedValue: 'hold_vs_exit_alpha' },
-                message: 'must be equal to constant',
-              };
-              if (vErrors === null) {
-                vErrors = [err22];
-              } else {
-                vErrors.push(err22);
-              }
-              errors++;
-            }
-          }
-        } else {
-          const err23 = {
-            instancePath: instancePath + '/target',
-            schemaPath: '#/$defs/ModelTrainingTarget/oneOf/2/type',
-            keyword: 'type',
-            params: { type: 'object' },
-            message: 'must be object',
-          };
-          if (vErrors === null) {
-            vErrors = [err23];
-          } else {
-            vErrors.push(err23);
-          }
-          errors++;
-        }
-        var _valid0 = _errs19 === errors;
-        if (_valid0 && valid2) {
-          valid2 = false;
-          passing0 = [passing0, 2];
-        } else {
-          if (_valid0) {
-            valid2 = true;
-            passing0 = 2;
-            if (props0 !== true) {
-              props0 = true;
-            }
-          }
-        }
       }
       if (!valid2) {
-        const err24 = {
+        const err15 = {
           instancePath: instancePath + '/target',
           schemaPath: '#/$defs/ModelTrainingTarget/oneOf',
           keyword: 'oneOf',
@@ -1058,9 +860,9 @@ function validate26(
           message: 'must match exactly one schema in oneOf',
         };
         if (vErrors === null) {
-          vErrors = [err24];
+          vErrors = [err15];
         } else {
-          vErrors.push(err24);
+          vErrors.push(err15);
         }
         errors++;
       } else {
@@ -1075,16 +877,16 @@ function validate26(
       }
     }
     if (data.validation_folds !== undefined) {
-      let data6 = data.validation_folds;
+      let data4 = data.validation_folds;
       if (
         !(
-          typeof data6 == 'number' &&
-          !(data6 % 1) &&
-          !isNaN(data6) &&
-          isFinite(data6)
+          typeof data4 == 'number' &&
+          !(data4 % 1) &&
+          !isNaN(data4) &&
+          isFinite(data4)
         )
       ) {
-        const err25 = {
+        const err16 = {
           instancePath: instancePath + '/validation_folds',
           schemaPath: '#/properties/validation_folds/type',
           keyword: 'type',
@@ -1092,15 +894,15 @@ function validate26(
           message: 'must be integer',
         };
         if (vErrors === null) {
-          vErrors = [err25];
+          vErrors = [err16];
         } else {
-          vErrors.push(err25);
+          vErrors.push(err16);
         }
         errors++;
       }
-      if (typeof data6 == 'number' && isFinite(data6)) {
-        if (data6 > 4294967295 || isNaN(data6)) {
-          const err26 = {
+      if (typeof data4 == 'number' && isFinite(data4)) {
+        if (data4 > 4294967295 || isNaN(data4)) {
+          const err17 = {
             instancePath: instancePath + '/validation_folds',
             schemaPath: '#/properties/validation_folds/maximum',
             keyword: 'maximum',
@@ -1108,14 +910,14 @@ function validate26(
             message: 'must be <= 4294967295',
           };
           if (vErrors === null) {
-            vErrors = [err26];
+            vErrors = [err17];
           } else {
-            vErrors.push(err26);
+            vErrors.push(err17);
           }
           errors++;
         }
-        if (data6 < 0 || isNaN(data6)) {
-          const err27 = {
+        if (data4 < 0 || isNaN(data4)) {
+          const err18 = {
             instancePath: instancePath + '/validation_folds',
             schemaPath: '#/properties/validation_folds/minimum',
             keyword: 'minimum',
@@ -1123,16 +925,16 @@ function validate26(
             message: 'must be >= 0',
           };
           if (vErrors === null) {
-            vErrors = [err27];
+            vErrors = [err18];
           } else {
-            vErrors.push(err27);
+            vErrors.push(err18);
           }
           errors++;
         }
       }
     }
   } else {
-    const err28 = {
+    const err19 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -1140,9 +942,9 @@ function validate26(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err28];
+      vErrors = [err19];
     } else {
-      vErrors.push(err28);
+      vErrors.push(err19);
     }
     errors++;
   }
@@ -1452,13 +1254,7 @@ function validate37(
       if (
         !(
           data3 === 'weighted_factor' ||
-          data3 === 'classical_gradient_boosted_trees' ||
-          data3 === 'classical_random_forest' ||
-          data3 === 'classical_extra_trees' ||
-          data3 === 'classical_logistic_regression' ||
-          data3 === 'classical_ridge' ||
-          data3 === 'classical_lasso' ||
-          data3 === 'classical_elastic_net'
+          data3 === 'classical_logistic_regression'
         )
       ) {
         const err15 = {
@@ -3892,13 +3688,7 @@ function validate42(
       if (
         !(
           data8 === 'weighted_factor' ||
-          data8 === 'classical_gradient_boosted_trees' ||
-          data8 === 'classical_random_forest' ||
-          data8 === 'classical_extra_trees' ||
-          data8 === 'classical_logistic_regression' ||
-          data8 === 'classical_ridge' ||
-          data8 === 'classical_lasso' ||
-          data8 === 'classical_elastic_net'
+          data8 === 'classical_logistic_regression'
         )
       ) {
         const err29 = {

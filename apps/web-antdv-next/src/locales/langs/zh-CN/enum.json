@@ -331,7 +331,8 @@
     "token_balance_delta": "Token 余额变动",
     "account_balance_delta": "账户余额变动",
     "book_context": "盘口上下文",
-    "operator_note": "操作员备注"
+    "operator_note": "操作员备注",
+    "on_chain_settlement": "链上结算"
   },
   "settlementCaseState": {
     "discovered": "已发现",
@@ -350,13 +351,7 @@
   "modelFamily": {
     "weighted_factor": "加权因子（Buy 排序）",
     "hold_vs_exit_weighted": "Hold vs Exit（Sell 退出）",
-    "classical_gradient_boosted_trees": "经典：梯度提升树",
-    "classical_random_forest": "经典：随机森林",
-    "classical_extra_trees": "经典：Extra Trees",
-    "classical_logistic_regression": "经典：逻辑回归",
-    "classical_ridge": "经典：Ridge",
-    "classical_lasso": "经典：Lasso",
-    "classical_elastic_net": "经典：Elastic Net"
+    "classical_logistic_regression": "经典：逻辑回归"
   },
   "publicationStatus": {
     "candidate": "候选",
@@ -784,7 +779,8 @@
     "unsupported_tick_size": "不支持报价步长规模",
     "duplicate_entity_id": "重复实体ID",
     "malformed_entity": "格式错误实体",
-    "cursor_protocol_violation": "游标协议违规"
+    "cursor_protocol_violation": "游标协议违规",
+    "invalid_fee_schedule": "无效手续费与返利计划"
   },
   "catalogSyncFailureStage": {
     "fetch": "拉取",
@@ -810,13 +806,7 @@
     "not_applicable": "不适用"
   },
   "classicalKind": {
-    "gradient_boosted_trees": "梯度提升树",
-    "random_forest": "随机森林",
-    "extra_trees": "极端树",
-    "logistic_regression": "逻辑回归",
-    "ridge": "岭回归",
-    "lasso": "Lasso",
-    "elastic_net": "弹性净额"
+    "logistic_regression": "逻辑回归"
   },
   "configAuditAction": {
     "config": {
@@ -916,7 +906,7 @@
   "feedbackDriftMetric": {
     "population_stability_index": "总体稳定性索引",
     "kolmogorov_smirnov_p_value": "kolmogorovsmirnovp值",
-    "rank_ic_drop": "排名IC丢弃",
+    "target_rank_ic_drop": "训练目标 Rank IC 下降",
     "jensen_shannon_divergence": "jensenshannon背离"
   },
   "feedbackEvaluationMode": {
@@ -965,6 +955,15 @@
   "feedbackTriggerFamily": {
     "scheduled": "已调度",
     "manual": "人工"
+  },
+  "feeLiquidityRole": {
+    "maker": "挂单方（Maker）",
+    "taker": "吃单方（Taker）"
+  },
+  "feeMeasurementStage": {
+    "prepared_expected": "预提交预估值",
+    "authenticated_trade_derived": "认证成交推导值",
+    "on_chain_settled": "链上结算值"
   },
   "fillRequirement": {
     "all_or_nothing": "全部或无操作",
@@ -1446,6 +1445,19 @@
   "userStatus": {
     "active": "活跃",
     "disabled": "已禁用"
+  },
+  "venueIncentiveKind": {
+    "maker_rebate": "Maker 返利",
+    "taker_rebate": "Taker 返利"
+  },
+  "venueIncentiveReconciliationScanStatus": {
+    "succeeded": "成功",
+    "failed": "失败"
+  },
+  "venueIncentiveStage": {
+    "estimated_accrual": "预计应计",
+    "venue_awarded": "平台已授予",
+    "wallet_credited": "钱包已入账"
   },
   "venueTradeStatus": {
     "matched": "已匹配",
