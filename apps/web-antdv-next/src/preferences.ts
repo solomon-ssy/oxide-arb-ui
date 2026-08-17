@@ -33,4 +33,7 @@ export const overridesPreferences = defineOverridesPreferences({
     colorSuccess: 'hsl(152 69% 41%)',
     colorWarning: 'hsl(38 92% 50%)',
   },
+  widget: {
+    globalSearch: false,
+  },
 });

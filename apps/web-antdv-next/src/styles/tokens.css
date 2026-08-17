@@ -195,11 +195,11 @@
   --qp-status-danger: 0 84% 64%;
   --qp-status-neutral: 215 16% 58%;
   --qp-status-paused: 215 25% 65%;
-  --qp-status-success-soft: 152 69% 41% / 18%;
-  --qp-status-running-soft: 189 94% 43% / 18%;
-  --qp-status-queued-soft: 217 91% 60% / 18%;
-  --qp-status-warning-soft: 38 92% 50% / 20%;
-  --qp-status-danger-soft: 0 84% 60% / 18%;
+  --qp-status-success-soft: 152 70% 48% / 28%;
+  --qp-status-running-soft: 189 94% 48% / 24%;
+  --qp-status-queued-soft: 217 91% 60% / 24%;
+  --qp-status-warning-soft: 38 92% 55% / 28%;
+  --qp-status-danger-soft: 0 84% 64% / 28%;
   --qp-status-neutral-soft: 215 16% 58% / 18%;
   --qp-status-paused-soft: 215 25% 65% / 18%;
   --qp-chart-cat-1: var(--qp-accent-sky);
@@ -259,9 +259,32 @@ body {
   background: hsl(var(--qp-surface-canvas));
 }
 
-.dark .ant-btn-link,
-.ant-tag-filled:not(.ant-tag-default) {
+.dark .ant-btn-link {
   color: hsl(var(--qp-text-primary)) !important;
+}
+
+.ant-tag-filled.ant-tag-success {
+  color: hsl(var(--qp-status-success));
+  background: hsl(var(--qp-status-success-soft));
+  border-color: hsl(var(--qp-status-success) / 42%);
+}
+
+.ant-tag-filled.ant-tag-error {
+  color: hsl(var(--qp-status-danger));
+  background: hsl(var(--qp-status-danger-soft));
+  border-color: hsl(var(--qp-status-danger) / 42%);
+}
+
+.ant-tag-filled.ant-tag-warning {
+  color: hsl(var(--qp-status-warning));
+  background: hsl(var(--qp-status-warning-soft));
+  border-color: hsl(var(--qp-status-warning) / 42%);
+}
+
+.ant-tag-filled.ant-tag-processing {
+  color: hsl(var(--qp-status-running));
+  background: hsl(var(--qp-status-running-soft));
+  border-color: hsl(var(--qp-status-running) / 42%);
 }
 
 .vben-link,

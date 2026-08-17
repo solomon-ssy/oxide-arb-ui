@@ -58,4 +58,9 @@ describe('dashboard static contract', () => {
       "navigate('/trading/recommendations?module=reports')",
     );
   });
+
+  it('renders subsystem health as a status board', () => {
+    expect(dashboard).toContain('SubsystemHealthList');
+    expect(dashboard).not.toMatch(/check\.ok \? 'success'/);
+  });
 });

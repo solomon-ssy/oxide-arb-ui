@@ -1,4 +1,4 @@
-import { initPreferences } from '@vben/preferences';
+import { initPreferences, updatePreferences } from '@vben/preferences';
 import { unmountGlobalLoading } from '@vben/utils';
 
 import { overridesPreferences } from './preferences';
@@ -17,6 +17,11 @@ async function initApplication() {
   await initPreferences({
     namespace,
     overrides: overridesPreferences,
+  });
+  // Cached preferences win over overrides; pin search off so the command
+  // palette remains the only Cmd/Ctrl+K owner across upgrades.
+  updatePreferences({
+    widget: { globalSearch: false },
   });
 
   // 启动应用并挂载

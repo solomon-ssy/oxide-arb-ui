@@ -7,6 +7,8 @@ import { computed, nextTick, onMounted, onScopeDispose, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
+import { usePreferences } from '@vben/preferences';
+import { isWindowsOs } from '@vben/utils';
 
 import { Empty, Input, Listy, Modal, Tag, Tooltip } from 'antdv-next';
 
@@ -95,6 +97,8 @@ const MODULES: Record<string, PaletteModule[]> = {
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { globalSearchShortcutKey } = usePreferences();
+const shortcutLabel = isWindowsOs() ? 'Ctrl+K' : '⌘K';
 const open = ref(false);
 const query = ref('');
 const selectedIndex = ref(0);
@@ -223,109 +227,124 @@ function resultIcon(result: PaletteResult) {
 }
 
 function onKeydown(event: KeyboardEvent) {
+  if (!globalSearchShortcutKey.value) return;
   if (
     (event.metaKey || event.ctrlKey) &&
     event.key.toLocaleLowerCase() === 'k'
   ) {
     event.preventDefault();
+    event.stopImmediatePropagation();
     open.value ? closePalette() : openPalette();
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onScopeDispose(() => window.removeEventListener('keydown', onKeydown));
+onMounted(() => window.addEventListener('keydown', onKeydown, true));
+onScopeDispose(() => window.removeEventListener('keydown', onKeydown, true));
 watch([query, allResults], () => {
   selectedIndex.value = 0;
 });
 </script>
 
 <template>
-  <Tooltip :title="$t('page.commandPalette.open')">
-    <button
-      :aria-label="$t('page.commandPalette.open')"
-      class="palette-trigger"
-      data-testid="command-palette-trigger"
-      type="button"
-      @click="openPalette"
-    >
-      <IconifyIcon icon="lucide:search" />
-      <kbd>⌘K</kbd>
-    </button>
-  </Tooltip>
+  <div class="command-palette-host">
+    <Tooltip :title="$t('page.commandPalette.open')">
+      <button
+        :aria-label="$t('page.commandPalette.open')"
+        class="palette-trigger"
+        data-testid="command-palette-trigger"
+        type="button"
+        @click="openPalette"
+      >
+        <IconifyIcon icon="lucide:search" />
+        <span class="palette-trigger-label">
+          {{ $t('page.commandPalette.trigger') }}
+        </span>
+        <kbd v-if="globalSearchShortcutKey">
+          {{ shortcutLabel }}
+        </kbd>
+      </button>
+    </Tooltip>
 
-  <Modal
-    v-model:open="open"
-    class="command-palette"
-    :closable="false"
-    :footer="null"
-    :width="680"
-    @cancel="closePalette"
-  >
-    <div class="palette-search">
-      <IconifyIcon icon="lucide:search" />
-      <Input
-        ref="inputRef"
-        v-model:value="query"
-        allow-clear
-        :bordered="false"
-        :placeholder="$t('page.commandPalette.placeholder')"
-        size="large"
-        @keydown="onPaletteKeydown"
+    <Modal
+      v-model:open="open"
+      class="command-palette"
+      :closable="false"
+      :footer="null"
+      :width="680"
+      @cancel="closePalette"
+    >
+      <div class="palette-search">
+        <IconifyIcon icon="lucide:search" />
+        <Input
+          ref="inputRef"
+          v-model:value="query"
+          allow-clear
+          :bordered="false"
+          :placeholder="$t('page.commandPalette.placeholder')"
+          size="large"
+          @keydown="onPaletteKeydown"
+        />
+        <kbd>ESC</kbd>
+      </div>
+
+      <Empty
+        v-if="results.length === 0"
+        class="palette-empty"
+        :description="$t('page.commandPalette.empty')"
       />
-      <kbd>ESC</kbd>
-    </div>
+      <Listy
+        v-else
+        :height="420"
+        :items="results"
+        :row-key="(item: PaletteResult) => item.key"
+        root-class="palette-results"
+        virtual
+      >
+        <template #itemRender="item">
+          <button
+            :aria-selected="resultIndex(item) === selectedIndex"
+            class="palette-result"
+            :class="{ active: resultIndex(item) === selectedIndex }"
+            role="option"
+            type="button"
+            @click="select(item)"
+            @mouseenter="selectedIndex = resultIndex(item)"
+          >
+            <span class="palette-result-icon">
+              <IconifyIcon :icon="resultIcon(item)" />
+            </span>
+            <span class="palette-result-copy">
+              <strong>{{ item.label }}</strong>
+              <small>{{ item.description }}</small>
+            </span>
+            <Tag>{{ $t(`page.commandPalette.type.${item.type}`) }}</Tag>
+            <IconifyIcon class="palette-arrow" icon="lucide:corner-down-left" />
+          </button>
+        </template>
+      </Listy>
 
-    <Empty
-      v-if="results.length === 0"
-      class="palette-empty"
-      :description="$t('page.commandPalette.empty')"
-    />
-    <Listy
-      v-else
-      :height="420"
-      :items="results"
-      :row-key="(item: PaletteResult) => item.key"
-      root-class="palette-results"
-      virtual
-    >
-      <template #itemRender="item">
-        <button
-          :aria-selected="resultIndex(item) === selectedIndex"
-          class="palette-result"
-          :class="{ active: resultIndex(item) === selectedIndex }"
-          role="option"
-          type="button"
-          @click="select(item)"
-          @mouseenter="selectedIndex = resultIndex(item)"
-        >
-          <span class="palette-result-icon">
-            <IconifyIcon :icon="resultIcon(item)" />
-          </span>
-          <span class="palette-result-copy">
-            <strong>{{ item.label }}</strong>
-            <small>{{ item.description }}</small>
-          </span>
-          <Tag>{{ $t(`page.commandPalette.type.${item.type}`) }}</Tag>
-          <IconifyIcon class="palette-arrow" icon="lucide:corner-down-left" />
-        </button>
-      </template>
-    </Listy>
-
-    <div class="palette-footer">
-      <span>{{ $t('page.commandPalette.permissionHint') }}</span>
-      <span>
-        <kbd>↑</kbd><kbd>↓</kbd>
-        <span>{{ $t('page.commandPalette.navigateHint') }}</span>
-      </span>
-    </div>
-  </Modal>
+      <div class="palette-footer">
+        <span>{{ $t('page.commandPalette.permissionHint') }}</span>
+        <span>
+          <kbd>↑</kbd><kbd>↓</kbd>
+          <span>{{ $t('page.commandPalette.navigateHint') }}</span>
+        </span>
+      </div>
+    </Modal>
+  </div>
 </template>
 
 <style scoped>
+.command-palette-host {
+  display: flex;
+  align-items: center;
+}
+
 .palette-trigger {
   display: inline-flex;
-  gap: 7px;
+  gap: 8px;
   place-items: center;
+  min-width: 34px;
   height: 34px;
   padding-inline: 10px;
   color: hsl(var(--qp-text-secondary));
@@ -335,12 +354,39 @@ watch([query, allResults], () => {
   border-radius: var(--qp-radius-md);
   transition:
     color var(--qp-motion-instant) var(--qp-motion-ease-out),
-    border-color var(--qp-motion-instant) var(--qp-motion-ease-out);
+    border-color var(--qp-motion-instant) var(--qp-motion-ease-out),
+    background-color var(--qp-motion-instant) var(--qp-motion-ease-out);
 }
 
-.palette-trigger:hover {
+.palette-trigger:hover,
+.palette-trigger:focus-visible {
   color: hsl(var(--qp-text-primary));
+  outline: none;
+  background: hsl(var(--qp-surface-raised));
   border-color: hsl(var(--qp-border-active));
+}
+
+.palette-trigger-label {
+  display: none;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+@media (min-width: 640px) {
+  .palette-trigger {
+    min-width: 168px;
+    padding-inline: 10px 8px;
+  }
+
+  .palette-trigger-label {
+    display: inline;
+    flex: 1 1 auto;
+    text-align: start;
+  }
+}
+
+.palette-trigger kbd {
+  margin-inline-start: auto;
 }
 
 kbd {

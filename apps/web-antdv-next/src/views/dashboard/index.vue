@@ -101,6 +101,7 @@ import FreshBootPanel from './modules/fresh-boot-panel.vue';
 import { reduceFreshBootRead } from './modules/fresh-boot-presentation';
 import LifecycleSankey from './modules/lifecycle-sankey.vue';
 import RecommendationOrbit from './modules/recommendation-orbit.vue';
+import SubsystemHealthList from './modules/subsystem-health.vue';
 
 import './modules/register-dashboard-charts';
 
@@ -1025,34 +1026,13 @@ onBeforeUnmount(() => {
             fill
             :title="$t('page.dashboard.health.title')"
             icon="lucide:heart-pulse"
-            tone="teal"
+            :tone="health?.ready === false ? 'amber' : 'teal'"
           >
-            <template v-if="health">
-              <div class="mb-3 flex items-center justify-between">
-                <span class="text-sm font-medium">{{
-                  health.ready
-                    ? $t('page.dashboard.health.ready')
-                    : $t('page.dashboard.health.degraded')
-                }}</span>
-                <Badge :status="health.ready ? 'success' : 'error'" />
-              </div>
-              <ul class="health-check-list grid gap-2">
-                <li
-                  v-for="check in health.checks"
-                  :key="check.name"
-                  class="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-xs"
-                >
-                  <span class="truncate">{{ check.name }}</span>
-                  <Tag :color="check.ok ? 'success' : 'error'">
-                    {{
-                      check.ok
-                        ? $t('page.dashboard.health.ok')
-                        : $t('page.dashboard.health.failed')
-                    }}
-                  </Tag>
-                </li>
-              </ul>
-            </template>
+            <SubsystemHealthList
+              v-if="health"
+              :checks="health.checks"
+              :ready="health.ready"
+            />
             <div v-else class="panel-empty">
               <Empty
                 :description="$t('page.dashboard.section.unavailable')"
@@ -1637,13 +1617,6 @@ onBeforeUnmount(() => {
   display: grid;
   flex: 1 1 auto;
   place-items: center;
-}
-
-.health-check-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .dashboard-feedback-panel {

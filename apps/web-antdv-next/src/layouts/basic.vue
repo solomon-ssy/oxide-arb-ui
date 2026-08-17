@@ -156,10 +156,11 @@ watch(
 
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
+    <template #global-search>
+      <!-- Replaces Vben menu search so CommandPalette is the only Cmd+K owner. -->
+    </template>
     <template #header-right-2>
-      <div class="hidden md:contents">
-        <CommandPalette />
-      </div>
+      <CommandPalette />
     </template>
     <template #header-right-5>
       <ActivityCenter />

@@ -339,6 +339,9 @@ const headerSlots = computed(() => {
         <template #timezone>
           <slot name="timezone"></slot>
         </template>
+        <template v-if="$slots['global-search']" #global-search>
+          <slot name="global-search"></slot>
+        </template>
         <template v-for="item in headerSlots" #[item]>
           <slot :name="item"></slot>
         </template>

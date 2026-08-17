@@ -144,6 +144,7 @@
   },
   "commandPalette": {
     "open": "Open command palette",
+    "trigger": "Search",
     "placeholder": "Search workspaces, modules, or authorized actions…",
     "empty": "No result matches your current permission scope",
     "navigation": "Page navigation",
@@ -2993,7 +2994,15 @@
       "ready": "All dependencies ready",
       "degraded": "Dependencies degraded",
       "ok": "Healthy",
-      "failed": "Failed"
+      "failed": "Failed",
+      "counts": "{ok}/{total} ready",
+      "failedCount": "{count} failing",
+      "subsystem": {
+        "postgresql": "PostgreSQL",
+        "redis": "Redis",
+        "policy_generation": "Policy generation",
+        "catalog": "Market catalog"
+      }
     }
   },
   "systemAdmin": {

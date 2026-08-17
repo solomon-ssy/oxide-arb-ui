@@ -144,6 +144,7 @@
   },
   "commandPalette": {
     "open": "打开命令面板",
+    "trigger": "搜索",
     "placeholder": "搜索工作区、模块或有权执行的动作…",
     "empty": "没有匹配当前权限范围的结果",
     "navigation": "页面导航",
@@ -2993,7 +2994,15 @@
       "ready": "依赖全部就绪",
       "degraded": "存在异常依赖",
       "ok": "健康",
-      "failed": "异常"
+      "failed": "异常",
+      "counts": "{ok}/{total} 项就绪",
+      "failedCount": "{count} 项异常",
+      "subsystem": {
+        "postgresql": "PostgreSQL",
+        "redis": "Redis",
+        "policy_generation": "策略世代",
+        "catalog": "市场目录"
+      }
     }
   },
   "systemAdmin": {
