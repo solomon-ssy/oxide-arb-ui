@@ -56,7 +56,7 @@ function actionableRecommendation(
       worst_price: limitPrice,
     };
     recommendation.economic_tier.entry_execution = {
-      entry_vwap: limitPrice,
+      execution_vwap: limitPrice,
       filled_shares: recommendation.trade_plan.sizing.expected_filled_shares,
       immediate_cost: immediateCost,
       kind: 'aggressive',
@@ -70,6 +70,32 @@ function actionableRecommendation(
       tierEntry.kind === 'passive'
         ? tierEntry.full_fill_cost
         : tierEntry.immediate_cost;
+    const termsHash = recommendation.economic_tier.lineage_hash;
+    const availableAt = new Date(now).toISOString();
+    const programDate = availableAt.slice(0, 10);
+    const schedule = {
+      available_at: availableAt,
+      exponent: '2',
+      platform_rate: '0.2',
+      rebate_rate: '0.25',
+      taker_only: true,
+      terms_hash: termsHash,
+    };
+    recommendation.trade_plan.sizing = {
+      ...recommendation.trade_plan.sizing,
+      expected_maker_rebate_accrual_usd: '0.12',
+      maker_rebate_objective_status: {
+        credited_probability_bps: 10_000,
+        state: 'scenario_weighted',
+      },
+      maker_rebate_terms: { schedule, state: 'passive_program' },
+      objective_maker_rebate_usd: '0.10',
+      rebate_delay_basis: {
+        kind: 'conservative_fallback',
+        lag_from_program_close_secs: 172_800,
+      },
+      rebate_valuation_hash: termsHash,
+    };
     recommendation.trade_plan.entry.order_policy = {
       kind: 'passive',
       limit_price: limitPrice,
@@ -79,8 +105,7 @@ function actionableRecommendation(
       decision_at: new Date(now).toISOString(),
       expected_filled_shares:
         recommendation.trade_plan.sizing.expected_filled_shares,
-      expected_maker_rebate_usd:
-        recommendation.trade_plan.sizing.expected_maker_rebate_usd,
+      expected_maker_rebate_accrual_usd: '0.12',
       fill_distribution: {
         sample_count: 1,
         source_evidence_hash: recommendation.economic_tier.lineage_hash,
@@ -95,13 +120,29 @@ function actionableRecommendation(
         ],
       },
       full_fill_cost: fullFillCost,
-      full_fill_maker_rebate: null,
+      full_fill_maker_rebate_accrual_usd: '0.15',
       good_til_secs: 60,
       hard_reserved_cash_usd:
         recommendation.trade_plan.sizing.hard_reserved_cash_usd,
       kind: 'passive',
       limit_price: limitPrice,
-      maker_rebate_schedule: null,
+      maker_rebate_objective_status:
+        recommendation.trade_plan.sizing.maker_rebate_objective_status,
+      maker_rebate_terms: { schedule, state: 'passive_program' },
+      maker_rebate_valuation: {
+        as_of: availableAt,
+        delay_basis: {
+          kind: 'conservative_fallback',
+          lag_from_program_close_secs: 172_800,
+        },
+        evidence_hash: termsHash,
+        health: 'healthy',
+        payout_threshold_usd: '1',
+        program_day_baselines: [
+          { confirmed_accrual_usd: '0.95', program_date: programDate },
+        ],
+      },
+      objective_maker_rebate_usd: '0.10',
       requested_shares: requestedShares,
       visible_liquidity_usd: visibleLiquidityUsd,
     };
@@ -168,9 +209,7 @@ test('recommendation workspace preserves revoked report evidence and owning deta
     .first();
   await expect(reservation).toContainText(/\$25(?:\.00)?/);
   await expect(reservation).not.toContainText('—');
-  await expect(panel).toContainText(
-    /预计 maker 激励|Expected maker incentive/i,
-  );
+  await expect(panel).toContainText(/名义返佣应计|Nominal rebate accrual/i);
   await expectReleaseQuality(page);
 });
 
@@ -277,20 +316,34 @@ test('create-intent confirmation preserves aggressive and passive economics', as
     await expect(
       modalDetail(page, /即时费用|Immediate Fee/i),
     ).not.toContainText('—');
-    await expect(
-      modalDetail(page, /预计 Maker 激励|Expected Maker Rebate/i),
-    ).toContainText(
-      /不是可用现金.*绝不抵扣风险|not available cash.*never offsets risk/i,
-    );
-
     const routeDetail = modalDetail(page, /入场路线|Entry Route/i);
     const postOnlyDetail = modalDetail(page, /仅挂单|Post-only/i);
     const ttlDetail = modalDetail(page, /有效时长|Time to Live/i);
     if (entryRoute === 'aggressive') {
+      for (const label of [
+        /返佣比例|Rebate Rate/i,
+        /名义返佣应计|Nominal Rebate Accrual/i,
+        /Objective 返佣信用|Objective Rebate Credit/i,
+        /每日支付门槛|Daily Payout Threshold/i,
+        /预计入账延迟|Expected Credit Delay/i,
+      ]) {
+        await expect(modalDetail(page, label)).toContainText('—');
+      }
       await expect(routeDetail).toContainText(/主动|Aggressive/i);
       await expect(postOnlyDetail).toContainText(/否|No/i);
       await expect(ttlDetail).toContainText('—');
     } else {
+      await expect(
+        modalDetail(page, /名义返佣应计|Nominal Rebate Accrual/i),
+      ).toContainText(/\$0\.12/);
+      await expect(
+        modalDetail(page, /名义返佣应计|Nominal Rebate Accrual/i),
+      ).toContainText(
+        /不是可用现金.*绝不抵扣风险|not available cash.*never offsets risk/i,
+      );
+      await expect(
+        modalDetail(page, /Objective 返佣信用|Objective Rebate Credit/i),
+      ).toContainText(/\$0\.10/);
       await expect(routeDetail).toContainText(/被动|Passive/i);
       await expect(postOnlyDetail).toContainText(/是|Yes/i);
       await expect(ttlDetail).not.toContainText('—');

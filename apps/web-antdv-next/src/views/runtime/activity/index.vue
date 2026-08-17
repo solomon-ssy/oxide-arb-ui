@@ -297,7 +297,10 @@ onScopeDispose(() => {
     data-testid="runtime-activity-page"
   >
     <Flex class="activity-page" gap="middle" vertical>
-      <section class="activity-hero" aria-labelledby="activity-title">
+      <section
+        class="activity-hero qp-page-hero"
+        aria-labelledby="activity-title"
+      >
         <Flex align="start" gap="middle" justify="space-between" wrap="wrap">
           <div>
             <p class="activity-eyebrow">
@@ -405,24 +408,6 @@ onScopeDispose(() => {
   margin-inline: auto;
 }
 
-.activity-hero {
-  position: relative;
-  padding: var(--qp-density-card-padding);
-  overflow: hidden;
-  background: var(--qp-gradient-hero), hsl(var(--qp-surface-raised));
-  border: 1px solid hsl(var(--qp-border-subtle));
-  border-radius: var(--qp-radius-lg);
-}
-
-.activity-hero::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: '';
-  background: var(--qp-gradient-brand);
-  opacity: 0.08;
-}
-
 .activity-eyebrow {
   margin-bottom: 4px;
   font-size: 11px;
@@ -517,11 +502,5 @@ onScopeDispose(() => {
 .load-more {
   padding: 14px;
   border-top: 1px solid hsl(var(--qp-border-subtle));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .activity-hero::after {
-    display: none;
-  }
 }
 </style>

@@ -69,29 +69,64 @@ watch([categories, reducedMotion], render, { deep: true, immediate: true });
 <template>
   <InsightPanel
     :title="$t('page.dashboard.exposure.title')"
+    fill
     icon="lucide:blocks"
     tone="amber"
   >
-    <EchartsUI v-if="categories.length > 0" ref="chartRef" height="270px" />
-    <Empty
-      v-else
-      :description="$t('page.dashboard.exposure.none')"
-      :image="Empty.PRESENTED_IMAGE_SIMPLE"
-    />
-    <ul v-if="categories.length > 0" class="mt-3 grid gap-2">
-      <li
-        v-for="item in categories"
-        :key="item.name"
-        class="grid grid-cols-[7rem_1fr_auto] items-center gap-2 text-xs"
-      >
-        <span class="truncate">{{ item.name }}</span>
-        <Progress
-          :percent="total > 0 ? Math.round((item.value / total) * 100) : 0"
-          :show-info="false"
-          size="small"
-        />
-        <span class="tabular-nums">{{ formatUsd(item.raw) }}</span>
-      </li>
-    </ul>
+    <div v-if="categories.length > 0" class="exposure-fill">
+      <EchartsUI ref="chartRef" class="chart-fill" height="100%" />
+      <ul class="exposure-list mt-3 grid gap-2">
+        <li
+          v-for="item in categories"
+          :key="item.name"
+          class="grid grid-cols-[7rem_1fr_auto] items-center gap-2 text-xs"
+        >
+          <span class="truncate">{{ item.name }}</span>
+          <Progress
+            :percent="total > 0 ? Math.round((item.value / total) * 100) : 0"
+            :show-info="false"
+            size="small"
+          />
+          <span class="tabular-nums">{{ formatUsd(item.raw) }}</span>
+        </li>
+      </ul>
+    </div>
+    <div v-else class="panel-empty">
+      <Empty
+        :description="$t('page.dashboard.exposure.none')"
+        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+      />
+    </div>
   </InsightPanel>
 </template>
+
+<style scoped>
+.exposure-fill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.chart-fill {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.exposure-list {
+  flex: none;
+  max-height: 8.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1279px) {
+  .chart-fill {
+    min-height: 16.875rem;
+  }
+
+  .exposure-list {
+    max-height: none;
+  }
+}
+</style>

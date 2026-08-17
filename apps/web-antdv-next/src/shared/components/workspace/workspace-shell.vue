@@ -173,9 +173,9 @@ onBeforeUnmount(() => {
     gap="middle"
     vertical
   >
-    <header class="workspace-hero">
+    <header class="workspace-hero qp-page-hero">
       <p class="workspace-eyebrow">{{ $t(eyebrow) }}</p>
-      <h1>{{ $t(title) }}</h1>
+      <h1 tabindex="-1">{{ $t(title) }}</h1>
       <p>{{ $t(description) }}</p>
     </header>
 
@@ -224,6 +224,7 @@ onBeforeUnmount(() => {
   --workspace-aurora-soft: 6%;
   --workspace-aurora-strong: 8%;
   --workspace-gradient: var(--qp-gradient-trading);
+  --workspace-control: var(--qp-gradient-control);
   --workspace-hero:
     radial-gradient(
       circle at 8% 0%,
@@ -251,6 +252,12 @@ onBeforeUnmount(() => {
 .workspace-shell[data-domain='execution'] {
   --workspace-accent: var(--qp-accent-orange);
   --workspace-gradient: var(--qp-gradient-execution);
+  --workspace-control: linear-gradient(
+    180deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink)) 58%,
+    hsl(var(--qp-accent-orange))
+  );
   --workspace-hero:
     radial-gradient(
       circle at 8% 0%,
@@ -274,6 +281,11 @@ onBeforeUnmount(() => {
 .workspace-shell[data-domain='research'] {
   --workspace-accent: var(--qp-accent-pink);
   --workspace-gradient: var(--qp-gradient-research);
+  --workspace-control: linear-gradient(
+    180deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink))
+  );
   --workspace-hero:
     radial-gradient(
       circle at 8% 0%,
@@ -297,6 +309,11 @@ onBeforeUnmount(() => {
 .workspace-shell[data-domain='governance'] {
   --workspace-accent: var(--qp-accent-violet);
   --workspace-gradient: var(--qp-gradient-governance);
+  --workspace-control: linear-gradient(
+    180deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet))
+  );
   --workspace-hero:
     radial-gradient(
       circle at 8% 0%,
@@ -318,38 +335,13 @@ onBeforeUnmount(() => {
 }
 
 .workspace-hero {
-  position: relative;
-  padding: var(--qp-density-card-padding);
-  overflow: hidden;
   background: var(--workspace-hero), hsl(var(--qp-surface-raised));
-  border: 1px solid hsl(var(--qp-border-subtle));
-  border-radius: var(--qp-radius-lg);
-  box-shadow: var(--qp-shadow-subtle);
 }
 
 :global(.dark) .workspace-shell {
   --workspace-aurora-medium: 12%;
   --workspace-aurora-soft: 10%;
   --workspace-aurora-strong: 14%;
-}
-
-.workspace-hero::before {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline: 0;
-  height: 2px;
-  content: '';
-  background: var(--qp-gradient-brand);
-}
-
-.workspace-hero::after {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 3px;
-  content: '';
-  background: var(--workspace-gradient);
-  box-shadow: var(--qp-shadow-workspace);
 }
 
 .workspace-eyebrow {
@@ -400,7 +392,9 @@ onBeforeUnmount(() => {
 .workspace-shell
   :deep(.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-dangerous)) {
   color: white;
-  background: var(--workspace-gradient);
+  background: var(--workspace-control);
+  background-clip: border-box;
+  background-origin: border-box;
   border-color: transparent;
   box-shadow: var(--qp-shadow-subtle);
 }
@@ -424,6 +418,16 @@ onBeforeUnmount(() => {
 
   .workspace-tab svg {
     display: none;
+  }
+
+  .workspace-tabs :deep(.ant-tabs-nav-wrap) {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .workspace-tabs :deep(.ant-tabs-nav-list) {
+    flex: none;
   }
 }
 </style>

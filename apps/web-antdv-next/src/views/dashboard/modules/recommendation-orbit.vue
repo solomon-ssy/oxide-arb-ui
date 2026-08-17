@@ -159,66 +159,101 @@ onUnmounted(() => {
   <InsightPanel
     :title="$t('page.dashboard.orbit.title')"
     featured
+    fill
     icon="lucide:orbit"
     tone="violet"
   >
-    <div v-if="recommendations.length > 0">
-      <EchartsUI ref="chartRef" class="hidden md:block" height="330px" />
-      <LayoutGroup>
-        <ol
-          class="mt-2 grid gap-2"
-          :aria-label="$t('page.dashboard.orbit.list')"
-        >
-          <AnimatePresence :initial="false">
-            <motion.li
-              v-for="recommendation in recommendations"
-              :key="recommendation.recommendation_id"
-              :animate="reducedMotion ? undefined : { opacity: 1, y: 0 }"
-              :exit="reducedMotion ? undefined : { opacity: 0, y: -4 }"
-              :initial="reducedMotion ? false : { opacity: 0, y: 4 }"
-              :layout="reducedMotion ? false : 'position'"
-              :transition="{ duration: reducedMotion ? 0 : 0.18 }"
-            >
-              <button
-                class="hover:bg-accent focus-visible:ring-primary flex min-h-11 w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs focus-visible:ring-2 focus-visible:outline-none"
-                data-orbit-kind="recommendation"
-                data-testid="dashboard-orbit-action"
-                type="button"
-                @click="select(recommendation)"
+    <div v-if="recommendations.length > 0" class="orbit-fill">
+      <div class="orbit-chart hidden md:block">
+        <EchartsUI ref="chartRef" height="100%" />
+      </div>
+      <div class="orbit-list">
+        <LayoutGroup>
+          <ol class="grid gap-2" :aria-label="$t('page.dashboard.orbit.list')">
+            <AnimatePresence :initial="false">
+              <motion.li
+                v-for="recommendation in recommendations"
+                :key="recommendation.recommendation_id"
+                :animate="reducedMotion ? undefined : { opacity: 1, y: 0 }"
+                :exit="reducedMotion ? undefined : { opacity: 0, y: -4 }"
+                :initial="reducedMotion ? false : { opacity: 0, y: 4 }"
+                :layout="reducedMotion ? false : 'position'"
+                :transition="{ duration: reducedMotion ? 0 : 0.18 }"
               >
-                <span class="text-muted-foreground w-6">
-                  #{{ recommendation.rank }}
-                </span>
-                <span class="min-w-0 flex-1 truncate">{{
-                  recommendation.identity.question
-                }}</span>
-                <Tag>{{ recommendation.identity.outcome_name }}</Tag>
-                <span class="tabular-nums">
-                  {{
-                    formatUsd(
-                      recommendation.trade_plan.sizing.hard_reserved_cash_usd,
-                    )
-                  }}
-                </span>
-              </button>
-            </motion.li>
-          </AnimatePresence>
-        </ol>
-      </LayoutGroup>
+                <button
+                  class="hover:bg-accent focus-visible:ring-primary flex min-h-11 w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs focus-visible:ring-2 focus-visible:outline-none"
+                  data-orbit-kind="recommendation"
+                  data-testid="dashboard-orbit-action"
+                  type="button"
+                  @click="select(recommendation)"
+                >
+                  <span class="text-muted-foreground w-6">
+                    #{{ recommendation.rank }}
+                  </span>
+                  <span class="min-w-0 flex-1 truncate">{{
+                    recommendation.identity.question
+                  }}</span>
+                  <Tag>{{ recommendation.identity.outcome_name }}</Tag>
+                  <span class="tabular-nums">
+                    {{
+                      formatUsd(
+                        recommendation.trade_plan.sizing.hard_reserved_cash_usd,
+                      )
+                    }}
+                  </span>
+                </button>
+              </motion.li>
+            </AnimatePresence>
+          </ol>
+        </LayoutGroup>
+      </div>
     </div>
-    <Empty
-      v-else
-      :description="$t('page.dashboard.section.noReport')"
-      :image="Empty.PRESENTED_IMAGE_SIMPLE"
-    >
-      <Button
-        class="min-h-11 min-w-11"
-        data-orbit-kind="empty"
-        data-testid="dashboard-orbit-action"
-        @click="emit('openReports')"
+    <div v-else class="panel-empty">
+      <Empty
+        :description="$t('page.dashboard.section.noReport')"
+        :image="Empty.PRESENTED_IMAGE_SIMPLE"
       >
-        {{ $t('page.dashboard.orbit.openReports') }}
-      </Button>
-    </Empty>
+        <Button
+          class="min-h-11 min-w-11"
+          data-orbit-kind="empty"
+          data-testid="dashboard-orbit-action"
+          @click="emit('openReports')"
+        >
+          {{ $t('page.dashboard.orbit.openReports') }}
+        </Button>
+      </Empty>
+    </div>
   </InsightPanel>
 </template>
+
+<style scoped>
+.orbit-fill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.orbit-chart {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.orbit-list {
+  flex: none;
+  max-height: 40%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1279px) {
+  .orbit-chart {
+    min-height: 16rem;
+  }
+
+  .orbit-list {
+    max-height: none;
+  }
+}
+</style>

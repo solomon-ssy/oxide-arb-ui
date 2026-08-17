@@ -134,15 +134,22 @@ watch([values, reducedMotion], render, { immediate: true });
   <InsightPanel
     :title="$t('page.dashboard.equity.title')"
     featured
+    fill
     icon="lucide:chart-no-axes-combined"
     tone="sky"
   >
-    <EchartsUI v-if="values.length > 0" ref="chartRef" height="330px" />
-    <Empty
-      v-else
-      :description="$t('page.dashboard.section.noSamples')"
-      :image="Empty.PRESENTED_IMAGE_SIMPLE"
+    <EchartsUI
+      v-if="values.length > 0"
+      ref="chartRef"
+      class="chart-fill"
+      height="100%"
     />
+    <div v-else class="panel-empty">
+      <Empty
+        :description="$t('page.dashboard.section.noSamples')"
+        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+      />
+    </div>
     <ol v-if="values.length > 0" class="sr-only">
       <li v-for="row in values" :key="row.equity_snapshot_id">
         {{ new Date(row.as_of).toLocaleString() }}:
@@ -152,3 +159,10 @@ watch([values, reducedMotion], render, { immediate: true });
     </ol>
   </InsightPanel>
 </template>
+
+<style scoped>
+.chart-fill {
+  flex: 1 1 auto;
+  min-height: 20.625rem;
+}
+</style>

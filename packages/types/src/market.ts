@@ -37,7 +37,6 @@ export interface MarketView {
   no_token_id: TokenId;
   tick_size: TickSize;
   neg_risk: boolean;
-  fees_enabled: boolean;
   /** Whether both tokens are live on the CLOB WS transport. */
   subscribed: boolean;
   /** Live order-book digest; `null` when no book has been published yet. */

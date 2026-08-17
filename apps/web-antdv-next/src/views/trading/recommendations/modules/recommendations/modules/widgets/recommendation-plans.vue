@@ -25,6 +25,7 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
+import { vAccessibleTableScroll } from '#/shared/directives/accessible-table-scroll';
 
 defineOptions({ name: 'RecommendationPlans' });
 
@@ -44,6 +45,46 @@ const bootstrapGuidance = computed(() =>
 const risk = computed(() => props.recommendation.trade_plan.risk_envelope);
 const tier = computed(() => props.recommendation.economic_tier);
 const tierEntry = computed(() => tier.value.entry_execution);
+const rebateApplicable = computed(() => tierEntry.value.kind === 'passive');
+const rebateTerms = computed(() => sizing.value.maker_rebate_terms);
+const rebateSchedule = computed(() =>
+  rebateTerms.value.state === 'passive_program'
+    ? rebateTerms.value.schedule
+    : null,
+);
+const rebateAvailableAt = computed(() => {
+  if (rebateTerms.value.state === 'passive_program') {
+    return rebateTerms.value.schedule.available_at;
+  }
+  if (rebateTerms.value.state === 'passive_no_program') {
+    return rebateTerms.value.available_at;
+  }
+  return null;
+});
+const rebateTermsHash = computed(() => {
+  if (rebateTerms.value.state === 'passive_program') {
+    return rebateTerms.value.schedule.terms_hash;
+  }
+  if (rebateTerms.value.state === 'passive_no_program') {
+    return rebateTerms.value.terms_hash;
+  }
+  return null;
+});
+const rebateObjectiveReason = computed(() => {
+  const status = sizing.value.maker_rebate_objective_status;
+  return status.state === 'zero' ? status.reason : null;
+});
+const rebateDelayLabel = computed(() => {
+  const basis = sizing.value.rebate_delay_basis;
+  if (!basis) return EMPTY_PLACEHOLDER;
+  const lag = formatDurationSecs(basis.lag_from_program_close_secs);
+  return basis.kind === 'observed_p95'
+    ? $t('page.quantRecommendations.sizingPlan.rebateDelayObserved', {
+        days: basis.complete_program_days,
+        lag,
+      })
+    : $t('page.quantRecommendations.sizingPlan.rebateDelayFallback', { lag });
+});
 
 const scenarioColumns = [
   {
@@ -53,16 +94,64 @@ const scenarioColumns = [
     width: 120,
   },
   {
+    dataIndex: 'maker_rebate_program_date',
+    key: 'maker_rebate_program_date',
+    title: $t('page.quantRecommendations.economicTier.programDate'),
+    width: 130,
+  },
+  {
+    align: 'right' as const,
+    dataIndex: 'maker_rebate_program_day_baseline_usd',
+    key: 'maker_rebate_program_day_baseline_usd',
+    title: $t('page.quantRecommendations.economicTier.rebateBaseline'),
+    width: 160,
+  },
+  {
+    align: 'right' as const,
+    dataIndex: 'maker_rebate_program_day_total_usd',
+    key: 'maker_rebate_program_day_total_usd',
+    title: $t('page.quantRecommendations.economicTier.rebateDayTotal'),
+    width: 160,
+  },
+  {
+    align: 'right' as const,
+    dataIndex: 'maker_rebate_accrual_usd',
+    key: 'maker_rebate_accrual_usd',
+    title: $t('page.quantRecommendations.economicTier.rebateAccrual'),
+    width: 150,
+  },
+  {
+    dataIndex: 'maker_rebate_credit_status',
+    key: 'maker_rebate_credit_status',
+    title: $t('page.quantRecommendations.economicTier.rebateCreditStatus'),
+    width: 160,
+  },
+  {
+    dataIndex: 'maker_rebate_expected_by',
+    key: 'maker_rebate_expected_by',
+    title: $t('page.quantRecommendations.economicTier.rebateExpectedBy'),
+    width: 190,
+  },
+  {
+    align: 'right' as const,
+    dataIndex: 'objective_maker_rebate_usd',
+    key: 'objective_maker_rebate_usd',
+    title: $t('page.quantRecommendations.economicTier.rebateObjective'),
+    width: 170,
+  },
+  {
     align: 'right' as const,
     dataIndex: 'discounted_net_usd',
     key: 'discounted_net_usd',
     title: $t('page.quantRecommendations.economicTier.discountedNet'),
+    width: 150,
   },
   {
     align: 'right' as const,
     dataIndex: 'risk_net_usd',
     key: 'risk_net_usd',
     title: $t('page.quantRecommendations.economicTier.riskNet'),
+    width: 140,
   },
 ];
 const occupancyColumns = [
@@ -108,7 +197,7 @@ function millis(value: number): string {
 
 <template>
   <div
-    class="grid grid-cols-1 gap-4 xl:grid-cols-2"
+    class="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2"
     data-testid="recommendation-plans"
   >
     <Card size="small" :title="$t('page.quantRecommendations.entryPlan.title')">
@@ -221,13 +310,115 @@ function millis(value: number): string {
           {{ formatUsd(sizing.immediate_fee_usd) }}
         </DescriptionsItem>
         <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateProgramState')"
+        >
+          {{
+            $t(
+              `page.quantRecommendations.sizingPlan.rebateState.${rebateTerms.state}`,
+            )
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateRate')"
+        >
+          {{
+            rebateApplicable && rebateSchedule
+              ? formatPercent(rebateSchedule.rebate_rate)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateTermsHash')"
+        >
+          <span v-if="rebateTermsHash" class="font-mono text-xs break-all">
+            {{ rebateTermsHash }}
+          </span>
+          <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateAvailableAt')"
+        >
+          {{
+            rebateAvailableAt
+              ? formatDateTimeLocal(rebateAvailableAt)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateAccrual')"
+        >
+          {{
+            rebateApplicable
+              ? formatUsd(sizing.expected_maker_rebate_accrual_usd)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateObjective')"
+        >
+          {{
+            rebateApplicable
+              ? formatUsd(sizing.objective_maker_rebate_usd)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
           :label="
-            $t('page.quantRecommendations.sizingPlan.expectedMakerRebate')
+            $t('page.quantRecommendations.sizingPlan.rebateDailyThreshold')
+          "
+        >
+          {{
+            tierEntry.kind === 'passive'
+              ? formatUsd(tierEntry.maker_rebate_valuation.payout_threshold_usd)
+              : EMPTY_PLACEHOLDER
+          }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="$t('page.quantRecommendations.sizingPlan.rebateCreditWindow')"
+        >
+          {{ rebateApplicable ? rebateDelayLabel : EMPTY_PLACEHOLDER }}
+        </DescriptionsItem>
+        <DescriptionsItem
+          :label="
+            $t('page.quantRecommendations.sizingPlan.rebateObjectiveStatus')
           "
         >
           <div class="flex flex-col gap-1">
-            <span>{{ formatUsd(sizing.expected_maker_rebate_usd) }}</span>
-            <span class="text-warning text-xs">
+            <Tag
+              :color="
+                sizing.maker_rebate_objective_status.state ===
+                'scenario_weighted'
+                  ? 'success'
+                  : 'default'
+              "
+            >
+              {{
+                $t(
+                  `page.quantRecommendations.sizingPlan.rebateObjectiveState.${sizing.maker_rebate_objective_status.state}`,
+                )
+              }}
+            </Tag>
+            <span
+              v-if="
+                sizing.maker_rebate_objective_status.state ===
+                'scenario_weighted'
+              "
+              class="text-muted-foreground text-xs"
+            >
+              {{
+                formatBps(
+                  sizing.maker_rebate_objective_status.credited_probability_bps,
+                )
+              }}
+            </span>
+            <span v-if="rebateObjectiveReason" class="text-warning text-xs">
+              {{
+                $t(
+                  `page.quantRecommendations.sizingPlan.rebateZeroReason.${rebateObjectiveReason}`,
+                )
+              }}
+            </span>
+            <span v-if="rebateApplicable" class="text-muted-foreground text-xs">
               {{ $t('page.quantRecommendations.sizingPlan.rebateNotice') }}
             </span>
           </div>
@@ -347,23 +538,101 @@ function millis(value: number): string {
         </DescriptionsItem>
       </Descriptions>
       <div class="mt-4 grid grid-cols-1 gap-4 2xl:grid-cols-2">
-        <Table
-          :columns="scenarioColumns"
-          :data-source="tier.scenario_cashflows"
-          :pagination="false"
-          row-key="scenario_index"
-          size="small"
-          :title="() => $t('page.quantRecommendations.economicTier.cashflows')"
-        >
-          <template #bodyCell="{ column, record }">
-            <span v-if="column.key === 'discounted_net_usd'" class="font-mono">
-              {{ formatUsd(record.discounted_net_usd) }}
-            </span>
-            <span v-else-if="column.key === 'risk_net_usd'" class="font-mono">
-              {{ formatUsd(record.risk_net_usd) }}
-            </span>
-          </template>
-        </Table>
+        <div class="min-w-0">
+          <Table
+            v-accessible-table-scroll="
+              $t('page.quantRecommendations.economicTier.cashflowScrollLabel')
+            "
+            :columns="scenarioColumns"
+            :data-source="tier.scenario_cashflows"
+            :pagination="false"
+            row-key="scenario_index"
+            :scroll="{ x: 1580 }"
+            size="small"
+            :title="
+              () => $t('page.quantRecommendations.economicTier.cashflows')
+            "
+          >
+            <template #bodyCell="{ column, record }">
+              <span
+                v-if="column.key === 'maker_rebate_accrual_usd'"
+                class="font-mono"
+              >
+                {{
+                  rebateApplicable
+                    ? formatUsd(record.maker_rebate_accrual_usd)
+                    : EMPTY_PLACEHOLDER
+                }}
+              </span>
+              <span
+                v-else-if="column.key === 'objective_maker_rebate_usd'"
+                class="font-mono"
+              >
+                {{
+                  rebateApplicable
+                    ? formatUsd(record.objective_maker_rebate_usd)
+                    : EMPTY_PLACEHOLDER
+                }}
+              </span>
+              <span
+                v-else-if="
+                  column.key === 'maker_rebate_program_day_baseline_usd' ||
+                  column.key === 'maker_rebate_program_day_total_usd'
+                "
+                class="font-mono"
+              >
+                {{
+                  rebateApplicable
+                    ? formatUsd(
+                        column.key === 'maker_rebate_program_day_baseline_usd'
+                          ? record.maker_rebate_program_day_baseline_usd
+                          : record.maker_rebate_program_day_total_usd,
+                      )
+                    : EMPTY_PLACEHOLDER
+                }}
+              </span>
+              <span v-else-if="column.key === 'maker_rebate_program_date'">
+                {{
+                  rebateApplicable
+                    ? record.maker_rebate_program_date || EMPTY_PLACEHOLDER
+                    : EMPTY_PLACEHOLDER
+                }}
+              </span>
+              <Tag
+                v-else-if="column.key === 'maker_rebate_credit_status'"
+                :color="
+                  record.maker_rebate_credit_status === 'credited'
+                    ? 'success'
+                    : 'default'
+                "
+              >
+                {{
+                  rebateApplicable
+                    ? $t(
+                        `page.quantRecommendations.economicTier.rebateCreditState.${record.maker_rebate_credit_status}`,
+                      )
+                    : EMPTY_PLACEHOLDER
+                }}
+              </Tag>
+              <span v-else-if="column.key === 'maker_rebate_expected_by'">
+                {{
+                  rebateApplicable && record.maker_rebate_expected_by
+                    ? formatDateTimeLocal(record.maker_rebate_expected_by)
+                    : EMPTY_PLACEHOLDER
+                }}
+              </span>
+              <span
+                v-else-if="column.key === 'discounted_net_usd'"
+                class="font-mono"
+              >
+                {{ formatUsd(record.discounted_net_usd) }}
+              </span>
+              <span v-else-if="column.key === 'risk_net_usd'" class="font-mono">
+                {{ formatUsd(record.risk_net_usd) }}
+              </span>
+            </template>
+          </Table>
+        </div>
         <Table
           :columns="occupancyColumns"
           :data-source="tier.hard_reservation_envelope"
@@ -597,3 +866,22 @@ function millis(value: number): string {
     </Card>
   </div>
 </template>
+
+<style scoped>
+@media (max-width: 640px) {
+  :deep(.ant-descriptions-row) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(.ant-descriptions-item-label),
+  :deep(.ant-descriptions-item-content) {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+</style>

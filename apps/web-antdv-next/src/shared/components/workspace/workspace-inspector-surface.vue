@@ -73,6 +73,19 @@ const desktopTarget = computed(
 let deactivateTimer: ReturnType<typeof setTimeout> | undefined;
 let restoreFocus: HTMLElement | null = null;
 
+function focusAfterClose() {
+  const original =
+    restoreFocus?.isConnected && restoreFocus !== document.body
+      ? restoreFocus
+      : null;
+  const fallback =
+    document.querySelector<HTMLElement>(
+      '.workspace-tabs [role="tab"][aria-selected="true"]',
+    ) ?? document.querySelector<HTMLElement>('.workspace-hero h1');
+  (original ?? fallback)?.focus();
+  restoreFocus = null;
+}
+
 function close() {
   if (props.drawerApi) {
     props.drawerApi.close();
@@ -101,8 +114,8 @@ watch(
   async (visible) => {
     if (!visible) {
       deactivateAfterExit();
-      restoreFocus?.focus();
-      restoreFocus = null;
+      await nextTick();
+      focusAfterClose();
       return;
     }
 
@@ -123,6 +136,7 @@ watch(
 onBeforeUnmount(() => {
   if (deactivateTimer) clearTimeout(deactivateTimer);
   host.deactivate(surfaceId);
+  focusAfterClose();
 });
 </script>
 
@@ -172,10 +186,14 @@ onBeforeUnmount(() => {
   </Teleport>
 
   <Drawer
+    auto-focus
+    class="workspace-inspector-drawer"
+    :keyboard="true"
+    :mask-closable="true"
     v-else-if="!host.desktop.value"
     :open="open"
     placement="right"
-    :size="440"
+    size="min(100vw, 720px)"
     :data-testid="testId"
     :title="title"
     @close="close"
@@ -245,5 +263,32 @@ onBeforeUnmount(() => {
   min-height: 0;
   padding: var(--qp-density-card-padding);
   overflow-y: auto;
+}
+
+:global(.workspace-inspector-drawer .ant-drawer-content),
+:global(.workspace-inspector-drawer .ant-drawer-wrapper-body),
+:global(.workspace-inspector-drawer .ant-drawer-body) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+:global(.workspace-inspector-drawer .ant-drawer-body) {
+  padding: 0;
+  overflow: hidden;
+}
+
+:global(.workspace-inspector-drawer .workspace-inspector-content) {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .workspace-inspector-content {
+    padding: 10px;
+  }
+
+  :global(.workspace-inspector-drawer .ant-drawer-header) {
+    padding: 12px;
+  }
 }
 </style>

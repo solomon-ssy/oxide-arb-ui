@@ -7,8 +7,11 @@ import type {
 
 import { computed, ref, watch } from 'vue';
 
+import { IconifyIcon } from '@vben/icons';
+
 import {
   Alert,
+  Badge,
   Button,
   Drawer,
   Empty,
@@ -57,10 +60,11 @@ const pooledReady = computed(
     props.freshBoot?.capability.first_report_ready === true &&
     (props.freshBoot.capability.pooled_first_report_id ?? null) !== null,
 );
+const quarantineCount = computed(
+  () => props.freshBoot?.exchange_history.quarantine_count ?? 0,
+);
 const compact = computed(
-  () =>
-    pooledReady.value &&
-    (props.freshBoot?.exchange_history.quarantine_count ?? 0) === 0,
+  () => pooledReady.value && quarantineCount.value === 0,
 );
 const summary = computed(() =>
   summarizeFreshBoot(capabilityState.value, pooledReady.value),
@@ -159,24 +163,41 @@ async function copyId(value: string) {
             }}
           </p>
         </div>
-        <div class="flex flex-wrap justify-end gap-2">
-          <Button
-            :danger="freshBoot.exchange_history.quarantine_count > 0"
-            size="small"
-            @click="openQuarantines"
+        <div class="fresh-boot-actions">
+          <Badge
+            :count="quarantineCount"
+            :overflow-count="99"
+            :show-zero="false"
           >
-            {{
-              $t('page.dashboard.bootstrap.openQuarantines', {
-                count: freshBoot.exchange_history.quarantine_count,
-              })
-            }}
-          </Button>
+            <Button
+              class="fresh-boot-action"
+              size="small"
+              :color="quarantineCount > 0 ? 'danger' : 'purple'"
+              :variant="quarantineCount > 0 ? 'solid' : 'filled'"
+              @click="openQuarantines"
+            >
+              <template #icon>
+                <IconifyIcon
+                  :icon="
+                    quarantineCount > 0
+                      ? 'lucide:shield-alert'
+                      : 'lucide:shield'
+                  "
+                />
+              </template>
+              {{ $t('page.dashboard.bootstrap.openQuarantines') }}
+            </Button>
+          </Badge>
           <Button
             v-if="freshBoot.capability.pooled_first_report_id"
+            class="fresh-boot-action"
             size="small"
             type="primary"
             @click="emit('openReport')"
           >
+            <template #icon>
+              <IconifyIcon icon="lucide:file-check" />
+            </template>
             {{ $t('page.dashboard.bootstrap.openReport') }}
           </Button>
         </div>
@@ -204,7 +225,16 @@ async function copyId(value: string) {
                     }}
                   </Tag>
                 </div>
-                <Button size="small" @click="emit('timeline', profile)">
+                <Button
+                  class="fresh-boot-action"
+                  color="cyan"
+                  size="small"
+                  variant="filled"
+                  @click="emit('timeline', profile)"
+                >
+                  <template #icon>
+                    <IconifyIcon icon="lucide:history" />
+                  </template>
                   {{ $t('page.dashboard.bootstrap.timeline') }}
                 </Button>
               </div>
@@ -316,178 +346,218 @@ async function copyId(value: string) {
           </p>
         </section>
 
-        <section aria-labelledby="fresh-boot-routes-title">
-          <h3 id="fresh-boot-routes-title" class="mb-3 font-semibold">
-            {{ $t('page.dashboard.bootstrap.routesTitle') }}
-          </h3>
-          <ul v-if="freshBoot.profiles.length > 0" class="grid gap-3">
-            <li
-              v-for="profile in freshBoot.profiles"
-              :key="profile.run.run_id"
-              class="fresh-boot-profile"
-            >
-              <div class="fresh-boot-profile-grid">
-                <div>
-                  <span class="fresh-boot-label">{{
-                    $t('page.dashboard.bootstrap.routeLabel')
-                  }}</span>
-                  <strong>{{
-                    $t(`page.dashboard.bootstrap.route.${profile.run.route}`)
-                  }}</strong>
-                  <Tag
-                    class="mt-1 w-fit"
-                    :color="profileStatusColor(profile.run.status)"
-                  >
-                    {{
-                      $t(
-                        `page.dashboard.bootstrap.status.${profile.run.status}`,
-                      )
-                    }}
-                  </Tag>
-                </div>
-                <div>
-                  <span class="fresh-boot-label">{{
-                    $t('page.dashboard.bootstrap.sourceCoverage')
-                  }}</span>
-                  <strong>
-                    {{
-                      profile.run.source_coverage_manifest
-                        ? $t('page.dashboard.bootstrap.coverageSealed', {
-                            count:
-                              profile.run.source_coverage_manifest.requirements
-                                .length,
-                          })
-                        : $t('page.dashboard.bootstrap.coverageWaiting')
-                    }}
-                  </strong>
-                  <span
-                    v-if="profile.run.next_attempt_at"
-                    class="text-muted-foreground text-xs"
-                  >
-                    {{
-                      $t('page.dashboard.bootstrap.nextRetry', {
-                        time: formatDateTimeLocal(profile.run.next_attempt_at),
-                      })
-                    }}
-                  </span>
-                </div>
-                <div>
-                  <span class="fresh-boot-label">{{
-                    $t('page.dashboard.bootstrap.currentStage')
-                  }}</span>
-                  <strong>{{
-                    $t(`page.dashboard.bootstrap.stage.${profile.run.stage}`)
-                  }}</strong>
-                  <span class="text-muted-foreground text-xs">
-                    {{ formatDateTimeLocal(profile.run.stage_entered_at) }}
-                  </span>
-                </div>
-                <div>
-                  <span class="fresh-boot-label">{{
-                    $t('page.dashboard.bootstrap.lastEvent')
-                  }}</span>
-                  <strong>
-                    {{
-                      profile.last_event
-                        ? $t(
-                            `page.dashboard.bootstrap.event.${profile.last_event.event}`,
+        <section
+          class="fresh-boot-routes"
+          aria-labelledby="fresh-boot-routes-title"
+        >
+          <div class="fresh-boot-routes-anchor">
+            <h3 id="fresh-boot-routes-title" class="fresh-boot-routes-title">
+              {{ $t('page.dashboard.bootstrap.routesTitle') }}
+            </h3>
+            <div class="fresh-boot-routes-body">
+              <ul v-if="freshBoot.profiles.length > 0" class="grid gap-3">
+                <li
+                  v-for="profile in freshBoot.profiles"
+                  :key="profile.run.run_id"
+                  class="fresh-boot-profile"
+                >
+                  <div class="fresh-boot-profile-grid">
+                    <div>
+                      <span class="fresh-boot-label">{{
+                        $t('page.dashboard.bootstrap.routeLabel')
+                      }}</span>
+                      <strong>{{
+                        $t(
+                          `page.dashboard.bootstrap.route.${profile.run.route}`,
+                        )
+                      }}</strong>
+                      <Tag
+                        class="mt-1 w-fit"
+                        :color="profileStatusColor(profile.run.status)"
+                      >
+                        {{
+                          $t(
+                            `page.dashboard.bootstrap.status.${profile.run.status}`,
                           )
-                        : $t('page.dashboard.bootstrap.notObserved')
-                    }}
-                  </strong>
-                  <span
-                    v-if="profile.last_event"
-                    class="text-muted-foreground text-xs"
-                  >
-                    {{ formatDateTimeLocal(profile.last_event.occurred_at) }}
-                  </span>
-                </div>
-                <div>
-                  <span class="fresh-boot-label">{{
-                    $t('page.dashboard.bootstrap.job')
-                  }}</span>
-                  <strong class="fresh-boot-id">
-                    {{
-                      profile.run.active_job_id ??
-                      profile.run.last_job_id ??
-                      '—'
-                    }}
-                  </strong>
-                </div>
-                <div>
-                  <span class="fresh-boot-label">{{
-                    $t('page.dashboard.bootstrap.firstReport')
-                  }}</span>
-                  <strong>
-                    {{
-                      profile.run.first_report_id
-                        ? $t('page.dashboard.bootstrap.ready')
-                        : profile.run.first_report_run_id
-                          ? $t('page.dashboard.bootstrap.queued')
-                          : $t('page.dashboard.bootstrap.pending')
-                    }}
-                  </strong>
-                  <span
-                    v-if="profile.run.first_report_id"
-                    class="fresh-boot-id text-xs"
-                  >
-                    {{ profile.run.first_report_id }}
-                  </span>
-                </div>
-              </div>
+                        }}
+                      </Tag>
+                    </div>
+                    <div>
+                      <span class="fresh-boot-label">{{
+                        $t('page.dashboard.bootstrap.sourceCoverage')
+                      }}</span>
+                      <strong>
+                        {{
+                          profile.run.source_coverage_manifest
+                            ? $t('page.dashboard.bootstrap.coverageSealed', {
+                                count:
+                                  profile.run.source_coverage_manifest
+                                    .requirements.length,
+                              })
+                            : $t('page.dashboard.bootstrap.coverageWaiting')
+                        }}
+                      </strong>
+                      <span
+                        v-if="profile.run.next_attempt_at"
+                        class="text-muted-foreground text-xs"
+                      >
+                        {{
+                          $t('page.dashboard.bootstrap.nextRetry', {
+                            time: formatDateTimeLocal(
+                              profile.run.next_attempt_at,
+                            ),
+                          })
+                        }}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="fresh-boot-label">{{
+                        $t('page.dashboard.bootstrap.currentStage')
+                      }}</span>
+                      <strong>{{
+                        $t(
+                          `page.dashboard.bootstrap.stage.${profile.run.stage}`,
+                        )
+                      }}</strong>
+                      <span class="text-muted-foreground text-xs">
+                        {{ formatDateTimeLocal(profile.run.stage_entered_at) }}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="fresh-boot-label">{{
+                        $t('page.dashboard.bootstrap.lastEvent')
+                      }}</span>
+                      <strong>
+                        {{
+                          profile.last_event
+                            ? $t(
+                                `page.dashboard.bootstrap.event.${profile.last_event.event}`,
+                              )
+                            : $t('page.dashboard.bootstrap.notObserved')
+                        }}
+                      </strong>
+                      <span
+                        v-if="profile.last_event"
+                        class="text-muted-foreground text-xs"
+                      >
+                        {{
+                          formatDateTimeLocal(profile.last_event.occurred_at)
+                        }}
+                      </span>
+                    </div>
+                    <div>
+                      <span class="fresh-boot-label">{{
+                        $t('page.dashboard.bootstrap.job')
+                      }}</span>
+                      <strong class="fresh-boot-id">
+                        {{
+                          profile.run.active_job_id ??
+                          profile.run.last_job_id ??
+                          '—'
+                        }}
+                      </strong>
+                    </div>
+                    <div>
+                      <span class="fresh-boot-label">{{
+                        $t('page.dashboard.bootstrap.firstReport')
+                      }}</span>
+                      <strong>
+                        {{
+                          profile.run.first_report_id
+                            ? $t('page.dashboard.bootstrap.ready')
+                            : profile.run.first_report_run_id
+                              ? $t('page.dashboard.bootstrap.queued')
+                              : $t('page.dashboard.bootstrap.pending')
+                        }}
+                      </strong>
+                      <span
+                        v-if="profile.run.first_report_id"
+                        class="fresh-boot-id text-xs"
+                      >
+                        {{ profile.run.first_report_id }}
+                      </span>
+                    </div>
+                  </div>
 
-              <Alert
-                v-if="profile.run.blocker"
-                class="mt-3"
-                :description="profile.run.blocker.detail"
-                :message="
-                  profile.run.blocker.code.kind === 'terminal'
-                    ? $t(
-                        `page.dashboard.bootstrap.blockedReason.${profile.run.blocker.code.code}`,
-                      )
-                    : $t(
-                        `page.dashboard.bootstrap.retryReason.${profile.run.blocker.code.code}`,
-                      )
-                "
-                show-icon
-                :type="profile.run.blocker.retryable ? 'warning' : 'error'"
+                  <Alert
+                    v-if="profile.run.blocker"
+                    class="mt-3"
+                    :description="profile.run.blocker.detail"
+                    :message="
+                      profile.run.blocker.code.kind === 'terminal'
+                        ? $t(
+                            `page.dashboard.bootstrap.blockedReason.${profile.run.blocker.code.code}`,
+                          )
+                        : $t(
+                            `page.dashboard.bootstrap.retryReason.${profile.run.blocker.code.code}`,
+                          )
+                    "
+                    show-icon
+                    :type="profile.run.blocker.retryable ? 'warning' : 'error'"
+                  />
+
+                  <div class="fresh-boot-actions mt-3">
+                    <Button
+                      class="fresh-boot-action"
+                      color="cyan"
+                      size="small"
+                      variant="filled"
+                      @click="emit('timeline', profile)"
+                    >
+                      <template #icon>
+                        <IconifyIcon icon="lucide:history" />
+                      </template>
+                      {{ $t('page.dashboard.bootstrap.timeline') }}
+                    </Button>
+                    <Button
+                      v-if="canRetry(profile)"
+                      class="fresh-boot-action"
+                      color="orange"
+                      size="small"
+                      variant="solid"
+                      @click="emit('retry', profile)"
+                    >
+                      <template #icon>
+                        <IconifyIcon icon="lucide:refresh-cw" />
+                      </template>
+                      {{ $t('page.dashboard.bootstrap.retryNow') }}
+                    </Button>
+                    <Button
+                      v-if="canSupersede(profile)"
+                      class="fresh-boot-action"
+                      color="danger"
+                      size="small"
+                      variant="outlined"
+                      @click="emit('supersede', profile)"
+                    >
+                      <template #icon>
+                        <IconifyIcon icon="lucide:ban" />
+                      </template>
+                      {{ $t('page.dashboard.bootstrap.supersede') }}
+                    </Button>
+                    <Button
+                      v-if="profile.run.first_report_id"
+                      class="fresh-boot-action"
+                      size="small"
+                      type="primary"
+                      @click="emit('openReport')"
+                    >
+                      <template #icon>
+                        <IconifyIcon icon="lucide:file-check" />
+                      </template>
+                      {{ $t('page.dashboard.bootstrap.openReport') }}
+                    </Button>
+                  </div>
+                </li>
+              </ul>
+              <Empty
+                v-else
+                class="fresh-boot-routes-empty"
+                :description="$t('page.dashboard.bootstrap.noProfiles')"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
               />
-
-              <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
-                <Button size="small" @click="emit('timeline', profile)">
-                  {{ $t('page.dashboard.bootstrap.timeline') }}
-                </Button>
-                <Button
-                  v-if="canRetry(profile)"
-                  size="small"
-                  @click="emit('retry', profile)"
-                >
-                  {{ $t('page.dashboard.bootstrap.retryNow') }}
-                </Button>
-                <Button
-                  v-if="canSupersede(profile)"
-                  danger
-                  size="small"
-                  @click="emit('supersede', profile)"
-                >
-                  {{ $t('page.dashboard.bootstrap.supersede') }}
-                </Button>
-                <Button
-                  v-if="profile.run.first_report_id"
-                  size="small"
-                  type="primary"
-                  @click="emit('openReport')"
-                >
-                  {{ $t('page.dashboard.bootstrap.openReport') }}
-                </Button>
-              </div>
-            </li>
-          </ul>
-          <Empty
-            v-else
-            :description="$t('page.dashboard.bootstrap.noProfiles')"
-            :image="Empty.PRESENTED_IMAGE_SIMPLE"
-          />
+            </div>
+          </div>
         </section>
       </div>
     </template>
@@ -616,6 +686,27 @@ async function copyId(value: string) {
   border-radius: var(--qp-radius-md);
 }
 
+.fresh-boot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.fresh-boot-action {
+  font-weight: 600;
+}
+
+:deep(.fresh-boot-action.ant-btn-color-purple.ant-btn-variant-filled) {
+  color: hsl(var(--qp-text-primary));
+}
+
+.fresh-boot-action :deep(.ant-btn-icon) {
+  display: inline-flex;
+  font-size: 0.875rem;
+}
+
 .fresh-boot-route-details {
   padding: 0.75rem 1rem;
   background: hsl(var(--qp-surface-inset));
@@ -632,17 +723,70 @@ async function copyId(value: string) {
   display: grid;
   grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 2.2fr);
   gap: 1.25rem;
-  align-items: start;
+  align-items: stretch;
+}
+
+.fresh-boot-history,
+.fresh-boot-routes,
+.fresh-boot-profile,
+.fresh-boot-quarantine {
+  min-width: 0;
+  background: hsl(var(--qp-surface-inset));
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-md);
 }
 
 .fresh-boot-history,
 .fresh-boot-profile,
 .fresh-boot-quarantine {
-  min-width: 0;
   padding: 1rem;
-  background: hsl(var(--qp-surface-inset));
-  border: 1px solid hsl(var(--qp-border-subtle));
-  border-radius: var(--qp-radius-md);
+}
+
+.fresh-boot-routes {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.fresh-boot-routes-anchor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1rem;
+}
+
+.fresh-boot-routes-title {
+  flex: none;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.fresh-boot-routes-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.fresh-boot-routes-empty {
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  min-height: 12rem;
+}
+
+@media (min-width: 1024px) {
+  .fresh-boot-routes {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fresh-boot-routes-anchor {
+    position: absolute;
+    inset: 0;
+  }
 }
 
 .fresh-boot-frontier {
@@ -721,6 +865,10 @@ async function copyId(value: string) {
 @media (max-width: 1023px) {
   .fresh-boot-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fresh-boot-routes-body {
+    max-height: min(28rem, 70vh);
   }
 }
 

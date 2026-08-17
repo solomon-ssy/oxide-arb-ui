@@ -12,6 +12,7 @@
   --qp-text-primary: 222 47% 11%;
   --qp-text-secondary: 215 25% 32%;
   --qp-text-muted: 215 16% 43%;
+  --qp-text-on-accent: 0 0% 100%;
   --qp-accent-sky: 199 89% 48%;
   --qp-accent-sky-ink: 199 89% 37%;
   --qp-accent-violet: 263 70% 50%;
@@ -62,6 +63,12 @@
     hsl(var(--qp-accent-violet)) 42%,
     hsl(var(--qp-accent-pink)) 72%,
     hsl(var(--qp-accent-orange)) 100%
+  );
+  --qp-gradient-control: linear-gradient(
+    180deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet)) 58%,
+    hsl(var(--qp-accent-pink))
   );
   --qp-gradient-trading: linear-gradient(
     112deg,
@@ -263,4 +270,34 @@ body {
   color: hsl(var(--qp-text-primary));
   text-decoration-line: underline;
   text-underline-offset: 2px;
+}
+
+.qp-page-hero {
+  position: relative;
+  padding: var(--qp-density-card-padding);
+  overflow: hidden;
+  background: var(--qp-gradient-hero), hsl(var(--qp-surface-raised));
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-lg);
+}
+
+.qp-page-hero::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background: var(--qp-gradient-brand);
+  opacity: 0.08;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qp-page-hero::after {
+    display: none;
+  }
+}
+
+.ant-btn.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-dangerous) {
+  background-clip: border-box !important;
+  background-origin: border-box !important;
+  border-color: transparent !important;
 }

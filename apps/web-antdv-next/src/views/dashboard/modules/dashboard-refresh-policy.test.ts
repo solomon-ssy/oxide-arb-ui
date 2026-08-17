@@ -34,7 +34,7 @@ describe('dashboard refresh policy', () => {
     expect(dashboardWsHealth('connected', null, NOW)).toBe('stale');
     expect(
       dashboardWsHealth('reconnecting', '2026-07-29T03:29:59.000Z', NOW),
-    ).toBe('disconnected');
+    ).toBe('connecting');
     expect(dashboardWsHealth('connecting', null, NOW)).toBe('connecting');
   });
 

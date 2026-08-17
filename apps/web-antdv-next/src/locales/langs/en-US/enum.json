@@ -1456,7 +1456,7 @@
   },
   "venueIncentiveStage": {
     "estimated_accrual": "Estimated Accrual",
-    "venue_awarded": "Venue Awarded",
+    "venue_reported_accrual": "Venue Reported Accrual",
     "wallet_credited": "Wallet Credited"
   },
   "venueTradeStatus": {

@@ -187,7 +187,7 @@ export type VenueIncentiveKind = 'maker_rebate' | 'taker_rebate';
  */
 export type VenueIncentiveStage =
   | 'estimated_accrual'
-  | 'venue_awarded'
+  | 'venue_reported_accrual'
   | 'wallet_credited';
 export type IncentiveReconciliationHealth =
   | 'healthy'
@@ -205,24 +205,38 @@ export type EntryExecutionEconomics =
   | {
       decision_at: string;
       expected_filled_shares: Shares;
-      expected_maker_rebate_usd: Usd;
+      expected_maker_rebate_accrual_usd: Usd;
       fill_distribution: PassiveFillDistribution;
       full_fill_cost: ImmediateExecutionCost;
-      full_fill_maker_rebate?: DeferredVenueIncentive | null;
+      full_fill_maker_rebate_accrual_usd: Usd;
       good_til_secs: number;
       hard_reserved_cash_usd: Usd;
       kind: 'passive';
       limit_price: Price;
+      maker_rebate_objective_status: MakerRebateObjectiveStatus;
       /**
-       * Gamma terms frozen at the decision boundary. `None` means rebate was
-       * unavailable and the route was valued with a strict zero incentive.
+       * Required, route-aware Gamma program truth frozen at decision time.
        */
-      maker_rebate_schedule?: FrozenMakerRebateSchedule | null;
+      maker_rebate_terms:
+        | {
+            available_at: string;
+            state: 'passive_no_program';
+            terms_hash: string;
+          }
+        | {
+            schedule: FrozenMakerRebateSchedule;
+            state: 'passive_program';
+          }
+        | {
+            state: 'aggressive_not_applicable';
+          };
+      maker_rebate_valuation: MakerRebateValuationEvidence;
+      objective_maker_rebate_usd: Usd;
       requested_shares: Shares;
       visible_liquidity_usd: Usd;
     }
   | {
-      entry_vwap: Price;
+      execution_vwap: Price;
       filled_shares: Shares;
       immediate_cost: ImmediateExecutionCost;
       kind: 'aggressive';
@@ -236,9 +250,54 @@ export type EntryExecutionEconomics =
  */
 export type PassiveFillStateKind = 'full_fill' | 'no_fill' | 'partial_fill';
 /**
- * Eligibility state frozen into a maker-rebate accrual estimate.
+ * Operator-facing status of a recommendation's maker-rebate objective.
  */
-export type MakerRebateEligibility = 'eligible_maker_fill';
+export type MakerRebateObjectiveStatus =
+  | {
+      credited_probability_bps: number;
+      state: 'scenario_weighted';
+    }
+  | {
+      reason: MakerRebateObjectiveZeroReason;
+      state: 'zero';
+    }
+  | {
+      state: 'no_program';
+    }
+  | {
+      state: 'not_applicable';
+    };
+/**
+ * Typed reason why nominal maker accrual receives zero objective credit.
+ */
+export type MakerRebateObjectiveZeroReason =
+  | 'below_payout_threshold'
+  | 'reconciliation_incomplete'
+  | 'reconciliation_stale'
+  | 'reconciliation_unavailable';
+/**
+ * Frozen payout-lag evidence. Lag is measured from the close of the maker
+ * fill's UTC program day, never from a later API observation timestamp.
+ */
+export type MakerRebateDelayBasis =
+  | {
+      complete_program_days: number;
+      kind: 'observed_p95';
+      lag_from_program_close_secs: number;
+    }
+  | {
+      kind: 'conservative_fallback';
+      lag_from_program_close_secs: number;
+    };
+/**
+ * Point-in-time health of the account evidence required to value an
+ * unreceived maker rebate in the expected objective.
+ */
+export type MakerRebateValuationHealth =
+  | 'healthy'
+  | 'incomplete'
+  | 'stale'
+  | 'unavailable';
 /**
  * Which binary-market outcome token a recommendation opens a position in.
  *
@@ -279,6 +338,14 @@ export type ScenarioEntryExecution =
   | {
       kind: 'aggressive_fill';
     };
+/**
+ * Day-local payout eligibility for one promoted joint scenario.
+ */
+export type MakerRebateScenarioCreditStatus =
+  | 'below_daily_threshold'
+  | 'credited'
+  | 'no_accrual'
+  | 'not_applicable';
 /**
  * Why a recommendation is ineligible for execution in a given mode.
  */
@@ -669,10 +736,21 @@ export interface EntryOrderSpec {
    */
   limit_price: string;
   /**
-   * Frozen independently sourced maker-rebate terms. Only a passive,
-   * post-only entry may carry this evidence.
+   * Required route applicability and independently sourced Gamma terms.
    */
-  maker_rebate_schedule?: FrozenMakerRebateSchedule | null;
+  maker_rebate_terms:
+    | {
+        available_at: string;
+        state: 'passive_no_program';
+        terms_hash: string;
+      }
+    | {
+        schedule: FrozenMakerRebateSchedule;
+        state: 'passive_program';
+      }
+    | {
+        state: 'aggressive_not_applicable';
+      };
   /**
    * Maximum tolerated slippage from the reference price.
    */
@@ -715,14 +793,11 @@ export interface EntryOrderSpec {
  */
 export interface FrozenMakerRebateSchedule {
   available_at: string;
-  catalog_change_hash: string;
-  effective_at: string;
   exponent: string;
-  fees_enabled: boolean;
   platform_rate: string;
   rebate_rate: string;
-  schedule_hash: string;
   taker_only: boolean;
+  terms_hash: string;
 }
 /**
  * Authoritative read-time projection of one lot's governed exit monitor.
@@ -957,7 +1032,7 @@ export interface VenueIncentiveEventView {
   program_date: string;
   source_identity: string;
   source_partition: string;
-  source_schedule_hash?: null | string;
+  source_terms_hash?: null | string;
   stage: VenueIncentiveStage;
   transaction_hash?: null | string;
   venue_incentive_event_id: string;
@@ -967,16 +1042,17 @@ export interface VenueIncentiveEventView {
  */
 export interface IncentiveReconciliationView {
   as_of: string;
-  award_to_credit_delta_usd: Usd;
-  below_payout_threshold: boolean;
-  estimate_to_award_delta_usd: Usd;
+  below_payout_threshold_program_dates: string[];
+  estimate_to_reported_delta_usd: Usd;
   estimated_maker_accrual_usd: Usd;
   health: IncentiveReconciliationHealth;
   incomplete_day_count: number;
   last_success_at?: null | string;
   oldest_incomplete_date?: null | string;
+  overdue_program_dates: string[];
   payout_threshold_usd: Usd;
-  venue_awarded_maker_usd: Usd;
+  reported_to_credit_delta_usd: Usd;
+  venue_reported_maker_accrual_usd: Usd;
   wallet_credited_maker_usd: Usd;
   wallet_credited_taker_usd: Usd;
 }
@@ -1110,23 +1186,23 @@ export interface PassiveFillState {
   probability_bps: number;
 }
 /**
- * Delayed venue incentive estimated from one actual or simulated maker fill.
- *
- * This is deliberately not a fee and never changes immediate cash outlay,
- * hard reservation, maximum loss, or spendable balance.
+ * Frozen account-level evidence used by all passive tiers in one report.
  */
-export interface DeferredVenueIncentive {
-  eligibility: MakerRebateEligibility;
-  /**
-   * Modeling assumption for discounting, never evidence of wallet credit.
-   */
-  expected_credit_at: string;
-  expected_rebate_usd: Usd;
-  /**
-   * UTC program day containing the maker fill.
-   */
+export interface MakerRebateValuationEvidence {
+  as_of: string;
+  delay_basis: MakerRebateDelayBasis;
+  evidence_hash: string;
+  health: MakerRebateValuationHealth;
+  payout_threshold_usd: Usd;
+  program_day_baselines: MakerRebateProgramDayBaseline[];
+}
+/**
+ * Confirmed local maker-fill accrual already accumulated on one UTC program
+ * day before the current report's hypothetical fills are added.
+ */
+export interface MakerRebateProgramDayBaseline {
+  confirmed_accrual_usd: Usd;
   program_date: string;
-  source_schedule_hash: string;
 }
 /**
  * Hard cash reservation held independently of expected passive fills.
@@ -1144,13 +1220,18 @@ export interface ScenarioExecutionCashflow {
    */
   capital_cost_usd: string;
   capital_occupancy: ScenarioCapitalOccupancySlice[];
-  delayed_maker_rebate_usd: Usd;
   discounted_exit_cash_usd: Usd;
-  discounted_maker_rebate_usd: Usd;
   discounted_net_usd: Usd;
   entry_execution: ScenarioEntryExecution;
   filled_shares: Shares;
   immediate_cash_outlay_usd: Usd;
+  maker_rebate_accrual_usd: Usd;
+  maker_rebate_credit_status: MakerRebateScenarioCreditStatus;
+  maker_rebate_expected_by?: null | string;
+  maker_rebate_program_date?: null | string;
+  maker_rebate_program_day_baseline_usd: Usd;
+  maker_rebate_program_day_total_usd: Usd;
+  objective_maker_rebate_usd: Usd;
   /**
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
@@ -1572,7 +1653,7 @@ export interface SizingPlan {
   /**
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
-  expected_maker_rebate_usd: string;
+  expected_maker_rebate_accrual_usd: string;
   /**
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
@@ -1581,19 +1662,37 @@ export interface SizingPlan {
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
   immediate_fee_usd: string;
+  maker_rebate_objective_status: MakerRebateObjectiveStatus;
   /**
-   * Independent Gamma terms frozen for later maker-fill accrual. `None`
-   * means the tier was valued with zero rebate.
+   * Required route applicability and independent Gamma terms.
    */
-  maker_rebate_schedule?: FrozenMakerRebateSchedule | null;
+  maker_rebate_terms:
+    | {
+        available_at: string;
+        state: 'passive_no_program';
+        terms_hash: string;
+      }
+    | {
+        schedule: FrozenMakerRebateSchedule;
+        state: 'passive_program';
+      }
+    | {
+        state: 'aggressive_not_applicable';
+      };
   /**
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
   market_exposure_after_usd: string;
   /**
+   * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
+   */
+  objective_maker_rebate_usd: string;
+  /**
    * Suggested allocation as a fraction of the capital base.
    */
   portfolio_weight_pct: string;
+  rebate_delay_basis?: MakerRebateDelayBasis | null;
+  rebate_valuation_hash?: null | string;
   /**
    * Price per share in a prediction market. Range \[0, 1\].
    */

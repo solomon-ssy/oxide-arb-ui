@@ -48,7 +48,9 @@ export type InsightTone =
         <slot name="extra"></slot>
       </div>
     </header>
-    <div class="panel-body"><slot></slot></div>
+    <div class="panel-body" :class="{ 'panel-body-fill': fill }">
+      <slot></slot>
+    </div>
   </section>
 </template>
 
@@ -155,6 +157,24 @@ export type InsightTone =
   flex: 1;
   min-width: 0;
   min-height: 0;
+}
+
+.insight-panel.h-full {
+  overflow: hidden;
+}
+
+.panel-body-fill {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-body-fill :slotted(.panel-empty) {
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  width: 100%;
+  min-height: 12rem;
 }
 
 [data-tone='amber'] {

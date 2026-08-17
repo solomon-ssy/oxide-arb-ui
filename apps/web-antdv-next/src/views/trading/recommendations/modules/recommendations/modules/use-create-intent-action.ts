@@ -17,6 +17,7 @@ import { $t } from '#/locales';
 import {
   formatDateTimeLocal,
   formatDurationSecs,
+  formatPercent,
   formatPrice,
   formatShares,
   formatUsd,
@@ -36,6 +37,21 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
     sizing: sizingPlan,
   } = recommendation.trade_plan;
   const tierEntry = recommendation.economic_tier.entry_execution;
+  const rebateApplicable = tierEntry.kind === 'passive';
+  const rebateTerms = sizingPlan.maker_rebate_terms;
+  const rebateSchedule =
+    rebateTerms.state === 'passive_program' ? rebateTerms.schedule : null;
+  let rebateTermsHash = '—';
+  let rebateAvailableAt: null | string = null;
+  if (rebateTerms.state === 'passive_program') {
+    rebateTermsHash = rebateTerms.schedule.terms_hash;
+    rebateAvailableAt = rebateTerms.schedule.available_at;
+  } else if (rebateTerms.state === 'passive_no_program') {
+    rebateTermsHash = rebateTerms.terms_hash;
+    rebateAvailableAt = rebateTerms.available_at;
+  }
+  const objectiveStatus = sizingPlan.maker_rebate_objective_status;
+  const rebateDelay = sizingPlan.rebate_delay_basis;
   return [
     {
       label: $t('page.quantRecommendations.createIntent.details.entryTrigger'),
@@ -76,9 +92,74 @@ function createIntentDetails(recommendation: QuantRecommendationView) {
     },
     {
       label: $t(
-        'page.quantRecommendations.createIntent.details.expectedMakerRebate',
+        'page.quantRecommendations.createIntent.details.rebateProgramState',
       ),
-      value: `${formatUsd(sizingPlan.expected_maker_rebate_usd)} · ${$t('page.quantRecommendations.sizingPlan.rebateNotice')}`,
+      value: $t(
+        `page.quantRecommendations.sizingPlan.rebateState.${rebateTerms.state}`,
+      ),
+    },
+    {
+      label: $t('page.quantRecommendations.createIntent.details.rebateRate'),
+      value:
+        rebateApplicable && rebateSchedule
+          ? formatPercent(rebateSchedule.rebate_rate)
+          : '—',
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.rebateTermsHash',
+      ),
+      mono: true,
+      value: rebateTermsHash,
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.rebateAvailableAt',
+      ),
+      value: rebateAvailableAt ? formatDateTimeLocal(rebateAvailableAt) : '—',
+    },
+    {
+      label: $t('page.quantRecommendations.createIntent.details.rebateAccrual'),
+      value: rebateApplicable
+        ? `${formatUsd(sizingPlan.expected_maker_rebate_accrual_usd)} · ${$t('page.quantRecommendations.sizingPlan.rebateNotice')}`
+        : '—',
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.rebateObjective',
+      ),
+      value: rebateApplicable
+        ? formatUsd(sizingPlan.objective_maker_rebate_usd)
+        : '—',
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.rebateDailyThreshold',
+      ),
+      value:
+        tierEntry.kind === 'passive'
+          ? formatUsd(tierEntry.maker_rebate_valuation.payout_threshold_usd)
+          : '—',
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.rebateCreditWindow',
+      ),
+      value:
+        rebateApplicable && rebateDelay
+          ? formatDurationSecs(rebateDelay.lag_from_program_close_secs)
+          : '—',
+    },
+    {
+      label: $t(
+        'page.quantRecommendations.createIntent.details.rebateObjectiveStatus',
+      ),
+      value:
+        objectiveStatus.state === 'zero'
+          ? `${$t(`page.quantRecommendations.sizingPlan.rebateObjectiveState.${objectiveStatus.state}`)} · ${$t(`page.quantRecommendations.sizingPlan.rebateZeroReason.${objectiveStatus.reason}`)}`
+          : $t(
+              `page.quantRecommendations.sizingPlan.rebateObjectiveState.${objectiveStatus.state}`,
+            ),
     },
     {
       label: $t('page.quantRecommendations.createIntent.details.route'),

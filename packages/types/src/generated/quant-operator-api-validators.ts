@@ -9,7 +9,7 @@ const ucs2Length =
     ? ucs2LengthRuntime
     : ucs2LengthRuntime.default;
 ('use strict');
-export const validateAccountSnapshot = validate160;
+export const validateAccountSnapshot = validate169;
 const schema32 = {
   description:
     'Persisted decision-time venue account snapshot (immutable audit evidence).',
@@ -928,7 +928,7 @@ validate24.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate160(
+function validate169(
   data,
   {
     instancePath = '',
@@ -940,7 +940,7 @@ function validate160(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate160.evaluated;
+  const evaluated0 = validate169.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -1445,10 +1445,10 @@ function validate160(
     }
     errors++;
   }
-  validate160.errors = vErrors;
+  validate169.errors = vErrors;
   return errors === 0;
 }
-validate160.evaluated = {
+validate169.evaluated = {
   props: {
     account_snapshot_id: true,
     as_of: true,
@@ -1464,7 +1464,7 @@ validate160.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateCreateIntent = validate163;
+export const validateCreateIntent = validate172;
 const schema53 = {
   description:
     'Inbound body for `POST /quant/intents` (create from a recommendation).',
@@ -1477,7 +1477,7 @@ const schema53 = {
   required: ['recommendation_id', 'reason'],
 };
 const func3 = ucs2Length;
-function validate163(
+function validate172(
   data,
   {
     instancePath = '',
@@ -1489,7 +1489,7 @@ function validate163(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate163.evaluated;
+  const evaluated0 = validate172.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -1642,15 +1642,15 @@ function validate163(
     }
     errors++;
   }
-  validate163.errors = vErrors;
+  validate172.errors = vErrors;
   return errors === 0;
 }
-validate163.evaluated = {
+validate172.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateEquitySnapshot = validate164;
+export const validateEquitySnapshot = validate173;
 const schema54 = {
   description: 'Persisted strategy-capital equity curve snapshot.',
   type: 'object',
@@ -1690,7 +1690,7 @@ const schema54 = {
     'created_at',
   ],
 };
-function validate164(
+function validate173(
   data,
   {
     instancePath = '',
@@ -1702,7 +1702,7 @@ function validate164(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate164.evaluated;
+  const evaluated0 = validate173.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -2322,10 +2322,10 @@ function validate164(
     }
     errors++;
   }
-  validate164.errors = vErrors;
+  validate173.errors = vErrors;
   return errors === 0;
 }
-validate164.evaluated = {
+validate173.evaluated = {
   props: {
     account_snapshot_ref: true,
     as_of: true,
@@ -2345,7 +2345,7 @@ validate164.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateExecutionConfirmation = validate165;
+export const validateExecutionConfirmation = validate174;
 const schema64 = {
   description:
     'Outbound projection of a governed order intent (full operator transparency).',
@@ -2419,7 +2419,7 @@ const schema65 = {
   type: 'string',
   enum: ['not_required', 'pending', 'approved', 'rejected', 'expired'],
 };
-const schema92 = {
+const schema93 = {
   description:
     'Why a position lot exited (persisted on `quant_order_intent.exit_reason`).',
   oneOf: [
@@ -2448,7 +2448,7 @@ const schema92 = {
     },
   ],
 };
-const schema93 = {
+const schema94 = {
   type: 'string',
   enum: [
     'not_started',
@@ -2461,18 +2461,18 @@ const schema93 = {
     'manual_required',
   ],
 };
-const schema115 = { type: 'string', enum: ['buy'] };
+const schema116 = { type: 'string', enum: ['buy'] };
 const schema74 = {
   description: 'Price per share in a prediction market. Range \\[0, 1\\].',
   type: 'string',
 };
-const schema117 = {
+const schema118 = {
   description:
     'Governed runtime mode for report generation and optional execution.',
   type: 'string',
   enum: ['report_only', 'semi_auto', 'auto_execution'],
 };
-const schema122 = {
+const schema123 = {
   description: 'Governed execution-intent lifecycle state.',
   type: 'string',
   enum: [
@@ -4934,10 +4934,10 @@ const schema70 = {
       description: 'Hard limit price for the order.',
       $ref: '#/$defs/Price',
     },
-    maker_rebate_schedule: {
+    maker_rebate_terms: {
       description:
-        'Frozen independently sourced maker-rebate terms. Only a passive,\npost-only entry may carry this evidence.',
-      anyOf: [{ $ref: '#/$defs/FrozenMakerRebateSchedule' }, { type: 'null' }],
+        'Required route applicability and independently sourced Gamma terms.',
+      $ref: '#/$defs/EntryMakerRebateTerms',
     },
     max_slippage_bps: {
       description: 'Maximum tolerated slippage from the reference price.',
@@ -4971,43 +4971,16 @@ const schema70 = {
     'post_only',
     'limit_price',
     'amount',
+    'maker_rebate_terms',
     'max_slippage_bps',
     'valid_until',
   ],
 };
-const schema75 = {
-  description:
-    'Decision-time maker-rebate terms carried into the executable order.\n\nThis projection deliberately retains the independent Gamma identities and\ncurve terms needed to account for a later authenticated maker fill. It is\nnever reconstructed from a process-current catalog after the decision.',
-  type: 'object',
-  properties: {
-    available_at: { type: 'string', format: 'date-time' },
-    catalog_change_hash: { type: 'string', pattern: '^blake3:[0-9a-f]{64}$' },
-    effective_at: { type: 'string', format: 'date-time' },
-    exponent: { type: 'string' },
-    fees_enabled: { type: 'boolean' },
-    platform_rate: { type: 'string' },
-    rebate_rate: { type: 'string' },
-    schedule_hash: { type: 'string', pattern: '^blake3:[0-9a-f]{64}$' },
-    taker_only: { type: 'boolean' },
-  },
-  additionalProperties: false,
-  required: [
-    'schedule_hash',
-    'catalog_change_hash',
-    'effective_at',
-    'available_at',
-    'fees_enabled',
-    'platform_rate',
-    'exponent',
-    'taker_only',
-    'rebate_rate',
-  ],
-};
-const schema76 = {
+const schema77 = {
   description: 'Basis points (1 bps = 0.01%).',
   type: 'string',
 };
-const schema77 = {
+const schema78 = {
   description: 'Polymarket CLOB order time-in-force types.',
   oneOf: [
     {
@@ -5050,7 +5023,7 @@ const schema77 = {
     },
   ],
 };
-const schema78 = { type: 'string', enum: ['BUY', 'SELL'] };
+const schema79 = { type: 'string', enum: ['BUY', 'SELL'] };
 const schema71 = {
   description:
     'Governed intent amount. Aggressive BUY orders carry a total cash budget;\nresting orders and SELL orders carry an exact share quantity.',
@@ -5345,6 +5318,786 @@ function validate35(
   return errors === 0;
 }
 validate35.evaluated = { dynamicProps: true, dynamicItems: false };
+const schema75 = {
+  description:
+    'Route-aware maker-rebate contract frozen at recommendation and intent time.\n\nThis sum type makes route applicability and a confirmed no-program state\nexplicit; neither is represented by an ambiguous `None` or numeric zero.',
+  oneOf: [
+    {
+      type: 'object',
+      properties: {
+        state: { type: 'string', const: 'aggressive_not_applicable' },
+      },
+      additionalProperties: false,
+      required: ['state'],
+    },
+    {
+      type: 'object',
+      properties: {
+        available_at: { type: 'string', format: 'date-time' },
+        state: { type: 'string', const: 'passive_no_program' },
+        terms_hash: { type: 'string', pattern: '^blake3:[0-9a-f]{64}$' },
+      },
+      additionalProperties: false,
+      required: ['state', 'terms_hash', 'available_at'],
+    },
+    {
+      type: 'object',
+      properties: {
+        schedule: { $ref: '#/$defs/FrozenMakerRebateSchedule' },
+        state: { type: 'string', const: 'passive_program' },
+      },
+      additionalProperties: false,
+      required: ['state', 'schedule'],
+    },
+  ],
+};
+const schema76 = {
+  description:
+    'Decision-time maker-rebate terms carried into the executable order.\n\nThis projection deliberately retains the independent Gamma identities and\ncurve terms needed to account for a later authenticated maker fill. It is\nnever reconstructed from a process-current catalog after the decision.',
+  type: 'object',
+  properties: {
+    available_at: { type: 'string', format: 'date-time' },
+    exponent: { type: 'string' },
+    platform_rate: { type: 'string' },
+    rebate_rate: { type: 'string' },
+    taker_only: { type: 'boolean' },
+    terms_hash: { type: 'string', pattern: '^blake3:[0-9a-f]{64}$' },
+  },
+  additionalProperties: false,
+  required: [
+    'terms_hash',
+    'available_at',
+    'platform_rate',
+    'exponent',
+    'taker_only',
+    'rebate_rate',
+  ],
+};
+function validate37(
+  data,
+  {
+    instancePath = '',
+    parentData,
+    parentDataProperty,
+    rootData = data,
+    dynamicAnchors = {},
+  } = {},
+) {
+  let vErrors = null;
+  let errors = 0;
+  const evaluated0 = validate37.evaluated;
+  if (evaluated0.dynamicProps) {
+    evaluated0.props = undefined;
+  }
+  if (evaluated0.dynamicItems) {
+    evaluated0.items = undefined;
+  }
+  const _errs0 = errors;
+  let valid0 = false;
+  let passing0 = null;
+  const _errs1 = errors;
+  if (data && typeof data == 'object' && !Array.isArray(data)) {
+    if (data.state === undefined) {
+      const err0 = {
+        instancePath,
+        schemaPath: '#/oneOf/0/required',
+        keyword: 'required',
+        params: { missingProperty: 'state' },
+        message: "must have required property '" + 'state' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    }
+    for (const key0 in data) {
+      if (!(key0 === 'state')) {
+        const err1 = {
+          instancePath,
+          schemaPath: '#/oneOf/0/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: key0 },
+          message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err1];
+        } else {
+          vErrors.push(err1);
+        }
+        errors++;
+      }
+    }
+    if (data.state !== undefined) {
+      let data0 = data.state;
+      if (typeof data0 !== 'string') {
+        const err2 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/0/properties/state/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err2];
+        } else {
+          vErrors.push(err2);
+        }
+        errors++;
+      }
+      if ('aggressive_not_applicable' !== data0) {
+        const err3 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/0/properties/state/const',
+          keyword: 'const',
+          params: { allowedValue: 'aggressive_not_applicable' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+    }
+  } else {
+    const err4 = {
+      instancePath,
+      schemaPath: '#/oneOf/0/type',
+      keyword: 'type',
+      params: { type: 'object' },
+      message: 'must be object',
+    };
+    if (vErrors === null) {
+      vErrors = [err4];
+    } else {
+      vErrors.push(err4);
+    }
+    errors++;
+  }
+  var _valid0 = _errs1 === errors;
+  if (_valid0) {
+    valid0 = true;
+    passing0 = 0;
+    var props0 = true;
+  }
+  const _errs6 = errors;
+  if (data && typeof data == 'object' && !Array.isArray(data)) {
+    if (data.state === undefined) {
+      const err5 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'state' },
+        message: "must have required property '" + 'state' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err5];
+      } else {
+        vErrors.push(err5);
+      }
+      errors++;
+    }
+    if (data.terms_hash === undefined) {
+      const err6 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'terms_hash' },
+        message: "must have required property '" + 'terms_hash' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err6];
+      } else {
+        vErrors.push(err6);
+      }
+      errors++;
+    }
+    if (data.available_at === undefined) {
+      const err7 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'available_at' },
+        message: "must have required property '" + 'available_at' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err7];
+      } else {
+        vErrors.push(err7);
+      }
+      errors++;
+    }
+    for (const key1 in data) {
+      if (
+        !(key1 === 'available_at' || key1 === 'state' || key1 === 'terms_hash')
+      ) {
+        const err8 = {
+          instancePath,
+          schemaPath: '#/oneOf/1/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: key1 },
+          message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err8];
+        } else {
+          vErrors.push(err8);
+        }
+        errors++;
+      }
+    }
+    if (data.available_at !== undefined) {
+      let data1 = data.available_at;
+      if (typeof data1 === 'string') {
+        if (!formats2.validate(data1)) {
+          const err9 = {
+            instancePath: instancePath + '/available_at',
+            schemaPath: '#/oneOf/1/properties/available_at/format',
+            keyword: 'format',
+            params: { format: 'date-time' },
+            message: 'must match format "' + 'date-time' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err9];
+          } else {
+            vErrors.push(err9);
+          }
+          errors++;
+        }
+      } else {
+        const err10 = {
+          instancePath: instancePath + '/available_at',
+          schemaPath: '#/oneOf/1/properties/available_at/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err10];
+        } else {
+          vErrors.push(err10);
+        }
+        errors++;
+      }
+    }
+    if (data.state !== undefined) {
+      let data2 = data.state;
+      if (typeof data2 !== 'string') {
+        const err11 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/1/properties/state/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err11];
+        } else {
+          vErrors.push(err11);
+        }
+        errors++;
+      }
+      if ('passive_no_program' !== data2) {
+        const err12 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/1/properties/state/const',
+          keyword: 'const',
+          params: { allowedValue: 'passive_no_program' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err12];
+        } else {
+          vErrors.push(err12);
+        }
+        errors++;
+      }
+    }
+    if (data.terms_hash !== undefined) {
+      let data3 = data.terms_hash;
+      if (typeof data3 === 'string') {
+        if (!pattern4.test(data3)) {
+          const err13 = {
+            instancePath: instancePath + '/terms_hash',
+            schemaPath: '#/oneOf/1/properties/terms_hash/pattern',
+            keyword: 'pattern',
+            params: { pattern: '^blake3:[0-9a-f]{64}$' },
+            message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err13];
+          } else {
+            vErrors.push(err13);
+          }
+          errors++;
+        }
+      } else {
+        const err14 = {
+          instancePath: instancePath + '/terms_hash',
+          schemaPath: '#/oneOf/1/properties/terms_hash/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err14];
+        } else {
+          vErrors.push(err14);
+        }
+        errors++;
+      }
+    }
+  } else {
+    const err15 = {
+      instancePath,
+      schemaPath: '#/oneOf/1/type',
+      keyword: 'type',
+      params: { type: 'object' },
+      message: 'must be object',
+    };
+    if (vErrors === null) {
+      vErrors = [err15];
+    } else {
+      vErrors.push(err15);
+    }
+    errors++;
+  }
+  var _valid0 = _errs6 === errors;
+  if (_valid0 && valid0) {
+    valid0 = false;
+    passing0 = [passing0, 1];
+  } else {
+    if (_valid0) {
+      valid0 = true;
+      passing0 = 1;
+      if (props0 !== true) {
+        props0 = true;
+      }
+    }
+    const _errs15 = errors;
+    if (data && typeof data == 'object' && !Array.isArray(data)) {
+      if (data.state === undefined) {
+        const err16 = {
+          instancePath,
+          schemaPath: '#/oneOf/2/required',
+          keyword: 'required',
+          params: { missingProperty: 'state' },
+          message: "must have required property '" + 'state' + "'",
+        };
+        if (vErrors === null) {
+          vErrors = [err16];
+        } else {
+          vErrors.push(err16);
+        }
+        errors++;
+      }
+      if (data.schedule === undefined) {
+        const err17 = {
+          instancePath,
+          schemaPath: '#/oneOf/2/required',
+          keyword: 'required',
+          params: { missingProperty: 'schedule' },
+          message: "must have required property '" + 'schedule' + "'",
+        };
+        if (vErrors === null) {
+          vErrors = [err17];
+        } else {
+          vErrors.push(err17);
+        }
+        errors++;
+      }
+      for (const key2 in data) {
+        if (!(key2 === 'schedule' || key2 === 'state')) {
+          const err18 = {
+            instancePath,
+            schemaPath: '#/oneOf/2/additionalProperties',
+            keyword: 'additionalProperties',
+            params: { additionalProperty: key2 },
+            message: 'must NOT have additional properties',
+          };
+          if (vErrors === null) {
+            vErrors = [err18];
+          } else {
+            vErrors.push(err18);
+          }
+          errors++;
+        }
+      }
+      if (data.schedule !== undefined) {
+        let data4 = data.schedule;
+        if (data4 && typeof data4 == 'object' && !Array.isArray(data4)) {
+          if (data4.terms_hash === undefined) {
+            const err19 = {
+              instancePath: instancePath + '/schedule',
+              schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+              keyword: 'required',
+              params: { missingProperty: 'terms_hash' },
+              message: "must have required property '" + 'terms_hash' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err19];
+            } else {
+              vErrors.push(err19);
+            }
+            errors++;
+          }
+          if (data4.available_at === undefined) {
+            const err20 = {
+              instancePath: instancePath + '/schedule',
+              schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+              keyword: 'required',
+              params: { missingProperty: 'available_at' },
+              message: "must have required property '" + 'available_at' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err20];
+            } else {
+              vErrors.push(err20);
+            }
+            errors++;
+          }
+          if (data4.platform_rate === undefined) {
+            const err21 = {
+              instancePath: instancePath + '/schedule',
+              schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+              keyword: 'required',
+              params: { missingProperty: 'platform_rate' },
+              message: "must have required property '" + 'platform_rate' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err21];
+            } else {
+              vErrors.push(err21);
+            }
+            errors++;
+          }
+          if (data4.exponent === undefined) {
+            const err22 = {
+              instancePath: instancePath + '/schedule',
+              schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+              keyword: 'required',
+              params: { missingProperty: 'exponent' },
+              message: "must have required property '" + 'exponent' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err22];
+            } else {
+              vErrors.push(err22);
+            }
+            errors++;
+          }
+          if (data4.taker_only === undefined) {
+            const err23 = {
+              instancePath: instancePath + '/schedule',
+              schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+              keyword: 'required',
+              params: { missingProperty: 'taker_only' },
+              message: "must have required property '" + 'taker_only' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err23];
+            } else {
+              vErrors.push(err23);
+            }
+            errors++;
+          }
+          if (data4.rebate_rate === undefined) {
+            const err24 = {
+              instancePath: instancePath + '/schedule',
+              schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+              keyword: 'required',
+              params: { missingProperty: 'rebate_rate' },
+              message: "must have required property '" + 'rebate_rate' + "'",
+            };
+            if (vErrors === null) {
+              vErrors = [err24];
+            } else {
+              vErrors.push(err24);
+            }
+            errors++;
+          }
+          for (const key3 in data4) {
+            if (
+              !(
+                key3 === 'available_at' ||
+                key3 === 'exponent' ||
+                key3 === 'platform_rate' ||
+                key3 === 'rebate_rate' ||
+                key3 === 'taker_only' ||
+                key3 === 'terms_hash'
+              )
+            ) {
+              const err25 = {
+                instancePath: instancePath + '/schedule',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/additionalProperties',
+                keyword: 'additionalProperties',
+                params: { additionalProperty: key3 },
+                message: 'must NOT have additional properties',
+              };
+              if (vErrors === null) {
+                vErrors = [err25];
+              } else {
+                vErrors.push(err25);
+              }
+              errors++;
+            }
+          }
+          if (data4.available_at !== undefined) {
+            let data5 = data4.available_at;
+            if (typeof data5 === 'string') {
+              if (!formats2.validate(data5)) {
+                const err26 = {
+                  instancePath: instancePath + '/schedule/available_at',
+                  schemaPath:
+                    '#/$defs/FrozenMakerRebateSchedule/properties/available_at/format',
+                  keyword: 'format',
+                  params: { format: 'date-time' },
+                  message: 'must match format "' + 'date-time' + '"',
+                };
+                if (vErrors === null) {
+                  vErrors = [err26];
+                } else {
+                  vErrors.push(err26);
+                }
+                errors++;
+              }
+            } else {
+              const err27 = {
+                instancePath: instancePath + '/schedule/available_at',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/properties/available_at/type',
+                keyword: 'type',
+                params: { type: 'string' },
+                message: 'must be string',
+              };
+              if (vErrors === null) {
+                vErrors = [err27];
+              } else {
+                vErrors.push(err27);
+              }
+              errors++;
+            }
+          }
+          if (data4.exponent !== undefined) {
+            if (typeof data4.exponent !== 'string') {
+              const err28 = {
+                instancePath: instancePath + '/schedule/exponent',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/properties/exponent/type',
+                keyword: 'type',
+                params: { type: 'string' },
+                message: 'must be string',
+              };
+              if (vErrors === null) {
+                vErrors = [err28];
+              } else {
+                vErrors.push(err28);
+              }
+              errors++;
+            }
+          }
+          if (data4.platform_rate !== undefined) {
+            if (typeof data4.platform_rate !== 'string') {
+              const err29 = {
+                instancePath: instancePath + '/schedule/platform_rate',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/properties/platform_rate/type',
+                keyword: 'type',
+                params: { type: 'string' },
+                message: 'must be string',
+              };
+              if (vErrors === null) {
+                vErrors = [err29];
+              } else {
+                vErrors.push(err29);
+              }
+              errors++;
+            }
+          }
+          if (data4.rebate_rate !== undefined) {
+            if (typeof data4.rebate_rate !== 'string') {
+              const err30 = {
+                instancePath: instancePath + '/schedule/rebate_rate',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/properties/rebate_rate/type',
+                keyword: 'type',
+                params: { type: 'string' },
+                message: 'must be string',
+              };
+              if (vErrors === null) {
+                vErrors = [err30];
+              } else {
+                vErrors.push(err30);
+              }
+              errors++;
+            }
+          }
+          if (data4.taker_only !== undefined) {
+            if (typeof data4.taker_only !== 'boolean') {
+              const err31 = {
+                instancePath: instancePath + '/schedule/taker_only',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/properties/taker_only/type',
+                keyword: 'type',
+                params: { type: 'boolean' },
+                message: 'must be boolean',
+              };
+              if (vErrors === null) {
+                vErrors = [err31];
+              } else {
+                vErrors.push(err31);
+              }
+              errors++;
+            }
+          }
+          if (data4.terms_hash !== undefined) {
+            let data10 = data4.terms_hash;
+            if (typeof data10 === 'string') {
+              if (!pattern4.test(data10)) {
+                const err32 = {
+                  instancePath: instancePath + '/schedule/terms_hash',
+                  schemaPath:
+                    '#/$defs/FrozenMakerRebateSchedule/properties/terms_hash/pattern',
+                  keyword: 'pattern',
+                  params: { pattern: '^blake3:[0-9a-f]{64}$' },
+                  message:
+                    'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
+                };
+                if (vErrors === null) {
+                  vErrors = [err32];
+                } else {
+                  vErrors.push(err32);
+                }
+                errors++;
+              }
+            } else {
+              const err33 = {
+                instancePath: instancePath + '/schedule/terms_hash',
+                schemaPath:
+                  '#/$defs/FrozenMakerRebateSchedule/properties/terms_hash/type',
+                keyword: 'type',
+                params: { type: 'string' },
+                message: 'must be string',
+              };
+              if (vErrors === null) {
+                vErrors = [err33];
+              } else {
+                vErrors.push(err33);
+              }
+              errors++;
+            }
+          }
+        } else {
+          const err34 = {
+            instancePath: instancePath + '/schedule',
+            schemaPath: '#/$defs/FrozenMakerRebateSchedule/type',
+            keyword: 'type',
+            params: { type: 'object' },
+            message: 'must be object',
+          };
+          if (vErrors === null) {
+            vErrors = [err34];
+          } else {
+            vErrors.push(err34);
+          }
+          errors++;
+        }
+      }
+      if (data.state !== undefined) {
+        let data11 = data.state;
+        if (typeof data11 !== 'string') {
+          const err35 = {
+            instancePath: instancePath + '/state',
+            schemaPath: '#/oneOf/2/properties/state/type',
+            keyword: 'type',
+            params: { type: 'string' },
+            message: 'must be string',
+          };
+          if (vErrors === null) {
+            vErrors = [err35];
+          } else {
+            vErrors.push(err35);
+          }
+          errors++;
+        }
+        if ('passive_program' !== data11) {
+          const err36 = {
+            instancePath: instancePath + '/state',
+            schemaPath: '#/oneOf/2/properties/state/const',
+            keyword: 'const',
+            params: { allowedValue: 'passive_program' },
+            message: 'must be equal to constant',
+          };
+          if (vErrors === null) {
+            vErrors = [err36];
+          } else {
+            vErrors.push(err36);
+          }
+          errors++;
+        }
+      }
+    } else {
+      const err37 = {
+        instancePath,
+        schemaPath: '#/oneOf/2/type',
+        keyword: 'type',
+        params: { type: 'object' },
+        message: 'must be object',
+      };
+      if (vErrors === null) {
+        vErrors = [err37];
+      } else {
+        vErrors.push(err37);
+      }
+      errors++;
+    }
+    var _valid0 = _errs15 === errors;
+    if (_valid0 && valid0) {
+      valid0 = false;
+      passing0 = [passing0, 2];
+    } else {
+      if (_valid0) {
+        valid0 = true;
+        passing0 = 2;
+        if (props0 !== true) {
+          props0 = true;
+        }
+      }
+    }
+  }
+  if (!valid0) {
+    const err38 = {
+      instancePath,
+      schemaPath: '#/oneOf',
+      keyword: 'oneOf',
+      params: { passingSchemas: passing0 },
+      message: 'must match exactly one schema in oneOf',
+    };
+    if (vErrors === null) {
+      vErrors = [err38];
+    } else {
+      vErrors.push(err38);
+    }
+    errors++;
+  } else {
+    errors = _errs0;
+    if (vErrors !== null) {
+      if (_errs0) {
+        vErrors.length = _errs0;
+      } else {
+        vErrors = null;
+      }
+    }
+  }
+  validate37.errors = vErrors;
+  evaluated0.props = props0;
+  return errors === 0;
+}
+validate37.evaluated = { dynamicProps: true, dynamicItems: false };
 function validate34(
   data,
   {
@@ -5455,13 +6208,13 @@ function validate34(
       }
       errors++;
     }
-    if (data.max_slippage_bps === undefined) {
+    if (data.maker_rebate_terms === undefined) {
       const err6 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'max_slippage_bps' },
-        message: "must have required property '" + 'max_slippage_bps' + "'",
+        params: { missingProperty: 'maker_rebate_terms' },
+        message: "must have required property '" + 'maker_rebate_terms' + "'",
       };
       if (vErrors === null) {
         vErrors = [err6];
@@ -5470,13 +6223,13 @@ function validate34(
       }
       errors++;
     }
-    if (data.valid_until === undefined) {
+    if (data.max_slippage_bps === undefined) {
       const err7 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'valid_until' },
-        message: "must have required property '" + 'valid_until' + "'",
+        params: { missingProperty: 'max_slippage_bps' },
+        message: "must have required property '" + 'max_slippage_bps' + "'",
       };
       if (vErrors === null) {
         vErrors = [err7];
@@ -5485,9 +6238,24 @@ function validate34(
       }
       errors++;
     }
+    if (data.valid_until === undefined) {
+      const err8 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'valid_until' },
+        message: "must have required property '" + 'valid_until' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err8];
+      } else {
+        vErrors.push(err8);
+      }
+      errors++;
+    }
     for (const key0 in data) {
       if (!func1.call(schema70.properties, key0)) {
-        const err8 = {
+        const err9 = {
           instancePath,
           schemaPath: '#/additionalProperties',
           keyword: 'additionalProperties',
@@ -5495,9 +6263,9 @@ function validate34(
           message: 'must NOT have additional properties',
         };
         if (vErrors === null) {
-          vErrors = [err8];
+          vErrors = [err9];
         } else {
-          vErrors.push(err8);
+          vErrors.push(err9);
         }
         errors++;
       }
@@ -5521,7 +6289,7 @@ function validate34(
     }
     if (data.limit_price !== undefined) {
       if (typeof data.limit_price !== 'string') {
-        const err9 = {
+        const err10 = {
           instancePath: instancePath + '/limit_price',
           schemaPath: '#/$defs/Price/type',
           keyword: 'type',
@@ -5529,117 +6297,136 @@ function validate34(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err9];
+          vErrors = [err10];
         } else {
-          vErrors.push(err9);
+          vErrors.push(err10);
         }
         errors++;
       }
     }
-    if (data.maker_rebate_schedule !== undefined) {
-      let data2 = data.maker_rebate_schedule;
-      const _errs7 = errors;
-      let valid2 = false;
-      const _errs8 = errors;
-      if (data2 && typeof data2 == 'object' && !Array.isArray(data2)) {
-        if (data2.schedule_hash === undefined) {
-          const err10 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'schedule_hash' },
-            message: "must have required property '" + 'schedule_hash' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err10];
-          } else {
-            vErrors.push(err10);
-          }
-          errors++;
+    if (data.maker_rebate_terms !== undefined) {
+      if (
+        !validate37(data.maker_rebate_terms, {
+          instancePath: instancePath + '/maker_rebate_terms',
+          parentData: data,
+          parentDataProperty: 'maker_rebate_terms',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate37.errors
+            : vErrors.concat(validate37.errors);
+        errors = vErrors.length;
+      }
+    }
+    if (data.max_slippage_bps !== undefined) {
+      if (typeof data.max_slippage_bps !== 'string') {
+        const err11 = {
+          instancePath: instancePath + '/max_slippage_bps',
+          schemaPath: '#/$defs/Bps/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err11];
+        } else {
+          vErrors.push(err11);
         }
-        if (data2.catalog_change_hash === undefined) {
-          const err11 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'catalog_change_hash' },
-            message:
-              "must have required property '" + 'catalog_change_hash' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err11];
-          } else {
-            vErrors.push(err11);
-          }
-          errors++;
+        errors++;
+      }
+    }
+    if (data.order_type !== undefined) {
+      let data4 = data.order_type;
+      const _errs12 = errors;
+      let valid4 = false;
+      let passing0 = null;
+      const _errs13 = errors;
+      if (typeof data4 !== 'string') {
+        const err12 = {
+          instancePath: instancePath + '/order_type',
+          schemaPath: '#/$defs/OrderType/oneOf/0/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err12];
+        } else {
+          vErrors.push(err12);
         }
-        if (data2.effective_at === undefined) {
-          const err12 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'effective_at' },
-            message: "must have required property '" + 'effective_at' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err12];
-          } else {
-            vErrors.push(err12);
-          }
-          errors++;
+        errors++;
+      }
+      if ('fok' !== data4) {
+        const err13 = {
+          instancePath: instancePath + '/order_type',
+          schemaPath: '#/$defs/OrderType/oneOf/0/const',
+          keyword: 'const',
+          params: { allowedValue: 'fok' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err13];
+        } else {
+          vErrors.push(err13);
         }
-        if (data2.available_at === undefined) {
-          const err13 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'available_at' },
-            message: "must have required property '" + 'available_at' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err13];
-          } else {
-            vErrors.push(err13);
-          }
-          errors++;
+        errors++;
+      }
+      var _valid0 = _errs13 === errors;
+      if (_valid0) {
+        valid4 = true;
+        passing0 = 0;
+      }
+      const _errs15 = errors;
+      if (typeof data4 !== 'string') {
+        const err14 = {
+          instancePath: instancePath + '/order_type',
+          schemaPath: '#/$defs/OrderType/oneOf/1/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err14];
+        } else {
+          vErrors.push(err14);
         }
-        if (data2.fees_enabled === undefined) {
-          const err14 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'fees_enabled' },
-            message: "must have required property '" + 'fees_enabled' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err14];
-          } else {
-            vErrors.push(err14);
-          }
-          errors++;
+        errors++;
+      }
+      if ('fak' !== data4) {
+        const err15 = {
+          instancePath: instancePath + '/order_type',
+          schemaPath: '#/$defs/OrderType/oneOf/1/const',
+          keyword: 'const',
+          params: { allowedValue: 'fak' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err15];
+        } else {
+          vErrors.push(err15);
         }
-        if (data2.platform_rate === undefined) {
-          const err15 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'platform_rate' },
-            message: "must have required property '" + 'platform_rate' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err15];
-          } else {
-            vErrors.push(err15);
-          }
-          errors++;
+        errors++;
+      }
+      var _valid0 = _errs15 === errors;
+      if (_valid0 && valid4) {
+        valid4 = false;
+        passing0 = [passing0, 1];
+      } else {
+        if (_valid0) {
+          valid4 = true;
+          passing0 = 1;
         }
-        if (data2.exponent === undefined) {
+        const _errs17 = errors;
+        if (typeof data4 !== 'string') {
           const err16 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'exponent' },
-            message: "must have required property '" + 'exponent' + "'",
+            instancePath: instancePath + '/order_type',
+            schemaPath: '#/$defs/OrderType/oneOf/2/type',
+            keyword: 'type',
+            params: { type: 'string' },
+            message: 'must be string',
           };
           if (vErrors === null) {
             vErrors = [err16];
@@ -5648,13 +6435,13 @@ function validate34(
           }
           errors++;
         }
-        if (data2.taker_only === undefined) {
+        if ('gtc' !== data4) {
           const err17 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'taker_only' },
-            message: "must have required property '" + 'taker_only' + "'",
+            instancePath: instancePath + '/order_type',
+            schemaPath: '#/$defs/OrderType/oneOf/2/const',
+            keyword: 'const',
+            params: { allowedValue: 'gtc' },
+            message: 'must be equal to constant',
           };
           if (vErrors === null) {
             vErrors = [err17];
@@ -5663,485 +6450,19 @@ function validate34(
           }
           errors++;
         }
-        if (data2.rebate_rate === undefined) {
-          const err18 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'rebate_rate' },
-            message: "must have required property '" + 'rebate_rate' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err18];
-          } else {
-            vErrors.push(err18);
-          }
-          errors++;
-        }
-        for (const key1 in data2) {
-          if (!func1.call(schema75.properties, key1)) {
-            const err19 = {
-              instancePath: instancePath + '/maker_rebate_schedule',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/additionalProperties',
-              keyword: 'additionalProperties',
-              params: { additionalProperty: key1 },
-              message: 'must NOT have additional properties',
-            };
-            if (vErrors === null) {
-              vErrors = [err19];
-            } else {
-              vErrors.push(err19);
-            }
-            errors++;
-          }
-        }
-        if (data2.available_at !== undefined) {
-          let data3 = data2.available_at;
-          if (typeof data3 === 'string') {
-            if (!formats2.validate(data3)) {
-              const err20 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/available_at',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/available_at/format',
-                keyword: 'format',
-                params: { format: 'date-time' },
-                message: 'must match format "' + 'date-time' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err20];
-              } else {
-                vErrors.push(err20);
-              }
-              errors++;
-            }
-          } else {
-            const err21 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/available_at',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/available_at/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err21];
-            } else {
-              vErrors.push(err21);
-            }
-            errors++;
-          }
-        }
-        if (data2.catalog_change_hash !== undefined) {
-          let data4 = data2.catalog_change_hash;
-          if (typeof data4 === 'string') {
-            if (!pattern4.test(data4)) {
-              const err22 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/catalog_change_hash',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/catalog_change_hash/pattern',
-                keyword: 'pattern',
-                params: { pattern: '^blake3:[0-9a-f]{64}$' },
-                message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err22];
-              } else {
-                vErrors.push(err22);
-              }
-              errors++;
-            }
-          } else {
-            const err23 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/catalog_change_hash',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/catalog_change_hash/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err23];
-            } else {
-              vErrors.push(err23);
-            }
-            errors++;
-          }
-        }
-        if (data2.effective_at !== undefined) {
-          let data5 = data2.effective_at;
-          if (typeof data5 === 'string') {
-            if (!formats2.validate(data5)) {
-              const err24 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/effective_at',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/effective_at/format',
-                keyword: 'format',
-                params: { format: 'date-time' },
-                message: 'must match format "' + 'date-time' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err24];
-              } else {
-                vErrors.push(err24);
-              }
-              errors++;
-            }
-          } else {
-            const err25 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/effective_at',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/effective_at/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err25];
-            } else {
-              vErrors.push(err25);
-            }
-            errors++;
-          }
-        }
-        if (data2.exponent !== undefined) {
-          if (typeof data2.exponent !== 'string') {
-            const err26 = {
-              instancePath: instancePath + '/maker_rebate_schedule/exponent',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/exponent/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err26];
-            } else {
-              vErrors.push(err26);
-            }
-            errors++;
-          }
-        }
-        if (data2.fees_enabled !== undefined) {
-          if (typeof data2.fees_enabled !== 'boolean') {
-            const err27 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/fees_enabled',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/fees_enabled/type',
-              keyword: 'type',
-              params: { type: 'boolean' },
-              message: 'must be boolean',
-            };
-            if (vErrors === null) {
-              vErrors = [err27];
-            } else {
-              vErrors.push(err27);
-            }
-            errors++;
-          }
-        }
-        if (data2.platform_rate !== undefined) {
-          if (typeof data2.platform_rate !== 'string') {
-            const err28 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/platform_rate',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/platform_rate/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err28];
-            } else {
-              vErrors.push(err28);
-            }
-            errors++;
-          }
-        }
-        if (data2.rebate_rate !== undefined) {
-          if (typeof data2.rebate_rate !== 'string') {
-            const err29 = {
-              instancePath: instancePath + '/maker_rebate_schedule/rebate_rate',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/rebate_rate/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err29];
-            } else {
-              vErrors.push(err29);
-            }
-            errors++;
-          }
-        }
-        if (data2.schedule_hash !== undefined) {
-          let data10 = data2.schedule_hash;
-          if (typeof data10 === 'string') {
-            if (!pattern4.test(data10)) {
-              const err30 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/schedule_hash',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/schedule_hash/pattern',
-                keyword: 'pattern',
-                params: { pattern: '^blake3:[0-9a-f]{64}$' },
-                message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err30];
-              } else {
-                vErrors.push(err30);
-              }
-              errors++;
-            }
-          } else {
-            const err31 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/schedule_hash',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/schedule_hash/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err31];
-            } else {
-              vErrors.push(err31);
-            }
-            errors++;
-          }
-        }
-        if (data2.taker_only !== undefined) {
-          if (typeof data2.taker_only !== 'boolean') {
-            const err32 = {
-              instancePath: instancePath + '/maker_rebate_schedule/taker_only',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/taker_only/type',
-              keyword: 'type',
-              params: { type: 'boolean' },
-              message: 'must be boolean',
-            };
-            if (vErrors === null) {
-              vErrors = [err32];
-            } else {
-              vErrors.push(err32);
-            }
-            errors++;
-          }
-        }
-      } else {
-        const err33 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/$defs/FrozenMakerRebateSchedule/type',
-          keyword: 'type',
-          params: { type: 'object' },
-          message: 'must be object',
-        };
-        if (vErrors === null) {
-          vErrors = [err33];
-        } else {
-          vErrors.push(err33);
-        }
-        errors++;
-      }
-      var _valid0 = _errs8 === errors;
-      valid2 = valid2 || _valid0;
-      const _errs30 = errors;
-      if (data2 !== null) {
-        const err34 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/properties/maker_rebate_schedule/anyOf/1/type',
-          keyword: 'type',
-          params: { type: 'null' },
-          message: 'must be null',
-        };
-        if (vErrors === null) {
-          vErrors = [err34];
-        } else {
-          vErrors.push(err34);
-        }
-        errors++;
-      }
-      var _valid0 = _errs30 === errors;
-      valid2 = valid2 || _valid0;
-      if (!valid2) {
-        const err35 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/properties/maker_rebate_schedule/anyOf',
-          keyword: 'anyOf',
-          params: {},
-          message: 'must match a schema in anyOf',
-        };
-        if (vErrors === null) {
-          vErrors = [err35];
-        } else {
-          vErrors.push(err35);
-        }
-        errors++;
-      } else {
-        errors = _errs7;
-        if (vErrors !== null) {
-          if (_errs7) {
-            vErrors.length = _errs7;
-          } else {
-            vErrors = null;
-          }
-        }
-      }
-    }
-    if (data.max_slippage_bps !== undefined) {
-      if (typeof data.max_slippage_bps !== 'string') {
-        const err36 = {
-          instancePath: instancePath + '/max_slippage_bps',
-          schemaPath: '#/$defs/Bps/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err36];
-        } else {
-          vErrors.push(err36);
-        }
-        errors++;
-      }
-    }
-    if (data.order_type !== undefined) {
-      let data13 = data.order_type;
-      const _errs37 = errors;
-      let valid7 = false;
-      let passing0 = null;
-      const _errs38 = errors;
-      if (typeof data13 !== 'string') {
-        const err37 = {
-          instancePath: instancePath + '/order_type',
-          schemaPath: '#/$defs/OrderType/oneOf/0/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err37];
-        } else {
-          vErrors.push(err37);
-        }
-        errors++;
-      }
-      if ('fok' !== data13) {
-        const err38 = {
-          instancePath: instancePath + '/order_type',
-          schemaPath: '#/$defs/OrderType/oneOf/0/const',
-          keyword: 'const',
-          params: { allowedValue: 'fok' },
-          message: 'must be equal to constant',
-        };
-        if (vErrors === null) {
-          vErrors = [err38];
-        } else {
-          vErrors.push(err38);
-        }
-        errors++;
-      }
-      var _valid1 = _errs38 === errors;
-      if (_valid1) {
-        valid7 = true;
-        passing0 = 0;
-      }
-      const _errs40 = errors;
-      if (typeof data13 !== 'string') {
-        const err39 = {
-          instancePath: instancePath + '/order_type',
-          schemaPath: '#/$defs/OrderType/oneOf/1/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err39];
-        } else {
-          vErrors.push(err39);
-        }
-        errors++;
-      }
-      if ('fak' !== data13) {
-        const err40 = {
-          instancePath: instancePath + '/order_type',
-          schemaPath: '#/$defs/OrderType/oneOf/1/const',
-          keyword: 'const',
-          params: { allowedValue: 'fak' },
-          message: 'must be equal to constant',
-        };
-        if (vErrors === null) {
-          vErrors = [err40];
-        } else {
-          vErrors.push(err40);
-        }
-        errors++;
-      }
-      var _valid1 = _errs40 === errors;
-      if (_valid1 && valid7) {
-        valid7 = false;
-        passing0 = [passing0, 1];
-      } else {
-        if (_valid1) {
-          valid7 = true;
-          passing0 = 1;
-        }
-        const _errs42 = errors;
-        if (typeof data13 !== 'string') {
-          const err41 = {
-            instancePath: instancePath + '/order_type',
-            schemaPath: '#/$defs/OrderType/oneOf/2/type',
-            keyword: 'type',
-            params: { type: 'string' },
-            message: 'must be string',
-          };
-          if (vErrors === null) {
-            vErrors = [err41];
-          } else {
-            vErrors.push(err41);
-          }
-          errors++;
-        }
-        if ('gtc' !== data13) {
-          const err42 = {
-            instancePath: instancePath + '/order_type',
-            schemaPath: '#/$defs/OrderType/oneOf/2/const',
-            keyword: 'const',
-            params: { allowedValue: 'gtc' },
-            message: 'must be equal to constant',
-          };
-          if (vErrors === null) {
-            vErrors = [err42];
-          } else {
-            vErrors.push(err42);
-          }
-          errors++;
-        }
-        var _valid1 = _errs42 === errors;
-        if (_valid1 && valid7) {
-          valid7 = false;
+        var _valid0 = _errs17 === errors;
+        if (_valid0 && valid4) {
+          valid4 = false;
           passing0 = [passing0, 2];
         } else {
-          if (_valid1) {
-            valid7 = true;
+          if (_valid0) {
+            valid4 = true;
             passing0 = 2;
           }
-          const _errs44 = errors;
-          if (data13 && typeof data13 == 'object' && !Array.isArray(data13)) {
-            if (data13.gtd === undefined) {
-              const err43 = {
+          const _errs19 = errors;
+          if (data4 && typeof data4 == 'object' && !Array.isArray(data4)) {
+            if (data4.gtd === undefined) {
+              const err18 = {
                 instancePath: instancePath + '/order_type',
                 schemaPath: '#/$defs/OrderType/oneOf/3/required',
                 keyword: 'required',
@@ -6149,38 +6470,34 @@ function validate34(
                 message: "must have required property '" + 'gtd' + "'",
               };
               if (vErrors === null) {
-                vErrors = [err43];
+                vErrors = [err18];
               } else {
-                vErrors.push(err43);
+                vErrors.push(err18);
               }
               errors++;
             }
-            for (const key2 in data13) {
-              if (!(key2 === 'gtd')) {
-                const err44 = {
+            for (const key1 in data4) {
+              if (!(key1 === 'gtd')) {
+                const err19 = {
                   instancePath: instancePath + '/order_type',
                   schemaPath: '#/$defs/OrderType/oneOf/3/additionalProperties',
                   keyword: 'additionalProperties',
-                  params: { additionalProperty: key2 },
+                  params: { additionalProperty: key1 },
                   message: 'must NOT have additional properties',
                 };
                 if (vErrors === null) {
-                  vErrors = [err44];
+                  vErrors = [err19];
                 } else {
-                  vErrors.push(err44);
+                  vErrors.push(err19);
                 }
                 errors++;
               }
             }
-            if (data13.gtd !== undefined) {
-              let data14 = data13.gtd;
-              if (
-                data14 &&
-                typeof data14 == 'object' &&
-                !Array.isArray(data14)
-              ) {
-                if (data14.expiration === undefined) {
-                  const err45 = {
+            if (data4.gtd !== undefined) {
+              let data5 = data4.gtd;
+              if (data5 && typeof data5 == 'object' && !Array.isArray(data5)) {
+                if (data5.expiration === undefined) {
+                  const err20 = {
                     instancePath: instancePath + '/order_type/gtd',
                     schemaPath:
                       '#/$defs/OrderType/oneOf/3/properties/gtd/required',
@@ -6190,23 +6507,23 @@ function validate34(
                       "must have required property '" + 'expiration' + "'",
                   };
                   if (vErrors === null) {
-                    vErrors = [err45];
+                    vErrors = [err20];
                   } else {
-                    vErrors.push(err45);
+                    vErrors.push(err20);
                   }
                   errors++;
                 }
-                if (data14.expiration !== undefined) {
-                  let data15 = data14.expiration;
+                if (data5.expiration !== undefined) {
+                  let data6 = data5.expiration;
                   if (
                     !(
-                      typeof data15 == 'number' &&
-                      !(data15 % 1) &&
-                      !isNaN(data15) &&
-                      isFinite(data15)
+                      typeof data6 == 'number' &&
+                      !(data6 % 1) &&
+                      !isNaN(data6) &&
+                      isFinite(data6)
                     )
                   ) {
-                    const err46 = {
+                    const err21 = {
                       instancePath: instancePath + '/order_type/gtd/expiration',
                       schemaPath:
                         '#/$defs/OrderType/oneOf/3/properties/gtd/properties/expiration/type',
@@ -6215,15 +6532,15 @@ function validate34(
                       message: 'must be integer',
                     };
                     if (vErrors === null) {
-                      vErrors = [err46];
+                      vErrors = [err21];
                     } else {
-                      vErrors.push(err46);
+                      vErrors.push(err21);
                     }
                     errors++;
                   }
-                  if (typeof data15 == 'number' && isFinite(data15)) {
-                    if (data15 > 9007199254740991 || isNaN(data15)) {
-                      const err47 = {
+                  if (typeof data6 == 'number' && isFinite(data6)) {
+                    if (data6 > 9007199254740991 || isNaN(data6)) {
+                      const err22 = {
                         instancePath:
                           instancePath + '/order_type/gtd/expiration',
                         schemaPath:
@@ -6233,14 +6550,14 @@ function validate34(
                         message: 'must be <= 9007199254740991',
                       };
                       if (vErrors === null) {
-                        vErrors = [err47];
+                        vErrors = [err22];
                       } else {
-                        vErrors.push(err47);
+                        vErrors.push(err22);
                       }
                       errors++;
                     }
-                    if (data15 < 0 || isNaN(data15)) {
-                      const err48 = {
+                    if (data6 < 0 || isNaN(data6)) {
+                      const err23 = {
                         instancePath:
                           instancePath + '/order_type/gtd/expiration',
                         schemaPath:
@@ -6250,16 +6567,16 @@ function validate34(
                         message: 'must be >= 0',
                       };
                       if (vErrors === null) {
-                        vErrors = [err48];
+                        vErrors = [err23];
                       } else {
-                        vErrors.push(err48);
+                        vErrors.push(err23);
                       }
                       errors++;
                     }
                   }
                 }
               } else {
-                const err49 = {
+                const err24 = {
                   instancePath: instancePath + '/order_type/gtd',
                   schemaPath: '#/$defs/OrderType/oneOf/3/properties/gtd/type',
                   keyword: 'type',
@@ -6267,15 +6584,15 @@ function validate34(
                   message: 'must be object',
                 };
                 if (vErrors === null) {
-                  vErrors = [err49];
+                  vErrors = [err24];
                 } else {
-                  vErrors.push(err49);
+                  vErrors.push(err24);
                 }
                 errors++;
               }
             }
           } else {
-            const err50 = {
+            const err25 = {
               instancePath: instancePath + '/order_type',
               schemaPath: '#/$defs/OrderType/oneOf/3/type',
               keyword: 'type',
@@ -6283,26 +6600,26 @@ function validate34(
               message: 'must be object',
             };
             if (vErrors === null) {
-              vErrors = [err50];
+              vErrors = [err25];
             } else {
-              vErrors.push(err50);
+              vErrors.push(err25);
             }
             errors++;
           }
-          var _valid1 = _errs44 === errors;
-          if (_valid1 && valid7) {
-            valid7 = false;
+          var _valid0 = _errs19 === errors;
+          if (_valid0 && valid4) {
+            valid4 = false;
             passing0 = [passing0, 3];
           } else {
-            if (_valid1) {
-              valid7 = true;
+            if (_valid0) {
+              valid4 = true;
               passing0 = 3;
             }
           }
         }
       }
-      if (!valid7) {
-        const err51 = {
+      if (!valid4) {
+        const err26 = {
           instancePath: instancePath + '/order_type',
           schemaPath: '#/$defs/OrderType/oneOf',
           keyword: 'oneOf',
@@ -6310,16 +6627,16 @@ function validate34(
           message: 'must match exactly one schema in oneOf',
         };
         if (vErrors === null) {
-          vErrors = [err51];
+          vErrors = [err26];
         } else {
-          vErrors.push(err51);
+          vErrors.push(err26);
         }
         errors++;
       } else {
-        errors = _errs37;
+        errors = _errs12;
         if (vErrors !== null) {
-          if (_errs37) {
-            vErrors.length = _errs37;
+          if (_errs12) {
+            vErrors.length = _errs12;
           } else {
             vErrors = null;
           }
@@ -6328,7 +6645,7 @@ function validate34(
     }
     if (data.post_only !== undefined) {
       if (typeof data.post_only !== 'boolean') {
-        const err52 = {
+        const err27 = {
           instancePath: instancePath + '/post_only',
           schemaPath: '#/properties/post_only/type',
           keyword: 'type',
@@ -6336,17 +6653,17 @@ function validate34(
           message: 'must be boolean',
         };
         if (vErrors === null) {
-          vErrors = [err52];
+          vErrors = [err27];
         } else {
-          vErrors.push(err52);
+          vErrors.push(err27);
         }
         errors++;
       }
     }
     if (data.side !== undefined) {
-      let data17 = data.side;
-      if (typeof data17 !== 'string') {
-        const err53 = {
+      let data8 = data.side;
+      if (typeof data8 !== 'string') {
+        const err28 = {
           instancePath: instancePath + '/side',
           schemaPath: '#/$defs/Side/type',
           keyword: 'type',
@@ -6354,31 +6671,31 @@ function validate34(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err53];
+          vErrors = [err28];
         } else {
-          vErrors.push(err53);
+          vErrors.push(err28);
         }
         errors++;
       }
-      if (!(data17 === 'BUY' || data17 === 'SELL')) {
-        const err54 = {
+      if (!(data8 === 'BUY' || data8 === 'SELL')) {
+        const err29 = {
           instancePath: instancePath + '/side',
           schemaPath: '#/$defs/Side/enum',
           keyword: 'enum',
-          params: { allowedValues: schema78.enum },
+          params: { allowedValues: schema79.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
-          vErrors = [err54];
+          vErrors = [err29];
         } else {
-          vErrors.push(err54);
+          vErrors.push(err29);
         }
         errors++;
       }
     }
     if (data.token_id !== undefined) {
       if (typeof data.token_id !== 'string') {
-        const err55 = {
+        const err30 = {
           instancePath: instancePath + '/token_id',
           schemaPath: '#/properties/token_id/type',
           keyword: 'type',
@@ -6386,18 +6703,18 @@ function validate34(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err55];
+          vErrors = [err30];
         } else {
-          vErrors.push(err55);
+          vErrors.push(err30);
         }
         errors++;
       }
     }
     if (data.valid_until !== undefined) {
-      let data19 = data.valid_until;
-      if (typeof data19 === 'string') {
-        if (!formats2.validate(data19)) {
-          const err56 = {
+      let data10 = data.valid_until;
+      if (typeof data10 === 'string') {
+        if (!formats2.validate(data10)) {
+          const err31 = {
             instancePath: instancePath + '/valid_until',
             schemaPath: '#/properties/valid_until/format',
             keyword: 'format',
@@ -6405,14 +6722,14 @@ function validate34(
             message: 'must match format "' + 'date-time' + '"',
           };
           if (vErrors === null) {
-            vErrors = [err56];
+            vErrors = [err31];
           } else {
-            vErrors.push(err56);
+            vErrors.push(err31);
           }
           errors++;
         }
       } else {
-        const err57 = {
+        const err32 = {
           instancePath: instancePath + '/valid_until',
           schemaPath: '#/properties/valid_until/type',
           keyword: 'type',
@@ -6420,15 +6737,15 @@ function validate34(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err57];
+          vErrors = [err32];
         } else {
-          vErrors.push(err57);
+          vErrors.push(err32);
         }
         errors++;
       }
     }
   } else {
-    const err58 = {
+    const err33 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -6436,9 +6753,9 @@ function validate34(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err58];
+      vErrors = [err33];
     } else {
-      vErrors.push(err58);
+      vErrors.push(err33);
     }
     errors++;
   }
@@ -6450,7 +6767,7 @@ validate34.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema79 = {
+const schema80 = {
   description:
     "Authoritative read-time projection of one lot's governed exit monitor.",
   type: 'object',
@@ -6482,7 +6799,7 @@ const schema79 = {
   },
   required: ['state', 'book_fresh', 'cumulative_exited_shares'],
 };
-const schema83 = {
+const schema84 = {
   description:
     'Latest re-inference evidence persisted on the intent at the governed cadence.',
   type: 'object',
@@ -6516,18 +6833,18 @@ const schema83 = {
     'shadow',
   ],
 };
-const schema86 = {
+const schema87 = {
   description:
     'Statistical probability, confidence, or model weight stored losslessly.',
   type: 'string',
 };
-const schema87 = {
+const schema88 = {
   description:
     'Persisted classification of the latest governed thesis re-inference.',
   type: 'string',
   enum: ['holds', 'thesis_invalidated', 'indeterminate'],
 };
-function validate39(
+function validate41(
   data,
   {
     instancePath = '',
@@ -6539,7 +6856,7 @@ function validate39(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate39.evaluated;
+  const evaluated0 = validate41.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -6728,7 +7045,7 @@ function validate39(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema83.properties, key0)) {
+      if (!func1.call(schema84.properties, key0)) {
         const err12 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -7027,7 +7344,7 @@ function validate39(
           instancePath: instancePath + '/verdict',
           schemaPath: '#/$defs/ExitReinferenceVerdictKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema87.enum },
+          params: { allowedValues: schema88.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -7053,15 +7370,15 @@ function validate39(
     }
     errors++;
   }
-  validate39.errors = vErrors;
+  validate41.errors = vErrors;
   return errors === 0;
 }
-validate39.evaluated = {
+validate41.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema88 = {
+const schema89 = {
   description:
     'Exact next cumulative scale-out projection shared by monitor and read APIs.',
   type: 'object',
@@ -7078,7 +7395,7 @@ const schema88 = {
     'delta_shares',
   ],
 };
-function validate41(
+function validate43(
   data,
   {
     instancePath = '',
@@ -7090,7 +7407,7 @@ function validate41(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate41.evaluated;
+  const evaluated0 = validate43.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -7242,10 +7559,10 @@ function validate41(
     }
     errors++;
   }
-  validate41.errors = vErrors;
+  validate43.errors = vErrors;
   return errors === 0;
 }
-validate41.evaluated = {
+validate43.evaluated = {
   props: {
     delta_shares: true,
     target_cumulative_exit_pct: true,
@@ -7255,7 +7572,7 @@ validate41.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate38(
+function validate40(
   data,
   {
     instancePath = '',
@@ -7267,7 +7584,7 @@ function validate38(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate38.evaluated;
+  const evaluated0 = validate40.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -7336,7 +7653,7 @@ function validate38(
           instancePath: instancePath + '/book_age_ms',
           schemaPath: '#/properties/book_age_ms/type',
           keyword: 'type',
-          params: { type: schema79.properties.book_age_ms.type },
+          params: { type: schema80.properties.book_age_ms.type },
           message: 'must be integer,null',
         };
         if (vErrors === null) {
@@ -7403,7 +7720,7 @@ function validate38(
           instancePath: instancePath + '/book_observed_at',
           schemaPath: '#/properties/book_observed_at/type',
           keyword: 'type',
-          params: { type: schema79.properties.book_observed_at.type },
+          params: { type: schema80.properties.book_observed_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -7438,7 +7755,7 @@ function validate38(
           instancePath: instancePath + '/cumulative_exit_pct',
           schemaPath: '#/properties/cumulative_exit_pct/type',
           keyword: 'type',
-          params: { type: schema79.properties.cumulative_exit_pct.type },
+          params: { type: schema80.properties.cumulative_exit_pct.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -7603,7 +7920,7 @@ function validate38(
           instancePath: instancePath + '/last_check_at',
           schemaPath: '#/properties/last_check_at/type',
           keyword: 'type',
-          params: { type: schema79.properties.last_check_at.type },
+          params: { type: schema80.properties.last_check_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -7637,7 +7954,7 @@ function validate38(
       let valid6 = false;
       const _errs30 = errors;
       if (
-        !validate39(data8, {
+        !validate41(data8, {
           instancePath: instancePath + '/latest_reinference',
           parentData: data,
           parentDataProperty: 'latest_reinference',
@@ -7647,8 +7964,8 @@ function validate38(
       ) {
         vErrors =
           vErrors === null
-            ? validate39.errors
-            : vErrors.concat(validate39.errors);
+            ? validate41.errors
+            : vErrors.concat(validate41.errors);
         errors = vErrors.length;
       }
       var _valid2 = _errs30 === errors;
@@ -7703,7 +8020,7 @@ function validate38(
           instancePath: instancePath + '/next_check_at',
           schemaPath: '#/properties/next_check_at/type',
           keyword: 'type',
-          params: { type: schema79.properties.next_check_at.type },
+          params: { type: schema80.properties.next_check_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -7737,7 +8054,7 @@ function validate38(
       let valid7 = false;
       const _errs37 = errors;
       if (
-        !validate41(data10, {
+        !validate43(data10, {
           instancePath: instancePath + '/next_scale_out',
           parentData: data,
           parentDataProperty: 'next_scale_out',
@@ -7747,8 +8064,8 @@ function validate38(
       ) {
         vErrors =
           vErrors === null
-            ? validate41.errors
-            : vErrors.concat(validate41.errors);
+            ? validate43.errors
+            : vErrors.concat(validate43.errors);
         errors = vErrors.length;
       }
       var _valid3 = _errs37 === errors;
@@ -7912,7 +8229,7 @@ function validate38(
           instancePath: instancePath + '/reason',
           schemaPath: '#/$defs/ExitReason/oneOf/0/enum',
           keyword: 'enum',
-          params: { allowedValues: schema92.oneOf[0].enum },
+          params: { allowedValues: schema93.oneOf[0].enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -8070,7 +8387,7 @@ function validate38(
           instancePath: instancePath + '/state',
           schemaPath: '#/$defs/ExitState/enum',
           keyword: 'enum',
-          params: { allowedValues: schema93.enum },
+          params: { allowedValues: schema94.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -8096,10 +8413,10 @@ function validate38(
     }
     errors++;
   }
-  validate38.errors = vErrors;
+  validate40.errors = vErrors;
   return errors === 0;
 }
-validate38.evaluated = {
+validate40.evaluated = {
   props: {
     book_age_ms: true,
     book_fresh: true,
@@ -8119,7 +8436,7 @@ validate38.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema94 = {
+const schema95 = {
   description:
     "The exit policy an approved intent freezes after the entry fills.\n\nA **faithful, complete** projection of the recommendation's `ExitPlan` — the\nexit monitor evaluates every trigger deterministically from this frozen\ncontract and never re-reads the (possibly expired/revoked) recommendation\nfor the price/time/trailing/partial ladder. `entry_reference_price` and\n`entry_composite_score` are the frozen entry-thesis baselines used for\npercentage-based stops/targets and signal-degradation re-inference.",
   type: 'object',
@@ -8209,7 +8526,7 @@ const schema94 = {
     'entry_composite_score',
   ],
 };
-const schema101 = {
+const schema102 = {
   description:
     'Whether a resolved hold-to-resolution lot is redeemed by the system or\nleft for an operator.',
   oneOf: [
@@ -8226,7 +8543,7 @@ const schema101 = {
     },
   ],
 };
-const schema105 = {
+const schema106 = {
   description:
     'Whether an open lot should leave the market before resolution or be held\nuntil the CTF payout vector is available.',
   oneOf: [
@@ -8242,7 +8559,7 @@ const schema105 = {
     },
   ],
 };
-const schema97 = {
+const schema98 = {
   description:
     'Policy-fitted opportunistic exit rule frozen into recommendation and intent.\n\nRuntime configuration may disable or shadow it, but never supplies or\ntightens these decision thresholds.',
   type: 'object',
@@ -8261,7 +8578,7 @@ const schema97 = {
     'min_incremental_exit_pct',
   ],
 };
-function validate45(
+function validate47(
   data,
   {
     instancePath = '',
@@ -8273,7 +8590,7 @@ function validate45(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate45.evaluated;
+  const evaluated0 = validate47.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -8459,10 +8776,10 @@ function validate45(
     }
     errors++;
   }
-  validate45.errors = vErrors;
+  validate47.errors = vErrors;
   return errors === 0;
 }
-validate45.evaluated = {
+validate47.evaluated = {
   props: {
     max_cumulative_exit_pct: true,
     min_confidence: true,
@@ -8473,7 +8790,7 @@ validate45.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema102 = {
+const schema103 = {
   description: 'One deterministic cumulative scale-out target.',
   type: 'object',
   properties: {
@@ -8513,7 +8830,7 @@ const schema102 = {
     'reason',
   ],
 };
-function validate47(
+function validate49(
   data,
   {
     instancePath = '',
@@ -8525,7 +8842,7 @@ function validate47(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate47.evaluated;
+  const evaluated0 = validate49.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -8734,7 +9051,7 @@ function validate47(
           instancePath: instancePath + '/valid_after',
           schemaPath: '#/properties/valid_after/type',
           keyword: 'type',
-          params: { type: schema102.properties.valid_after.type },
+          params: { type: schema103.properties.valid_after.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -8769,7 +9086,7 @@ function validate47(
           instancePath: instancePath + '/valid_until',
           schemaPath: '#/properties/valid_until/type',
           keyword: 'type',
-          params: { type: schema102.properties.valid_until.type },
+          params: { type: schema103.properties.valid_until.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -8812,10 +9129,10 @@ function validate47(
     }
     errors++;
   }
-  validate47.errors = vErrors;
+  validate49.errors = vErrors;
   return errors === 0;
 }
-validate47.evaluated = {
+validate49.evaluated = {
   props: {
     min_price: true,
     reason: true,
@@ -8828,7 +9145,7 @@ validate47.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema108 = {
+const schema109 = {
   description: 'Frozen conditions that invalidate the entry thesis.',
   type: 'object',
   properties: {
@@ -8854,7 +9171,7 @@ const schema108 = {
     'require_route_gate_eligibility',
   ],
 };
-function validate49(
+function validate51(
   data,
   {
     instancePath = '',
@@ -8866,7 +9183,7 @@ function validate49(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate49.evaluated;
+  const evaluated0 = validate51.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -8989,10 +9306,10 @@ function validate49(
     }
     errors++;
   }
-  validate49.errors = vErrors;
+  validate51.errors = vErrors;
   return errors === 0;
 }
-validate49.evaluated = {
+validate51.evaluated = {
   props: {
     min_expected_return_bps: true,
     min_score_retention: true,
@@ -9001,7 +9318,7 @@ validate49.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema110 = {
+const schema111 = {
   description: "A trailing-stop policy relative to the position's peak mark.",
   type: 'object',
   properties: {
@@ -9016,7 +9333,7 @@ const schema110 = {
   },
   required: ['trail_bps'],
 };
-function validate51(
+function validate53(
   data,
   {
     instancePath = '',
@@ -9028,7 +9345,7 @@ function validate51(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate51.evaluated;
+  const evaluated0 = validate53.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -9148,15 +9465,15 @@ function validate51(
     }
     errors++;
   }
-  validate51.errors = vErrors;
+  validate53.errors = vErrors;
   return errors === 0;
 }
-validate51.evaluated = {
+validate53.evaluated = {
   props: { activation_price: true, trail_bps: true },
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate44(
+function validate46(
   data,
   {
     instancePath = '',
@@ -9168,7 +9485,7 @@ function validate44(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate44.evaluated;
+  const evaluated0 = validate46.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -9284,7 +9601,7 @@ function validate44(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema94.properties, key0)) {
+      if (!func1.call(schema95.properties, key0)) {
         const err7 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -9341,7 +9658,7 @@ function validate44(
           instancePath: instancePath + '/manual_review_at',
           schemaPath: '#/properties/manual_review_at/type',
           keyword: 'type',
-          params: { type: schema94.properties.manual_review_at.type },
+          params: { type: schema95.properties.manual_review_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -9384,7 +9701,7 @@ function validate44(
           instancePath: instancePath + '/max_hold_secs',
           schemaPath: '#/properties/max_hold_secs/type',
           keyword: 'type',
-          params: { type: schema94.properties.max_hold_secs.type },
+          params: { type: schema95.properties.max_hold_secs.type },
           message: 'must be integer,null',
         };
         if (vErrors === null) {
@@ -9429,7 +9746,7 @@ function validate44(
     }
     if (data.opportunistic_exit !== undefined) {
       if (
-        !validate45(data.opportunistic_exit, {
+        !validate47(data.opportunistic_exit, {
           instancePath: instancePath + '/opportunistic_exit',
           parentData: data,
           parentDataProperty: 'opportunistic_exit',
@@ -9439,8 +9756,8 @@ function validate44(
       ) {
         vErrors =
           vErrors === null
-            ? validate45.errors
-            : vErrors.concat(validate45.errors);
+            ? validate47.errors
+            : vErrors.concat(validate47.errors);
         errors = vErrors.length;
       }
     }
@@ -9557,7 +9874,7 @@ function validate44(
         const len0 = data6.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate47(data6[i0], {
+            !validate49(data6[i0], {
               instancePath: instancePath + '/scale_out_targets/' + i0,
               parentData: data6,
               parentDataProperty: i0,
@@ -9567,8 +9884,8 @@ function validate44(
           ) {
             vErrors =
               vErrors === null
-                ? validate47.errors
-                : vErrors.concat(validate47.errors);
+                ? validate49.errors
+                : vErrors.concat(validate49.errors);
             errors = vErrors.length;
           }
         }
@@ -9702,7 +10019,7 @@ function validate44(
           instancePath: instancePath + '/stop_loss_pct',
           schemaPath: '#/properties/stop_loss_pct/type',
           keyword: 'type',
-          params: { type: schema94.properties.stop_loss_pct.type },
+          params: { type: schema95.properties.stop_loss_pct.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -9785,7 +10102,7 @@ function validate44(
           instancePath: instancePath + '/take_profit_pct',
           schemaPath: '#/properties/take_profit_pct/type',
           keyword: 'type',
-          params: { type: schema94.properties.take_profit_pct.type },
+          params: { type: schema95.properties.take_profit_pct.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -9863,7 +10180,7 @@ function validate44(
     }
     if (data.thesis_invalidation !== undefined) {
       if (
-        !validate49(data.thesis_invalidation, {
+        !validate51(data.thesis_invalidation, {
           instancePath: instancePath + '/thesis_invalidation',
           parentData: data,
           parentDataProperty: 'thesis_invalidation',
@@ -9873,8 +10190,8 @@ function validate44(
       ) {
         vErrors =
           vErrors === null
-            ? validate49.errors
-            : vErrors.concat(validate49.errors);
+            ? validate51.errors
+            : vErrors.concat(validate51.errors);
         errors = vErrors.length;
       }
     }
@@ -9885,7 +10202,7 @@ function validate44(
           instancePath: instancePath + '/time_exit_at',
           schemaPath: '#/properties/time_exit_at/type',
           keyword: 'type',
-          params: { type: schema94.properties.time_exit_at.type },
+          params: { type: schema95.properties.time_exit_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -9919,7 +10236,7 @@ function validate44(
       let valid13 = false;
       const _errs53 = errors;
       if (
-        !validate51(data15, {
+        !validate53(data15, {
           instancePath: instancePath + '/trailing_stop',
           parentData: data,
           parentDataProperty: 'trailing_stop',
@@ -9929,8 +10246,8 @@ function validate44(
       ) {
         vErrors =
           vErrors === null
-            ? validate51.errors
-            : vErrors.concat(validate51.errors);
+            ? validate53.errors
+            : vErrors.concat(validate53.errors);
         errors = vErrors.length;
       }
       var _valid4 = _errs53 === errors;
@@ -9998,15 +10315,15 @@ function validate44(
     }
     errors++;
   }
-  validate44.errors = vErrors;
+  validate46.errors = vErrors;
   return errors === 0;
 }
-validate44.evaluated = {
+validate46.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema118 = {
+const schema119 = {
   description:
     'Unified scale-out state for deterministic and opportunistic partial exits.',
   type: 'object',
@@ -10036,7 +10353,7 @@ const schema118 = {
   additionalProperties: false,
   required: ['cumulative_exited_shares', 'settled_target_ids'],
 };
-const schema121 = {
+const schema122 = {
   description: 'One in-flight cumulative scale-out target.',
   type: 'object',
   properties: {
@@ -10053,7 +10370,7 @@ const schema121 = {
   },
   required: ['target_cumulative_exit_pct'],
 };
-function validate55(
+function validate57(
   data,
   {
     instancePath = '',
@@ -10065,7 +10382,7 @@ function validate55(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate55.evaluated;
+  const evaluated0 = validate57.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -10260,7 +10577,7 @@ function validate55(
               instancePath: instancePath + '/pending_target/target_id',
               schemaPath: '#/$defs/PendingScaleOut/properties/target_id/type',
               keyword: 'type',
-              params: { type: schema121.properties.target_id.type },
+              params: { type: schema122.properties.target_id.type },
               message: 'must be string,null',
             };
             if (vErrors === null) {
@@ -10388,15 +10705,15 @@ function validate55(
     }
     errors++;
   }
-  validate55.errors = vErrors;
+  validate57.errors = vErrors;
   return errors === 0;
 }
-validate55.evaluated = {
+validate57.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate165(
+function validate174(
   data,
   {
     instancePath = '',
@@ -10408,7 +10725,7 @@ function validate165(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate165.evaluated;
+  const evaluated0 = validate174.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -11030,7 +11347,7 @@ function validate165(
       let valid3 = false;
       const _errs26 = errors;
       if (
-        !validate38(data10, {
+        !validate40(data10, {
           instancePath: instancePath + '/exit_monitor_observation',
           parentData: data,
           parentDataProperty: 'exit_monitor_observation',
@@ -11040,8 +11357,8 @@ function validate165(
       ) {
         vErrors =
           vErrors === null
-            ? validate38.errors
-            : vErrors.concat(validate38.errors);
+            ? validate40.errors
+            : vErrors.concat(validate40.errors);
         errors = vErrors.length;
       }
       var _valid1 = _errs26 === errors;
@@ -11108,7 +11425,7 @@ function validate165(
     }
     if (data.exit_policy !== undefined) {
       if (
-        !validate44(data.exit_policy, {
+        !validate46(data.exit_policy, {
           instancePath: instancePath + '/exit_policy',
           parentData: data,
           parentDataProperty: 'exit_policy',
@@ -11118,8 +11435,8 @@ function validate165(
       ) {
         vErrors =
           vErrors === null
-            ? validate44.errors
-            : vErrors.concat(validate44.errors);
+            ? validate46.errors
+            : vErrors.concat(validate46.errors);
         errors = vErrors.length;
       }
     }
@@ -11167,7 +11484,7 @@ function validate165(
           instancePath: instancePath + '/exit_reason',
           schemaPath: '#/$defs/ExitReason/oneOf/0/enum',
           keyword: 'enum',
-          params: { allowedValues: schema92.oneOf[0].enum },
+          params: { allowedValues: schema93.oneOf[0].enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -11325,7 +11642,7 @@ function validate165(
           instancePath: instancePath + '/exit_state',
           schemaPath: '#/$defs/ExitState/enum',
           keyword: 'enum',
-          params: { allowedValues: schema93.enum },
+          params: { allowedValues: schema94.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -11392,7 +11709,7 @@ function validate165(
           instancePath: instancePath + '/intent_kind',
           schemaPath: '#/$defs/OrderIntentKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema115.enum },
+          params: { allowedValues: schema116.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -11444,7 +11761,7 @@ function validate165(
       let valid9 = false;
       const _errs53 = errors;
       if (
-        !validate39(data17, {
+        !validate41(data17, {
           instancePath: instancePath + '/latest_reinference',
           parentData: data,
           parentDataProperty: 'latest_reinference',
@@ -11454,8 +11771,8 @@ function validate165(
       ) {
         vErrors =
           vErrors === null
-            ? validate39.errors
-            : vErrors.concat(validate39.errors);
+            ? validate41.errors
+            : vErrors.concat(validate41.errors);
         errors = vErrors.length;
       }
       var _valid4 = _errs53 === errors;
@@ -11820,7 +12137,7 @@ function validate165(
           instancePath: instancePath + '/runtime_mode',
           schemaPath: '#/$defs/QuantRuntimeMode/enum',
           keyword: 'enum',
-          params: { allowedValues: schema117.enum },
+          params: { allowedValues: schema118.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -11833,7 +12150,7 @@ function validate165(
     }
     if (data.scale_out_state !== undefined) {
       if (
-        !validate55(data.scale_out_state, {
+        !validate57(data.scale_out_state, {
           instancePath: instancePath + '/scale_out_state',
           parentData: data,
           parentDataProperty: 'scale_out_state',
@@ -11843,8 +12160,8 @@ function validate165(
       ) {
         vErrors =
           vErrors === null
-            ? validate55.errors
-            : vErrors.concat(validate55.errors);
+            ? validate57.errors
+            : vErrors.concat(validate57.errors);
         errors = vErrors.length;
       }
     }
@@ -11887,7 +12204,7 @@ function validate165(
           instancePath: instancePath + '/status',
           schemaPath: '#/$defs/OrderIntentStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema122.enum },
+          params: { allowedValues: schema123.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -11965,10 +12282,10 @@ function validate165(
     }
     errors++;
   }
-  validate165.errors = vErrors;
+  validate174.errors = vErrors;
   return errors === 0;
 }
-validate165.evaluated = {
+validate174.evaluated = {
   props: {
     admission_trace_ref: true,
     approval_reason: true,
@@ -12005,8 +12322,8 @@ validate165.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateIncentiveEvent = validate172;
-const schema123 = {
+export const validateIncentiveEvent = validate181;
+const schema124 = {
   description:
     'One immutable incentive ledger event, including zero-amount retractions.',
   type: 'object',
@@ -12022,7 +12339,7 @@ const schema123 = {
     program_date: { type: 'string', format: 'date' },
     source_identity: { type: 'string' },
     source_partition: { type: 'string' },
-    source_schedule_hash: {
+    source_terms_hash: {
       type: ['string', 'null'],
       pattern: '^blake3:[0-9a-f]{64}$',
     },
@@ -12044,15 +12361,15 @@ const schema123 = {
     'created_at',
   ],
 };
-const schema125 = { type: 'string', enum: ['maker_rebate', 'taker_rebate'] };
-const schema126 = {
+const schema126 = { type: 'string', enum: ['maker_rebate', 'taker_rebate'] };
+const schema127 = {
   description:
     'Append-only incentive lifecycle event. Stages are facts, not mutable\nstatus values on a single row.',
   type: 'string',
-  enum: ['estimated_accrual', 'venue_awarded', 'wallet_credited'],
+  enum: ['estimated_accrual', 'venue_reported_accrual', 'wallet_credited'],
 };
 const formats88 = fullFormats.date;
-function validate172(
+function validate181(
   data,
   {
     instancePath = '',
@@ -12064,7 +12381,7 @@ function validate172(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate172.evaluated;
+  const evaluated0 = validate181.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -12364,7 +12681,7 @@ function validate172(
           instancePath: instancePath + '/execution_fill_id',
           schemaPath: '#/properties/execution_fill_id/type',
           keyword: 'type',
-          params: { type: schema123.properties.execution_fill_id.type },
+          params: { type: schema124.properties.execution_fill_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -12414,7 +12731,7 @@ function validate172(
           instancePath: instancePath + '/kind',
           schemaPath: '#/$defs/VenueIncentiveKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema125.enum },
+          params: { allowedValues: schema126.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -12432,7 +12749,7 @@ function validate172(
           instancePath: instancePath + '/market_id',
           schemaPath: '#/properties/market_id/type',
           keyword: 'type',
-          params: { type: schema123.properties.market_id.type },
+          params: { type: schema124.properties.market_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -12545,14 +12862,14 @@ function validate172(
         errors++;
       }
     }
-    if (data.source_schedule_hash !== undefined) {
-      let data11 = data.source_schedule_hash;
+    if (data.source_terms_hash !== undefined) {
+      let data11 = data.source_terms_hash;
       if (typeof data11 !== 'string' && data11 !== null) {
         const err29 = {
-          instancePath: instancePath + '/source_schedule_hash',
-          schemaPath: '#/properties/source_schedule_hash/type',
+          instancePath: instancePath + '/source_terms_hash',
+          schemaPath: '#/properties/source_terms_hash/type',
           keyword: 'type',
-          params: { type: schema123.properties.source_schedule_hash.type },
+          params: { type: schema124.properties.source_terms_hash.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -12565,8 +12882,8 @@ function validate172(
       if (typeof data11 === 'string') {
         if (!pattern4.test(data11)) {
           const err30 = {
-            instancePath: instancePath + '/source_schedule_hash',
-            schemaPath: '#/properties/source_schedule_hash/pattern',
+            instancePath: instancePath + '/source_terms_hash',
+            schemaPath: '#/properties/source_terms_hash/pattern',
             keyword: 'pattern',
             params: { pattern: '^blake3:[0-9a-f]{64}$' },
             message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
@@ -12600,7 +12917,7 @@ function validate172(
       if (
         !(
           data12 === 'estimated_accrual' ||
-          data12 === 'venue_awarded' ||
+          data12 === 'venue_reported_accrual' ||
           data12 === 'wallet_credited'
         )
       ) {
@@ -12608,7 +12925,7 @@ function validate172(
           instancePath: instancePath + '/stage',
           schemaPath: '#/$defs/VenueIncentiveStage/enum',
           keyword: 'enum',
-          params: { allowedValues: schema126.enum },
+          params: { allowedValues: schema127.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -12626,7 +12943,7 @@ function validate172(
           instancePath: instancePath + '/transaction_hash',
           schemaPath: '#/properties/transaction_hash/type',
           keyword: 'type',
-          params: { type: schema123.properties.transaction_hash.type },
+          params: { type: schema124.properties.transaction_hash.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -12686,10 +13003,10 @@ function validate172(
     }
     errors++;
   }
-  validate172.errors = vErrors;
+  validate181.errors = vErrors;
   return errors === 0;
 }
-validate172.evaluated = {
+validate181.evaluated = {
   props: {
     amount_usd: true,
     available_at: true,
@@ -12702,7 +13019,7 @@ validate172.evaluated = {
     program_date: true,
     source_identity: true,
     source_partition: true,
-    source_schedule_hash: true,
+    source_terms_hash: true,
     stage: true,
     transaction_hash: true,
     venue_incentive_event_id: true,
@@ -12710,44 +13027,52 @@ validate172.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateIncentiveReconciliation = validate173;
-const schema127 = {
+export const validateIncentiveReconciliation = validate182;
+const schema128 = {
   description: 'Account-level incentive attribution and upstream scan health.',
   type: 'object',
   properties: {
     as_of: { type: 'string', format: 'date-time' },
-    award_to_credit_delta_usd: { $ref: '#/$defs/Usd' },
-    below_payout_threshold: { type: 'boolean' },
-    estimate_to_award_delta_usd: { $ref: '#/$defs/Usd' },
+    below_payout_threshold_program_dates: {
+      type: 'array',
+      items: { type: 'string', format: 'date' },
+    },
+    estimate_to_reported_delta_usd: { $ref: '#/$defs/Usd' },
     estimated_maker_accrual_usd: { $ref: '#/$defs/Usd' },
     health: { $ref: '#/$defs/IncentiveReconciliationHealth' },
     incomplete_day_count: { type: 'integer', minimum: 0, maximum: 4294967295 },
     last_success_at: { type: ['string', 'null'], format: 'date-time' },
     oldest_incomplete_date: { type: ['string', 'null'], format: 'date' },
+    overdue_program_dates: {
+      type: 'array',
+      items: { type: 'string', format: 'date' },
+    },
     payout_threshold_usd: { $ref: '#/$defs/Usd' },
-    venue_awarded_maker_usd: { $ref: '#/$defs/Usd' },
+    reported_to_credit_delta_usd: { $ref: '#/$defs/Usd' },
+    venue_reported_maker_accrual_usd: { $ref: '#/$defs/Usd' },
     wallet_credited_maker_usd: { $ref: '#/$defs/Usd' },
     wallet_credited_taker_usd: { $ref: '#/$defs/Usd' },
   },
   required: [
     'as_of',
     'estimated_maker_accrual_usd',
-    'venue_awarded_maker_usd',
+    'venue_reported_maker_accrual_usd',
     'wallet_credited_maker_usd',
     'wallet_credited_taker_usd',
-    'estimate_to_award_delta_usd',
-    'award_to_credit_delta_usd',
+    'estimate_to_reported_delta_usd',
+    'reported_to_credit_delta_usd',
     'incomplete_day_count',
     'health',
     'payout_threshold_usd',
-    'below_payout_threshold',
+    'below_payout_threshold_program_dates',
+    'overdue_program_dates',
   ],
 };
 const schema131 = {
   type: 'string',
   enum: ['healthy', 'stale', 'incomplete', 'unavailable'],
 };
-function validate173(
+function validate182(
   data,
   {
     instancePath = '',
@@ -12759,7 +13084,7 @@ function validate173(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate173.evaluated;
+  const evaluated0 = validate182.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -12798,14 +13123,16 @@ function validate173(
       }
       errors++;
     }
-    if (data.venue_awarded_maker_usd === undefined) {
+    if (data.venue_reported_maker_accrual_usd === undefined) {
       const err2 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'venue_awarded_maker_usd' },
+        params: { missingProperty: 'venue_reported_maker_accrual_usd' },
         message:
-          "must have required property '" + 'venue_awarded_maker_usd' + "'",
+          "must have required property '" +
+          'venue_reported_maker_accrual_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err2];
@@ -12846,14 +13173,16 @@ function validate173(
       }
       errors++;
     }
-    if (data.estimate_to_award_delta_usd === undefined) {
+    if (data.estimate_to_reported_delta_usd === undefined) {
       const err5 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'estimate_to_award_delta_usd' },
+        params: { missingProperty: 'estimate_to_reported_delta_usd' },
         message:
-          "must have required property '" + 'estimate_to_award_delta_usd' + "'",
+          "must have required property '" +
+          'estimate_to_reported_delta_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err5];
@@ -12862,14 +13191,16 @@ function validate173(
       }
       errors++;
     }
-    if (data.award_to_credit_delta_usd === undefined) {
+    if (data.reported_to_credit_delta_usd === undefined) {
       const err6 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'award_to_credit_delta_usd' },
+        params: { missingProperty: 'reported_to_credit_delta_usd' },
         message:
-          "must have required property '" + 'award_to_credit_delta_usd' + "'",
+          "must have required property '" +
+          'reported_to_credit_delta_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err6];
@@ -12923,14 +13254,16 @@ function validate173(
       }
       errors++;
     }
-    if (data.below_payout_threshold === undefined) {
+    if (data.below_payout_threshold_program_dates === undefined) {
       const err10 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'below_payout_threshold' },
+        params: { missingProperty: 'below_payout_threshold_program_dates' },
         message:
-          "must have required property '" + 'below_payout_threshold' + "'",
+          "must have required property '" +
+          'below_payout_threshold_program_dates' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err10];
@@ -12939,11 +13272,27 @@ function validate173(
       }
       errors++;
     }
+    if (data.overdue_program_dates === undefined) {
+      const err11 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'overdue_program_dates' },
+        message:
+          "must have required property '" + 'overdue_program_dates' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err11];
+      } else {
+        vErrors.push(err11);
+      }
+      errors++;
+    }
     if (data.as_of !== undefined) {
       let data0 = data.as_of;
       if (typeof data0 === 'string') {
         if (!formats2.validate(data0)) {
-          const err11 = {
+          const err12 = {
             instancePath: instancePath + '/as_of',
             schemaPath: '#/properties/as_of/format',
             keyword: 'format',
@@ -12951,33 +13300,16 @@ function validate173(
             message: 'must match format "' + 'date-time' + '"',
           };
           if (vErrors === null) {
-            vErrors = [err11];
+            vErrors = [err12];
           } else {
-            vErrors.push(err11);
+            vErrors.push(err12);
           }
           errors++;
         }
       } else {
-        const err12 = {
+        const err13 = {
           instancePath: instancePath + '/as_of',
           schemaPath: '#/properties/as_of/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err12];
-        } else {
-          vErrors.push(err12);
-        }
-        errors++;
-      }
-    }
-    if (data.award_to_credit_delta_usd !== undefined) {
-      if (typeof data.award_to_credit_delta_usd !== 'string') {
-        const err13 = {
-          instancePath: instancePath + '/award_to_credit_delta_usd',
-          schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -12990,48 +13322,55 @@ function validate173(
         errors++;
       }
     }
-    if (data.below_payout_threshold !== undefined) {
-      if (typeof data.below_payout_threshold !== 'boolean') {
-        const err14 = {
-          instancePath: instancePath + '/below_payout_threshold',
-          schemaPath: '#/properties/below_payout_threshold/type',
-          keyword: 'type',
-          params: { type: 'boolean' },
-          message: 'must be boolean',
-        };
-        if (vErrors === null) {
-          vErrors = [err14];
-        } else {
-          vErrors.push(err14);
+    if (data.below_payout_threshold_program_dates !== undefined) {
+      let data1 = data.below_payout_threshold_program_dates;
+      if (Array.isArray(data1)) {
+        const len0 = data1.length;
+        for (let i0 = 0; i0 < len0; i0++) {
+          let data2 = data1[i0];
+          if (typeof data2 === 'string') {
+            if (!formats88.validate(data2)) {
+              const err14 = {
+                instancePath:
+                  instancePath + '/below_payout_threshold_program_dates/' + i0,
+                schemaPath:
+                  '#/properties/below_payout_threshold_program_dates/items/format',
+                keyword: 'format',
+                params: { format: 'date' },
+                message: 'must match format "' + 'date' + '"',
+              };
+              if (vErrors === null) {
+                vErrors = [err14];
+              } else {
+                vErrors.push(err14);
+              }
+              errors++;
+            }
+          } else {
+            const err15 = {
+              instancePath:
+                instancePath + '/below_payout_threshold_program_dates/' + i0,
+              schemaPath:
+                '#/properties/below_payout_threshold_program_dates/items/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err15];
+            } else {
+              vErrors.push(err15);
+            }
+            errors++;
+          }
         }
-        errors++;
-      }
-    }
-    if (data.estimate_to_award_delta_usd !== undefined) {
-      if (typeof data.estimate_to_award_delta_usd !== 'string') {
-        const err15 = {
-          instancePath: instancePath + '/estimate_to_award_delta_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err15];
-        } else {
-          vErrors.push(err15);
-        }
-        errors++;
-      }
-    }
-    if (data.estimated_maker_accrual_usd !== undefined) {
-      if (typeof data.estimated_maker_accrual_usd !== 'string') {
+      } else {
         const err16 = {
-          instancePath: instancePath + '/estimated_maker_accrual_usd',
-          schemaPath: '#/$defs/Usd/type',
+          instancePath: instancePath + '/below_payout_threshold_program_dates',
+          schemaPath: '#/properties/below_payout_threshold_program_dates/type',
           keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          params: { type: 'array' },
+          message: 'must be array',
         };
         if (vErrors === null) {
           vErrors = [err16];
@@ -13041,12 +13380,11 @@ function validate173(
         errors++;
       }
     }
-    if (data.health !== undefined) {
-      let data5 = data.health;
-      if (typeof data5 !== 'string') {
+    if (data.estimate_to_reported_delta_usd !== undefined) {
+      if (typeof data.estimate_to_reported_delta_usd !== 'string') {
         const err17 = {
-          instancePath: instancePath + '/health',
-          schemaPath: '#/$defs/IncentiveReconciliationHealth/type',
+          instancePath: instancePath + '/estimate_to_reported_delta_usd',
+          schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -13058,6 +13396,41 @@ function validate173(
         }
         errors++;
       }
+    }
+    if (data.estimated_maker_accrual_usd !== undefined) {
+      if (typeof data.estimated_maker_accrual_usd !== 'string') {
+        const err18 = {
+          instancePath: instancePath + '/estimated_maker_accrual_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err18];
+        } else {
+          vErrors.push(err18);
+        }
+        errors++;
+      }
+    }
+    if (data.health !== undefined) {
+      let data5 = data.health;
+      if (typeof data5 !== 'string') {
+        const err19 = {
+          instancePath: instancePath + '/health',
+          schemaPath: '#/$defs/IncentiveReconciliationHealth/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err19];
+        } else {
+          vErrors.push(err19);
+        }
+        errors++;
+      }
       if (
         !(
           data5 === 'healthy' ||
@@ -13066,7 +13439,7 @@ function validate173(
           data5 === 'unavailable'
         )
       ) {
-        const err18 = {
+        const err20 = {
           instancePath: instancePath + '/health',
           schemaPath: '#/$defs/IncentiveReconciliationHealth/enum',
           keyword: 'enum',
@@ -13074,9 +13447,9 @@ function validate173(
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
-          vErrors = [err18];
+          vErrors = [err20];
         } else {
-          vErrors.push(err18);
+          vErrors.push(err20);
         }
         errors++;
       }
@@ -13091,7 +13464,7 @@ function validate173(
           isFinite(data6)
         )
       ) {
-        const err19 = {
+        const err21 = {
           instancePath: instancePath + '/incomplete_day_count',
           schemaPath: '#/properties/incomplete_day_count/type',
           keyword: 'type',
@@ -13099,15 +13472,15 @@ function validate173(
           message: 'must be integer',
         };
         if (vErrors === null) {
-          vErrors = [err19];
+          vErrors = [err21];
         } else {
-          vErrors.push(err19);
+          vErrors.push(err21);
         }
         errors++;
       }
       if (typeof data6 == 'number' && isFinite(data6)) {
         if (data6 > 4294967295 || isNaN(data6)) {
-          const err20 = {
+          const err22 = {
             instancePath: instancePath + '/incomplete_day_count',
             schemaPath: '#/properties/incomplete_day_count/maximum',
             keyword: 'maximum',
@@ -13115,54 +13488,19 @@ function validate173(
             message: 'must be <= 4294967295',
           };
           if (vErrors === null) {
-            vErrors = [err20];
+            vErrors = [err22];
           } else {
-            vErrors.push(err20);
+            vErrors.push(err22);
           }
           errors++;
         }
         if (data6 < 0 || isNaN(data6)) {
-          const err21 = {
+          const err23 = {
             instancePath: instancePath + '/incomplete_day_count',
             schemaPath: '#/properties/incomplete_day_count/minimum',
             keyword: 'minimum',
             params: { comparison: '>=', limit: 0 },
             message: 'must be >= 0',
-          };
-          if (vErrors === null) {
-            vErrors = [err21];
-          } else {
-            vErrors.push(err21);
-          }
-          errors++;
-        }
-      }
-    }
-    if (data.last_success_at !== undefined) {
-      let data7 = data.last_success_at;
-      if (typeof data7 !== 'string' && data7 !== null) {
-        const err22 = {
-          instancePath: instancePath + '/last_success_at',
-          schemaPath: '#/properties/last_success_at/type',
-          keyword: 'type',
-          params: { type: schema127.properties.last_success_at.type },
-          message: 'must be string,null',
-        };
-        if (vErrors === null) {
-          vErrors = [err22];
-        } else {
-          vErrors.push(err22);
-        }
-        errors++;
-      }
-      if (typeof data7 === 'string') {
-        if (!formats2.validate(data7)) {
-          const err23 = {
-            instancePath: instancePath + '/last_success_at',
-            schemaPath: '#/properties/last_success_at/format',
-            keyword: 'format',
-            params: { format: 'date-time' },
-            message: 'must match format "' + 'date-time' + '"',
           };
           if (vErrors === null) {
             vErrors = [err23];
@@ -13173,14 +13511,14 @@ function validate173(
         }
       }
     }
-    if (data.oldest_incomplete_date !== undefined) {
-      let data8 = data.oldest_incomplete_date;
-      if (typeof data8 !== 'string' && data8 !== null) {
+    if (data.last_success_at !== undefined) {
+      let data7 = data.last_success_at;
+      if (typeof data7 !== 'string' && data7 !== null) {
         const err24 = {
-          instancePath: instancePath + '/oldest_incomplete_date',
-          schemaPath: '#/properties/oldest_incomplete_date/type',
+          instancePath: instancePath + '/last_success_at',
+          schemaPath: '#/properties/last_success_at/type',
           keyword: 'type',
-          params: { type: schema127.properties.oldest_incomplete_date.type },
+          params: { type: schema128.properties.last_success_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -13190,14 +13528,14 @@ function validate173(
         }
         errors++;
       }
-      if (typeof data8 === 'string') {
-        if (!formats88.validate(data8)) {
+      if (typeof data7 === 'string') {
+        if (!formats2.validate(data7)) {
           const err25 = {
-            instancePath: instancePath + '/oldest_incomplete_date',
-            schemaPath: '#/properties/oldest_incomplete_date/format',
+            instancePath: instancePath + '/last_success_at',
+            schemaPath: '#/properties/last_success_at/format',
             keyword: 'format',
-            params: { format: 'date' },
-            message: 'must match format "' + 'date' + '"',
+            params: { format: 'date-time' },
+            message: 'must match format "' + 'date-time' + '"',
           };
           if (vErrors === null) {
             vErrors = [err25];
@@ -13208,14 +13546,15 @@ function validate173(
         }
       }
     }
-    if (data.payout_threshold_usd !== undefined) {
-      if (typeof data.payout_threshold_usd !== 'string') {
+    if (data.oldest_incomplete_date !== undefined) {
+      let data8 = data.oldest_incomplete_date;
+      if (typeof data8 !== 'string' && data8 !== null) {
         const err26 = {
-          instancePath: instancePath + '/payout_threshold_usd',
-          schemaPath: '#/$defs/Usd/type',
+          instancePath: instancePath + '/oldest_incomplete_date',
+          schemaPath: '#/properties/oldest_incomplete_date/type',
           keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          params: { type: schema128.properties.oldest_incomplete_date.type },
+          message: 'must be string,null',
         };
         if (vErrors === null) {
           vErrors = [err26];
@@ -13224,27 +13563,132 @@ function validate173(
         }
         errors++;
       }
+      if (typeof data8 === 'string') {
+        if (!formats88.validate(data8)) {
+          const err27 = {
+            instancePath: instancePath + '/oldest_incomplete_date',
+            schemaPath: '#/properties/oldest_incomplete_date/format',
+            keyword: 'format',
+            params: { format: 'date' },
+            message: 'must match format "' + 'date' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err27];
+          } else {
+            vErrors.push(err27);
+          }
+          errors++;
+        }
+      }
     }
-    if (data.venue_awarded_maker_usd !== undefined) {
-      if (typeof data.venue_awarded_maker_usd !== 'string') {
-        const err27 = {
-          instancePath: instancePath + '/venue_awarded_maker_usd',
+    if (data.overdue_program_dates !== undefined) {
+      let data9 = data.overdue_program_dates;
+      if (Array.isArray(data9)) {
+        const len1 = data9.length;
+        for (let i1 = 0; i1 < len1; i1++) {
+          let data10 = data9[i1];
+          if (typeof data10 === 'string') {
+            if (!formats88.validate(data10)) {
+              const err28 = {
+                instancePath: instancePath + '/overdue_program_dates/' + i1,
+                schemaPath: '#/properties/overdue_program_dates/items/format',
+                keyword: 'format',
+                params: { format: 'date' },
+                message: 'must match format "' + 'date' + '"',
+              };
+              if (vErrors === null) {
+                vErrors = [err28];
+              } else {
+                vErrors.push(err28);
+              }
+              errors++;
+            }
+          } else {
+            const err29 = {
+              instancePath: instancePath + '/overdue_program_dates/' + i1,
+              schemaPath: '#/properties/overdue_program_dates/items/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err29];
+            } else {
+              vErrors.push(err29);
+            }
+            errors++;
+          }
+        }
+      } else {
+        const err30 = {
+          instancePath: instancePath + '/overdue_program_dates',
+          schemaPath: '#/properties/overdue_program_dates/type',
+          keyword: 'type',
+          params: { type: 'array' },
+          message: 'must be array',
+        };
+        if (vErrors === null) {
+          vErrors = [err30];
+        } else {
+          vErrors.push(err30);
+        }
+        errors++;
+      }
+    }
+    if (data.payout_threshold_usd !== undefined) {
+      if (typeof data.payout_threshold_usd !== 'string') {
+        const err31 = {
+          instancePath: instancePath + '/payout_threshold_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err27];
+          vErrors = [err31];
         } else {
-          vErrors.push(err27);
+          vErrors.push(err31);
+        }
+        errors++;
+      }
+    }
+    if (data.reported_to_credit_delta_usd !== undefined) {
+      if (typeof data.reported_to_credit_delta_usd !== 'string') {
+        const err32 = {
+          instancePath: instancePath + '/reported_to_credit_delta_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err32];
+        } else {
+          vErrors.push(err32);
+        }
+        errors++;
+      }
+    }
+    if (data.venue_reported_maker_accrual_usd !== undefined) {
+      if (typeof data.venue_reported_maker_accrual_usd !== 'string') {
+        const err33 = {
+          instancePath: instancePath + '/venue_reported_maker_accrual_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err33];
+        } else {
+          vErrors.push(err33);
         }
         errors++;
       }
     }
     if (data.wallet_credited_maker_usd !== undefined) {
       if (typeof data.wallet_credited_maker_usd !== 'string') {
-        const err28 = {
+        const err34 = {
           instancePath: instancePath + '/wallet_credited_maker_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
@@ -13252,16 +13696,16 @@ function validate173(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err28];
+          vErrors = [err34];
         } else {
-          vErrors.push(err28);
+          vErrors.push(err34);
         }
         errors++;
       }
     }
     if (data.wallet_credited_taker_usd !== undefined) {
       if (typeof data.wallet_credited_taker_usd !== 'string') {
-        const err29 = {
+        const err35 = {
           instancePath: instancePath + '/wallet_credited_taker_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
@@ -13269,15 +13713,15 @@ function validate173(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err29];
+          vErrors = [err35];
         } else {
-          vErrors.push(err29);
+          vErrors.push(err35);
         }
         errors++;
       }
     }
   } else {
-    const err30 = {
+    const err36 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -13285,36 +13729,37 @@ function validate173(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err30];
+      vErrors = [err36];
     } else {
-      vErrors.push(err30);
+      vErrors.push(err36);
     }
     errors++;
   }
-  validate173.errors = vErrors;
+  validate182.errors = vErrors;
   return errors === 0;
 }
-validate173.evaluated = {
+validate182.evaluated = {
   props: {
     as_of: true,
-    award_to_credit_delta_usd: true,
-    below_payout_threshold: true,
-    estimate_to_award_delta_usd: true,
+    below_payout_threshold_program_dates: true,
+    estimate_to_reported_delta_usd: true,
     estimated_maker_accrual_usd: true,
     health: true,
     incomplete_day_count: true,
     last_success_at: true,
     oldest_incomplete_date: true,
+    overdue_program_dates: true,
     payout_threshold_usd: true,
-    venue_awarded_maker_usd: true,
+    reported_to_credit_delta_usd: true,
+    venue_reported_maker_accrual_usd: true,
     wallet_credited_maker_usd: true,
     wallet_credited_taker_usd: true,
   },
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateLiveAccount = validate174;
-const schema136 = {
+export const validateLiveAccount = validate183;
+const schema137 = {
   description:
     'Live venue account read (re-fetched on every request; not persisted).',
   type: 'object',
@@ -13346,7 +13791,7 @@ const schema136 = {
     'exposures',
   ],
 };
-function validate174(
+function validate183(
   data,
   {
     instancePath = '',
@@ -13358,7 +13803,7 @@ function validate174(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate174.evaluated;
+  const evaluated0 = validate183.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -13846,10 +14291,10 @@ function validate174(
     }
     errors++;
   }
-  validate174.errors = vErrors;
+  validate183.errors = vErrors;
   return errors === 0;
 }
-validate174.evaluated = {
+validate183.evaluated = {
   props: {
     as_of: true,
     available_usd: true,
@@ -13865,8 +14310,8 @@ validate174.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateRecommendation = validate177;
-const schema143 = {
+export const validateRecommendation = validate186;
+const schema144 = {
   description:
     "Full outbound projection of one actionable recommendation.\n\nBeyond the frozen decision contract, the view carries the two governance\nfacts a client needs to decide whether an `OrderIntent` may still be\ncreated without a follow-up round-trip: the parent report's current\nlifecycle [`Self::report_status`] and the id of any blocking pre-submission\nintent [`Self::active_order_intent_id`]. Both are resolved server-side (the\nsingle source of truth) so the intent-creation gate never guesses.",
   type: 'object',
@@ -13931,13 +14376,13 @@ const schema143 = {
     'report_status',
   ],
 };
-const schema182 = {
+const schema189 = {
   description:
     'Which binary-market outcome token a recommendation opens a position in.\n\nA recommendation is always an *opening* position (buy-to-open) in one\noutcome token, so the only directional choice it expresses is the outcome\n(`Yes`/`No`) — the token itself is identified by `token_id`. Buy/sell\ndirection is an execution-layer concern (see [`crate::enums::common::Side`]),\nand the sell/exit plan is expressed entirely by `ExitPlan`; this enum never\nencodes a sell.',
   type: 'string',
   enum: ['yes', 'no'],
 };
-const schema222 = {
+const schema232 = {
   description:
     'Publication lifecycle of an immutable recommendation report artifact.',
   type: 'string',
@@ -13950,13 +14395,13 @@ const schema222 = {
     'expired',
   ],
 };
-const schema183 = {
+const schema190 = {
   description:
     'Exact Buy-side route represented by one report and one durable model run.\n\n`Pooled` may contain only non-vertical market categories. `Crypto` and\n`Weather` are isolated category routes because their `ResearchProfile`,\ndomain-source, factor-plane, and serving-contract preimages are distinct.',
   type: 'string',
   enum: ['pooled', 'crypto', 'weather'],
 };
-const schema224 = {
+const schema234 = {
   description: 'Lifecycle state for a single recommendation.',
   type: 'string',
   enum: [
@@ -13970,7 +14415,7 @@ const schema224 = {
     'executed',
   ],
 };
-const schema144 = {
+const schema145 = {
   description:
     'One complete tier offered to the MILP. The optimizer may select the identity or reject it;\nit never changes shares or money values.',
   type: 'object',
@@ -14028,7 +14473,7 @@ const schema144 = {
     'lineage_hash',
   ],
 };
-const schema146 = {
+const schema147 = {
   description:
     'Economic values displayed and ranked after global optimization.',
   type: 'object',
@@ -14052,11 +14497,11 @@ const schema146 = {
     'marginal_portfolio_value_usd',
   ],
 };
-const schema147 = {
+const schema148 = {
   description: 'Time-weighted capital occupancy in USD-hours.',
   type: 'string',
 };
-function validate68(
+function validate70(
   data,
   {
     instancePath = '',
@@ -14068,7 +14513,7 @@ function validate68(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate68.evaluated;
+  const evaluated0 = validate70.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -14350,15 +14795,15 @@ function validate68(
     }
     errors++;
   }
-  validate68.errors = vErrors;
+  validate70.errors = vErrors;
   return errors === 0;
 }
-validate68.evaluated = {
+validate70.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema154 = {
+const schema155 = {
   description: 'Route-specific entry contract offered to the optimizer.',
   oneOf: [
     {
@@ -14366,7 +14811,7 @@ const schema154 = {
         'Deterministic aggressive entry after a real L2 walk and venue rounding.',
       type: 'object',
       properties: {
-        entry_vwap: { $ref: '#/$defs/Price' },
+        execution_vwap: { $ref: '#/$defs/Price' },
         filled_shares: { $ref: '#/$defs/Shares' },
         immediate_cost: { $ref: '#/$defs/ImmediateExecutionCost' },
         kind: { type: 'string', const: 'aggressive' },
@@ -14381,7 +14826,7 @@ const schema154 = {
         'requested_shares',
         'filled_shares',
         'limit_price',
-        'entry_vwap',
+        'execution_vwap',
         'immediate_cost',
         'slippage_usd',
         'visible_liquidity_usd',
@@ -14394,12 +14839,10 @@ const schema154 = {
       properties: {
         decision_at: { type: 'string', format: 'date-time' },
         expected_filled_shares: { $ref: '#/$defs/Shares' },
-        expected_maker_rebate_usd: { $ref: '#/$defs/Usd' },
+        expected_maker_rebate_accrual_usd: { $ref: '#/$defs/Usd' },
         fill_distribution: { $ref: '#/$defs/PassiveFillDistribution' },
         full_fill_cost: { $ref: '#/$defs/ImmediateExecutionCost' },
-        full_fill_maker_rebate: {
-          anyOf: [{ $ref: '#/$defs/DeferredVenueIncentive' }, { type: 'null' }],
-        },
+        full_fill_maker_rebate_accrual_usd: { $ref: '#/$defs/Usd' },
         good_til_secs: {
           type: 'integer',
           minimum: 0,
@@ -14408,14 +14851,18 @@ const schema154 = {
         hard_reserved_cash_usd: { $ref: '#/$defs/Usd' },
         kind: { type: 'string', const: 'passive' },
         limit_price: { $ref: '#/$defs/Price' },
-        maker_rebate_schedule: {
-          description:
-            'Gamma terms frozen at the decision boundary. `None` means rebate was\nunavailable and the route was valued with a strict zero incentive.',
-          anyOf: [
-            { $ref: '#/$defs/FrozenMakerRebateSchedule' },
-            { type: 'null' },
-          ],
+        maker_rebate_objective_status: {
+          $ref: '#/$defs/MakerRebateObjectiveStatus',
         },
+        maker_rebate_terms: {
+          description:
+            'Required, route-aware Gamma program truth frozen at decision time.',
+          $ref: '#/$defs/EntryMakerRebateTerms',
+        },
+        maker_rebate_valuation: {
+          $ref: '#/$defs/MakerRebateValuationEvidence',
+        },
+        objective_maker_rebate_usd: { $ref: '#/$defs/Usd' },
         requested_shares: { $ref: '#/$defs/Shares' },
         visible_liquidity_usd: { $ref: '#/$defs/Usd' },
       },
@@ -14430,13 +14877,18 @@ const schema154 = {
         'expected_filled_shares',
         'full_fill_cost',
         'fill_distribution',
-        'expected_maker_rebate_usd',
+        'maker_rebate_terms',
+        'full_fill_maker_rebate_accrual_usd',
+        'expected_maker_rebate_accrual_usd',
+        'objective_maker_rebate_usd',
+        'maker_rebate_objective_status',
+        'maker_rebate_valuation',
         'visible_liquidity_usd',
       ],
     },
   ],
 };
-const schema157 = {
+const schema158 = {
   description:
     'Immediate account cost of one filled venue execution.\n\n`cash_outlay_usd` is always the principal plus both immediate fee\ncomponents. A caller projecting a SELL cash flow subtracts the fees from\nprincipal; delayed incentives never enter this structure.',
   type: 'object',
@@ -14454,7 +14906,7 @@ const schema157 = {
     'cash_outlay_usd',
   ],
 };
-function validate71(
+function validate73(
   data,
   {
     instancePath = '',
@@ -14466,7 +14918,7 @@ function validate71(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate71.evaluated;
+  const evaluated0 = validate73.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -14641,15 +15093,15 @@ function validate71(
     }
     errors++;
   }
-  validate71.errors = vErrors;
+  validate73.errors = vErrors;
   return errors === 0;
 }
-validate71.evaluated = {
+validate73.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema168 = {
+const schema169 = {
   description:
     'Published cross-fitted passive execution distribution for one cohort.',
   type: 'object',
@@ -14661,7 +15113,7 @@ const schema168 = {
   additionalProperties: false,
   required: ['sample_count', 'source_evidence_hash', 'states'],
 };
-const schema169 = {
+const schema170 = {
   description:
     'One joint fill/latency/adverse-selection state in a passive distribution.',
   type: 'object',
@@ -14681,13 +15133,13 @@ const schema169 = {
     'post_fill_markout_bps',
   ],
 };
-const schema170 = {
+const schema171 = {
   description:
     'Mutually exclusive passive-entry state estimated from cross-fitted OOS replay.',
   type: 'string',
   enum: ['no_fill', 'partial_fill', 'full_fill'],
 };
-function validate74(
+function validate76(
   data,
   {
     instancePath = '',
@@ -14699,7 +15151,7 @@ function validate74(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate74.evaluated;
+  const evaluated0 = validate76.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -14950,7 +15402,7 @@ function validate74(
           instancePath: instancePath + '/kind',
           schemaPath: '#/$defs/PassiveFillStateKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema170.enum },
+          params: { allowedValues: schema171.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -15050,15 +15502,15 @@ function validate74(
     }
     errors++;
   }
-  validate74.errors = vErrors;
+  validate76.errors = vErrors;
   return errors === 0;
 }
-validate74.evaluated = {
+validate76.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate73(
+function validate75(
   data,
   {
     instancePath = '',
@@ -15070,7 +15522,7 @@ function validate73(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate73.evaluated;
+  const evaluated0 = validate75.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -15243,7 +15695,7 @@ function validate73(
         const len0 = data2.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate74(data2[i0], {
+            !validate76(data2[i0], {
               instancePath: instancePath + '/states/' + i0,
               parentData: data2,
               parentDataProperty: i0,
@@ -15253,8 +15705,8 @@ function validate73(
           ) {
             vErrors =
               vErrors === null
-                ? validate74.errors
-                : vErrors.concat(validate74.errors);
+                ? validate76.errors
+                : vErrors.concat(validate76.errors);
             errors = vErrors.length;
           }
         }
@@ -15289,55 +15741,66 @@ function validate73(
     }
     errors++;
   }
-  validate73.errors = vErrors;
+  validate75.errors = vErrors;
   return errors === 0;
 }
-validate73.evaluated = {
+validate75.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema172 = {
+const schema176 = {
   description:
-    'Delayed venue incentive estimated from one actual or simulated maker fill.\n\nThis is deliberately not a fee and never changes immediate cash outlay,\nhard reservation, maximum loss, or spendable balance.',
-  type: 'object',
-  properties: {
-    eligibility: { $ref: '#/$defs/MakerRebateEligibility' },
-    expected_credit_at: {
-      description:
-        'Modeling assumption for discounting, never evidence of wallet credit.',
-      type: 'string',
-      format: 'date-time',
-    },
-    expected_rebate_usd: { $ref: '#/$defs/Usd' },
-    program_date: {
-      description: 'UTC program day containing the maker fill.',
-      type: 'string',
-      format: 'date',
-    },
-    source_schedule_hash: { type: 'string', pattern: '^blake3:[0-9a-f]{64}$' },
-  },
-  additionalProperties: false,
-  required: [
-    'expected_rebate_usd',
-    'program_date',
-    'expected_credit_at',
-    'source_schedule_hash',
-    'eligibility',
-  ],
-};
-const schema173 = {
-  description: 'Eligibility state frozen into a maker-rebate accrual estimate.',
+    "Operator-facing status of a recommendation's maker-rebate objective.",
   oneOf: [
     {
-      description:
-        'A confirmed maker fill is covered by the visible Gamma schedule.',
-      type: 'string',
-      const: 'eligible_maker_fill',
+      type: 'object',
+      properties: { state: { type: 'string', const: 'not_applicable' } },
+      additionalProperties: false,
+      required: ['state'],
+    },
+    {
+      type: 'object',
+      properties: { state: { type: 'string', const: 'no_program' } },
+      additionalProperties: false,
+      required: ['state'],
+    },
+    {
+      type: 'object',
+      properties: {
+        reason: { $ref: '#/$defs/MakerRebateObjectiveZeroReason' },
+        state: { type: 'string', const: 'zero' },
+      },
+      additionalProperties: false,
+      required: ['state', 'reason'],
+    },
+    {
+      type: 'object',
+      properties: {
+        credited_probability_bps: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 4294967295,
+        },
+        state: { type: 'string', const: 'scenario_weighted' },
+      },
+      additionalProperties: false,
+      required: ['state', 'credited_probability_bps'],
     },
   ],
 };
-function validate78(
+const schema177 = {
+  description:
+    'Typed reason why nominal maker accrual receives zero objective credit.',
+  type: 'string',
+  enum: [
+    'below_payout_threshold',
+    'reconciliation_stale',
+    'reconciliation_incomplete',
+    'reconciliation_unavailable',
+  ],
+};
+function validate80(
   data,
   {
     instancePath = '',
@@ -15349,21 +15812,25 @@ function validate78(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate78.evaluated;
+  const evaluated0 = validate80.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
   if (evaluated0.dynamicItems) {
     evaluated0.items = undefined;
   }
+  const _errs0 = errors;
+  let valid0 = false;
+  let passing0 = null;
+  const _errs1 = errors;
   if (data && typeof data == 'object' && !Array.isArray(data)) {
-    if (data.expected_rebate_usd === undefined) {
+    if (data.state === undefined) {
       const err0 = {
         instancePath,
-        schemaPath: '#/required',
+        schemaPath: '#/oneOf/0/required',
         keyword: 'required',
-        params: { missingProperty: 'expected_rebate_usd' },
-        message: "must have required property '" + 'expected_rebate_usd' + "'",
+        params: { missingProperty: 'state' },
+        message: "must have required property '" + 'state' + "'",
       };
       if (vErrors === null) {
         vErrors = [err0];
@@ -15372,13 +15839,649 @@ function validate78(
       }
       errors++;
     }
+    for (const key0 in data) {
+      if (!(key0 === 'state')) {
+        const err1 = {
+          instancePath,
+          schemaPath: '#/oneOf/0/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: key0 },
+          message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err1];
+        } else {
+          vErrors.push(err1);
+        }
+        errors++;
+      }
+    }
+    if (data.state !== undefined) {
+      let data0 = data.state;
+      if (typeof data0 !== 'string') {
+        const err2 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/0/properties/state/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err2];
+        } else {
+          vErrors.push(err2);
+        }
+        errors++;
+      }
+      if ('not_applicable' !== data0) {
+        const err3 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/0/properties/state/const',
+          keyword: 'const',
+          params: { allowedValue: 'not_applicable' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+    }
+  } else {
+    const err4 = {
+      instancePath,
+      schemaPath: '#/oneOf/0/type',
+      keyword: 'type',
+      params: { type: 'object' },
+      message: 'must be object',
+    };
+    if (vErrors === null) {
+      vErrors = [err4];
+    } else {
+      vErrors.push(err4);
+    }
+    errors++;
+  }
+  var _valid0 = _errs1 === errors;
+  if (_valid0) {
+    valid0 = true;
+    passing0 = 0;
+    var props0 = true;
+  }
+  const _errs6 = errors;
+  if (data && typeof data == 'object' && !Array.isArray(data)) {
+    if (data.state === undefined) {
+      const err5 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'state' },
+        message: "must have required property '" + 'state' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err5];
+      } else {
+        vErrors.push(err5);
+      }
+      errors++;
+    }
+    for (const key1 in data) {
+      if (!(key1 === 'state')) {
+        const err6 = {
+          instancePath,
+          schemaPath: '#/oneOf/1/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: key1 },
+          message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err6];
+        } else {
+          vErrors.push(err6);
+        }
+        errors++;
+      }
+    }
+    if (data.state !== undefined) {
+      let data1 = data.state;
+      if (typeof data1 !== 'string') {
+        const err7 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/1/properties/state/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err7];
+        } else {
+          vErrors.push(err7);
+        }
+        errors++;
+      }
+      if ('no_program' !== data1) {
+        const err8 = {
+          instancePath: instancePath + '/state',
+          schemaPath: '#/oneOf/1/properties/state/const',
+          keyword: 'const',
+          params: { allowedValue: 'no_program' },
+          message: 'must be equal to constant',
+        };
+        if (vErrors === null) {
+          vErrors = [err8];
+        } else {
+          vErrors.push(err8);
+        }
+        errors++;
+      }
+    }
+  } else {
+    const err9 = {
+      instancePath,
+      schemaPath: '#/oneOf/1/type',
+      keyword: 'type',
+      params: { type: 'object' },
+      message: 'must be object',
+    };
+    if (vErrors === null) {
+      vErrors = [err9];
+    } else {
+      vErrors.push(err9);
+    }
+    errors++;
+  }
+  var _valid0 = _errs6 === errors;
+  if (_valid0 && valid0) {
+    valid0 = false;
+    passing0 = [passing0, 1];
+  } else {
+    if (_valid0) {
+      valid0 = true;
+      passing0 = 1;
+      if (props0 !== true) {
+        props0 = true;
+      }
+    }
+    const _errs11 = errors;
+    if (data && typeof data == 'object' && !Array.isArray(data)) {
+      if (data.state === undefined) {
+        const err10 = {
+          instancePath,
+          schemaPath: '#/oneOf/2/required',
+          keyword: 'required',
+          params: { missingProperty: 'state' },
+          message: "must have required property '" + 'state' + "'",
+        };
+        if (vErrors === null) {
+          vErrors = [err10];
+        } else {
+          vErrors.push(err10);
+        }
+        errors++;
+      }
+      if (data.reason === undefined) {
+        const err11 = {
+          instancePath,
+          schemaPath: '#/oneOf/2/required',
+          keyword: 'required',
+          params: { missingProperty: 'reason' },
+          message: "must have required property '" + 'reason' + "'",
+        };
+        if (vErrors === null) {
+          vErrors = [err11];
+        } else {
+          vErrors.push(err11);
+        }
+        errors++;
+      }
+      for (const key2 in data) {
+        if (!(key2 === 'reason' || key2 === 'state')) {
+          const err12 = {
+            instancePath,
+            schemaPath: '#/oneOf/2/additionalProperties',
+            keyword: 'additionalProperties',
+            params: { additionalProperty: key2 },
+            message: 'must NOT have additional properties',
+          };
+          if (vErrors === null) {
+            vErrors = [err12];
+          } else {
+            vErrors.push(err12);
+          }
+          errors++;
+        }
+      }
+      if (data.reason !== undefined) {
+        let data2 = data.reason;
+        if (typeof data2 !== 'string') {
+          const err13 = {
+            instancePath: instancePath + '/reason',
+            schemaPath: '#/$defs/MakerRebateObjectiveZeroReason/type',
+            keyword: 'type',
+            params: { type: 'string' },
+            message: 'must be string',
+          };
+          if (vErrors === null) {
+            vErrors = [err13];
+          } else {
+            vErrors.push(err13);
+          }
+          errors++;
+        }
+        if (
+          !(
+            data2 === 'below_payout_threshold' ||
+            data2 === 'reconciliation_stale' ||
+            data2 === 'reconciliation_incomplete' ||
+            data2 === 'reconciliation_unavailable'
+          )
+        ) {
+          const err14 = {
+            instancePath: instancePath + '/reason',
+            schemaPath: '#/$defs/MakerRebateObjectiveZeroReason/enum',
+            keyword: 'enum',
+            params: { allowedValues: schema177.enum },
+            message: 'must be equal to one of the allowed values',
+          };
+          if (vErrors === null) {
+            vErrors = [err14];
+          } else {
+            vErrors.push(err14);
+          }
+          errors++;
+        }
+      }
+      if (data.state !== undefined) {
+        let data3 = data.state;
+        if (typeof data3 !== 'string') {
+          const err15 = {
+            instancePath: instancePath + '/state',
+            schemaPath: '#/oneOf/2/properties/state/type',
+            keyword: 'type',
+            params: { type: 'string' },
+            message: 'must be string',
+          };
+          if (vErrors === null) {
+            vErrors = [err15];
+          } else {
+            vErrors.push(err15);
+          }
+          errors++;
+        }
+        if ('zero' !== data3) {
+          const err16 = {
+            instancePath: instancePath + '/state',
+            schemaPath: '#/oneOf/2/properties/state/const',
+            keyword: 'const',
+            params: { allowedValue: 'zero' },
+            message: 'must be equal to constant',
+          };
+          if (vErrors === null) {
+            vErrors = [err16];
+          } else {
+            vErrors.push(err16);
+          }
+          errors++;
+        }
+      }
+    } else {
+      const err17 = {
+        instancePath,
+        schemaPath: '#/oneOf/2/type',
+        keyword: 'type',
+        params: { type: 'object' },
+        message: 'must be object',
+      };
+      if (vErrors === null) {
+        vErrors = [err17];
+      } else {
+        vErrors.push(err17);
+      }
+      errors++;
+    }
+    var _valid0 = _errs11 === errors;
+    if (_valid0 && valid0) {
+      valid0 = false;
+      passing0 = [passing0, 2];
+    } else {
+      if (_valid0) {
+        valid0 = true;
+        passing0 = 2;
+        if (props0 !== true) {
+          props0 = true;
+        }
+      }
+      const _errs19 = errors;
+      if (data && typeof data == 'object' && !Array.isArray(data)) {
+        if (data.state === undefined) {
+          const err18 = {
+            instancePath,
+            schemaPath: '#/oneOf/3/required',
+            keyword: 'required',
+            params: { missingProperty: 'state' },
+            message: "must have required property '" + 'state' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err18];
+          } else {
+            vErrors.push(err18);
+          }
+          errors++;
+        }
+        if (data.credited_probability_bps === undefined) {
+          const err19 = {
+            instancePath,
+            schemaPath: '#/oneOf/3/required',
+            keyword: 'required',
+            params: { missingProperty: 'credited_probability_bps' },
+            message:
+              "must have required property '" +
+              'credited_probability_bps' +
+              "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err19];
+          } else {
+            vErrors.push(err19);
+          }
+          errors++;
+        }
+        for (const key3 in data) {
+          if (!(key3 === 'credited_probability_bps' || key3 === 'state')) {
+            const err20 = {
+              instancePath,
+              schemaPath: '#/oneOf/3/additionalProperties',
+              keyword: 'additionalProperties',
+              params: { additionalProperty: key3 },
+              message: 'must NOT have additional properties',
+            };
+            if (vErrors === null) {
+              vErrors = [err20];
+            } else {
+              vErrors.push(err20);
+            }
+            errors++;
+          }
+        }
+        if (data.credited_probability_bps !== undefined) {
+          let data4 = data.credited_probability_bps;
+          if (
+            !(
+              typeof data4 == 'number' &&
+              !(data4 % 1) &&
+              !isNaN(data4) &&
+              isFinite(data4)
+            )
+          ) {
+            const err21 = {
+              instancePath: instancePath + '/credited_probability_bps',
+              schemaPath: '#/oneOf/3/properties/credited_probability_bps/type',
+              keyword: 'type',
+              params: { type: 'integer' },
+              message: 'must be integer',
+            };
+            if (vErrors === null) {
+              vErrors = [err21];
+            } else {
+              vErrors.push(err21);
+            }
+            errors++;
+          }
+          if (typeof data4 == 'number' && isFinite(data4)) {
+            if (data4 > 4294967295 || isNaN(data4)) {
+              const err22 = {
+                instancePath: instancePath + '/credited_probability_bps',
+                schemaPath:
+                  '#/oneOf/3/properties/credited_probability_bps/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 4294967295 },
+                message: 'must be <= 4294967295',
+              };
+              if (vErrors === null) {
+                vErrors = [err22];
+              } else {
+                vErrors.push(err22);
+              }
+              errors++;
+            }
+            if (data4 < 0 || isNaN(data4)) {
+              const err23 = {
+                instancePath: instancePath + '/credited_probability_bps',
+                schemaPath:
+                  '#/oneOf/3/properties/credited_probability_bps/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err23];
+              } else {
+                vErrors.push(err23);
+              }
+              errors++;
+            }
+          }
+        }
+        if (data.state !== undefined) {
+          let data5 = data.state;
+          if (typeof data5 !== 'string') {
+            const err24 = {
+              instancePath: instancePath + '/state',
+              schemaPath: '#/oneOf/3/properties/state/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err24];
+            } else {
+              vErrors.push(err24);
+            }
+            errors++;
+          }
+          if ('scenario_weighted' !== data5) {
+            const err25 = {
+              instancePath: instancePath + '/state',
+              schemaPath: '#/oneOf/3/properties/state/const',
+              keyword: 'const',
+              params: { allowedValue: 'scenario_weighted' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err25];
+            } else {
+              vErrors.push(err25);
+            }
+            errors++;
+          }
+        }
+      } else {
+        const err26 = {
+          instancePath,
+          schemaPath: '#/oneOf/3/type',
+          keyword: 'type',
+          params: { type: 'object' },
+          message: 'must be object',
+        };
+        if (vErrors === null) {
+          vErrors = [err26];
+        } else {
+          vErrors.push(err26);
+        }
+        errors++;
+      }
+      var _valid0 = _errs19 === errors;
+      if (_valid0 && valid0) {
+        valid0 = false;
+        passing0 = [passing0, 3];
+      } else {
+        if (_valid0) {
+          valid0 = true;
+          passing0 = 3;
+          if (props0 !== true) {
+            props0 = true;
+          }
+        }
+      }
+    }
+  }
+  if (!valid0) {
+    const err27 = {
+      instancePath,
+      schemaPath: '#/oneOf',
+      keyword: 'oneOf',
+      params: { passingSchemas: passing0 },
+      message: 'must match exactly one schema in oneOf',
+    };
+    if (vErrors === null) {
+      vErrors = [err27];
+    } else {
+      vErrors.push(err27);
+    }
+    errors++;
+  } else {
+    errors = _errs0;
+    if (vErrors !== null) {
+      if (_errs0) {
+        vErrors.length = _errs0;
+      } else {
+        vErrors = null;
+      }
+    }
+  }
+  validate80.errors = vErrors;
+  evaluated0.props = props0;
+  return errors === 0;
+}
+validate80.evaluated = { dynamicProps: true, dynamicItems: false };
+const schema178 = {
+  description:
+    'Frozen account-level evidence used by all passive tiers in one report.',
+  type: 'object',
+  properties: {
+    as_of: { type: 'string', format: 'date-time' },
+    delay_basis: { $ref: '#/$defs/MakerRebateDelayBasis' },
+    evidence_hash: { type: 'string', pattern: '^blake3:[0-9a-f]{64}$' },
+    health: { $ref: '#/$defs/MakerRebateValuationHealth' },
+    payout_threshold_usd: { $ref: '#/$defs/Usd' },
+    program_day_baselines: {
+      type: 'array',
+      items: { $ref: '#/$defs/MakerRebateProgramDayBaseline' },
+    },
+  },
+  additionalProperties: false,
+  required: [
+    'as_of',
+    'health',
+    'program_day_baselines',
+    'payout_threshold_usd',
+    'delay_basis',
+    'evidence_hash',
+  ],
+};
+const schema179 = {
+  description:
+    "Frozen payout-lag evidence. Lag is measured from the close of the maker\nfill's UTC program day, never from a later API observation timestamp.",
+  oneOf: [
+    {
+      type: 'object',
+      properties: {
+        kind: { type: 'string', const: 'conservative_fallback' },
+        lag_from_program_close_secs: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 9007199254740991,
+        },
+      },
+      additionalProperties: false,
+      required: ['kind', 'lag_from_program_close_secs'],
+    },
+    {
+      type: 'object',
+      properties: {
+        complete_program_days: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 4294967295,
+        },
+        kind: { type: 'string', const: 'observed_p95' },
+        lag_from_program_close_secs: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 9007199254740991,
+        },
+      },
+      additionalProperties: false,
+      required: [
+        'kind',
+        'lag_from_program_close_secs',
+        'complete_program_days',
+      ],
+    },
+  ],
+};
+const schema180 = {
+  description:
+    'Point-in-time health of the account evidence required to value an\nunreceived maker rebate in the expected objective.',
+  type: 'string',
+  enum: ['healthy', 'stale', 'incomplete', 'unavailable'],
+};
+const schema182 = {
+  description:
+    "Confirmed local maker-fill accrual already accumulated on one UTC program\nday before the current report's hypothetical fills are added.",
+  type: 'object',
+  properties: {
+    confirmed_accrual_usd: { $ref: '#/$defs/Usd' },
+    program_date: { type: 'string', format: 'date' },
+  },
+  additionalProperties: false,
+  required: ['program_date', 'confirmed_accrual_usd'],
+};
+function validate84(
+  data,
+  {
+    instancePath = '',
+    parentData,
+    parentDataProperty,
+    rootData = data,
+    dynamicAnchors = {},
+  } = {},
+) {
+  let vErrors = null;
+  let errors = 0;
+  const evaluated0 = validate84.evaluated;
+  if (evaluated0.dynamicProps) {
+    evaluated0.props = undefined;
+  }
+  if (evaluated0.dynamicItems) {
+    evaluated0.items = undefined;
+  }
+  if (data && typeof data == 'object' && !Array.isArray(data)) {
     if (data.program_date === undefined) {
-      const err1 = {
+      const err0 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
         params: { missingProperty: 'program_date' },
         message: "must have required property '" + 'program_date' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    }
+    if (data.confirmed_accrual_usd === undefined) {
+      const err1 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'confirmed_accrual_usd' },
+        message:
+          "must have required property '" + 'confirmed_accrual_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err1];
@@ -15387,67 +16490,65 @@ function validate78(
       }
       errors++;
     }
-    if (data.expected_credit_at === undefined) {
-      const err2 = {
-        instancePath,
-        schemaPath: '#/required',
-        keyword: 'required',
-        params: { missingProperty: 'expected_credit_at' },
-        message: "must have required property '" + 'expected_credit_at' + "'",
-      };
-      if (vErrors === null) {
-        vErrors = [err2];
-      } else {
-        vErrors.push(err2);
-      }
-      errors++;
-    }
-    if (data.source_schedule_hash === undefined) {
-      const err3 = {
-        instancePath,
-        schemaPath: '#/required',
-        keyword: 'required',
-        params: { missingProperty: 'source_schedule_hash' },
-        message: "must have required property '" + 'source_schedule_hash' + "'",
-      };
-      if (vErrors === null) {
-        vErrors = [err3];
-      } else {
-        vErrors.push(err3);
-      }
-      errors++;
-    }
-    if (data.eligibility === undefined) {
-      const err4 = {
-        instancePath,
-        schemaPath: '#/required',
-        keyword: 'required',
-        params: { missingProperty: 'eligibility' },
-        message: "must have required property '" + 'eligibility' + "'",
-      };
-      if (vErrors === null) {
-        vErrors = [err4];
-      } else {
-        vErrors.push(err4);
-      }
-      errors++;
-    }
     for (const key0 in data) {
-      if (
-        !(
-          key0 === 'eligibility' ||
-          key0 === 'expected_credit_at' ||
-          key0 === 'expected_rebate_usd' ||
-          key0 === 'program_date' ||
-          key0 === 'source_schedule_hash'
-        )
-      ) {
-        const err5 = {
+      if (!(key0 === 'confirmed_accrual_usd' || key0 === 'program_date')) {
+        const err2 = {
           instancePath,
           schemaPath: '#/additionalProperties',
           keyword: 'additionalProperties',
           params: { additionalProperty: key0 },
           message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err2];
+        } else {
+          vErrors.push(err2);
+        }
+        errors++;
+      }
+    }
+    if (data.confirmed_accrual_usd !== undefined) {
+      if (typeof data.confirmed_accrual_usd !== 'string') {
+        const err3 = {
+          instancePath: instancePath + '/confirmed_accrual_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+    }
+    if (data.program_date !== undefined) {
+      let data1 = data.program_date;
+      if (typeof data1 === 'string') {
+        if (!formats88.validate(data1)) {
+          const err4 = {
+            instancePath: instancePath + '/program_date',
+            schemaPath: '#/properties/program_date/format',
+            keyword: 'format',
+            params: { format: 'date' },
+            message: 'must match format "' + 'date' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err4];
+          } else {
+            vErrors.push(err4);
+          }
+          errors++;
+        }
+      } else {
+        const err5 = {
+          instancePath: instancePath + '/program_date',
+          schemaPath: '#/properties/program_date/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err5];
@@ -15457,193 +16558,8 @@ function validate78(
         errors++;
       }
     }
-    if (data.eligibility !== undefined) {
-      let data0 = data.eligibility;
-      const _errs4 = errors;
-      let valid2 = false;
-      let passing0 = null;
-      const _errs5 = errors;
-      if (typeof data0 !== 'string') {
-        const err6 = {
-          instancePath: instancePath + '/eligibility',
-          schemaPath: '#/$defs/MakerRebateEligibility/oneOf/0/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err6];
-        } else {
-          vErrors.push(err6);
-        }
-        errors++;
-      }
-      if ('eligible_maker_fill' !== data0) {
-        const err7 = {
-          instancePath: instancePath + '/eligibility',
-          schemaPath: '#/$defs/MakerRebateEligibility/oneOf/0/const',
-          keyword: 'const',
-          params: { allowedValue: 'eligible_maker_fill' },
-          message: 'must be equal to constant',
-        };
-        if (vErrors === null) {
-          vErrors = [err7];
-        } else {
-          vErrors.push(err7);
-        }
-        errors++;
-      }
-      var _valid0 = _errs5 === errors;
-      if (_valid0) {
-        valid2 = true;
-        passing0 = 0;
-      }
-      if (!valid2) {
-        const err8 = {
-          instancePath: instancePath + '/eligibility',
-          schemaPath: '#/$defs/MakerRebateEligibility/oneOf',
-          keyword: 'oneOf',
-          params: { passingSchemas: passing0 },
-          message: 'must match exactly one schema in oneOf',
-        };
-        if (vErrors === null) {
-          vErrors = [err8];
-        } else {
-          vErrors.push(err8);
-        }
-        errors++;
-      } else {
-        errors = _errs4;
-        if (vErrors !== null) {
-          if (_errs4) {
-            vErrors.length = _errs4;
-          } else {
-            vErrors = null;
-          }
-        }
-      }
-    }
-    if (data.expected_credit_at !== undefined) {
-      let data1 = data.expected_credit_at;
-      if (typeof data1 === 'string') {
-        if (!formats2.validate(data1)) {
-          const err9 = {
-            instancePath: instancePath + '/expected_credit_at',
-            schemaPath: '#/properties/expected_credit_at/format',
-            keyword: 'format',
-            params: { format: 'date-time' },
-            message: 'must match format "' + 'date-time' + '"',
-          };
-          if (vErrors === null) {
-            vErrors = [err9];
-          } else {
-            vErrors.push(err9);
-          }
-          errors++;
-        }
-      } else {
-        const err10 = {
-          instancePath: instancePath + '/expected_credit_at',
-          schemaPath: '#/properties/expected_credit_at/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err10];
-        } else {
-          vErrors.push(err10);
-        }
-        errors++;
-      }
-    }
-    if (data.expected_rebate_usd !== undefined) {
-      if (typeof data.expected_rebate_usd !== 'string') {
-        const err11 = {
-          instancePath: instancePath + '/expected_rebate_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err11];
-        } else {
-          vErrors.push(err11);
-        }
-        errors++;
-      }
-    }
-    if (data.program_date !== undefined) {
-      let data3 = data.program_date;
-      if (typeof data3 === 'string') {
-        if (!formats88.validate(data3)) {
-          const err12 = {
-            instancePath: instancePath + '/program_date',
-            schemaPath: '#/properties/program_date/format',
-            keyword: 'format',
-            params: { format: 'date' },
-            message: 'must match format "' + 'date' + '"',
-          };
-          if (vErrors === null) {
-            vErrors = [err12];
-          } else {
-            vErrors.push(err12);
-          }
-          errors++;
-        }
-      } else {
-        const err13 = {
-          instancePath: instancePath + '/program_date',
-          schemaPath: '#/properties/program_date/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err13];
-        } else {
-          vErrors.push(err13);
-        }
-        errors++;
-      }
-    }
-    if (data.source_schedule_hash !== undefined) {
-      let data4 = data.source_schedule_hash;
-      if (typeof data4 === 'string') {
-        if (!pattern4.test(data4)) {
-          const err14 = {
-            instancePath: instancePath + '/source_schedule_hash',
-            schemaPath: '#/properties/source_schedule_hash/pattern',
-            keyword: 'pattern',
-            params: { pattern: '^blake3:[0-9a-f]{64}$' },
-            message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
-          };
-          if (vErrors === null) {
-            vErrors = [err14];
-          } else {
-            vErrors.push(err14);
-          }
-          errors++;
-        }
-      } else {
-        const err15 = {
-          instancePath: instancePath + '/source_schedule_hash',
-          schemaPath: '#/properties/source_schedule_hash/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err15];
-        } else {
-          vErrors.push(err15);
-        }
-        errors++;
-      }
-    }
   } else {
-    const err16 = {
+    const err6 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -15651,21 +16567,21 @@ function validate78(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err16];
+      vErrors = [err6];
     } else {
-      vErrors.push(err16);
+      vErrors.push(err6);
     }
     errors++;
   }
-  validate78.errors = vErrors;
+  validate84.errors = vErrors;
   return errors === 0;
 }
-validate78.evaluated = {
+validate84.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate70(
+function validate83(
   data,
   {
     instancePath = '',
@@ -15677,7 +16593,794 @@ function validate70(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate70.evaluated;
+  const evaluated0 = validate83.evaluated;
+  if (evaluated0.dynamicProps) {
+    evaluated0.props = undefined;
+  }
+  if (evaluated0.dynamicItems) {
+    evaluated0.items = undefined;
+  }
+  if (data && typeof data == 'object' && !Array.isArray(data)) {
+    if (data.as_of === undefined) {
+      const err0 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'as_of' },
+        message: "must have required property '" + 'as_of' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    }
+    if (data.health === undefined) {
+      const err1 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'health' },
+        message: "must have required property '" + 'health' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err1];
+      } else {
+        vErrors.push(err1);
+      }
+      errors++;
+    }
+    if (data.program_day_baselines === undefined) {
+      const err2 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'program_day_baselines' },
+        message:
+          "must have required property '" + 'program_day_baselines' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err2];
+      } else {
+        vErrors.push(err2);
+      }
+      errors++;
+    }
+    if (data.payout_threshold_usd === undefined) {
+      const err3 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'payout_threshold_usd' },
+        message: "must have required property '" + 'payout_threshold_usd' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err3];
+      } else {
+        vErrors.push(err3);
+      }
+      errors++;
+    }
+    if (data.delay_basis === undefined) {
+      const err4 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'delay_basis' },
+        message: "must have required property '" + 'delay_basis' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err4];
+      } else {
+        vErrors.push(err4);
+      }
+      errors++;
+    }
+    if (data.evidence_hash === undefined) {
+      const err5 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'evidence_hash' },
+        message: "must have required property '" + 'evidence_hash' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err5];
+      } else {
+        vErrors.push(err5);
+      }
+      errors++;
+    }
+    for (const key0 in data) {
+      if (
+        !(
+          key0 === 'as_of' ||
+          key0 === 'delay_basis' ||
+          key0 === 'evidence_hash' ||
+          key0 === 'health' ||
+          key0 === 'payout_threshold_usd' ||
+          key0 === 'program_day_baselines'
+        )
+      ) {
+        const err6 = {
+          instancePath,
+          schemaPath: '#/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: key0 },
+          message: 'must NOT have additional properties',
+        };
+        if (vErrors === null) {
+          vErrors = [err6];
+        } else {
+          vErrors.push(err6);
+        }
+        errors++;
+      }
+    }
+    if (data.as_of !== undefined) {
+      let data0 = data.as_of;
+      if (typeof data0 === 'string') {
+        if (!formats2.validate(data0)) {
+          const err7 = {
+            instancePath: instancePath + '/as_of',
+            schemaPath: '#/properties/as_of/format',
+            keyword: 'format',
+            params: { format: 'date-time' },
+            message: 'must match format "' + 'date-time' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err7];
+          } else {
+            vErrors.push(err7);
+          }
+          errors++;
+        }
+      } else {
+        const err8 = {
+          instancePath: instancePath + '/as_of',
+          schemaPath: '#/properties/as_of/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err8];
+        } else {
+          vErrors.push(err8);
+        }
+        errors++;
+      }
+    }
+    if (data.delay_basis !== undefined) {
+      let data1 = data.delay_basis;
+      const _errs6 = errors;
+      let valid2 = false;
+      let passing0 = null;
+      const _errs7 = errors;
+      if (data1 && typeof data1 == 'object' && !Array.isArray(data1)) {
+        if (data1.kind === undefined) {
+          const err9 = {
+            instancePath: instancePath + '/delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/0/required',
+            keyword: 'required',
+            params: { missingProperty: 'kind' },
+            message: "must have required property '" + 'kind' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err9];
+          } else {
+            vErrors.push(err9);
+          }
+          errors++;
+        }
+        if (data1.lag_from_program_close_secs === undefined) {
+          const err10 = {
+            instancePath: instancePath + '/delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/0/required',
+            keyword: 'required',
+            params: { missingProperty: 'lag_from_program_close_secs' },
+            message:
+              "must have required property '" +
+              'lag_from_program_close_secs' +
+              "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err10];
+          } else {
+            vErrors.push(err10);
+          }
+          errors++;
+        }
+        for (const key1 in data1) {
+          if (!(key1 === 'kind' || key1 === 'lag_from_program_close_secs')) {
+            const err11 = {
+              instancePath: instancePath + '/delay_basis',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/additionalProperties',
+              keyword: 'additionalProperties',
+              params: { additionalProperty: key1 },
+              message: 'must NOT have additional properties',
+            };
+            if (vErrors === null) {
+              vErrors = [err11];
+            } else {
+              vErrors.push(err11);
+            }
+            errors++;
+          }
+        }
+        if (data1.kind !== undefined) {
+          let data2 = data1.kind;
+          if (typeof data2 !== 'string') {
+            const err12 = {
+              instancePath: instancePath + '/delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/kind/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err12];
+            } else {
+              vErrors.push(err12);
+            }
+            errors++;
+          }
+          if ('conservative_fallback' !== data2) {
+            const err13 = {
+              instancePath: instancePath + '/delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/kind/const',
+              keyword: 'const',
+              params: { allowedValue: 'conservative_fallback' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err13];
+            } else {
+              vErrors.push(err13);
+            }
+            errors++;
+          }
+        }
+        if (data1.lag_from_program_close_secs !== undefined) {
+          let data3 = data1.lag_from_program_close_secs;
+          if (
+            !(
+              typeof data3 == 'number' &&
+              !(data3 % 1) &&
+              !isNaN(data3) &&
+              isFinite(data3)
+            )
+          ) {
+            const err14 = {
+              instancePath:
+                instancePath + '/delay_basis/lag_from_program_close_secs',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/lag_from_program_close_secs/type',
+              keyword: 'type',
+              params: { type: 'integer' },
+              message: 'must be integer',
+            };
+            if (vErrors === null) {
+              vErrors = [err14];
+            } else {
+              vErrors.push(err14);
+            }
+            errors++;
+          }
+          if (typeof data3 == 'number' && isFinite(data3)) {
+            if (data3 > 9007199254740991 || isNaN(data3)) {
+              const err15 = {
+                instancePath:
+                  instancePath + '/delay_basis/lag_from_program_close_secs',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/lag_from_program_close_secs/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 9007199254740991 },
+                message: 'must be <= 9007199254740991',
+              };
+              if (vErrors === null) {
+                vErrors = [err15];
+              } else {
+                vErrors.push(err15);
+              }
+              errors++;
+            }
+            if (data3 < 0 || isNaN(data3)) {
+              const err16 = {
+                instancePath:
+                  instancePath + '/delay_basis/lag_from_program_close_secs',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/lag_from_program_close_secs/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err16];
+              } else {
+                vErrors.push(err16);
+              }
+              errors++;
+            }
+          }
+        }
+      } else {
+        const err17 = {
+          instancePath: instancePath + '/delay_basis',
+          schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/0/type',
+          keyword: 'type',
+          params: { type: 'object' },
+          message: 'must be object',
+        };
+        if (vErrors === null) {
+          vErrors = [err17];
+        } else {
+          vErrors.push(err17);
+        }
+        errors++;
+      }
+      var _valid0 = _errs7 === errors;
+      if (_valid0) {
+        valid2 = true;
+        passing0 = 0;
+        var props0 = true;
+      }
+      const _errs14 = errors;
+      if (data1 && typeof data1 == 'object' && !Array.isArray(data1)) {
+        if (data1.kind === undefined) {
+          const err18 = {
+            instancePath: instancePath + '/delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'kind' },
+            message: "must have required property '" + 'kind' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err18];
+          } else {
+            vErrors.push(err18);
+          }
+          errors++;
+        }
+        if (data1.lag_from_program_close_secs === undefined) {
+          const err19 = {
+            instancePath: instancePath + '/delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'lag_from_program_close_secs' },
+            message:
+              "must have required property '" +
+              'lag_from_program_close_secs' +
+              "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err19];
+          } else {
+            vErrors.push(err19);
+          }
+          errors++;
+        }
+        if (data1.complete_program_days === undefined) {
+          const err20 = {
+            instancePath: instancePath + '/delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'complete_program_days' },
+            message:
+              "must have required property '" + 'complete_program_days' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err20];
+          } else {
+            vErrors.push(err20);
+          }
+          errors++;
+        }
+        for (const key2 in data1) {
+          if (
+            !(
+              key2 === 'complete_program_days' ||
+              key2 === 'kind' ||
+              key2 === 'lag_from_program_close_secs'
+            )
+          ) {
+            const err21 = {
+              instancePath: instancePath + '/delay_basis',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/additionalProperties',
+              keyword: 'additionalProperties',
+              params: { additionalProperty: key2 },
+              message: 'must NOT have additional properties',
+            };
+            if (vErrors === null) {
+              vErrors = [err21];
+            } else {
+              vErrors.push(err21);
+            }
+            errors++;
+          }
+        }
+        if (data1.complete_program_days !== undefined) {
+          let data4 = data1.complete_program_days;
+          if (
+            !(
+              typeof data4 == 'number' &&
+              !(data4 % 1) &&
+              !isNaN(data4) &&
+              isFinite(data4)
+            )
+          ) {
+            const err22 = {
+              instancePath: instancePath + '/delay_basis/complete_program_days',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/complete_program_days/type',
+              keyword: 'type',
+              params: { type: 'integer' },
+              message: 'must be integer',
+            };
+            if (vErrors === null) {
+              vErrors = [err22];
+            } else {
+              vErrors.push(err22);
+            }
+            errors++;
+          }
+          if (typeof data4 == 'number' && isFinite(data4)) {
+            if (data4 > 4294967295 || isNaN(data4)) {
+              const err23 = {
+                instancePath:
+                  instancePath + '/delay_basis/complete_program_days',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/complete_program_days/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 4294967295 },
+                message: 'must be <= 4294967295',
+              };
+              if (vErrors === null) {
+                vErrors = [err23];
+              } else {
+                vErrors.push(err23);
+              }
+              errors++;
+            }
+            if (data4 < 0 || isNaN(data4)) {
+              const err24 = {
+                instancePath:
+                  instancePath + '/delay_basis/complete_program_days',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/complete_program_days/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err24];
+              } else {
+                vErrors.push(err24);
+              }
+              errors++;
+            }
+          }
+        }
+        if (data1.kind !== undefined) {
+          let data5 = data1.kind;
+          if (typeof data5 !== 'string') {
+            const err25 = {
+              instancePath: instancePath + '/delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/kind/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
+            };
+            if (vErrors === null) {
+              vErrors = [err25];
+            } else {
+              vErrors.push(err25);
+            }
+            errors++;
+          }
+          if ('observed_p95' !== data5) {
+            const err26 = {
+              instancePath: instancePath + '/delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/kind/const',
+              keyword: 'const',
+              params: { allowedValue: 'observed_p95' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err26];
+            } else {
+              vErrors.push(err26);
+            }
+            errors++;
+          }
+        }
+        if (data1.lag_from_program_close_secs !== undefined) {
+          let data6 = data1.lag_from_program_close_secs;
+          if (
+            !(
+              typeof data6 == 'number' &&
+              !(data6 % 1) &&
+              !isNaN(data6) &&
+              isFinite(data6)
+            )
+          ) {
+            const err27 = {
+              instancePath:
+                instancePath + '/delay_basis/lag_from_program_close_secs',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/lag_from_program_close_secs/type',
+              keyword: 'type',
+              params: { type: 'integer' },
+              message: 'must be integer',
+            };
+            if (vErrors === null) {
+              vErrors = [err27];
+            } else {
+              vErrors.push(err27);
+            }
+            errors++;
+          }
+          if (typeof data6 == 'number' && isFinite(data6)) {
+            if (data6 > 9007199254740991 || isNaN(data6)) {
+              const err28 = {
+                instancePath:
+                  instancePath + '/delay_basis/lag_from_program_close_secs',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/lag_from_program_close_secs/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 9007199254740991 },
+                message: 'must be <= 9007199254740991',
+              };
+              if (vErrors === null) {
+                vErrors = [err28];
+              } else {
+                vErrors.push(err28);
+              }
+              errors++;
+            }
+            if (data6 < 0 || isNaN(data6)) {
+              const err29 = {
+                instancePath:
+                  instancePath + '/delay_basis/lag_from_program_close_secs',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/lag_from_program_close_secs/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err29];
+              } else {
+                vErrors.push(err29);
+              }
+              errors++;
+            }
+          }
+        }
+      } else {
+        const err30 = {
+          instancePath: instancePath + '/delay_basis',
+          schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/type',
+          keyword: 'type',
+          params: { type: 'object' },
+          message: 'must be object',
+        };
+        if (vErrors === null) {
+          vErrors = [err30];
+        } else {
+          vErrors.push(err30);
+        }
+        errors++;
+      }
+      var _valid0 = _errs14 === errors;
+      if (_valid0 && valid2) {
+        valid2 = false;
+        passing0 = [passing0, 1];
+      } else {
+        if (_valid0) {
+          valid2 = true;
+          passing0 = 1;
+          if (props0 !== true) {
+            props0 = true;
+          }
+        }
+      }
+      if (!valid2) {
+        const err31 = {
+          instancePath: instancePath + '/delay_basis',
+          schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf',
+          keyword: 'oneOf',
+          params: { passingSchemas: passing0 },
+          message: 'must match exactly one schema in oneOf',
+        };
+        if (vErrors === null) {
+          vErrors = [err31];
+        } else {
+          vErrors.push(err31);
+        }
+        errors++;
+      } else {
+        errors = _errs6;
+        if (vErrors !== null) {
+          if (_errs6) {
+            vErrors.length = _errs6;
+          } else {
+            vErrors = null;
+          }
+        }
+      }
+    }
+    if (data.evidence_hash !== undefined) {
+      let data7 = data.evidence_hash;
+      if (typeof data7 === 'string') {
+        if (!pattern4.test(data7)) {
+          const err32 = {
+            instancePath: instancePath + '/evidence_hash',
+            schemaPath: '#/properties/evidence_hash/pattern',
+            keyword: 'pattern',
+            params: { pattern: '^blake3:[0-9a-f]{64}$' },
+            message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err32];
+          } else {
+            vErrors.push(err32);
+          }
+          errors++;
+        }
+      } else {
+        const err33 = {
+          instancePath: instancePath + '/evidence_hash',
+          schemaPath: '#/properties/evidence_hash/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err33];
+        } else {
+          vErrors.push(err33);
+        }
+        errors++;
+      }
+    }
+    if (data.health !== undefined) {
+      let data8 = data.health;
+      if (typeof data8 !== 'string') {
+        const err34 = {
+          instancePath: instancePath + '/health',
+          schemaPath: '#/$defs/MakerRebateValuationHealth/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err34];
+        } else {
+          vErrors.push(err34);
+        }
+        errors++;
+      }
+      if (
+        !(
+          data8 === 'healthy' ||
+          data8 === 'stale' ||
+          data8 === 'incomplete' ||
+          data8 === 'unavailable'
+        )
+      ) {
+        const err35 = {
+          instancePath: instancePath + '/health',
+          schemaPath: '#/$defs/MakerRebateValuationHealth/enum',
+          keyword: 'enum',
+          params: { allowedValues: schema180.enum },
+          message: 'must be equal to one of the allowed values',
+        };
+        if (vErrors === null) {
+          vErrors = [err35];
+        } else {
+          vErrors.push(err35);
+        }
+        errors++;
+      }
+    }
+    if (data.payout_threshold_usd !== undefined) {
+      if (typeof data.payout_threshold_usd !== 'string') {
+        const err36 = {
+          instancePath: instancePath + '/payout_threshold_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err36];
+        } else {
+          vErrors.push(err36);
+        }
+        errors++;
+      }
+    }
+    if (data.program_day_baselines !== undefined) {
+      let data10 = data.program_day_baselines;
+      if (Array.isArray(data10)) {
+        const len0 = data10.length;
+        for (let i0 = 0; i0 < len0; i0++) {
+          if (
+            !validate84(data10[i0], {
+              instancePath: instancePath + '/program_day_baselines/' + i0,
+              parentData: data10,
+              parentDataProperty: i0,
+              rootData,
+              dynamicAnchors,
+            })
+          ) {
+            vErrors =
+              vErrors === null
+                ? validate84.errors
+                : vErrors.concat(validate84.errors);
+            errors = vErrors.length;
+          }
+        }
+      } else {
+        const err37 = {
+          instancePath: instancePath + '/program_day_baselines',
+          schemaPath: '#/properties/program_day_baselines/type',
+          keyword: 'type',
+          params: { type: 'array' },
+          message: 'must be array',
+        };
+        if (vErrors === null) {
+          vErrors = [err37];
+        } else {
+          vErrors.push(err37);
+        }
+        errors++;
+      }
+    }
+  } else {
+    const err38 = {
+      instancePath,
+      schemaPath: '#/type',
+      keyword: 'type',
+      params: { type: 'object' },
+      message: 'must be object',
+    };
+    if (vErrors === null) {
+      vErrors = [err38];
+    } else {
+      vErrors.push(err38);
+    }
+    errors++;
+  }
+  validate83.errors = vErrors;
+  return errors === 0;
+}
+validate83.evaluated = {
+  props: true,
+  dynamicProps: false,
+  dynamicItems: false,
+};
+function validate72(
+  data,
+  {
+    instancePath = '',
+    parentData,
+    parentDataProperty,
+    rootData = data,
+    dynamicAnchors = {},
+  } = {},
+) {
+  let vErrors = null;
+  let errors = 0;
+  const evaluated0 = validate72.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -15749,13 +17452,13 @@ function validate70(
       }
       errors++;
     }
-    if (data.entry_vwap === undefined) {
+    if (data.execution_vwap === undefined) {
       const err4 = {
         instancePath,
         schemaPath: '#/oneOf/0/required',
         keyword: 'required',
-        params: { missingProperty: 'entry_vwap' },
-        message: "must have required property '" + 'entry_vwap' + "'",
+        params: { missingProperty: 'execution_vwap' },
+        message: "must have required property '" + 'execution_vwap' + "'",
       };
       if (vErrors === null) {
         vErrors = [err4];
@@ -15813,7 +17516,7 @@ function validate70(
     for (const key0 in data) {
       if (
         !(
-          key0 === 'entry_vwap' ||
+          key0 === 'execution_vwap' ||
           key0 === 'filled_shares' ||
           key0 === 'immediate_cost' ||
           key0 === 'kind' ||
@@ -15838,10 +17541,10 @@ function validate70(
         errors++;
       }
     }
-    if (data.entry_vwap !== undefined) {
-      if (typeof data.entry_vwap !== 'string') {
+    if (data.execution_vwap !== undefined) {
+      if (typeof data.execution_vwap !== 'string') {
         const err9 = {
-          instancePath: instancePath + '/entry_vwap',
+          instancePath: instancePath + '/execution_vwap',
           schemaPath: '#/$defs/Price/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -15874,7 +17577,7 @@ function validate70(
     }
     if (data.immediate_cost !== undefined) {
       if (
-        !validate71(data.immediate_cost, {
+        !validate73(data.immediate_cost, {
           instancePath: instancePath + '/immediate_cost',
           parentData: data,
           parentDataProperty: 'immediate_cost',
@@ -15884,8 +17587,8 @@ function validate70(
       ) {
         vErrors =
           vErrors === null
-            ? validate71.errors
-            : vErrors.concat(validate71.errors);
+            ? validate73.errors
+            : vErrors.concat(validate73.errors);
         errors = vErrors.length;
       }
     }
@@ -16150,14 +17853,13 @@ function validate70(
       }
       errors++;
     }
-    if (data.expected_maker_rebate_usd === undefined) {
+    if (data.maker_rebate_terms === undefined) {
       const err27 = {
         instancePath,
         schemaPath: '#/oneOf/1/required',
         keyword: 'required',
-        params: { missingProperty: 'expected_maker_rebate_usd' },
-        message:
-          "must have required property '" + 'expected_maker_rebate_usd' + "'",
+        params: { missingProperty: 'maker_rebate_terms' },
+        message: "must have required property '" + 'maker_rebate_terms' + "'",
       };
       if (vErrors === null) {
         vErrors = [err27];
@@ -16166,14 +17868,16 @@ function validate70(
       }
       errors++;
     }
-    if (data.visible_liquidity_usd === undefined) {
+    if (data.full_fill_maker_rebate_accrual_usd === undefined) {
       const err28 = {
         instancePath,
         schemaPath: '#/oneOf/1/required',
         keyword: 'required',
-        params: { missingProperty: 'visible_liquidity_usd' },
+        params: { missingProperty: 'full_fill_maker_rebate_accrual_usd' },
         message:
-          "must have required property '" + 'visible_liquidity_usd' + "'",
+          "must have required property '" +
+          'full_fill_maker_rebate_accrual_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err28];
@@ -16182,9 +17886,93 @@ function validate70(
       }
       errors++;
     }
+    if (data.expected_maker_rebate_accrual_usd === undefined) {
+      const err29 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'expected_maker_rebate_accrual_usd' },
+        message:
+          "must have required property '" +
+          'expected_maker_rebate_accrual_usd' +
+          "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err29];
+      } else {
+        vErrors.push(err29);
+      }
+      errors++;
+    }
+    if (data.objective_maker_rebate_usd === undefined) {
+      const err30 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'objective_maker_rebate_usd' },
+        message:
+          "must have required property '" + 'objective_maker_rebate_usd' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err30];
+      } else {
+        vErrors.push(err30);
+      }
+      errors++;
+    }
+    if (data.maker_rebate_objective_status === undefined) {
+      const err31 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'maker_rebate_objective_status' },
+        message:
+          "must have required property '" +
+          'maker_rebate_objective_status' +
+          "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err31];
+      } else {
+        vErrors.push(err31);
+      }
+      errors++;
+    }
+    if (data.maker_rebate_valuation === undefined) {
+      const err32 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'maker_rebate_valuation' },
+        message:
+          "must have required property '" + 'maker_rebate_valuation' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err32];
+      } else {
+        vErrors.push(err32);
+      }
+      errors++;
+    }
+    if (data.visible_liquidity_usd === undefined) {
+      const err33 = {
+        instancePath,
+        schemaPath: '#/oneOf/1/required',
+        keyword: 'required',
+        params: { missingProperty: 'visible_liquidity_usd' },
+        message:
+          "must have required property '" + 'visible_liquidity_usd' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err33];
+      } else {
+        vErrors.push(err33);
+      }
+      errors++;
+    }
     for (const key1 in data) {
-      if (!func1.call(schema154.oneOf[1].properties, key1)) {
-        const err29 = {
+      if (!func1.call(schema155.oneOf[1].properties, key1)) {
+        const err34 = {
           instancePath,
           schemaPath: '#/oneOf/1/additionalProperties',
           keyword: 'additionalProperties',
@@ -16192,9 +17980,9 @@ function validate70(
           message: 'must NOT have additional properties',
         };
         if (vErrors === null) {
-          vErrors = [err29];
+          vErrors = [err34];
         } else {
-          vErrors.push(err29);
+          vErrors.push(err34);
         }
         errors++;
       }
@@ -16203,7 +17991,7 @@ function validate70(
       let data8 = data.decision_at;
       if (typeof data8 === 'string') {
         if (!formats2.validate(data8)) {
-          const err30 = {
+          const err35 = {
             instancePath: instancePath + '/decision_at',
             schemaPath: '#/oneOf/1/properties/decision_at/format',
             keyword: 'format',
@@ -16211,14 +17999,14 @@ function validate70(
             message: 'must match format "' + 'date-time' + '"',
           };
           if (vErrors === null) {
-            vErrors = [err30];
+            vErrors = [err35];
           } else {
-            vErrors.push(err30);
+            vErrors.push(err35);
           }
           errors++;
         }
       } else {
-        const err31 = {
+        const err36 = {
           instancePath: instancePath + '/decision_at',
           schemaPath: '#/oneOf/1/properties/decision_at/type',
           keyword: 'type',
@@ -16226,16 +18014,16 @@ function validate70(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err31];
+          vErrors = [err36];
         } else {
-          vErrors.push(err31);
+          vErrors.push(err36);
         }
         errors++;
       }
     }
     if (data.expected_filled_shares !== undefined) {
       if (typeof data.expected_filled_shares !== 'string') {
-        const err32 = {
+        const err37 = {
           instancePath: instancePath + '/expected_filled_shares',
           schemaPath: '#/$defs/Shares/type',
           keyword: 'type',
@@ -16243,36 +18031,53 @@ function validate70(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err32];
+          vErrors = [err37];
         } else {
-          vErrors.push(err32);
+          vErrors.push(err37);
         }
         errors++;
       }
     }
-    if (data.expected_maker_rebate_usd !== undefined) {
-      if (typeof data.expected_maker_rebate_usd !== 'string') {
-        const err33 = {
-          instancePath: instancePath + '/expected_maker_rebate_usd',
+    if (data.expected_maker_rebate_accrual_usd !== undefined) {
+      if (typeof data.expected_maker_rebate_accrual_usd !== 'string') {
+        const err38 = {
+          instancePath: instancePath + '/expected_maker_rebate_accrual_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err33];
+          vErrors = [err38];
         } else {
-          vErrors.push(err33);
+          vErrors.push(err38);
         }
         errors++;
       }
     }
     if (data.fill_distribution !== undefined) {
       if (
-        !validate73(data.fill_distribution, {
+        !validate75(data.fill_distribution, {
           instancePath: instancePath + '/fill_distribution',
           parentData: data,
           parentDataProperty: 'fill_distribution',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate75.errors
+            : vErrors.concat(validate75.errors);
+        errors = vErrors.length;
+      }
+    }
+    if (data.full_fill_cost !== undefined) {
+      if (
+        !validate73(data.full_fill_cost, {
+          instancePath: instancePath + '/full_fill_cost',
+          parentData: data,
+          parentDataProperty: 'full_fill_cost',
           rootData,
           dynamicAnchors,
         })
@@ -16284,150 +18089,10 @@ function validate70(
         errors = vErrors.length;
       }
     }
-    if (data.full_fill_cost !== undefined) {
-      if (
-        !validate71(data.full_fill_cost, {
-          instancePath: instancePath + '/full_fill_cost',
-          parentData: data,
-          parentDataProperty: 'full_fill_cost',
-          rootData,
-          dynamicAnchors,
-        })
-      ) {
-        vErrors =
-          vErrors === null
-            ? validate71.errors
-            : vErrors.concat(validate71.errors);
-        errors = vErrors.length;
-      }
-    }
-    if (data.full_fill_maker_rebate !== undefined) {
-      let data13 = data.full_fill_maker_rebate;
-      const _errs39 = errors;
-      let valid11 = false;
-      const _errs40 = errors;
-      if (
-        !validate78(data13, {
-          instancePath: instancePath + '/full_fill_maker_rebate',
-          parentData: data,
-          parentDataProperty: 'full_fill_maker_rebate',
-          rootData,
-          dynamicAnchors,
-        })
-      ) {
-        vErrors =
-          vErrors === null
-            ? validate78.errors
-            : vErrors.concat(validate78.errors);
-        errors = vErrors.length;
-      }
-      var _valid1 = _errs40 === errors;
-      valid11 = valid11 || _valid1;
-      const _errs41 = errors;
-      if (data13 !== null) {
-        const err34 = {
-          instancePath: instancePath + '/full_fill_maker_rebate',
-          schemaPath:
-            '#/oneOf/1/properties/full_fill_maker_rebate/anyOf/1/type',
-          keyword: 'type',
-          params: { type: 'null' },
-          message: 'must be null',
-        };
-        if (vErrors === null) {
-          vErrors = [err34];
-        } else {
-          vErrors.push(err34);
-        }
-        errors++;
-      }
-      var _valid1 = _errs41 === errors;
-      valid11 = valid11 || _valid1;
-      if (!valid11) {
-        const err35 = {
-          instancePath: instancePath + '/full_fill_maker_rebate',
-          schemaPath: '#/oneOf/1/properties/full_fill_maker_rebate/anyOf',
-          keyword: 'anyOf',
-          params: {},
-          message: 'must match a schema in anyOf',
-        };
-        if (vErrors === null) {
-          vErrors = [err35];
-        } else {
-          vErrors.push(err35);
-        }
-        errors++;
-      } else {
-        errors = _errs39;
-        if (vErrors !== null) {
-          if (_errs39) {
-            vErrors.length = _errs39;
-          } else {
-            vErrors = null;
-          }
-        }
-      }
-    }
-    if (data.good_til_secs !== undefined) {
-      let data14 = data.good_til_secs;
-      if (
-        !(
-          typeof data14 == 'number' &&
-          !(data14 % 1) &&
-          !isNaN(data14) &&
-          isFinite(data14)
-        )
-      ) {
-        const err36 = {
-          instancePath: instancePath + '/good_til_secs',
-          schemaPath: '#/oneOf/1/properties/good_til_secs/type',
-          keyword: 'type',
-          params: { type: 'integer' },
-          message: 'must be integer',
-        };
-        if (vErrors === null) {
-          vErrors = [err36];
-        } else {
-          vErrors.push(err36);
-        }
-        errors++;
-      }
-      if (typeof data14 == 'number' && isFinite(data14)) {
-        if (data14 > 9007199254740991 || isNaN(data14)) {
-          const err37 = {
-            instancePath: instancePath + '/good_til_secs',
-            schemaPath: '#/oneOf/1/properties/good_til_secs/maximum',
-            keyword: 'maximum',
-            params: { comparison: '<=', limit: 9007199254740991 },
-            message: 'must be <= 9007199254740991',
-          };
-          if (vErrors === null) {
-            vErrors = [err37];
-          } else {
-            vErrors.push(err37);
-          }
-          errors++;
-        }
-        if (data14 < 0 || isNaN(data14)) {
-          const err38 = {
-            instancePath: instancePath + '/good_til_secs',
-            schemaPath: '#/oneOf/1/properties/good_til_secs/minimum',
-            keyword: 'minimum',
-            params: { comparison: '>=', limit: 0 },
-            message: 'must be >= 0',
-          };
-          if (vErrors === null) {
-            vErrors = [err38];
-          } else {
-            vErrors.push(err38);
-          }
-          errors++;
-        }
-      }
-    }
-    if (data.hard_reserved_cash_usd !== undefined) {
-      if (typeof data.hard_reserved_cash_usd !== 'string') {
+    if (data.full_fill_maker_rebate_accrual_usd !== undefined) {
+      if (typeof data.full_fill_maker_rebate_accrual_usd !== 'string') {
         const err39 = {
-          instancePath: instancePath + '/hard_reserved_cash_usd',
+          instancePath: instancePath + '/full_fill_maker_rebate_accrual_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -16441,15 +18106,22 @@ function validate70(
         errors++;
       }
     }
-    if (data.kind !== undefined) {
-      let data16 = data.kind;
-      if (typeof data16 !== 'string') {
+    if (data.good_til_secs !== undefined) {
+      let data14 = data.good_til_secs;
+      if (
+        !(
+          typeof data14 == 'number' &&
+          !(data14 % 1) &&
+          !isNaN(data14) &&
+          isFinite(data14)
+        )
+      ) {
         const err40 = {
-          instancePath: instancePath + '/kind',
-          schemaPath: '#/oneOf/1/properties/kind/type',
+          instancePath: instancePath + '/good_til_secs',
+          schemaPath: '#/oneOf/1/properties/good_til_secs/type',
           keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          params: { type: 'integer' },
+          message: 'must be integer',
         };
         if (vErrors === null) {
           vErrors = [err40];
@@ -16458,8 +18130,75 @@ function validate70(
         }
         errors++;
       }
+      if (typeof data14 == 'number' && isFinite(data14)) {
+        if (data14 > 9007199254740991 || isNaN(data14)) {
+          const err41 = {
+            instancePath: instancePath + '/good_til_secs',
+            schemaPath: '#/oneOf/1/properties/good_til_secs/maximum',
+            keyword: 'maximum',
+            params: { comparison: '<=', limit: 9007199254740991 },
+            message: 'must be <= 9007199254740991',
+          };
+          if (vErrors === null) {
+            vErrors = [err41];
+          } else {
+            vErrors.push(err41);
+          }
+          errors++;
+        }
+        if (data14 < 0 || isNaN(data14)) {
+          const err42 = {
+            instancePath: instancePath + '/good_til_secs',
+            schemaPath: '#/oneOf/1/properties/good_til_secs/minimum',
+            keyword: 'minimum',
+            params: { comparison: '>=', limit: 0 },
+            message: 'must be >= 0',
+          };
+          if (vErrors === null) {
+            vErrors = [err42];
+          } else {
+            vErrors.push(err42);
+          }
+          errors++;
+        }
+      }
+    }
+    if (data.hard_reserved_cash_usd !== undefined) {
+      if (typeof data.hard_reserved_cash_usd !== 'string') {
+        const err43 = {
+          instancePath: instancePath + '/hard_reserved_cash_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err43];
+        } else {
+          vErrors.push(err43);
+        }
+        errors++;
+      }
+    }
+    if (data.kind !== undefined) {
+      let data16 = data.kind;
+      if (typeof data16 !== 'string') {
+        const err44 = {
+          instancePath: instancePath + '/kind',
+          schemaPath: '#/oneOf/1/properties/kind/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err44];
+        } else {
+          vErrors.push(err44);
+        }
+        errors++;
+      }
       if ('passive' !== data16) {
-        const err41 = {
+        const err45 = {
           instancePath: instancePath + '/kind',
           schemaPath: '#/oneOf/1/properties/kind/const',
           keyword: 'const',
@@ -16467,16 +18206,16 @@ function validate70(
           message: 'must be equal to constant',
         };
         if (vErrors === null) {
-          vErrors = [err41];
+          vErrors = [err45];
         } else {
-          vErrors.push(err41);
+          vErrors.push(err45);
         }
         errors++;
       }
     }
     if (data.limit_price !== undefined) {
       if (typeof data.limit_price !== 'string') {
-        const err42 = {
+        const err46 = {
           instancePath: instancePath + '/limit_price',
           schemaPath: '#/$defs/Price/type',
           keyword: 'type',
@@ -16484,480 +18223,84 @@ function validate70(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err42];
+          vErrors = [err46];
         } else {
-          vErrors.push(err42);
+          vErrors.push(err46);
         }
         errors++;
       }
     }
-    if (data.maker_rebate_schedule !== undefined) {
-      let data18 = data.maker_rebate_schedule;
-      const _errs54 = errors;
-      let valid14 = false;
-      const _errs55 = errors;
-      if (data18 && typeof data18 == 'object' && !Array.isArray(data18)) {
-        if (data18.schedule_hash === undefined) {
-          const err43 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'schedule_hash' },
-            message: "must have required property '" + 'schedule_hash' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err43];
-          } else {
-            vErrors.push(err43);
-          }
-          errors++;
-        }
-        if (data18.catalog_change_hash === undefined) {
-          const err44 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'catalog_change_hash' },
-            message:
-              "must have required property '" + 'catalog_change_hash' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err44];
-          } else {
-            vErrors.push(err44);
-          }
-          errors++;
-        }
-        if (data18.effective_at === undefined) {
-          const err45 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'effective_at' },
-            message: "must have required property '" + 'effective_at' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err45];
-          } else {
-            vErrors.push(err45);
-          }
-          errors++;
-        }
-        if (data18.available_at === undefined) {
-          const err46 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'available_at' },
-            message: "must have required property '" + 'available_at' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err46];
-          } else {
-            vErrors.push(err46);
-          }
-          errors++;
-        }
-        if (data18.fees_enabled === undefined) {
-          const err47 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'fees_enabled' },
-            message: "must have required property '" + 'fees_enabled' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err47];
-          } else {
-            vErrors.push(err47);
-          }
-          errors++;
-        }
-        if (data18.platform_rate === undefined) {
-          const err48 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'platform_rate' },
-            message: "must have required property '" + 'platform_rate' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err48];
-          } else {
-            vErrors.push(err48);
-          }
-          errors++;
-        }
-        if (data18.exponent === undefined) {
-          const err49 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'exponent' },
-            message: "must have required property '" + 'exponent' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err49];
-          } else {
-            vErrors.push(err49);
-          }
-          errors++;
-        }
-        if (data18.taker_only === undefined) {
-          const err50 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'taker_only' },
-            message: "must have required property '" + 'taker_only' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err50];
-          } else {
-            vErrors.push(err50);
-          }
-          errors++;
-        }
-        if (data18.rebate_rate === undefined) {
-          const err51 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'rebate_rate' },
-            message: "must have required property '" + 'rebate_rate' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err51];
-          } else {
-            vErrors.push(err51);
-          }
-          errors++;
-        }
-        for (const key2 in data18) {
-          if (!func1.call(schema75.properties, key2)) {
-            const err52 = {
-              instancePath: instancePath + '/maker_rebate_schedule',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/additionalProperties',
-              keyword: 'additionalProperties',
-              params: { additionalProperty: key2 },
-              message: 'must NOT have additional properties',
-            };
-            if (vErrors === null) {
-              vErrors = [err52];
-            } else {
-              vErrors.push(err52);
-            }
-            errors++;
-          }
-        }
-        if (data18.available_at !== undefined) {
-          let data19 = data18.available_at;
-          if (typeof data19 === 'string') {
-            if (!formats2.validate(data19)) {
-              const err53 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/available_at',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/available_at/format',
-                keyword: 'format',
-                params: { format: 'date-time' },
-                message: 'must match format "' + 'date-time' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err53];
-              } else {
-                vErrors.push(err53);
-              }
-              errors++;
-            }
-          } else {
-            const err54 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/available_at',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/available_at/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err54];
-            } else {
-              vErrors.push(err54);
-            }
-            errors++;
-          }
-        }
-        if (data18.catalog_change_hash !== undefined) {
-          let data20 = data18.catalog_change_hash;
-          if (typeof data20 === 'string') {
-            if (!pattern4.test(data20)) {
-              const err55 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/catalog_change_hash',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/catalog_change_hash/pattern',
-                keyword: 'pattern',
-                params: { pattern: '^blake3:[0-9a-f]{64}$' },
-                message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err55];
-              } else {
-                vErrors.push(err55);
-              }
-              errors++;
-            }
-          } else {
-            const err56 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/catalog_change_hash',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/catalog_change_hash/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err56];
-            } else {
-              vErrors.push(err56);
-            }
-            errors++;
-          }
-        }
-        if (data18.effective_at !== undefined) {
-          let data21 = data18.effective_at;
-          if (typeof data21 === 'string') {
-            if (!formats2.validate(data21)) {
-              const err57 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/effective_at',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/effective_at/format',
-                keyword: 'format',
-                params: { format: 'date-time' },
-                message: 'must match format "' + 'date-time' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err57];
-              } else {
-                vErrors.push(err57);
-              }
-              errors++;
-            }
-          } else {
-            const err58 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/effective_at',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/effective_at/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err58];
-            } else {
-              vErrors.push(err58);
-            }
-            errors++;
-          }
-        }
-        if (data18.exponent !== undefined) {
-          if (typeof data18.exponent !== 'string') {
-            const err59 = {
-              instancePath: instancePath + '/maker_rebate_schedule/exponent',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/exponent/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err59];
-            } else {
-              vErrors.push(err59);
-            }
-            errors++;
-          }
-        }
-        if (data18.fees_enabled !== undefined) {
-          if (typeof data18.fees_enabled !== 'boolean') {
-            const err60 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/fees_enabled',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/fees_enabled/type',
-              keyword: 'type',
-              params: { type: 'boolean' },
-              message: 'must be boolean',
-            };
-            if (vErrors === null) {
-              vErrors = [err60];
-            } else {
-              vErrors.push(err60);
-            }
-            errors++;
-          }
-        }
-        if (data18.platform_rate !== undefined) {
-          if (typeof data18.platform_rate !== 'string') {
-            const err61 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/platform_rate',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/platform_rate/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err61];
-            } else {
-              vErrors.push(err61);
-            }
-            errors++;
-          }
-        }
-        if (data18.rebate_rate !== undefined) {
-          if (typeof data18.rebate_rate !== 'string') {
-            const err62 = {
-              instancePath: instancePath + '/maker_rebate_schedule/rebate_rate',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/rebate_rate/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err62];
-            } else {
-              vErrors.push(err62);
-            }
-            errors++;
-          }
-        }
-        if (data18.schedule_hash !== undefined) {
-          let data26 = data18.schedule_hash;
-          if (typeof data26 === 'string') {
-            if (!pattern4.test(data26)) {
-              const err63 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/schedule_hash',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/schedule_hash/pattern',
-                keyword: 'pattern',
-                params: { pattern: '^blake3:[0-9a-f]{64}$' },
-                message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err63];
-              } else {
-                vErrors.push(err63);
-              }
-              errors++;
-            }
-          } else {
-            const err64 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/schedule_hash',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/schedule_hash/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err64];
-            } else {
-              vErrors.push(err64);
-            }
-            errors++;
-          }
-        }
-        if (data18.taker_only !== undefined) {
-          if (typeof data18.taker_only !== 'boolean') {
-            const err65 = {
-              instancePath: instancePath + '/maker_rebate_schedule/taker_only',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/taker_only/type',
-              keyword: 'type',
-              params: { type: 'boolean' },
-              message: 'must be boolean',
-            };
-            if (vErrors === null) {
-              vErrors = [err65];
-            } else {
-              vErrors.push(err65);
-            }
-            errors++;
-          }
-        }
-      } else {
-        const err66 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/$defs/FrozenMakerRebateSchedule/type',
-          keyword: 'type',
-          params: { type: 'object' },
-          message: 'must be object',
-        };
-        if (vErrors === null) {
-          vErrors = [err66];
-        } else {
-          vErrors.push(err66);
-        }
-        errors++;
+    if (data.maker_rebate_objective_status !== undefined) {
+      if (
+        !validate80(data.maker_rebate_objective_status, {
+          instancePath: instancePath + '/maker_rebate_objective_status',
+          parentData: data,
+          parentDataProperty: 'maker_rebate_objective_status',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate80.errors
+            : vErrors.concat(validate80.errors);
+        errors = vErrors.length;
       }
-      var _valid2 = _errs55 === errors;
-      valid14 = valid14 || _valid2;
-      const _errs77 = errors;
-      if (data18 !== null) {
-        const err67 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/oneOf/1/properties/maker_rebate_schedule/anyOf/1/type',
-          keyword: 'type',
-          params: { type: 'null' },
-          message: 'must be null',
-        };
-        if (vErrors === null) {
-          vErrors = [err67];
-        } else {
-          vErrors.push(err67);
-        }
-        errors++;
+    }
+    if (data.maker_rebate_terms !== undefined) {
+      if (
+        !validate37(data.maker_rebate_terms, {
+          instancePath: instancePath + '/maker_rebate_terms',
+          parentData: data,
+          parentDataProperty: 'maker_rebate_terms',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate37.errors
+            : vErrors.concat(validate37.errors);
+        errors = vErrors.length;
       }
-      var _valid2 = _errs77 === errors;
-      valid14 = valid14 || _valid2;
-      if (!valid14) {
-        const err68 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/oneOf/1/properties/maker_rebate_schedule/anyOf',
-          keyword: 'anyOf',
-          params: {},
-          message: 'must match a schema in anyOf',
+    }
+    if (data.maker_rebate_valuation !== undefined) {
+      if (
+        !validate83(data.maker_rebate_valuation, {
+          instancePath: instancePath + '/maker_rebate_valuation',
+          parentData: data,
+          parentDataProperty: 'maker_rebate_valuation',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate83.errors
+            : vErrors.concat(validate83.errors);
+        errors = vErrors.length;
+      }
+    }
+    if (data.objective_maker_rebate_usd !== undefined) {
+      if (typeof data.objective_maker_rebate_usd !== 'string') {
+        const err47 = {
+          instancePath: instancePath + '/objective_maker_rebate_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err68];
+          vErrors = [err47];
         } else {
-          vErrors.push(err68);
+          vErrors.push(err47);
         }
         errors++;
-      } else {
-        errors = _errs54;
-        if (vErrors !== null) {
-          if (_errs54) {
-            vErrors.length = _errs54;
-          } else {
-            vErrors = null;
-          }
-        }
       }
     }
     if (data.requested_shares !== undefined) {
       if (typeof data.requested_shares !== 'string') {
-        const err69 = {
+        const err48 = {
           instancePath: instancePath + '/requested_shares',
           schemaPath: '#/$defs/Shares/type',
           keyword: 'type',
@@ -16965,16 +18308,16 @@ function validate70(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err69];
+          vErrors = [err48];
         } else {
-          vErrors.push(err69);
+          vErrors.push(err48);
         }
         errors++;
       }
     }
     if (data.visible_liquidity_usd !== undefined) {
       if (typeof data.visible_liquidity_usd !== 'string') {
-        const err70 = {
+        const err49 = {
           instancePath: instancePath + '/visible_liquidity_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
@@ -16982,15 +18325,15 @@ function validate70(
           message: 'must be string',
         };
         if (vErrors === null) {
-          vErrors = [err70];
+          vErrors = [err49];
         } else {
-          vErrors.push(err70);
+          vErrors.push(err49);
         }
         errors++;
       }
     }
   } else {
-    const err71 = {
+    const err50 = {
       instancePath,
       schemaPath: '#/oneOf/1/type',
       keyword: 'type',
@@ -16998,9 +18341,9 @@ function validate70(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err71];
+      vErrors = [err50];
     } else {
-      vErrors.push(err71);
+      vErrors.push(err50);
     }
     errors++;
   }
@@ -17018,7 +18361,7 @@ function validate70(
     }
   }
   if (!valid0) {
-    const err72 = {
+    const err51 = {
       instancePath,
       schemaPath: '#/oneOf',
       keyword: 'oneOf',
@@ -17026,9 +18369,9 @@ function validate70(
       message: 'must match exactly one schema in oneOf',
     };
     if (vErrors === null) {
-      vErrors = [err72];
+      vErrors = [err51];
     } else {
-      vErrors.push(err72);
+      vErrors.push(err51);
     }
     errors++;
   } else {
@@ -17041,12 +18384,12 @@ function validate70(
       }
     }
   }
-  validate70.errors = vErrors;
+  validate72.errors = vErrors;
   evaluated0.props = props0;
   return errors === 0;
 }
-validate70.evaluated = { dynamicProps: true, dynamicItems: false };
-const schema180 = {
+validate72.evaluated = { dynamicProps: true, dynamicItems: false };
+const schema187 = {
   description:
     'Hard cash reservation held independently of expected passive fills.',
   type: 'object',
@@ -17057,7 +18400,7 @@ const schema180 = {
   additionalProperties: false,
   required: ['end_secs', 'reserved_cash_usd'],
 };
-function validate81(
+function validate88(
   data,
   {
     instancePath = '',
@@ -17069,7 +18412,7 @@ function validate81(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate81.evaluated;
+  const evaluated0 = validate88.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -17213,15 +18556,15 @@ function validate81(
     }
     errors++;
   }
-  validate81.errors = vErrors;
+  validate88.errors = vErrors;
   return errors === 0;
 }
-validate81.evaluated = {
+validate88.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema184 = {
+const schema191 = {
   description: 'Scenario-specific execution and discounted cash flow.',
   type: 'object',
   properties: {
@@ -17234,13 +18577,20 @@ const schema184 = {
       type: 'array',
       items: { $ref: '#/$defs/ScenarioCapitalOccupancySlice' },
     },
-    delayed_maker_rebate_usd: { $ref: '#/$defs/Usd' },
     discounted_exit_cash_usd: { $ref: '#/$defs/Usd' },
-    discounted_maker_rebate_usd: { $ref: '#/$defs/Usd' },
     discounted_net_usd: { $ref: '#/$defs/Usd' },
     entry_execution: { $ref: '#/$defs/ScenarioEntryExecution' },
     filled_shares: { $ref: '#/$defs/Shares' },
     immediate_cash_outlay_usd: { $ref: '#/$defs/Usd' },
+    maker_rebate_accrual_usd: { $ref: '#/$defs/Usd' },
+    maker_rebate_credit_status: {
+      $ref: '#/$defs/MakerRebateScenarioCreditStatus',
+    },
+    maker_rebate_expected_by: { type: ['string', 'null'], format: 'date-time' },
+    maker_rebate_program_date: { type: ['string', 'null'], format: 'date' },
+    maker_rebate_program_day_baseline_usd: { $ref: '#/$defs/Usd' },
+    maker_rebate_program_day_total_usd: { $ref: '#/$defs/Usd' },
+    objective_maker_rebate_usd: { $ref: '#/$defs/Usd' },
     risk_net_usd: {
       description:
         'Tail-risk cash flow with all unreceived venue incentives forced to zero.',
@@ -17255,15 +18605,23 @@ const schema184 = {
     'filled_shares',
     'immediate_cash_outlay_usd',
     'discounted_exit_cash_usd',
-    'delayed_maker_rebate_usd',
-    'discounted_maker_rebate_usd',
+    'maker_rebate_accrual_usd',
+    'objective_maker_rebate_usd',
+    'maker_rebate_program_day_baseline_usd',
+    'maker_rebate_program_day_total_usd',
+    'maker_rebate_credit_status',
     'capital_cost_usd',
     'capital_occupancy',
     'discounted_net_usd',
     'risk_net_usd',
   ],
 };
-const schema186 = {
+const schema203 = {
+  description: 'Day-local payout eligibility for one promoted joint scenario.',
+  type: 'string',
+  enum: ['not_applicable', 'no_accrual', 'below_daily_threshold', 'credited'],
+};
+const schema193 = {
   description:
     'One contiguous interval during which scenario cash is unavailable.',
   type: 'object',
@@ -17274,7 +18632,7 @@ const schema186 = {
   additionalProperties: false,
   required: ['locked_cash_usd', 'duration_secs'],
 };
-function validate84(
+function validate91(
   data,
   {
     instancePath = '',
@@ -17286,7 +18644,7 @@ function validate84(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate84.evaluated;
+  const evaluated0 = validate91.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -17430,15 +18788,15 @@ function validate84(
     }
     errors++;
   }
-  validate84.errors = vErrors;
+  validate91.errors = vErrors;
   return errors === 0;
 }
-validate84.evaluated = {
+validate91.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema192 = {
+const schema197 = {
   description:
     'Entry state selected jointly with one promoted market-outcome scenario.',
   oneOf: [
@@ -17491,7 +18849,7 @@ const schema192 = {
     },
   ],
 };
-function validate86(
+function validate93(
   data,
   {
     instancePath = '',
@@ -17503,7 +18861,7 @@ function validate86(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate86.evaluated;
+  const evaluated0 = validate93.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -18204,12 +19562,12 @@ function validate86(
       }
     }
   }
-  validate86.errors = vErrors;
+  validate93.errors = vErrors;
   evaluated0.props = props0;
   return errors === 0;
 }
-validate86.evaluated = { dynamicProps: true, dynamicItems: false };
-function validate83(
+validate93.evaluated = { dynamicProps: true, dynamicItems: false };
+function validate90(
   data,
   {
     instancePath = '',
@@ -18221,7 +19579,7 @@ function validate83(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate83.evaluated;
+  const evaluated0 = validate90.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -18306,14 +19664,14 @@ function validate83(
       }
       errors++;
     }
-    if (data.delayed_maker_rebate_usd === undefined) {
+    if (data.maker_rebate_accrual_usd === undefined) {
       const err5 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'delayed_maker_rebate_usd' },
+        params: { missingProperty: 'maker_rebate_accrual_usd' },
         message:
-          "must have required property '" + 'delayed_maker_rebate_usd' + "'",
+          "must have required property '" + 'maker_rebate_accrual_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err5];
@@ -18322,14 +19680,14 @@ function validate83(
       }
       errors++;
     }
-    if (data.discounted_maker_rebate_usd === undefined) {
+    if (data.objective_maker_rebate_usd === undefined) {
       const err6 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'discounted_maker_rebate_usd' },
+        params: { missingProperty: 'objective_maker_rebate_usd' },
         message:
-          "must have required property '" + 'discounted_maker_rebate_usd' + "'",
+          "must have required property '" + 'objective_maker_rebate_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err6];
@@ -18338,13 +19696,16 @@ function validate83(
       }
       errors++;
     }
-    if (data.capital_cost_usd === undefined) {
+    if (data.maker_rebate_program_day_baseline_usd === undefined) {
       const err7 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'capital_cost_usd' },
-        message: "must have required property '" + 'capital_cost_usd' + "'",
+        params: { missingProperty: 'maker_rebate_program_day_baseline_usd' },
+        message:
+          "must have required property '" +
+          'maker_rebate_program_day_baseline_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err7];
@@ -18353,13 +19714,16 @@ function validate83(
       }
       errors++;
     }
-    if (data.capital_occupancy === undefined) {
+    if (data.maker_rebate_program_day_total_usd === undefined) {
       const err8 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'capital_occupancy' },
-        message: "must have required property '" + 'capital_occupancy' + "'",
+        params: { missingProperty: 'maker_rebate_program_day_total_usd' },
+        message:
+          "must have required property '" +
+          'maker_rebate_program_day_total_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err8];
@@ -18368,13 +19732,14 @@ function validate83(
       }
       errors++;
     }
-    if (data.discounted_net_usd === undefined) {
+    if (data.maker_rebate_credit_status === undefined) {
       const err9 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'discounted_net_usd' },
-        message: "must have required property '" + 'discounted_net_usd' + "'",
+        params: { missingProperty: 'maker_rebate_credit_status' },
+        message:
+          "must have required property '" + 'maker_rebate_credit_status' + "'",
       };
       if (vErrors === null) {
         vErrors = [err9];
@@ -18383,13 +19748,13 @@ function validate83(
       }
       errors++;
     }
-    if (data.risk_net_usd === undefined) {
+    if (data.capital_cost_usd === undefined) {
       const err10 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'risk_net_usd' },
-        message: "must have required property '" + 'risk_net_usd' + "'",
+        params: { missingProperty: 'capital_cost_usd' },
+        message: "must have required property '" + 'capital_cost_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err10];
@@ -18398,85 +19763,59 @@ function validate83(
       }
       errors++;
     }
+    if (data.capital_occupancy === undefined) {
+      const err11 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'capital_occupancy' },
+        message: "must have required property '" + 'capital_occupancy' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err11];
+      } else {
+        vErrors.push(err11);
+      }
+      errors++;
+    }
+    if (data.discounted_net_usd === undefined) {
+      const err12 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'discounted_net_usd' },
+        message: "must have required property '" + 'discounted_net_usd' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err12];
+      } else {
+        vErrors.push(err12);
+      }
+      errors++;
+    }
+    if (data.risk_net_usd === undefined) {
+      const err13 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'risk_net_usd' },
+        message: "must have required property '" + 'risk_net_usd' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err13];
+      } else {
+        vErrors.push(err13);
+      }
+      errors++;
+    }
     for (const key0 in data) {
-      if (!func1.call(schema184.properties, key0)) {
-        const err11 = {
+      if (!func1.call(schema191.properties, key0)) {
+        const err14 = {
           instancePath,
           schemaPath: '#/additionalProperties',
           keyword: 'additionalProperties',
           params: { additionalProperty: key0 },
           message: 'must NOT have additional properties',
-        };
-        if (vErrors === null) {
-          vErrors = [err11];
-        } else {
-          vErrors.push(err11);
-        }
-        errors++;
-      }
-    }
-    if (data.capital_cost_usd !== undefined) {
-      if (typeof data.capital_cost_usd !== 'string') {
-        const err12 = {
-          instancePath: instancePath + '/capital_cost_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err12];
-        } else {
-          vErrors.push(err12);
-        }
-        errors++;
-      }
-    }
-    if (data.capital_occupancy !== undefined) {
-      let data1 = data.capital_occupancy;
-      if (Array.isArray(data1)) {
-        const len0 = data1.length;
-        for (let i0 = 0; i0 < len0; i0++) {
-          if (
-            !validate84(data1[i0], {
-              instancePath: instancePath + '/capital_occupancy/' + i0,
-              parentData: data1,
-              parentDataProperty: i0,
-              rootData,
-              dynamicAnchors,
-            })
-          ) {
-            vErrors =
-              vErrors === null
-                ? validate84.errors
-                : vErrors.concat(validate84.errors);
-            errors = vErrors.length;
-          }
-        }
-      } else {
-        const err13 = {
-          instancePath: instancePath + '/capital_occupancy',
-          schemaPath: '#/properties/capital_occupancy/type',
-          keyword: 'type',
-          params: { type: 'array' },
-          message: 'must be array',
-        };
-        if (vErrors === null) {
-          vErrors = [err13];
-        } else {
-          vErrors.push(err13);
-        }
-        errors++;
-      }
-    }
-    if (data.delayed_maker_rebate_usd !== undefined) {
-      if (typeof data.delayed_maker_rebate_usd !== 'string') {
-        const err14 = {
-          instancePath: instancePath + '/delayed_maker_rebate_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err14];
@@ -18486,10 +19825,10 @@ function validate83(
         errors++;
       }
     }
-    if (data.discounted_exit_cash_usd !== undefined) {
-      if (typeof data.discounted_exit_cash_usd !== 'string') {
+    if (data.capital_cost_usd !== undefined) {
+      if (typeof data.capital_cost_usd !== 'string') {
         const err15 = {
-          instancePath: instancePath + '/discounted_exit_cash_usd',
+          instancePath: instancePath + '/capital_cost_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -18503,14 +19842,34 @@ function validate83(
         errors++;
       }
     }
-    if (data.discounted_maker_rebate_usd !== undefined) {
-      if (typeof data.discounted_maker_rebate_usd !== 'string') {
+    if (data.capital_occupancy !== undefined) {
+      let data1 = data.capital_occupancy;
+      if (Array.isArray(data1)) {
+        const len0 = data1.length;
+        for (let i0 = 0; i0 < len0; i0++) {
+          if (
+            !validate91(data1[i0], {
+              instancePath: instancePath + '/capital_occupancy/' + i0,
+              parentData: data1,
+              parentDataProperty: i0,
+              rootData,
+              dynamicAnchors,
+            })
+          ) {
+            vErrors =
+              vErrors === null
+                ? validate91.errors
+                : vErrors.concat(validate91.errors);
+            errors = vErrors.length;
+          }
+        }
+      } else {
         const err16 = {
-          instancePath: instancePath + '/discounted_maker_rebate_usd',
-          schemaPath: '#/$defs/Usd/type',
+          instancePath: instancePath + '/capital_occupancy',
+          schemaPath: '#/properties/capital_occupancy/type',
           keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          params: { type: 'array' },
+          message: 'must be array',
         };
         if (vErrors === null) {
           vErrors = [err16];
@@ -18520,10 +19879,10 @@ function validate83(
         errors++;
       }
     }
-    if (data.discounted_net_usd !== undefined) {
-      if (typeof data.discounted_net_usd !== 'string') {
+    if (data.discounted_exit_cash_usd !== undefined) {
+      if (typeof data.discounted_exit_cash_usd !== 'string') {
         const err17 = {
-          instancePath: instancePath + '/discounted_net_usd',
+          instancePath: instancePath + '/discounted_exit_cash_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -18537,28 +19896,11 @@ function validate83(
         errors++;
       }
     }
-    if (data.entry_execution !== undefined) {
-      if (
-        !validate86(data.entry_execution, {
-          instancePath: instancePath + '/entry_execution',
-          parentData: data,
-          parentDataProperty: 'entry_execution',
-          rootData,
-          dynamicAnchors,
-        })
-      ) {
-        vErrors =
-          vErrors === null
-            ? validate86.errors
-            : vErrors.concat(validate86.errors);
-        errors = vErrors.length;
-      }
-    }
-    if (data.filled_shares !== undefined) {
-      if (typeof data.filled_shares !== 'string') {
+    if (data.discounted_net_usd !== undefined) {
+      if (typeof data.discounted_net_usd !== 'string') {
         const err18 = {
-          instancePath: instancePath + '/filled_shares',
-          schemaPath: '#/$defs/Shares/type',
+          instancePath: instancePath + '/discounted_net_usd',
+          schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -18571,11 +19913,28 @@ function validate83(
         errors++;
       }
     }
-    if (data.immediate_cash_outlay_usd !== undefined) {
-      if (typeof data.immediate_cash_outlay_usd !== 'string') {
+    if (data.entry_execution !== undefined) {
+      if (
+        !validate93(data.entry_execution, {
+          instancePath: instancePath + '/entry_execution',
+          parentData: data,
+          parentDataProperty: 'entry_execution',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate93.errors
+            : vErrors.concat(validate93.errors);
+        errors = vErrors.length;
+      }
+    }
+    if (data.filled_shares !== undefined) {
+      if (typeof data.filled_shares !== 'string') {
         const err19 = {
-          instancePath: instancePath + '/immediate_cash_outlay_usd',
-          schemaPath: '#/$defs/Usd/type',
+          instancePath: instancePath + '/filled_shares',
+          schemaPath: '#/$defs/Shares/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -18588,10 +19947,10 @@ function validate83(
         errors++;
       }
     }
-    if (data.risk_net_usd !== undefined) {
-      if (typeof data.risk_net_usd !== 'string') {
+    if (data.immediate_cash_outlay_usd !== undefined) {
+      if (typeof data.immediate_cash_outlay_usd !== 'string') {
         const err20 = {
-          instancePath: instancePath + '/risk_net_usd',
+          instancePath: instancePath + '/immediate_cash_outlay_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -18605,22 +19964,14 @@ function validate83(
         errors++;
       }
     }
-    if (data.scenario_index !== undefined) {
-      let data11 = data.scenario_index;
-      if (
-        !(
-          typeof data11 == 'number' &&
-          !(data11 % 1) &&
-          !isNaN(data11) &&
-          isFinite(data11)
-        )
-      ) {
+    if (data.maker_rebate_accrual_usd !== undefined) {
+      if (typeof data.maker_rebate_accrual_usd !== 'string') {
         const err21 = {
-          instancePath: instancePath + '/scenario_index',
-          schemaPath: '#/properties/scenario_index/type',
+          instancePath: instancePath + '/maker_rebate_accrual_usd',
+          schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
-          params: { type: 'integer' },
-          message: 'must be integer',
+          params: { type: 'string' },
+          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err21];
@@ -18629,9 +19980,212 @@ function validate83(
         }
         errors++;
       }
-      if (typeof data11 == 'number' && isFinite(data11)) {
-        if (data11 > 4294967295 || isNaN(data11)) {
-          const err22 = {
+    }
+    if (data.maker_rebate_credit_status !== undefined) {
+      let data9 = data.maker_rebate_credit_status;
+      if (typeof data9 !== 'string') {
+        const err22 = {
+          instancePath: instancePath + '/maker_rebate_credit_status',
+          schemaPath: '#/$defs/MakerRebateScenarioCreditStatus/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err22];
+        } else {
+          vErrors.push(err22);
+        }
+        errors++;
+      }
+      if (
+        !(
+          data9 === 'not_applicable' ||
+          data9 === 'no_accrual' ||
+          data9 === 'below_daily_threshold' ||
+          data9 === 'credited'
+        )
+      ) {
+        const err23 = {
+          instancePath: instancePath + '/maker_rebate_credit_status',
+          schemaPath: '#/$defs/MakerRebateScenarioCreditStatus/enum',
+          keyword: 'enum',
+          params: { allowedValues: schema203.enum },
+          message: 'must be equal to one of the allowed values',
+        };
+        if (vErrors === null) {
+          vErrors = [err23];
+        } else {
+          vErrors.push(err23);
+        }
+        errors++;
+      }
+    }
+    if (data.maker_rebate_expected_by !== undefined) {
+      let data10 = data.maker_rebate_expected_by;
+      if (typeof data10 !== 'string' && data10 !== null) {
+        const err24 = {
+          instancePath: instancePath + '/maker_rebate_expected_by',
+          schemaPath: '#/properties/maker_rebate_expected_by/type',
+          keyword: 'type',
+          params: { type: schema191.properties.maker_rebate_expected_by.type },
+          message: 'must be string,null',
+        };
+        if (vErrors === null) {
+          vErrors = [err24];
+        } else {
+          vErrors.push(err24);
+        }
+        errors++;
+      }
+      if (typeof data10 === 'string') {
+        if (!formats2.validate(data10)) {
+          const err25 = {
+            instancePath: instancePath + '/maker_rebate_expected_by',
+            schemaPath: '#/properties/maker_rebate_expected_by/format',
+            keyword: 'format',
+            params: { format: 'date-time' },
+            message: 'must match format "' + 'date-time' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err25];
+          } else {
+            vErrors.push(err25);
+          }
+          errors++;
+        }
+      }
+    }
+    if (data.maker_rebate_program_date !== undefined) {
+      let data11 = data.maker_rebate_program_date;
+      if (typeof data11 !== 'string' && data11 !== null) {
+        const err26 = {
+          instancePath: instancePath + '/maker_rebate_program_date',
+          schemaPath: '#/properties/maker_rebate_program_date/type',
+          keyword: 'type',
+          params: { type: schema191.properties.maker_rebate_program_date.type },
+          message: 'must be string,null',
+        };
+        if (vErrors === null) {
+          vErrors = [err26];
+        } else {
+          vErrors.push(err26);
+        }
+        errors++;
+      }
+      if (typeof data11 === 'string') {
+        if (!formats88.validate(data11)) {
+          const err27 = {
+            instancePath: instancePath + '/maker_rebate_program_date',
+            schemaPath: '#/properties/maker_rebate_program_date/format',
+            keyword: 'format',
+            params: { format: 'date' },
+            message: 'must match format "' + 'date' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err27];
+          } else {
+            vErrors.push(err27);
+          }
+          errors++;
+        }
+      }
+    }
+    if (data.maker_rebate_program_day_baseline_usd !== undefined) {
+      if (typeof data.maker_rebate_program_day_baseline_usd !== 'string') {
+        const err28 = {
+          instancePath: instancePath + '/maker_rebate_program_day_baseline_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err28];
+        } else {
+          vErrors.push(err28);
+        }
+        errors++;
+      }
+    }
+    if (data.maker_rebate_program_day_total_usd !== undefined) {
+      if (typeof data.maker_rebate_program_day_total_usd !== 'string') {
+        const err29 = {
+          instancePath: instancePath + '/maker_rebate_program_day_total_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err29];
+        } else {
+          vErrors.push(err29);
+        }
+        errors++;
+      }
+    }
+    if (data.objective_maker_rebate_usd !== undefined) {
+      if (typeof data.objective_maker_rebate_usd !== 'string') {
+        const err30 = {
+          instancePath: instancePath + '/objective_maker_rebate_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err30];
+        } else {
+          vErrors.push(err30);
+        }
+        errors++;
+      }
+    }
+    if (data.risk_net_usd !== undefined) {
+      if (typeof data.risk_net_usd !== 'string') {
+        const err31 = {
+          instancePath: instancePath + '/risk_net_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err31];
+        } else {
+          vErrors.push(err31);
+        }
+        errors++;
+      }
+    }
+    if (data.scenario_index !== undefined) {
+      let data16 = data.scenario_index;
+      if (
+        !(
+          typeof data16 == 'number' &&
+          !(data16 % 1) &&
+          !isNaN(data16) &&
+          isFinite(data16)
+        )
+      ) {
+        const err32 = {
+          instancePath: instancePath + '/scenario_index',
+          schemaPath: '#/properties/scenario_index/type',
+          keyword: 'type',
+          params: { type: 'integer' },
+          message: 'must be integer',
+        };
+        if (vErrors === null) {
+          vErrors = [err32];
+        } else {
+          vErrors.push(err32);
+        }
+        errors++;
+      }
+      if (typeof data16 == 'number' && isFinite(data16)) {
+        if (data16 > 4294967295 || isNaN(data16)) {
+          const err33 = {
             instancePath: instancePath + '/scenario_index',
             schemaPath: '#/properties/scenario_index/maximum',
             keyword: 'maximum',
@@ -18639,14 +20193,14 @@ function validate83(
             message: 'must be <= 4294967295',
           };
           if (vErrors === null) {
-            vErrors = [err22];
+            vErrors = [err33];
           } else {
-            vErrors.push(err22);
+            vErrors.push(err33);
           }
           errors++;
         }
-        if (data11 < 0 || isNaN(data11)) {
-          const err23 = {
+        if (data16 < 0 || isNaN(data16)) {
+          const err34 = {
             instancePath: instancePath + '/scenario_index',
             schemaPath: '#/properties/scenario_index/minimum',
             keyword: 'minimum',
@@ -18654,16 +20208,16 @@ function validate83(
             message: 'must be >= 0',
           };
           if (vErrors === null) {
-            vErrors = [err23];
+            vErrors = [err34];
           } else {
-            vErrors.push(err23);
+            vErrors.push(err34);
           }
           errors++;
         }
       }
     }
   } else {
-    const err24 = {
+    const err35 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -18671,21 +20225,21 @@ function validate83(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err24];
+      vErrors = [err35];
     } else {
-      vErrors.push(err24);
+      vErrors.push(err35);
     }
     errors++;
   }
-  validate83.errors = vErrors;
+  validate90.errors = vErrors;
   return errors === 0;
 }
-validate83.evaluated = {
+validate90.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate67(
+function validate69(
   data,
   {
     instancePath = '',
@@ -18697,7 +20251,7 @@ function validate67(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate67.evaluated;
+  const evaluated0 = validate69.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -18968,7 +20522,7 @@ function validate67(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema144.properties, key0)) {
+      if (!func1.call(schema145.properties, key0)) {
         const err17 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -19100,7 +20654,7 @@ function validate67(
     }
     if (data.economics !== undefined) {
       if (
-        !validate68(data.economics, {
+        !validate70(data.economics, {
           instancePath: instancePath + '/economics',
           parentData: data,
           parentDataProperty: 'economics',
@@ -19110,14 +20664,14 @@ function validate67(
       ) {
         vErrors =
           vErrors === null
-            ? validate68.errors
-            : vErrors.concat(validate68.errors);
+            ? validate70.errors
+            : vErrors.concat(validate70.errors);
         errors = vErrors.length;
       }
     }
     if (data.entry_execution !== undefined) {
       if (
-        !validate70(data.entry_execution, {
+        !validate72(data.entry_execution, {
           instancePath: instancePath + '/entry_execution',
           parentData: data,
           parentDataProperty: 'entry_execution',
@@ -19127,8 +20681,8 @@ function validate67(
       ) {
         vErrors =
           vErrors === null
-            ? validate70.errors
-            : vErrors.concat(validate70.errors);
+            ? validate72.errors
+            : vErrors.concat(validate72.errors);
         errors = vErrors.length;
       }
     }
@@ -19155,7 +20709,7 @@ function validate67(
         const len0 = data6.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate81(data6[i0], {
+            !validate88(data6[i0], {
               instancePath: instancePath + '/hard_reservation_envelope/' + i0,
               parentData: data6,
               parentDataProperty: i0,
@@ -19165,8 +20719,8 @@ function validate67(
           ) {
             vErrors =
               vErrors === null
-                ? validate81.errors
-                : vErrors.concat(validate81.errors);
+                ? validate88.errors
+                : vErrors.concat(validate88.errors);
             errors = vErrors.length;
           }
         }
@@ -19259,7 +20813,7 @@ function validate67(
           instancePath: instancePath + '/outcome_side',
           schemaPath: '#/$defs/OutcomeSide/enum',
           keyword: 'enum',
-          params: { allowedValues: schema182.enum },
+          params: { allowedValues: schema189.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -19442,7 +20996,7 @@ function validate67(
           instancePath: instancePath + '/route',
           schemaPath: '#/$defs/BuyModelRoute/enum',
           keyword: 'enum',
-          params: { allowedValues: schema183.enum },
+          params: { allowedValues: schema190.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -19459,7 +21013,7 @@ function validate67(
         const len1 = data15.length;
         for (let i1 = 0; i1 < len1; i1++) {
           if (
-            !validate83(data15[i1], {
+            !validate90(data15[i1], {
               instancePath: instancePath + '/scenario_cashflows/' + i1,
               parentData: data15,
               parentDataProperty: i1,
@@ -19469,8 +21023,8 @@ function validate67(
           ) {
             vErrors =
               vErrors === null
-                ? validate83.errors
-                : vErrors.concat(validate83.errors);
+                ? validate90.errors
+                : vErrors.concat(validate90.errors);
             errors = vErrors.length;
           }
         }
@@ -19579,15 +21133,15 @@ function validate67(
     }
     errors++;
   }
-  validate67.errors = vErrors;
+  validate69.errors = vErrors;
   return errors === 0;
 }
-validate67.evaluated = {
+validate69.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema198 = {
+const schema208 = {
   description:
     'Per-recommendation execution eligibility across runtime modes.\n\nComputed and persisted with the recommendation. The create-intent and\nadmission flow consumes it. `eligible_modes` always contains\n[`QuantRuntimeMode::ReportOnly`] (a report is the report-only artifact).',
   type: 'object',
@@ -19616,7 +21170,7 @@ const schema198 = {
   additionalProperties: false,
   required: ['eligible_modes', 'ineligibility_reasons', 'approval_required'],
 };
-const schema200 = {
+const schema210 = {
   description:
     'Why a recommendation is ineligible for execution in a given mode.',
   oneOf: [
@@ -19633,7 +21187,7 @@ const schema200 = {
     },
   ],
 };
-function validate91(
+function validate98(
   data,
   {
     instancePath = '',
@@ -19645,7 +21199,7 @@ function validate91(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate91.evaluated;
+  const evaluated0 = validate98.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -19747,7 +21301,7 @@ function validate91(
           instancePath: instancePath + '/auto_policy_id',
           schemaPath: '#/properties/auto_policy_id/type',
           keyword: 'type',
-          params: { type: schema198.properties.auto_policy_id.type },
+          params: { type: schema208.properties.auto_policy_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -19790,7 +21344,7 @@ function validate91(
               instancePath: instancePath + '/eligible_modes/' + i0,
               schemaPath: '#/$defs/QuantRuntimeMode/enum',
               keyword: 'enum',
-              params: { allowedValues: schema117.enum },
+              params: { allowedValues: schema118.enum },
               message: 'must be equal to one of the allowed values',
             };
             if (vErrors === null) {
@@ -19959,21 +21513,21 @@ function validate91(
     }
     errors++;
   }
-  validate91.errors = vErrors;
+  validate98.errors = vErrors;
   return errors === 0;
 }
-validate91.evaluated = {
+validate98.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema201 = {
+const schema211 = {
   description:
     "JSONB column wrapper for a recommendation's full factor breakdown.",
   type: 'array',
   items: { $ref: '#/$defs/FactorBreakdownEntry' },
 };
-const schema202 = {
+const schema212 = {
   description:
     "One factor's signed contribution to a recommendation's composite score.",
   type: 'object',
@@ -20039,12 +21593,12 @@ const schema202 = {
     'source_refs',
   ],
 };
-const schema204 = {
+const schema214 = {
   description: 'Factor contribution direction.',
   type: 'string',
   enum: ['positive', 'negative', 'neutral'],
 };
-const schema205 = {
+const schema215 = {
   oneOf: [
     {
       type: 'string',
@@ -20078,7 +21632,7 @@ const schema205 = {
     },
   ],
 };
-const schema206 = {
+const schema216 = {
   description:
     'Why a factor produced **no** normalized score (never a silent neutral).',
   oneOf: [
@@ -20108,7 +21662,7 @@ const schema206 = {
     },
   ],
 };
-const schema207 = {
+const schema217 = {
   description:
     "How a factor's normalized score was derived (audit + analytics).",
   oneOf: [
@@ -20131,7 +21685,7 @@ const schema207 = {
     },
   ],
 };
-const schema209 = {
+const schema219 = {
   description:
     'The authoritative outcome state of a persisted factor value — orthogonal\nto `indeterminate_reason` (which is populated only for `Indeterminate`).\n\nThis makes a structurally **not-applicable** factor (a neg-risk factor on\na binary market) durably distinguishable from a **missing-input** factor:\nboth carry no score, but they are different truths and must render / audit\ndifferently (never conflated into one null bucket).',
   oneOf: [
@@ -20160,7 +21714,7 @@ const schema209 = {
     },
   ],
 };
-function validate94(
+function validate101(
   data,
   {
     instancePath = '',
@@ -20172,7 +21726,7 @@ function validate94(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate94.evaluated;
+  const evaluated0 = validate101.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -20373,7 +21927,7 @@ function validate94(
           instancePath: instancePath + '/direction',
           schemaPath: '#/$defs/FactorDirection/enum',
           keyword: 'enum',
-          params: { allowedValues: schema204.enum },
+          params: { allowedValues: schema214.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -20455,7 +22009,7 @@ function validate94(
           instancePath: instancePath + '/family',
           schemaPath: '#/$defs/FactorFamily/oneOf/0/enum',
           keyword: 'enum',
-          params: { allowedValues: schema205.oneOf[0].enum },
+          params: { allowedValues: schema215.oneOf[0].enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -21121,7 +22675,7 @@ function validate94(
           instancePath: instancePath + '/raw_value',
           schemaPath: '#/properties/raw_value/type',
           keyword: 'type',
-          params: { type: schema202.properties.raw_value.type },
+          params: { type: schema212.properties.raw_value.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -21390,10 +22944,10 @@ function validate94(
     }
     errors++;
   }
-  validate94.errors = vErrors;
+  validate101.errors = vErrors;
   return errors === 0;
 }
-validate94.evaluated = {
+validate101.evaluated = {
   props: {
     confidence: true,
     contribution: true,
@@ -21412,7 +22966,7 @@ validate94.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate93(
+function validate100(
   data,
   {
     instancePath = '',
@@ -21424,7 +22978,7 @@ function validate93(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate93.evaluated;
+  const evaluated0 = validate100.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -21435,7 +22989,7 @@ function validate93(
     const len0 = data.length;
     for (let i0 = 0; i0 < len0; i0++) {
       if (
-        !validate94(data[i0], {
+        !validate101(data[i0], {
           instancePath: instancePath + '/' + i0,
           parentData: data,
           parentDataProperty: i0,
@@ -21445,8 +22999,8 @@ function validate93(
       ) {
         vErrors =
           vErrors === null
-            ? validate94.errors
-            : vErrors.concat(validate94.errors);
+            ? validate101.errors
+            : vErrors.concat(validate101.errors);
         errors = vErrors.length;
       }
     }
@@ -21465,15 +23019,15 @@ function validate93(
     }
     errors++;
   }
-  validate93.errors = vErrors;
+  validate100.errors = vErrors;
   return errors === 0;
 }
-validate93.evaluated = {
+validate100.evaluated = {
   items: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema210 = {
+const schema220 = {
   description: 'Display identity frozen at decision time.',
   type: 'object',
   properties: {
@@ -21484,7 +23038,7 @@ const schema210 = {
   additionalProperties: false,
   required: ['category', 'question', 'outcome_name'],
 };
-function validate97(
+function validate104(
   data,
   {
     instancePath = '',
@@ -21496,7 +23050,7 @@ function validate97(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate97.evaluated;
+  const evaluated0 = validate104.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -21663,15 +23217,15 @@ function validate97(
     }
     errors++;
   }
-  validate97.errors = vErrors;
+  validate104.errors = vErrors;
   return errors === 0;
 }
-validate97.evaluated = {
+validate104.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema212 = {
+const schema222 = {
   description:
     'Frozen top-of-book and metadata at recommendation decision time.',
   type: 'object',
@@ -21702,7 +23256,7 @@ const schema212 = {
     'tick_size',
   ],
 };
-const schema216 = {
+const schema226 = {
   type: 'string',
   enum: [
     'discovered',
@@ -21714,11 +23268,11 @@ const schema216 = {
     'delisted',
   ],
 };
-const schema219 = {
+const schema229 = {
   type: 'string',
   enum: ['0.1', '0.01', '0.005', '0.0025', '0.001', '0.0001'],
 };
-function validate99(
+function validate106(
   data,
   {
     instancePath = '',
@@ -21730,7 +23284,7 @@ function validate99(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate99.evaluated;
+  const evaluated0 = validate106.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -21814,7 +23368,7 @@ function validate99(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema212.properties, key0)) {
+      if (!func1.call(schema222.properties, key0)) {
         const err5 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -22041,7 +23595,7 @@ function validate99(
           instancePath: instancePath + '/fee_rate',
           schemaPath: '#/properties/fee_rate/type',
           keyword: 'type',
-          params: { type: schema212.properties.fee_rate.type },
+          params: { type: schema222.properties.fee_rate.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -22084,7 +23638,7 @@ function validate99(
           instancePath: instancePath + '/market_status',
           schemaPath: '#/$defs/MarketStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema216.enum },
+          params: { allowedValues: schema226.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -22273,7 +23827,7 @@ function validate99(
           instancePath: instancePath + '/tick_size',
           schemaPath: '#/$defs/TickSize/enum',
           keyword: 'enum',
-          params: { allowedValues: schema219.enum },
+          params: { allowedValues: schema229.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -22299,7 +23853,7 @@ function validate99(
           instancePath: instancePath + '/time_to_resolution_secs',
           schemaPath: '#/properties/time_to_resolution_secs/type',
           keyword: 'type',
-          params: { type: schema212.properties.time_to_resolution_secs.type },
+          params: { type: schema222.properties.time_to_resolution_secs.type },
           message: 'must be integer,null',
         };
         if (vErrors === null) {
@@ -22422,15 +23976,15 @@ function validate99(
     }
     errors++;
   }
-  validate99.errors = vErrors;
+  validate106.errors = vErrors;
   return errors === 0;
 }
-validate99.evaluated = {
+validate106.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema225 = {
+const schema235 = {
   description:
     'The single authoritative recommendation plan contract.\n\nFull-L2 recommendations own an executable exit plan. Bootstrap\nrecommendations instead own explicit, non-executable manual guidance. Both\nregimes require calibration, an exact scenario binding, and live L2 entry\nand sizing evidence before publication.',
   type: 'object',
@@ -22444,7 +23998,7 @@ const schema225 = {
   additionalProperties: false,
   required: ['policy', 'entry', 'sizing', 'exit', 'risk_envelope'],
 };
-const schema226 = {
+const schema236 = {
   description: 'When and how a recommendation becomes executable.',
   type: 'object',
   properties: {
@@ -22503,7 +24057,7 @@ const schema226 = {
     'entry_reason',
   ],
 };
-const schema227 = {
+const schema237 = {
   description:
     'Recommendation trade-plan reference to an immutable condition artifact.',
   oneOf: [
@@ -22525,7 +24079,7 @@ const schema227 = {
     },
   ],
 };
-const schema230 = {
+const schema240 = {
   description: 'How an armed entry is submitted to the venue.',
   oneOf: [
     {
@@ -22552,12 +24106,12 @@ const schema230 = {
     },
   ],
 };
-const schema232 = {
+const schema242 = {
   description: 'Venue fill semantics required by an aggressive entry.',
   type: 'string',
   enum: ['all_or_nothing', 'allow_partial'],
 };
-function validate103(
+function validate110(
   data,
   {
     instancePath = '',
@@ -22569,7 +24123,7 @@ function validate103(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate103.evaluated;
+  const evaluated0 = validate110.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -22786,7 +24340,7 @@ function validate103(
           instancePath: instancePath + '/fill_requirement',
           schemaPath: '#/$defs/FillRequirement/enum',
           keyword: 'enum',
-          params: { allowedValues: schema232.enum },
+          params: { allowedValues: schema242.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -22902,12 +24456,12 @@ function validate103(
       }
     }
   }
-  validate103.errors = vErrors;
+  validate110.errors = vErrors;
   evaluated0.props = props0;
   return errors === 0;
 }
-validate103.evaluated = { dynamicProps: true, dynamicItems: false };
-function validate102(
+validate110.evaluated = { dynamicProps: true, dynamicItems: false };
+function validate109(
   data,
   {
     instancePath = '',
@@ -22919,7 +24473,7 @@ function validate102(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate102.evaluated;
+  const evaluated0 = validate109.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -23479,7 +25033,7 @@ function validate102(
     }
     if (data.order_policy !== undefined) {
       if (
-        !validate103(data.order_policy, {
+        !validate110(data.order_policy, {
           instancePath: instancePath + '/order_policy',
           parentData: data,
           parentDataProperty: 'order_policy',
@@ -23489,8 +25043,8 @@ function validate102(
       ) {
         vErrors =
           vErrors === null
-            ? validate103.errors
-            : vErrors.concat(validate103.errors);
+            ? validate110.errors
+            : vErrors.concat(validate110.errors);
         errors = vErrors.length;
       }
     }
@@ -23577,10 +25131,10 @@ function validate102(
     }
     errors++;
   }
-  validate102.errors = vErrors;
+  validate109.errors = vErrors;
   return errors === 0;
 }
-validate102.evaluated = {
+validate109.evaluated = {
   props: {
     cancel_if_not_triggered: true,
     condition: true,
@@ -23595,7 +25149,7 @@ validate102.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema234 = {
+const schema244 = {
   description: 'Exit authority carried by a recommendation.',
   oneOf: [
     {
@@ -23618,7 +25172,7 @@ const schema234 = {
     },
   ],
 };
-const schema240 = {
+const schema250 = {
   description:
     'Honest report-only exit guidance for an L2-free bootstrap model.\n\nThis intentionally contains no synthetic take-profit, stop-loss, trailing,\nor opportunistic-exit thresholds. It is not accepted by execution paths.',
   type: 'object',
@@ -23640,7 +25194,7 @@ const schema240 = {
     'guidance',
   ],
 };
-const schema235 = {
+const schema245 = {
   description: 'When and how a recommendation should be exited.',
   type: 'object',
   properties: {
@@ -23717,7 +25271,7 @@ const schema235 = {
     'exit_reason',
   ],
 };
-function validate107(
+function validate114(
   data,
   {
     instancePath = '',
@@ -23729,7 +25283,7 @@ function validate107(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate107.evaluated;
+  const evaluated0 = validate114.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -23851,7 +25405,7 @@ function validate107(
           instancePath: instancePath + '/manual_review_at',
           schemaPath: '#/properties/manual_review_at/type',
           keyword: 'type',
-          params: { type: schema235.properties.manual_review_at.type },
+          params: { type: schema245.properties.manual_review_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -23894,7 +25448,7 @@ function validate107(
           instancePath: instancePath + '/max_hold_secs',
           schemaPath: '#/properties/max_hold_secs/type',
           keyword: 'type',
-          params: { type: schema235.properties.max_hold_secs.type },
+          params: { type: schema245.properties.max_hold_secs.type },
           message: 'must be integer,null',
         };
         if (vErrors === null) {
@@ -23939,7 +25493,7 @@ function validate107(
     }
     if (data.opportunistic_exit !== undefined) {
       if (
-        !validate45(data.opportunistic_exit, {
+        !validate47(data.opportunistic_exit, {
           instancePath: instancePath + '/opportunistic_exit',
           parentData: data,
           parentDataProperty: 'opportunistic_exit',
@@ -23949,8 +25503,8 @@ function validate107(
       ) {
         vErrors =
           vErrors === null
-            ? validate45.errors
-            : vErrors.concat(validate45.errors);
+            ? validate47.errors
+            : vErrors.concat(validate47.errors);
         errors = vErrors.length;
       }
     }
@@ -24067,7 +25621,7 @@ function validate107(
         const len0 = data5.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate47(data5[i0], {
+            !validate49(data5[i0], {
               instancePath: instancePath + '/scale_out_targets/' + i0,
               parentData: data5,
               parentDataProperty: i0,
@@ -24077,8 +25631,8 @@ function validate107(
           ) {
             vErrors =
               vErrors === null
-                ? validate47.errors
-                : vErrors.concat(validate47.errors);
+                ? validate49.errors
+                : vErrors.concat(validate49.errors);
             errors = vErrors.length;
           }
         }
@@ -24212,7 +25766,7 @@ function validate107(
           instancePath: instancePath + '/stop_loss_pct',
           schemaPath: '#/properties/stop_loss_pct/type',
           keyword: 'type',
-          params: { type: schema235.properties.stop_loss_pct.type },
+          params: { type: schema245.properties.stop_loss_pct.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -24295,7 +25849,7 @@ function validate107(
           instancePath: instancePath + '/take_profit_pct',
           schemaPath: '#/properties/take_profit_pct/type',
           keyword: 'type',
-          params: { type: schema235.properties.take_profit_pct.type },
+          params: { type: schema245.properties.take_profit_pct.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -24373,7 +25927,7 @@ function validate107(
     }
     if (data.thesis_invalidation !== undefined) {
       if (
-        !validate49(data.thesis_invalidation, {
+        !validate51(data.thesis_invalidation, {
           instancePath: instancePath + '/thesis_invalidation',
           parentData: data,
           parentDataProperty: 'thesis_invalidation',
@@ -24383,8 +25937,8 @@ function validate107(
       ) {
         vErrors =
           vErrors === null
-            ? validate49.errors
-            : vErrors.concat(validate49.errors);
+            ? validate51.errors
+            : vErrors.concat(validate51.errors);
         errors = vErrors.length;
       }
     }
@@ -24395,7 +25949,7 @@ function validate107(
           instancePath: instancePath + '/time_exit_at',
           schemaPath: '#/properties/time_exit_at/type',
           keyword: 'type',
-          params: { type: schema235.properties.time_exit_at.type },
+          params: { type: schema245.properties.time_exit_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -24429,7 +25983,7 @@ function validate107(
       let valid11 = false;
       const _errs48 = errors;
       if (
-        !validate51(data14, {
+        !validate53(data14, {
           instancePath: instancePath + '/trailing_stop',
           parentData: data,
           parentDataProperty: 'trailing_stop',
@@ -24439,8 +25993,8 @@ function validate107(
       ) {
         vErrors =
           vErrors === null
-            ? validate51.errors
-            : vErrors.concat(validate51.errors);
+            ? validate53.errors
+            : vErrors.concat(validate53.errors);
         errors = vErrors.length;
       }
       var _valid4 = _errs48 === errors;
@@ -24508,10 +26062,10 @@ function validate107(
     }
     errors++;
   }
-  validate107.errors = vErrors;
+  validate114.errors = vErrors;
   return errors === 0;
 }
-validate107.evaluated = {
+validate114.evaluated = {
   props: {
     exit_reason: true,
     manual_review_at: true,
@@ -24531,7 +26085,7 @@ validate107.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate106(
+function validate113(
   data,
   {
     instancePath = '',
@@ -24543,7 +26097,7 @@ function validate106(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate106.evaluated;
+  const evaluated0 = validate113.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -24637,7 +26191,7 @@ function validate106(
     }
     if (data.plan !== undefined) {
       if (
-        !validate107(data.plan, {
+        !validate114(data.plan, {
           instancePath: instancePath + '/plan',
           parentData: data,
           parentDataProperty: 'plan',
@@ -24647,8 +26201,8 @@ function validate106(
       ) {
         vErrors =
           vErrors === null
-            ? validate107.errors
-            : vErrors.concat(validate107.errors);
+            ? validate114.errors
+            : vErrors.concat(validate114.errors);
         errors = vErrors.length;
       }
     }
@@ -25047,12 +26601,12 @@ function validate106(
       }
     }
   }
-  validate106.errors = vErrors;
+  validate113.errors = vErrors;
   evaluated0.props = props0;
   return errors === 0;
 }
-validate106.evaluated = { dynamicProps: true, dynamicItems: false };
-const schema241 = {
+validate113.evaluated = { dynamicProps: true, dynamicItems: false };
+const schema251 = {
   description:
     'Exact decision-policy lineage behind one published recommendation.\n\nBootstrap recommendations bind their immutable L2-free profile instead of\npretending that a historical execution-policy fit exists.',
   oneOf: [
@@ -25095,7 +26649,7 @@ const schema241 = {
     },
   ],
 };
-const schema251 = {
+const schema261 = {
   description:
     'Closed feature contracts prevent a profile from silently changing its\nhistorical information regime when a source is unavailable.',
   type: 'string',
@@ -25108,7 +26662,7 @@ const schema251 = {
     'trade_bootstrap_weather',
   ],
 };
-const schema249 = {
+const schema259 = {
   description:
     'Stable immutable profile identity carried by every downstream artifact.',
   type: 'object',
@@ -25120,7 +26674,7 @@ const schema249 = {
   additionalProperties: false,
   required: ['id', 'version', 'content_hash'],
 };
-const schema242 = {
+const schema252 = {
   description:
     'Deterministic cohort selector for prediction-market trajectory policies.',
   type: 'object',
@@ -25148,13 +26702,13 @@ const schema242 = {
     'volatility',
   ],
 };
-const schema247 = {
+const schema257 = {
   description:
     'Entry execution route fitted and published independently within a cohort.',
   type: 'string',
   enum: ['aggressive', 'passive_post_only'],
 };
-const schema248 = {
+const schema258 = {
   description: 'Versioned provenance for one fitted cohort dimension.',
   type: 'object',
   properties: {
@@ -25165,7 +26719,7 @@ const schema248 = {
   additionalProperties: false,
   required: ['methodology_id', 'methodology_hash', 'bucket_id'],
 };
-function validate115(
+function validate122(
   data,
   {
     instancePath = '',
@@ -25177,7 +26731,7 @@ function validate115(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate115.evaluated;
+  const evaluated0 = validate122.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -25321,7 +26875,7 @@ function validate115(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema242.properties, key0)) {
+      if (!func1.call(schema252.properties, key0)) {
         const err9 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -25456,7 +27010,7 @@ function validate115(
           instancePath: instancePath + '/entry_route',
           schemaPath: '#/$defs/TradePolicyEntryRoute/enum',
           keyword: 'enum',
-          params: { allowedValues: schema247.enum },
+          params: { allowedValues: schema257.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -26054,15 +27608,15 @@ function validate115(
     }
     errors++;
   }
-  validate115.errors = vErrors;
+  validate122.errors = vErrors;
   return errors === 0;
 }
-validate115.evaluated = {
+validate122.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate114(
+function validate121(
   data,
   {
     instancePath = '',
@@ -26074,7 +27628,7 @@ function validate114(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate114.evaluated;
+  const evaluated0 = validate121.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -26313,7 +27867,7 @@ function validate114(
     }
     if (data.cohort_key !== undefined) {
       if (
-        !validate115(data.cohort_key, {
+        !validate122(data.cohort_key, {
           instancePath: instancePath + '/cohort_key',
           parentData: data,
           parentDataProperty: 'cohort_key',
@@ -26323,8 +27877,8 @@ function validate114(
       ) {
         vErrors =
           vErrors === null
-            ? validate115.errors
-            : vErrors.concat(validate115.errors);
+            ? validate122.errors
+            : vErrors.concat(validate122.errors);
         errors = vErrors.length;
       }
     }
@@ -26502,7 +28056,7 @@ function validate114(
           instancePath: instancePath + '/feature_contract',
           schemaPath: '#/$defs/ResearchFeatureContract/enum',
           keyword: 'enum',
-          params: { allowedValues: schema251.enum },
+          params: { allowedValues: schema261.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -26828,12 +28382,12 @@ function validate114(
       }
     }
   }
-  validate114.errors = vErrors;
+  validate121.errors = vErrors;
   evaluated0.props = props0;
   return errors === 0;
 }
-validate114.evaluated = { dynamicProps: true, dynamicItems: false };
-const schema253 = {
+validate121.evaluated = { dynamicProps: true, dynamicItems: false };
+const schema263 = {
   description:
     'Hard risk bounds consumed by execution admission (not natural language).',
   type: 'object',
@@ -26916,7 +28470,7 @@ const schema253 = {
     'envelope_hash',
   ],
 };
-function validate118(
+function validate125(
   data,
   {
     instancePath = '',
@@ -26928,7 +28482,7 @@ function validate118(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate118.evaluated;
+  const evaluated0 = validate125.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -27446,10 +29000,10 @@ function validate118(
     }
     errors++;
   }
-  validate118.errors = vErrors;
+  validate125.errors = vErrors;
   return errors === 0;
 }
-validate118.evaluated = {
+validate125.evaluated = {
   props: {
     auto_execution_allowed: true,
     cvar_contribution_usd: true,
@@ -27469,7 +29023,7 @@ validate118.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema264 = {
+const schema274 = {
   description:
     'How much capital a recommendation should deploy and the binding cap.',
   type: 'object',
@@ -27496,7 +29050,7 @@ const schema264 = {
         'OOS expected fill quantity; equals requested shares for aggressive entry.',
       $ref: '#/$defs/Shares',
     },
-    expected_maker_rebate_usd: {
+    expected_maker_rebate_accrual_usd: {
       description: 'Delayed maker incentive expectation; never spendable cash.',
       $ref: '#/$defs/Usd',
     },
@@ -27509,18 +29063,32 @@ const schema264 = {
       description: 'Immediate full-fill venue and builder fee.',
       $ref: '#/$defs/Usd',
     },
-    maker_rebate_schedule: {
-      description:
-        'Independent Gamma terms frozen for later maker-fill accrual. `None`\nmeans the tier was valued with zero rebate.',
-      anyOf: [{ $ref: '#/$defs/FrozenMakerRebateSchedule' }, { type: 'null' }],
+    maker_rebate_objective_status: {
+      $ref: '#/$defs/MakerRebateObjectiveStatus',
+    },
+    maker_rebate_terms: {
+      description: 'Required route applicability and independent Gamma terms.',
+      $ref: '#/$defs/EntryMakerRebateTerms',
     },
     market_exposure_after_usd: {
       description: 'Projected market exposure after this allocation.',
       $ref: '#/$defs/Usd',
     },
+    objective_maker_rebate_usd: {
+      description:
+        'Threshold-aware discounted amount admitted to the expected objective.',
+      $ref: '#/$defs/Usd',
+    },
     portfolio_weight_pct: {
       description: 'Suggested allocation as a fraction of the capital base.',
       type: 'string',
+    },
+    rebate_delay_basis: {
+      anyOf: [{ $ref: '#/$defs/MakerRebateDelayBasis' }, { type: 'null' }],
+    },
+    rebate_valuation_hash: {
+      type: ['string', 'null'],
+      pattern: '^blake3:[0-9a-f]{64}$',
     },
     reference_entry_price: {
       description:
@@ -27546,7 +29114,10 @@ const schema264 = {
     'expected_filled_shares',
     'hard_reserved_cash_usd',
     'immediate_fee_usd',
-    'expected_maker_rebate_usd',
+    'expected_maker_rebate_accrual_usd',
+    'objective_maker_rebate_usd',
+    'maker_rebate_objective_status',
+    'maker_rebate_terms',
     'reference_entry_price',
     'portfolio_weight_pct',
     'market_exposure_after_usd',
@@ -27557,7 +29128,7 @@ const schema264 = {
     'sizing_reason',
   ],
 };
-function validate120(
+function validate127(
   data,
   {
     instancePath = '',
@@ -27569,7 +29140,7 @@ function validate120(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate120.evaluated;
+  const evaluated0 = validate127.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -27654,14 +29225,16 @@ function validate120(
       }
       errors++;
     }
-    if (data.expected_maker_rebate_usd === undefined) {
+    if (data.expected_maker_rebate_accrual_usd === undefined) {
       const err5 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'expected_maker_rebate_usd' },
+        params: { missingProperty: 'expected_maker_rebate_accrual_usd' },
         message:
-          "must have required property '" + 'expected_maker_rebate_usd' + "'",
+          "must have required property '" +
+          'expected_maker_rebate_accrual_usd' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err5];
@@ -27670,14 +29243,14 @@ function validate120(
       }
       errors++;
     }
-    if (data.reference_entry_price === undefined) {
+    if (data.objective_maker_rebate_usd === undefined) {
       const err6 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'reference_entry_price' },
+        params: { missingProperty: 'objective_maker_rebate_usd' },
         message:
-          "must have required property '" + 'reference_entry_price' + "'",
+          "must have required property '" + 'objective_maker_rebate_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err6];
@@ -27686,13 +29259,16 @@ function validate120(
       }
       errors++;
     }
-    if (data.portfolio_weight_pct === undefined) {
+    if (data.maker_rebate_objective_status === undefined) {
       const err7 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'portfolio_weight_pct' },
-        message: "must have required property '" + 'portfolio_weight_pct' + "'",
+        params: { missingProperty: 'maker_rebate_objective_status' },
+        message:
+          "must have required property '" +
+          'maker_rebate_objective_status' +
+          "'",
       };
       if (vErrors === null) {
         vErrors = [err7];
@@ -27701,14 +29277,13 @@ function validate120(
       }
       errors++;
     }
-    if (data.market_exposure_after_usd === undefined) {
+    if (data.maker_rebate_terms === undefined) {
       const err8 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'market_exposure_after_usd' },
-        message:
-          "must have required property '" + 'market_exposure_after_usd' + "'",
+        params: { missingProperty: 'maker_rebate_terms' },
+        message: "must have required property '" + 'maker_rebate_terms' + "'",
       };
       if (vErrors === null) {
         vErrors = [err8];
@@ -27717,14 +29292,14 @@ function validate120(
       }
       errors++;
     }
-    if (data.event_exposure_after_usd === undefined) {
+    if (data.reference_entry_price === undefined) {
       const err9 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'event_exposure_after_usd' },
+        params: { missingProperty: 'reference_entry_price' },
         message:
-          "must have required property '" + 'event_exposure_after_usd' + "'",
+          "must have required property '" + 'reference_entry_price' + "'",
       };
       if (vErrors === null) {
         vErrors = [err9];
@@ -27733,14 +29308,13 @@ function validate120(
       }
       errors++;
     }
-    if (data.category_exposure_after_usd === undefined) {
+    if (data.portfolio_weight_pct === undefined) {
       const err10 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'category_exposure_after_usd' },
-        message:
-          "must have required property '" + 'category_exposure_after_usd' + "'",
+        params: { missingProperty: 'portfolio_weight_pct' },
+        message: "must have required property '" + 'portfolio_weight_pct' + "'",
       };
       if (vErrors === null) {
         vErrors = [err10];
@@ -27749,14 +29323,14 @@ function validate120(
       }
       errors++;
     }
-    if (data.route_exposure_after_usd === undefined) {
+    if (data.market_exposure_after_usd === undefined) {
       const err11 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'route_exposure_after_usd' },
+        params: { missingProperty: 'market_exposure_after_usd' },
         message:
-          "must have required property '" + 'route_exposure_after_usd' + "'",
+          "must have required property '" + 'market_exposure_after_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err11];
@@ -27765,14 +29339,14 @@ function validate120(
       }
       errors++;
     }
-    if (data.capital_occupancy_usd_hours === undefined) {
+    if (data.event_exposure_after_usd === undefined) {
       const err12 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'capital_occupancy_usd_hours' },
+        params: { missingProperty: 'event_exposure_after_usd' },
         message:
-          "must have required property '" + 'capital_occupancy_usd_hours' + "'",
+          "must have required property '" + 'event_exposure_after_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err12];
@@ -27781,13 +29355,14 @@ function validate120(
       }
       errors++;
     }
-    if (data.sizing_reason === undefined) {
+    if (data.category_exposure_after_usd === undefined) {
       const err13 = {
         instancePath,
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'sizing_reason' },
-        message: "must have required property '" + 'sizing_reason' + "'",
+        params: { missingProperty: 'category_exposure_after_usd' },
+        message:
+          "must have required property '" + 'category_exposure_after_usd' + "'",
       };
       if (vErrors === null) {
         vErrors = [err13];
@@ -27796,62 +29371,58 @@ function validate120(
       }
       errors++;
     }
+    if (data.route_exposure_after_usd === undefined) {
+      const err14 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'route_exposure_after_usd' },
+        message:
+          "must have required property '" + 'route_exposure_after_usd' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err14];
+      } else {
+        vErrors.push(err14);
+      }
+      errors++;
+    }
+    if (data.capital_occupancy_usd_hours === undefined) {
+      const err15 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'capital_occupancy_usd_hours' },
+        message:
+          "must have required property '" + 'capital_occupancy_usd_hours' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err15];
+      } else {
+        vErrors.push(err15);
+      }
+      errors++;
+    }
+    if (data.sizing_reason === undefined) {
+      const err16 = {
+        instancePath,
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'sizing_reason' },
+        message: "must have required property '" + 'sizing_reason' + "'",
+      };
+      if (vErrors === null) {
+        vErrors = [err16];
+      } else {
+        vErrors.push(err16);
+      }
+      errors++;
+    }
     if (data.capital_occupancy_usd_hours !== undefined) {
       if (typeof data.capital_occupancy_usd_hours !== 'string') {
-        const err14 = {
+        const err17 = {
           instancePath: instancePath + '/capital_occupancy_usd_hours',
           schemaPath: '#/$defs/UsdHours/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err14];
-        } else {
-          vErrors.push(err14);
-        }
-        errors++;
-      }
-    }
-    if (data.category_exposure_after_usd !== undefined) {
-      if (typeof data.category_exposure_after_usd !== 'string') {
-        const err15 = {
-          instancePath: instancePath + '/category_exposure_after_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err15];
-        } else {
-          vErrors.push(err15);
-        }
-        errors++;
-      }
-    }
-    if (data.economic_tier_id !== undefined) {
-      let data2 = data.economic_tier_id;
-      if (typeof data2 === 'string') {
-        if (!formats0.test(data2)) {
-          const err16 = {
-            instancePath: instancePath + '/economic_tier_id',
-            schemaPath: '#/properties/economic_tier_id/format',
-            keyword: 'format',
-            params: { format: 'uuid' },
-            message: 'must match format "' + 'uuid' + '"',
-          };
-          if (vErrors === null) {
-            vErrors = [err16];
-          } else {
-            vErrors.push(err16);
-          }
-          errors++;
-        }
-      } else {
-        const err17 = {
-          instancePath: instancePath + '/economic_tier_id',
-          schemaPath: '#/properties/economic_tier_id/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -27864,10 +29435,10 @@ function validate120(
         errors++;
       }
     }
-    if (data.event_exposure_after_usd !== undefined) {
-      if (typeof data.event_exposure_after_usd !== 'string') {
+    if (data.category_exposure_after_usd !== undefined) {
+      if (typeof data.category_exposure_after_usd !== 'string') {
         const err18 = {
-          instancePath: instancePath + '/event_exposure_after_usd',
+          instancePath: instancePath + '/category_exposure_after_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -27881,28 +29452,28 @@ function validate120(
         errors++;
       }
     }
-    if (data.expected_filled_shares !== undefined) {
-      if (typeof data.expected_filled_shares !== 'string') {
-        const err19 = {
-          instancePath: instancePath + '/expected_filled_shares',
-          schemaPath: '#/$defs/Shares/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err19];
-        } else {
-          vErrors.push(err19);
+    if (data.economic_tier_id !== undefined) {
+      let data2 = data.economic_tier_id;
+      if (typeof data2 === 'string') {
+        if (!formats0.test(data2)) {
+          const err19 = {
+            instancePath: instancePath + '/economic_tier_id',
+            schemaPath: '#/properties/economic_tier_id/format',
+            keyword: 'format',
+            params: { format: 'uuid' },
+            message: 'must match format "' + 'uuid' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err19];
+          } else {
+            vErrors.push(err19);
+          }
+          errors++;
         }
-        errors++;
-      }
-    }
-    if (data.expected_maker_rebate_usd !== undefined) {
-      if (typeof data.expected_maker_rebate_usd !== 'string') {
+      } else {
         const err20 = {
-          instancePath: instancePath + '/expected_maker_rebate_usd',
-          schemaPath: '#/$defs/Usd/type',
+          instancePath: instancePath + '/economic_tier_id',
+          schemaPath: '#/properties/economic_tier_id/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -27915,10 +29486,10 @@ function validate120(
         errors++;
       }
     }
-    if (data.hard_reserved_cash_usd !== undefined) {
-      if (typeof data.hard_reserved_cash_usd !== 'string') {
+    if (data.event_exposure_after_usd !== undefined) {
+      if (typeof data.event_exposure_after_usd !== 'string') {
         const err21 = {
-          instancePath: instancePath + '/hard_reserved_cash_usd',
+          instancePath: instancePath + '/event_exposure_after_usd',
           schemaPath: '#/$defs/Usd/type',
           keyword: 'type',
           params: { type: 'string' },
@@ -27932,11 +29503,11 @@ function validate120(
         errors++;
       }
     }
-    if (data.immediate_fee_usd !== undefined) {
-      if (typeof data.immediate_fee_usd !== 'string') {
+    if (data.expected_filled_shares !== undefined) {
+      if (typeof data.expected_filled_shares !== 'string') {
         const err22 = {
-          instancePath: instancePath + '/immediate_fee_usd',
-          schemaPath: '#/$defs/Usd/type',
+          instancePath: instancePath + '/expected_filled_shares',
+          schemaPath: '#/$defs/Shares/type',
           keyword: 'type',
           params: { type: 'string' },
           message: 'must be string',
@@ -27949,110 +29520,159 @@ function validate120(
         errors++;
       }
     }
-    if (data.maker_rebate_schedule !== undefined) {
-      let data8 = data.maker_rebate_schedule;
-      const _errs25 = errors;
-      let valid8 = false;
-      const _errs26 = errors;
-      if (data8 && typeof data8 == 'object' && !Array.isArray(data8)) {
-        if (data8.schedule_hash === undefined) {
-          const err23 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'schedule_hash' },
-            message: "must have required property '" + 'schedule_hash' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err23];
-          } else {
-            vErrors.push(err23);
-          }
-          errors++;
+    if (data.expected_maker_rebate_accrual_usd !== undefined) {
+      if (typeof data.expected_maker_rebate_accrual_usd !== 'string') {
+        const err23 = {
+          instancePath: instancePath + '/expected_maker_rebate_accrual_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err23];
+        } else {
+          vErrors.push(err23);
         }
-        if (data8.catalog_change_hash === undefined) {
-          const err24 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'catalog_change_hash' },
-            message:
-              "must have required property '" + 'catalog_change_hash' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err24];
-          } else {
-            vErrors.push(err24);
-          }
-          errors++;
+        errors++;
+      }
+    }
+    if (data.hard_reserved_cash_usd !== undefined) {
+      if (typeof data.hard_reserved_cash_usd !== 'string') {
+        const err24 = {
+          instancePath: instancePath + '/hard_reserved_cash_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err24];
+        } else {
+          vErrors.push(err24);
         }
-        if (data8.effective_at === undefined) {
-          const err25 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'effective_at' },
-            message: "must have required property '" + 'effective_at' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err25];
-          } else {
-            vErrors.push(err25);
-          }
-          errors++;
+        errors++;
+      }
+    }
+    if (data.immediate_fee_usd !== undefined) {
+      if (typeof data.immediate_fee_usd !== 'string') {
+        const err25 = {
+          instancePath: instancePath + '/immediate_fee_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err25];
+        } else {
+          vErrors.push(err25);
         }
-        if (data8.available_at === undefined) {
-          const err26 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'available_at' },
-            message: "must have required property '" + 'available_at' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err26];
-          } else {
-            vErrors.push(err26);
-          }
-          errors++;
+        errors++;
+      }
+    }
+    if (data.maker_rebate_objective_status !== undefined) {
+      if (
+        !validate80(data.maker_rebate_objective_status, {
+          instancePath: instancePath + '/maker_rebate_objective_status',
+          parentData: data,
+          parentDataProperty: 'maker_rebate_objective_status',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate80.errors
+            : vErrors.concat(validate80.errors);
+        errors = vErrors.length;
+      }
+    }
+    if (data.maker_rebate_terms !== undefined) {
+      if (
+        !validate37(data.maker_rebate_terms, {
+          instancePath: instancePath + '/maker_rebate_terms',
+          parentData: data,
+          parentDataProperty: 'maker_rebate_terms',
+          rootData,
+          dynamicAnchors,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate37.errors
+            : vErrors.concat(validate37.errors);
+        errors = vErrors.length;
+      }
+    }
+    if (data.market_exposure_after_usd !== undefined) {
+      if (typeof data.market_exposure_after_usd !== 'string') {
+        const err26 = {
+          instancePath: instancePath + '/market_exposure_after_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err26];
+        } else {
+          vErrors.push(err26);
         }
-        if (data8.fees_enabled === undefined) {
-          const err27 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'fees_enabled' },
-            message: "must have required property '" + 'fees_enabled' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err27];
-          } else {
-            vErrors.push(err27);
-          }
-          errors++;
+        errors++;
+      }
+    }
+    if (data.objective_maker_rebate_usd !== undefined) {
+      if (typeof data.objective_maker_rebate_usd !== 'string') {
+        const err27 = {
+          instancePath: instancePath + '/objective_maker_rebate_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err27];
+        } else {
+          vErrors.push(err27);
         }
-        if (data8.platform_rate === undefined) {
-          const err28 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'platform_rate' },
-            message: "must have required property '" + 'platform_rate' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err28];
-          } else {
-            vErrors.push(err28);
-          }
-          errors++;
+        errors++;
+      }
+    }
+    if (data.portfolio_weight_pct !== undefined) {
+      if (typeof data.portfolio_weight_pct !== 'string') {
+        const err28 = {
+          instancePath: instancePath + '/portfolio_weight_pct',
+          schemaPath: '#/properties/portfolio_weight_pct/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err28];
+        } else {
+          vErrors.push(err28);
         }
-        if (data8.exponent === undefined) {
+        errors++;
+      }
+    }
+    if (data.rebate_delay_basis !== undefined) {
+      let data13 = data.rebate_delay_basis;
+      const _errs35 = errors;
+      let valid10 = false;
+      const _errs36 = errors;
+      const _errs38 = errors;
+      let valid12 = false;
+      let passing0 = null;
+      const _errs39 = errors;
+      if (data13 && typeof data13 == 'object' && !Array.isArray(data13)) {
+        if (data13.kind === undefined) {
           const err29 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+            instancePath: instancePath + '/rebate_delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/0/required',
             keyword: 'required',
-            params: { missingProperty: 'exponent' },
-            message: "must have required property '" + 'exponent' + "'",
+            params: { missingProperty: 'kind' },
+            message: "must have required property '" + 'kind' + "'",
           };
           if (vErrors === null) {
             vErrors = [err29];
@@ -28061,13 +29681,16 @@ function validate120(
           }
           errors++;
         }
-        if (data8.taker_only === undefined) {
+        if (data13.lag_from_program_close_secs === undefined) {
           const err30 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
+            instancePath: instancePath + '/rebate_delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/0/required',
             keyword: 'required',
-            params: { missingProperty: 'taker_only' },
-            message: "must have required property '" + 'taker_only' + "'",
+            params: { missingProperty: 'lag_from_program_close_secs' },
+            message:
+              "must have required property '" +
+              'lag_from_program_close_secs' +
+              "'",
           };
           if (vErrors === null) {
             vErrors = [err30];
@@ -28076,30 +29699,34 @@ function validate120(
           }
           errors++;
         }
-        if (data8.rebate_rate === undefined) {
-          const err31 = {
-            instancePath: instancePath + '/maker_rebate_schedule',
-            schemaPath: '#/$defs/FrozenMakerRebateSchedule/required',
-            keyword: 'required',
-            params: { missingProperty: 'rebate_rate' },
-            message: "must have required property '" + 'rebate_rate' + "'",
-          };
-          if (vErrors === null) {
-            vErrors = [err31];
-          } else {
-            vErrors.push(err31);
-          }
-          errors++;
-        }
-        for (const key0 in data8) {
-          if (!func1.call(schema75.properties, key0)) {
-            const err32 = {
-              instancePath: instancePath + '/maker_rebate_schedule',
+        for (const key0 in data13) {
+          if (!(key0 === 'kind' || key0 === 'lag_from_program_close_secs')) {
+            const err31 = {
+              instancePath: instancePath + '/rebate_delay_basis',
               schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/additionalProperties',
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/additionalProperties',
               keyword: 'additionalProperties',
               params: { additionalProperty: key0 },
               message: 'must NOT have additional properties',
+            };
+            if (vErrors === null) {
+              vErrors = [err31];
+            } else {
+              vErrors.push(err31);
+            }
+            errors++;
+          }
+        }
+        if (data13.kind !== undefined) {
+          let data14 = data13.kind;
+          if (typeof data14 !== 'string') {
+            const err32 = {
+              instancePath: instancePath + '/rebate_delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/kind/type',
+              keyword: 'type',
+              params: { type: 'string' },
+              message: 'must be string',
             };
             if (vErrors === null) {
               vErrors = [err32];
@@ -28108,36 +29735,42 @@ function validate120(
             }
             errors++;
           }
-        }
-        if (data8.available_at !== undefined) {
-          let data9 = data8.available_at;
-          if (typeof data9 === 'string') {
-            if (!formats2.validate(data9)) {
-              const err33 = {
-                instancePath:
-                  instancePath + '/maker_rebate_schedule/available_at',
-                schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/available_at/format',
-                keyword: 'format',
-                params: { format: 'date-time' },
-                message: 'must match format "' + 'date-time' + '"',
-              };
-              if (vErrors === null) {
-                vErrors = [err33];
-              } else {
-                vErrors.push(err33);
-              }
-              errors++;
+          if ('conservative_fallback' !== data14) {
+            const err33 = {
+              instancePath: instancePath + '/rebate_delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/kind/const',
+              keyword: 'const',
+              params: { allowedValue: 'conservative_fallback' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err33];
+            } else {
+              vErrors.push(err33);
             }
-          } else {
+            errors++;
+          }
+        }
+        if (data13.lag_from_program_close_secs !== undefined) {
+          let data15 = data13.lag_from_program_close_secs;
+          if (
+            !(
+              typeof data15 == 'number' &&
+              !(data15 % 1) &&
+              !isNaN(data15) &&
+              isFinite(data15)
+            )
+          ) {
             const err34 = {
               instancePath:
-                instancePath + '/maker_rebate_schedule/available_at',
+                instancePath +
+                '/rebate_delay_basis/lag_from_program_close_secs',
               schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/available_at/type',
+                '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/lag_from_program_close_secs/type',
               keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
+              params: { type: 'integer' },
+              message: 'must be integer',
             };
             if (vErrors === null) {
               vErrors = [err34];
@@ -28146,19 +29779,17 @@ function validate120(
             }
             errors++;
           }
-        }
-        if (data8.catalog_change_hash !== undefined) {
-          let data10 = data8.catalog_change_hash;
-          if (typeof data10 === 'string') {
-            if (!pattern4.test(data10)) {
+          if (typeof data15 == 'number' && isFinite(data15)) {
+            if (data15 > 9007199254740991 || isNaN(data15)) {
               const err35 = {
                 instancePath:
-                  instancePath + '/maker_rebate_schedule/catalog_change_hash',
+                  instancePath +
+                  '/rebate_delay_basis/lag_from_program_close_secs',
                 schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/catalog_change_hash/pattern',
-                keyword: 'pattern',
-                params: { pattern: '^blake3:[0-9a-f]{64}$' },
-                message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
+                  '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/lag_from_program_close_secs/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 9007199254740991 },
+                message: 'must be <= 9007199254740991',
               };
               if (vErrors === null) {
                 vErrors = [err35];
@@ -28167,109 +29798,113 @@ function validate120(
               }
               errors++;
             }
-          } else {
-            const err36 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/catalog_change_hash',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/catalog_change_hash/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err36];
-            } else {
-              vErrors.push(err36);
-            }
-            errors++;
-          }
-        }
-        if (data8.effective_at !== undefined) {
-          let data11 = data8.effective_at;
-          if (typeof data11 === 'string') {
-            if (!formats2.validate(data11)) {
-              const err37 = {
+            if (data15 < 0 || isNaN(data15)) {
+              const err36 = {
                 instancePath:
-                  instancePath + '/maker_rebate_schedule/effective_at',
+                  instancePath +
+                  '/rebate_delay_basis/lag_from_program_close_secs',
                 schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/effective_at/format',
-                keyword: 'format',
-                params: { format: 'date-time' },
-                message: 'must match format "' + 'date-time' + '"',
+                  '#/$defs/MakerRebateDelayBasis/oneOf/0/properties/lag_from_program_close_secs/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
               };
               if (vErrors === null) {
-                vErrors = [err37];
+                vErrors = [err36];
               } else {
-                vErrors.push(err37);
+                vErrors.push(err36);
               }
               errors++;
             }
+          }
+        }
+      } else {
+        const err37 = {
+          instancePath: instancePath + '/rebate_delay_basis',
+          schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/0/type',
+          keyword: 'type',
+          params: { type: 'object' },
+          message: 'must be object',
+        };
+        if (vErrors === null) {
+          vErrors = [err37];
+        } else {
+          vErrors.push(err37);
+        }
+        errors++;
+      }
+      var _valid1 = _errs39 === errors;
+      if (_valid1) {
+        valid12 = true;
+        passing0 = 0;
+        var props2 = true;
+      }
+      const _errs46 = errors;
+      if (data13 && typeof data13 == 'object' && !Array.isArray(data13)) {
+        if (data13.kind === undefined) {
+          const err38 = {
+            instancePath: instancePath + '/rebate_delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'kind' },
+            message: "must have required property '" + 'kind' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err38];
           } else {
-            const err38 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/effective_at',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/effective_at/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err38];
-            } else {
-              vErrors.push(err38);
-            }
-            errors++;
+            vErrors.push(err38);
           }
+          errors++;
         }
-        if (data8.exponent !== undefined) {
-          if (typeof data8.exponent !== 'string') {
-            const err39 = {
-              instancePath: instancePath + '/maker_rebate_schedule/exponent',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/exponent/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err39];
-            } else {
-              vErrors.push(err39);
-            }
-            errors++;
+        if (data13.lag_from_program_close_secs === undefined) {
+          const err39 = {
+            instancePath: instancePath + '/rebate_delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'lag_from_program_close_secs' },
+            message:
+              "must have required property '" +
+              'lag_from_program_close_secs' +
+              "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err39];
+          } else {
+            vErrors.push(err39);
           }
+          errors++;
         }
-        if (data8.fees_enabled !== undefined) {
-          if (typeof data8.fees_enabled !== 'boolean') {
-            const err40 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/fees_enabled',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/fees_enabled/type',
-              keyword: 'type',
-              params: { type: 'boolean' },
-              message: 'must be boolean',
-            };
-            if (vErrors === null) {
-              vErrors = [err40];
-            } else {
-              vErrors.push(err40);
-            }
-            errors++;
+        if (data13.complete_program_days === undefined) {
+          const err40 = {
+            instancePath: instancePath + '/rebate_delay_basis',
+            schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/required',
+            keyword: 'required',
+            params: { missingProperty: 'complete_program_days' },
+            message:
+              "must have required property '" + 'complete_program_days' + "'",
+          };
+          if (vErrors === null) {
+            vErrors = [err40];
+          } else {
+            vErrors.push(err40);
           }
+          errors++;
         }
-        if (data8.platform_rate !== undefined) {
-          if (typeof data8.platform_rate !== 'string') {
+        for (const key1 in data13) {
+          if (
+            !(
+              key1 === 'complete_program_days' ||
+              key1 === 'kind' ||
+              key1 === 'lag_from_program_close_secs'
+            )
+          ) {
             const err41 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/platform_rate',
+              instancePath: instancePath + '/rebate_delay_basis',
               schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/platform_rate/type',
-              keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/additionalProperties',
+              keyword: 'additionalProperties',
+              params: { additionalProperty: key1 },
+              message: 'must NOT have additional properties',
             };
             if (vErrors === null) {
               vErrors = [err41];
@@ -28279,15 +29914,24 @@ function validate120(
             errors++;
           }
         }
-        if (data8.rebate_rate !== undefined) {
-          if (typeof data8.rebate_rate !== 'string') {
+        if (data13.complete_program_days !== undefined) {
+          let data16 = data13.complete_program_days;
+          if (
+            !(
+              typeof data16 == 'number' &&
+              !(data16 % 1) &&
+              !isNaN(data16) &&
+              isFinite(data16)
+            )
+          ) {
             const err42 = {
-              instancePath: instancePath + '/maker_rebate_schedule/rebate_rate',
+              instancePath:
+                instancePath + '/rebate_delay_basis/complete_program_days',
               schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/rebate_rate/type',
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/complete_program_days/type',
               keyword: 'type',
-              params: { type: 'string' },
-              message: 'must be string',
+              params: { type: 'integer' },
+              message: 'must be integer',
             };
             if (vErrors === null) {
               vErrors = [err42];
@@ -28296,19 +29940,16 @@ function validate120(
             }
             errors++;
           }
-        }
-        if (data8.schedule_hash !== undefined) {
-          let data16 = data8.schedule_hash;
-          if (typeof data16 === 'string') {
-            if (!pattern4.test(data16)) {
+          if (typeof data16 == 'number' && isFinite(data16)) {
+            if (data16 > 4294967295 || isNaN(data16)) {
               const err43 = {
                 instancePath:
-                  instancePath + '/maker_rebate_schedule/schedule_hash',
+                  instancePath + '/rebate_delay_basis/complete_program_days',
                 schemaPath:
-                  '#/$defs/FrozenMakerRebateSchedule/properties/schedule_hash/pattern',
-                keyword: 'pattern',
-                params: { pattern: '^blake3:[0-9a-f]{64}$' },
-                message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/complete_program_days/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 4294967295 },
+                message: 'must be <= 4294967295',
               };
               if (vErrors === null) {
                 vErrors = [err43];
@@ -28317,33 +29958,35 @@ function validate120(
               }
               errors++;
             }
-          } else {
-            const err44 = {
-              instancePath:
-                instancePath + '/maker_rebate_schedule/schedule_hash',
+            if (data16 < 0 || isNaN(data16)) {
+              const err44 = {
+                instancePath:
+                  instancePath + '/rebate_delay_basis/complete_program_days',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/complete_program_days/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err44];
+              } else {
+                vErrors.push(err44);
+              }
+              errors++;
+            }
+          }
+        }
+        if (data13.kind !== undefined) {
+          let data17 = data13.kind;
+          if (typeof data17 !== 'string') {
+            const err45 = {
+              instancePath: instancePath + '/rebate_delay_basis/kind',
               schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/schedule_hash/type',
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/kind/type',
               keyword: 'type',
               params: { type: 'string' },
               message: 'must be string',
-            };
-            if (vErrors === null) {
-              vErrors = [err44];
-            } else {
-              vErrors.push(err44);
-            }
-            errors++;
-          }
-        }
-        if (data8.taker_only !== undefined) {
-          if (typeof data8.taker_only !== 'boolean') {
-            const err45 = {
-              instancePath: instancePath + '/maker_rebate_schedule/taker_only',
-              schemaPath:
-                '#/$defs/FrozenMakerRebateSchedule/properties/taker_only/type',
-              keyword: 'type',
-              params: { type: 'boolean' },
-              message: 'must be boolean',
             };
             if (vErrors === null) {
               vErrors = [err45];
@@ -28352,92 +29995,96 @@ function validate120(
             }
             errors++;
           }
+          if ('observed_p95' !== data17) {
+            const err46 = {
+              instancePath: instancePath + '/rebate_delay_basis/kind',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/kind/const',
+              keyword: 'const',
+              params: { allowedValue: 'observed_p95' },
+              message: 'must be equal to constant',
+            };
+            if (vErrors === null) {
+              vErrors = [err46];
+            } else {
+              vErrors.push(err46);
+            }
+            errors++;
+          }
+        }
+        if (data13.lag_from_program_close_secs !== undefined) {
+          let data18 = data13.lag_from_program_close_secs;
+          if (
+            !(
+              typeof data18 == 'number' &&
+              !(data18 % 1) &&
+              !isNaN(data18) &&
+              isFinite(data18)
+            )
+          ) {
+            const err47 = {
+              instancePath:
+                instancePath +
+                '/rebate_delay_basis/lag_from_program_close_secs',
+              schemaPath:
+                '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/lag_from_program_close_secs/type',
+              keyword: 'type',
+              params: { type: 'integer' },
+              message: 'must be integer',
+            };
+            if (vErrors === null) {
+              vErrors = [err47];
+            } else {
+              vErrors.push(err47);
+            }
+            errors++;
+          }
+          if (typeof data18 == 'number' && isFinite(data18)) {
+            if (data18 > 9007199254740991 || isNaN(data18)) {
+              const err48 = {
+                instancePath:
+                  instancePath +
+                  '/rebate_delay_basis/lag_from_program_close_secs',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/lag_from_program_close_secs/maximum',
+                keyword: 'maximum',
+                params: { comparison: '<=', limit: 9007199254740991 },
+                message: 'must be <= 9007199254740991',
+              };
+              if (vErrors === null) {
+                vErrors = [err48];
+              } else {
+                vErrors.push(err48);
+              }
+              errors++;
+            }
+            if (data18 < 0 || isNaN(data18)) {
+              const err49 = {
+                instancePath:
+                  instancePath +
+                  '/rebate_delay_basis/lag_from_program_close_secs',
+                schemaPath:
+                  '#/$defs/MakerRebateDelayBasis/oneOf/1/properties/lag_from_program_close_secs/minimum',
+                keyword: 'minimum',
+                params: { comparison: '>=', limit: 0 },
+                message: 'must be >= 0',
+              };
+              if (vErrors === null) {
+                vErrors = [err49];
+              } else {
+                vErrors.push(err49);
+              }
+              errors++;
+            }
+          }
         }
       } else {
-        const err46 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/$defs/FrozenMakerRebateSchedule/type',
+        const err50 = {
+          instancePath: instancePath + '/rebate_delay_basis',
+          schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf/1/type',
           keyword: 'type',
           params: { type: 'object' },
           message: 'must be object',
-        };
-        if (vErrors === null) {
-          vErrors = [err46];
-        } else {
-          vErrors.push(err46);
-        }
-        errors++;
-      }
-      var _valid0 = _errs26 === errors;
-      valid8 = valid8 || _valid0;
-      const _errs48 = errors;
-      if (data8 !== null) {
-        const err47 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/properties/maker_rebate_schedule/anyOf/1/type',
-          keyword: 'type',
-          params: { type: 'null' },
-          message: 'must be null',
-        };
-        if (vErrors === null) {
-          vErrors = [err47];
-        } else {
-          vErrors.push(err47);
-        }
-        errors++;
-      }
-      var _valid0 = _errs48 === errors;
-      valid8 = valid8 || _valid0;
-      if (!valid8) {
-        const err48 = {
-          instancePath: instancePath + '/maker_rebate_schedule',
-          schemaPath: '#/properties/maker_rebate_schedule/anyOf',
-          keyword: 'anyOf',
-          params: {},
-          message: 'must match a schema in anyOf',
-        };
-        if (vErrors === null) {
-          vErrors = [err48];
-        } else {
-          vErrors.push(err48);
-        }
-        errors++;
-      } else {
-        errors = _errs25;
-        if (vErrors !== null) {
-          if (_errs25) {
-            vErrors.length = _errs25;
-          } else {
-            vErrors = null;
-          }
-        }
-      }
-    }
-    if (data.market_exposure_after_usd !== undefined) {
-      if (typeof data.market_exposure_after_usd !== 'string') {
-        const err49 = {
-          instancePath: instancePath + '/market_exposure_after_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
-        };
-        if (vErrors === null) {
-          vErrors = [err49];
-        } else {
-          vErrors.push(err49);
-        }
-        errors++;
-      }
-    }
-    if (data.portfolio_weight_pct !== undefined) {
-      if (typeof data.portfolio_weight_pct !== 'string') {
-        const err50 = {
-          instancePath: instancePath + '/portfolio_weight_pct',
-          schemaPath: '#/properties/portfolio_weight_pct/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err50];
@@ -28446,15 +30093,26 @@ function validate120(
         }
         errors++;
       }
-    }
-    if (data.reference_entry_price !== undefined) {
-      if (typeof data.reference_entry_price !== 'string') {
+      var _valid1 = _errs46 === errors;
+      if (_valid1 && valid12) {
+        valid12 = false;
+        passing0 = [passing0, 1];
+      } else {
+        if (_valid1) {
+          valid12 = true;
+          passing0 = 1;
+          if (props2 !== true) {
+            props2 = true;
+          }
+        }
+      }
+      if (!valid12) {
         const err51 = {
-          instancePath: instancePath + '/reference_entry_price',
-          schemaPath: '#/$defs/Price/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          instancePath: instancePath + '/rebate_delay_basis',
+          schemaPath: '#/$defs/MakerRebateDelayBasis/oneOf',
+          keyword: 'oneOf',
+          params: { passingSchemas: passing0 },
+          message: 'must match exactly one schema in oneOf',
         };
         if (vErrors === null) {
           vErrors = [err51];
@@ -28462,16 +30120,26 @@ function validate120(
           vErrors.push(err51);
         }
         errors++;
+      } else {
+        errors = _errs38;
+        if (vErrors !== null) {
+          if (_errs38) {
+            vErrors.length = _errs38;
+          } else {
+            vErrors = null;
+          }
+        }
       }
-    }
-    if (data.requested_shares !== undefined) {
-      if (typeof data.requested_shares !== 'string') {
+      var _valid0 = _errs36 === errors;
+      valid10 = valid10 || _valid0;
+      const _errs55 = errors;
+      if (data13 !== null) {
         const err52 = {
-          instancePath: instancePath + '/requested_shares',
-          schemaPath: '#/$defs/Shares/type',
+          instancePath: instancePath + '/rebate_delay_basis',
+          schemaPath: '#/properties/rebate_delay_basis/anyOf/1/type',
           keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          params: { type: 'null' },
+          message: 'must be null',
         };
         if (vErrors === null) {
           vErrors = [err52];
@@ -28480,15 +30148,15 @@ function validate120(
         }
         errors++;
       }
-    }
-    if (data.route_exposure_after_usd !== undefined) {
-      if (typeof data.route_exposure_after_usd !== 'string') {
+      var _valid0 = _errs55 === errors;
+      valid10 = valid10 || _valid0;
+      if (!valid10) {
         const err53 = {
-          instancePath: instancePath + '/route_exposure_after_usd',
-          schemaPath: '#/$defs/Usd/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          instancePath: instancePath + '/rebate_delay_basis',
+          schemaPath: '#/properties/rebate_delay_basis/anyOf',
+          keyword: 'anyOf',
+          params: {},
+          message: 'must match a schema in anyOf',
         };
         if (vErrors === null) {
           vErrors = [err53];
@@ -28496,16 +30164,26 @@ function validate120(
           vErrors.push(err53);
         }
         errors++;
+      } else {
+        errors = _errs35;
+        if (vErrors !== null) {
+          if (_errs35) {
+            vErrors.length = _errs35;
+          } else {
+            vErrors = null;
+          }
+        }
       }
     }
-    if (data.sizing_reason !== undefined) {
-      if (typeof data.sizing_reason !== 'string') {
+    if (data.rebate_valuation_hash !== undefined) {
+      let data19 = data.rebate_valuation_hash;
+      if (typeof data19 !== 'string' && data19 !== null) {
         const err54 = {
-          instancePath: instancePath + '/sizing_reason',
-          schemaPath: '#/properties/sizing_reason/type',
+          instancePath: instancePath + '/rebate_valuation_hash',
+          schemaPath: '#/properties/rebate_valuation_hash/type',
           keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
+          params: { type: schema274.properties.rebate_valuation_hash.type },
+          message: 'must be string,null',
         };
         if (vErrors === null) {
           vErrors = [err54];
@@ -28514,9 +30192,94 @@ function validate120(
         }
         errors++;
       }
+      if (typeof data19 === 'string') {
+        if (!pattern4.test(data19)) {
+          const err55 = {
+            instancePath: instancePath + '/rebate_valuation_hash',
+            schemaPath: '#/properties/rebate_valuation_hash/pattern',
+            keyword: 'pattern',
+            params: { pattern: '^blake3:[0-9a-f]{64}$' },
+            message: 'must match pattern "' + '^blake3:[0-9a-f]{64}$' + '"',
+          };
+          if (vErrors === null) {
+            vErrors = [err55];
+          } else {
+            vErrors.push(err55);
+          }
+          errors++;
+        }
+      }
+    }
+    if (data.reference_entry_price !== undefined) {
+      if (typeof data.reference_entry_price !== 'string') {
+        const err56 = {
+          instancePath: instancePath + '/reference_entry_price',
+          schemaPath: '#/$defs/Price/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err56];
+        } else {
+          vErrors.push(err56);
+        }
+        errors++;
+      }
+    }
+    if (data.requested_shares !== undefined) {
+      if (typeof data.requested_shares !== 'string') {
+        const err57 = {
+          instancePath: instancePath + '/requested_shares',
+          schemaPath: '#/$defs/Shares/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err57];
+        } else {
+          vErrors.push(err57);
+        }
+        errors++;
+      }
+    }
+    if (data.route_exposure_after_usd !== undefined) {
+      if (typeof data.route_exposure_after_usd !== 'string') {
+        const err58 = {
+          instancePath: instancePath + '/route_exposure_after_usd',
+          schemaPath: '#/$defs/Usd/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err58];
+        } else {
+          vErrors.push(err58);
+        }
+        errors++;
+      }
+    }
+    if (data.sizing_reason !== undefined) {
+      if (typeof data.sizing_reason !== 'string') {
+        const err59 = {
+          instancePath: instancePath + '/sizing_reason',
+          schemaPath: '#/properties/sizing_reason/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err59];
+        } else {
+          vErrors.push(err59);
+        }
+        errors++;
+      }
     }
   } else {
-    const err55 = {
+    const err60 = {
       instancePath,
       schemaPath: '#/type',
       keyword: 'type',
@@ -28524,28 +30287,32 @@ function validate120(
       message: 'must be object',
     };
     if (vErrors === null) {
-      vErrors = [err55];
+      vErrors = [err60];
     } else {
-      vErrors.push(err55);
+      vErrors.push(err60);
     }
     errors++;
   }
-  validate120.errors = vErrors;
+  validate127.errors = vErrors;
   return errors === 0;
 }
-validate120.evaluated = {
+validate127.evaluated = {
   props: {
     capital_occupancy_usd_hours: true,
     category_exposure_after_usd: true,
     economic_tier_id: true,
     event_exposure_after_usd: true,
     expected_filled_shares: true,
-    expected_maker_rebate_usd: true,
+    expected_maker_rebate_accrual_usd: true,
     hard_reserved_cash_usd: true,
     immediate_fee_usd: true,
-    maker_rebate_schedule: true,
+    maker_rebate_objective_status: true,
+    maker_rebate_terms: true,
     market_exposure_after_usd: true,
+    objective_maker_rebate_usd: true,
     portfolio_weight_pct: true,
+    rebate_delay_basis: true,
+    rebate_valuation_hash: true,
     reference_entry_price: true,
     requested_shares: true,
     route_exposure_after_usd: true,
@@ -28554,7 +30321,7 @@ validate120.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate101(
+function validate108(
   data,
   {
     instancePath = '',
@@ -28566,7 +30333,7 @@ function validate101(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate101.evaluated;
+  const evaluated0 = validate108.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -28676,7 +30443,7 @@ function validate101(
     }
     if (data.entry !== undefined) {
       if (
-        !validate102(data.entry, {
+        !validate109(data.entry, {
           instancePath: instancePath + '/entry',
           parentData: data,
           parentDataProperty: 'entry',
@@ -28686,14 +30453,14 @@ function validate101(
       ) {
         vErrors =
           vErrors === null
-            ? validate102.errors
-            : vErrors.concat(validate102.errors);
+            ? validate109.errors
+            : vErrors.concat(validate109.errors);
         errors = vErrors.length;
       }
     }
     if (data.exit !== undefined) {
       if (
-        !validate106(data.exit, {
+        !validate113(data.exit, {
           instancePath: instancePath + '/exit',
           parentData: data,
           parentDataProperty: 'exit',
@@ -28703,14 +30470,14 @@ function validate101(
       ) {
         vErrors =
           vErrors === null
-            ? validate106.errors
-            : vErrors.concat(validate106.errors);
+            ? validate113.errors
+            : vErrors.concat(validate113.errors);
         errors = vErrors.length;
       }
     }
     if (data.policy !== undefined) {
       if (
-        !validate114(data.policy, {
+        !validate121(data.policy, {
           instancePath: instancePath + '/policy',
           parentData: data,
           parentDataProperty: 'policy',
@@ -28720,14 +30487,14 @@ function validate101(
       ) {
         vErrors =
           vErrors === null
-            ? validate114.errors
-            : vErrors.concat(validate114.errors);
+            ? validate121.errors
+            : vErrors.concat(validate121.errors);
         errors = vErrors.length;
       }
     }
     if (data.risk_envelope !== undefined) {
       if (
-        !validate118(data.risk_envelope, {
+        !validate125(data.risk_envelope, {
           instancePath: instancePath + '/risk_envelope',
           parentData: data,
           parentDataProperty: 'risk_envelope',
@@ -28737,14 +30504,14 @@ function validate101(
       ) {
         vErrors =
           vErrors === null
-            ? validate118.errors
-            : vErrors.concat(validate118.errors);
+            ? validate125.errors
+            : vErrors.concat(validate125.errors);
         errors = vErrors.length;
       }
     }
     if (data.sizing !== undefined) {
       if (
-        !validate120(data.sizing, {
+        !validate127(data.sizing, {
           instancePath: instancePath + '/sizing',
           parentData: data,
           parentDataProperty: 'sizing',
@@ -28754,8 +30521,8 @@ function validate101(
       ) {
         vErrors =
           vErrors === null
-            ? validate120.errors
-            : vErrors.concat(validate120.errors);
+            ? validate127.errors
+            : vErrors.concat(validate127.errors);
         errors = vErrors.length;
       }
     }
@@ -28774,15 +30541,15 @@ function validate101(
     }
     errors++;
   }
-  validate101.errors = vErrors;
+  validate108.errors = vErrors;
   return errors === 0;
 }
-validate101.evaluated = {
+validate108.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate177(
+function validate186(
   data,
   {
     instancePath = '',
@@ -28794,7 +30561,7 @@ function validate177(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate177.evaluated;
+  const evaluated0 = validate186.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -29156,7 +30923,7 @@ function validate177(
           instancePath: instancePath + '/active_order_intent_id',
           schemaPath: '#/properties/active_order_intent_id/type',
           keyword: 'type',
-          params: { type: schema143.properties.active_order_intent_id.type },
+          params: { type: schema144.properties.active_order_intent_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -29220,7 +30987,7 @@ function validate177(
     }
     if (data.economic_tier !== undefined) {
       if (
-        !validate67(data.economic_tier, {
+        !validate69(data.economic_tier, {
           instancePath: instancePath + '/economic_tier',
           parentData: data,
           parentDataProperty: 'economic_tier',
@@ -29230,8 +30997,8 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate67.errors
-            : vErrors.concat(validate67.errors);
+            ? validate69.errors
+            : vErrors.concat(validate69.errors);
         errors = vErrors.length;
       }
     }
@@ -29271,7 +31038,7 @@ function validate177(
     }
     if (data.economics !== undefined) {
       if (
-        !validate68(data.economics, {
+        !validate70(data.economics, {
           instancePath: instancePath + '/economics',
           parentData: data,
           parentDataProperty: 'economics',
@@ -29281,8 +31048,8 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate68.errors
-            : vErrors.concat(validate68.errors);
+            ? validate70.errors
+            : vErrors.concat(validate70.errors);
         errors = vErrors.length;
       }
     }
@@ -29305,7 +31072,7 @@ function validate177(
     }
     if (data.execution_eligibility !== undefined) {
       if (
-        !validate91(data.execution_eligibility, {
+        !validate98(data.execution_eligibility, {
           instancePath: instancePath + '/execution_eligibility',
           parentData: data,
           parentDataProperty: 'execution_eligibility',
@@ -29315,14 +31082,14 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate91.errors
-            : vErrors.concat(validate91.errors);
+            ? validate98.errors
+            : vErrors.concat(validate98.errors);
         errors = vErrors.length;
       }
     }
     if (data.factor_breakdown !== undefined) {
       if (
-        !validate93(data.factor_breakdown, {
+        !validate100(data.factor_breakdown, {
           instancePath: instancePath + '/factor_breakdown',
           parentData: data,
           parentDataProperty: 'factor_breakdown',
@@ -29332,14 +31099,14 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate93.errors
-            : vErrors.concat(validate93.errors);
+            ? validate100.errors
+            : vErrors.concat(validate100.errors);
         errors = vErrors.length;
       }
     }
     if (data.identity !== undefined) {
       if (
-        !validate97(data.identity, {
+        !validate104(data.identity, {
           instancePath: instancePath + '/identity',
           parentData: data,
           parentDataProperty: 'identity',
@@ -29349,14 +31116,14 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate97.errors
-            : vErrors.concat(validate97.errors);
+            ? validate104.errors
+            : vErrors.concat(validate104.errors);
         errors = vErrors.length;
       }
     }
     if (data.market_context !== undefined) {
       if (
-        !validate99(data.market_context, {
+        !validate106(data.market_context, {
           instancePath: instancePath + '/market_context',
           parentData: data,
           parentDataProperty: 'market_context',
@@ -29366,8 +31133,8 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate99.errors
-            : vErrors.concat(validate99.errors);
+            ? validate106.errors
+            : vErrors.concat(validate106.errors);
         errors = vErrors.length;
       }
     }
@@ -29410,7 +31177,7 @@ function validate177(
           instancePath: instancePath + '/outcome_side',
           schemaPath: '#/$defs/OutcomeSide/enum',
           keyword: 'enum',
-          params: { allowedValues: schema182.enum },
+          params: { allowedValues: schema189.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -29645,7 +31412,7 @@ function validate177(
           instancePath: instancePath + '/report_status',
           schemaPath: '#/$defs/RecommendationReportStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema222.enum },
+          params: { allowedValues: schema232.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -29680,7 +31447,7 @@ function validate177(
           instancePath: instancePath + '/route',
           schemaPath: '#/$defs/BuyModelRoute/enum',
           keyword: 'enum',
-          params: { allowedValues: schema183.enum },
+          params: { allowedValues: schema190.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -29724,7 +31491,7 @@ function validate177(
           instancePath: instancePath + '/status',
           schemaPath: '#/$defs/RecommendationStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema224.enum },
+          params: { allowedValues: schema234.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -29754,7 +31521,7 @@ function validate177(
     }
     if (data.trade_plan !== undefined) {
       if (
-        !validate101(data.trade_plan, {
+        !validate108(data.trade_plan, {
           instancePath: instancePath + '/trade_plan',
           parentData: data,
           parentDataProperty: 'trade_plan',
@@ -29764,8 +31531,8 @@ function validate177(
       ) {
         vErrors =
           vErrors === null
-            ? validate101.errors
-            : vErrors.concat(validate101.errors);
+            ? validate108.errors
+            : vErrors.concat(validate108.errors);
         errors = vErrors.length;
       }
     }
@@ -29852,10 +31619,10 @@ function validate177(
     }
     errors++;
   }
-  validate177.errors = vErrors;
+  validate186.errors = vErrors;
   return errors === 0;
 }
-validate177.evaluated = {
+validate186.evaluated = {
   props: {
     active_order_intent_id: true,
     created_at: true,
@@ -29885,8 +31652,8 @@ validate177.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateReportDetail = validate185;
-const schema277 = {
+export const validateReportDetail = validate194;
+const schema288 = {
   description:
     'Full report header projection: lifecycle + account base + replay handles +\nthe report-level [`ReportSummary`].',
   type: 'object',
@@ -29947,12 +31714,12 @@ const schema277 = {
     'created_at',
   ],
 };
-const schema295 = {
+const schema306 = {
   description: 'Recommendation report category.',
   type: 'string',
   enum: ['top_n', 'shadow_top_n', 'post_run_audit'],
 };
-const schema280 = {
+const schema291 = {
   type: 'object',
   properties: {
     announced_at: { type: ['string', 'null'], format: 'date-time' },
@@ -29992,7 +31759,7 @@ const schema280 = {
     'attempt_count',
   ],
 };
-const schema281 = {
+const schema292 = {
   description: 'Delivery lifecycle for the two-table report fact bundle.',
   type: 'string',
   enum: [
@@ -30004,7 +31771,7 @@ const schema281 = {
     'cancelled',
   ],
 };
-function validate125(
+function validate134(
   data,
   {
     instancePath = '',
@@ -30016,7 +31783,7 @@ function validate125(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate125.evaluated;
+  const evaluated0 = validate134.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -30141,7 +31908,7 @@ function validate125(
           instancePath: instancePath + '/announced_at',
           schemaPath: '#/properties/announced_at/type',
           keyword: 'type',
-          params: { type: schema280.properties.announced_at.type },
+          params: { type: schema291.properties.announced_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -30358,7 +32125,7 @@ function validate125(
           instancePath: instancePath + '/last_error',
           schemaPath: '#/properties/last_error/type',
           keyword: 'type',
-          params: { type: schema280.properties.last_error.type },
+          params: { type: schema291.properties.last_error.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -30376,7 +32143,7 @@ function validate125(
           instancePath: instancePath + '/next_attempt_at',
           schemaPath: '#/properties/next_attempt_at/type',
           keyword: 'type',
-          params: { type: schema280.properties.next_attempt_at.type },
+          params: { type: schema291.properties.next_attempt_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -30526,7 +32293,7 @@ function validate125(
           instancePath: instancePath + '/status',
           schemaPath: '#/$defs/ReportFactDeliveryStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema281.enum },
+          params: { allowedValues: schema292.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -30544,7 +32311,7 @@ function validate125(
           instancePath: instancePath + '/verified_at',
           schemaPath: '#/properties/verified_at/type',
           keyword: 'type',
-          params: { type: schema280.properties.verified_at.type },
+          params: { type: schema291.properties.verified_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -30587,10 +32354,10 @@ function validate125(
     }
     errors++;
   }
-  validate125.errors = vErrors;
+  validate134.errors = vErrors;
   return errors === 0;
 }
-validate125.evaluated = {
+validate134.evaluated = {
   props: {
     announced_at: true,
     attempt_count: true,
@@ -30607,7 +32374,7 @@ validate125.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema282 = {
+const schema293 = {
   description:
     'Durable terminal portfolio decision. Zero candidates is explicit evidence;\nsolver failure never produces this value.',
   oneOf: [
@@ -30636,7 +32403,7 @@ const schema282 = {
     },
   ],
 };
-const schema283 = {
+const schema294 = {
   description:
     'Unique global portfolio plan persisted and referenced by every recommendation.',
   type: 'object',
@@ -30663,7 +32430,7 @@ const schema283 = {
     'content_hash',
   ],
 };
-const schema288 = {
+const schema299 = {
   description: 'Exact post-solve verification evidence.',
   type: 'object',
   properties: {
@@ -30677,7 +32444,7 @@ const schema288 = {
   additionalProperties: false,
   required: ['passed', 'selected_tier_digest', 'recomputed_economics_hash'],
 };
-const schema294 = {
+const schema305 = {
   description:
     'Stable `HiGHS` evidence. A plan exists only when every stage is proven optimal.',
   type: 'object',
@@ -30760,7 +32527,7 @@ const schema294 = {
     'optimal',
   ],
 };
-const schema284 = {
+const schema295 = {
   description:
     'Aggregate hard-constraint values recomputed outside the solver.',
   type: 'object',
@@ -30790,7 +32557,7 @@ const schema284 = {
     'evidence_hash',
   ],
 };
-function validate129(
+function validate138(
   data,
   {
     instancePath = '',
@@ -30802,7 +32569,7 @@ function validate129(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate129.evaluated;
+  const evaluated0 = validate138.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -31146,15 +32913,15 @@ function validate129(
     }
     errors++;
   }
-  validate129.errors = vErrors;
+  validate138.errors = vErrors;
   return errors === 0;
 }
-validate129.evaluated = {
+validate138.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema289 = {
+const schema300 = {
   description: 'Exact Decimal values fixed between lexicographic solve stages.',
   type: 'object',
   properties: {
@@ -31177,7 +32944,7 @@ const schema289 = {
     'stable_tie_break_stages',
   ],
 };
-function validate131(
+function validate140(
   data,
   {
     instancePath = '',
@@ -31189,7 +32956,7 @@ function validate131(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate131.evaluated;
+  const evaluated0 = validate140.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -31441,15 +33208,15 @@ function validate131(
     }
     errors++;
   }
-  validate131.errors = vErrors;
+  validate140.errors = vErrors;
   return errors === 0;
 }
-validate131.evaluated = {
+validate140.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate128(
+function validate137(
   data,
   {
     instancePath = '',
@@ -31461,7 +33228,7 @@ function validate128(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate128.evaluated;
+  const evaluated0 = validate137.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -31603,7 +33370,7 @@ function validate128(
     }
     if (data.constraints !== undefined) {
       if (
-        !validate129(data.constraints, {
+        !validate138(data.constraints, {
           instancePath: instancePath + '/constraints',
           parentData: data,
           parentDataProperty: 'constraints',
@@ -31613,8 +33380,8 @@ function validate128(
       ) {
         vErrors =
           vErrors === null
-            ? validate129.errors
-            : vErrors.concat(validate129.errors);
+            ? validate138.errors
+            : vErrors.concat(validate138.errors);
         errors = vErrors.length;
       }
     }
@@ -31841,7 +33608,7 @@ function validate128(
     }
     if (data.objectives !== undefined) {
       if (
-        !validate131(data.objectives, {
+        !validate140(data.objectives, {
           instancePath: instancePath + '/objectives',
           parentData: data,
           parentDataProperty: 'objectives',
@@ -31851,8 +33618,8 @@ function validate128(
       ) {
         vErrors =
           vErrors === null
-            ? validate131.errors
-            : vErrors.concat(validate131.errors);
+            ? validate140.errors
+            : vErrors.concat(validate140.errors);
         errors = vErrors.length;
       }
     }
@@ -32166,7 +33933,7 @@ function validate128(
           errors++;
         }
         for (const key2 in data10) {
-          if (!func1.call(schema294.properties, key2)) {
+          if (!func1.call(schema305.properties, key2)) {
             const err38 = {
               instancePath: instancePath + '/solver',
               schemaPath: '#/$defs/SolverEvidence/additionalProperties',
@@ -32919,15 +34686,15 @@ function validate128(
     }
     errors++;
   }
-  validate128.errors = vErrors;
+  validate137.errors = vErrors;
   return errors === 0;
 }
-validate128.evaluated = {
+validate137.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate127(
+function validate136(
   data,
   {
     instancePath = '',
@@ -32939,7 +34706,7 @@ function validate127(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate127.evaluated;
+  const evaluated0 = validate136.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -33248,7 +35015,7 @@ function validate127(
     }
     if (data.plan !== undefined) {
       if (
-        !validate128(data.plan, {
+        !validate137(data.plan, {
           instancePath: instancePath + '/plan',
           parentData: data,
           parentDataProperty: 'plan',
@@ -33258,8 +35025,8 @@ function validate127(
       ) {
         vErrors =
           vErrors === null
-            ? validate128.errors
-            : vErrors.concat(validate128.errors);
+            ? validate137.errors
+            : vErrors.concat(validate137.errors);
         errors = vErrors.length;
       }
     }
@@ -33315,12 +35082,12 @@ function validate127(
       }
     }
   }
-  validate127.errors = vErrors;
+  validate136.errors = vErrors;
   evaluated0.props = props0;
   return errors === 0;
 }
-validate127.evaluated = { dynamicProps: true, dynamicItems: false };
-const schema296 = {
+validate136.evaluated = { dynamicProps: true, dynamicItems: false };
+const schema307 = {
   description:
     'Ordered, deduplicated model Routes represented by immutable market eligibility.',
   type: 'object',
@@ -33331,7 +35098,7 @@ const schema296 = {
   additionalProperties: false,
   required: ['routes', 'digest'],
 };
-function validate135(
+function validate144(
   data,
   {
     instancePath = '',
@@ -33343,7 +35110,7 @@ function validate135(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate135.evaluated;
+  const evaluated0 = validate144.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -33460,7 +35227,7 @@ function validate135(
               instancePath: instancePath + '/routes/' + i0,
               schemaPath: '#/$defs/BuyModelRoute/enum',
               keyword: 'enum',
-              params: { allowedValues: schema183.enum },
+              params: { allowedValues: schema190.enum },
               message: 'must be equal to one of the allowed values',
             };
             if (vErrors === null) {
@@ -33502,15 +35269,15 @@ function validate135(
     }
     errors++;
   }
-  validate135.errors = vErrors;
+  validate144.errors = vErrors;
   return errors === 0;
 }
-validate135.evaluated = {
+validate144.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema298 = {
+const schema309 = {
   description:
     'Durable report-run projection returned by enqueue, list, detail, and retry.',
   type: 'object',
@@ -33556,12 +35323,12 @@ const schema298 = {
     'status',
   ],
 };
-const schema299 = {
+const schema310 = {
   description: 'Durable lifecycle of one report build attempt.',
   type: 'string',
   enum: ['queued', 'running', 'succeeded', 'failed', 'skipped', 'abandoned'],
 };
-const schema300 = {
+const schema311 = {
   description:
     'Typed terminal reason for skipped, failed, or abandoned report runs.',
   type: 'string',
@@ -33573,12 +35340,12 @@ const schema300 = {
     'lease_expired',
   ],
 };
-const schema301 = {
+const schema312 = {
   description: 'Stable report-generation trigger source.',
   type: 'string',
   enum: ['scheduled', 'ad_hoc'],
 };
-function validate137(
+function validate146(
   data,
   {
     instancePath = '',
@@ -33590,7 +35357,7 @@ function validate137(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate137.evaluated;
+  const evaluated0 = validate146.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -33680,7 +35447,7 @@ function validate137(
           instancePath: instancePath + '/decision_at',
           schemaPath: '#/properties/decision_at/type',
           keyword: 'type',
-          params: { type: schema298.properties.decision_at.type },
+          params: { type: schema309.properties.decision_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33716,7 +35483,7 @@ function validate137(
           schemaPath: '#/properties/decision_policy_snapshot_id/type',
           keyword: 'type',
           params: {
-            type: schema298.properties.decision_policy_snapshot_id.type,
+            type: schema309.properties.decision_policy_snapshot_id.type,
           },
           message: 'must be string,null',
         };
@@ -33752,7 +35519,7 @@ function validate137(
           instancePath: instancePath + '/error_code',
           schemaPath: '#/properties/error_code/type',
           keyword: 'type',
-          params: { type: schema298.properties.error_code.type },
+          params: { type: schema309.properties.error_code.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33770,7 +35537,7 @@ function validate137(
           instancePath: instancePath + '/error_summary',
           schemaPath: '#/properties/error_summary/type',
           keyword: 'type',
-          params: { type: schema298.properties.error_summary.type },
+          params: { type: schema309.properties.error_summary.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33788,7 +35555,7 @@ function validate137(
           instancePath: instancePath + '/finished_at',
           schemaPath: '#/properties/finished_at/type',
           keyword: 'type',
-          params: { type: schema298.properties.finished_at.type },
+          params: { type: schema309.properties.finished_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33823,7 +35590,7 @@ function validate137(
           instancePath: instancePath + '/heartbeat_at',
           schemaPath: '#/properties/heartbeat_at/type',
           keyword: 'type',
-          params: { type: schema298.properties.heartbeat_at.type },
+          params: { type: schema309.properties.heartbeat_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33866,7 +35633,7 @@ function validate137(
           instancePath: instancePath + '/knowledge_lag_secs',
           schemaPath: '#/properties/knowledge_lag_secs/type',
           keyword: 'type',
-          params: { type: schema298.properties.knowledge_lag_secs.type },
+          params: { type: schema309.properties.knowledge_lag_secs.type },
           message: 'must be integer,null',
         };
         if (vErrors === null) {
@@ -33916,7 +35683,7 @@ function validate137(
           instancePath: instancePath + '/lease_expires_at',
           schemaPath: '#/properties/lease_expires_at/type',
           keyword: 'type',
-          params: { type: schema298.properties.lease_expires_at.type },
+          params: { type: schema309.properties.lease_expires_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33951,7 +35718,7 @@ function validate137(
           instancePath: instancePath + '/lease_owner',
           schemaPath: '#/properties/lease_owner/type',
           keyword: 'type',
-          params: { type: schema298.properties.lease_owner.type },
+          params: { type: schema309.properties.lease_owner.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -33986,7 +35753,7 @@ function validate137(
           instancePath: instancePath + '/output_report_id',
           schemaPath: '#/properties/output_report_id/type',
           keyword: 'type',
-          params: { type: schema298.properties.output_report_id.type },
+          params: { type: schema309.properties.output_report_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -34055,7 +35822,7 @@ function validate137(
           instancePath: instancePath + '/request_id',
           schemaPath: '#/properties/request_id/type',
           keyword: 'type',
-          params: { type: schema298.properties.request_id.type },
+          params: { type: schema309.properties.request_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -34107,7 +35874,7 @@ function validate137(
           instancePath: instancePath + '/retry_of_run_id',
           schemaPath: '#/properties/retry_of_run_id/type',
           keyword: 'type',
-          params: { type: schema298.properties.retry_of_run_id.type },
+          params: { type: schema309.properties.retry_of_run_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -34142,7 +35909,7 @@ function validate137(
           instancePath: instancePath + '/schedule_id',
           schemaPath: '#/properties/schedule_id/type',
           keyword: 'type',
-          params: { type: schema298.properties.schedule_id.type },
+          params: { type: schema309.properties.schedule_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -34160,7 +35927,7 @@ function validate137(
           instancePath: instancePath + '/scheduled_for',
           schemaPath: '#/properties/scheduled_for/type',
           keyword: 'type',
-          params: { type: schema298.properties.scheduled_for.type },
+          params: { type: schema309.properties.scheduled_for.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -34195,7 +35962,7 @@ function validate137(
           instancePath: instancePath + '/started_at',
           schemaPath: '#/properties/started_at/type',
           keyword: 'type',
-          params: { type: schema298.properties.started_at.type },
+          params: { type: schema309.properties.started_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -34254,7 +36021,7 @@ function validate137(
           instancePath: instancePath + '/status',
           schemaPath: '#/$defs/ReportRunStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema299.enum },
+          params: { allowedValues: schema310.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -34298,7 +36065,7 @@ function validate137(
           instancePath: instancePath + '/terminal_reason',
           schemaPath: '#/$defs/ReportRunTerminalReason/enum',
           keyword: 'enum',
-          params: { allowedValues: schema300.enum },
+          params: { allowedValues: schema311.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -34368,7 +36135,7 @@ function validate137(
           instancePath: instancePath + '/top_n',
           schemaPath: '#/properties/top_n/type',
           keyword: 'type',
-          params: { type: schema298.properties.top_n.type },
+          params: { type: schema309.properties.top_n.type },
           message: 'must be integer,null',
         };
         if (vErrors === null) {
@@ -34450,7 +36217,7 @@ function validate137(
           instancePath: instancePath + '/trigger_kind',
           schemaPath: '#/$defs/ReportTriggerKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema301.enum },
+          params: { allowedValues: schema312.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -34476,10 +36243,10 @@ function validate137(
     }
     errors++;
   }
-  validate137.errors = vErrors;
+  validate146.errors = vErrors;
   return errors === 0;
 }
-validate137.evaluated = {
+validate146.evaluated = {
   props: {
     decision_at: true,
     decision_policy_snapshot_id: true,
@@ -34507,7 +36274,7 @@ validate137.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-const schema304 = {
+const schema315 = {
   description:
     'Report-level summary persisted to `quant_recommendation_report.summary_json`.',
   type: 'object',
@@ -34654,7 +36421,7 @@ const schema304 = {
     'warnings',
   ],
 };
-const schema317 = {
+const schema328 = {
   description: 'Counts of candidates by data-quality classification.',
   type: 'object',
   properties: {
@@ -34697,7 +36464,7 @@ const schema317 = {
     'insufficient_count',
   ],
 };
-const schema318 = {
+const schema329 = {
   description:
     'Why a report could not publish any recommendation (empty report).\n\nEvery variant has an independent producer in the report builder — there\nare no wire-only placeholders (zero dead semantics).',
   oneOf: [
@@ -34729,7 +36496,7 @@ const schema318 = {
     },
   ],
 };
-const schema320 = {
+const schema331 = {
   description:
     'Execution-eligibility roll-up across published recommendations.',
   type: 'object',
@@ -34759,7 +36526,7 @@ const schema320 = {
     'eligible_auto_execution',
   ],
 };
-const schema328 = {
+const schema339 = {
   description: 'One rejection-reason tally.',
   type: 'object',
   properties: {
@@ -34776,7 +36543,7 @@ const schema328 = {
   },
   required: ['reason', 'count'],
 };
-const schema329 = {
+const schema340 = {
   description: 'Stable economic admission or global-optimum exclusion reason.',
   type: 'string',
   enum: [
@@ -34791,7 +36558,7 @@ const schema329 = {
     'not_selected_by_global_optimum',
   ],
 };
-function validate140(
+function validate149(
   data,
   {
     instancePath = '',
@@ -34803,7 +36570,7 @@ function validate140(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate140.evaluated;
+  const evaluated0 = validate149.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -34932,7 +36699,7 @@ function validate140(
           instancePath: instancePath + '/reason',
           schemaPath: '#/$defs/PortfolioRejectionReason/enum',
           keyword: 'enum',
-          params: { allowedValues: schema329.enum },
+          params: { allowedValues: schema340.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -34958,15 +36725,15 @@ function validate140(
     }
     errors++;
   }
-  validate140.errors = vErrors;
+  validate149.errors = vErrors;
   return errors === 0;
 }
-validate140.evaluated = {
+validate149.evaluated = {
   props: { count: true, reason: true },
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate139(
+function validate148(
   data,
   {
     instancePath = '',
@@ -34978,7 +36745,7 @@ function validate139(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate139.evaluated;
+  const evaluated0 = validate148.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -35291,7 +37058,7 @@ function validate139(
       errors++;
     }
     for (const key0 in data) {
-      if (!func1.call(schema304.properties, key0)) {
+      if (!func1.call(schema315.properties, key0)) {
         const err19 = {
           instancePath,
           schemaPath: '#/additionalProperties',
@@ -35387,7 +37154,7 @@ function validate139(
         for (const key1 in data2) {
           if (
             !func1.call(
-              schema304.properties.category_allocation.properties,
+              schema315.properties.category_allocation.properties,
               key1,
             )
           ) {
@@ -36988,7 +38755,7 @@ function validate139(
         const len0 = data39.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate140(data39[i0], {
+            !validate149(data39[i0], {
               instancePath: instancePath + '/top_rejection_reasons/' + i0,
               parentData: data39,
               parentDataProperty: i0,
@@ -36998,8 +38765,8 @@ function validate139(
           ) {
             vErrors =
               vErrors === null
-                ? validate140.errors
-                : vErrors.concat(validate140.errors);
+                ? validate149.errors
+                : vErrors.concat(validate149.errors);
             errors = vErrors.length;
           }
         }
@@ -37088,15 +38855,15 @@ function validate139(
     }
     errors++;
   }
-  validate139.errors = vErrors;
+  validate148.errors = vErrors;
   return errors === 0;
 }
-validate139.evaluated = {
+validate148.evaluated = {
   props: true,
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate185(
+function validate194(
   data,
   {
     instancePath = '',
@@ -37108,7 +38875,7 @@ function validate185(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate185.evaluated;
+  const evaluated0 = validate194.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -37640,7 +39407,7 @@ function validate185(
           instancePath: instancePath + '/expired_at',
           schemaPath: '#/properties/expired_at/type',
           keyword: 'type',
-          params: { type: schema277.properties.expired_at.type },
+          params: { type: schema288.properties.expired_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -37674,7 +39441,7 @@ function validate185(
       let valid4 = false;
       const _errs23 = errors;
       if (
-        !validate125(data7, {
+        !validate134(data7, {
           instancePath: instancePath + '/fact_delivery',
           parentData: data,
           parentDataProperty: 'fact_delivery',
@@ -37684,8 +39451,8 @@ function validate185(
       ) {
         vErrors =
           vErrors === null
-            ? validate125.errors
-            : vErrors.concat(validate125.errors);
+            ? validate134.errors
+            : vErrors.concat(validate134.errors);
         errors = vErrors.length;
       }
       var _valid1 = _errs23 === errors;
@@ -37788,7 +39555,7 @@ function validate185(
           instancePath: instancePath + '/obsoleted_at',
           schemaPath: '#/properties/obsoleted_at/type',
           keyword: 'type',
-          params: { type: schema277.properties.obsoleted_at.type },
+          params: { type: schema288.properties.obsoleted_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -37818,7 +39585,7 @@ function validate185(
     }
     if (data.portfolio_decision !== undefined) {
       if (
-        !validate127(data.portfolio_decision, {
+        !validate136(data.portfolio_decision, {
           instancePath: instancePath + '/portfolio_decision',
           parentData: data,
           parentDataProperty: 'portfolio_decision',
@@ -37828,8 +39595,8 @@ function validate185(
       ) {
         vErrors =
           vErrors === null
-            ? validate127.errors
-            : vErrors.concat(validate127.errors);
+            ? validate136.errors
+            : vErrors.concat(validate136.errors);
         errors = vErrors.length;
       }
     }
@@ -37874,7 +39641,7 @@ function validate185(
           instancePath: instancePath + '/predecessor_report_id',
           schemaPath: '#/properties/predecessor_report_id/type',
           keyword: 'type',
-          params: { type: schema277.properties.predecessor_report_id.type },
+          params: { type: schema288.properties.predecessor_report_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -37909,7 +39676,7 @@ function validate185(
           instancePath: instancePath + '/published_at',
           schemaPath: '#/properties/published_at/type',
           keyword: 'type',
-          params: { type: schema277.properties.published_at.type },
+          params: { type: schema288.properties.published_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -37999,7 +39766,7 @@ function validate185(
           instancePath: instancePath + '/report_kind',
           schemaPath: '#/$defs/ReportKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema295.enum },
+          params: { allowedValues: schema306.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -38046,7 +39813,7 @@ function validate185(
     }
     if (data.represented_routes !== undefined) {
       if (
-        !validate135(data.represented_routes, {
+        !validate144(data.represented_routes, {
           instancePath: instancePath + '/represented_routes',
           parentData: data,
           parentDataProperty: 'represented_routes',
@@ -38056,8 +39823,8 @@ function validate185(
       ) {
         vErrors =
           vErrors === null
-            ? validate135.errors
-            : vErrors.concat(validate135.errors);
+            ? validate144.errors
+            : vErrors.concat(validate144.errors);
         errors = vErrors.length;
       }
     }
@@ -38068,7 +39835,7 @@ function validate185(
           instancePath: instancePath + '/revoked_at',
           schemaPath: '#/properties/revoked_at/type',
           keyword: 'type',
-          params: { type: schema277.properties.revoked_at.type },
+          params: { type: schema288.properties.revoked_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38102,7 +39869,7 @@ function validate185(
       let valid6 = false;
       const _errs49 = errors;
       if (
-        !validate137(data19, {
+        !validate146(data19, {
           instancePath: instancePath + '/run',
           parentData: data,
           parentDataProperty: 'run',
@@ -38112,8 +39879,8 @@ function validate185(
       ) {
         vErrors =
           vErrors === null
-            ? validate137.errors
-            : vErrors.concat(validate137.errors);
+            ? validate146.errors
+            : vErrors.concat(validate146.errors);
         errors = vErrors.length;
       }
       var _valid2 = _errs49 === errors;
@@ -38214,7 +39981,7 @@ function validate185(
           instancePath: instancePath + '/runtime_mode',
           schemaPath: '#/$defs/QuantRuntimeMode/enum',
           keyword: 'enum',
-          params: { allowedValues: schema117.enum },
+          params: { allowedValues: schema118.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -38232,7 +39999,7 @@ function validate185(
           instancePath: instancePath + '/scenario_artifact_hash',
           schemaPath: '#/properties/scenario_artifact_hash/type',
           keyword: 'type',
-          params: { type: schema277.properties.scenario_artifact_hash.type },
+          params: { type: schema288.properties.scenario_artifact_hash.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38267,7 +40034,7 @@ function validate185(
           instancePath: instancePath + '/scenario_artifact_id',
           schemaPath: '#/properties/scenario_artifact_id/type',
           keyword: 'type',
-          params: { type: schema277.properties.scenario_artifact_id.type },
+          params: { type: schema288.properties.scenario_artifact_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38326,7 +40093,7 @@ function validate185(
           instancePath: instancePath + '/status',
           schemaPath: '#/$defs/RecommendationReportStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema222.enum },
+          params: { allowedValues: schema232.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -38344,7 +40111,7 @@ function validate185(
           instancePath: instancePath + '/status_reason',
           schemaPath: '#/properties/status_reason/type',
           keyword: 'type',
-          params: { type: schema277.properties.status_reason.type },
+          params: { type: schema288.properties.status_reason.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38362,7 +40129,7 @@ function validate185(
           instancePath: instancePath + '/successor_report_id',
           schemaPath: '#/properties/successor_report_id/type',
           keyword: 'type',
-          params: { type: schema277.properties.successor_report_id.type },
+          params: { type: schema288.properties.successor_report_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38392,7 +40159,7 @@ function validate185(
     }
     if (data.summary !== undefined) {
       if (
-        !validate139(data.summary, {
+        !validate148(data.summary, {
           instancePath: instancePath + '/summary',
           parentData: data,
           parentDataProperty: 'summary',
@@ -38402,8 +40169,8 @@ function validate185(
       ) {
         vErrors =
           vErrors === null
-            ? validate139.errors
-            : vErrors.concat(validate139.errors);
+            ? validate148.errors
+            : vErrors.concat(validate148.errors);
         errors = vErrors.length;
       }
     }
@@ -38414,7 +40181,7 @@ function validate185(
           instancePath: instancePath + '/superseded_at',
           schemaPath: '#/properties/superseded_at/type',
           keyword: 'type',
-          params: { type: schema277.properties.superseded_at.type },
+          params: { type: schema288.properties.superseded_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38506,7 +40273,7 @@ function validate185(
           instancePath: instancePath + '/valid_until',
           schemaPath: '#/properties/valid_until/type',
           keyword: 'type',
-          params: { type: schema277.properties.valid_until.type },
+          params: { type: schema288.properties.valid_until.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -38549,10 +40316,10 @@ function validate185(
     }
     errors++;
   }
-  validate185.errors = vErrors;
+  validate194.errors = vErrors;
   return errors === 0;
 }
-validate185.evaluated = {
+validate194.evaluated = {
   props: {
     account_snapshot_ref: true,
     account_source: true,
@@ -38588,8 +40355,8 @@ validate185.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateReportDiff = validate191;
-const schema331 = {
+export const validateReportDiff = validate200;
+const schema342 = {
   description: 'Outbound projection of a [`ReportDiff`].',
   type: 'object',
   properties: {
@@ -38626,7 +40393,7 @@ const schema331 = {
     'compare_eligibility',
   ],
 };
-const schema332 = {
+const schema343 = {
   description:
     'Outbound projection of a single `(market, side)` recommendation delta.',
   type: 'object',
@@ -38658,7 +40425,7 @@ const schema332 = {
     'hard_reserved_cash_usd_delta',
   ],
 };
-const schema334 = {
+const schema345 = {
   description:
     'Stable field vocabulary used to group diff details without raw JSON.',
   type: 'string',
@@ -38679,7 +40446,7 @@ const schema334 = {
     'factor_breakdown',
   ],
 };
-const schema333 = {
+const schema344 = {
   description: 'Typed decision snapshot for one side of a recommendation diff.',
   type: 'object',
   properties: {
@@ -38703,7 +40470,7 @@ const schema333 = {
     'factor_breakdown',
   ],
 };
-function validate146(
+function validate155(
   data,
   {
     instancePath = '',
@@ -38715,7 +40482,7 @@ function validate146(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate146.evaluated;
+  const evaluated0 = validate155.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -38846,7 +40613,7 @@ function validate146(
     }
     if (data.economics !== undefined) {
       if (
-        !validate68(data.economics, {
+        !validate70(data.economics, {
           instancePath: instancePath + '/economics',
           parentData: data,
           parentDataProperty: 'economics',
@@ -38856,14 +40623,14 @@ function validate146(
       ) {
         vErrors =
           vErrors === null
-            ? validate68.errors
-            : vErrors.concat(validate68.errors);
+            ? validate70.errors
+            : vErrors.concat(validate70.errors);
         errors = vErrors.length;
       }
     }
     if (data.execution_eligibility !== undefined) {
       if (
-        !validate91(data.execution_eligibility, {
+        !validate98(data.execution_eligibility, {
           instancePath: instancePath + '/execution_eligibility',
           parentData: data,
           parentDataProperty: 'execution_eligibility',
@@ -38873,14 +40640,14 @@ function validate146(
       ) {
         vErrors =
           vErrors === null
-            ? validate91.errors
-            : vErrors.concat(validate91.errors);
+            ? validate98.errors
+            : vErrors.concat(validate98.errors);
         errors = vErrors.length;
       }
     }
     if (data.factor_breakdown !== undefined) {
       if (
-        !validate93(data.factor_breakdown, {
+        !validate100(data.factor_breakdown, {
           instancePath: instancePath + '/factor_breakdown',
           parentData: data,
           parentDataProperty: 'factor_breakdown',
@@ -38890,8 +40657,8 @@ function validate146(
       ) {
         vErrors =
           vErrors === null
-            ? validate93.errors
-            : vErrors.concat(validate93.errors);
+            ? validate100.errors
+            : vErrors.concat(validate100.errors);
         errors = vErrors.length;
       }
     }
@@ -38988,7 +40755,7 @@ function validate146(
     }
     if (data.trade_plan !== undefined) {
       if (
-        !validate101(data.trade_plan, {
+        !validate108(data.trade_plan, {
           instancePath: instancePath + '/trade_plan',
           parentData: data,
           parentDataProperty: 'trade_plan',
@@ -38998,8 +40765,8 @@ function validate146(
       ) {
         vErrors =
           vErrors === null
-            ? validate101.errors
-            : vErrors.concat(validate101.errors);
+            ? validate108.errors
+            : vErrors.concat(validate108.errors);
         errors = vErrors.length;
       }
     }
@@ -39086,10 +40853,10 @@ function validate146(
     }
     errors++;
   }
-  validate146.errors = vErrors;
+  validate155.errors = vErrors;
   return errors === 0;
 }
-validate146.evaluated = {
+validate155.evaluated = {
   props: {
     economics: true,
     execution_eligibility: true,
@@ -39103,7 +40870,7 @@ validate146.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate145(
+function validate154(
   data,
   {
     instancePath = '',
@@ -39115,7 +40882,7 @@ function validate145(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate145.evaluated;
+  const evaluated0 = validate154.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -39192,7 +40959,7 @@ function validate145(
       let valid1 = false;
       const _errs3 = errors;
       if (
-        !validate146(data0, {
+        !validate155(data0, {
           instancePath: instancePath + '/base',
           parentData: data,
           parentDataProperty: 'base',
@@ -39202,8 +40969,8 @@ function validate145(
       ) {
         vErrors =
           vErrors === null
-            ? validate146.errors
-            : vErrors.concat(validate146.errors);
+            ? validate155.errors
+            : vErrors.concat(validate155.errors);
         errors = vErrors.length;
       }
       var _valid0 = _errs3 === errors;
@@ -39305,7 +41072,7 @@ function validate145(
               instancePath: instancePath + '/changed_fields/' + i0,
               schemaPath: '#/$defs/RecommendationChangedFieldView/enum',
               keyword: 'enum',
-              params: { allowedValues: schema334.enum },
+              params: { allowedValues: schema345.enum },
               message: 'must be equal to one of the allowed values',
             };
             if (vErrors === null) {
@@ -39338,7 +41105,7 @@ function validate145(
       let valid5 = false;
       const _errs13 = errors;
       if (
-        !validate146(data3, {
+        !validate155(data3, {
           instancePath: instancePath + '/compare',
           parentData: data,
           parentDataProperty: 'compare',
@@ -39348,8 +41115,8 @@ function validate145(
       ) {
         vErrors =
           vErrors === null
-            ? validate146.errors
-            : vErrors.concat(validate146.errors);
+            ? validate155.errors
+            : vErrors.concat(validate155.errors);
         errors = vErrors.length;
       }
       var _valid1 = _errs13 === errors;
@@ -39464,7 +41231,7 @@ function validate145(
           instancePath: instancePath + '/outcome_side',
           schemaPath: '#/$defs/OutcomeSide/enum',
           keyword: 'enum',
-          params: { allowedValues: schema182.enum },
+          params: { allowedValues: schema189.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -39490,10 +41257,10 @@ function validate145(
     }
     errors++;
   }
-  validate145.errors = vErrors;
+  validate154.errors = vErrors;
   return errors === 0;
 }
-validate145.evaluated = {
+validate154.evaluated = {
   props: {
     base: true,
     changed_fields: true,
@@ -39505,7 +41272,7 @@ validate145.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-function validate191(
+function validate200(
   data,
   {
     instancePath = '',
@@ -39517,7 +41284,7 @@ function validate191(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate191.evaluated;
+  const evaluated0 = validate200.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -39690,7 +41457,7 @@ function validate191(
         const len0 = data0.length;
         for (let i0 = 0; i0 < len0; i0++) {
           if (
-            !validate145(data0[i0], {
+            !validate154(data0[i0], {
               instancePath: instancePath + '/added/' + i0,
               parentData: data0,
               parentDataProperty: i0,
@@ -39700,8 +41467,8 @@ function validate191(
           ) {
             vErrors =
               vErrors === null
-                ? validate145.errors
-                : vErrors.concat(validate145.errors);
+                ? validate154.errors
+                : vErrors.concat(validate154.errors);
             errors = vErrors.length;
           }
         }
@@ -40341,7 +42108,7 @@ function validate191(
         const len1 = data14.length;
         for (let i1 = 0; i1 < len1; i1++) {
           if (
-            !validate145(data14[i1], {
+            !validate154(data14[i1], {
               instancePath: instancePath + '/removed/' + i1,
               parentData: data14,
               parentDataProperty: i1,
@@ -40351,8 +42118,8 @@ function validate191(
           ) {
             vErrors =
               vErrors === null
-                ? validate145.errors
-                : vErrors.concat(validate145.errors);
+                ? validate154.errors
+                : vErrors.concat(validate154.errors);
             errors = vErrors.length;
           }
         }
@@ -40378,7 +42145,7 @@ function validate191(
         const len2 = data16.length;
         for (let i2 = 0; i2 < len2; i2++) {
           if (
-            !validate145(data16[i2], {
+            !validate154(data16[i2], {
               instancePath: instancePath + '/retained/' + i2,
               parentData: data16,
               parentDataProperty: i2,
@@ -40388,8 +42155,8 @@ function validate191(
           ) {
             vErrors =
               vErrors === null
-                ? validate145.errors
-                : vErrors.concat(validate145.errors);
+                ? validate154.errors
+                : vErrors.concat(validate154.errors);
             errors = vErrors.length;
           }
         }
@@ -40441,10 +42208,10 @@ function validate191(
     }
     errors++;
   }
-  validate191.errors = vErrors;
+  validate200.errors = vErrors;
   return errors === 0;
 }
-validate191.evaluated = {
+validate200.evaluated = {
   props: {
     added: true,
     base_eligibility: true,
@@ -40460,8 +42227,8 @@ validate191.evaluated = {
   dynamicProps: false,
   dynamicItems: false,
 };
-export const validateReportListRow = validate195;
-const schema342 = {
+export const validateReportListRow = validate204;
+const schema353 = {
   description:
     'List-row projection of a recommendation report (header + summary roll-up).',
   type: 'object',
@@ -40510,7 +42277,7 @@ const schema342 = {
     'created_at',
   ],
 };
-function validate195(
+function validate204(
   data,
   {
     instancePath = '',
@@ -40522,7 +42289,7 @@ function validate195(
 ) {
   let vErrors = null;
   let errors = 0;
-  const evaluated0 = validate195.evaluated;
+  const evaluated0 = validate204.evaluated;
   if (evaluated0.dynamicProps) {
     evaluated0.props = undefined;
   }
@@ -41193,7 +42960,7 @@ function validate195(
           instancePath: instancePath + '/expired_at',
           schemaPath: '#/properties/expired_at/type',
           keyword: 'type',
-          params: { type: schema342.properties.expired_at.type },
+          params: { type: schema353.properties.expired_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41228,7 +42995,7 @@ function validate195(
           instancePath: instancePath + '/obsoleted_at',
           schemaPath: '#/properties/obsoleted_at/type',
           keyword: 'type',
-          params: { type: schema342.properties.obsoleted_at.type },
+          params: { type: schema353.properties.obsoleted_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41263,7 +43030,7 @@ function validate195(
           instancePath: instancePath + '/published_at',
           schemaPath: '#/properties/published_at/type',
           keyword: 'type',
-          params: { type: schema342.properties.published_at.type },
+          params: { type: schema353.properties.published_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41410,7 +43177,7 @@ function validate195(
           instancePath: instancePath + '/report_kind',
           schemaPath: '#/$defs/ReportKind/enum',
           keyword: 'enum',
-          params: { allowedValues: schema295.enum },
+          params: { allowedValues: schema306.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -41423,7 +43190,7 @@ function validate195(
     }
     if (data.represented_routes !== undefined) {
       if (
-        !validate135(data.represented_routes, {
+        !validate144(data.represented_routes, {
           instancePath: instancePath + '/represented_routes',
           parentData: data,
           parentDataProperty: 'represented_routes',
@@ -41433,8 +43200,8 @@ function validate195(
       ) {
         vErrors =
           vErrors === null
-            ? validate135.errors
-            : vErrors.concat(validate135.errors);
+            ? validate144.errors
+            : vErrors.concat(validate144.errors);
         errors = vErrors.length;
       }
     }
@@ -41445,7 +43212,7 @@ function validate195(
           instancePath: instancePath + '/revoked_at',
           schemaPath: '#/properties/revoked_at/type',
           keyword: 'type',
-          params: { type: schema342.properties.revoked_at.type },
+          params: { type: schema353.properties.revoked_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41501,7 +43268,7 @@ function validate195(
           instancePath: instancePath + '/runtime_mode',
           schemaPath: '#/$defs/QuantRuntimeMode/enum',
           keyword: 'enum',
-          params: { allowedValues: schema117.enum },
+          params: { allowedValues: schema118.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -41519,7 +43286,7 @@ function validate195(
           instancePath: instancePath + '/scenario_artifact_id',
           schemaPath: '#/properties/scenario_artifact_id/type',
           keyword: 'type',
-          params: { type: schema342.properties.scenario_artifact_id.type },
+          params: { type: schema353.properties.scenario_artifact_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41578,7 +43345,7 @@ function validate195(
           instancePath: instancePath + '/status',
           schemaPath: '#/$defs/RecommendationReportStatus/enum',
           keyword: 'enum',
-          params: { allowedValues: schema222.enum },
+          params: { allowedValues: schema232.enum },
           message: 'must be equal to one of the allowed values',
         };
         if (vErrors === null) {
@@ -41596,7 +43363,7 @@ function validate195(
           instancePath: instancePath + '/status_reason',
           schemaPath: '#/properties/status_reason/type',
           keyword: 'type',
-          params: { type: schema342.properties.status_reason.type },
+          params: { type: schema353.properties.status_reason.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41614,7 +43381,7 @@ function validate195(
           instancePath: instancePath + '/successor_report_id',
           schemaPath: '#/properties/successor_report_id/type',
           keyword: 'type',
-          params: { type: schema342.properties.successor_report_id.type },
+          params: { type: schema353.properties.successor_report_id.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41649,7 +43416,7 @@ function validate195(
           instancePath: instancePath + '/superseded_at',
           schemaPath: '#/properties/superseded_at/type',
           keyword: 'type',
-          params: { type: schema342.properties.superseded_at.type },
+          params: { type: schema353.properties.superseded_at.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41758,7 +43525,7 @@ function validate195(
           instancePath: instancePath + '/valid_until',
           schemaPath: '#/properties/valid_until/type',
           keyword: 'type',
-          params: { type: schema342.properties.valid_until.type },
+          params: { type: schema353.properties.valid_until.type },
           message: 'must be string,null',
         };
         if (vErrors === null) {
@@ -41801,10 +43568,10 @@ function validate195(
     }
     errors++;
   }
-  validate195.errors = vErrors;
+  validate204.errors = vErrors;
   return errors === 0;
 }
-validate195.evaluated = {
+validate204.evaluated = {
   props: {
     account_source: true,
     capital_base_usd: true,

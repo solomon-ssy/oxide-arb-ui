@@ -16,7 +16,7 @@ export default {
         'selector-pseudo-class-no-unknown': [
           true,
           {
-            ignorePseudoClasses: ['global', 'deep'],
+            ignorePseudoClasses: ['global', 'deep', 'slotted'],
           },
         ],
         'selector-pseudo-element-no-unknown': [

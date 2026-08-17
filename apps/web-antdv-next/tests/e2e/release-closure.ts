@@ -206,24 +206,33 @@ async function setReleaseLayout(page: Page): Promise<void> {
 async function normalizeRuntimeEvidence(page: Page): Promise<void> {
   await page.evaluate(() => {
     const runtimeValuePatterns = [
-      /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{3,4}(?:-[0-9a-f]{0,4})?/i,
-      /\b[0-9a-f]{32,64}\b/i,
-      /\b20\d{2}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2})?/,
+      /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{3,4}(?:-[0-9a-f]{0,4})?/gi,
+      /\b[0-9a-f]{32,64}\b/gi,
+      /\b20\d{2}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2})?/g,
     ];
-    const containsRuntimeValue = (value: null | string) =>
-      runtimeValuePatterns.some((pattern) => pattern.test(value?.trim() ?? ''));
+    function normalizeRuntimeValue(value = '') {
+      let normalized = value;
+      for (const pattern of runtimeValuePatterns) {
+        normalized = normalized.replaceAll(pattern, (matched) =>
+          matched.replaceAll(/[0-9a-f]/gi, '0'),
+        );
+      }
+      return normalized;
+    }
+    const containsRuntimeValue = (value = '') =>
+      normalizeRuntimeValue(value) !== value;
     const candidates = document.querySelectorAll(
       '[data-ui-ready="true"] time, [data-ui-ready="true"] code, [data-ui-ready="true"] td, [data-ui-ready="true"] dd, [data-ui-ready="true"] a, [data-ui-ready="true"] span, [data-ui-ready="true"] p, [data-ui-ready="true"] div',
     );
 
     for (const candidate of candidates) {
-      if (!containsRuntimeValue(candidate.textContent)) continue;
+      if (!containsRuntimeValue(candidate.textContent ?? '')) continue;
       const childOwnsValue = [...candidate.children].some((child) =>
-        containsRuntimeValue(child.textContent),
+        containsRuntimeValue(child.textContent ?? ''),
       );
       if (!childOwnsValue) {
         const element = candidate as HTMLElement;
-        element.textContent = 'qp-runtime-value';
+        element.textContent = normalizeRuntimeValue(element.textContent ?? '');
         element.dataset.screenshotVolatile = 'true';
       }
     }

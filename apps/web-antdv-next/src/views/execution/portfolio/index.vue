@@ -11,6 +11,9 @@ const Account = defineAsyncComponent(
 const Positions = defineAsyncComponent(
   () => import('./modules/positions/index.vue'),
 );
+const Incentives = defineAsyncComponent(
+  () => import('./modules/incentives/index.vue'),
+);
 
 const modules = [
   {
@@ -36,6 +39,12 @@ const modules = [
     icon: 'lucide:chart-spline',
     key: 'equity',
     label: 'page.commandPalette.module.equity',
+  },
+  {
+    component: Incentives,
+    icon: 'lucide:badge-dollar-sign',
+    key: 'incentives',
+    label: 'page.commandPalette.module.incentives',
   },
 ];
 </script>

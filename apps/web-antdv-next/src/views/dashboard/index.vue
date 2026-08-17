@@ -491,7 +491,10 @@ const refreshCoordinator = new AuthoritativeReadCoordinator<
       overview.value = snapshot.overview.value;
       loadError.value = null;
       const nextAuthority = valueOf(snapshot.overview.value.authority);
-      if (nextAuthority) {
+      if (
+        nextAuthority &&
+        (qpWs.status.value !== 'connected' || systemStore.status === null)
+      ) {
         systemStore.applyControlPlaneStatus(nextAuthority.system);
       }
     } else {
@@ -534,9 +537,9 @@ watch(windowValue, (window) => {
   }
 });
 watch(
-  () => reportStore.revision,
-  () => {
-    if (pageActive.value) {
+  () => reportStore.lastEvent,
+  (event) => {
+    if (pageActive.value && event !== null) {
       refreshCoordinator.invalidate();
     }
   },
@@ -709,7 +712,7 @@ onBeforeUnmount(() => {
       <template v-else>
         <template v-if="overview">
           <section
-            class="command-rail bg-card relative overflow-hidden rounded-xl border p-4"
+            class="command-rail qp-page-hero"
             aria-labelledby="dashboard-authority-title"
           >
             <div
@@ -745,6 +748,8 @@ onBeforeUnmount(() => {
               <div class="flex flex-wrap items-center gap-2">
                 <Segmented
                   v-model:value="windowValue"
+                  class="window-segmented"
+                  shape="round"
                   :options="[
                     { label: '24H', value: '24h' },
                     { label: '7D', value: '7d' },
@@ -752,7 +757,7 @@ onBeforeUnmount(() => {
                   ]"
                 />
                 <Button
-                  class="min-h-11"
+                  class="command-primary"
                   data-testid="dashboard-primary-action"
                   :disabled="!authority?.primary_action_enabled"
                   :loading="refreshing"
@@ -850,11 +855,11 @@ onBeforeUnmount(() => {
             @timeline="openFreshBootTimeline"
           />
 
-          <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
-            <div class="xl:col-span-7">
+          <div class="dashboard-equal-row">
+            <div class="dashboard-equal-lead">
               <EquityDrawdownChart :section="overview.equity_curve" />
             </div>
-            <div class="xl:col-span-5">
+            <div class="dashboard-equal-follow">
               <RecommendationOrbit
                 :recommendations="latestReport?.recommendations ?? []"
                 @open-reports="
@@ -865,11 +870,11 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
-            <div class="xl:col-span-7">
+          <div class="dashboard-equal-row">
+            <div class="dashboard-equal-lead">
               <LifecycleSankey :section="overview.report_lifecycle" />
             </div>
-            <div class="xl:col-span-5">
+            <div class="dashboard-equal-follow">
               <ExposureTreemap :section="overview.exposures" />
             </div>
           </div>
@@ -966,18 +971,15 @@ onBeforeUnmount(() => {
           </div>
         </template>
 
-        <div
-          class="grid grid-cols-1 gap-5"
-          :class="{ 'lg:grid-cols-2 xl:grid-cols-4': overview }"
-        >
+        <div v-if="overview" class="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <InsightPanel
-            v-if="overview"
+            fill
             :title="$t('page.dashboard.dataQuality.title')"
             icon="lucide:gauge"
             tone="sky"
           >
             <template v-if="quality">
-              <div class="flex items-center justify-center py-3">
+              <div class="data-quality-gauge">
                 <Progress
                   :aria-label="$t('page.dashboard.dataQuality.progressAria')"
                   :percent="Math.round((usableRatio ?? 0) * 100)"
@@ -1011,15 +1013,16 @@ onBeforeUnmount(() => {
                 {{ quality.max_ingest_lag_ms }}ms
               </p>
             </template>
-            <Empty
-              v-else
-              :description="$t('page.dashboard.section.unavailable')"
-              :image="Empty.PRESENTED_IMAGE_SIMPLE"
-            />
+            <div v-else class="panel-empty">
+              <Empty
+                :description="$t('page.dashboard.section.unavailable')"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
+            </div>
           </InsightPanel>
 
           <InsightPanel
-            v-if="overview"
+            fill
             :title="$t('page.dashboard.health.title')"
             icon="lucide:heart-pulse"
             tone="teal"
@@ -1033,7 +1036,7 @@ onBeforeUnmount(() => {
                 }}</span>
                 <Badge :status="health.ready ? 'success' : 'error'" />
               </div>
-              <ul class="grid gap-2">
+              <ul class="health-check-list grid gap-2">
                 <li
                   v-for="check in health.checks"
                   :key="check.name"
@@ -1050,30 +1053,34 @@ onBeforeUnmount(() => {
                 </li>
               </ul>
             </template>
-            <Empty
-              v-else
-              :description="$t('page.dashboard.section.unavailable')"
-              :image="Empty.PRESENTED_IMAGE_SIMPLE"
-            />
+            <div v-else class="panel-empty">
+              <Empty
+                :description="$t('page.dashboard.section.unavailable')"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
+            </div>
           </InsightPanel>
+        </div>
 
-          <InsightPanel
-            :title="$t('page.dashboard.feedback.title')"
-            icon="lucide:refresh-cw"
-            tone="violet"
-          >
-            <template #extra>
-              <Button
-                v-if="canReadFeedback"
-                class="min-h-11"
-                size="small"
-                type="text"
-                @click="navigate('/research/learning-policy?module=feedback')"
-              >
-                {{ $t('page.dashboard.feedback.open') }}
-              </Button>
-            </template>
+        <InsightPanel
+          class="dashboard-feedback-panel"
+          :title="$t('page.dashboard.feedback.title')"
+          icon="lucide:refresh-cw"
+          tone="violet"
+        >
+          <template #extra>
+            <Button
+              v-if="canReadFeedback"
+              class="min-h-11"
+              size="small"
+              type="text"
+              @click="navigate('/research/learning-policy?module=feedback')"
+            >
+              {{ $t('page.dashboard.feedback.open') }}
+            </Button>
+          </template>
 
+          <div class="dashboard-feedback-scroll">
             <div aria-live="polite" class="sr-only" role="status">
               {{ $t(`page.dashboard.feedback.state.${feedbackState}`) }}
             </div>
@@ -1228,8 +1235,8 @@ onBeforeUnmount(() => {
                 }}
               </p>
             </template>
-          </InsightPanel>
-        </div>
+          </div>
+        </InsightPanel>
 
         <template v-if="overview">
           <InsightPanel
@@ -1487,40 +1494,70 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.command-rail::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: '';
-  background: var(--qp-gradient-hero);
-}
-
-.command-rail::after {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  pointer-events: none;
-  content: '';
-  background: var(--qp-gradient-brand);
-}
-
-.command-rail {
-  background:
-    linear-gradient(
-        hsl(var(--qp-surface-raised) / 94%),
-        hsl(var(--qp-surface-raised) / 94%)
-      )
-      padding-box,
-    var(--qp-gradient-brand) border-box;
-  border-color: transparent;
-  box-shadow: var(--qp-shadow-featured);
-}
-
 .command-rail :deep(.ant-btn-primary:not(.ant-btn-dangerous)) {
   color: white;
-  background: var(--qp-gradient-brand);
+  background: var(--qp-gradient-control);
+  background-clip: border-box;
+  background-origin: border-box;
   border-color: transparent;
-  box-shadow: var(--qp-shadow-featured);
+  box-shadow: var(--qp-shadow-subtle);
+}
+
+.command-rail :deep(.command-primary.ant-btn) {
+  height: 2rem;
+  min-height: 2rem;
+  padding-inline: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.command-rail :deep(.window-segmented.ant-segmented) {
+  padding: 0.125rem;
+  font-size: 0.75rem;
+  background: hsl(var(--qp-surface-inset) / 92%);
+  border: 1px solid hsl(var(--qp-border-subtle));
+}
+
+.command-rail :deep(.window-segmented .ant-segmented-item) {
+  min-width: 2.75rem;
+  font-weight: 600;
+  color: hsl(var(--qp-text-muted));
+}
+
+.command-rail :deep(.window-segmented .ant-segmented-item-label) {
+  min-height: 1.75rem;
+  padding-inline: 0.65rem;
+  line-height: 1.75rem;
+}
+
+.command-rail :deep(.window-segmented .ant-segmented-item-selected) {
+  font-weight: 700;
+  color: hsl(var(--qp-text-on-accent)) !important;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet))
+  ) !important;
+  box-shadow:
+    0 0 0 1px hsl(var(--qp-accent-sky) / 50%),
+    0 6px 14px -6px hsl(var(--qp-accent-sky) / 75%);
+}
+
+.command-rail
+  :deep(
+    .window-segmented .ant-segmented-item-selected .ant-segmented-item-label
+  ) {
+  color: inherit;
+}
+
+.command-rail :deep(.window-segmented .ant-segmented-thumb) {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet))
+  );
+  box-shadow:
+    0 0 0 1px hsl(var(--qp-accent-sky) / 50%),
+    0 6px 14px -6px hsl(var(--qp-accent-sky) / 75%);
 }
 
 .status-cell {
@@ -1573,6 +1610,81 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--qp-text-primary));
+}
+
+.dashboard-equal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.dashboard-equal-lead,
+.dashboard-equal-follow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-equal-lead > :deep(.insight-panel),
+.dashboard-equal-follow > :deep(.insight-panel) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.data-quality-gauge {
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+}
+
+.health-check-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dashboard-feedback-panel {
+  height: 22.5rem;
+  overflow: hidden;
+}
+
+.dashboard-feedback-panel :deep(.panel-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard-feedback-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dashboard-feedback-scroll :deep(.ant-empty) {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+}
+
+@media (min-width: 1280px) {
+  .dashboard-equal-row {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .dashboard-equal-follow {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dashboard-equal-follow > :deep(.insight-panel) {
+    position: absolute;
+    inset: 0;
+    flex: none;
+  }
 }
 
 :global(.fresh-boot-timeline-drawer .ant-drawer-content-wrapper) {

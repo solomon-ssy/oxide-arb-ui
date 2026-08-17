@@ -2565,7 +2565,7 @@ const GENERATED_ENUM_PRESENTATION = {
     icon: 'lucide:clock-3',
     tone: 'queued',
   },
-  'VenueIncentiveStage.venue_awarded': {
+  'VenueIncentiveStage.venue_reported_accrual': {
     emphasis: 'solid',
     icon: 'lucide:badge-check',
     tone: 'warning',

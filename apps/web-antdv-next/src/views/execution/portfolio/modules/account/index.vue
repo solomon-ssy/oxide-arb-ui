@@ -4,7 +4,6 @@ import type { Dayjs } from 'dayjs';
 
 import type {
   EquitySnapshotView,
-  IncentiveReconciliationView,
   LiveAccountView,
   VenuePositionSnapshotView,
 } from '@vben/types';
@@ -22,10 +21,9 @@ import { useRoute } from 'vue-router';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert, Button, DatePicker, Empty, Table, Tag } from 'antdv-next';
+import { Button, DatePicker, Empty, Table, Tag } from 'antdv-next';
 
 import { getLiveAccount, listEquitySnapshots } from '#/api/account';
-import { getIncentiveReconciliation } from '#/api/incentives';
 import { $t } from '#/locales';
 import {
   formatDateTimeLocal,
@@ -161,23 +159,7 @@ const positionColumns: TableColumnsType<VenuePositionSnapshotView> = [
 // ── Equity snapshots (single ranged fetch feeds both the curve and the table) ─
 const range = ref<[Dayjs, Dayjs] | null>(null);
 const equitySnapshots = ref<EquitySnapshotView[]>([]);
-const incentiveReconciliation = ref<IncentiveReconciliationView | null>(null);
 const equityLoading = ref(false);
-
-const incentiveHealthColor = computed(() => {
-  switch (incentiveReconciliation.value?.health) {
-    case 'healthy': {
-      return 'success';
-    }
-    case 'incomplete':
-    case 'stale': {
-      return 'warning';
-    }
-    default: {
-      return 'error';
-    }
-  }
-});
 
 /** Chart wants ascending time; the table shows newest first. */
 const equityAscending = computed(() =>
@@ -192,18 +174,14 @@ async function loadEquity() {
     return;
   }
   equityLoading.value = true;
-  const [page, reconciliation] = await Promise.all([
-    handleRequest(() =>
-      listEquitySnapshots({
-        from: range.value?.[0]?.toISOString(),
-        size: EQUITY_FETCH_CAP,
-        to: range.value?.[1]?.toISOString(),
-      }),
-    ),
-    handleRequest(getIncentiveReconciliation),
-  ]);
+  const page = await handleRequest(() =>
+    listEquitySnapshots({
+      from: range.value?.[0]?.toISOString(),
+      size: EQUITY_FETCH_CAP,
+      to: range.value?.[1]?.toISOString(),
+    }),
+  );
   equitySnapshots.value = page?.items ?? [];
-  incentiveReconciliation.value = reconciliation ?? null;
   equityLoading.value = false;
 }
 
@@ -436,114 +414,6 @@ onBeforeUnmount(() => {
         </div>
 
         <EquityChart :loading="equityLoading" :snapshots="equityAscending" />
-
-        <InsightPanel
-          :title="$t('page.quantAccount.incentives.title')"
-          icon="lucide:badge-dollar-sign"
-          tone="amber"
-        >
-          <template #extra>
-            <Tag
-              v-if="incentiveReconciliation"
-              :color="incentiveHealthColor"
-              data-testid="incentive-reconciliation-health"
-            >
-              {{
-                $t(
-                  `page.quantAccount.incentives.health.${incentiveReconciliation.health}`,
-                )
-              }}
-            </Tag>
-          </template>
-          <div
-            v-if="incentiveReconciliation"
-            class="flex flex-col gap-3"
-            data-testid="incentive-reconciliation"
-          >
-            <Alert
-              :message="$t('page.quantAccount.incentives.attributionOnly')"
-              show-icon
-              type="info"
-            />
-            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <KpiCard
-                :title="$t('page.quantAccount.incentives.estimated')"
-                :value="
-                  formatUsd(incentiveReconciliation.estimated_maker_accrual_usd)
-                "
-              />
-              <KpiCard
-                :title="$t('page.quantAccount.incentives.awarded')"
-                :value="
-                  formatUsd(incentiveReconciliation.venue_awarded_maker_usd)
-                "
-              />
-              <KpiCard
-                :title="$t('page.quantAccount.incentives.makerCredited')"
-                :value="
-                  formatUsd(incentiveReconciliation.wallet_credited_maker_usd)
-                "
-              />
-              <KpiCard
-                :title="$t('page.quantAccount.incentives.takerCredited')"
-                :value="
-                  formatUsd(incentiveReconciliation.wallet_credited_taker_usd)
-                "
-              />
-            </div>
-            <div
-              class="text-muted-foreground grid gap-1 text-xs md:grid-cols-2"
-            >
-              <span>
-                {{ $t('page.quantAccount.incentives.estimateAwardDelta') }}:
-                {{
-                  formatUsd(incentiveReconciliation.estimate_to_award_delta_usd)
-                }}
-              </span>
-              <span>
-                {{ $t('page.quantAccount.incentives.awardCreditDelta') }}:
-                {{
-                  formatUsd(incentiveReconciliation.award_to_credit_delta_usd)
-                }}
-              </span>
-              <span>
-                {{ $t('page.quantAccount.incentives.lastSuccess') }}:
-                {{
-                  incentiveReconciliation.last_success_at
-                    ? formatDateTimeLocal(
-                        incentiveReconciliation.last_success_at,
-                      )
-                    : $t('page.quantAccount.incentives.unavailable')
-                }}
-              </span>
-              <span>
-                {{ $t('page.quantAccount.incentives.incompleteDays') }}:
-                {{ incentiveReconciliation.incomplete_day_count }}
-                <template v-if="incentiveReconciliation.oldest_incomplete_date">
-                  · {{ $t('page.quantAccount.incentives.oldestIncomplete') }}
-                  {{ incentiveReconciliation.oldest_incomplete_date }}
-                </template>
-              </span>
-            </div>
-            <Alert
-              v-if="incentiveReconciliation.below_payout_threshold"
-              :message="
-                $t('page.quantAccount.incentives.belowThreshold', {
-                  threshold: formatUsd(
-                    incentiveReconciliation.payout_threshold_usd,
-                  ),
-                })
-              "
-              show-icon
-              type="warning"
-            />
-          </div>
-          <Empty
-            v-else
-            :description="$t('page.quantAccount.incentives.unavailable')"
-            :image="Empty.PRESENTED_IMAGE_SIMPLE"
-          />
-        </InsightPanel>
 
         <InsightPanel
           :title="$t('page.quantAccount.equity.title')"

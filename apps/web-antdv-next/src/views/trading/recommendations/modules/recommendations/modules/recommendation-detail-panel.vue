@@ -113,9 +113,11 @@ function onCreateIntent() {
 
 <template>
   <div class="flex flex-col gap-4" data-testid="recommendation-detail-panel">
-    <div class="flex items-start justify-between gap-3">
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2">
+    <div
+      class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between"
+    >
+      <div class="min-w-0 flex flex-col gap-1">
+        <div class="flex flex-wrap items-center gap-2">
           <span class="text-muted-foreground text-sm">
             #{{ recommendation.rank }}
           </span>
@@ -135,12 +137,13 @@ function onCreateIntent() {
             {{ enumOption(statusTagOptions, recommendation.status)?.label }}
           </Tag>
         </div>
-        <span class="text-base font-medium">
+        <span class="text-base font-medium break-words">
           {{ recommendation.identity.question }}
         </span>
       </div>
       <Tooltip :title="createDisabledReason">
         <Button
+          class="w-full sm:w-auto"
           data-testid="create-intent"
           :disabled="!gate.enabled"
           type="primary"
@@ -613,3 +616,22 @@ function onCreateIntent() {
     </Tabs>
   </div>
 </template>
+
+<style scoped>
+@media (max-width: 640px) {
+  :deep(.ant-descriptions-row) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(.ant-descriptions-item-label),
+  :deep(.ant-descriptions-item-content) {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+</style>

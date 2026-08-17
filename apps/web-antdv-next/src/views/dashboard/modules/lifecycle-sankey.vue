@@ -97,18 +97,25 @@ watch([lifecycle, reducedMotion], render, { immediate: true });
 <template>
   <InsightPanel
     :title="$t('page.dashboard.lifecycle.title')"
+    fill
     icon="lucide:workflow"
     tone="sky"
   >
-    <EchartsUI v-if="lifecycle" ref="chartRef" height="270px" />
-    <Empty
-      v-else
-      :description="$t('page.dashboard.section.noSamples')"
-      :image="Empty.PRESENTED_IMAGE_SIMPLE"
+    <EchartsUI
+      v-if="lifecycle"
+      ref="chartRef"
+      class="chart-fill"
+      height="100%"
     />
+    <div v-else class="panel-empty">
+      <Empty
+        :description="$t('page.dashboard.section.noSamples')"
+        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+      />
+    </div>
     <Steps
       v-if="lifecycle"
-      class="mt-3"
+      class="lifecycle-steps mt-3"
       :items="
         stages.map(([name, count]) => ({
           content: String(count),
@@ -121,3 +128,14 @@ watch([lifecycle, reducedMotion], render, { immediate: true });
     />
   </InsightPanel>
 </template>
+
+<style scoped>
+.chart-fill {
+  flex: 1 1 auto;
+  min-height: 16.875rem;
+}
+
+.lifecycle-steps {
+  flex: none;
+}
+</style>

@@ -1456,7 +1456,7 @@
   },
   "venueIncentiveStage": {
     "estimated_accrual": "预计应计",
-    "venue_awarded": "平台已授予",
+    "venue_reported_accrual": "平台报告应计",
     "wallet_credited": "钱包已入账"
   },
   "venueTradeStatus": {

@@ -960,7 +960,7 @@ export const ENUM_CATALOG = {
   VenueIncentiveReconciliationScanStatus: ['succeeded', 'failed'],
   VenueIncentiveStage: [
     'estimated_accrual',
-    'venue_awarded',
+    'venue_reported_accrual',
     'wallet_credited',
   ],
   VenueOrderStatus: [

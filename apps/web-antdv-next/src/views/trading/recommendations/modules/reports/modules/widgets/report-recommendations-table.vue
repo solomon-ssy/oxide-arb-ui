@@ -10,6 +10,7 @@ import { Button, Empty, Select, Table, Tag, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { formatBps, formatScore, formatUsd } from '#/shared/components/format';
+import { vAccessibleTableScroll } from '#/shared/directives/accessible-table-scroll';
 import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'ReportRecommendationsTable' });
@@ -182,6 +183,9 @@ const columns = [
   />
   <Table
     v-else
+    v-accessible-table-scroll="
+      $t('page.quantReports.detail.recommendations.scrollLabel')
+    "
     :columns="columns"
     :custom-row="rowProps"
     data-testid="global-report-recommendations"
