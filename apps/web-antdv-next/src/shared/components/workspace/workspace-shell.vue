@@ -13,6 +13,11 @@ import { $t } from '#/locales';
 
 import WorkspaceInspectorHost from './workspace-inspector-host.vue';
 import { inspectorModule } from './workspace-inspector-registry';
+import {
+  highlightedTab,
+  isLandingModule,
+  resolveWorkspaceModule,
+} from './workspace-landing';
 
 defineOptions({ name: 'WorkspaceShell' });
 
@@ -28,21 +33,29 @@ const route = useRoute();
 const router = useRouter();
 const reducedMotion = useReducedMotion();
 
-const fallbackModule = computed(() => props.modules[0]);
+const landingModules = computed(() =>
+  props.modules.filter((item) => isLandingModule(item)),
+);
+const fallbackModule = computed(() => landingModules.value[0]);
 const moduleKeys = computed(
   () => new Set(props.modules.map((item) => item.key)),
 );
-const activeKey = computed({
+const activeKey = computed(() => {
+  const raw = Array.isArray(route.query.module)
+    ? route.query.module[0]
+    : route.query.module;
+  return typeof raw === 'string' && moduleKeys.value.has(raw)
+    ? raw
+    : fallbackModule.value?.key;
+});
+const tabKey = computed({
   get() {
-    const raw = Array.isArray(route.query.module)
-      ? route.query.module[0]
-      : route.query.module;
-    return typeof raw === 'string' && moduleKeys.value.has(raw)
-      ? raw
-      : fallbackModule.value?.key;
+    return highlightedTab(props.modules, activeKey.value);
   },
   set(value: string | undefined) {
-    if (!value || !moduleKeys.value.has(value)) return;
+    if (!value || !landingModules.value.some((item) => item.key === value)) {
+      return;
+    }
     const { entity: _entity, id: _id, ...query } = route.query;
     void router.push({ query: { ...query, module: value } });
   },
@@ -55,24 +68,22 @@ function canonicalizeModule() {
   const raw = Array.isArray(route.query.module)
     ? route.query.module[0]
     : route.query.module;
-  const fallback = fallbackModule.value?.key;
-  if (!fallback || raw === fallback || moduleKeys.value.has(String(raw))) {
-    return;
-  }
   const entity = Array.isArray(route.query.entity)
     ? route.query.entity[0]
     : route.query.entity;
-  const inspectorFallback =
-    typeof entity === 'string'
-      ? inspectorModule(route.path, entity)
-      : undefined;
+  const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
+  const next = resolveWorkspaceModule({
+    entity: typeof entity === 'string' ? entity : undefined,
+    id: typeof id === 'string' ? id : undefined,
+    modules: props.modules,
+    path: route.path,
+    requested: typeof raw === 'string' ? raw : undefined,
+  });
+  if (!next || next === raw) return;
   void router.replace({
     query: {
       ...route.query,
-      module:
-        inspectorFallback && moduleKeys.value.has(inspectorFallback)
-          ? inspectorFallback
-          : fallback,
+      module: next,
     },
   });
 }
@@ -103,7 +114,10 @@ function canonicalizeInspector() {
   }
 }
 
-watch(() => route.query.module, canonicalizeModule);
+watch(
+  () => [route.query.module, route.query.entity, route.query.id],
+  canonicalizeModule,
+);
 watch(() => [route.query.entity, route.query.id], canonicalizeInspector);
 onMounted(() => {
   canonicalizeModule();
@@ -126,8 +140,8 @@ onMounted(() => {
       <p>{{ $t(description) }}</p>
     </header>
 
-    <Tabs v-model:active-key="activeKey" class="workspace-tabs">
-      <TabPane v-for="item in modules" :key="item.key">
+    <Tabs v-model:active-key="tabKey" class="workspace-tabs">
+      <TabPane v-for="item in landingModules" :key="item.key">
         <template #tab>
           <span class="workspace-tab">
             <IconifyIcon :icon="item.icon" />

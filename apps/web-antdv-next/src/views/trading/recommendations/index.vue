@@ -21,21 +21,27 @@ const modules = [
   },
   {
     component: Queue,
+    highlight: 'reports',
     icon: 'lucide:list-restart',
     key: 'queue',
     label: 'page.commandPalette.module.queue',
+    landing: false,
   },
   {
     component: Funnel,
+    highlight: 'reports',
     icon: 'lucide:funnel',
     key: 'funnel',
     label: 'page.commandPalette.module.funnel',
+    landing: false,
   },
   {
     component: Diff,
+    highlight: 'reports',
     icon: 'lucide:git-compare',
     key: 'diff',
     label: 'page.commandPalette.module.diff',
+    landing: false,
   },
 ];
 </script>

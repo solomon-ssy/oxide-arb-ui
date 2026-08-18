@@ -446,6 +446,32 @@ describe('ui fresh-boot clean-break inventory', () => {
     expect(stretched).toEqual([]);
   });
 
+  it('does not offer object-stage views as inventory landings', () => {
+    const palette = readFileSync(
+      join(APP_ROOT, 'src/shared/components/header/command-palette.vue'),
+      'utf8',
+    );
+    const intelligence = readFileSync(
+      join(APP_ROOT, 'src/views/trading/market-intelligence/index.vue'),
+      'utf8',
+    );
+    const recommendations = readFileSync(
+      join(APP_ROOT, 'src/views/trading/recommendations/index.vue'),
+      'utf8',
+    );
+
+    expect(palette.includes("module('live'")).toBe(false);
+    expect(palette.includes("module('queue'")).toBe(false);
+    expect(palette.includes("module('funnel'")).toBe(false);
+    expect(palette.includes("module('diff'")).toBe(false);
+    expect(intelligence.includes("key: 'live'")).toBe(true);
+    expect(intelligence.includes('landing: false')).toBe(true);
+    expect(recommendations.includes("key: 'queue'")).toBe(true);
+    expect(recommendations.includes("key: 'funnel'")).toBe(true);
+    expect(recommendations.includes("key: 'diff'")).toBe(true);
+    expect(recommendations.includes('landing: false')).toBe(true);
+  });
+
   it('hides list pane descendants while object stage is open', () => {
     const content = readFileSync(
       join(

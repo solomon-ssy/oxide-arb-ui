@@ -24,9 +24,11 @@ const modules = [
   },
   {
     component: LiveMarket,
+    highlight: 'overview',
     icon: 'lucide:radio-tower',
     key: 'live',
     label: 'page.commandPalette.module.live',
+    landing: false,
   },
   {
     component: MarketStructure,

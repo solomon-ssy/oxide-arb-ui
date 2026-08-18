@@ -53,15 +53,9 @@ const MODULES: Record<string, PaletteModule[]> = {
   ],
   'market-intelligence': [
     module('overview', 'lucide:radar'),
-    module('live', 'lucide:radio-tower'),
     module('structure', 'lucide:network'),
   ],
-  recommendations: [
-    module('reports', 'lucide:file-chart-column'),
-    module('queue', 'lucide:list-restart'),
-    module('funnel', 'lucide:funnel'),
-    module('diff', 'lucide:git-compare'),
-  ],
+  recommendations: [module('reports', 'lucide:file-chart-column')],
   'research-data-reliability': [
     module('sources', 'lucide:database-zap'),
     module('linkages', 'lucide:link-2'),
