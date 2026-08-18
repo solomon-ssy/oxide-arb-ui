@@ -390,6 +390,19 @@ describe('ui fresh-boot clean-break inventory', () => {
     expect(violations).toEqual([]);
   });
 
+  it('keeps object inspector definition lists single-column', () => {
+    const violations = productionSources()
+      .filter(
+        ({ content, path }) =>
+          path.includes(`${hyphenated('object', 'inspector')}`) &&
+          /Descriptions[\s\S]{0,80}:column="2"/.test(content),
+      )
+      .map(({ path }) => path.slice(APP_ROOT.length + 1))
+      .toSorted();
+
+    expect(violations).toEqual([]);
+  });
+
   it('keeps page locales symmetric and free of dead keys', () => {
     const localeRoot = join(APP_ROOT, 'src/locales/langs');
     const english = localeLeaves(loadJson(join(localeRoot, 'en-US/page.json')));

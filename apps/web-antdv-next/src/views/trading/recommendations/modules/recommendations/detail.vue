@@ -9,7 +9,7 @@ import { useRequestHandler } from '@vben/request/qp';
 import { getRecommendation } from '#/api/quant-recommendations';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useOrderIntentStore } from '#/store';
 
 import RecommendationDetailPanel from './modules/recommendation-detail-panel.vue';
@@ -77,9 +77,16 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     v-model:open="inspectorOpen"
-    :title="$t('page.quantRecommendations.title')"
+    :eyebrow="
+      recommendation?.identity.question
+        ? $t('page.quantRecommendations.title')
+        : undefined
+    "
+    :title="
+      recommendation?.identity.question ?? $t('page.quantRecommendations.title')
+    "
   >
     <AsyncState
       :error-message="loadError"
@@ -94,5 +101,5 @@ onMounted(() => void load());
         :recommendation="recommendation"
       />
     </AsyncState>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

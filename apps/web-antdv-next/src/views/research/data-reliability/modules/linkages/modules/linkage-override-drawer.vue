@@ -3,7 +3,7 @@ import type { CryptoOverrideFormState } from './build-crypto-subject';
 
 import { computed, ref } from 'vue';
 
-import { useVbenDrawer } from '@vben/common-ui';
+import { useVbenModal } from '@vben/common-ui';
 
 import { Alert, Card, Input, message } from 'antdv-next';
 
@@ -103,7 +103,7 @@ async function onSubmit(values: Record<string, unknown>) {
   );
   if (detail) {
     message.success($t('page.research.marketLinkages.override.feedback'));
-    drawerApi.close();
+    modalApi.close();
     emit('success');
   }
 }
@@ -352,11 +352,11 @@ const [Form, formApi] = useVbenForm({
   wrapperClass: 'grid-cols-1 md:grid-cols-2',
 });
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [Modal, modalApi] = useVbenModal({
   onConfirm: () => formApi.validateAndSubmitForm(),
   onOpenChange(isOpen) {
     if (isOpen) {
-      const data = drawerApi.getData<{
+      const data = modalApi.getData<{
         alreadyResolved?: boolean;
         marketId: string;
       }>();
@@ -370,7 +370,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <Modal
     class="w-full max-w-2xl"
     :title="
       alreadyResolved
@@ -405,5 +405,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         <Form />
       </Card>
     </div>
-  </Drawer>
+  </Modal>
 </template>

@@ -25,6 +25,7 @@ import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { usePolling } from '#/shared/composables/use-polling';
 
 import { jobResultRoute } from './schemas';
@@ -83,7 +84,7 @@ usePolling(
   { enabled: polling, intervalMs: 3000 },
 );
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -106,35 +107,37 @@ function openResult() {
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
+    test-id="runtime-activity-inspector"
     :title="$t('page.research.jobs.detail.title')"
-    class="w-full max-w-3xl"
+    width="640"
   >
+    <template v-if="resultRoute" #actions>
+      <Button type="primary" @click="openResult">
+        {{ $t('page.research.jobs.actions.openResult') }}
+      </Button>
+    </template>
     <Spin :spinning="loading">
       <div v-if="job" class="flex flex-col gap-4">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <EnumTag
-              context="research-job-detail"
-              name="ResearchJobKind"
-              :value="job.kind"
-            />
-            <EnumTag
-              context="research-job-detail"
-              name="ResearchJobStatus"
-              :value="job.status"
-            />
-            <Tag v-if="job.recovery_attempt > 0" color="warning">
-              {{
-                $t('page.research.jobs.recovery.badge', {
-                  count: job.recovery_attempt,
-                })
-              }}
-            </Tag>
-          </div>
-          <Button v-if="resultRoute" type="primary" @click="openResult">
-            {{ $t('page.research.jobs.actions.openResult') }}
-          </Button>
+        <div class="flex items-center gap-2">
+          <EnumTag
+            context="research-job-detail"
+            name="ResearchJobKind"
+            :value="job.kind"
+          />
+          <EnumTag
+            context="research-job-detail"
+            name="ResearchJobStatus"
+            :value="job.status"
+          />
+          <Tag v-if="job.recovery_attempt > 0" color="warning">
+            {{
+              $t('page.research.jobs.recovery.badge', {
+                count: job.recovery_attempt,
+              })
+            }}
+          </Tag>
         </div>
 
         <Card size="small" :title="$t('page.research.jobs.detail.progress')">
@@ -239,5 +242,5 @@ function openResult() {
         </Card>
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

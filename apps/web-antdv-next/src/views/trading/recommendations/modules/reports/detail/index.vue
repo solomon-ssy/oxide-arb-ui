@@ -23,7 +23,8 @@ import {
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import { formatDateTimeLocal } from '#/shared/components/format';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useOrderIntentStore, useQuantReportStore } from '#/store';
@@ -204,24 +205,27 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     v-model:open="inspectorOpen"
     test-id="report-detail-workspace"
-    :title="$t('page.quantReports.listTitle')"
+    :eyebrow="report ? $t('page.quantReports.listTitle') : undefined"
+    :title="
+      report
+        ? formatDateTimeLocal(report.decision_at)
+        : $t('page.quantReports.listTitle')
+    "
   >
-    <div class="mb-4 flex items-center justify-end">
-      <div class="flex gap-2">
-        <Button v-if="report?.run" @click="openRun">
-          {{ $t('page.quantReports.detail.openRun') }}
-        </Button>
-        <Button v-if="showPublicationRetry" danger @click="retryPublication">
-          {{ $t('page.quantReports.detail.publicationRetry') }}
-        </Button>
-        <Button v-if="showRevoke" danger @click="onRevoke">
-          {{ $t('page.quantReports.actions.revoke') }}
-        </Button>
-      </div>
-    </div>
+    <template #actions>
+      <Button v-if="report?.run" @click="openRun">
+        {{ $t('page.quantReports.detail.openRun') }}
+      </Button>
+      <Button v-if="showPublicationRetry" danger @click="retryPublication">
+        {{ $t('page.quantReports.detail.publicationRetry') }}
+      </Button>
+      <Button v-if="showRevoke" danger @click="onRevoke">
+        {{ $t('page.quantReports.actions.revoke') }}
+      </Button>
+    </template>
     <AsyncState
       :error-message="loadError"
       :loading="loading"
@@ -304,5 +308,5 @@ onMounted(() => void load());
       </Tabs>
     </AsyncState>
     <RouteLineageDrawer />
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

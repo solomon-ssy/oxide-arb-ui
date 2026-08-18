@@ -66,7 +66,7 @@ import {
 import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import {
   FEEDBACK_RECOVERED_VISIBLE_MS,
@@ -1699,20 +1699,28 @@ onBeforeUnmount(() => {
                 </button>
               </nav>
 
-              <WorkspaceInspectorSurface
+              <WorkspaceObjectStage
                 v-model:open="cycleInspectorOpen"
-                :title="$t('page.research.feedback.tabs.cycles')"
+                :eyebrow="
+                  selectedCycle
+                    ? $t('page.research.feedback.tabs.cycles')
+                    : undefined
+                "
+                :title="
+                  selectedCycle
+                    ? selectedCycle.profile_ref.id
+                    : $t('page.research.feedback.tabs.cycles')
+                "
               >
-                <div
+                <template
                   v-if="
                     canTrigger &&
                     selectedCycle &&
                     canCancelFeedbackCycle(selectedCycle)
                   "
-                  class="mb-3 flex justify-end"
+                  #actions
                 >
                   <Button
-                    class="min-h-11"
                     danger
                     :loading="
                       pendingActions.has(
@@ -1723,7 +1731,7 @@ onBeforeUnmount(() => {
                   >
                     {{ $t('page.research.feedback.actions.cancel.button') }}
                   </Button>
-                </div>
+                </template>
 
                 <Alert
                   v-if="detailError"
@@ -1777,7 +1785,7 @@ onBeforeUnmount(() => {
                   :description="$t('page.research.feedback.detail.empty')"
                   :image="Empty.PRESENTED_IMAGE_SIMPLE"
                 />
-              </WorkspaceInspectorSurface>
+              </WorkspaceObjectStage>
             </div>
 
             <div

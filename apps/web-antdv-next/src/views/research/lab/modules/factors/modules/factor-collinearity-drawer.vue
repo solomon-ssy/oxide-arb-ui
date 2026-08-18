@@ -27,6 +27,7 @@ import { getFactorCollinearity } from '#/api/research';
 import { $t } from '#/locales';
 import { parseDecimal } from '#/shared/components/format';
 import { themeColors } from '#/shared/components/theme-color';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'FactorCollinearityDrawer' });
 
@@ -155,7 +156,7 @@ watch(source, () => {
   }
 });
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -170,9 +171,10 @@ defineExpose({ open: () => drawerApi.open() });
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.factors.collinearity.title')"
-    class="w-full max-w-4xl"
+    width="720"
   >
     <Spin :spinning="loading">
       <div class="flex flex-col gap-4">
@@ -262,5 +264,5 @@ defineExpose({ open: () => drawerApi.open() });
         />
       </div>
     </Spin>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

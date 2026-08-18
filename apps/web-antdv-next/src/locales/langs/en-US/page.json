@@ -12,6 +12,7 @@
   },
   "common": {
     "close": "Close",
+    "back": "Back",
     "yes": "Yes",
     "no": "No",
     "deepLinkNotFound": "The linked record was not found or is no longer available."
@@ -99,6 +100,8 @@
     "refresh": "Refresh activity",
     "refreshing": "Synchronizing authoritative state",
     "viewAll": "View all activity",
+    "openWorkspace": "Open in workspace",
+    "taskDetail": "Task details",
     "loadMore": "Load more",
     "loadError": "Failed to read activity",
     "empty": "No activity matches these filters. New runtime work will appear here when it starts.",
@@ -140,6 +143,15 @@
       "cancel": "Cancel research job {id}. Running work will enter cooperative cancellation.",
       "retryResearch": "Create a governed retry from terminal research job {id}.",
       "retryReport": "Create a new ad-hoc retry from report run {id}."
+    },
+    "inspector": {
+      "entity": "Entity",
+      "related": "Related entity",
+      "sourceStatus": "Source status",
+      "startedAt": "Started",
+      "finishedAt": "Finished",
+      "updatedAt": "Updated",
+      "detail": "Detail"
     }
   },
   "commandPalette": {
@@ -3084,7 +3096,6 @@
       "unblocked": "Market unblocked"
     },
     "detail": {
-      "back": "Back to markets",
       "marketId": "Market ID",
       "eventId": "Event ID",
       "book": "Order Book",
@@ -3422,6 +3433,7 @@
     "audits": "Immutable Audit Timeline",
     "immediate": "No condition is required; the published recommendation proceeds directly to admission eligibility.",
     "emptyAudits": "No condition audit events yet.",
+    "technicalDetail": "Technical detail",
     "loadError": "Unable to load entry-condition evidence.",
     "node": {
       "all": "All conditions must hold",

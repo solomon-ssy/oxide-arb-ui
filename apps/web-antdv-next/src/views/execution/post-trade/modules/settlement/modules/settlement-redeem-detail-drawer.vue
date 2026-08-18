@@ -33,7 +33,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useDrawerSettlementRevisionRefresh } from '#/shared/composables/use-drawer-settlement-revision-refresh';
 import { positionOpenPath } from '#/shared/routes/execution-plane';
 
@@ -297,7 +297,7 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
     :title="$t('page.quantSettlementRedeems.detail.title')"
   >
@@ -891,5 +891,5 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
         </Card>
       </div>
     </AsyncState>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

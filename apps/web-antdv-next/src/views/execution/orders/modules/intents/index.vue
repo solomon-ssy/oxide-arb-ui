@@ -6,7 +6,7 @@ import type { OnActionClickParams } from '#/adapter/vxe-table';
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { message } from 'antdv-next';
@@ -38,12 +38,6 @@ const emptyPage = {
   size: 0,
   total: 0,
 };
-
-const [Drawer, drawerApi] = useVbenDrawer({
-  connectedComponent: IntentDetailDrawer,
-  destroyOnClose: true,
-  onOpenChange: (open) => onInspectorOpenChange(open),
-});
 
 const [Grid, gridApi] = useVbenVxeGrid<OrderIntentView>({
   formOptions: {
@@ -109,15 +103,13 @@ function onActionClick({ code, row }: OnActionClickParams<OrderIntentView>) {
   }
 }
 
-const { onInspectorOpenChange, openInspector } = useWorkspaceInspectorRoute({
-  close: () => drawerApi.close?.(),
+const { openInspector } = useWorkspaceInspectorRoute({
+  close: () => {},
   entity: 'order-intent',
   fetch: (id) => getOrderIntent(id),
-  open: (intent) => drawerApi.setData({ intent }).open(),
+  open: () => {},
 });
 
-// WS `quant.intent` frames bump the store revision; refetch the list and
-// toast lifecycle transitions from other operators (local actions suppress echo).
 watch(
   () => orderIntentStore.revision,
   () => {
@@ -143,6 +135,6 @@ watch(
           : $t('page.quantIntents.listTitle')
       "
     />
-    <Drawer @changed="() => void gridApi.query()" />
+    <IntentDetailDrawer @changed="() => void gridApi.query()" />
   </Page>
 </template>

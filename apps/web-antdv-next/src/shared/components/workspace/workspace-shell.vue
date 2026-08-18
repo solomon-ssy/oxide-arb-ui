@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { WorkspaceDomain, WorkspaceModule } from './workspace-shell.types';
 
-import { computed, onMounted, provide, readonly, ref, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
@@ -11,7 +11,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion-v';
 
 import { $t } from '#/locales';
 
-import { WORKSPACE_INSPECTOR_HOST_KEY } from './workspace-inspector-host.types';
 import WorkspaceInspectorHost from './workspace-inspector-host.vue';
 import { inspectorModule } from './workspace-inspector-registry';
 
@@ -28,8 +27,6 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 const reducedMotion = useReducedMotion();
-const inspectorActiveId = ref<null | string>(null);
-let activeInspectorClose: (() => void) | undefined;
 
 const fallbackModule = computed(() => props.modules[0]);
 const moduleKeys = computed(
@@ -53,26 +50,6 @@ const activeKey = computed({
 const activeModule = computed(() =>
   props.modules.find((item) => item.key === activeKey.value),
 );
-
-function activateInspector(id: string, close: () => void) {
-  if (inspectorActiveId.value !== null && inspectorActiveId.value !== id) {
-    activeInspectorClose?.();
-  }
-  inspectorActiveId.value = id;
-  activeInspectorClose = close;
-}
-
-function deactivateInspector(id: string) {
-  if (inspectorActiveId.value !== id) return;
-  inspectorActiveId.value = null;
-  activeInspectorClose = undefined;
-}
-
-provide(WORKSPACE_INSPECTOR_HOST_KEY, {
-  activeId: readonly(inspectorActiveId),
-  activate: activateInspector,
-  deactivate: deactivateInspector,
-});
 
 function canonicalizeModule() {
   const raw = Array.isArray(route.query.module)
@@ -215,7 +192,10 @@ onMounted(() => {
   --qp-shadow-inspector: var(--qp-glow-sky);
   --qp-shadow-workspace: var(--qp-glow-sky);
 
+  display: flex;
+  flex-direction: column;
   max-width: 1600px;
+  min-height: calc(100dvh - var(--vben-header-height, 48px));
   padding: 16px 16px 28px;
   margin-inline: auto;
 }

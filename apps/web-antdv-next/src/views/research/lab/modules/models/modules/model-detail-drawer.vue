@@ -58,7 +58,7 @@ import { getRuntimeControls } from '#/api/system';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useResearchStore } from '#/store';
@@ -645,30 +645,28 @@ watch(
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
-    :title="$t('page.research.models.detail.title')"
+    :eyebrow="
+      model?.model_spec_name
+        ? $t('page.research.models.detail.title')
+        : undefined
+    "
+    :title="model?.model_spec_name ?? $t('page.research.models.detail.title')"
   >
+    <template v-if="canReplay" #actions>
+      <Button v-if="showSinglePathBacktest" @click="openBacktest">
+        {{ $t('page.research.models.actions.backtest') }}
+      </Button>
+      <Button type="primary" @click="openCpcv">
+        {{ $t('page.research.models.actions.cpcv') }}
+      </Button>
+    </template>
     <p aria-atomic="true" aria-live="polite" class="sr-only" role="status">
       {{ detailAnnouncement }}
     </p>
     <Spin :spinning="loading">
       <div v-if="model" class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <Space v-if="canReplay">
-            <Button
-              v-if="showSinglePathBacktest"
-              size="small"
-              @click="openBacktest"
-            >
-              {{ $t('page.research.models.actions.backtest') }}
-            </Button>
-            <Button size="small" type="primary" @click="openCpcv">
-              {{ $t('page.research.models.actions.cpcv') }}
-            </Button>
-          </Space>
-        </div>
-
         <Alert :message="dualTrackHint" show-icon type="info" />
 
         <Card
@@ -1763,7 +1761,7 @@ watch(
     </Spin>
     <BacktestModal />
     <CpcvModal />
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>
 
 <style scoped>

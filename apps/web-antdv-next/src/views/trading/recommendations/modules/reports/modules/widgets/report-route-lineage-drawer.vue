@@ -9,6 +9,7 @@ import { Alert, Descriptions, DescriptionsItem, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { EMPTY_PLACEHOLDER } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'ReportRouteLineageDrawer' });
 
@@ -19,7 +20,7 @@ interface RouteLineageDrawerData {
 const route = ref<null | ReportRouteDiagnosticsView>(null);
 const twoColumnLayout = { lg: 2, md: 2, sm: 1, xl: 2, xs: 1, xxl: 2 };
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(open) {
     route.value = open
@@ -30,9 +31,10 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantReports.detail.routes.lineageTitle')"
-    class="w-full max-w-4xl"
+    width="720"
   >
     <div
       v-if="route"
@@ -187,5 +189,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </DescriptionsItem>
       </Descriptions>
     </div>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

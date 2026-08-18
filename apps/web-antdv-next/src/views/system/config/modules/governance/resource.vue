@@ -39,7 +39,7 @@ import { getModelRouteActivation } from '#/api/feedback';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 
@@ -748,62 +748,42 @@ watch(
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     v-model:open="inspectorOpen"
     test-id="config-resource-workspace"
-    :title="$t('page.config.overview.resourcesTitle')"
+    :eyebrow="$t('page.config.eyebrow')"
+    :title="meta ? $t(meta.labelKey) : $t('page.config.resource.title')"
   >
+    <template v-if="stage === 'view' && canCreate" #actions>
+      <Button data-testid="edit-config-draft" type="primary" @click="startEdit">
+        <IconifyIcon icon="lucide:file-pen-line" />
+        {{ $t('page.config.workflow.editDraft') }}
+      </Button>
+    </template>
     <div class="mx-auto flex max-w-[1280px] flex-col gap-4 pb-8">
       <header class="bg-card rounded-xl border px-5 py-4">
         <div
           class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
         >
           <div class="flex min-w-0 items-start gap-3">
-            <Button
-              :aria-label="$t('page.config.nav.back')"
-              shape="circle"
-              type="text"
-              @click="router.push('/system/config?module=policy')"
-            >
-              <IconifyIcon icon="lucide:arrow-left" />
-            </Button>
             <span v-if="meta" class="resource-icon">
               <IconifyIcon :icon="meta.icon" />
             </span>
             <div class="min-w-0">
-              <p class="config-eyebrow text-xs font-semibold tracking-wide">
-                {{ $t('page.config.eyebrow') }}
-              </p>
-              <h1 class="truncate text-xl font-semibold">
-                {{
-                  meta ? $t(meta.labelKey) : $t('page.config.resource.title')
-                }}
-              </h1>
-              <p v-if="meta" class="text-muted-foreground mt-1 text-sm">
+              <p v-if="meta" class="text-muted-foreground text-sm">
                 {{ $t(meta.descriptionKey) }}
               </p>
             </div>
           </div>
-          <div class="flex flex-wrap gap-2">
-            <Tag
-              v-if="current?.revision"
-              class="config-active-tag"
-              color="processing"
-              data-screenshot-volatile="true"
-            >
-              {{ $t('page.config.resource.active') }} ·
-              {{ shortId(current.revision.policy_revision_id) }}
-            </Tag>
-            <Button
-              v-if="stage === 'view' && canCreate"
-              data-testid="edit-config-draft"
-              type="primary"
-              @click="startEdit"
-            >
-              <IconifyIcon icon="lucide:file-pen-line" />
-              {{ $t('page.config.workflow.editDraft') }}
-            </Button>
-          </div>
+          <Tag
+            v-if="current?.revision"
+            class="config-active-tag"
+            color="processing"
+            data-screenshot-volatile="true"
+          >
+            {{ $t('page.config.resource.active') }} ·
+            {{ shortId(current.revision.policy_revision_id) }}
+          </Tag>
         </div>
 
         <ol
@@ -1505,7 +1485,7 @@ watch(
         </section>
       </template>
     </div>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>
 
 <style scoped>

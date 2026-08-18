@@ -55,7 +55,7 @@ import {
   formatPrice,
   formatUsd,
 } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
@@ -458,21 +458,13 @@ onMounted(load);
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     v-model:open="inspectorOpen"
     :loading="loading"
     :title="$t('page.research.tradePolicies.detail.title')"
   >
-    <p class="mb-4 text-sm text-muted-foreground">
-      {{ $t('page.research.tradePolicies.detail.subtitle') }}
-    </p>
-    <div class="mb-4 flex justify-end">
+    <template #actions>
       <Space>
-        <Button
-          @click="router.push('/research/learning-policy?module=policies')"
-        >
-          {{ $t('common.back') }}
-        </Button>
         <Button
           v-if="detail?.allowed_governance_actions.includes('validate')"
           type="primary"
@@ -495,7 +487,10 @@ onMounted(load);
           {{ $t('page.research.tradePolicies.governance.retire') }}
         </Button>
       </Space>
-    </div>
+    </template>
+    <p class="mb-4 text-sm text-muted-foreground">
+      {{ $t('page.research.tradePolicies.detail.subtitle') }}
+    </p>
 
     <Empty v-if="!loading && !detail" />
 
@@ -1101,7 +1096,7 @@ onMounted(load);
         />
       </Card>
     </div>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>
 
 <style scoped>

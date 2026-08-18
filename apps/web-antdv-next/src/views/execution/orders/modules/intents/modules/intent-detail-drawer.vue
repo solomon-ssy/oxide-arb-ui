@@ -2,14 +2,14 @@
 import type { OrderIntentView } from '@vben/types';
 
 import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { getOrderIntent } from '#/api/order-intents';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useOrderIntentStore } from '#/store';
 
 import IntentDetailPanel from './intent-detail-panel.vue';
@@ -20,24 +20,37 @@ const emit = defineEmits<{
   changed: [];
 }>();
 
-interface IntentDrawerData {
-  intent: OrderIntentView;
-}
-
+const route = useRoute();
+const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const orderIntentStore = useOrderIntentStore();
 
 const intent = ref<null | OrderIntentView>(null);
 const loading = ref(false);
 const loadError = ref<null | string>(null);
-/** Intent id while the drawer is open; drives WS-driven refetch. */
-const openIntentId = ref<null | string>(null);
 
+const intentId = computed(() => {
+  const entity = Array.isArray(route.query.entity)
+    ? route.query.entity[0]
+    : route.query.entity;
+  const id = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
+  return entity === 'order-intent' && typeof id === 'string' ? id : '';
+});
+const inspectorOpen = computed({
+  get: () => intentId.value !== '',
+  set: (value: boolean) => {
+    if (!value) goBack();
+  },
+});
 const notFound = computed(
-  () => !intent.value && !loading.value && !loadError.value,
+  () =>
+    !intent.value &&
+    !loading.value &&
+    !loadError.value &&
+    intentId.value !== '',
 );
 
-async function refreshIntent(id: string) {
+async function loadIntent(id: string) {
   loading.value = true;
   loadError.value = null;
   try {
@@ -49,7 +62,7 @@ async function refreshIntent(id: string) {
         }
       },
     });
-    if (openIntentId.value === id) {
+    if (intentId.value === id) {
       intent.value = fresh ?? null;
     }
   } finally {
@@ -57,53 +70,45 @@ async function refreshIntent(id: string) {
   }
 }
 
-const [, drawerApi] = useVbenDrawer({
-  footer: false,
-  onOpenChange(isOpen) {
-    if (isOpen) {
-      const data = drawerApi.getData<IntentDrawerData>();
-      openIntentId.value = data.intent.order_intent_id;
-      loadError.value = null;
-      // Seed from the list row for instant paint, then fetch the authoritative view.
-      intent.value = data.intent;
-      void refreshIntent(data.intent.order_intent_id);
-    } else {
-      openIntentId.value = null;
-      intent.value = null;
-      loadError.value = null;
-    }
-  },
-});
+function goBack() {
+  const { entity: _entity, id: _id, ...query } = route.query;
+  void router.push({ query });
+}
 
 function onChanged() {
-  const id = openIntentId.value;
-  if (id) {
-    void refreshIntent(id);
+  if (intentId.value) {
+    void loadIntent(intentId.value);
   }
   emit('changed');
 }
 
 function retry() {
-  const id = openIntentId.value;
-  if (id) {
-    void refreshIntent(id);
+  if (intentId.value) {
+    void loadIntent(intentId.value);
   }
 }
 
+watch(intentId, (id) => {
+  if (!id) {
+    intent.value = null;
+    loadError.value = null;
+    return;
+  }
+  void loadIntent(id);
+});
 watch(
   () => orderIntentStore.revision,
   () => {
-    const id = openIntentId.value;
-    if (id) {
-      void refreshIntent(id);
+    if (intentId.value) {
+      void loadIntent(intentId.value);
     }
   },
 );
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
-    :drawer-api="drawerApi"
+  <WorkspaceObjectStage
+    v-model:open="inspectorOpen"
     :title="$t('page.quantIntents.detail.title')"
   >
     <AsyncState
@@ -115,5 +120,5 @@ watch(
     >
       <IntentDetailPanel v-if="intent" :intent="intent" @changed="onChanged" />
     </AsyncState>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

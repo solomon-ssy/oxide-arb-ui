@@ -1,25 +1,19 @@
 <script lang="ts" setup>
-import type { ComponentPublicInstance, CSSProperties, Ref } from 'vue';
+import type { CSSProperties } from 'vue';
 
-import {
-  computed,
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-  useId,
-  watch,
-} from 'vue';
+import type { InspectorDrawerApi } from './use-workspace-overlay';
+
+import { computed, ref } from 'vue';
 
 import { IconifyIcon } from '@vben/icons';
 
-import { useEventListener } from '@vueuse/core';
-import { Button, ConfigProvider, Skeleton } from 'antdv-next';
-import { AnimatePresence, motion, useReducedMotion } from 'motion-v';
+import { ConfigProvider, Skeleton } from 'antdv-next';
+import { AnimatePresence, motion } from 'motion-v';
 
 import { $t } from '#/locales';
 
-import { WORKSPACE_INSPECTOR_HOST_KEY } from './workspace-inspector-host.types';
+import { useWorkspaceOverlay } from './use-workspace-overlay';
+import { provideWorkspaceChromeActions } from './workspace-chrome';
 
 defineOptions({ name: 'WorkspaceInspectorSurface' });
 
@@ -42,38 +36,25 @@ const emit = defineEmits<{ close: [] }>();
 const DEFAULT_WIDTH_PX = 520;
 const MIN_STORED_WIDTH = 360;
 const MAX_STORED_WIDTH = 760;
-const EXIT_MS = 750;
 const MOTION_SLOW = 0.75;
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
-interface DrawerState {
-  isOpen?: boolean;
-}
-
-interface InspectorDrawerApi {
-  close: () => void;
-  useStore: <T = DrawerState>(
-    selector?: (state: DrawerState) => T,
-  ) => Readonly<Ref<T>>;
-}
-
 const openModel = defineModel<boolean>('open', { default: false });
+const {
+  close,
+  layerMounted,
+  open,
+  popupContainer,
+  quietMotion,
+  setPanelRef,
+  workspaceDomain,
+} = useWorkspaceOverlay({
+  drawerApi: props.drawerApi,
+  emitClose: () => emit('close'),
+  openModel,
+  surface: 'inspector',
+});
 
-const host = inject(WORKSPACE_INSPECTOR_HOST_KEY, null);
-const drawerState = props.drawerApi?.useStore();
-const reducedMotion = useReducedMotion();
-const panel = ref<HTMLElement | null>(null);
-const layerMounted = ref(false);
-const workspaceDomain = ref<string | undefined>();
-const surfaceId = useId();
-const open = computed(() =>
-  props.drawerApi ? Boolean(drawerState?.value.isOpen) : openModel.value,
-);
-const quietMotion = computed(
-  () =>
-    Boolean(reducedMotion.value) ||
-    document.documentElement.dataset.uiDeterministic === 'true',
-);
 const panelWidth = computed(() => {
   if (typeof props.width === 'number') {
     return `${props.width}px`;
@@ -96,8 +77,9 @@ const panelMotion = computed(() => ({
   duration: quietMotion.value ? 0 : MOTION_SLOW,
   ease: [...EASE_OUT],
 }));
-let deactivateTimer: ReturnType<typeof setTimeout> | undefined;
-let restoreFocus: HTMLElement | null = null;
+
+const actionsHost = ref<HTMLElement | null>(null);
+provideWorkspaceChromeActions(actionsHost);
 
 function readStoredWidth(): number {
   const saved = Number(localStorage.getItem('qp.workspace-inspector.width'));
@@ -110,95 +92,6 @@ function readStoredWidth(): number {
   }
   return DEFAULT_WIDTH_PX;
 }
-
-function syncWorkspaceDomain() {
-  workspaceDomain.value =
-    document.querySelector<HTMLElement>('.workspace-shell')?.dataset.domain;
-}
-
-function popupContainer(trigger?: HTMLElement) {
-  return panel.value ?? trigger?.parentElement ?? document.body;
-}
-
-function focusAfterClose() {
-  const original =
-    restoreFocus?.isConnected && restoreFocus !== document.body
-      ? restoreFocus
-      : null;
-  const fallback =
-    document.querySelector<HTMLElement>(
-      '.workspace-tabs [role="tab"][aria-selected="true"]',
-    ) ?? document.querySelector<HTMLElement>('.workspace-hero h1');
-  (original ?? fallback)?.focus();
-  restoreFocus = null;
-}
-
-function close() {
-  if (props.drawerApi) {
-    props.drawerApi.close();
-  } else {
-    openModel.value = false;
-  }
-  emit('close');
-}
-
-function setPanelRef(value: ComponentPublicInstance | Element | null) {
-  const element = value instanceof Element ? value : value?.$el;
-  panel.value = element instanceof HTMLElement ? element : null;
-}
-
-function deactivateAfterExit() {
-  if (deactivateTimer) clearTimeout(deactivateTimer);
-  const delay = quietMotion.value ? 0 : EXIT_MS;
-  deactivateTimer = setTimeout(() => {
-    host?.deactivate(surfaceId);
-    layerMounted.value = false;
-    deactivateTimer = undefined;
-  }, delay);
-}
-
-function onEscape(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || !open.value) return;
-  event.preventDefault();
-  close();
-}
-
-watch(
-  open,
-  async (visible, wasOpen) => {
-    if (!visible) {
-      if (wasOpen) {
-        deactivateAfterExit();
-        await nextTick();
-        focusAfterClose();
-      }
-      return;
-    }
-
-    if (deactivateTimer) {
-      clearTimeout(deactivateTimer);
-      deactivateTimer = undefined;
-    }
-    restoreFocus = document.activeElement as HTMLElement | null;
-    layerMounted.value = true;
-    syncWorkspaceDomain();
-    host?.activate(surfaceId, close);
-    await nextTick();
-    await nextTick();
-    panel.value?.focus();
-  },
-  { immediate: true },
-);
-
-onBeforeUnmount(() => {
-  if (deactivateTimer) clearTimeout(deactivateTimer);
-  host?.deactivate(surfaceId);
-  if (restoreFocus) {
-    focusAfterClose();
-  }
-});
-
-useEventListener(window, 'keydown', onEscape);
 </script>
 
 <template>
@@ -246,18 +139,18 @@ useEventListener(window, 'keydown', onEscape);
           <ConfigProvider :get-popup-container="popupContainer">
             <div class="workspace-inspector-frame">
               <header class="workspace-inspector-toolbar">
-                <span class="workspace-inspector-title">
-                  <IconifyIcon aria-hidden="true" icon="lucide:panel-right" />
-                  {{ title }}
-                </span>
-                <Button
+                <h2 class="workspace-inspector-title">{{ title }}</h2>
+                <div ref="actionsHost" class="workspace-inspector-actions">
+                  <slot name="actions"></slot>
+                </div>
+                <button
                   :aria-label="$t('page.common.close')"
-                  shape="circle"
-                  type="text"
+                  class="workspace-inspector-close"
+                  type="button"
                   @click="close"
                 >
                   <IconifyIcon icon="lucide:x" />
-                </Button>
+                </button>
               </header>
               <div class="workspace-inspector-content">
                 <Skeleton v-if="loading" active :paragraph="{ rows: 8 }" />
@@ -357,6 +250,8 @@ useEventListener(window, 'keydown', onEscape);
   display: flex;
   flex: 1;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 0;
 }
@@ -364,6 +259,8 @@ useEventListener(window, 'keydown', onEscape);
 .workspace-inspector-surface > :deep(*) {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 0;
 }
@@ -371,38 +268,83 @@ useEventListener(window, 'keydown', onEscape);
 .workspace-inspector-toolbar {
   display: flex;
   flex: none;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
   padding: 12px 14px;
-  font-size: 12px;
-  font-weight: 720;
-  color: hsl(var(--qp-text-secondary));
-  background:
-    linear-gradient(
-      90deg,
-      hsl(var(--workspace-accent, var(--qp-accent-violet)) / 10%),
-      transparent 72%
-    ),
-    hsl(var(--qp-surface-glass) / 92%);
+  background: hsl(var(--qp-surface-raised));
   border-bottom: 1px solid hsl(var(--qp-border-subtle));
 }
 
 .workspace-inspector-title {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  font-weight: 720;
+  line-height: 1.3;
+  color: hsl(var(--qp-text-primary));
+  white-space: nowrap;
 }
 
-.workspace-inspector-title svg {
-  color: hsl(var(--workspace-accent, var(--qp-accent-violet)));
+.workspace-inspector-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workspace-inspector-actions:empty {
+  display: none;
+}
+
+.workspace-inspector-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: hsl(var(--qp-text-muted));
+  cursor: pointer;
+  background: hsl(var(--qp-surface-overlay));
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-md);
+}
+
+.workspace-inspector-close:hover,
+.workspace-inspector-close:focus-visible {
+  color: hsl(var(--qp-text-primary));
+  outline: none;
+  background: hsl(var(--qp-surface-sunken));
+  border-color: hsl(var(--qp-border-active));
+  box-shadow: var(--qp-shadow-focus);
 }
 
 .workspace-inspector-content {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   padding: var(--qp-density-card-padding);
-  overflow-y: auto;
+  overflow: hidden auto;
+}
+
+.workspace-inspector-content > :deep(*) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workspace-inspector-content :deep(.ant-table-wrapper),
+.workspace-inspector-content :deep(.ant-descriptions-view) {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 @media (max-width: 640px) {

@@ -28,7 +28,7 @@ import {
   formatDurationSecs,
 } from '#/shared/components/format';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { usePolling } from '#/shared/composables/use-polling';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { datasetManifestBindingIssues } from '#/views/research/components/dataset-manifest';
@@ -164,22 +164,22 @@ function onTrain() {
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
     :title="$t('page.research.datasets.detail.title')"
   >
+    <template v-if="canTrain" #actions>
+      <Button type="primary" @click="onTrain">
+        {{ $t('page.research.datasets.actions.train') }}
+      </Button>
+    </template>
     <Spin :spinning="loading">
       <div v-if="dataset" class="flex min-w-0 flex-col gap-4">
-        <div class="flex items-center justify-between gap-2">
-          <EnumTag
-            context="dataset-detail"
-            name="TrainingDatasetStatus"
-            :value="dataset.status"
-          />
-          <Button v-if="canTrain" type="primary" @click="onTrain">
-            {{ $t('page.research.datasets.actions.train') }}
-          </Button>
-        </div>
+        <EnumTag
+          context="dataset-detail"
+          name="TrainingDatasetStatus"
+          :value="dataset.status"
+        />
 
         <Card size="small" :title="$t('page.research.datasets.detail.summary')">
           <Descriptions :column="1" bordered size="small">
@@ -850,5 +850,5 @@ function onTrain() {
         </Collapse>
       </div>
     </Spin>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

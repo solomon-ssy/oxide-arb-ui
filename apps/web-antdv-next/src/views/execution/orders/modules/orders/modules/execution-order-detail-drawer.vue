@@ -21,7 +21,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 import { reconciliationQueuePath } from '#/shared/routes/execution-plane';
 
@@ -106,7 +106,7 @@ useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
     :title="$t('page.quantExecutionOrders.detail.title')"
   >
@@ -252,5 +252,5 @@ useDrawerIntentRevisionRefresh(openOrderId, refreshOrder);
         </Card>
       </div>
     </AsyncState>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

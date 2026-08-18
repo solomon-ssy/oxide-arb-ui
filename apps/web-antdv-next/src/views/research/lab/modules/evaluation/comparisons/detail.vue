@@ -35,7 +35,7 @@ import {
 } from '#/shared/components/format';
 import KpiCard from '#/shared/components/kpi-card.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 
 import CategoryDiffTable from './modules/category-diff-table.vue';
 
@@ -305,7 +305,7 @@ watch(
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     v-model:open="inspectorOpen"
     :title="$t('page.research.comparisons.detail.summary')"
   >
@@ -425,5 +425,5 @@ watch(
         :description="$t('page.research.comparisons.detail.notFound')"
       />
     </Spin>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

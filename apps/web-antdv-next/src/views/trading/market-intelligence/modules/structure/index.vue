@@ -43,6 +43,7 @@ import {
   formatUsd,
   parseDecimal,
 } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { usePolling } from '#/shared/composables/use-polling';
 
 defineOptions({ name: 'StructuralMonitorPage' });
@@ -298,7 +299,7 @@ async function loadMarketDetail(row: ParticipantConcentrationMarketView) {
   }
 }
 
-const [DetailDrawer, detailDrawerApi] = useVbenDrawer({
+const [, detailDrawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     if (isOpen) {
@@ -571,9 +572,9 @@ watch(topMarkets, () => {
       </TabPane>
     </Tabs>
 
-    <DetailDrawer
+    <WorkspaceInspectorSurface
+      :drawer-api="detailDrawerApi"
       :title="$t('page.structuralAlpha.detail.title')"
-      class="w-full max-w-3xl"
     >
       <AsyncState
         :error-message="detailError"
@@ -653,6 +654,6 @@ watch(topMarkets, () => {
           </template>
         </Table>
       </AsyncState>
-    </DetailDrawer>
+    </WorkspaceInspectorSurface>
   </Page>
 </template>

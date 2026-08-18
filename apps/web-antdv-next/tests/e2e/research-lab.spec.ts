@@ -22,11 +22,11 @@ test('research lab opens authoritative model lineage inside the canonical worksp
   );
   await waitForUiReady(page, browserAudit);
   const inspector = page
-    .locator('aside.workspace-inspector-surface')
+    .getByTestId('workspace-object-stage')
     .filter({ hasText: modelSpec.name });
   await expect(inspector).toContainText(modelSpec.model_spec_id);
   await expect(inspector).toContainText(/Input Contract|输入契约/i);
-  await inspector.getByRole('button', { name: /^(关闭|Close)$/i }).click();
+  await inspector.getByRole('button', { name: /^(返回|Back)$/i }).click();
   await expect(inspector).not.toBeVisible();
   await expect(page).toHaveURL(
     (url) =>

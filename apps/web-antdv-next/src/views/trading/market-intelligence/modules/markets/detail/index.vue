@@ -10,7 +10,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Empty, Spin } from 'antdv-next';
+import { Button, Empty, Spin } from 'antdv-next';
 
 import {
   getMarketBook,
@@ -18,7 +18,7 @@ import {
   getMarketMicrostructure,
 } from '#/api/markets';
 import { $t } from '#/locales';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useMarketStore } from '#/store';
 
@@ -260,12 +260,25 @@ onUnmounted(() => teardown(marketId.value));
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     v-model:open="inspectorOpen"
-    :title="$t('page.menu.marketIntelligence')"
+    :eyebrow="market?.question ? $t('page.menu.marketIntelligence') : undefined"
+    :title="market?.question ?? $t('page.menu.marketIntelligence')"
   >
+    <template v-if="market && canUpdate" #actions>
+      <Button
+        v-if="market.status !== 'manually_blocked'"
+        danger
+        @click="onBlock"
+      >
+        {{ $t('page.markets.actions.block') }}
+      </Button>
+      <Button v-else @click="onUnblock">
+        {{ $t('page.markets.actions.unblock') }}
+      </Button>
+    </template>
     <Spin :spinning="marketLoading && !market">
-      <div v-if="market" class="flex flex-col gap-4 pb-4">
+      <div v-if="market" class="flex min-w-0 flex-col gap-4 pb-4">
         <MarketDetailHeader
           v-model:range="range"
           :range-options="RANGE_OPTIONS"
@@ -274,10 +287,7 @@ onUnmounted(() => teardown(marketId.value));
           :fresh="fresh"
           :book-age-ms="bookAgeMs"
           :can-update="canUpdate"
-          @back="goBack"
-          @block="onBlock"
           @toggle-subscription="onToggleSubscription"
-          @unblock="onUnblock"
         />
 
         <LiveKpiStrip :metrics="metrics" :fresh="fresh" />
@@ -320,5 +330,5 @@ onUnmounted(() => teardown(marketId.value));
       <Empty v-else-if="!marketLoading" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
     </Spin>
     <UnblockModalHost />
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

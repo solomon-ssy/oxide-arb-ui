@@ -3,6 +3,7 @@ import type {
   RuntimeActivityDomain,
   RuntimeActivityPageView,
   RuntimeActivityStatus,
+  RuntimeActivityView,
 } from '@vben/types';
 
 import { computed, onMounted, onScopeDispose, ref, watch } from 'vue';
@@ -11,12 +12,13 @@ import { useRouter } from 'vue-router';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Badge, Button, Drawer, Flex, Tooltip } from 'antdv-next';
+import { Badge, Button, Flex, Tooltip } from 'antdv-next';
 
 import { listRuntimeActivities } from '#/api/runtime-activities';
 import { $t } from '#/locales';
 import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
 import EnumSelect from '#/shared/components/enum/enum-select.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { enumOptions } from '#/shared/presentation/enum-options';
 import { useActivityStore } from '#/store/activity';
@@ -87,6 +89,19 @@ function viewAll() {
   });
 }
 
+function openActivity(item: RuntimeActivityView) {
+  open.value = false;
+  void router.push({
+    path: '/runtime/activity',
+    query: {
+      domain: domain.value,
+      entity: item.entity.kind,
+      id: item.entity.id,
+      status: status.value,
+    },
+  });
+}
+
 watch([domain, status], () => readCoordinator.changeKey(readKey()));
 watch(
   () => activityStore.refreshGeneration,
@@ -118,14 +133,28 @@ onScopeDispose(() => {
     </Badge>
   </Tooltip>
 
-  <Drawer
+  <WorkspaceInspectorSurface
     v-model:open="open"
-    class="activity-drawer"
-    placement="right"
+    test-id="activity-center-inspector"
     :title="$t('page.runtimeActivity.title')"
-    :size="520"
   >
-    <template #extra>
+    <Flex class="activity-filters" gap="small" justify="space-between">
+      <Flex gap="small" wrap="wrap">
+        <EnumSelect
+          v-model:value="domain"
+          allow-clear
+          :aria-label="$t('page.runtimeActivity.filter.domain')"
+          :options="domainOptions"
+          :placeholder="$t('page.runtimeActivity.filter.allDomains')"
+        />
+        <EnumSelect
+          v-model:value="status"
+          allow-clear
+          :aria-label="$t('page.runtimeActivity.filter.status')"
+          :options="statusOptions"
+          :placeholder="$t('page.runtimeActivity.filter.allStatuses')"
+        />
+      </Flex>
       <Button
         :aria-label="$t('page.runtimeActivity.refresh')"
         size="small"
@@ -137,43 +166,29 @@ onScopeDispose(() => {
           icon="lucide:refresh-cw"
         />
       </Button>
-    </template>
-
-    <Flex class="activity-filters" gap="small" wrap="wrap">
-      <EnumSelect
-        v-model:value="domain"
-        allow-clear
-        :aria-label="$t('page.runtimeActivity.filter.domain')"
-        :options="domainOptions"
-        :placeholder="$t('page.runtimeActivity.filter.allDomains')"
-      />
-      <EnumSelect
-        v-model:value="status"
-        allow-clear
-        :aria-label="$t('page.runtimeActivity.filter.status')"
-        :options="statusOptions"
-        :placeholder="$t('page.runtimeActivity.filter.allStatuses')"
-      />
     </Flex>
 
-    <RuntimeActivityFeed :height="560" :items="items" :loading="loading" />
+    <RuntimeActivityFeed
+      :height="560"
+      :items="items"
+      :loading="loading"
+      @select="openActivity"
+    />
 
-    <template #footer>
-      <Flex align="center" justify="space-between">
-        <span class="activity-total">
-          {{
-            $t('page.runtimeActivity.total', {
-              count: page?.summary.total ?? 0,
-            })
-          }}
-        </span>
-        <Button type="primary" @click="viewAll">
-          {{ $t('page.runtimeActivity.viewAll') }}
-          <IconifyIcon icon="lucide:arrow-right" />
-        </Button>
-      </Flex>
-    </template>
-  </Drawer>
+    <Flex align="center" class="activity-footer" justify="space-between">
+      <span class="activity-total">
+        {{
+          $t('page.runtimeActivity.total', {
+            count: page?.summary.total ?? 0,
+          })
+        }}
+      </span>
+      <Button type="primary" @click="viewAll">
+        {{ $t('page.runtimeActivity.viewAll') }}
+        <IconifyIcon icon="lucide:arrow-right" />
+      </Button>
+    </Flex>
+  </WorkspaceInspectorSurface>
 </template>
 
 <style scoped>
@@ -213,14 +228,9 @@ onScopeDispose(() => {
   color: hsl(var(--qp-text-muted));
 }
 
-:global(.activity-drawer .ant-drawer-content) {
-  background: hsl(var(--qp-surface-overlay) / 88%);
-  border-inline-start: 1px solid hsl(var(--qp-border-subtle));
-  box-shadow: var(--qp-shadow-medium);
-  backdrop-filter: blur(18px);
-}
-
-:global(.activity-drawer .ant-drawer-body) {
-  padding: 14px;
+.activity-footer {
+  padding-top: 12px;
+  margin-top: 14px;
+  border-top: 1px solid hsl(var(--qp-border-subtle));
 }
 </style>

@@ -5,7 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
-import { intentActions } from '@vben/types';
+import { ENUM_CATALOG, intentActions } from '@vben/types';
 
 import {
   Button,
@@ -34,6 +34,7 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
+import { useWorkspaceChromeActions } from '#/shared/components/workspace/workspace-chrome';
 import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
 import { useIntentActions } from './use-intent-actions';
@@ -52,6 +53,7 @@ const { handleRequest } = useRequestHandler();
 
 const { approve, canApprove, canCancel, canReject, cancel, reject } =
   useIntentActions(() => emit('changed'));
+const chromeActionsHost = useWorkspaceChromeActions();
 
 const executionOrders = ref<ExecutionOrderView[]>([]);
 const loadingOrders = ref(false);
@@ -59,6 +61,21 @@ const loadingOrders = ref(false);
 const fsm = computed(() => intentActions(props.intent.status));
 const entry = computed(() => props.intent.entry_order);
 const exit = computed(() => props.intent.exit_policy);
+const invalidationReasons = new Set<string>(ENUM_CATALOG.ApprovalInvalidation);
+const statusReason = computed(() => {
+  const reason = props.intent.status_reason;
+  if (!reason) {
+    return { kind: 'empty' as const };
+  }
+  const normalized = reason.replaceAll(' ', '_');
+  if (invalidationReasons.has(reason)) {
+    return { kind: 'enum' as const, value: reason };
+  }
+  if (invalidationReasons.has(normalized)) {
+    return { kind: 'enum' as const, value: normalized };
+  }
+  return { kind: 'text' as const, value: reason };
+});
 
 const showApprove = computed(() => canApprove && fsm.value.canApprove);
 const showReject = computed(() => canReject && fsm.value.canReject);
@@ -121,36 +138,42 @@ onMounted(() => void loadExecutionOrders());
           {{ intent.order_intent_id }}
         </span>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <Button
-          v-if="showApprove"
-          data-testid="approve-intent"
-          type="primary"
-          @click="approve(intent)"
-        >
-          <span class="inline-flex items-center gap-1.5">
-            <IconifyIcon class="size-4" icon="lucide:check" />
-            {{ $t('page.quantIntents.actions.approve') }}
-          </span>
-        </Button>
-        <Button v-if="showReject" danger @click="reject(intent)">
-          <span class="inline-flex items-center gap-1.5">
-            <IconifyIcon class="size-4" icon="lucide:x" />
-            {{ $t('page.quantIntents.actions.reject') }}
-          </span>
-        </Button>
-        <Button
-          v-if="showCancel"
-          danger
-          data-testid="cancel-intent"
-          @click="cancel(intent)"
-        >
-          <span class="inline-flex items-center gap-1.5">
-            <IconifyIcon class="size-4" icon="lucide:ban" />
-            {{ $t('page.quantIntents.actions.cancel') }}
-          </span>
-        </Button>
-      </div>
+      <Teleport
+        v-if="showApprove || showReject || showCancel"
+        :disabled="!chromeActionsHost"
+        :to="chromeActionsHost || 'body'"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          <Button
+            v-if="showApprove"
+            data-testid="approve-intent"
+            type="primary"
+            @click="approve(intent)"
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <IconifyIcon class="size-4" icon="lucide:check" />
+              {{ $t('page.quantIntents.actions.approve') }}
+            </span>
+          </Button>
+          <Button v-if="showReject" danger @click="reject(intent)">
+            <span class="inline-flex items-center gap-1.5">
+              <IconifyIcon class="size-4" icon="lucide:x" />
+              {{ $t('page.quantIntents.actions.reject') }}
+            </span>
+          </Button>
+          <Button
+            v-if="showCancel"
+            danger
+            data-testid="cancel-intent"
+            @click="cancel(intent)"
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <IconifyIcon class="size-4" icon="lucide:ban" />
+              {{ $t('page.quantIntents.actions.cancel') }}
+            </span>
+          </Button>
+        </div>
+      </Teleport>
     </div>
 
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -266,7 +289,19 @@ onMounted(() => void loadExecutionOrders());
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.approval.statusReason')"
           >
-            {{ intent.status_reason ?? EMPTY_PLACEHOLDER }}
+            <EnumTag
+              v-if="statusReason.kind === 'enum'"
+              context="intent-detail"
+              name="ApprovalInvalidation"
+              :value="statusReason.value"
+            />
+            <span v-else>
+              {{
+                statusReason.kind === 'text'
+                  ? statusReason.value
+                  : EMPTY_PLACEHOLDER
+              }}
+            </span>
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.approval.admissionTrace')"

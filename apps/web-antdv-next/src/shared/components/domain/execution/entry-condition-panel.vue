@@ -465,9 +465,11 @@ onMounted(() => void load());
                 r{{ audit.revision }} ·
                 {{ formatDateTimeLocal(audit.occurred_at) }}
               </span>
-              <span v-if="audit.detail" class="text-sm">{{
-                audit.detail
-              }}</span>
+              <span v-if="audit.detail" class="text-muted-foreground text-xs">
+                <Tooltip :title="audit.detail">
+                  {{ $t('page.entryCondition.technicalDetail') }}
+                </Tooltip>
+              </span>
             </div>
           </TimelineItem>
         </Timeline>

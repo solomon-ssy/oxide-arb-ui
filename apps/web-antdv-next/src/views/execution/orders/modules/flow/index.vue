@@ -17,7 +17,6 @@ import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import {
-  ObjectInspectorActions,
   ObjectInspectorHeader,
   ObjectInspectorSection,
   ObjectInspectorTimeline,
@@ -210,12 +209,16 @@ function openOwningLedger() {
         : $t('page.execution.flow.inspector.title')
     "
   >
+    <template v-if="selectedStage" #actions>
+      <Button type="primary" @click="openOwningLedger">
+        {{ $t('page.execution.flow.inspector.openLedger') }}
+      </Button>
+    </template>
     <template v-if="selectedStage">
       <ObjectInspectorHeader
         :entity-id="selectedStage.entityId"
         :eyebrow="$t('page.execution.flow.inspector.eyebrow')"
         :statuses="[selectedStage.status]"
-        :title="$t(selectedStage.labelKey)"
       />
       <ObjectInspectorSection
         v-for="section in inspectorSections"
@@ -223,17 +226,6 @@ function openOwningLedger() {
         :section="section"
       />
       <ObjectInspectorTimeline :items="inspectorTimeline" />
-      <ObjectInspectorActions
-        :actions="[
-          {
-            icon: 'lucide:arrow-up-right',
-            key: 'open-ledger',
-            label: $t('page.execution.flow.inspector.openLedger'),
-            primary: true,
-          },
-        ]"
-        @select="openOwningLedger"
-      />
     </template>
   </WorkspaceInspectorSurface>
 </template>

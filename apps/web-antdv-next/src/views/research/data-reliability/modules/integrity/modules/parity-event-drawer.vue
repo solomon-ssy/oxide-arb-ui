@@ -21,6 +21,7 @@ import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
 } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'FeatureParityEventDrawer' });
 
@@ -55,7 +56,7 @@ function displayDetail(value: unknown): string {
   return typeof value === 'string' ? value : JSON.stringify(value);
 }
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     event.value = isOpen ? drawerApi.getData<DrawerData>().event : null;
@@ -64,9 +65,10 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.research.featureIntegrity.event.title')"
-    class="w-full max-w-4xl"
+    width="720"
   >
     <div v-if="event" class="flex flex-col gap-4">
       <div class="flex flex-wrap gap-2">
@@ -99,7 +101,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
         size="small"
         :title="$t('page.research.featureIntegrity.event.context')"
       >
-        <Descriptions :column="2" bordered size="small">
+        <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
             :label="$t('page.research.featureIntegrity.columns.eventId')"
             :span="2"
@@ -349,5 +351,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         </CollapsePanel>
       </Collapse>
     </div>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

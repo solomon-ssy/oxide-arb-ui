@@ -32,6 +32,7 @@ import { enumOptions } from '#/shared/presentation/enum-options';
 import { useActivityStore } from '#/store/activity';
 import { useReconciliationActions } from '#/views/execution/post-trade/modules/reconciliation/modules/use-reconciliation-actions';
 
+import ActivityTaskInspector from './modules/activity-task-inspector.vue';
 import JobDetailDrawer from './modules/research-jobs/modules/job-detail-drawer.vue';
 
 defineOptions({ name: 'RuntimeActivityPage' });
@@ -86,6 +87,8 @@ const summaryByDomain = computed(() =>
     ]),
   ),
 );
+const selectedActivity = ref<null | RuntimeActivityView>(null);
+const taskOpen = ref(false);
 
 const [JobDrawer, jobDrawerApi] = useVbenDrawer({
   connectedComponent: JobDetailDrawer,
@@ -245,16 +248,106 @@ async function runAction(
 }
 
 async function openEntity() {
-  if (queryValue(route.query.entity) !== 'research-job') {
-    return;
-  }
+  const entity = queryValue(route.query.entity);
   const id = queryValue(route.query.id);
-  if (typeof id !== 'string' || id === '') {
+  if (typeof entity !== 'string' || typeof id !== 'string' || id === '') {
+    selectedActivity.value = null;
+    taskOpen.value = false;
+    jobDrawerApi.close();
     return;
   }
-  const job = await handleRequest(() => getResearchJob(id));
-  if (job) {
-    jobDrawerApi.setData({ job }).open();
+  selectedActivity.value =
+    items.value.find(
+      (item) => item.entity.kind === entity && item.entity.id === id,
+    ) ?? stubActivity(entity, id);
+  if (entity === 'research-job') {
+    const job = await handleRequest(() => getResearchJob(id));
+    if (queryValue(route.query.id) !== id) {
+      return;
+    }
+    if (job) {
+      taskOpen.value = false;
+      jobDrawerApi.setData({ job }).open();
+      return;
+    }
+  }
+  jobDrawerApi.close();
+  taskOpen.value = true;
+}
+
+function selectActivity(item: RuntimeActivityView) {
+  void router.replace({
+    query: {
+      ...route.query,
+      entity: item.entity.kind,
+      id: item.entity.id,
+    },
+  });
+}
+
+function clearEntityQuery() {
+  const query = { ...route.query };
+  delete query.entity;
+  delete query.id;
+  void router.replace({ query });
+}
+
+function stubActivity(kind: string, id: string): RuntimeActivityView {
+  return {
+    activity_id: id,
+    available_actions: [],
+    detail: null,
+    domain: activityDomain(kind),
+    entity: { id, kind },
+    finished_at: null,
+    kind,
+    progress_pct: null,
+    related_entity: null,
+    source_status: '',
+    started_at: null,
+    status: 'pending',
+    target_route: workspacePath(kind, id),
+    updated_at: '',
+  };
+}
+
+function activityDomain(kind: string): RuntimeActivityDomain {
+  switch (kind) {
+    case 'execution-order': {
+      return 'execution';
+    }
+    case 'reconciliation': {
+      return 'reconciliation';
+    }
+    case 'report-run': {
+      return 'report';
+    }
+    case 'settlement-redeem': {
+      return 'settlement';
+    }
+    default: {
+      return 'research';
+    }
+  }
+}
+
+function workspacePath(kind: string, id: string) {
+  switch (kind) {
+    case 'execution-order': {
+      return `/execution/orders?module=orders&entity=execution-order&id=${id}`;
+    }
+    case 'reconciliation': {
+      return `/execution/post-trade?module=reconciliation&entity=reconciliation&id=${id}`;
+    }
+    case 'report-run': {
+      return `/trading/recommendations?module=reports&entity=report-run&id=${id}`;
+    }
+    case 'settlement-redeem': {
+      return `/execution/post-trade?module=settlement&entity=settlement-redeem&id=${id}`;
+    }
+    default: {
+      return `/runtime/activity?entity=${kind}&id=${id}`;
+    }
   }
 }
 
@@ -275,6 +368,19 @@ watch(
   () => [route.query.entity, route.query.id],
   () => void openEntity(),
 );
+watch(items, () => {
+  const entity = queryValue(route.query.entity);
+  const id = queryValue(route.query.id);
+  if (typeof entity !== 'string' || typeof id !== 'string' || id === '') {
+    return;
+  }
+  const found = items.value.find(
+    (item) => item.entity.kind === entity && item.entity.id === id,
+  );
+  if (found) {
+    selectedActivity.value = found;
+  }
+});
 watch(
   () => activityStore.refreshGeneration,
   () => void refresh(),
@@ -388,6 +494,7 @@ onScopeDispose(() => {
           :loading="loading"
           show-actions
           @action="runAction"
+          @select="selectActivity"
         />
 
         <Flex v-if="hasMore" class="load-more" justify="center">
@@ -398,6 +505,12 @@ onScopeDispose(() => {
       </Card>
     </Flex>
     <JobDrawer />
+    <ActivityTaskInspector
+      v-model:open="taskOpen"
+      :item="selectedActivity"
+      @action="runAction"
+      @close="clearEntityQuery"
+    />
   </Page>
 </template>
 

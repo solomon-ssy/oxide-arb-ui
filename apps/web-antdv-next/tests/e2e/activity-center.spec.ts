@@ -39,9 +39,9 @@ test('activity center cancels a real research job and converges through REST and
     browserAudit,
     '[data-testid="runtime-activity-page"][data-ui-ready="true"]',
   );
-  const targetRow = page.locator('.activity-row').filter({
-    has: page.locator(`a[href*="id=${target.entity.id}"]`),
-  });
+  const targetRow = page.locator(
+    `.activity-row[data-activity-id="${target.entity.id}"]`,
+  );
   await targetRow
     .getByRole('button', { name: /取消.*任务|Cancel job/i })
     .click();
@@ -68,5 +68,61 @@ test('activity center cancels a real research job and converges through REST and
   await expect(page).toHaveURL(
     (url) => url.searchParams.get('domain') === 'research',
   );
+  await expectReleaseQuality(page);
+});
+
+test('activity page opens local inspectors without leaving the feed', async ({
+  adminApi,
+  authenticatedPage: page,
+  browserAudit,
+}) => {
+  const activity = await readApiData<RuntimeActivityPage>(
+    adminApi.context,
+    '/api/runtime/activities?limit=50',
+  );
+  const researchJob = activity.items.find(
+    (item) => item.entity.kind === 'research-job',
+  );
+  const reportRun = activity.items.find(
+    (item) => item.entity.kind === 'report-run',
+  );
+  if (!researchJob && !reportRun) {
+    throw new Error('fresh production fixture has no activity rows');
+  }
+
+  await page.goto('/runtime/activity');
+  await waitForUiReady(
+    page,
+    browserAudit,
+    '[data-testid="runtime-activity-page"][data-ui-ready="true"]',
+  );
+
+  async function openKind(target: RuntimeActivity) {
+    await page
+      .locator(`.activity-row[data-activity-id="${target.entity.id}"]`)
+      .click();
+    await expect(page).toHaveURL((url) => {
+      return (
+        url.pathname === '/runtime/activity' &&
+        url.searchParams.get('entity') === target.entity.kind &&
+        url.searchParams.get('id') === target.entity.id
+      );
+    });
+    await expect(page.getByTestId('runtime-activity-inspector')).toBeVisible();
+    await page
+      .getByTestId('runtime-activity-inspector')
+      .getByRole('button', { name: /^(关闭|Close)$/i })
+      .click();
+    await expect(
+      page.getByTestId('runtime-activity-inspector'),
+    ).not.toBeVisible();
+  }
+
+  if (researchJob) {
+    await openKind(researchJob);
+  }
+  if (reportRun) {
+    await openKind(reportRun);
+  }
   await expectReleaseQuality(page);
 });

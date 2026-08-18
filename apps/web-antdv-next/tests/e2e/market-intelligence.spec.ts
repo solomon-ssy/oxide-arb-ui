@@ -35,7 +35,7 @@ test('market intelligence opens the real live-market inspector from the catalog'
     );
   });
   await waitForUiReady(page, browserAudit);
-  const inspector = page.locator('aside.workspace-inspector-surface');
+  const inspector = page.getByTestId('workspace-object-stage');
   await expect(inspector).toContainText(market.question);
   await expectReleaseQuality(page);
 });

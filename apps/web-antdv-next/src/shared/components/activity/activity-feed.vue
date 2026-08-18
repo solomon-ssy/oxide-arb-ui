@@ -7,7 +7,6 @@ import type {
 } from '@vben/types';
 
 import { computed, h } from 'vue';
-import { RouterLink } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
 
@@ -41,6 +40,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   action: [kind: RuntimeActivityActionKind, item: RuntimeActivityView];
+  select: [item: RuntimeActivityView];
 }>();
 
 const reducedMotion = useReducedMotion();
@@ -172,10 +172,12 @@ function domainIcon(item: RuntimeActivityView) {
                 statusClass(item),
                 { 'qp-running-motion': item.status === 'running' },
               ]"
+              :data-activity-id="item.entity.id"
               :exit="reducedMotion ? undefined : { opacity: 0, y: -4 }"
               :initial="reducedMotion ? false : { opacity: 0, y: 8 }"
               :layout="reducedMotion ? false : 'position'"
               :transition="{ duration: reducedMotion ? 0 : 0.18 }"
+              @click="emit('select', item)"
             >
               <span class="status-rail" aria-hidden="true"></span>
               <span class="activity-icon" :class="statusClass(item)">
@@ -183,9 +185,13 @@ function domainIcon(item: RuntimeActivityView) {
               </span>
               <div class="activity-body">
                 <div class="activity-heading">
-                  <RouterLink class="activity-title" :to="item.target_route">
+                  <button
+                    class="activity-title"
+                    type="button"
+                    @click.stop="emit('select', item)"
+                  >
                     {{ activityKind(item) }}
-                  </RouterLink>
+                  </button>
                   <time :datetime="item.updated_at" class="activity-time">
                     {{ formatDateTimeLocal(item.updated_at) }}
                   </time>
@@ -216,6 +222,7 @@ function domainIcon(item: RuntimeActivityView) {
                 <div
                   v-if="showActions && item.available_actions.length > 0"
                   class="activity-actions"
+                  @click.stop
                 >
                   <Button
                     v-for="action in item.available_actions"
@@ -287,6 +294,7 @@ function domainIcon(item: RuntimeActivityView) {
   gap: 12px;
   min-height: 96px;
   padding: 14px 16px 14px 18px;
+  cursor: pointer;
   background: hsl(var(--qp-surface-overlay) / 62%);
   border-bottom: 1px solid hsl(var(--qp-border-subtle));
   transition:
@@ -378,12 +386,17 @@ function domainIcon(item: RuntimeActivityView) {
 }
 
 .activity-title {
+  padding: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 13px;
   font-weight: 650;
   color: hsl(var(--qp-text-primary));
+  text-align: start;
   white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
 }
 
 .activity-title:hover {

@@ -3,11 +3,8 @@ import type { MarketView } from '@vben/types';
 
 import { computed } from 'vue';
 
-import { IconifyIcon } from '@vben/icons';
-
 import { useClipboard } from '@vueuse/core';
 import {
-  Button,
   message,
   RadioButton,
   RadioGroup,
@@ -38,18 +35,12 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  back: [];
-  block: [];
   toggleSubscription: [next: boolean];
-  unblock: [];
 }>();
 
 const range = defineModel<string>('range', { required: true });
 
 const { copy } = useClipboard();
-
-const isBlocked = computed(() => props.market.status === 'manually_blocked');
-
 const freshnessState = computed(() =>
   resolveMarketFreshnessState({
     bookAgeMs: props.bookAgeMs,
@@ -77,19 +68,8 @@ function copyId(value: string) {
   <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="flex min-w-0 items-start gap-2">
-        <Button
-          :aria-label="$t('page.markets.detail.back')"
-          size="small"
-          type="text"
-          @click="emit('back')"
-        >
-          <IconifyIcon class="size-4" icon="lucide:arrow-left" />
-        </Button>
         <div class="flex min-w-0 flex-col gap-1">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-base font-semibold leading-tight">
-              {{ market.question }}
-            </span>
             <EnumTag
               context="market-detail.status"
               name="MarketStatus"
@@ -128,33 +108,16 @@ function copyId(value: string) {
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3">
-        <div v-if="canUpdate" class="flex items-center gap-2">
-          <span class="text-muted-foreground text-xs">
-            {{ $t('page.markets.columns.subscribed') }}
-          </span>
-          <Switch
-            :aria-label="$t('page.markets.columns.subscribed')"
-            :checked="market.subscribed"
-            size="small"
-            @change="(checked: boolean) => emit('toggleSubscription', checked)"
-          />
-        </div>
-        <Button
-          v-if="canUpdate && !isBlocked"
-          danger
+      <div v-if="canUpdate" class="flex flex-wrap items-center gap-3">
+        <span class="text-muted-foreground text-xs">
+          {{ $t('page.markets.columns.subscribed') }}
+        </span>
+        <Switch
+          :aria-label="$t('page.markets.columns.subscribed')"
+          :checked="market.subscribed"
           size="small"
-          @click="emit('block')"
-        >
-          {{ $t('page.markets.actions.block') }}
-        </Button>
-        <Button
-          v-if="canUpdate && isBlocked"
-          size="small"
-          @click="emit('unblock')"
-        >
-          {{ $t('page.markets.actions.unblock') }}
-        </Button>
+          @change="(checked: boolean) => emit('toggleSubscription', checked)"
+        />
       </div>
     </div>
 

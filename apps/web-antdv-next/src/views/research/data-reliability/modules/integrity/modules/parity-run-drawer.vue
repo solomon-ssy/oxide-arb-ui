@@ -66,7 +66,7 @@ const [, drawerApi] = useVbenDrawer({
         size="small"
         :title="$t('page.research.featureIntegrity.run.context')"
       >
-        <Descriptions :column="2" bordered size="small">
+        <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
             :label="$t('page.research.featureIntegrity.columns.runId')"
             :span="2"
@@ -196,7 +196,7 @@ const [, drawerApi] = useVbenDrawer({
         size="small"
         :title="$t('page.research.featureIntegrity.run.counts')"
       >
-        <Descriptions :column="2" bordered size="small">
+        <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
             :label="$t('page.research.featureIntegrity.run.total')"
           >

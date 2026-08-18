@@ -14,13 +14,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { IconifyIcon } from '@vben/icons';
 import { usePreferences } from '@vben/preferences';
 
-import { VueFlow } from '@vue-flow/core';
+import { MarkerType, VueFlow } from '@vue-flow/core';
+import { usePreferredReducedMotion } from '@vueuse/core';
 import { Alert, Button, Skeleton } from 'antdv-next';
 
 import { $t } from '#/locales';
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import {
-  ObjectInspectorActions,
   ObjectInspectorHeader,
   ObjectInspectorSection,
   ObjectInspectorTimeline,
@@ -37,8 +37,15 @@ defineOptions({ name: 'ResearchLineageGraph' });
 const router = useRouter();
 const route = useRoute();
 const { isMobile } = usePreferences();
-const { animated, error, load, loading, runningJobs, stages } =
+const reducedMotion = usePreferredReducedMotion();
+const { error, live, load, loading, runningJobs, stages } =
   useResearchLineage();
+const quietMotion = computed(
+  () =>
+    reducedMotion.value === 'reduce' ||
+    document.documentElement.dataset.uiDeterministic === 'true',
+);
+const flowing = computed(() => !quietMotion.value);
 
 const nodes = computed<Node<ResearchLineageStage>[]>(() =>
   stages.value.map((stage, index) => ({
@@ -58,8 +65,9 @@ const edges = computed<Edge[]>(() =>
     return target
       ? [
           {
-            animated: animated.value,
+            animated: flowing.value,
             id: `${stage.key}-${target.key}`,
+            markerEnd: MarkerType.ArrowClosed,
             source: stage.key,
             target: target.key,
             type: 'smoothstep',
@@ -136,6 +144,13 @@ const inspectorTimeline = computed<ObjectInspectorTimelineItem[]>(() => {
   ];
 });
 
+function stageIndex(key: ResearchLineageStage['key']) {
+  return Math.max(
+    0,
+    stages.value.findIndex((stage) => stage.key === key),
+  );
+}
+
 function openStage(event: NodeMouseEvent) {
   const stage = event.node.data as ResearchLineageStage;
   if (!stage.entity || !stage.entityId) return;
@@ -163,18 +178,21 @@ function openOwningWorkspace() {
 <template>
   <div class="lineage-workspace">
     <InsightPanel
-      accent="violet"
-      :description="$t('page.research.lineage.description')"
+      featured
       icon="lucide:workflow"
       :title="$t('page.research.lineage.title')"
+      tone="violet"
     >
-      <template #actions>
+      <template #extra>
         <Button :loading="loading" size="small" @click="load">
           <IconifyIcon class="mr-1 size-4" icon="lucide:refresh-cw" />
           {{ $t('page.research.lineage.refresh') }}
         </Button>
       </template>
 
+      <p class="lineage-lede">
+        {{ $t('page.research.lineage.description') }}
+      </p>
       <Alert
         v-if="error"
         :message="$t('page.research.lineage.partialError')"
@@ -185,7 +203,15 @@ function openOwningWorkspace() {
         v-if="loading && stages.every((stage) => stage.count === 0)"
         active
       />
-      <div v-else class="lineage-canvas">
+      <div
+        v-else
+        class="lineage-canvas"
+        :class="{
+          'is-flowing': flowing,
+          'is-live': live,
+          'is-quiet': quietMotion,
+        }"
+      >
         <VueFlow
           :edges="edges"
           :fit-view-on-init="true"
@@ -200,6 +226,7 @@ function openOwningWorkspace() {
             <button
               class="lineage-node"
               :disabled="!data.entity || !data.entityId"
+              :style="{ '--lineage-index': stageIndex(data.key) }"
               type="button"
             >
               <span class="lineage-node-label">{{ $t(data.labelKey) }}</span>
@@ -230,11 +257,15 @@ function openOwningWorkspace() {
         : $t('page.research.lineage.inspector.title')
     "
   >
+    <template v-if="selectedStage" #actions>
+      <Button type="primary" @click="openOwningWorkspace">
+        {{ $t('page.research.lineage.inspector.openWorkspace') }}
+      </Button>
+    </template>
     <template v-if="selectedStage">
       <ObjectInspectorHeader
         :entity-id="selectedStage.entityId"
         :eyebrow="$t('page.research.lineage.inspector.eyebrow')"
-        :title="$t(selectedStage.labelKey)"
       />
       <ObjectInspectorSection
         v-for="section in inspectorSections"
@@ -242,17 +273,6 @@ function openOwningWorkspace() {
         :section="section"
       />
       <ObjectInspectorTimeline :items="inspectorTimeline" />
-      <ObjectInspectorActions
-        :actions="[
-          {
-            icon: 'lucide:arrow-up-right',
-            key: 'open-workspace',
-            label: $t('page.research.lineage.inspector.openWorkspace'),
-            primary: true,
-          },
-        ]"
-        @select="openOwningWorkspace"
-      />
     </template>
   </WorkspaceInspectorSurface>
 </template>
@@ -263,12 +283,41 @@ function openOwningWorkspace() {
   padding: 4px;
 }
 
+.lineage-lede {
+  max-width: 72ch;
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: hsl(var(--qp-text-secondary));
+}
+
 .lineage-canvas {
   height: 390px;
   overflow: hidden;
-  background: hsl(var(--qp-surface-sunken));
+  background:
+    radial-gradient(
+      ellipse at 12% 28%,
+      hsl(var(--qp-accent-violet) / 16%),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 88% 72%,
+      hsl(var(--qp-accent-pink) / 12%),
+      transparent 46%
+    ),
+    radial-gradient(hsl(var(--qp-border-subtle) / 70%) 1px, transparent 1px),
+    hsl(var(--qp-surface-sunken));
+  background-size:
+    auto,
+    auto,
+    22px 22px,
+    auto;
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
+}
+
+.lineage-canvas.is-live {
+  box-shadow: var(--qp-glow-realtime);
 }
 
 @media (width < 768px) {
@@ -278,18 +327,45 @@ function openOwningWorkspace() {
 }
 
 .lineage-node {
+  --lineage-index: 0;
+
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 174px;
   padding: 14px;
+  overflow: hidden;
   color: hsl(var(--qp-text-primary));
   text-align: left;
   cursor: pointer;
-  background: hsl(var(--qp-surface-raised));
+  background:
+    linear-gradient(180deg, hsl(var(--qp-accent-pink) / 10%), transparent 42%),
+    hsl(var(--qp-surface-raised) / 92%);
   border: 1px solid hsl(var(--qp-chart-cat-4) / 58%);
   border-radius: var(--qp-radius-md);
-  box-shadow: var(--qp-shadow-subtle);
+  box-shadow: var(--qp-shadow-featured-pink);
+  animation:
+    lineage-enter 520ms var(--qp-motion-ease-out) both,
+    qp-status-pulse 4.2s var(--qp-motion-ease-out) infinite;
+  animation-delay:
+    calc(var(--lineage-index) * 90ms), calc(520ms + var(--lineage-index) * 90ms);
+}
+
+.lineage-node > * {
+  position: relative;
+  z-index: var(--qp-layer-raised);
+}
+
+.lineage-canvas.is-flowing .lineage-node::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background: var(--qp-gradient-scan);
+  opacity: 0.18;
+  animation: qp-scan 4.8s linear infinite;
+  animation-delay: calc(var(--lineage-index) * 240ms);
 }
 
 .lineage-node:hover,
@@ -297,6 +373,7 @@ function openOwningWorkspace() {
   outline: none;
   border-color: hsl(var(--qp-chart-cat-4));
   box-shadow: var(--qp-shadow-focus);
+  transform: translateY(-2px);
 }
 
 .lineage-node-label {
@@ -309,6 +386,7 @@ function openOwningWorkspace() {
   font-size: 24px;
   font-weight: 720;
   color: hsl(var(--qp-chart-cat-4));
+  text-shadow: 0 0 18px hsl(var(--qp-accent-orange) / 45%);
 }
 
 .lineage-node-action {
@@ -325,18 +403,60 @@ function openOwningWorkspace() {
   color: hsl(var(--qp-text-muted));
 }
 
-:deep(.vue-flow__edge.animated path) {
+:deep(.vue-flow__edge-path) {
+  filter: drop-shadow(0 0 6px hsl(var(--qp-accent-violet) / 70%));
+  stroke: hsl(var(--qp-accent-violet));
+  stroke-width: 2;
+}
+
+.lineage-canvas.is-live :deep(.vue-flow__edge-path) {
+  filter: drop-shadow(0 0 8px hsl(var(--qp-accent-realtime) / 80%));
   stroke: hsl(var(--qp-accent-realtime));
 }
 
-:deep(.vue-flow__edge-path) {
-  stroke: hsl(var(--qp-border-strong));
-  stroke-width: 1.5;
+.lineage-canvas.is-flowing :deep(.vue-flow__edge.animated path) {
+  stroke-dasharray: 5 12;
+  animation: lineage-dash 1.15s linear infinite;
+}
+
+.lineage-canvas.is-live :deep(.vue-flow__edge.animated path) {
+  animation-duration: 0.7s;
+}
+
+:deep(.vue-flow__edge .vue-flow__edge-path) {
+  marker-end: url('#vue-flow__arrowclosed');
+}
+
+:deep(.vue-flow__arrowhead polyline),
+:deep(.vue-flow__edge.animated .vue-flow__edge-interaction) {
+  stroke: hsl(var(--qp-accent-violet));
 }
 
 :deep(.vue-flow__node) {
   padding: 0;
   background: none;
   border: 0;
+}
+
+@keyframes lineage-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lineage-dash {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+.lineage-canvas.is-quiet .lineage-node,
+.lineage-canvas.is-quiet .lineage-node::after,
+.lineage-canvas.is-quiet :deep(.vue-flow__edge.animated path) {
+  animation: none;
 }
 </style>

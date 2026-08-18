@@ -14,6 +14,7 @@ import {
   formatPercent,
   formatUsd,
 } from '#/shared/components/format';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 defineOptions({ name: 'EquitySnapshotDrawer' });
 
@@ -23,7 +24,7 @@ interface EquitySnapshotDrawerData {
 
 const snapshot = ref<EquitySnapshotView | null>(null);
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [, drawerApi] = useVbenDrawer({
   footer: false,
   onOpenChange(isOpen) {
     snapshot.value = isOpen
@@ -34,9 +35,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <Drawer
+  <WorkspaceInspectorSurface
+    :drawer-api="drawerApi"
     :title="$t('page.quantAccount.snapshotDetail.title')"
-    class="w-full max-w-2xl"
   >
     <Descriptions v-if="snapshot" :column="1" bordered size="small">
       <DescriptionsItem :label="$t('page.quantAccount.snapshotDetail.id')">
@@ -86,5 +87,5 @@ const [Drawer, drawerApi] = useVbenDrawer({
         {{ formatDateTimeLocal(snapshot.created_at) }}
       </DescriptionsItem>
     </Descriptions>
-  </Drawer>
+  </WorkspaceInspectorSurface>
 </template>

@@ -30,7 +30,7 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
@@ -106,22 +106,22 @@ useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
     :title="$t('page.quantReconciliations.detail.title')"
   >
+    <template v-if="showResolve" #actions>
+      <Button danger type="primary" @click="onResolve">
+        {{ $t('page.quantReconciliations.actions.resolve') }}
+      </Button>
+    </template>
     <Spin :spinning="loading">
       <div v-if="reconciliation" class="flex flex-col gap-4">
-        <div class="flex items-center justify-between gap-2">
-          <EnumTag
-            context="reconciliation-detail"
-            name="ReconciliationResult"
-            :value="reconciliation.result"
-          />
-          <Button v-if="showResolve" danger type="primary" @click="onResolve">
-            {{ $t('page.quantReconciliations.actions.resolve') }}
-          </Button>
-        </div>
+        <EnumTag
+          context="reconciliation-detail"
+          name="ReconciliationResult"
+          :value="reconciliation.result"
+        />
 
         <Card
           size="small"
@@ -257,5 +257,5 @@ useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
         </Card>
       </div>
     </Spin>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

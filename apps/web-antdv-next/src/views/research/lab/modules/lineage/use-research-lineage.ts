@@ -161,8 +161,8 @@ export function useResearchLineage() {
   onMounted(() => void load());
 
   return {
-    animated: computed(() => runningJobs.value > 0),
     error,
+    live: computed(() => runningJobs.value > 0),
     load,
     loading,
     runningJobs,

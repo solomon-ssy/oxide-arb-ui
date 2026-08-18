@@ -76,7 +76,7 @@ withDefaults(
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 720;
   color: hsl(var(--qp-text-primary));
   white-space: nowrap;

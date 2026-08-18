@@ -24,7 +24,7 @@ import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import CopyableHash from '#/views/research/components/copyable-hash.vue';
 
 defineOptions({ name: 'FactorDetailDrawer' });
@@ -97,9 +97,12 @@ watch(usagePage, () => {
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
-    :title="$t('page.research.factors.detail.title')"
+    :eyebrow="
+      factor?.name ? $t('page.research.factors.detail.title') : undefined
+    "
+    :title="factor?.name ?? $t('page.research.factors.detail.title')"
   >
     <Spin :spinning="loading">
       <div v-if="factor" class="flex flex-col gap-4">
@@ -273,5 +276,5 @@ watch(usagePage, () => {
         </Card>
       </div>
     </Spin>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

@@ -12,9 +12,9 @@ import { Alert, Button, Descriptions, DescriptionsItem } from 'antdv-next';
 import { getReportRun, retryReportRun } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
-import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import ObjectInspectorHeader from '#/shared/components/object-inspector/object-inspector-header.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQuantReportStore } from '#/store';
@@ -164,11 +164,16 @@ watch(
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
     :loading="loading"
     :title="$t('page.quantReports.runs.drawerTitle')"
   >
+    <template v-if="canRetry" #actions>
+      <Button danger @click="retry">
+        {{ $t('page.quantReports.runs.retry') }}
+      </Button>
+    </template>
     <Alert
       v-if="loadError"
       class="mb-4"
@@ -177,21 +182,21 @@ watch(
       type="error"
     />
     <div v-if="run" class="flex flex-col gap-4" data-testid="report-run-drawer">
-      <div class="flex flex-wrap items-center gap-2">
-        <EnumTag
-          context="report-run-drawer"
-          name="ReportRunStatus"
-          :value="run.status"
-        />
-        <EnumTag
-          context="report-run-drawer"
-          name="ReportTriggerKind"
-          :value="run.trigger_kind"
-        />
-        <Button v-if="canRetry" danger size="small" @click="retry">
-          {{ $t('page.quantReports.runs.retry') }}
-        </Button>
-      </div>
+      <ObjectInspectorHeader
+        :entity-id="run.report_run_id"
+        :statuses="[
+          {
+            context: 'report-run-drawer',
+            name: 'ReportRunStatus',
+            value: run.status,
+          },
+          {
+            context: 'report-run-drawer',
+            name: 'ReportTriggerKind',
+            value: run.trigger_kind,
+          },
+        ]"
+      />
 
       <Alert
         v-if="run.error_code || run.error_summary"
@@ -285,5 +290,5 @@ watch(
         </DescriptionsItem>
       </Descriptions>
     </div>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>

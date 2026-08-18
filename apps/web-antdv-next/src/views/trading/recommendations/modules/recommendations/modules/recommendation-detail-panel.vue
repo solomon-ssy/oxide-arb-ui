@@ -29,6 +29,7 @@ import {
   formatScore,
   formatUsd,
 } from '#/shared/components/format';
+import { useWorkspaceChromeActions } from '#/shared/components/workspace/workspace-chrome';
 import { useSystemStore } from '#/store';
 
 import { useCreateIntentAction } from './use-create-intent-action';
@@ -47,6 +48,7 @@ const props = defineProps<{
 
 const systemStore = useSystemStore();
 const { canCreate, createIntent } = useCreateIntentAction();
+const chromeActionsHost = useWorkspaceChromeActions();
 
 const DETAIL_TABS = new Set(['condition', 'evidence']);
 const detailTab = ref(
@@ -109,35 +111,27 @@ function onCreateIntent() {
 
 <template>
   <div class="flex flex-col gap-4" data-testid="recommendation-detail-panel">
-    <div
-      class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between"
-    >
-      <div class="min-w-0 flex flex-col gap-1">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="text-muted-foreground text-sm">
-            #{{ recommendation.rank }}
-          </span>
-          <EnumTag
-            context="recommendation-detail"
-            name="OutcomeSide"
-            :value="recommendation.outcome_side"
-          />
-          <Tag data-testid="recommendation-route">
-            {{ $t(`page.quantReports.routes.${recommendation.route}`) }}
-          </Tag>
-          <EnumTag
-            context="recommendation-detail"
-            name="RecommendationStatus"
-            :value="recommendation.status"
-          />
-        </div>
-        <span class="text-base font-medium break-words">
-          {{ recommendation.identity.question }}
-        </span>
-      </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-muted-foreground text-sm">
+        #{{ recommendation.rank }}
+      </span>
+      <EnumTag
+        context="recommendation-detail"
+        name="OutcomeSide"
+        :value="recommendation.outcome_side"
+      />
+      <Tag data-testid="recommendation-route">
+        {{ $t(`page.quantReports.routes.${recommendation.route}`) }}
+      </Tag>
+      <EnumTag
+        context="recommendation-detail"
+        name="RecommendationStatus"
+        :value="recommendation.status"
+      />
+    </div>
+    <Teleport :disabled="!chromeActionsHost" :to="chromeActionsHost || 'body'">
       <Tooltip :title="createDisabledReason">
         <Button
-          class="w-full sm:w-auto"
           data-testid="create-intent"
           :disabled="!gate.enabled"
           type="primary"
@@ -146,7 +140,7 @@ function onCreateIntent() {
           {{ $t('page.quantRecommendations.createIntent.button') }}
         </Button>
       </Tooltip>
-    </div>
+    </Teleport>
 
     <Card
       class="border-primary/30"

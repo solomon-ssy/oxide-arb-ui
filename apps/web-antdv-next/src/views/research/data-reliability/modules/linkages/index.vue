@@ -8,7 +8,7 @@ import type { OnActionClickParams } from '#/adapter/vxe-table';
 
 import { onMounted, ref, watch } from 'vue';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page, useVbenDrawer, useVbenModal } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
 import { Badge, Button, message } from 'antdv-next';
@@ -56,7 +56,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
   onOpenChange: (open) => onInspectorOpenChange(open),
 });
 
-const [OverrideDrawer, overrideDrawerApi] = useVbenDrawer({
+const [OverrideDrawer, overrideDrawerApi] = useVbenModal({
   connectedComponent: LinkageOverrideDrawer,
   destroyOnClose: true,
 });

@@ -140,8 +140,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
   min-height: 124px;
   padding: var(--qp-density-card-padding);
+  overflow: hidden;
   background: hsl(var(--qp-surface-raised));
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
@@ -183,12 +185,16 @@ onBeforeUnmount(() => {
 }
 
 .kpi-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: 'JetBrains Mono Variable', monospace;
   font-size: 24px;
   font-weight: 720;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--kpi-accent));
   letter-spacing: -0.035em;
+  white-space: nowrap;
 }
 
 .kpi-footer {
@@ -196,6 +202,7 @@ onBeforeUnmount(() => {
   font-size: 11px;
   line-height: 1.5;
   color: hsl(var(--qp-text-muted));
+  overflow-wrap: anywhere;
 }
 
 [data-accent='amber'] {

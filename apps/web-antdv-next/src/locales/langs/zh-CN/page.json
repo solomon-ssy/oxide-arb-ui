@@ -12,6 +12,7 @@
   },
   "common": {
     "close": "关闭",
+    "back": "返回",
     "yes": "是",
     "no": "否",
     "deepLinkNotFound": "深链记录不存在或已不可用。"
@@ -99,6 +100,8 @@
     "refresh": "刷新活动",
     "refreshing": "正在同步权威状态",
     "viewAll": "查看全部活动",
+    "openWorkspace": "在工作区打开",
+    "taskDetail": "任务详情",
     "loadMore": "加载更多",
     "loadError": "活动读取失败",
     "empty": "当前筛选范围内没有活动。系统启动任务或执行流程后会显示在这里。",
@@ -140,6 +143,15 @@
       "cancel": "取消研究任务 {id}。运行中的任务将进入协作取消流程。",
       "retryResearch": "从终态研究任务 {id} 创建一次受治理的重试。",
       "retryReport": "从报告运行 {id} 创建一次新的 ad-hoc 重试。"
+    },
+    "inspector": {
+      "entity": "对象",
+      "related": "关联对象",
+      "sourceStatus": "源状态",
+      "startedAt": "开始时间",
+      "finishedAt": "结束时间",
+      "updatedAt": "更新时间",
+      "detail": "详情"
     }
   },
   "commandPalette": {
@@ -3084,7 +3096,6 @@
       "unblocked": "已解除屏蔽"
     },
     "detail": {
-      "back": "返回市场列表",
       "marketId": "市场 ID",
       "eventId": "事件 ID",
       "book": "订单簿",
@@ -3422,6 +3433,7 @@
     "audits": "不可变审计时间线",
     "immediate": "无需条件；Recommendation 发布后直接进入准入候选。",
     "emptyAudits": "暂无条件审计记录。",
+    "technicalDetail": "技术细节",
     "loadError": "无法加载入场条件证据。",
     "node": {
       "all": "全部条件同时成立",

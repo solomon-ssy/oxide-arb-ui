@@ -12,7 +12,7 @@ import { getBacktestReport, getModelQualityGate } from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
-import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import QualityGateScorecard from '#/views/research/components/quality-gate-scorecard.vue';
 
 import BacktestCategoryBreakdown from './backtest-category-breakdown.vue';
@@ -106,7 +106,7 @@ const [, drawerApi] = useVbenDrawer({
 </script>
 
 <template>
-  <WorkspaceInspectorSurface
+  <WorkspaceObjectStage
     :drawer-api="drawerApi"
     :title="$t('page.research.backtests.detail.title')"
   >
@@ -249,5 +249,5 @@ const [, drawerApi] = useVbenDrawer({
         </Card>
       </div>
     </Spin>
-  </WorkspaceInspectorSurface>
+  </WorkspaceObjectStage>
 </template>
