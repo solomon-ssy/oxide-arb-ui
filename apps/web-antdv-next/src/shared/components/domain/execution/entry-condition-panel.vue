@@ -37,6 +37,7 @@ import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
 } from '#/shared/components/format';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 import { useEntryConditionStore } from '#/store/entry-condition';
 
 defineOptions({ name: 'EntryConditionPanel' });
@@ -446,8 +447,12 @@ onMounted(() => void load());
           v-if="audits.length === 0"
           :description="$t('page.entryCondition.emptyAudits')"
         />
-        <Timeline v-else>
-          <TimelineItem v-for="audit in audits" :key="audit.audit_id">
+        <Timeline v-else mode="start" variant="outlined">
+          <TimelineItem
+            v-for="audit in audits"
+            :key="audit.audit_id"
+            :color="enumTimelineColor('EntryConditionState', audit.to_state)"
+          >
             <div class="flex flex-col gap-1">
               <span>
                 {{ $t(`enum.entryConditionAuditAction.${audit.action}`) }} ·

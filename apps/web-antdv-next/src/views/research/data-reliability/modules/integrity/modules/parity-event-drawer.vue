@@ -12,16 +12,15 @@ import {
   CollapsePanel,
   Descriptions,
   DescriptionsItem,
-  Tag,
 } from 'antdv-next';
 
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
 } from '#/shared/components/format';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'FeatureParityEventDrawer' });
 
@@ -30,9 +29,6 @@ interface DrawerData {
 }
 
 const event = ref<FeatureParityEventView | null>(null);
-const eventStatusOptions = enumOptions('FeatureParityEventStatus');
-const featureCellStateOptions = enumOptions('FeatureCellState');
-const stageOptions = enumOptions('FeatureParityStage');
 const isPreInferenceReport = computed(
   () => !!event.value?.report_id && !event.value.model_run_id,
 );
@@ -74,12 +70,16 @@ const [Drawer, drawerApi] = useVbenDrawer({
   >
     <div v-if="event" class="flex flex-col gap-4">
       <div class="flex flex-wrap gap-2">
-        <Tag :color="enumOption(eventStatusOptions, event.status)?.color">
-          {{ enumOption(eventStatusOptions, event.status)?.label }}
-        </Tag>
-        <Tag :color="enumOption(stageOptions, event.stage)?.color">
-          {{ enumOption(stageOptions, event.stage)?.label }}
-        </Tag>
+        <EnumTag
+          context="parity-event-drawer"
+          name="FeatureParityEventStatus"
+          :value="event.status"
+        />
+        <EnumTag
+          context="parity-event-drawer"
+          name="FeatureParityStage"
+          :value="event.stage"
+        />
       </div>
 
       <Alert
@@ -233,17 +233,12 @@ const [Drawer, drawerApi] = useVbenDrawer({
             <DescriptionsItem
               :label="$t('page.research.featureIntegrity.event.state')"
             >
-              <Tag
+              <EnumTag
                 v-if="event.online.state"
-                :color="
-                  enumOption(featureCellStateOptions, event.online.state)?.color
-                "
-              >
-                {{
-                  enumOption(featureCellStateOptions, event.online.state)
-                    ?.label ?? EMPTY_PLACEHOLDER
-                }}
-              </Tag>
+                context="parity-event-drawer"
+                name="FeatureCellState"
+                :value="event.online.state"
+              />
               <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
             </DescriptionsItem>
             <DescriptionsItem
@@ -286,17 +281,12 @@ const [Drawer, drawerApi] = useVbenDrawer({
             <DescriptionsItem
               :label="$t('page.research.featureIntegrity.event.state')"
             >
-              <Tag
+              <EnumTag
                 v-if="event.replay.state"
-                :color="
-                  enumOption(featureCellStateOptions, event.replay.state)?.color
-                "
-              >
-                {{
-                  enumOption(featureCellStateOptions, event.replay.state)
-                    ?.label ?? EMPTY_PLACEHOLDER
-                }}
-              </Tag>
+                context="parity-event-drawer"
+                name="FeatureCellState"
+                :value="event.replay.state"
+              />
               <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
             </DescriptionsItem>
             <DescriptionsItem

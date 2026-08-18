@@ -5,13 +5,13 @@ import { ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
 
-import { Alert, Card, Descriptions, DescriptionsItem, Tag } from 'antdv-next';
+import { Alert, Card, Descriptions, DescriptionsItem } from 'antdv-next';
 
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'FeatureParityRunDrawer' });
 
@@ -20,8 +20,6 @@ interface DrawerData {
 }
 
 const run = ref<FeatureParityRunView | null>(null);
-const kindOptions = enumOptions('FeatureParityRunKind');
-const statusOptions = enumOptions('FeatureParityRunStatus');
 
 function display(value: null | string | undefined): string {
   return value === null || value === undefined || value === '' ? '—' : value;
@@ -42,12 +40,16 @@ const [, drawerApi] = useVbenDrawer({
   >
     <div v-if="run" class="flex flex-col gap-4">
       <div class="flex flex-wrap gap-2">
-        <Tag :color="enumOption(kindOptions, run.kind)?.color">
-          {{ enumOption(kindOptions, run.kind)?.label }}
-        </Tag>
-        <Tag :color="enumOption(statusOptions, run.status)?.color">
-          {{ enumOption(statusOptions, run.status)?.label }}
-        </Tag>
+        <EnumTag
+          context="parity-run-drawer"
+          name="FeatureParityRunKind"
+          :value="run.kind"
+        />
+        <EnumTag
+          context="parity-run-drawer"
+          name="FeatureParityRunStatus"
+          :value="run.status"
+        />
       </div>
 
       <Alert

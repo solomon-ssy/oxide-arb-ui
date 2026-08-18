@@ -22,10 +22,10 @@ import { Mode } from 'vanilla-jsoneditor';
 
 import { getResearchJob } from '#/api/research';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
 import { usePolling } from '#/shared/composables/use-polling';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 import { jobResultRoute } from './schemas';
 
@@ -37,17 +37,10 @@ interface JobDrawerData {
 
 const router = useRouter();
 const { handleRequest } = useRequestHandler();
-const statusTagOptions = enumOptions('ResearchJobStatus');
-const kindTagOptions = enumOptions('ResearchJobKind');
-
 const job = ref<null | ResearchJobView>(null);
 const loading = ref(false);
 const openId = ref<null | string>(null);
 
-const statusTag = computed(() =>
-  enumOption(statusTagOptions, job.value?.status),
-);
-const kindTag = computed(() => enumOption(kindTagOptions, job.value?.kind));
 const pct = computed(() => {
   const raw = job.value?.progress_pct;
   if (typeof raw !== 'number') {
@@ -121,8 +114,16 @@ function openResult() {
       <div v-if="job" class="flex flex-col gap-4">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <Tag :color="kindTag?.color">{{ kindTag?.label }}</Tag>
-            <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
+            <EnumTag
+              context="research-job-detail"
+              name="ResearchJobKind"
+              :value="job.kind"
+            />
+            <EnumTag
+              context="research-job-detail"
+              name="ResearchJobStatus"
+              :value="job.status"
+            />
             <Tag v-if="job.recovery_attempt > 0" color="warning">
               {{
                 $t('page.research.jobs.recovery.badge', {

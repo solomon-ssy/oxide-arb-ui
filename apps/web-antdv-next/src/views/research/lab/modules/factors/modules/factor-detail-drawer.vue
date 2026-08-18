@@ -22,9 +22,9 @@ import {
 import { getFactor } from '#/api/research';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import CopyableHash from '#/views/research/components/copyable-hash.vue';
 
 defineOptions({ name: 'FactorDetailDrawer' });
@@ -34,8 +34,6 @@ interface FactorDrawerData {
 }
 
 const { handleRequest } = useRequestHandler();
-const familyTagOptions = enumOptions('FactorFamily');
-const scopeTagOptions = enumOptions('FactorDefinitionScope');
 
 const factor = ref<FactorDefinitionView | null>(null);
 const detail = ref<FactorDefinitionDetailView | null>(null);
@@ -44,12 +42,6 @@ const openId = ref<null | string>(null);
 const usagePage = ref(1);
 const USAGE_PAGE_SIZE = 20;
 
-const familyTag = computed(() =>
-  enumOption(familyTagOptions, factor.value?.factor_family),
-);
-const scopeTag = computed(() =>
-  enumOption(scopeTagOptions, factor.value?.scope),
-);
 const outputLabel = computed(() => {
   const output = factor.value?.output;
   if (!output) return '—';
@@ -112,8 +104,16 @@ watch(usagePage, () => {
     <Spin :spinning="loading">
       <div v-if="factor" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="familyTag?.color">{{ familyTag?.label }}</Tag>
-          <Tag :color="scopeTag?.color">{{ scopeTag?.label }}</Tag>
+          <EnumTag
+            context="factor-detail"
+            name="FactorFamily"
+            :value="factor.factor_family"
+          />
+          <EnumTag
+            context="factor-detail"
+            name="FactorDefinitionScope"
+            :value="factor.scope"
+          />
         </div>
         <Card size="small" :title="$t('page.research.factors.detail.summary')">
           <Descriptions :column="1" bordered size="small">

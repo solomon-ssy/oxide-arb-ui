@@ -21,32 +21,32 @@
   --qp-accent-command: var(--qp-accent-violet);
   --qp-accent-research: var(--qp-accent-pink);
   --qp-accent-realtime: var(--qp-accent-sky);
-  --qp-status-success: 152 69% 36%;
-  --qp-status-running: 189 88% 34%;
-  --qp-status-queued: 217 82% 49%;
-  --qp-status-warning: 38 92% 42%;
-  --qp-status-danger: 0 76% 50%;
+  --qp-status-success: 145 52% 38%;
+  --qp-status-running: 199 89% 42%;
+  --qp-status-queued: 263 62% 48%;
+  --qp-status-warning: 38 88% 42%;
+  --qp-status-danger: 352 72% 48%;
   --qp-status-neutral: 215 16% 43%;
-  --qp-status-paused: 215 25% 47%;
-  --qp-status-success-soft: 152 69% 41% / 14%;
-  --qp-status-running-soft: 189 94% 43% / 14%;
-  --qp-status-queued-soft: 217 91% 60% / 14%;
-  --qp-status-warning-soft: 38 92% 50% / 16%;
-  --qp-status-danger-soft: 0 84% 60% / 14%;
-  --qp-status-neutral-soft: 215 16% 52% / 14%;
-  --qp-status-paused-soft: 215 25% 65% / 14%;
+  --qp-status-paused: 24 88% 46%;
+  --qp-status-success-soft: 145 52% 42% / 10%;
+  --qp-status-running-soft: 199 89% 48% / 10%;
+  --qp-status-queued-soft: 263 62% 52% / 10%;
+  --qp-status-warning-soft: 38 88% 48% / 12%;
+  --qp-status-danger-soft: 352 72% 54% / 10%;
+  --qp-status-neutral-soft: 215 16% 52% / 10%;
+  --qp-status-paused-soft: 24 88% 52% / 10%;
   --qp-chart-cat-1: var(--qp-accent-sky);
   --qp-chart-cat-2: var(--qp-accent-violet);
   --qp-chart-cat-3: var(--qp-accent-pink);
   --qp-chart-cat-4: var(--qp-accent-orange);
-  --qp-chart-cat-5: 217 82% 49%;
-  --qp-chart-cat-6: 152 69% 36%;
-  --qp-chart-cat-7: 28 89% 48%;
-  --qp-chart-cat-8: 347 75% 48%;
-  --qp-chart-cat-9: 199 82% 42%;
-  --qp-chart-cat-10: 276 68% 53%;
-  --qp-chart-cat-11: 47 88% 43%;
-  --qp-chart-cat-12: 168 68% 34%;
+  --qp-chart-cat-5: 38 88% 42%;
+  --qp-chart-cat-6: 199 76% 40%;
+  --qp-chart-cat-7: 24 92% 48%;
+  --qp-chart-cat-8: 330 72% 48%;
+  --qp-chart-cat-9: 199 82% 44%;
+  --qp-chart-cat-10: 276 62% 50%;
+  --qp-chart-cat-11: 38 88% 44%;
+  --qp-chart-cat-12: 263 58% 48%;
   --qp-chart-sequential-1: 222 47% 86%;
   --qp-chart-sequential-2: 199 76% 68%;
   --qp-chart-sequential-3: 189 82% 48%;
@@ -188,32 +188,32 @@
   --qp-accent-command: var(--qp-accent-violet);
   --qp-accent-research: var(--qp-accent-pink);
   --qp-accent-realtime: var(--qp-accent-sky);
-  --qp-status-success: 152 69% 41%;
-  --qp-status-running: 189 94% 43%;
-  --qp-status-queued: 217 91% 60%;
-  --qp-status-warning: 38 92% 50%;
-  --qp-status-danger: 0 84% 64%;
-  --qp-status-neutral: 215 16% 58%;
-  --qp-status-paused: 215 25% 65%;
-  --qp-status-success-soft: 152 70% 48% / 28%;
-  --qp-status-running-soft: 189 94% 48% / 24%;
-  --qp-status-queued-soft: 217 91% 60% / 24%;
-  --qp-status-warning-soft: 38 92% 55% / 28%;
-  --qp-status-danger-soft: 0 84% 64% / 28%;
-  --qp-status-neutral-soft: 215 16% 58% / 18%;
-  --qp-status-paused-soft: 215 25% 65% / 18%;
+  --qp-status-success: 145 58% 58%;
+  --qp-status-running: 198 93% 64%;
+  --qp-status-queued: 258 86% 72%;
+  --qp-status-warning: 38 92% 60%;
+  --qp-status-danger: 352 82% 70%;
+  --qp-status-neutral: 215 16% 68%;
+  --qp-status-paused: 27 96% 64%;
+  --qp-status-success-soft: 145 58% 62% / 12%;
+  --qp-status-running-soft: 198 93% 64% / 12%;
+  --qp-status-queued-soft: 258 86% 72% / 12%;
+  --qp-status-warning-soft: 38 92% 60% / 14%;
+  --qp-status-danger-soft: 352 82% 70% / 12%;
+  --qp-status-neutral-soft: 215 16% 68% / 12%;
+  --qp-status-paused-soft: 27 96% 64% / 12%;
   --qp-chart-cat-1: var(--qp-accent-sky);
   --qp-chart-cat-2: var(--qp-accent-violet);
   --qp-chart-cat-3: var(--qp-accent-pink);
   --qp-chart-cat-4: var(--qp-accent-orange);
-  --qp-chart-cat-5: 217 91% 67%;
-  --qp-chart-cat-6: 152 69% 55%;
-  --qp-chart-cat-7: 28 95% 61%;
-  --qp-chart-cat-8: 347 77% 66%;
-  --qp-chart-cat-9: 199 89% 58%;
-  --qp-chart-cat-10: 276 82% 70%;
-  --qp-chart-cat-11: 47 92% 58%;
-  --qp-chart-cat-12: 168 76% 48%;
+  --qp-chart-cat-5: 38 92% 60%;
+  --qp-chart-cat-6: 198 86% 62%;
+  --qp-chart-cat-7: 27 96% 64%;
+  --qp-chart-cat-8: 330 81% 68%;
+  --qp-chart-cat-9: 199 89% 62%;
+  --qp-chart-cat-10: 276 82% 72%;
+  --qp-chart-cat-11: 38 92% 62%;
+  --qp-chart-cat-12: 258 82% 72%;
   --qp-chart-sequential-1: 222 31% 20%;
   --qp-chart-sequential-2: 199 70% 34%;
   --qp-chart-sequential-3: 189 94% 43%;
@@ -263,6 +263,109 @@ body {
   color: hsl(var(--qp-text-primary)) !important;
 }
 
+.qp-tone {
+  --qp-tone-color: var(--qp-status-neutral);
+}
+
+.qp-tone[data-tone='success'] {
+  --qp-tone-color: var(--qp-status-success);
+}
+
+.qp-tone[data-tone='running'] {
+  --qp-tone-color: var(--qp-status-running);
+}
+
+.qp-tone[data-tone='queued'] {
+  --qp-tone-color: var(--qp-status-queued);
+}
+
+.qp-tone[data-tone='warning'] {
+  --qp-tone-color: var(--qp-status-warning);
+}
+
+.qp-tone[data-tone='danger'] {
+  --qp-tone-color: var(--qp-status-danger);
+}
+
+.qp-tone[data-tone='paused'] {
+  --qp-tone-color: var(--qp-status-paused);
+}
+
+.qp-tone[data-tone='neutral'] {
+  --qp-tone-color: var(--qp-status-neutral);
+}
+
+.qp-tone[data-category-hue='1'] {
+  --qp-tone-color: var(--qp-chart-cat-1);
+}
+
+.qp-tone[data-category-hue='2'] {
+  --qp-tone-color: var(--qp-chart-cat-2);
+}
+
+.qp-tone[data-category-hue='3'] {
+  --qp-tone-color: var(--qp-chart-cat-3);
+}
+
+.qp-tone[data-category-hue='4'] {
+  --qp-tone-color: var(--qp-chart-cat-4);
+}
+
+.qp-tone[data-category-hue='5'] {
+  --qp-tone-color: var(--qp-chart-cat-5);
+}
+
+.qp-tone[data-category-hue='6'] {
+  --qp-tone-color: var(--qp-chart-cat-6);
+}
+
+.qp-tone[data-category-hue='7'] {
+  --qp-tone-color: var(--qp-chart-cat-7);
+}
+
+.qp-tone[data-category-hue='8'] {
+  --qp-tone-color: var(--qp-chart-cat-8);
+}
+
+.qp-tone[data-category-hue='9'] {
+  --qp-tone-color: var(--qp-chart-cat-9);
+}
+
+.qp-tone[data-category-hue='10'] {
+  --qp-tone-color: var(--qp-chart-cat-10);
+}
+
+.qp-tone[data-category-hue='11'] {
+  --qp-tone-color: var(--qp-chart-cat-11);
+}
+
+.qp-tone[data-category-hue='12'] {
+  --qp-tone-color: var(--qp-chart-cat-12);
+}
+
+.qp-header-status-btn {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 0.375rem;
+}
+
+.qp-header-status-btn:hover {
+  background: hsl(var(--qp-surface-overlay));
+}
+
+.ant-tag:not(.qp-status-chip) {
+  border-color: transparent;
+}
+
 .ant-tag-filled.ant-tag-success {
   color: hsl(var(--qp-status-success));
   background: hsl(var(--qp-status-success-soft));
@@ -285,6 +388,16 @@ body {
   color: hsl(var(--qp-status-running));
   background: hsl(var(--qp-status-running-soft));
   border-color: hsl(var(--qp-status-running) / 42%);
+}
+
+.vxe-table .vxe-cell:has(.qp-status-chip) {
+  overflow: hidden;
+  text-overflow: unset;
+}
+
+.vxe-table .qp-status-chip {
+  max-width: 100%;
+  vertical-align: middle;
 }
 
 .vben-link,

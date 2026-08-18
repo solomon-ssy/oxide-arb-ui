@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { computed, onScopeDispose, ref } from 'vue';
+import type { EnumTone } from '#/shared/presentation/enum-presentation';
 
-import { IconifyIcon } from '@vben/icons';
+import { computed, onScopeDispose, ref } from 'vue';
 
 import { Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import HeaderStatusGlyph from '#/shared/components/header/header-status-glyph.vue';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useWsStore } from '#/store';
 
@@ -22,19 +23,19 @@ const timer = setInterval(() => {
 }, 1000);
 onScopeDispose(() => clearInterval(timer));
 
-const ICON_CLASS = {
-  connected: 'text-success',
-  connecting: 'text-primary animate-spin',
-  disconnected: 'text-destructive',
-  reconnecting: 'text-warning animate-spin',
-} as const;
-
 const ICON_NAME = {
   connected: 'lucide:wifi',
   connecting: 'lucide:loader-2',
   disconnected: 'lucide:wifi-off',
   reconnecting: 'lucide:loader-2',
 } as const;
+
+const ICON_TONE: Record<keyof typeof ICON_NAME, EnumTone> = {
+  connected: 'success',
+  connecting: 'running',
+  disconnected: 'danger',
+  reconnecting: 'warning',
+};
 
 const isStatusStale = computed(() => {
   if (wsStore.status !== 'connected' || !wsStore.lastSystemStatusAt) {
@@ -64,16 +65,18 @@ const tooltip = computed(() => {
   <Tooltip :title="tooltip">
     <button
       :aria-label="statusLabel"
-      class="hover:bg-accent relative flex size-11 cursor-pointer items-center justify-center rounded-md"
+      class="qp-header-status-btn"
       :data-state="wsStore.status"
       data-testid="websocket-status"
       type="button"
       @click="connect"
     >
-      <IconifyIcon
-        :class="ICON_CLASS[wsStore.status]"
+      <HeaderStatusGlyph
         :icon="ICON_NAME[wsStore.status]"
-        class="size-4"
+        :spin="
+          wsStore.status === 'connecting' || wsStore.status === 'reconnecting'
+        "
+        :tone="ICON_TONE[wsStore.status]"
       />
       <span
         v-if="isStatusStale"

@@ -6,18 +6,16 @@ import { FACTOR_VALUE_STATES } from '@vben/types';
 import { Empty, Table, Tag, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatPercent,
   formatScore,
 } from '#/shared/components/format';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'RecommendationFactors' });
 
 defineProps<{ factors: FactorBreakdownEntry[] }>();
-
-const directionTagOptions = enumOptions('FactorDirection');
 
 const columns = [
   {
@@ -134,9 +132,11 @@ function unscoredLabel(record: FactorBreakdownEntry): string {
         {{ $t(`enum.factorFamily.${record.family}`) }}
       </template>
       <template v-else-if="column.key === 'direction'">
-        <Tag :color="enumOption(directionTagOptions, record.direction)?.color">
-          {{ enumOption(directionTagOptions, record.direction)?.label }}
-        </Tag>
+        <EnumTag
+          context="recommendation-factors"
+          name="FactorDirection"
+          :value="record.direction"
+        />
       </template>
       <template v-else-if="column.key === 'raw_value'">
         <span class="font-mono">{{

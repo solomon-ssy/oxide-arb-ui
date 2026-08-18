@@ -57,6 +57,7 @@ import {
 } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
 defineOptions({ name: 'TradePolicyDetailPage' });
 
@@ -1067,12 +1068,21 @@ onMounted(load);
         <h3 class="section-title">
           {{ $t('page.research.tradePolicies.detail.audit') }}
         </h3>
-        <Timeline v-if="audits.length > 0" data-testid="trade-policy-audit">
-          <TimelineItem v-for="audit in audits" :key="audit.audit_id">
+        <Timeline
+          v-if="audits.length > 0"
+          data-testid="trade-policy-audit"
+          mode="start"
+          variant="outlined"
+        >
+          <TimelineItem
+            v-for="audit in audits"
+            :key="audit.audit_id"
+            :color="enumTimelineColor('TradePolicyStatus', audit.to_status)"
+          >
             <div class="audit-row">
               <strong>{{ audit.from_status }} → {{ audit.to_status }}</strong>
               <span>{{ audit.reason }}</span>
-              <span class="muted">
+              <span class="muted" data-screenshot-volatile="true">
                 {{ audit.actor_id }} ·
                 {{ formatDateTimeLocal(audit.created_at) }}
               </span>

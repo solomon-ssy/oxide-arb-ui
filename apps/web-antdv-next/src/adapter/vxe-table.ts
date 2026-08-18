@@ -126,25 +126,33 @@ setupVbenVxeTable({
             ? [
                 h(
                   Tag,
-                  { color: emptyColor, ...props },
+                  { bordered: false, color: emptyColor, ...props },
                   { default: () => emptyLabel },
                 ),
               ]
             : items.map((value) => {
-                const tagItem = tagOptions.find(
-                  (item) => item.value === value,
-                ) ?? {
-                  color: attrs?.defaultColor ?? 'default',
-                  label: value,
-                  value,
-                };
+                const tagItem = tagOptions.find((item) => item.value === value);
+                if (tagItem?.enumName) {
+                  return h(EnumTag, {
+                    context: `vxe:${String(column.field)}`,
+                    name: tagItem.enumName,
+                    value: String(tagItem.value),
+                  });
+                }
                 return h(
                   Tag,
                   {
                     ...props,
-                    ...objectOmit(tagItem, ['label', 'value']),
+                    ...objectOmit(tagItem ?? {}, [
+                      'enumName',
+                      'label',
+                      'swatch',
+                      'value',
+                    ]),
+                    bordered: false,
+                    color: tagItem?.color ?? attrs?.defaultColor ?? 'default',
                   },
-                  { default: () => tagItem.label ?? value },
+                  { default: () => tagItem?.label ?? value },
                 );
               });
 
@@ -188,6 +196,7 @@ setupVbenVxeTable({
           {
             ...props,
             ...objectOmit(tagItem, ['label', 'value']),
+            bordered: false,
           },
           { default: () => tagItem?.label ?? value },
         );

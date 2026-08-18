@@ -26,9 +26,9 @@ import {
 
 import { getMarketLinkageHistory, listBasisAlerts } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'LinkageDetailDrawer' });
 
@@ -43,13 +43,6 @@ const basisAlerts = ref<BasisAlertView[]>([]);
 const basisAlertTotal = ref(0);
 const basisAlertsLoading = ref(false);
 const { handleRequest } = useRequestHandler();
-
-const statusTag = computed(() =>
-  enumOption(enumOptions('LinkageStatus'), detail.value?.status),
-);
-const tierTag = computed(() =>
-  enumOption(enumOptions('ResolverTier'), detail.value?.resolver_tier),
-);
 
 const outcome = computed(() => detail.value?.outcome ?? null);
 const binding = computed(() =>
@@ -359,17 +352,21 @@ const [, drawerApi] = useVbenDrawer({
           <DescriptionsItem
             :label="$t('page.research.marketLinkages.detail.fields.status')"
           >
-            <Tag :color="statusTag?.color">
-              {{ statusTag?.label ?? detail.status }}
-            </Tag>
+            <EnumTag
+              context="linkage-detail"
+              name="LinkageStatus"
+              :value="detail.status"
+            />
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.marketLinkages.detail.fields.tier')"
           >
-            <Tag :color="tierTag?.color">
-              {{ tierTag?.label ?? detail.resolver_tier }}
-              (v{{ detail.resolver_version }})
-            </Tag>
+            <EnumTag
+              context="linkage-detail"
+              name="ResolverTier"
+              :value="detail.resolver_tier"
+            />
+            (v{{ detail.resolver_version }})
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.marketLinkages.detail.fields.confidence')"

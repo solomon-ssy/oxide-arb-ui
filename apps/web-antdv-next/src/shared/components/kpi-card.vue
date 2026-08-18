@@ -9,9 +9,10 @@ import { IconifyIcon } from '@vben/icons';
 import { Skeleton, Tooltip } from 'antdv-next';
 
 import { EMPTY_PLACEHOLDER } from '#/shared/components/format';
+import QpBorderBeam from '#/shared/components/qp-border-beam.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
 
-defineOptions({ name: 'KpiCard' });
+defineOptions({ name: 'KpiCard', inheritAttrs: false });
 
 const props = withDefaults(
   defineProps<{
@@ -82,52 +83,55 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <article
-    :data-accent="accent"
-    :data-featured="featured ? 'true' : undefined"
-    class="kpi-card"
-  >
-    <header class="kpi-header">
-      <div class="kpi-title">
-        <span class="truncate">{{ title }}</span>
-        <Tooltip v-if="tooltip" :title="tooltip">
-          <IconifyIcon
-            class="size-3.5 shrink-0 cursor-help"
-            icon="lucide:info"
+  <QpBorderBeam :disabled="!featured" emphasis="featured" palette="brand">
+    <article
+      v-bind="$attrs"
+      :data-accent="accent"
+      :data-featured="featured ? 'true' : undefined"
+      class="kpi-card"
+    >
+      <header class="kpi-header">
+        <div class="kpi-title">
+          <span class="truncate">{{ title }}</span>
+          <Tooltip v-if="tooltip" :title="tooltip">
+            <IconifyIcon
+              class="size-3.5 shrink-0 cursor-help"
+              icon="lucide:info"
+            />
+          </Tooltip>
+        </div>
+        <span v-if="icon" class="kpi-icon" aria-hidden="true">
+          <IconifyIcon :icon="icon" />
+        </span>
+      </header>
+
+      <Skeleton
+        v-if="loading"
+        :paragraph="false"
+        :title="{ width: '60%' }"
+        active
+      />
+      <div v-else class="kpi-value">
+        <slot name="value">
+          <SignedValue v-if="value !== undefined" :sign="sign" :value="value" />
+          <VbenCountToAnimator
+            v-else-if="hasNumericValue"
+            :decimals="decimals"
+            :duration="animateFirstArrival ? duration : 0"
+            :end-val="endVal!"
+            :prefix="prefix"
+            :start-val="animateFirstArrival ? 0 : endVal!"
+            :suffix="suffix"
           />
-        </Tooltip>
+          <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
+        </slot>
       </div>
-      <span v-if="icon" class="kpi-icon" aria-hidden="true">
-        <IconifyIcon :icon="icon" />
-      </span>
-    </header>
 
-    <Skeleton
-      v-if="loading"
-      :paragraph="false"
-      :title="{ width: '60%' }"
-      active
-    />
-    <div v-else class="kpi-value">
-      <slot name="value">
-        <SignedValue v-if="value !== undefined" :sign="sign" :value="value" />
-        <VbenCountToAnimator
-          v-else-if="hasNumericValue"
-          :decimals="decimals"
-          :duration="animateFirstArrival ? duration : 0"
-          :end-val="endVal!"
-          :prefix="prefix"
-          :start-val="animateFirstArrival ? 0 : endVal!"
-          :suffix="suffix"
-        />
-        <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
-      </slot>
-    </div>
-
-    <footer v-if="$slots.footer" class="kpi-footer">
-      <slot name="footer"></slot>
-    </footer>
-  </article>
+      <footer v-if="$slots.footer" class="kpi-footer">
+        <slot name="footer"></slot>
+      </footer>
+    </article>
+  </QpBorderBeam>
 </template>
 
 <style scoped>
@@ -142,18 +146,6 @@ onBeforeUnmount(() => {
   border: 1px solid hsl(var(--qp-border-subtle));
   border-radius: var(--qp-radius-lg);
   isolation: isolate;
-}
-
-.kpi-card[data-featured='true'] {
-  background:
-    linear-gradient(
-        hsl(var(--qp-surface-raised)),
-        hsl(var(--qp-surface-raised))
-      )
-      padding-box,
-    var(--qp-gradient-brand) border-box;
-  border-color: transparent;
-  box-shadow: var(--qp-shadow-featured);
 }
 
 .kpi-card[data-featured='true'] .kpi-value {

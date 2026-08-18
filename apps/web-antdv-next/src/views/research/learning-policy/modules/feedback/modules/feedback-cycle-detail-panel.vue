@@ -22,6 +22,8 @@ import {
   DescriptionsItem,
   Empty,
   Tag,
+  Timeline,
+  TimelineItem,
 } from 'antdv-next';
 
 import { $t } from '#/locales';
@@ -30,6 +32,7 @@ import {
   formatDateTimeLocal,
   formatPercent,
 } from '#/shared/components/format';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 import QualityGateScorecard from '#/views/research/components/quality-gate-scorecard.vue';
 
 import { feedbackCycleOutcomeState } from './feedback-cycle-detail-state';
@@ -842,121 +845,135 @@ function driftColor(assessment: FeedbackDriftAssessment) {
         :description="$t('page.research.feedback.detail.timeline.empty')"
         :image="Empty.PRESENTED_IMAGE_SIMPLE"
       />
-      <ol
+      <Timeline
         v-else
         :aria-label="$t('page.research.feedback.detail.timeline.aria')"
-        class="space-y-3"
+        mode="start"
+        :pending="outcome === 'pending' || undefined"
+        variant="outlined"
       >
-        <li
+        <TimelineItem
           v-for="event in detail.timeline"
           :key="event.feedback_stage_event_id"
-          class="min-w-0 rounded-md border p-3"
+          :color="enumTimelineColor('FeedbackStageEventKind', event.event_kind)"
         >
-          <div
-            class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
-          >
-            <div class="min-w-0">
-              <p class="font-medium">
-                <span class="mr-2 font-mono tabular-nums">
-                  #{{ event.event_sequence }}
-                </span>
+          <div class="min-w-0">
+            <div
+              class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
+            >
+              <div class="min-w-0">
+                <p class="font-medium">
+                  <span class="mr-2 font-mono tabular-nums">
+                    #{{ event.event_sequence }}
+                  </span>
+                  {{
+                    $t(
+                      `page.research.feedback.detail.timeline.stage.${event.stage}`,
+                    )
+                  }}
+                </p>
+                <p
+                  class="text-muted-foreground mt-1 text-xs"
+                  data-screenshot-volatile="true"
+                >
+                  {{ formatDateTimeLocal(event.occurred_at) }}
+                </p>
+              </div>
+              <Tag :color="eventColor(event.event_kind)">
                 {{
                   $t(
-                    `page.research.feedback.detail.timeline.stage.${event.stage}`,
+                    `page.research.feedback.detail.timeline.event.${event.event_kind}`,
                   )
                 }}
-              </p>
-              <p class="mt-1 text-xs text-muted-foreground">
-                {{ formatDateTimeLocal(event.occurred_at) }}
-              </p>
+              </Tag>
             </div>
-            <Tag :color="eventColor(event.event_kind)">
-              {{
-                $t(
-                  `page.research.feedback.detail.timeline.event.${event.event_kind}`,
-                )
-              }}
-            </Tag>
-          </div>
 
-          <dl class="mt-3 grid min-w-0 gap-x-4 gap-y-2 text-xs sm:grid-cols-2">
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.eventId') }}
-              </dt>
-              <dd class="break-all font-mono">
-                {{ event.feedback_stage_event_id }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.actor') }}
-              </dt>
-              <dd class="break-all font-mono">
-                {{
-                  event.actor ?? $t('page.research.feedback.detail.notObserved')
-                }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.jobId') }}
-              </dt>
-              <dd class="break-all font-mono">
-                {{
-                  event.research_job_id ??
-                  $t('page.research.feedback.detail.notObserved')
-                }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.reason') }}
-              </dt>
-              <dd class="break-all font-mono">
-                {{
-                  event.reason_code ??
-                  $t('page.research.feedback.detail.notObserved')
-                }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.eventHash') }}
-              </dt>
-              <dd class="break-all font-mono">{{ event.event_hash }}</dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.evidenceUri') }}
-              </dt>
-              <dd class="break-all font-mono">
-                {{
-                  event.evidence_uri ??
-                  $t('page.research.feedback.detail.notObserved')
-                }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.evidenceHash') }}
-              </dt>
-              <dd class="break-all font-mono">
-                {{
-                  event.evidence_hash ??
-                  $t('page.research.feedback.detail.notObserved')
-                }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-muted-foreground">
-                {{ $t('page.research.feedback.detail.timeline.createdAt') }}
-              </dt>
-              <dd>{{ formatDateTimeLocal(event.created_at) }}</dd>
-            </div>
-          </dl>
-        </li>
-      </ol>
+            <dl
+              class="mt-3 grid min-w-0 gap-x-4 gap-y-2 text-xs sm:grid-cols-2"
+            >
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.eventId') }}
+                </dt>
+                <dd class="break-all font-mono">
+                  {{ event.feedback_stage_event_id }}
+                </dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.actor') }}
+                </dt>
+                <dd class="break-all font-mono">
+                  {{
+                    event.actor ??
+                    $t('page.research.feedback.detail.notObserved')
+                  }}
+                </dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.jobId') }}
+                </dt>
+                <dd class="break-all font-mono">
+                  {{
+                    event.research_job_id ??
+                    $t('page.research.feedback.detail.notObserved')
+                  }}
+                </dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.reason') }}
+                </dt>
+                <dd class="break-all font-mono">
+                  {{
+                    event.reason_code ??
+                    $t('page.research.feedback.detail.notObserved')
+                  }}
+                </dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.eventHash') }}
+                </dt>
+                <dd class="break-all font-mono">{{ event.event_hash }}</dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.evidenceUri') }}
+                </dt>
+                <dd class="break-all font-mono">
+                  {{
+                    event.evidence_uri ??
+                    $t('page.research.feedback.detail.notObserved')
+                  }}
+                </dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{
+                    $t('page.research.feedback.detail.timeline.evidenceHash')
+                  }}
+                </dt>
+                <dd class="break-all font-mono">
+                  {{
+                    event.evidence_hash ??
+                    $t('page.research.feedback.detail.notObserved')
+                  }}
+                </dd>
+              </div>
+              <div class="min-w-0">
+                <dt class="text-muted-foreground">
+                  {{ $t('page.research.feedback.detail.timeline.createdAt') }}
+                </dt>
+                <dd data-screenshot-volatile="true">
+                  {{ formatDateTimeLocal(event.created_at) }}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </TimelineItem>
+      </Timeline>
     </Card>
 
     <Card class="min-w-0" size="small">

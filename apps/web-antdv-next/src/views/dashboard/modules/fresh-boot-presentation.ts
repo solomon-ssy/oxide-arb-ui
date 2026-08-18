@@ -2,10 +2,11 @@ import type {
   ExchangeHistoryFrontierProgress,
   FreshBootCapabilityState,
   FreshBootProgressView,
-  FreshBootStatus,
 } from '@vben/types';
 
 import type { DashboardReadResult } from './dashboard-snapshot';
+
+import type { EnumTone } from '#/shared/presentation/enum-presentation';
 
 export type FreshBootSummaryStatus =
   | 'blocked'
@@ -14,8 +15,8 @@ export type FreshBootSummaryStatus =
   | 'waiting';
 
 export interface FreshBootSummary {
-  color: 'error' | 'processing' | 'success';
   status: FreshBootSummaryStatus;
+  tone: EnumTone;
 }
 
 export interface FreshBootReadState {
@@ -68,33 +69,23 @@ export function summarizeFreshBoot(
   pooledFirstReportReady = false,
 ): FreshBootSummary {
   if (capability === 'blocked') {
-    return { color: 'error', status: 'blocked' };
+    return { status: 'blocked', tone: 'danger' };
   }
   if (capability === 'partial_blocked') {
     return pooledFirstReportReady
-      ? { color: 'success', status: 'succeeded' }
-      : { color: 'error', status: 'blocked' };
+      ? { status: 'succeeded', tone: 'success' }
+      : { status: 'blocked', tone: 'danger' };
   }
   if (!capability || capability === 'awaiting_history') {
-    return { color: 'processing', status: 'waiting' };
+    return { status: 'waiting', tone: 'queued' };
   }
   if (
     capability === 'first_report_ready' ||
     capability === 'all_routes_ready'
   ) {
-    return { color: 'success', status: 'succeeded' };
+    return { status: 'succeeded', tone: 'success' };
   }
-  return { color: 'processing', status: 'running' };
-}
-
-export function profileStatusColor(status: FreshBootStatus) {
-  if (status === 'succeeded') return 'success';
-  if (status === 'blocked_terminal') return 'error';
-  if (status === 'retry_scheduled' || status === 'waiting_evidence') {
-    return 'warning';
-  }
-  if (status === 'superseded') return 'default';
-  return 'processing';
+  return { status: 'running', tone: 'running' };
 }
 
 export function reduceFreshBootRead(

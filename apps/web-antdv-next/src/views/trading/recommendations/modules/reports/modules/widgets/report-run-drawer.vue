@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ReportRunStatus, ReportRunView } from '@vben/types';
+import type { ReportRunView } from '@vben/types';
 
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -7,11 +7,12 @@ import { useRoute, useRouter } from 'vue-router';
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert, Button, Descriptions, DescriptionsItem, Tag } from 'antdv-next';
+import { Alert, Button, Descriptions, DescriptionsItem } from 'antdv-next';
 
 import { getReportRun, retryReportRun } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
@@ -35,15 +36,6 @@ const run = ref<null | ReportRunView>(null);
 const loading = ref(false);
 const loadError = ref<null | string>(null);
 const runId = ref<null | string>(null);
-
-const statusColor: Record<ReportRunStatus, string> = {
-  abandoned: 'error',
-  failed: 'error',
-  queued: 'default',
-  running: 'processing',
-  skipped: 'warning',
-  succeeded: 'success',
-};
 
 const canRetry = computed(
   () =>
@@ -186,10 +178,16 @@ watch(
     />
     <div v-if="run" class="flex flex-col gap-4" data-testid="report-run-drawer">
       <div class="flex flex-wrap items-center gap-2">
-        <Tag :color="statusColor[run.status]">
-          {{ $t(`enum.reportRunStatus.${run.status}`) }}
-        </Tag>
-        <Tag>{{ $t(`enum.reportTriggerKind.${run.trigger_kind}`) }}</Tag>
+        <EnumTag
+          context="report-run-drawer"
+          name="ReportRunStatus"
+          :value="run.status"
+        />
+        <EnumTag
+          context="report-run-drawer"
+          name="ReportTriggerKind"
+          :value="run.trigger_kind"
+        />
         <Button v-if="canRetry" danger size="small" @click="retry">
           {{ $t('page.quantReports.runs.retry') }}
         </Button>

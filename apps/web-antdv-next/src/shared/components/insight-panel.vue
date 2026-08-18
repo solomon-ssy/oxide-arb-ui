@@ -1,9 +1,15 @@
 <script lang="ts" setup>
+import type { BorderBeamPalette } from '#/shared/components/qp-border-beam';
+
+import { computed } from 'vue';
+
 import { IconifyIcon } from '@vben/icons';
 
-defineOptions({ name: 'InsightPanel' });
+import QpBorderBeam from '#/shared/components/qp-border-beam.vue';
 
-withDefaults(
+defineOptions({ name: 'InsightPanel', inheritAttrs: false });
+
+const props = withDefaults(
   defineProps<{
     featured?: boolean;
     fill?: boolean;
@@ -28,30 +34,48 @@ export type InsightTone =
   | 'sky'
   | 'teal'
   | 'violet';
+
+const INSIGHT_BEAM_PALETTE: Record<InsightTone, BorderBeamPalette> = {
+  amber: 'brand',
+  cyan: 'trading',
+  indigo: 'governance',
+  sky: 'trading',
+  teal: 'governance',
+  violet: 'execution',
+};
+
+const beamPalette = computed(() => INSIGHT_BEAM_PALETTE[props.tone]);
 </script>
 
 <template>
-  <section
-    :class="{ 'h-full': fill, 'panel-gap-sm': gap === 'sm' }"
-    :data-featured="featured ? 'true' : undefined"
-    :data-tone="tone"
-    class="insight-panel"
+  <QpBorderBeam
+    :disabled="!featured"
+    emphasis="featured"
+    :palette="beamPalette"
   >
-    <header class="panel-header">
-      <div class="panel-title">
-        <span v-if="icon" class="panel-icon" aria-hidden="true">
-          <IconifyIcon :icon="icon" />
-        </span>
-        <h2>{{ title }}</h2>
+    <section
+      v-bind="$attrs"
+      :class="{ 'h-full': fill, 'panel-gap-sm': gap === 'sm' }"
+      :data-featured="featured ? 'true' : undefined"
+      :data-tone="tone"
+      class="insight-panel"
+    >
+      <header class="panel-header">
+        <div class="panel-title">
+          <span v-if="icon" class="panel-icon" aria-hidden="true">
+            <IconifyIcon :icon="icon" />
+          </span>
+          <h2>{{ title }}</h2>
+        </div>
+        <div v-if="$slots.extra" class="panel-extra">
+          <slot name="extra"></slot>
+        </div>
+      </header>
+      <div class="panel-body" :class="{ 'panel-body-fill': fill }">
+        <slot></slot>
       </div>
-      <div v-if="$slots.extra" class="panel-extra">
-        <slot name="extra"></slot>
-      </div>
-    </header>
-    <div class="panel-body" :class="{ 'panel-body-fill': fill }">
-      <slot></slot>
-    </div>
-  </section>
+    </section>
+  </QpBorderBeam>
 </template>
 
 <style scoped>
@@ -59,6 +83,7 @@ export type InsightTone =
   --panel-accent: var(--qp-accent-command);
   --panel-feature-gradient: var(--qp-gradient-governance);
 
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -72,19 +97,11 @@ export type InsightTone =
 .insight-panel[data-featured='true'] {
   background:
     radial-gradient(
-        circle at 4% 0%,
-        hsl(var(--panel-accent) / 9%),
-        transparent 38%
-      )
-      padding-box,
-    linear-gradient(
-        hsl(var(--qp-surface-raised) / 98%),
-        hsl(var(--qp-surface-raised) / 98%)
-      )
-      padding-box,
-    var(--panel-feature-gradient) border-box;
-  border-color: transparent;
-  box-shadow: var(--qp-shadow-featured);
+      circle at 4% 0%,
+      hsl(var(--panel-accent) / 9%),
+      transparent 38%
+    ),
+    hsl(var(--qp-surface-raised) / 98%);
 }
 
 .insight-panel[data-featured='true'] .panel-icon {
@@ -93,14 +110,11 @@ export type InsightTone =
   box-shadow: var(--qp-shadow-featured);
 }
 
-.insight-panel[data-featured='true'][data-tone='cyan'],
-.insight-panel[data-featured='true'][data-tone='sky'],
 .insight-panel[data-featured='true'][data-tone='cyan'] .panel-icon,
 .insight-panel[data-featured='true'][data-tone='sky'] .panel-icon {
   box-shadow: var(--qp-shadow-featured-sky);
 }
 
-.insight-panel[data-featured='true'][data-tone='violet'],
 .insight-panel[data-featured='true'][data-tone='violet'] .panel-icon {
   box-shadow: var(--qp-shadow-featured-pink);
 }

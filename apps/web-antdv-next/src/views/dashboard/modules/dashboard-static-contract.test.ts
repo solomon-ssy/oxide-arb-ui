@@ -63,4 +63,13 @@ describe('dashboard static contract', () => {
     expect(dashboard).toContain('SubsystemHealthList');
     expect(dashboard).not.toMatch(/check\.ok \? 'success'/);
   });
+
+  it('paints command-rail enums through EnumTag on a half-width grid', () => {
+    expect(dashboard).toContain('name="QuantRuntimeMode"');
+    expect(dashboard).toContain('name="KillSwitchState"');
+    expect(dashboard).toContain('StatusChip');
+    expect(dashboard).not.toContain('enumOption');
+    expect(dashboard).toContain('minmax(0, 1fr) minmax(0, 1fr)');
+    expect(dashboard).toContain('xl:grid-cols-5');
+  });
 });

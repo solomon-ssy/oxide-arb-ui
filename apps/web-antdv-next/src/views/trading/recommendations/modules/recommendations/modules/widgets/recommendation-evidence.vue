@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import type { QuantEvidenceView } from '@vben/types';
+import type { EnumName, QuantEvidenceView } from '@vben/types';
 
 import { computed, ref, watch } from 'vue';
 
 import { useRequestHandler } from '@vben/request/qp';
+import { ENUM_CATALOG } from '@vben/types';
 
 import {
   Alert,
@@ -14,7 +15,6 @@ import {
   DescriptionsItem,
   Empty,
   Spin,
-  Tag,
   Typography,
 } from 'antdv-next';
 import { Mode } from 'vanilla-jsoneditor';
@@ -22,12 +22,12 @@ import { Mode } from 'vanilla-jsoneditor';
 import { getRecommendationEvidence } from '#/api/quant-recommendations';
 import { $t } from '#/locales';
 import CompactDataTable from '#/shared/components/compact-data-table.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
 } from '#/shared/components/format';
 import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.vue';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 import { summarizeModelInputAudit } from '../model-input-audit';
 
@@ -37,11 +37,12 @@ const props = defineProps<{ active: boolean; recommendationId: string }>();
 
 const { handleRequest } = useRequestHandler();
 const { Text } = Typography;
-const featureCellStateOptions = enumOptions('FeatureCellState');
-const modelInputStateOptions = enumOptions(
-  'FeatureCellState',
-  'FactorValueState',
-);
+
+function modelInputEnum(value: string): EnumName {
+  return (ENUM_CATALOG.FeatureCellState as readonly string[]).includes(value)
+    ? 'FeatureCellState'
+    : 'FactorValueState';
+}
 
 const evidence = ref<null | QuantEvidenceView>(null);
 const loading = ref(false);
@@ -319,15 +320,12 @@ watch(
           :scroll="{ x: 1500 }"
         >
           <template #bodyCell="{ column, record }">
-            <Tag
+            <EnumTag
               v-if="column.key === 'state'"
-              :color="enumOption(featureCellStateOptions, record.state)?.color"
-            >
-              {{
-                enumOption(featureCellStateOptions, record.state)?.label ??
-                EMPTY_PLACEHOLDER
-              }}
-            </Tag>
+              context="recommendation-evidence"
+              name="FeatureCellState"
+              :value="record.state"
+            />
             <span
               v-else-if="column.key === 'staleness_ms'"
               class="font-mono text-xs"
@@ -384,17 +382,12 @@ watch(
           :scroll="{ x: 900 }"
         >
           <template #bodyCell="{ column, record }">
-            <Tag
+            <EnumTag
               v-if="column.key === 'raw_state'"
-              :color="
-                enumOption(modelInputStateOptions, record.raw_state)?.color
-              "
-            >
-              {{
-                enumOption(modelInputStateOptions, record.raw_state)?.label ??
-                EMPTY_PLACEHOLDER
-              }}
-            </Tag>
+              context="recommendation-evidence"
+              :name="modelInputEnum(record.raw_state)"
+              :value="record.raw_state"
+            />
             <span v-else class="font-mono text-xs break-all">
               {{ displayRecordValue(record, column.key) }}
             </span>

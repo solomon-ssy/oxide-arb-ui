@@ -158,7 +158,6 @@ onUnmounted(() => {
 <template>
   <InsightPanel
     :title="$t('page.dashboard.orbit.title')"
-    featured
     fill
     icon="lucide:orbit"
     tone="violet"

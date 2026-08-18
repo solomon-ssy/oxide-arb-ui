@@ -18,6 +18,7 @@ import { $t } from '#/locales';
 import BulletList from '#/shared/components/bullet-list.vue';
 import EntryConditionPanel from '#/shared/components/domain/execution/entry-condition-panel.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatBps,
@@ -28,7 +29,6 @@ import {
   formatScore,
   formatUsd,
 } from '#/shared/components/format';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 import { useCreateIntentAction } from './use-create-intent-action';
@@ -47,10 +47,6 @@ const props = defineProps<{
 
 const systemStore = useSystemStore();
 const { canCreate, createIntent } = useCreateIntentAction();
-
-const sideTagOptions = enumOptions('OutcomeSide');
-const statusTagOptions = enumOptions('RecommendationStatus');
-const modeTagOptions = enumOptions('QuantRuntimeMode');
 
 const DETAIL_TABS = new Set(['condition', 'evidence']);
 const detailTab = ref(
@@ -121,21 +117,19 @@ function onCreateIntent() {
           <span class="text-muted-foreground text-sm">
             #{{ recommendation.rank }}
           </span>
-          <Tag
-            :color="
-              enumOption(sideTagOptions, recommendation.outcome_side)?.color
-            "
-          >
-            {{ enumOption(sideTagOptions, recommendation.outcome_side)?.label }}
-          </Tag>
+          <EnumTag
+            context="recommendation-detail"
+            name="OutcomeSide"
+            :value="recommendation.outcome_side"
+          />
           <Tag data-testid="recommendation-route">
             {{ $t(`page.quantReports.routes.${recommendation.route}`) }}
           </Tag>
-          <Tag
-            :color="enumOption(statusTagOptions, recommendation.status)?.color"
-          >
-            {{ enumOption(statusTagOptions, recommendation.status)?.label }}
-          </Tag>
+          <EnumTag
+            context="recommendation-detail"
+            name="RecommendationStatus"
+            :value="recommendation.status"
+          />
         </div>
         <span class="text-base font-medium break-words">
           {{ recommendation.identity.question }}
@@ -542,13 +536,13 @@ function onCreateIntent() {
             :label="$t('page.quantRecommendations.eligibility.eligibleModes')"
           >
             <template v-if="eligibility.eligible_modes.length > 0">
-              <Tag
+              <EnumTag
                 v-for="mode in eligibility.eligible_modes"
                 :key="mode"
-                :color="enumOption(modeTagOptions, mode)?.color"
-              >
-                {{ enumOption(modeTagOptions, mode)?.label }}
-              </Tag>
+                context="recommendation-detail"
+                name="QuantRuntimeMode"
+                :value="mode"
+              />
             </template>
             <span v-else>{{
               $t('page.quantRecommendations.eligibility.none')

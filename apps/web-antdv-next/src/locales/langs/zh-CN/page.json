@@ -2702,8 +2702,13 @@
       "title": "反馈与再训练",
       "open": "打开工作台",
       "history": "已验证历史",
+      "historyMissing": "尚无证据",
+      "historyObserved": "{observed} 天",
+      "historyDays": "{observed} / {required} 天",
       "latest": "最新反馈",
-      "updatedAt": "更新时间",
+      "updatedAt": "周期更新",
+      "updatedAtHint": "最近一次反馈周期的更新时间。尚未创建周期时没有时间戳。",
+      "noCycle": "尚无周期",
       "openCycle": "打开最近周期",
       "loadError": "反馈快照加载失败",
       "invalidRevision": "反馈快照 revision 非法或发生倒退",
@@ -2727,6 +2732,11 @@
       "title": "Action Inbox",
       "clear": "没有待处理的操作项",
       "owner": "责任域：{owner}",
+      "severity": {
+        "critical": "紧急",
+        "info": "信息",
+        "warning": "警告"
+      },
       "reason": {
         "unresolved_reconciliation": "存在尚未解决的执行对账",
         "basis_alert_unacknowledged": "存在尚未确认的跨源基差告警",
@@ -3950,15 +3960,7 @@
         "missing": "缺失",
         "notVerified": "报告事实尚未核验",
         "pendingDescription": "该报告目前仅供管理员查看；两类 ClickHouse 事实承诺全部核验前，不能成为 current/actionable 报告，也不能创建 OrderIntent。",
-        "funnelBlocked": "完整逐行漏斗事实完成投递与哈希核验前不展示漏斗；空查询结果不会被误解为合法的零。",
-        "statuses": {
-          "pending": "待投递",
-          "delivering": "投递中",
-          "retrying": "重试中",
-          "failed": "失败",
-          "cancelled": "已取消",
-          "verified": "已核验"
-        }
+        "funnelBlocked": "完整逐行漏斗事实完成投递与哈希核验前不展示漏斗；空查询结果不会被误解为合法的零。"
       },
       "empty": {
         "title": "空报告",

@@ -18,11 +18,11 @@ import {
 } from '@vben/types';
 
 import { useDebounceFn, useResizeObserver } from '@vueuse/core';
-import { Alert, Card, Empty, Skeleton, Tag } from 'antdv-next';
+import { Alert, Card, Empty, Skeleton } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { themeColors } from '#/shared/components/theme-color';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 import { buildParityRunTrend } from './parity-run-trend';
 
@@ -44,8 +44,6 @@ const { renderEcharts, resize } = useEcharts(chartRef);
 const { isDark } = usePreferences();
 const trend = computed(() => buildParityRunTrend(props.runs));
 const hasData = computed(() => trend.value.points.length > 0);
-const kindTagOptions = enumOptions('FeatureParityRunKind');
-const statusTagOptions = enumOptions('FeatureParityRunStatus');
 const visibleKinds = computed(() =>
   kinds.filter((kind) =>
     trend.value.points.some((point) => point.kind === kind),
@@ -224,23 +222,23 @@ watch(
       <span class="text-muted-foreground text-xs">
         {{ $t('page.research.featureIntegrity.trend.runKinds') }}
       </span>
-      <Tag
+      <EnumTag
         v-for="kind in visibleKinds"
         :key="kind"
-        :color="enumOption(kindTagOptions, kind)?.color"
-      >
-        {{ enumOption(kindTagOptions, kind)?.label }}
-      </Tag>
+        context="parity-run-trend"
+        name="FeatureParityRunKind"
+        :value="kind"
+      />
       <span class="text-muted-foreground ml-2 text-xs">
         {{ $t('page.research.featureIntegrity.trend.markerStatus') }}
       </span>
-      <Tag
+      <EnumTag
         v-for="status in visibleStatuses"
         :key="status"
-        :color="enumOption(statusTagOptions, status)?.color"
-      >
-        {{ enumOption(statusTagOptions, status)?.label }}
-      </Tag>
+        context="parity-run-trend"
+        name="FeatureParityRunStatus"
+        :value="status"
+      />
     </div>
   </Card>
 </template>

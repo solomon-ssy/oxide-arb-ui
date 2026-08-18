@@ -133,7 +133,6 @@ watch([values, reducedMotion], render, { immediate: true });
 <template>
   <InsightPanel
     :title="$t('page.dashboard.equity.title')"
-    featured
     fill
     icon="lucide:chart-no-axes-combined"
     tone="sky"

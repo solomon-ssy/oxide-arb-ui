@@ -22,12 +22,13 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import InsightPanel from '#/shared/components/insight-panel.vue';
+import StatusChip from '#/shared/components/status-chip.vue';
 
 import {
   activationPercent,
-  profileStatusColor,
   retentionPercent,
   summarizeFreshBoot,
 } from './fresh-boot-presentation';
@@ -98,6 +99,7 @@ async function copyId(value: string) {
 <template>
   <InsightPanel
     class="fresh-boot-panel"
+    :featured="Boolean(freshBoot) && !compact"
     :title="$t('page.dashboard.bootstrap.title')"
     icon="lucide:rocket"
     tone="violet"
@@ -133,18 +135,18 @@ async function copyId(value: string) {
       <div class="fresh-boot-capability">
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
-            <Tag :color="summary.color">
+            <StatusChip :tone="summary.tone">
               {{ $t(`page.dashboard.bootstrap.status.${summary.status}`) }}
-            </Tag>
-            <Tag :color="pooledReady ? 'success' : 'processing'">
+            </StatusChip>
+            <StatusChip :tone="pooledReady ? 'success' : 'running'">
               {{
                 pooledReady
                   ? $t('page.dashboard.bootstrap.pooledReady')
                   : $t('page.dashboard.bootstrap.pooledPending')
               }}
-            </Tag>
-            <Tag
-              :color="
+            </StatusChip>
+            <StatusChip
+              :tone="
                 freshBoot.capability.all_routes_ready ? 'success' : 'warning'
               "
             >
@@ -153,7 +155,7 @@ async function copyId(value: string) {
                   ? $t('page.dashboard.bootstrap.allRoutesReady')
                   : $t('page.dashboard.bootstrap.routesStillBuilding')
               }}
-            </Tag>
+            </StatusChip>
           </div>
           <p class="text-muted-foreground mt-2 text-sm">
             {{
@@ -217,13 +219,11 @@ async function copyId(value: string) {
                   <strong>{{
                     $t(`page.dashboard.bootstrap.route.${profile.run.route}`)
                   }}</strong>
-                  <Tag :color="profileStatusColor(profile.run.status)">
-                    {{
-                      $t(
-                        `page.dashboard.bootstrap.status.${profile.run.status}`,
-                      )
-                    }}
-                  </Tag>
+                  <EnumTag
+                    context="fresh-boot-panel"
+                    name="FreshBootStatus"
+                    :value="profile.run.status"
+                  />
                 </div>
                 <Button
                   class="fresh-boot-action"
@@ -371,16 +371,12 @@ async function copyId(value: string) {
                           `page.dashboard.bootstrap.route.${profile.run.route}`,
                         )
                       }}</strong>
-                      <Tag
+                      <EnumTag
                         class="mt-1 w-fit"
-                        :color="profileStatusColor(profile.run.status)"
-                      >
-                        {{
-                          $t(
-                            `page.dashboard.bootstrap.status.${profile.run.status}`,
-                          )
-                        }}
-                      </Tag>
+                        context="fresh-boot-panel"
+                        name="FreshBootStatus"
+                        :value="profile.run.status"
+                      />
                     </div>
                     <div>
                       <span class="fresh-boot-label">{{
@@ -461,7 +457,15 @@ async function copyId(value: string) {
                       <span class="fresh-boot-label">{{
                         $t('page.dashboard.bootstrap.firstReport')
                       }}</span>
-                      <strong>
+                      <StatusChip
+                        :tone="
+                          profile.run.first_report_id
+                            ? 'success'
+                            : profile.run.first_report_run_id
+                              ? 'queued'
+                              : 'warning'
+                        "
+                      >
                         {{
                           profile.run.first_report_id
                             ? $t('page.dashboard.bootstrap.ready')
@@ -469,7 +473,7 @@ async function copyId(value: string) {
                               ? $t('page.dashboard.bootstrap.queued')
                               : $t('page.dashboard.bootstrap.pending')
                         }}
-                      </strong>
+                      </StatusChip>
                       <span
                         v-if="profile.run.first_report_id"
                         class="fresh-boot-id text-xs"

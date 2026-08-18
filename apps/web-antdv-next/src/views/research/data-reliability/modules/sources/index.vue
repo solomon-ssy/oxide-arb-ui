@@ -6,6 +6,8 @@ import type {
   DomainSourcesSnapshot,
 } from '@vben/types';
 
+import type { EnumTone } from '#/shared/presentation/enum-presentation';
+
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -17,6 +19,7 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { listDomainSources } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import StatusChip from '#/shared/components/status-chip.vue';
 
 import { useDomainSourceColumns } from './modules/schemas/table-columns';
 
@@ -103,16 +106,16 @@ onMounted(() => {
   void refresh();
 });
 
-function cursorStatusColor(status: DomainCursorStatus) {
+function cursorStatusTone(status: DomainCursorStatus): EnumTone {
   switch (status) {
     case 'backfilling': {
-      return 'processing';
+      return 'running';
     }
     case 'bootstrap': {
-      return 'default';
+      return 'queued';
     }
     case 'error': {
-      return 'error';
+      return 'danger';
     }
     case 'live': {
       return 'success';
@@ -120,13 +123,13 @@ function cursorStatusColor(status: DomainCursorStatus) {
   }
 }
 
-function snapshotStatusColor(status: DomainSourceSnapshotStatus) {
+function snapshotStatusTone(status: DomainSourceSnapshotStatus): EnumTone {
   switch (status) {
     case 'blocked': {
-      return 'error';
+      return 'danger';
     }
     case 'declared': {
-      return 'processing';
+      return 'running';
     }
     case 'live': {
       return 'success';
@@ -135,7 +138,7 @@ function snapshotStatusColor(status: DomainSourceSnapshotStatus) {
       return 'warning';
     }
     case 'unobserved': {
-      return 'default';
+      return 'neutral';
     }
   }
 }
@@ -326,9 +329,9 @@ function snapshotStatusColor(status: DomainSourceSnapshotStatus) {
         }}</span>
       </template>
       <template #snapshotStatus="{ row }">
-        <Tag :color="snapshotStatusColor(row.snapshot_status)">
+        <StatusChip :tone="snapshotStatusTone(row.snapshot_status)">
           {{ $t(`enum.domainSourceSnapshotStatus.${row.snapshot_status}`) }}
-        </Tag>
+        </StatusChip>
       </template>
       <template #lag="{ row }">
         <span
@@ -355,12 +358,12 @@ function snapshotStatusColor(status: DomainSourceSnapshotStatus) {
         <span v-else class="text-muted-foreground">—</span>
       </template>
       <template #cursorStatus="{ row }">
-        <Tag
+        <StatusChip
           v-if="row.cursor_status"
-          :color="cursorStatusColor(row.cursor_status)"
+          :tone="cursorStatusTone(row.cursor_status)"
         >
           {{ $t(`enum.domainCursorStatus.${row.cursor_status}`) }}
-        </Tag>
+        </StatusChip>
         <span v-else class="text-muted-foreground">
           {{ $t('page.research.domainSources.notObserved') }}
         </span>

@@ -28,7 +28,6 @@ import {
   Statistic,
   TabPane,
   Tabs,
-  Tag,
 } from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
@@ -40,6 +39,7 @@ import {
   runFullFeatureParity,
 } from '#/api/research';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
@@ -82,7 +82,6 @@ const { governed } = useGovernedAction();
 const { hasAccessByCodes } = useQpAccess();
 const researchStore = useResearchStore();
 const featureCellStateOptions = enumOptions('FeatureCellState');
-const runStatusOptions = enumOptions('FeatureParityRunStatus');
 
 const canMutate = hasAccessByCodes(['materialization:create']);
 const summary = ref<FeatureIntegritySummaryView | null>(null);
@@ -547,19 +546,13 @@ watch(
               :title="$t('page.research.featureIntegrity.summary.lastFull')"
               :value="formatDateTimeLocal(summary.last_full_run?.finished_at)"
             />
-            <Tag
+            <EnumTag
               v-if="summary.last_full_run"
               class="mt-2"
-              :color="
-                enumOption(runStatusOptions, summary.last_full_run.status)
-                  ?.color
-              "
-            >
-              {{
-                enumOption(runStatusOptions, summary.last_full_run.status)
-                  ?.label
-              }}
-            </Tag>
+              context="feature-integrity-summary"
+              name="FeatureParityRunStatus"
+              :value="summary.last_full_run.status"
+            />
           </Card>
           <Card size="small">
             <Statistic
@@ -568,19 +561,13 @@ watch(
                 formatDateTimeLocal(summary.last_sampled_run?.finished_at)
               "
             />
-            <Tag
+            <EnumTag
               v-if="summary.last_sampled_run"
               class="mt-2"
-              :color="
-                enumOption(runStatusOptions, summary.last_sampled_run.status)
-                  ?.color
-              "
-            >
-              {{
-                enumOption(runStatusOptions, summary.last_sampled_run.status)
-                  ?.label
-              }}
-            </Tag>
+              context="feature-integrity-summary"
+              name="FeatureParityRunStatus"
+              :value="summary.last_sampled_run.status"
+            />
           </Card>
         </div>
       </Spin>

@@ -5,13 +5,11 @@ import type { EnumPresentation } from '#/shared/presentation/enum-presentation';
 
 import { computed, watch } from 'vue';
 
-import { IconifyIcon } from '@vben/icons';
 import { ENUM_CATALOG } from '@vben/types';
-
-import { Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
 import { EMPTY_PLACEHOLDER } from '#/shared/components/format';
+import StatusChip from '#/shared/components/status-chip.vue';
 import { reportEnumDrift } from '#/shared/presentation/enum-drift';
 import { ENUM_PRESENTATION } from '#/shared/presentation/enum-presentation';
 
@@ -81,106 +79,13 @@ watch(
 </script>
 
 <template>
-  <Tag
-    :data-category-hue="presentation.categoryHue"
-    :data-emphasis="presentation.emphasis ?? 'subtle'"
-    :data-tone="presentation.tone"
+  <StatusChip
     class="enum-tag"
+    :category-hue="presentation.categoryHue"
+    :emphasis="presentation.emphasis"
+    :icon="presentation.icon"
+    :tone="presentation.tone"
   >
-    <IconifyIcon v-if="presentation.icon" :icon="presentation.icon" />
-    <span>{{ translatedLabel }}</span>
-  </Tag>
+    {{ translatedLabel }}
+  </StatusChip>
 </template>
-
-<style scoped>
-.enum-tag {
-  --enum-color: var(--qp-status-neutral);
-
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  margin-inline-end: 0;
-  font-weight: 620;
-  color: hsl(var(--enum-color));
-  background: hsl(var(--enum-color) / 11%);
-  border-color: hsl(var(--enum-color) / 38%);
-}
-
-[data-emphasis='solid'] {
-  color: hsl(var(--qp-text-primary));
-  background: hsl(var(--enum-color) / 23%);
-  border-color: hsl(var(--enum-color) / 72%);
-}
-
-[data-tone='success'] {
-  --enum-color: var(--qp-status-success);
-}
-
-[data-tone='running'] {
-  --enum-color: var(--qp-status-running);
-}
-
-[data-tone='queued'] {
-  --enum-color: var(--qp-status-queued);
-}
-
-[data-tone='warning'] {
-  --enum-color: var(--qp-status-warning);
-}
-
-[data-tone='danger'] {
-  --enum-color: var(--qp-status-danger);
-}
-
-[data-tone='paused'] {
-  --enum-color: var(--qp-status-paused);
-}
-
-[data-category-hue='1'] {
-  --enum-color: var(--qp-chart-cat-1);
-}
-
-[data-category-hue='2'] {
-  --enum-color: var(--qp-chart-cat-2);
-}
-
-[data-category-hue='3'] {
-  --enum-color: var(--qp-chart-cat-3);
-}
-
-[data-category-hue='4'] {
-  --enum-color: var(--qp-chart-cat-4);
-}
-
-[data-category-hue='5'] {
-  --enum-color: var(--qp-chart-cat-5);
-}
-
-[data-category-hue='6'] {
-  --enum-color: var(--qp-chart-cat-6);
-}
-
-[data-category-hue='7'] {
-  --enum-color: var(--qp-chart-cat-7);
-}
-
-[data-category-hue='8'] {
-  --enum-color: var(--qp-chart-cat-8);
-}
-
-[data-category-hue='9'] {
-  --enum-color: var(--qp-chart-cat-9);
-}
-
-[data-category-hue='10'] {
-  --enum-color: var(--qp-chart-cat-10);
-}
-
-[data-category-hue='11'] {
-  --enum-color: var(--qp-chart-cat-11);
-}
-
-[data-category-hue='12'] {
-  --enum-color: var(--qp-chart-cat-12);
-}
-</style>

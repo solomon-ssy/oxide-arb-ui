@@ -8,7 +8,6 @@ import { KILL_SWITCH_STATES } from '@vben/types';
 import { $t } from '#/locales';
 import GovernedStatePickerPopover from '#/shared/components/header/governed-state-picker-popover.vue';
 import { useKillSwitchAction } from '#/shared/composables/use-system-actions';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'KillSwitchIndicator' });
@@ -18,11 +17,6 @@ const killSwitchAction = useKillSwitchAction();
 
 const killSwitch = computed(() => systemStore.status?.kill_switch ?? null);
 const currentState = computed(() => killSwitch.value?.state ?? null);
-
-const killSwitchTagOptions = enumOptions('KillSwitchState');
-const currentTag = computed(() =>
-  enumOption(killSwitchTagOptions, currentState.value),
-);
 
 const allStates = computed(() => Object.values(KILL_SWITCH_STATES));
 
@@ -39,7 +33,6 @@ const visible = computed(() => {
 
 const pickerOptions = computed(() =>
   allStates.value.map((state) => {
-    const tag = enumOption(killSwitchTagOptions, state);
     const current = currentState.value;
     const hidden =
       current !== null &&
@@ -49,8 +42,6 @@ const pickerOptions = computed(() =>
       danger: state === KILL_SWITCH_STATES.emergencyHalted,
       disabled: state === current,
       hidden,
-      label: tag?.label ?? state,
-      tagColor: tag?.color,
       value: state,
     };
   }),
@@ -75,10 +66,9 @@ async function onSelect(raw: string) {
   <GovernedStatePickerPopover
     v-if="visible"
     :current-value="currentState"
-    icon="lucide:shield-alert"
+    enum-name="KillSwitchState"
+    :fallback-label="$t('page.header.killSwitchPicker.unknown')"
     :options="pickerOptions"
-    :tag-color="currentTag?.color ?? 'default'"
-    :tag-label="currentTag?.label ?? $t('page.header.killSwitchPicker.unknown')"
     :title="$t('page.header.killSwitchPicker.title')"
     @select="onSelect"
   />

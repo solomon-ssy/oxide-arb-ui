@@ -13,7 +13,6 @@ import {
   Descriptions,
   DescriptionsItem,
   Empty,
-  Tag,
   Timeline,
   TimelineItem,
   Tooltip,
@@ -24,6 +23,7 @@ import { $t } from '#/locales';
 import EntryConditionPanel from '#/shared/components/domain/execution/entry-condition-panel.vue';
 import ExitMonitorCard from '#/shared/components/domain/execution/exit-monitor-card.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatBps,
@@ -34,7 +34,7 @@ import {
   formatShares,
   formatUsd,
 } from '#/shared/components/format';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
 import { useIntentActions } from './use-intent-actions';
 
@@ -49,13 +49,6 @@ const emit = defineEmits<{
 }>();
 
 const { handleRequest } = useRequestHandler();
-
-const statusTagOptions = enumOptions('OrderIntentStatus');
-const approvalTagOptions = enumOptions('ApprovalStatus');
-const modeTagOptions = enumOptions('QuantRuntimeMode');
-const kindTagOptions = enumOptions('OrderIntentKind');
-const sideTagOptions = enumOptions('Side');
-const executionStateTagOptions = enumOptions('ExecutionOrderState');
 
 const { approve, canApprove, canCancel, canReject, cancel, reject } =
   useIntentActions(() => emit('changed'));
@@ -100,22 +93,26 @@ onMounted(() => void loadExecutionOrders());
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-1">
         <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="enumOption(statusTagOptions, intent.status)?.color">
-            {{ enumOption(statusTagOptions, intent.status)?.label }}
-          </Tag>
-          <Tag
-            :color="
-              enumOption(approvalTagOptions, intent.approval_status)?.color
-            "
-          >
-            {{ enumOption(approvalTagOptions, intent.approval_status)?.label }}
-          </Tag>
-          <Tag :color="enumOption(modeTagOptions, intent.runtime_mode)?.color">
-            {{ enumOption(modeTagOptions, intent.runtime_mode)?.label }}
-          </Tag>
-          <Tag :color="enumOption(kindTagOptions, intent.intent_kind)?.color">
-            {{ enumOption(kindTagOptions, intent.intent_kind)?.label }}
-          </Tag>
+          <EnumTag
+            context="intent-detail"
+            name="OrderIntentStatus"
+            :value="intent.status"
+          />
+          <EnumTag
+            context="intent-detail"
+            name="ApprovalStatus"
+            :value="intent.approval_status"
+          />
+          <EnumTag
+            context="intent-detail"
+            name="QuantRuntimeMode"
+            :value="intent.runtime_mode"
+          />
+          <EnumTag
+            context="intent-detail"
+            name="OrderIntentKind"
+            :value="intent.intent_kind"
+          />
         </div>
         <span
           class="font-mono text-xs break-all"
@@ -294,9 +291,7 @@ onMounted(() => void loadExecutionOrders());
             </span>
           </DescriptionsItem>
           <DescriptionsItem :label="$t('page.quantIntents.detail.entry.side')">
-            <Tag :color="enumOption(sideTagOptions, entry.side)?.color">
-              {{ enumOption(sideTagOptions, entry.side)?.label }}
-            </Tag>
+            <EnumTag context="intent-detail" name="Side" :value="entry.side" />
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.quantIntents.detail.entry.orderType')"
@@ -426,11 +421,14 @@ onMounted(() => void loadExecutionOrders());
       </template>
       <Timeline
         v-if="executionOrders.length > 0"
+        mode="start"
         :pending="loadingOrders || undefined"
+        variant="outlined"
       >
         <TimelineItem
           v-for="record in executionOrders"
           :key="record.execution_order_id"
+          :color="enumTimelineColor('ExecutionOrderState', record.state)"
         >
           <div class="flex flex-col gap-1">
             <div class="flex flex-wrap items-center gap-2">
@@ -443,30 +441,26 @@ onMounted(() => void loadExecutionOrders());
                 v-if="record.error_message"
                 :title="record.error_message"
               >
-                <Tag
-                  :color="
-                    enumOption(executionStateTagOptions, record.state)?.color
-                  "
-                >
-                  {{
-                    enumOption(executionStateTagOptions, record.state)?.label
-                  }}
-                </Tag>
+                <EnumTag
+                  context="intent-detail"
+                  name="ExecutionOrderState"
+                  :value="record.state"
+                />
               </Tooltip>
-              <Tag
+              <EnumTag
                 v-else
-                :color="
-                  enumOption(executionStateTagOptions, record.state)?.color
-                "
-              >
-                {{ enumOption(executionStateTagOptions, record.state)?.label }}
-              </Tag>
+                context="intent-detail"
+                name="ExecutionOrderState"
+                :value="record.state"
+              />
             </div>
             <span class="text-muted-foreground text-xs">
               {{ $t(`enum.executionOrderPhase.${record.order_phase}`) }} ·
               {{ formatPrice(record.price) }} ·
               {{ formatShares(record.shares) }} ·
-              {{ formatDateTimeLocal(record.submitted_at) }}
+              <span data-screenshot-volatile="true">{{
+                formatDateTimeLocal(record.submitted_at)
+              }}</span>
             </span>
           </div>
         </TimelineItem>

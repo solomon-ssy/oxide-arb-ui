@@ -5,6 +5,8 @@ import type {
   ReportRouteDiagnosticsView,
 } from '@vben/types';
 
+import type { EnumTone } from '#/shared/presentation/enum-presentation';
+
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -19,6 +21,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
@@ -26,7 +29,7 @@ import {
   formatScore,
   formatUsd,
 } from '#/shared/components/format';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
+import StatusChip from '#/shared/components/status-chip.vue';
 import SubjectParityPanel from '#/views/research/data-reliability/modules/integrity/components/subject-parity-panel.vue';
 
 defineOptions({ name: 'ReportOverview' });
@@ -41,8 +44,6 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const statusTagOptions = enumOptions('RecommendationReportStatus');
-const modeTagOptions = enumOptions('QuantRuntimeMode');
 
 const summary = computed(() => props.report.summary);
 const factDelivery = computed(() => props.report.fact_delivery);
@@ -116,30 +117,12 @@ const routeColumns = [
   },
 ];
 
-function factDeliveryColor(status: string | undefined) {
-  switch (status) {
-    case 'delivering': {
-      return 'processing';
-    }
-    case 'failed': {
-      return 'error';
-    }
-    case 'retrying': {
-      return 'warning';
-    }
-    case 'verified': {
-      return 'success';
-    }
-    default: {
-      return 'default';
-    }
-  }
-}
-
-function routeOutcomeColor(outcome: ReportRouteDiagnosticsView['outcome']) {
+function routeOutcomeTone(
+  outcome: ReportRouteDiagnosticsView['outcome'],
+): EnumTone {
   switch (outcome) {
     case 'failed': {
-      return 'error';
+      return 'danger';
     }
     case 'ready': {
       return 'success';
@@ -372,9 +355,11 @@ function openDecisionPolicyActivity() {
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.status')"
         >
-          <Tag :color="enumOption(statusTagOptions, report.status)?.color">
-            {{ enumOption(statusTagOptions, report.status)?.label }}
-          </Tag>
+          <EnumTag
+            context="report-overview"
+            name="RecommendationReportStatus"
+            :value="report.status"
+          />
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.routes')"
@@ -412,9 +397,11 @@ function openDecisionPolicyActivity() {
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.runtimeMode')"
         >
-          <Tag :color="enumOption(modeTagOptions, report.runtime_mode)?.color">
-            {{ enumOption(modeTagOptions, report.runtime_mode)?.label }}
-          </Tag>
+          <EnumTag
+            context="report-overview"
+            name="QuantRuntimeMode"
+            :value="report.runtime_mode"
+          />
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.decisionAt')"
@@ -502,14 +489,14 @@ function openDecisionPolicyActivity() {
           <Tag v-if="column.key === 'route'">
             {{ $t(`page.quantReports.routes.${record.route}`) }}
           </Tag>
-          <Tag
+          <StatusChip
             v-else-if="column.key === 'outcome'"
-            :color="routeOutcomeColor(record.outcome)"
+            :tone="routeOutcomeTone(record.outcome)"
           >
             {{
               $t(`page.quantReports.detail.routes.outcomes.${record.outcome}`)
             }}
-          </Tag>
+          </StatusChip>
           <span v-else-if="column.key === 'model'" class="font-mono text-xs">
             {{ record.lineage?.model_version_id ?? EMPTY_PLACEHOLDER }}
           </span>
@@ -642,15 +629,15 @@ function openDecisionPolicyActivity() {
         <DescriptionsItem
           :label="$t('page.quantReports.detail.factDelivery.status')"
         >
-          <Tag :color="factDeliveryColor(factDelivery?.status)">
-            {{
-              factDelivery
-                ? $t(
-                    `page.quantReports.detail.factDelivery.statuses.${factDelivery.status}`,
-                  )
-                : $t('page.quantReports.detail.factDelivery.missing')
-            }}
-          </Tag>
+          <EnumTag
+            v-if="factDelivery"
+            context="report-overview"
+            name="ReportFactDeliveryStatus"
+            :value="factDelivery.status"
+          />
+          <StatusChip v-else tone="neutral">
+            {{ $t('page.quantReports.detail.factDelivery.missing') }}
+          </StatusChip>
         </DescriptionsItem>
         <DescriptionsItem
           :label="

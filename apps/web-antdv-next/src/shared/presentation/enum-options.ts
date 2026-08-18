@@ -20,9 +20,9 @@ const TONE_COLOR: Record<EnumPresentation['tone'], string> = {
   category: 'geekblue',
   danger: 'error',
   neutral: 'default',
-  paused: 'blue',
-  queued: 'blue',
-  running: 'cyan',
+  paused: 'orange',
+  queued: 'purple',
+  running: 'blue',
   success: 'success',
   warning: 'warning',
 };

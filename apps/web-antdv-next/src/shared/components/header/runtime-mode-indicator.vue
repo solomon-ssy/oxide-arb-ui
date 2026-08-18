@@ -10,7 +10,6 @@ import GovernedStatePickerPopover from '#/shared/components/header/governed-stat
 import { usePreflightResult } from '#/shared/composables/use-preflight-result';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQuantModeAction } from '#/shared/composables/use-system-actions';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'RuntimeModeIndicator' });
@@ -30,21 +29,11 @@ const visible = computed(
   () => hasAccessByCodes(['system:switch_mode']) && currentMode.value !== null,
 );
 
-const modeTagOptions = enumOptions('QuantRuntimeMode');
-const currentTag = computed(() =>
-  enumOption(modeTagOptions, currentMode.value),
-);
-
 const pickerOptions = computed(() =>
-  QUANT_RUNTIME_MODE_OPTIONS.map((mode) => {
-    const tag = enumOption(modeTagOptions, mode);
-    return {
-      disabled: mode === currentMode.value,
-      label: tag?.label ?? mode,
-      tagColor: tag?.color,
-      value: mode,
-    };
-  }),
+  QUANT_RUNTIME_MODE_OPTIONS.map((mode) => ({
+    disabled: mode === currentMode.value,
+    value: mode,
+  })),
 );
 
 async function onSelect(raw: string) {
@@ -71,10 +60,9 @@ async function onSelect(raw: string) {
   <GovernedStatePickerPopover
     v-if="visible"
     :current-value="currentMode"
-    icon="lucide:gauge"
+    enum-name="QuantRuntimeMode"
+    :fallback-label="$t('page.header.modePicker.unknown')"
     :options="pickerOptions"
-    :tag-color="currentTag?.color ?? 'default'"
-    :tag-label="currentTag?.label ?? $t('page.header.modePicker.unknown')"
     :title="$t('page.header.modePicker.title')"
     @select="onSelect"
   />

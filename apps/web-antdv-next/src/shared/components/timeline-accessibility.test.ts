@@ -35,6 +35,82 @@ describe('antdv timeline accessibility contract', () => {
     }
   });
 
+  it('does not reserve a title column when items have no title', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const subject = defineComponent(
+      () => () =>
+        h(
+          Timeline,
+          { mode: 'start', pending: true, variant: 'outlined' },
+          {
+            default: () =>
+              h(
+                TimelineItem,
+                { color: 'green' },
+                {
+                  default: () => 'bootstrap committed',
+                },
+              ),
+          },
+        ),
+    );
+    const app = createApp(subject);
+
+    try {
+      app.mount(host);
+      await nextTick();
+
+      const root = host.querySelector('ol');
+      expect(root?.className).not.toContain('layout-alternate');
+      expect(host.textContent).toContain('bootstrap committed');
+    } finally {
+      app.unmount();
+      host.remove();
+    }
+  });
+
+  it('keeps pending and titled entries as native list items', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const subject = defineComponent(
+      () => () =>
+        h(
+          Timeline,
+          { mode: 'start', pending: true, variant: 'outlined' },
+          {
+            default: () =>
+              h(
+                TimelineItem,
+                { color: 'green', title: '2026-08-18 11:28' },
+                {
+                  default: () => 'bootstrap committed',
+                },
+              ),
+          },
+        ),
+    );
+    const app = createApp(subject);
+
+    try {
+      app.mount(host);
+      await nextTick();
+
+      const root = host.querySelector('ol');
+      const items = root?.querySelectorAll(':scope > li');
+      expect(root).not.toBeNull();
+      expect(items?.length).toBeGreaterThan(0);
+      for (const item of items ?? []) {
+        expect(item.getAttribute('role')).toBeNull();
+        expect(item.getAttribute('tabindex')).toBeNull();
+      }
+      expect(host.textContent).toContain('bootstrap committed');
+    } finally {
+      app.unmount();
+      host.remove();
+    }
+  });
+
   it('preserves interactive step semantics when an onChange handler exists', async () => {
     const host = document.createElement('div');
     document.body.append(host);

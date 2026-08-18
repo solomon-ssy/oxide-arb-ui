@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   activationPercent,
-  profileStatusColor,
   reduceFreshBootRead,
   retentionPercent,
   summarizeFreshBoot,
@@ -28,43 +27,41 @@ function history(): ExchangeHistoryFrontierProgress {
 describe('fresh-boot presentation', () => {
   it('distinguishes waiting and running states', () => {
     expect(summarizeFreshBoot('awaiting_history')).toEqual({
-      color: 'processing',
       status: 'waiting',
+      tone: 'queued',
     });
     expect(summarizeFreshBoot('bootstrapping')).toEqual({
-      color: 'processing',
       status: 'running',
+      tone: 'running',
     });
   });
 
   it('keeps retryable states visible', () => {
-    expect(profileStatusColor('waiting_evidence')).toBe('warning');
-    expect(profileStatusColor('retry_scheduled')).toBe('warning');
     expect(summarizeFreshBoot('first_report_queued')).toEqual({
-      color: 'processing',
       status: 'running',
+      tone: 'running',
     });
   });
 
   it('prioritizes terminal blockers', () => {
     expect(summarizeFreshBoot('blocked')).toEqual({
-      color: 'error',
       status: 'blocked',
+      tone: 'danger',
     });
   });
 
   it('does not let a vertical-route blocker negate a published pooled report', () => {
     expect(summarizeFreshBoot('partial_blocked', true)).toEqual({
-      color: 'success',
       status: 'succeeded',
+      tone: 'success',
     });
     expect(summarizeFreshBoot('partial_blocked', false)).toEqual({
-      color: 'error',
       status: 'blocked',
+      tone: 'danger',
     });
     expect(summarizeFreshBoot('all_routes_ready')).toEqual({
-      color: 'success',
       status: 'succeeded',
+      tone: 'success',
     });
   });
 

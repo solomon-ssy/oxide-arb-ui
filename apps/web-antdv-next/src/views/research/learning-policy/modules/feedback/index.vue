@@ -3,7 +3,6 @@ import type {
   DriftReportView,
   FeedbackCandidateReadyView,
   FeedbackCycleDetailView,
-  FeedbackCycleStatus,
   FeedbackCycleView,
   FeedbackOverviewView,
   FeedbackSchedulerListView,
@@ -65,6 +64,7 @@ import {
   triggerFeedbackCycle,
 } from '#/api/feedback';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
@@ -339,25 +339,6 @@ const workbenchState = computed(() =>
     loading: loading.value,
   }),
 );
-
-function statusColor(status: FeedbackCycleStatus) {
-  switch (status) {
-    case 'cancelled':
-    case 'failed':
-    case 'quarantined': {
-      return 'error';
-    }
-    case 'queued': {
-      return 'default';
-    }
-    case 'running': {
-      return 'processing';
-    }
-    case 'succeeded': {
-      return 'success';
-    }
-  }
-}
 
 function selectCycle(cycle: FeedbackCycleView) {
   void router.push({
@@ -1710,9 +1691,11 @@ onBeforeUnmount(() => {
                       {{ formatDateTimeLocal(cycle.created_at) }}
                     </span>
                   </span>
-                  <Tag :color="statusColor(cycle.status)">
-                    {{ $t(`page.research.feedback.status.${cycle.status}`) }}
-                  </Tag>
+                  <EnumTag
+                    context="feedback-cycle-list"
+                    name="FeedbackCycleStatus"
+                    :value="cycle.status"
+                  />
                 </button>
               </nav>
 

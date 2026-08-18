@@ -2702,8 +2702,13 @@
       "title": "Feedback & Retraining",
       "open": "Open Workbench",
       "history": "Verified history",
+      "historyMissing": "No evidence yet",
+      "historyObserved": "{observed} days",
+      "historyDays": "{observed} / {required} days",
       "latest": "Latest feedback",
-      "updatedAt": "Updated",
+      "updatedAt": "Cycle updated",
+      "updatedAtHint": "Timestamp of the latest feedback cycle. There is no timestamp until a cycle has been created.",
+      "noCycle": "No cycle yet",
       "openCycle": "Open latest cycle",
       "loadError": "Feedback snapshot failed to load",
       "invalidRevision": "Feedback snapshot revision was invalid or regressed",
@@ -2727,6 +2732,11 @@
       "title": "Action Inbox",
       "clear": "No operator actions are pending",
       "owner": "Owner: {owner}",
+      "severity": {
+        "critical": "Critical",
+        "info": "Info",
+        "warning": "Warning"
+      },
       "reason": {
         "unresolved_reconciliation": "An execution reconciliation remains unresolved",
         "basis_alert_unacknowledged": "A cross-source basis alert awaits acknowledgement",
@@ -3950,15 +3960,7 @@
         "missing": "Missing",
         "notVerified": "Report facts are not verified",
         "pendingDescription": "This report remains administrative-only. It cannot become current, actionable, or create an OrderIntent until both ClickHouse fact commitments are verified.",
-        "funnelBlocked": "The funnel is hidden until its complete row set has been delivered and hash-verified; an empty analytics query is not treated as a valid zero.",
-        "statuses": {
-          "pending": "Pending",
-          "delivering": "Delivering",
-          "retrying": "Retrying",
-          "failed": "Failed",
-          "cancelled": "Cancelled",
-          "verified": "Verified"
-        }
+        "funnelBlocked": "The funnel is hidden until its complete row set has been delivered and hash-verified; an empty analytics query is not treated as a valid zero."
       },
       "empty": {
         "title": "Empty report",

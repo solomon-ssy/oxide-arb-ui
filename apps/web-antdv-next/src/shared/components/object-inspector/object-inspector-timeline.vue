@@ -5,6 +5,7 @@ import { Timeline, TimelineItem } from 'antdv-next';
 
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
 defineOptions({ name: 'ObjectInspectorTimeline' });
 
@@ -14,8 +15,16 @@ defineProps<{
 </script>
 
 <template>
-  <Timeline>
-    <TimelineItem v-for="item in items" :key="item.key">
+  <Timeline mode="start" variant="outlined">
+    <TimelineItem
+      v-for="item in items"
+      :key="item.key"
+      :color="
+        item.status
+          ? enumTimelineColor(item.status.name, item.status.value)
+          : 'gray'
+      "
+    >
       <div class="inspector-timeline-item">
         <div class="inspector-timeline-heading">
           <span class="inspector-timeline-title">{{ item.title }}</span>
@@ -27,7 +36,11 @@ defineProps<{
             :value="item.status.value"
           />
         </div>
-        <span v-if="item.occurredAt" class="inspector-timeline-time">
+        <span
+          v-if="item.occurredAt"
+          class="inspector-timeline-time"
+          data-screenshot-volatile="true"
+        >
           {{ formatDateTimeLocal(item.occurredAt) }}
         </span>
         <p v-if="item.description" class="inspector-timeline-description">

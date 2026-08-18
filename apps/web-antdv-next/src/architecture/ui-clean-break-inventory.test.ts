@@ -377,6 +377,19 @@ describe('ui fresh-boot clean-break inventory', () => {
     expect(violations).toEqual([]);
   });
 
+  it('paints generated enums with EnumTag instead of antd Tag colors', () => {
+    const violations = productionSources()
+      .filter(
+        ({ content, path }) =>
+          path.endsWith('.vue') &&
+          /:color="[^"]*enumOption\(|:color="\w+Tag\??\.color"/.test(content),
+      )
+      .map(({ path }) => path.slice(APP_ROOT.length + 1))
+      .toSorted();
+
+    expect(violations).toEqual([]);
+  });
+
   it('keeps page locales symmetric and free of dead keys', () => {
     const localeRoot = join(APP_ROOT, 'src/locales/langs');
     const english = localeLeaves(loadJson(join(localeRoot, 'en-US/page.json')));

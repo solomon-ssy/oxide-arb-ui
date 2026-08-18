@@ -20,13 +20,13 @@ import { Alert, Button, Skeleton, Tag } from 'antdv-next';
 
 import { getRuntimeControls, getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import {
   useKillSwitchAction,
   useQuantModeAction,
   useSettlementWritePolicyAction,
 } from '#/shared/composables/use-system-actions';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { useSystemStore } from '#/store';
 
 defineOptions({ name: 'RuntimeControlPanel' });
@@ -99,32 +99,9 @@ const killSwitch = computed<KillSwitchView | null>(() => {
     state: snapshot.kill_switch_state,
   };
 });
-const modeTag = computed(() =>
-  enumOption(
-    enumOptions('QuantRuntimeMode'),
-    controls.value?.quant_runtime_mode,
-  ),
+const settlementPolicy = computed(
+  () => controls.value?.settlement_write_policy ?? null,
 );
-const killSwitchTag = computed(() =>
-  enumOption(enumOptions('KillSwitchState'), controls.value?.kill_switch_state),
-);
-const settlementPolicyColor = computed(() => {
-  switch (controls.value?.settlement_write_policy) {
-    case SETTLEMENT_WRITE_POLICIES.auto: {
-      return 'error';
-    }
-    case SETTLEMENT_WRITE_POLICIES.disabled: {
-      return 'default';
-    }
-    case SETTLEMENT_WRITE_POLICIES.governedCanary:
-    case SETTLEMENT_WRITE_POLICIES.semiAuto: {
-      return 'warning';
-    }
-    default: {
-      return 'default';
-    }
-  }
-});
 const isRestricted = computed(
   () =>
     Boolean(controls.value) &&
@@ -250,9 +227,11 @@ onMounted(() => void loadTruth());
             {{ $t('page.config.operationalControl.quantMode') }}
           </dt>
           <dd class="mt-1">
-            <Tag v-if="modeTag" :color="modeTag.color">
-              {{ modeTag.label }}
-            </Tag>
+            <EnumTag
+              context="runtime-control"
+              name="QuantRuntimeMode"
+              :value="controls.quant_runtime_mode"
+            />
           </dd>
         </div>
         <div class="bg-card px-4 py-3">
@@ -260,13 +239,11 @@ onMounted(() => void loadTruth());
             {{ $t('page.config.operationalControl.settlementWritePolicy') }}
           </dt>
           <dd class="mt-1">
-            <Tag :color="settlementPolicyColor">
-              {{
-                $t(
-                  `enum.settlementWritePolicy.${controls.settlement_write_policy}`,
-                )
-              }}
-            </Tag>
+            <EnumTag
+              context="runtime-control"
+              name="SettlementWritePolicy"
+              :value="settlementPolicy"
+            />
           </dd>
         </div>
         <div class="bg-card px-4 py-3">
@@ -274,9 +251,11 @@ onMounted(() => void loadTruth());
             {{ $t('page.config.operationalControl.killSwitch') }}
           </dt>
           <dd class="mt-1">
-            <Tag v-if="killSwitchTag" :color="killSwitchTag.color">
-              {{ killSwitchTag.label }}
-            </Tag>
+            <EnumTag
+              context="runtime-control"
+              name="KillSwitchState"
+              :value="controls.kill_switch_state"
+            />
           </dd>
         </div>
         <div class="bg-card px-4 py-3">

@@ -7,21 +7,14 @@ import { useRouter } from 'vue-router';
 import { useVbenDrawer } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
 
-import {
-  Button,
-  Card,
-  Descriptions,
-  DescriptionsItem,
-  Spin,
-  Tag,
-} from 'antdv-next';
+import { Button, Card, Descriptions, DescriptionsItem, Spin } from 'antdv-next';
 
 import { getModelSpec } from '#/api/research';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 import InputContractEditor from './input-contract-editor.vue';
 import {
@@ -39,17 +32,11 @@ const router = useRouter();
 const { handleRequest } = useRequestHandler();
 const { hasAccessByCodes } = useQpAccess();
 
-const familyTagOptions = enumOptions('ModelFamily');
-
 const canCreateDataset = hasAccessByCodes(['materialization:create']);
 
 const spec = ref<null | QuantModelSpecView>(null);
 const loading = ref(false);
 const openId = ref<null | string>(null);
-
-const familyTag = computed(() =>
-  enumOption(familyTagOptions, spec.value?.model_family),
-);
 
 const targetLabel = computed(() =>
   spec.value ? trainingTargetLabel(spec.value.training_contract.target) : '—',
@@ -125,7 +112,11 @@ const [, drawerApi] = useVbenDrawer({
     <Spin :spinning="loading">
       <div v-if="spec" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">
-          <Tag :color="familyTag?.color">{{ familyTag?.label }}</Tag>
+          <EnumTag
+            context="model-spec-detail"
+            name="ModelFamily"
+            :value="spec.model_family"
+          />
         </div>
 
         <Card

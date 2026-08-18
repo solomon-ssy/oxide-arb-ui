@@ -9,9 +9,9 @@ import { IconifyIcon } from '@vben/icons';
 import { Button, Empty, Select, Table, Tag, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatBps, formatScore, formatUsd } from '#/shared/components/format';
 import { vAccessibleTableScroll } from '#/shared/directives/accessible-table-scroll';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'ReportRecommendationsTable' });
 
@@ -58,9 +58,6 @@ function rowProps(record: QuantRecommendationView) {
     },
   };
 }
-
-const sideTagOptions = enumOptions('OutcomeSide');
-const statusTagOptions = enumOptions('RecommendationStatus');
 
 const columns = [
   {
@@ -200,9 +197,11 @@ const columns = [
         <Tag>{{ $t(`page.quantReports.routes.${record.route}`) }}</Tag>
       </template>
       <template v-else-if="column.key === 'outcome_side'">
-        <Tag :color="enumOption(sideTagOptions, record.outcome_side)?.color">
-          {{ enumOption(sideTagOptions, record.outcome_side)?.label }}
-        </Tag>
+        <EnumTag
+          context="report-recommendations"
+          name="OutcomeSide"
+          :value="record.outcome_side"
+        />
       </template>
       <template v-else-if="column.key === 'profit_probability'">
         <span class="font-mono">{{
@@ -245,17 +244,20 @@ const columns = [
         </span>
       </template>
       <template v-else-if="column.key === 'eligibility'">
-        <Tag
+        <EnumTag
           v-for="mode in record.execution_eligibility.eligible_modes"
           :key="mode"
-        >
-          {{ $t(`enum.quantRuntimeMode.${mode}`) }}
-        </Tag>
+          context="report-recommendations"
+          name="QuantRuntimeMode"
+          :value="mode"
+        />
       </template>
       <template v-else-if="column.key === 'status'">
-        <Tag :color="enumOption(statusTagOptions, record.status)?.color">
-          {{ enumOption(statusTagOptions, record.status)?.label }}
-        </Tag>
+        <EnumTag
+          context="report-recommendations"
+          name="RecommendationStatus"
+          :value="record.status"
+        />
       </template>
       <template v-else-if="column.key === 'open'">
         <Tooltip

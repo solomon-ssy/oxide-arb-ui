@@ -25,6 +25,7 @@ import {
 
 import { getReportDiff } from '#/api/quant-reports';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatBps,
@@ -32,7 +33,6 @@ import {
   formatScore,
   formatUsd,
 } from '#/shared/components/format';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 import { useReportComparePicker } from '../use-report-compare-picker';
 
@@ -42,9 +42,6 @@ const props = defineProps<{ report: QuantReportDetailView }>();
 
 const { handleRequest } = useRequestHandler();
 const { load, loading: optionsLoading, options } = useReportComparePicker();
-
-const sideTagOptions = enumOptions('OutcomeSide');
-const statusTagOptions = enumOptions('RecommendationReportStatus');
 
 // The report being viewed is always the *compare* (newer) side; the picker
 // chooses the *baseline* (older) side. Diff = baseline -> this report.
@@ -109,14 +106,6 @@ const deltaColumns = [
 const hasCompare = computed(() => options.value.length > 0);
 const baselineOption = computed(() =>
   options.value.find((option) => option.value === baselineId.value),
-);
-const thisStatusTag = computed(() =>
-  enumOption(statusTagOptions, props.report.status),
-);
-const baselineStatusTag = computed(() =>
-  baselineOption.value
-    ? enumOption(statusTagOptions, baselineOption.value.status)
-    : undefined,
 );
 
 function deltaRowKey(row: RecommendationDeltaView): string {
@@ -265,13 +254,13 @@ onMounted(async () => {
                   ? formatDateTimeLocal(baselineOption.decision_at)
                   : EMPTY_PLACEHOLDER
               }}</span>
-              <Tag
-                v-if="baselineStatusTag"
+              <EnumTag
+                v-if="baselineOption"
                 class="ml-1"
-                :color="baselineStatusTag.color"
-              >
-                {{ baselineStatusTag.label }}
-              </Tag>
+                context="report-diff"
+                name="RecommendationReportStatus"
+                :value="baselineOption.status"
+              />
             </span>
             <span>→</span>
             <span>
@@ -279,13 +268,12 @@ onMounted(async () => {
               <span class="font-mono">{{
                 formatDateTimeLocal(report.decision_at)
               }}</span>
-              <Tag
-                v-if="thisStatusTag"
+              <EnumTag
                 class="ml-1"
-                :color="thisStatusTag.color"
-              >
-                {{ thisStatusTag.label }}
-              </Tag>
+                context="report-diff"
+                name="RecommendationReportStatus"
+                :value="report.status"
+              />
             </span>
           </div>
         </template>
@@ -365,11 +353,11 @@ onMounted(async () => {
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'outcome_side'">
-              <Tag
-                :color="enumOption(sideTagOptions, record.outcome_side)?.color"
-              >
-                {{ enumOption(sideTagOptions, record.outcome_side)?.label }}
-              </Tag>
+              <EnumTag
+                context="report-diff"
+                name="OutcomeSide"
+                :value="record.outcome_side"
+              />
             </template>
             <template v-else-if="column.key === 'base_rank'">
               {{ record.base?.rank ?? EMPTY_PLACEHOLDER }}

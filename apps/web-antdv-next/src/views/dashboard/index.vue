@@ -5,17 +5,21 @@ import type {
   DashboardSection,
   DashboardWindow,
   ExchangeHistoryQuarantineView,
-  FeedbackCycleStatus,
   FeedbackOverviewView,
   FreshBootProfileProgressView,
   FreshBootProgressView,
   FreshBootRunDetailView,
+  FreshBootStatus,
   QuantRecommendationView,
 } from '@vben/types';
 
 import type { DashboardSnapshot } from './modules/dashboard-snapshot';
 
-import type { FeedbackProfileReadinessState } from '#/views/research/learning-policy/modules/feedback/modules/feedback-profile-presentation';
+import type { EnumTone } from '#/shared/presentation/enum-presentation';
+import type {
+  FeedbackProfilePresentation,
+  FeedbackProfileReadinessState,
+} from '#/views/research/learning-policy/modules/feedback/modules/feedback-profile-presentation';
 
 import {
   computed,
@@ -38,7 +42,6 @@ import {
 } from '@vueuse/core';
 import {
   Alert,
-  Badge,
   Button,
   Descriptions,
   DescriptionsItem,
@@ -47,7 +50,8 @@ import {
   Progress,
   Segmented,
   Skeleton,
-  Tag,
+  Timeline,
+  TimelineItem,
 } from 'antdv-next';
 
 import {
@@ -58,6 +62,7 @@ import {
 } from '#/api/system';
 import { $t } from '#/locales';
 import RuntimeActivityFeed from '#/shared/components/activity/activity-feed.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   formatBps,
   formatDateTimeLocal,
@@ -68,13 +73,14 @@ import {
 } from '#/shared/components/format';
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import KpiCard from '#/shared/components/kpi-card.vue';
+import StatusChip from '#/shared/components/status-chip.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { useQpWs } from '#/shared/composables/use-qp-ws';
 import { useRunReportAction } from '#/shared/composables/use-run-report-action';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 import {
   useFeedbackStore,
   useQuantReportStore,
@@ -187,6 +193,14 @@ function canSupersedeFreshBoot(profile: FreshBootProfileProgressView) {
   return (
     hasAccessByCodes(['system:resolve']) &&
     profile.run.status === 'blocked_terminal'
+  );
+}
+
+function freshBootPending(status: FreshBootStatus) {
+  return (
+    status === 'running' ||
+    status === 'waiting_evidence' ||
+    status === 'retry_scheduled'
   );
 }
 
@@ -308,18 +322,36 @@ const executionRuntime = computed(() =>
   valueOf(overview.value?.execution_runtime),
 );
 
-const runtimeModeTag = computed(() =>
-  enumOption(
-    enumOptions('QuantRuntimeMode'),
-    authority.value?.system.quant_runtime_mode,
-  ),
-);
-const killSwitchTag = computed(() =>
-  enumOption(
-    enumOptions('KillSwitchState'),
-    authority.value?.system.kill_switch.state,
-  ),
-);
+const wsTone = computed<EnumTone>(() => {
+  switch (qpWs.status.value) {
+    case 'connected': {
+      return 'success';
+    }
+    case 'connecting': {
+      return 'running';
+    }
+    case 'reconnecting': {
+      return 'warning';
+    }
+    default: {
+      return 'danger';
+    }
+  }
+});
+const bookFreshnessTone = computed<EnumTone>(() => {
+  const age = authority.value?.system.market_data.last_message_age_ms;
+  const maxAge = quality.value?.max_book_age_ms;
+  if (typeof age !== 'number') return 'neutral';
+  if (typeof maxAge === 'number' && maxAge > 0) {
+    if (age <= maxAge) return 'running';
+    if (age <= maxAge * 2) return 'warning';
+    return 'danger';
+  }
+  if (age <= 1000) return 'running';
+  if (age <= 5000) return 'running';
+  if (age <= 15_000) return 'warning';
+  return 'danger';
+});
 const actions = computed(() => {
   const values = valueOf(overview.value?.action_inbox) ?? [];
   const order: Record<DashboardActionItemView['severity'], number> = {
@@ -460,12 +492,6 @@ const kpis = computed(() => [
   },
 ]);
 
-const wsColor: Record<string, string> = {
-  connected: 'success',
-  connecting: 'processing',
-  disconnected: 'error',
-  reconnecting: 'warning',
-};
 const primaryActionLabel = computed(() =>
   authority.value
     ? $t(`page.dashboard.primaryAction.${authority.value.primary_action}`)
@@ -636,23 +662,42 @@ function openSelectedRecommendation() {
   });
 }
 
-function severityStatus(severity: DashboardActionItemView['severity']) {
-  if (severity === 'critical') return 'error';
+function severityTone(severity: DashboardActionItemView['severity']): EnumTone {
+  if (severity === 'critical') return 'danger';
   if (severity === 'warning') return 'warning';
-  return 'processing';
+  return 'queued';
 }
 
-function readinessColor(state: FeedbackProfileReadinessState) {
+function readinessTone(state: FeedbackProfileReadinessState): EnumTone {
   if (state === 'ready') return 'success';
-  if (state === 'blocked') return 'error';
+  if (state === 'blocked') return 'danger';
   return 'warning';
 }
 
-function feedbackStatusColor(status: FeedbackCycleStatus | null) {
-  if (status === 'cancelled' || status === 'failed') return 'error';
-  if (status === 'running') return 'processing';
-  if (status === 'succeeded') return 'success';
-  return status === 'queued' ? 'default' : 'warning';
+function historyTone(profile: FeedbackProfilePresentation): EnumTone {
+  if (profile.observedHistoryDays === null) return 'warning';
+  if (
+    profile.requiredHistoryDays !== null &&
+    profile.observedHistoryDays >= profile.requiredHistoryDays
+  ) {
+    return 'success';
+  }
+  return 'warning';
+}
+
+function historyLabel(profile: FeedbackProfilePresentation) {
+  if (profile.observedHistoryDays === null) {
+    return $t('page.dashboard.feedback.historyMissing');
+  }
+  if (profile.requiredHistoryDays === null) {
+    return $t('page.dashboard.feedback.historyObserved', {
+      observed: profile.observedHistoryDays,
+    });
+  }
+  return $t('page.dashboard.feedback.historyDays', {
+    observed: profile.observedHistoryDays,
+    required: profile.requiredHistoryDays,
+  });
 }
 
 function activateDashboard() {
@@ -731,16 +776,19 @@ onBeforeUnmount(() => {
                   >
                     {{ $t('page.dashboard.commandCenter.title') }}
                   </h1>
-                  <Tag v-if="refreshing" color="processing">
+                  <StatusChip v-if="refreshing" tone="running">
                     {{ $t('page.dashboard.commandCenter.refreshing') }}
-                  </Tag>
-                  <Tag v-else-if="partialSections.length > 0" color="warning">
+                  </StatusChip>
+                  <StatusChip
+                    v-else-if="partialSections.length > 0"
+                    tone="warning"
+                  >
                     {{
                       $t('page.dashboard.commandCenter.partial', {
                         count: partialSections.length,
                       })
                     }}
-                  </Tag>
+                  </StatusChip>
                 </div>
                 <p class="text-muted-foreground mt-1 text-sm">
                   {{ $t('page.dashboard.commandCenter.subtitle') }}
@@ -772,44 +820,55 @@ onBeforeUnmount(() => {
             </div>
             <dl
               v-if="authority"
-              class="relative mt-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-3 xl:grid-cols-6"
+              class="relative mt-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-3 xl:grid-cols-5"
             >
               <div class="status-cell">
                 <dt>{{ $t('page.dashboard.status.runtimeMode') }}</dt>
                 <dd>
-                  <Tag :color="runtimeModeTag?.color ?? 'default'">
-                    {{ runtimeModeTag?.label ?? '—' }}
-                  </Tag>
+                  <EnumTag
+                    context="dashboard-status"
+                    name="QuantRuntimeMode"
+                    :value="authority.system.quant_runtime_mode"
+                  />
                 </dd>
               </div>
               <div class="status-cell">
                 <dt>{{ $t('page.dashboard.status.killSwitch') }}</dt>
                 <dd>
-                  <Tag :color="killSwitchTag?.color ?? 'default'">
-                    {{ killSwitchTag?.label ?? '—' }}
-                  </Tag>
+                  <EnumTag
+                    context="dashboard-status"
+                    name="KillSwitchState"
+                    :value="authority.system.kill_switch.state"
+                  />
                 </dd>
               </div>
               <div class="status-cell">
                 <dt>{{ $t('page.dashboard.status.ws') }}</dt>
                 <dd>
-                  <Tag :color="wsColor[qpWs.status.value]">
+                  <StatusChip :tone="wsTone">
                     {{ $t(`page.ws.status.${qpWs.status.value}`) }}
-                  </Tag>
+                  </StatusChip>
                 </dd>
               </div>
               <div class="status-cell" data-screenshot-volatile="true">
                 <dt>{{ $t('page.dashboard.status.bookFreshness') }}</dt>
                 <dd>
-                  {{
-                    authority.system.market_data.last_message_age_ms ?? '—'
-                  }}ms
+                  <StatusChip :tone="bookFreshnessTone">
+                    {{
+                      authority.system.market_data.last_message_age_ms ?? '—'
+                    }}ms
+                  </StatusChip>
                 </dd>
               </div>
               <div class="status-cell">
                 <dt>{{ $t('page.dashboard.status.latestReport') }}</dt>
                 <dd>
-                  {{ formatDateTimeLocal(latestReport?.report.decision_at) }}
+                  <StatusChip
+                    :category-hue="latestReport ? 8 : undefined"
+                    :tone="latestReport ? 'category' : 'queued'"
+                  >
+                    {{ formatDateTimeLocal(latestReport?.report.decision_at) }}
+                  </StatusChip>
                 </dd>
               </div>
             </dl>
@@ -880,8 +939,8 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
-            <div class="xl:col-span-7">
+          <div class="dashboard-equal-row">
+            <div class="dashboard-equal-lead">
               <InsightPanel
                 :title="$t('page.dashboard.runtimeActivity.title')"
                 icon="lucide:activity"
@@ -908,7 +967,7 @@ onBeforeUnmount(() => {
                 />
               </InsightPanel>
             </div>
-            <div class="grid gap-5 xl:col-span-5">
+            <div class="grid gap-5">
               <InsightPanel
                 :title="$t('page.dashboard.reportRuntime.title')"
                 icon="lucide:file-chart-column"
@@ -990,22 +1049,22 @@ onBeforeUnmount(() => {
                 />
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs">
-                <Tag color="success">
+                <StatusChip tone="success">
                   {{ $t('page.dashboard.dataQuality.fresh') }} ·
                   {{ quality.fresh }}
-                </Tag>
-                <Tag color="processing">
+                </StatusChip>
+                <StatusChip tone="running">
                   {{ $t('page.dashboard.dataQuality.acceptable') }} ·
                   {{ quality.acceptable }}
-                </Tag>
-                <Tag color="warning">
+                </StatusChip>
+                <StatusChip tone="warning">
                   {{ $t('page.dashboard.dataQuality.degraded') }} ·
                   {{ quality.degraded }}
-                </Tag>
-                <Tag color="error">
+                </StatusChip>
+                <StatusChip tone="danger">
                   {{ $t('page.dashboard.dataQuality.stale') }} ·
                   {{ quality.stale }}
-                </Tag>
+                </StatusChip>
               </div>
               <p class="text-muted-foreground mt-3 text-xs">
                 {{ quality.worst_book_age_ms }}ms /
@@ -1111,39 +1170,33 @@ onBeforeUnmount(() => {
                     <span class="min-w-0 flex-1 truncate font-mono text-xs">
                       {{ profile.profileId }}
                     </span>
-                    <Tag>
+                    <EnumTag
+                      v-if="profile.category"
+                      name="MarketCategory"
+                      :value="profile.category"
+                    />
+                    <StatusChip v-else :category-hue="10" tone="category">
                       {{
-                        profile.category
-                          ? $t(`enum.marketCategory.${profile.category}`)
-                          : $t(
-                              'page.research.feedback.profile.category.control',
-                            )
+                        $t('page.research.feedback.profile.category.control')
                       }}
-                    </Tag>
-                    <Tag :color="readinessColor(profile.readinessState)">
+                    </StatusChip>
+                    <StatusChip :tone="readinessTone(profile.readinessState)">
                       {{
                         $t(
                           `page.research.feedback.profile.readiness.${profile.readinessState}`,
                         )
                       }}
-                    </Tag>
+                    </StatusChip>
                   </div>
                   <dl class="mt-3 grid gap-2 text-xs">
                     <div class="flex items-start justify-between gap-3">
                       <dt class="text-muted-foreground">
                         {{ $t('page.dashboard.feedback.history') }}
                       </dt>
-                      <dd class="text-right font-mono tabular-nums">
-                        <template v-if="profile.observedHistoryDays !== null">
-                          {{ profile.observedHistoryDays }} /
-                          {{
-                            profile.requiredHistoryDays ??
-                            $t('page.research.feedback.profile.notObserved')
-                          }}
-                        </template>
-                        <template v-else>
-                          {{ $t('page.research.feedback.profile.notObserved') }}
-                        </template>
+                      <dd>
+                        <StatusChip :tone="historyTone(profile)">
+                          {{ historyLabel(profile) }}
+                        </StatusChip>
                       </dd>
                     </div>
                     <div class="flex items-start justify-between gap-3">
@@ -1151,19 +1204,15 @@ onBeforeUnmount(() => {
                         {{ $t('page.dashboard.feedback.latest') }}
                       </dt>
                       <dd class="flex flex-wrap justify-end gap-1 text-right">
-                        <Tag
-                          :color="
-                            feedbackStatusColor(profile.latestCycleStatus)
-                          "
-                        >
-                          {{
-                            profile.latestCycleStatus
-                              ? $t(
-                                  `page.research.feedback.status.${profile.latestCycleStatus}`,
-                                )
-                              : $t('page.research.feedback.profile.notObserved')
-                          }}
-                        </Tag>
+                        <EnumTag
+                          v-if="profile.latestCycleStatus"
+                          context="dashboard-feedback"
+                          name="FeedbackCycleStatus"
+                          :value="profile.latestCycleStatus"
+                        />
+                        <StatusChip v-else tone="neutral">
+                          {{ $t('page.dashboard.feedback.noCycle') }}
+                        </StatusChip>
                         <span v-if="profile.latestDecision">
                           {{
                             $t(
@@ -1174,15 +1223,23 @@ onBeforeUnmount(() => {
                       </dd>
                     </div>
                     <div class="flex items-start justify-between gap-3">
-                      <dt class="text-muted-foreground">
+                      <dt
+                        class="text-muted-foreground"
+                        :title="$t('page.dashboard.feedback.updatedAtHint')"
+                      >
                         {{ $t('page.dashboard.feedback.updatedAt') }}
                       </dt>
                       <dd class="text-right">
-                        {{
-                          profile.latestUpdatedAt
-                            ? formatDateTimeLocal(profile.latestUpdatedAt)
-                            : $t('page.research.feedback.profile.notObserved')
-                        }}
+                        <time
+                          v-if="profile.latestUpdatedAt"
+                          class="font-mono tabular-nums"
+                          :datetime="profile.latestUpdatedAt"
+                        >
+                          {{ formatDateTimeLocal(profile.latestUpdatedAt) }}
+                        </time>
+                        <StatusChip v-else tone="warning">
+                          {{ $t('page.dashboard.feedback.noCycle') }}
+                        </StatusChip>
                       </dd>
                     </div>
                   </dl>
@@ -1232,7 +1289,9 @@ onBeforeUnmount(() => {
                 type="button"
                 @click="navigate(action.target_route)"
               >
-                <Badge :status="severityStatus(action.severity)" />
+                <StatusChip :tone="severityTone(action.severity)">
+                  {{ $t(`page.dashboard.inbox.severity.${action.severity}`) }}
+                </StatusChip>
                 <span class="min-w-0">
                   <span class="block truncate text-sm font-medium">{{
                     $t(`page.dashboard.inbox.reason.${action.reason_code}`)
@@ -1294,60 +1353,63 @@ onBeforeUnmount(() => {
               {{ freshBootDetail.run.run_id }}
             </strong>
           </div>
-          <ol
+          <Timeline
             v-if="freshBootDetail.events.length > 0"
             aria-live="polite"
-            class="grid gap-3"
+            class="fresh-boot-run-timeline"
+            mode="start"
+            :pending="freshBootPending(freshBootDetail.run.status) || undefined"
+            variant="outlined"
           >
-            <li
+            <TimelineItem
               v-for="event in freshBootDetail.events"
               :key="event.event_id"
-              class="rounded-lg border p-3"
+              :color="enumTimelineColor('FreshBootEventKind', event.event)"
             >
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <strong>
-                  {{ $t(`page.dashboard.bootstrap.event.${event.event}`) }}
-                </strong>
-                <span class="text-muted-foreground text-xs">
-                  {{ formatDateTimeLocal(event.occurred_at) }}
-                </span>
+              <div class="fresh-boot-event">
+                <EnumTag
+                  class="fresh-boot-event-kind"
+                  context="fresh-boot-timeline"
+                  :label="$t(`page.dashboard.bootstrap.event.${event.event}`)"
+                  name="FreshBootEventKind"
+                  :value="event.event"
+                />
+                <div class="fresh-boot-event-meta">
+                  <span data-screenshot-volatile="true">
+                    {{ formatDateTimeLocal(event.occurred_at) }}
+                  </span>
+                  <span class="fresh-boot-event-seq">
+                    #{{ event.sequence }}
+                  </span>
+                  <span>
+                    {{
+                      $t('page.dashboard.bootstrap.attempt', {
+                        value: event.attempt,
+                      })
+                    }}
+                  </span>
+                  <span class="fresh-boot-event-actor">{{ event.actor }}</span>
+                </div>
+                <dl class="fresh-boot-event-refs">
+                  <div v-if="event.research_job_id">
+                    <dt>{{ $t('page.dashboard.bootstrap.job') }}</dt>
+                    <dd class="fresh-boot-id">{{ event.research_job_id }}</dd>
+                  </div>
+                  <div v-if="event.result_ref">
+                    <dt>{{ $t('page.dashboard.bootstrap.resultRef') }}</dt>
+                    <dd class="fresh-boot-id">{{ event.result_ref }}</dd>
+                  </div>
+                  <div v-if="event.evidence_ref">
+                    <dt>{{ $t('page.dashboard.bootstrap.evidenceRef') }}</dt>
+                    <dd class="fresh-boot-id">{{ event.evidence_ref }}</dd>
+                  </div>
+                </dl>
+                <p v-if="event.detail" class="fresh-boot-event-detail">
+                  {{ event.detail }}
+                </p>
               </div>
-              <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                <span>#{{ event.sequence }}</span>
-                <span>
-                  {{
-                    $t('page.dashboard.bootstrap.attempt', {
-                      value: event.attempt,
-                    })
-                  }}
-                </span>
-                <span>{{ event.actor }}</span>
-              </div>
-              <dl class="mt-2 grid gap-2 text-xs">
-                <div v-if="event.research_job_id">
-                  <dt class="text-muted-foreground">
-                    {{ $t('page.dashboard.bootstrap.job') }}
-                  </dt>
-                  <dd class="fresh-boot-id">{{ event.research_job_id }}</dd>
-                </div>
-                <div v-if="event.result_ref">
-                  <dt class="text-muted-foreground">
-                    {{ $t('page.dashboard.bootstrap.resultRef') }}
-                  </dt>
-                  <dd class="fresh-boot-id">{{ event.result_ref }}</dd>
-                </div>
-                <div v-if="event.evidence_ref">
-                  <dt class="text-muted-foreground">
-                    {{ $t('page.dashboard.bootstrap.evidenceRef') }}
-                  </dt>
-                  <dd class="fresh-boot-id">{{ event.evidence_ref }}</dd>
-                </div>
-              </dl>
-              <p v-if="event.detail" class="mt-2 text-sm">
-                {{ event.detail }}
-              </p>
-            </li>
-          </ol>
+            </TimelineItem>
+          </Timeline>
           <Empty
             v-else
             :description="$t('page.dashboard.bootstrap.timelineEmpty')"
@@ -1541,6 +1603,7 @@ onBeforeUnmount(() => {
 }
 
 .status-cell {
+  width: 100%;
   min-width: 0;
   padding: 0.65rem 0.75rem;
   background: hsl(var(--muted) / 48%);
@@ -1554,11 +1617,13 @@ onBeforeUnmount(() => {
 }
 
 .status-cell dd {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--font-family-mono);
+  overflow: visible;
   font-weight: 600;
-  white-space: nowrap;
+}
+
+.status-cell dd :deep(.qp-status-chip) {
+  max-width: 100%;
+  font-family: var(--font-family-mono);
 }
 
 .runtime-metrics {
@@ -1645,7 +1710,7 @@ onBeforeUnmount(() => {
 
 @media (min-width: 1280px) {
   .dashboard-equal-row {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .dashboard-equal-follow {
@@ -1662,6 +1727,65 @@ onBeforeUnmount(() => {
 
 :global(.fresh-boot-timeline-drawer .ant-drawer-content-wrapper) {
   width: min(45rem, 100vw) !important;
+}
+
+:global(.fresh-boot-timeline-drawer .ant-drawer-body) {
+  padding-inline: 1.25rem;
+}
+
+:global(.fresh-boot-timeline-drawer .fresh-boot-run-timeline.ant-timeline) {
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
+.fresh-boot-event {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.fresh-boot-event-kind {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.fresh-boot-event-kind :deep(.qp-status-chip) {
+  max-width: 100%;
+  padding-block: 0.2rem;
+  padding-inline: 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 680;
+}
+
+.fresh-boot-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  color: hsl(var(--qp-text-muted));
+}
+
+.fresh-boot-event-seq,
+.fresh-boot-event-actor {
+  font-family: 'JetBrains Mono Variable', monospace;
+}
+
+.fresh-boot-event-refs {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.fresh-boot-event-refs dt {
+  color: hsl(var(--qp-text-muted));
+}
+
+.fresh-boot-event-detail {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: hsl(var(--qp-text-secondary));
 }
 
 @media (prefers-reduced-motion: reduce) {

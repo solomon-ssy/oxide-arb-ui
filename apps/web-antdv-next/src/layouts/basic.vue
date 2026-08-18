@@ -166,20 +166,12 @@ watch(
       <ActivityCenter />
     </template>
     <template #header-right-10>
-      <div class="hidden md:contents">
+      <div class="hidden items-center md:flex">
         <WsStatusBadge />
-      </div>
-    </template>
-    <template #header-right-20>
-      <div class="hidden md:contents">
         <SystemStatusIndicator />
+        <RuntimeModeIndicator />
+        <KillSwitchIndicator />
       </div>
-    </template>
-    <template #header-right-25>
-      <RuntimeModeIndicator />
-    </template>
-    <template #header-right-28>
-      <KillSwitchIndicator />
     </template>
     <template #user-dropdown>
       <UserDropdown

@@ -3,9 +3,10 @@ import type { CategoryMetric } from '@vben/types';
 
 import { computed } from 'vue';
 
-import { Empty, Table, Tag } from 'antdv-next';
+import { Empty, Table } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   decimalSign,
   formatBps,
@@ -15,7 +16,6 @@ import {
 } from '#/shared/components/format';
 import InlineBar from '#/shared/components/inline-bar.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 
 defineOptions({ name: 'BacktestCategoryBreakdown' });
 
@@ -25,8 +25,6 @@ const props = withDefaults(
   }>(),
   { value: () => [] },
 );
-
-const categoryTagOptions = enumOptions('MarketCategory');
 
 interface CategoryRow extends CategoryMetric {
   share: number;
@@ -112,12 +110,11 @@ const columns = computed(() => [
   >
     <template #bodyCell="{ column, record }">
       <template v-if="column.key === 'category'">
-        <Tag
-          :color="enumOption(categoryTagOptions, record.category)?.color"
-          :bordered="false"
-        >
-          {{ enumOption(categoryTagOptions, record.category)?.label }}
-        </Tag>
+        <EnumTag
+          context="backtest-category-breakdown"
+          name="MarketCategory"
+          :value="record.category"
+        />
       </template>
       <template v-else-if="column.key === 'share'">
         <div class="flex items-center gap-2">

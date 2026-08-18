@@ -46,6 +46,23 @@ html[data-ui-deterministic='true'] .qp-scan-motion::after {
   animation-play-state: paused;
 }
 
+html[data-page-visibility='hidden'] .ant-border-beam,
+html[data-ui-deterministic='true'] .ant-border-beam {
+  display: none !important;
+}
+
+[data-qp-beam='hover'] > .ant-border-beam {
+  opacity: 0;
+  transition: opacity 180ms var(--qp-motion-ease-out);
+  animation-play-state: paused;
+}
+
+[data-qp-beam='hover']:hover > .ant-border-beam,
+[data-qp-beam='hover']:focus-within > .ant-border-beam {
+  opacity: 1;
+  animation-play-state: running;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;

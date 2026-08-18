@@ -19,13 +19,13 @@ import {
   Empty,
   Input,
   Table,
-  Tag,
 } from 'antdv-next';
 
 import { getSettlementRedeem } from '#/api/settlement-redeems';
 import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
@@ -35,7 +35,6 @@ import {
 import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerSettlementRevisionRefresh } from '#/shared/composables/use-drawer-settlement-revision-refresh';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { positionOpenPath } from '#/shared/routes/execution-plane';
 
 import {
@@ -56,8 +55,6 @@ interface SettlementRedeemDrawerData {
 }
 
 const { handleRequest } = useRequestHandler();
-const effectivePolicyTagOptions = enumOptions('SettlementEffectivePolicy');
-const submissionKindTagOptions = enumOptions('SettlementSubmissionKind');
 
 const seed = ref<null | SettlementRedeemView>(null);
 const detail = ref<null | SettlementRedeemDetailView>(null);
@@ -105,9 +102,6 @@ const canAuthorizeCanary = computed(() =>
 
 const notFound = computed(
   () => !header.value && !loading.value && !loadError.value,
-);
-const effectivePolicyTag = computed(() =>
-  enumOption(effectivePolicyTagOptions, header.value?.effective_policy),
 );
 
 const inventoryLotColumns = [
@@ -238,10 +232,6 @@ function submissionIdentity(
     return submission.transaction_hash;
   }
   return null;
-}
-
-function submissionKindTag(kind: string) {
-  return enumOption(submissionKindTagOptions, kind);
 }
 
 async function refreshDetail(id: string) {
@@ -389,9 +379,11 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
             <DescriptionsItem
               :label="$t('page.quantSettlementRedeems.columns.effectivePolicy')"
             >
-              <Tag :color="effectivePolicyTag?.color">
-                {{ effectivePolicyTag?.label ?? header.effective_policy }}
-              </Tag>
+              <EnumTag
+                context="settlement-redeem-detail"
+                name="SettlementEffectivePolicy"
+                :value="header.effective_policy"
+              />
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.quantSettlementRedeems.columns.payout')"
@@ -800,9 +792,11 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
             </template>
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'kind'">
-                <Tag :color="submissionKindTag(record.kind)?.color">
-                  {{ submissionKindTag(record.kind)?.label ?? record.kind }}
-                </Tag>
+                <EnumTag
+                  context="settlement-redeem-detail"
+                  name="SettlementSubmissionKind"
+                  :value="record.kind"
+                />
               </template>
               <template
                 v-else-if="

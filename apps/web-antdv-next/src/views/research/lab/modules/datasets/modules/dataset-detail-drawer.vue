@@ -16,12 +16,12 @@ import {
   Descriptions,
   DescriptionsItem,
   Spin,
-  Tag,
 } from 'antdv-next';
 import { Mode } from 'vanilla-jsoneditor';
 
 import { getTrainingDataset } from '#/api/research';
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
@@ -31,7 +31,6 @@ import JsonEditorShell from '#/shared/components/json-editor/json-editor-shell.v
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { usePolling } from '#/shared/composables/use-polling';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
 import { datasetManifestBindingIssues } from '#/views/research/components/dataset-manifest';
 import SubjectParityPanel from '#/views/research/data-reliability/modules/integrity/components/subject-parity-panel.vue';
 
@@ -50,7 +49,6 @@ const NON_TERMINAL = new Set(['building', 'planned']);
 
 const { handleRequest } = useRequestHandler();
 const { hasAccessByCodes } = useQpAccess();
-const statusTagOptions = enumOptions('TrainingDatasetStatus');
 const hasTrainAccess = hasAccessByCodes(['materialization:create']);
 
 const dataset = ref<null | TrainingDatasetView>(null);
@@ -59,9 +57,6 @@ const openId = ref<null | string>(null);
 
 const coverage = computed(() => dataset.value?.coverage ?? {});
 const integrityCoverage = computed(() => dataset.value?.coverage ?? null);
-const statusTag = computed(() =>
-  enumOption(statusTagOptions, dataset.value?.status),
-);
 const canTrain = computed(
   () => !!dataset.value && canTrainDataset(hasTrainAccess, dataset.value),
 );
@@ -176,7 +171,11 @@ function onTrain() {
     <Spin :spinning="loading">
       <div v-if="dataset" class="flex min-w-0 flex-col gap-4">
         <div class="flex items-center justify-between gap-2">
-          <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
+          <EnumTag
+            context="dataset-detail"
+            name="TrainingDatasetStatus"
+            :value="dataset.status"
+          />
           <Button v-if="canTrain" type="primary" @click="onTrain">
             {{ $t('page.research.datasets.actions.train') }}
           </Button>
@@ -658,7 +657,11 @@ function onTrain() {
             <DescriptionsItem
               :label="$t('page.research.datasets.detail.gateStatus')"
             >
-              <Tag :color="statusTag?.color">{{ statusTag?.label }}</Tag>
+              <EnumTag
+                context="dataset-detail"
+                name="TrainingDatasetStatus"
+                :value="dataset.status"
+              />
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.research.datasets.detail.completedAt')"

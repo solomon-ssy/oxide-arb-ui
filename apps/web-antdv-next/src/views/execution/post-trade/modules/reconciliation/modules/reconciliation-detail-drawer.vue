@@ -22,6 +22,7 @@ import {
 import { getReconciliation } from '#/api/reconciliations';
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
@@ -31,7 +32,7 @@ import {
 } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
-import { enumOption, enumOptions } from '#/shared/presentation/enum-options';
+import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
 
 import { useReconciliationActions } from './use-reconciliation-actions';
 
@@ -46,7 +47,6 @@ interface ReconciliationDrawerData {
 }
 
 const { handleRequest } = useRequestHandler();
-const resultTagOptions = enumOptions('ReconciliationResult');
 
 const reconciliation = ref<null | ReconciliationView>(null);
 const loading = ref(false);
@@ -113,11 +113,11 @@ useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
     <Spin :spinning="loading">
       <div v-if="reconciliation" class="flex flex-col gap-4">
         <div class="flex items-center justify-between gap-2">
-          <Tag
-            :color="enumOption(resultTagOptions, reconciliation.result)?.color"
-          >
-            {{ enumOption(resultTagOptions, reconciliation.result)?.label }}
-          </Tag>
+          <EnumTag
+            context="reconciliation-detail"
+            name="ReconciliationResult"
+            :value="reconciliation.result"
+          />
           <Button v-if="showResolve" danger type="primary" @click="onResolve">
             {{ $t('page.quantReconciliations.actions.resolve') }}
           </Button>
@@ -208,17 +208,27 @@ useDrawerIntentRevisionRefresh(openId, refreshReconciliation);
           size="small"
           :title="$t('page.quantReconciliations.detail.sections.evidence')"
         >
-          <Timeline v-if="reconciliation.evidence_json.length > 0">
+          <Timeline
+            v-if="reconciliation.evidence_json.length > 0"
+            mode="start"
+            variant="outlined"
+          >
             <TimelineItem
               v-for="(evidence, index) in reconciliation.evidence_json"
               :key="index"
+              :color="
+                enumTimelineColor('ReconciliationEvidenceKind', evidence.kind)
+              "
             >
               <div class="flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <Tag color="blue">
                     {{ $t(`enum.reconciliationEvidenceKind.${evidence.kind}`) }}
                   </Tag>
-                  <span class="text-muted-foreground text-xs">
+                  <span
+                    class="text-muted-foreground text-xs"
+                    data-screenshot-volatile="true"
+                  >
                     {{ formatDateTimeLocal(evidence.observed_at) }}
                   </span>
                 </div>

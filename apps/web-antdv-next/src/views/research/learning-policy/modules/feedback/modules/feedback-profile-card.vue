@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type {
-  FeedbackCycleStatus,
   FeedbackProfileOverviewView,
   FeedbackReadinessView,
 } from '@vben/types';
@@ -10,10 +9,12 @@ import { computed } from 'vue';
 import { Card, Descriptions, DescriptionsItem, Divider, Tag } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   formatDateTimeLocal,
   formatDurationSecs,
 } from '#/shared/components/format';
+import StatusChip from '#/shared/components/status-chip.vue';
 
 import { feedbackProfilePresentation } from './feedback-profile-presentation';
 
@@ -54,27 +55,6 @@ function coverageColor() {
     }
     case 'not_observed': {
       return 'warning';
-    }
-  }
-}
-
-function cycleColor(status: FeedbackCycleStatus | null) {
-  switch (status) {
-    case 'cancelled':
-    case 'failed': {
-      return 'error';
-    }
-    case null: {
-      return 'warning';
-    }
-    case 'queued': {
-      return 'default';
-    }
-    case 'running': {
-      return 'processing';
-    }
-    case 'succeeded': {
-      return 'success';
     }
   }
 }
@@ -285,15 +265,15 @@ function gateLabel(value: boolean | null) {
         <DescriptionsItem
           :label="$t('page.research.feedback.profile.latest.status')"
         >
-          <Tag :color="cycleColor(presentation.latestCycleStatus)">
-            {{
-              presentation.latestCycleStatus
-                ? $t(
-                    `page.research.feedback.status.${presentation.latestCycleStatus}`,
-                  )
-                : $t('page.research.feedback.profile.notObserved')
-            }}
-          </Tag>
+          <EnumTag
+            v-if="presentation.latestCycleStatus"
+            context="feedback-profile-card"
+            name="FeedbackCycleStatus"
+            :value="presentation.latestCycleStatus"
+          />
+          <StatusChip v-else tone="warning">
+            {{ $t('page.research.feedback.profile.notObserved') }}
+          </StatusChip>
         </DescriptionsItem>
         <DescriptionsItem
           :label="$t('page.research.feedback.profile.latest.cycleId')"
