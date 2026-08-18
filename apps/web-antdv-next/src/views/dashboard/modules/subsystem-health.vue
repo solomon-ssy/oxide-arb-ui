@@ -124,8 +124,6 @@ function showDetail(check: DashboardDependencyCheck) {
   flex: 1 1 auto;
   flex-direction: column;
   gap: 10px;
-  height: 100%;
-  min-height: 0;
 }
 
 .health-summary,
@@ -178,11 +176,7 @@ function showDetail(check: DashboardDependencyCheck) {
 
 .health-check-list {
   display: grid;
-  flex: 1 1 auto;
   gap: 6px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .health-check {

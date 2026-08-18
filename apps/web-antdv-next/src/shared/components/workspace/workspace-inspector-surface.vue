@@ -14,6 +14,7 @@ import { $t } from '#/locales';
 
 import { useWorkspaceOverlay } from './use-workspace-overlay';
 import { provideWorkspaceChromeActions } from './workspace-chrome';
+import { resolveInspectorPanelWidth } from './workspace-inspector-width';
 
 defineOptions({ name: 'WorkspaceInspectorSurface' });
 
@@ -55,15 +56,9 @@ const {
   surface: 'inspector',
 });
 
-const panelWidth = computed(() => {
-  if (typeof props.width === 'number') {
-    return `${props.width}px`;
-  }
-  if (typeof props.width === 'string') {
-    return props.width;
-  }
-  return `${readStoredWidth()}px`;
-});
+const panelWidth = computed(() =>
+  resolveInspectorPanelWidth(props.width, readStoredWidth()),
+);
 const panelStyle = computed(
   (): CSSProperties =>
     ({
@@ -230,6 +225,7 @@ function readStoredWidth(): number {
     var(--workspace-inspector-width, 520px),
     calc(100% - 2 * var(--qp-inspector-inset))
   );
+  min-width: min(360px, calc(100% - 2 * var(--qp-inspector-inset)));
   overflow: hidden;
   color: hsl(var(--qp-text-primary));
   pointer-events: auto;
@@ -333,10 +329,17 @@ function readStoredWidth(): number {
   min-width: 0;
   min-height: 0;
   padding: var(--qp-density-card-padding);
-  overflow: hidden auto;
+  container-type: inline-size;
+  overflow: clip auto;
 }
 
 .workspace-inspector-content > :deep(*) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workspace-inspector-content :deep(.ant-spin-nested-loading),
+.workspace-inspector-content :deep(.ant-spin-container) {
   min-width: 0;
   max-width: 100%;
 }
@@ -345,6 +348,13 @@ function readStoredWidth(): number {
 .workspace-inspector-content :deep(.ant-descriptions-view) {
   max-width: 100%;
   overflow-x: auto;
+}
+
+@container (max-width: 40rem) {
+  .workspace-inspector-content :deep([class*='grid-cols-6']),
+  .workspace-inspector-content :deep([class*='grid-cols-3']) {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {

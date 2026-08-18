@@ -51,7 +51,6 @@ function buildOptions(): ECOption {
   ]);
 
   return {
-    grid: { bottom: 40, left: 56, right: 16, top: 30 },
     legend: {
       data: [
         $t('page.markets.detail.series.bids'),
@@ -135,6 +134,6 @@ watch(
         </RadioButton>
       </RadioGroup>
     </template>
-    <EchartsUI ref="chartRef" height="280px" />
+    <EchartsUI ref="chartRef" height="100%" />
   </ChartPanel>
 </template>

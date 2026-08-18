@@ -121,7 +121,7 @@ function copyId(value: string) {
       </div>
     </div>
 
-    <div class="flex items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div
         class="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs"
       >

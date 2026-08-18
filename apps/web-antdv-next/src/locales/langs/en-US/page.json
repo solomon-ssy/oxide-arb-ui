@@ -2684,7 +2684,8 @@
     },
     "lifecycle": {
       "title": "Report-to-Execution Lifecycle",
-      "aria": "Report lifecycle states and flow volume in the selected window."
+      "aria": "Counts by lifecycle state in the selected window, not transitions between states.",
+      "total": "{count} items"
     },
     "exposure": {
       "title": "Exposure Concentration",
@@ -3005,6 +3006,11 @@
         "revoked": "Revoked",
         "expired": "Expired",
         "intent_pending_approval": "Intent approval",
+        "intent_pending_authorization": "Intent authorization",
+        "report_run_queued": "Report run queued",
+        "report_run_running": "Report run running",
+        "report_run_failed": "Report run failed",
+        "report_run_abandoned": "Report run abandoned",
         "execution_submitted": "Order submitted",
         "execution_partially_filled": "Partially filled",
         "execution_ambiguous": "Ambiguous order",

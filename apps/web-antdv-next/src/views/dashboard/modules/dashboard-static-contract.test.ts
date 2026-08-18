@@ -1,19 +1,34 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+const APP_ROOT = resolve(process.cwd(), 'apps/web-antdv-next/src');
 const dashboard = readFileSync(
-  resolve(process.cwd(), 'apps/web-antdv-next/src/views/dashboard/index.vue'),
+  join(APP_ROOT, 'views/dashboard/index.vue'),
   'utf8',
 );
 const orbit = readFileSync(
-  resolve(
-    process.cwd(),
-    'apps/web-antdv-next/src/views/dashboard/modules/recommendation-orbit.vue',
-  ),
+  join(APP_ROOT, 'views/dashboard/modules/recommendation-orbit.vue'),
   'utf8',
 );
+const freshBoot = readFileSync(
+  join(APP_ROOT, 'views/dashboard/modules/fresh-boot-panel.vue'),
+  'utf8',
+);
+
+function collectVue(root: string): string[] {
+  const files: string[] = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const path = join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectVue(path));
+    } else if (entry.isFile() && path.endsWith('.vue')) {
+      files.push(path);
+    }
+  }
+  return files;
+}
 
 describe('dashboard static contract', () => {
   it('removes overview motion wrappers and binds feedback invalidation', () => {
@@ -71,5 +86,26 @@ describe('dashboard static contract', () => {
     expect(dashboard).not.toContain('enumOption');
     expect(dashboard).toContain('minmax(0, 1fr) minmax(0, 1fr)');
     expect(dashboard).toContain('xl:grid-cols-5');
+  });
+
+  it('lets the page scroller own the dashboard instead of nested contain traps', () => {
+    expect(dashboard).not.toContain('overscroll-behavior: contain');
+    expect(dashboard).not.toContain('position: absolute');
+    expect(dashboard).not.toContain('inset: 0');
+    const dashboardVue = collectVue(join(APP_ROOT, 'views/dashboard'));
+    const nestedTraps = dashboardVue.filter((path) =>
+      /overscroll-behavior:\s*contain/.test(readFileSync(path, 'utf8')),
+    );
+    expect(nestedTraps).toEqual([]);
+  });
+
+  it('keeps bootstrap routes equal-height with chainable inner scroll', () => {
+    expect(freshBoot).toContain('align-items: stretch');
+    expect(freshBoot).toContain('overflow-y: auto');
+    expect(freshBoot).toContain('overscroll-behavior: auto');
+    expect(freshBoot).toContain('overflow: clip');
+    expect(freshBoot).toContain('position: absolute');
+    expect(freshBoot).toContain('inset: 0');
+    expect(freshBoot).not.toContain('overscroll-behavior: contain');
   });
 });

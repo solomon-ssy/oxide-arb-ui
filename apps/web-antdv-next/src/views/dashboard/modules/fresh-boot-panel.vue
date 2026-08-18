@@ -753,6 +753,7 @@ async function copyId(value: string) {
 .fresh-boot-routes-anchor {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
   padding: 1rem;
 }
@@ -769,7 +770,7 @@ async function copyId(value: string) {
   flex-direction: column;
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
 }
 
 .fresh-boot-routes-empty {
@@ -780,14 +781,17 @@ async function copyId(value: string) {
 }
 
 @media (min-width: 1024px) {
+  /* Clip to the radius without creating a scrollport. `hidden` would sit on
+     the wheel chain and swallow leftover deltas after the list bottoms out. */
   .fresh-boot-routes {
     position: relative;
-    overflow: hidden;
+    overflow: clip;
   }
 
   .fresh-boot-routes-anchor {
     position: absolute;
     inset: 0;
+    height: auto;
   }
 }
 

@@ -39,7 +39,7 @@ function render() {
     return;
   }
   void renderEcharts({
-    grid: { bottom: 24, left: 56, right: 16, top: 16 },
+    grid: { bottom: 24, containLabel: true, left: 16, right: 16, top: 16 },
     series: [
       {
         areaStyle: { opacity: 0.08 },

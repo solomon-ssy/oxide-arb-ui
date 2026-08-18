@@ -106,7 +106,7 @@ function render() {
     });
   });
   void renderEcharts({
-    grid: { bottom: 110, left: 130, right: 24, top: 24 },
+    grid: { containLabel: true, left: 130, right: 24, top: 24, bottom: 110 },
     series: [
       {
         data: cells,

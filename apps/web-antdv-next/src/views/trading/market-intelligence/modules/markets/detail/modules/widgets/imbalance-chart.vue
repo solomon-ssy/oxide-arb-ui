@@ -58,7 +58,6 @@ function buildOptions(): ECOption {
   const axisAnchor = deterministic ? 0 : anchor;
 
   return {
-    grid: { bottom: 40, left: 48, right: 16, top: 30 },
     legend: {
       data: [
         $t('page.markets.detail.series.yesImbalance'),
@@ -128,7 +127,7 @@ watch(
       ref="chartRef"
       :data-market-series-points="Math.min(yes.length, no.length)"
       :data-market-series-ready="!isEmpty"
-      height="280px"
+      height="100%"
     />
   </ChartPanel>
 </template>

@@ -1,3 +1,4 @@
+export * from './cartesian-layout';
 export * from './echarts';
 export { default as EchartsUI } from './echarts-ui.vue';
 export * from './types';

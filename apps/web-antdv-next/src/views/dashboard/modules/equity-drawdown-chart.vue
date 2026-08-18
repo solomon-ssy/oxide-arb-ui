@@ -50,8 +50,7 @@ function render() {
       enabled: true,
     },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
-    grid: { bottom: 42, left: 20, right: 28, top: 26, containLabel: true },
-    legend: { bottom: 0 },
+    legend: {},
     series: [
       {
         areaStyle: {

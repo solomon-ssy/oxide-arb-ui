@@ -41,7 +41,6 @@ function render() {
     (row) => toNumber(row.drawdown_pct) * 100,
   );
   void renderEcharts({
-    grid: { bottom: 40, left: 60, right: 60, top: 30 },
     legend: {
       data: [
         $t('page.quantAccount.chart.equity'),
@@ -103,6 +102,6 @@ watch(
     icon="lucide:line-chart"
     @resize="resize"
   >
-    <EchartsUI ref="chartRef" height="320px" />
+    <EchartsUI ref="chartRef" height="100%" />
   </ChartPanel>
 </template>

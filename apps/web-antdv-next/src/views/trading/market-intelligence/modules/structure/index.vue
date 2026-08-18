@@ -332,7 +332,6 @@ function renderConcentrationChart() {
     .filter((row) => !row.missing_reason)
     .slice(0, 12);
   void renderEcharts({
-    grid: { bottom: 70, left: 48, right: 32, top: 28 },
     legend: {
       data: [
         $t('page.structuralAlpha.chart.cr1Share'),

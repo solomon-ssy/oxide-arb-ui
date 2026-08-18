@@ -163,9 +163,7 @@ onUnmounted(() => {
     tone="violet"
   >
     <div v-if="recommendations.length > 0" class="orbit-fill">
-      <div class="orbit-chart hidden md:block">
-        <EchartsUI ref="chartRef" height="100%" />
-      </div>
+      <EchartsUI ref="chartRef" class="orbit-chart" height="100%" />
       <div class="orbit-list">
         <LayoutGroup>
           <ol class="grid gap-2" :aria-label="$t('page.dashboard.orbit.list')">
@@ -230,29 +228,13 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  height: 100%;
-  min-height: 0;
 }
 
 .orbit-chart {
-  flex: 1 1 0;
-  min-height: 0;
+  min-height: 16rem;
 }
 
 .orbit-list {
   flex: none;
-  max-height: 40%;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-@media (max-width: 1279px) {
-  .orbit-chart {
-    min-height: 16rem;
-  }
-
-  .orbit-list {
-    max-height: none;
-  }
 }
 </style>

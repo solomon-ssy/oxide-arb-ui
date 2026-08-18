@@ -2684,7 +2684,8 @@
     },
     "lifecycle": {
       "title": "报告到执行生命周期",
-      "aria": "所选窗口内报告生命周期状态与流转规模。"
+      "aria": "所选窗口内各生命周期状态的数量分布，不是状态之间的流转。",
+      "total": "共 {count} 件"
     },
     "exposure": {
       "title": "风险敞口集中度",
@@ -3005,6 +3006,11 @@
         "revoked": "已撤销",
         "expired": "已过期",
         "intent_pending_approval": "意图待审批",
+        "intent_pending_authorization": "意图待授权",
+        "report_run_queued": "报告运行排队",
+        "report_run_running": "报告运行中",
+        "report_run_failed": "报告运行失败",
+        "report_run_abandoned": "报告运行已放弃",
         "execution_submitted": "订单已提交",
         "execution_partially_filled": "订单部分成交",
         "execution_ambiguous": "订单状态不明",

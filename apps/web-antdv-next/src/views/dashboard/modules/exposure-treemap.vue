@@ -104,29 +104,13 @@ watch([categories, reducedMotion], render, { deep: true, immediate: true });
 .exposure-fill {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
 }
 
 .chart-fill {
-  flex: 1 1 0;
-  min-height: 0;
+  min-height: 16.875rem;
 }
 
 .exposure-list {
   flex: none;
-  max-height: 8.5rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-@media (max-width: 1279px) {
-  .chart-fill {
-    min-height: 16.875rem;
-  }
-
-  .exposure-list {
-    max-height: none;
-  }
 }
 </style>

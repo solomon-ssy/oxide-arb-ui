@@ -68,7 +68,7 @@ const bestBidAsk = computed(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+  <div class="kpi-strip" data-testid="live-kpi-strip">
     <KpiCard
       accent="emerald"
       :decimals="4"
@@ -130,3 +130,29 @@ const bestBidAsk = computed(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.kpi-strip > :deep(*) {
+  min-width: 0;
+}
+
+@container (min-width: 40rem) {
+  .kpi-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 72rem) {
+  .kpi-strip {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+</style>

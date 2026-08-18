@@ -10,7 +10,8 @@ import { nextTick, onMounted, ref } from 'vue';
 
 import { useEcharts } from '@vben/plugins/echarts';
 
-/** Shared ECharts tuning for live market-detail charts. */
+/** Shared ECharts tuning for live market-detail charts. Layout (legend / grid
+ * collision) is owned by `applyCartesianLayout` inside `useEcharts`. */
 export const MARKET_CHART_BASE: ECOption = {
   animationDurationUpdate: 0,
   animationEasingUpdate: 'linear',

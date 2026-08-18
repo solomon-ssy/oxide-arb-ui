@@ -238,10 +238,17 @@ provideWorkspaceChromeActions(actionsHost);
   min-width: 0;
   min-height: 0;
   padding: var(--qp-density-card-padding);
-  overflow: hidden auto;
+  container-type: inline-size;
+  overflow: clip auto;
 }
 
 .workspace-object-stage-content > :deep(*) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workspace-object-stage-content :deep(.ant-spin-nested-loading),
+.workspace-object-stage-content :deep(.ant-spin-container) {
   min-width: 0;
   max-width: 100%;
 }
@@ -250,5 +257,17 @@ provideWorkspaceChromeActions(actionsHost);
 .workspace-object-stage-content :deep(.ant-descriptions-view) {
   max-width: 100%;
   overflow-x: auto;
+}
+
+@container (max-width: 72rem) {
+  .workspace-object-stage-content :deep([class*='grid-cols-6']) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 40rem) {
+  .workspace-object-stage-content :deep([class*='grid-cols-6']) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>

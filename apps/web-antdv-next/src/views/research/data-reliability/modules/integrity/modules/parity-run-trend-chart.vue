@@ -138,8 +138,7 @@ function render() {
     'pendingCount',
   ];
   void renderEcharts({
-    grid: { bottom: 52, containLabel: true, left: 16, right: 24, top: 24 },
-    legend: { bottom: 0, type: 'scroll' },
+    legend: { type: 'scroll' },
     series: kinds.flatMap((kind) =>
       metricKeys.map((metric) => ({
         connectNulls: false,

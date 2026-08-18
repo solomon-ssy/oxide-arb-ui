@@ -1110,7 +1110,6 @@ onBeforeUnmount(() => {
         </div>
 
         <InsightPanel
-          class="dashboard-feedback-panel"
           :title="$t('page.dashboard.feedback.title')"
           icon="lucide:refresh-cw"
           tone="violet"
@@ -1127,7 +1126,7 @@ onBeforeUnmount(() => {
             </Button>
           </template>
 
-          <div class="dashboard-feedback-scroll">
+          <div class="dashboard-feedback-body">
             <div aria-live="polite" class="sr-only" role="status">
               {{ $t(`page.dashboard.feedback.state.${feedbackState}`) }}
             </div>
@@ -1673,13 +1672,11 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 0;
 }
 
 .dashboard-equal-lead > :deep(.insight-panel),
 .dashboard-equal-follow > :deep(.insight-panel) {
   flex: 1 1 auto;
-  min-height: 0;
 }
 
 .data-quality-gauge {
@@ -1688,44 +1685,15 @@ onBeforeUnmount(() => {
   place-items: center;
 }
 
-.dashboard-feedback-panel {
-  height: 22.5rem;
-  overflow: hidden;
-}
-
-.dashboard-feedback-panel :deep(.panel-body) {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.dashboard-feedback-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.dashboard-feedback-scroll :deep(.ant-empty) {
+.dashboard-feedback-body :deep(.ant-empty) {
   display: grid;
   place-items: center;
-  min-height: 12rem;
+  min-height: 8rem;
 }
 
 @media (min-width: 1280px) {
   .dashboard-equal-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .dashboard-equal-follow {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .dashboard-equal-follow > :deep(.insight-panel) {
-    position: absolute;
-    inset: 0;
-    flex: none;
   }
 }
 

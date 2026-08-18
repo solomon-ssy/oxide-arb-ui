@@ -99,7 +99,6 @@ function buildOptions(): ECOption {
   const anchor = props.anchorTs ?? observedHead ?? Date.now();
 
   return {
-    grid: { bottom: 40, left: 48, right: 16, top: 30 },
     legend: {
       data: [
         $t('page.markets.detail.series.yesMid'),
@@ -254,6 +253,6 @@ watch(
         {{ $t(`page.markets.detail.resolution.${resolution}`) }}
       </span>
     </template>
-    <EchartsUI ref="chartRef" height="340px" />
+    <EchartsUI ref="chartRef" height="100%" />
   </ChartPanel>
 </template>

@@ -51,10 +51,10 @@ provide(WORKSPACE_INSPECTOR_HOST_KEY, {
     :class="{ 'is-object-stage': stageOpen }"
     :data-object-stage="stageOpen ? 'true' : 'false'"
   >
-    <div :ref="bindStageTarget" class="workspace-object-stage-host"></div>
     <div class="workspace-module-pane" :aria-hidden="stageOpen">
       <slot></slot>
     </div>
+    <div :ref="bindStageTarget" class="workspace-object-stage-host"></div>
   </div>
 </template>
 
@@ -73,7 +73,9 @@ provide(WORKSPACE_INSPECTOR_HOST_KEY, {
   display: none;
   flex: 1;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .workspace-module-pane {
@@ -89,10 +91,6 @@ provide(WORKSPACE_INSPECTOR_HOST_KEY, {
 }
 
 .workspace-inspector-host.is-object-stage .workspace-module-pane {
-  position: absolute;
-  inset: 0;
-  visibility: hidden;
-  overflow: hidden;
-  pointer-events: none;
+  display: none;
 }
 </style>

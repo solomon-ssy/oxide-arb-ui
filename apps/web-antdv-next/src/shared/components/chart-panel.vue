@@ -51,7 +51,7 @@ useResizeObserver(
         :description="emptyText"
         :image="Empty.PRESENTED_IMAGE_SIMPLE"
       />
-      <template v-else>
+      <div v-else class="chart-canvas">
         <slot></slot>
         <Skeleton
           v-if="loading"
@@ -59,7 +59,7 @@ useResizeObserver(
           active
           class="chart-loading"
         />
-      </template>
+      </div>
     </div>
   </InsightPanel>
 </template>
@@ -68,12 +68,24 @@ useResizeObserver(
 .chart-area {
   position: relative;
   display: grid;
-  place-items: center;
   min-width: 0;
 }
 
-.chart-area > :deep(*) {
+.chart-area > :deep(.ant-empty),
+.chart-area > :deep(.ant-alert) {
+  place-self: center;
+}
+
+.chart-canvas {
+  position: relative;
   width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.chart-canvas > :deep(*) {
+  width: 100%;
+  height: 100%;
 }
 
 .chart-loading {

@@ -47,7 +47,6 @@ function buildOptions(): ECOption {
   const axisAnchor = deterministic ? 0 : anchor;
 
   return {
-    grid: { bottom: 40, left: 56, right: 16, top: 30 },
     legend: {
       data: [
         $t('page.markets.detail.series.top1'),
@@ -124,7 +123,7 @@ watch(
       ref="chartRef"
       :data-market-series-points="yes.length"
       :data-market-series-ready="!isEmpty"
-      height="280px"
+      height="100%"
     />
   </ChartPanel>
 </template>

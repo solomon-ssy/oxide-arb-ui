@@ -45,7 +45,7 @@ function renderChart() {
   }
   const data = values.value;
   void renderEcharts({
-    grid: { left: 72, right: 16, top: 16, bottom: 24 },
+    grid: { containLabel: true, left: 16, right: 16, top: 16, bottom: 24 },
     xAxis: {
       type: 'value',
       name: $t('page.research.cpcv.pathSharpe'),

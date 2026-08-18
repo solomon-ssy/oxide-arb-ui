@@ -403,6 +403,44 @@ describe('ui fresh-boot clean-break inventory', () => {
     expect(violations).toEqual([]);
   });
 
+  it('contains workspace chrome overflow on both axes', () => {
+    const chrome = [
+      'src/shared/components/workspace/workspace-object-stage.vue',
+      'src/shared/components/workspace/workspace-inspector-surface.vue',
+    ].map((relative) => ({
+      relative,
+      content: readFileSync(join(APP_ROOT, relative), 'utf8'),
+    }));
+    const missing = chrome
+      .filter(
+        ({ content }) =>
+          !(
+            content.includes('overflow-x: clip') ||
+            content.includes('overflow: clip auto')
+          ) ||
+          !content.includes('container-type: inline-size') ||
+          !content.includes('min-width: 0'),
+      )
+      .map(({ relative }) => relative);
+
+    expect(missing).toEqual([]);
+  });
+
+  it('hides list pane descendants while object stage is open', () => {
+    const content = readFileSync(
+      join(
+        APP_ROOT,
+        'src/shared/components/workspace/workspace-inspector-host.vue',
+      ),
+      'utf8',
+    );
+
+    expect(content.includes('is-object-stage .workspace-module-pane')).toBe(
+      true,
+    );
+    expect(content.includes('display: none')).toBe(true);
+  });
+
   it('keeps page locales symmetric and free of dead keys', () => {
     const localeRoot = join(APP_ROOT, 'src/locales/langs');
     const english = localeLeaves(loadJson(join(localeRoot, 'en-US/page.json')));
