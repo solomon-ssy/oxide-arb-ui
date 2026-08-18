@@ -17,7 +17,16 @@ import { useReducedMotion } from 'motion-v';
 
 import { WORKSPACE_INSPECTOR_HOST_KEY } from './workspace-inspector-host.types';
 
-const EXIT_MS = 750;
+/** Keep visual exit and layer unmount in lockstep. Inspector is a glance overlay. */
+export const OVERLAY_EXIT_MS = {
+  inspector: 200,
+  page: 280,
+} as const;
+
+export const OVERLAY_EXIT_S = {
+  inspector: OVERLAY_EXIT_MS.inspector / 1000,
+  page: OVERLAY_EXIT_MS.page / 1000,
+} as const;
 
 interface DrawerState {
   isOpen?: boolean;
@@ -97,7 +106,7 @@ export function useWorkspaceOverlay(options: WorkspaceOverlayOptions) {
 
   function deactivateAfterExit() {
     if (deactivateTimer) clearTimeout(deactivateTimer);
-    const delay = quietMotion.value ? 0 : EXIT_MS;
+    const delay = quietMotion.value ? 0 : OVERLAY_EXIT_MS[options.surface];
     deactivateTimer = setTimeout(() => {
       host?.deactivate(surfaceId);
       layerMounted.value = false;

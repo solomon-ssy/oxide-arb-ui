@@ -10,7 +10,7 @@ import { AnimatePresence, motion } from 'motion-v';
 
 import { $t } from '#/locales';
 
-import { useWorkspaceOverlay } from './use-workspace-overlay';
+import { OVERLAY_EXIT_S, useWorkspaceOverlay } from './use-workspace-overlay';
 import { provideWorkspaceChromeActions } from './workspace-chrome';
 
 defineOptions({ name: 'WorkspaceObjectStage' });
@@ -29,7 +29,6 @@ const props = withDefaults(
   },
 );
 const emit = defineEmits<{ close: [] }>();
-const MOTION_SLOW = 0.28;
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 const openModel = defineModel<boolean>('open', { default: false });
@@ -49,7 +48,7 @@ const {
 });
 
 const panelMotion = computed(() => ({
-  duration: quietMotion.value ? 0 : MOTION_SLOW,
+  duration: quietMotion.value ? 0 : OVERLAY_EXIT_S.page,
   ease: [...EASE_OUT],
 }));
 const actionsHost = ref<HTMLElement | null>(null);

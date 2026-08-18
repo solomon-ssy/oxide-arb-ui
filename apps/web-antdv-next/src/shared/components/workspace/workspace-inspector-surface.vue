@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from 'motion-v';
 
 import { $t } from '#/locales';
 
-import { useWorkspaceOverlay } from './use-workspace-overlay';
+import { OVERLAY_EXIT_S, useWorkspaceOverlay } from './use-workspace-overlay';
 import { provideWorkspaceChromeActions } from './workspace-chrome';
 import { resolveInspectorPanelWidth } from './workspace-inspector-width';
 
@@ -37,7 +37,6 @@ const emit = defineEmits<{ close: [] }>();
 const DEFAULT_WIDTH_PX = 520;
 const MIN_STORED_WIDTH = 360;
 const MAX_STORED_WIDTH = 760;
-const MOTION_SLOW = 0.75;
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 const openModel = defineModel<boolean>('open', { default: false });
@@ -66,10 +65,10 @@ const panelStyle = computed(
     }) as CSSProperties,
 );
 const maskTransition = computed(() => ({
-  duration: quietMotion.value ? 0 : MOTION_SLOW,
+  duration: quietMotion.value ? 0 : OVERLAY_EXIT_S.inspector,
 }));
 const panelMotion = computed(() => ({
-  duration: quietMotion.value ? 0 : MOTION_SLOW,
+  duration: quietMotion.value ? 0 : OVERLAY_EXIT_S.inspector,
   ease: [...EASE_OUT],
 }));
 
@@ -95,6 +94,7 @@ function readStoredWidth(): number {
       v-if="layerMounted"
       class="workspace-inspector-layer"
       :data-domain="workspaceDomain"
+      :data-open="open ? 'true' : undefined"
     >
       <AnimatePresence :initial="false">
         <motion.div
@@ -205,19 +205,24 @@ function readStoredWidth(): number {
   );
 }
 
+.workspace-inspector-layer[data-open='true'] .workspace-inspector-mask,
+.workspace-inspector-layer[data-open='true'] .workspace-inspector-surface {
+  pointer-events: auto;
+}
+
 .workspace-inspector-mask {
   position: absolute;
   inset: 0;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: pointer;
   background: hsl(var(--qp-surface-sunken) / 48%);
 }
 
 .workspace-inspector-surface {
   position: absolute;
-  top: 0;
+  top: calc(var(--vben-header-height, 48px) + var(--qp-inspector-inset));
   right: var(--qp-inspector-inset);
-  bottom: 0;
+  bottom: max(var(--qp-inspector-inset), env(safe-area-inset-bottom, 0px));
   z-index: var(--qp-layer-raised);
   display: flex;
   flex-direction: column;
@@ -228,7 +233,7 @@ function readStoredWidth(): number {
   min-width: min(360px, calc(100% - 2 * var(--qp-inspector-inset)));
   overflow: hidden;
   color: hsl(var(--qp-text-primary));
-  pointer-events: auto;
+  pointer-events: none;
   outline: none;
   background:
     linear-gradient(
