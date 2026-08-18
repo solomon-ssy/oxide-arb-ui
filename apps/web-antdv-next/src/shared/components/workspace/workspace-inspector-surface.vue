@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ComponentPublicInstance, Ref } from 'vue';
+import type { ComponentPublicInstance, CSSProperties, Ref } from 'vue';
 
 import {
   computed,
@@ -13,7 +13,8 @@ import {
 
 import { IconifyIcon } from '@vben/icons';
 
-import { Button, Drawer, Skeleton } from 'antdv-next';
+import { useEventListener } from '@vueuse/core';
+import { Button, ConfigProvider, Skeleton } from 'antdv-next';
 import { AnimatePresence, motion, useReducedMotion } from 'motion-v';
 
 import { $t } from '#/locales';
@@ -28,15 +29,22 @@ const props = withDefaults(
     loading?: boolean;
     testId?: string;
     title: string;
+    width?: number | string;
   }>(),
   {
     drawerApi: undefined,
     loading: false,
     testId: undefined,
+    width: undefined,
   },
 );
-
 const emit = defineEmits<{ close: [] }>();
+const DEFAULT_WIDTH_PX = 520;
+const MIN_STORED_WIDTH = 360;
+const MAX_STORED_WIDTH = 760;
+const EXIT_MS = 750;
+const MOTION_SLOW = 0.75;
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 interface DrawerState {
   isOpen?: boolean;
@@ -51,27 +59,66 @@ interface InspectorDrawerApi {
 
 const openModel = defineModel<boolean>('open', { default: false });
 
-const host =
-  inject(WORKSPACE_INSPECTOR_HOST_KEY) ??
-  (() => {
-    throw new Error(
-      'WorkspaceInspectorSurface requires WorkspaceInspectorHost',
-    );
-  })();
-
+const host = inject(WORKSPACE_INSPECTOR_HOST_KEY, null);
 const drawerState = props.drawerApi?.useStore();
 const reducedMotion = useReducedMotion();
 const panel = ref<HTMLElement | null>(null);
+const layerMounted = ref(false);
+const workspaceDomain = ref<string | undefined>();
 const surfaceId = useId();
 const open = computed(() =>
   props.drawerApi ? Boolean(drawerState?.value.isOpen) : openModel.value,
 );
-const active = computed(() => host.activeId.value === surfaceId);
-const desktopTarget = computed(
-  () => host.desktop.value && active.value && host.target.value !== null,
+const quietMotion = computed(
+  () =>
+    Boolean(reducedMotion.value) ||
+    document.documentElement.dataset.uiDeterministic === 'true',
 );
+const panelWidth = computed(() => {
+  if (typeof props.width === 'number') {
+    return `${props.width}px`;
+  }
+  if (typeof props.width === 'string') {
+    return props.width;
+  }
+  return `${readStoredWidth()}px`;
+});
+const panelStyle = computed(
+  (): CSSProperties =>
+    ({
+      '--workspace-inspector-width': panelWidth.value,
+    }) as CSSProperties,
+);
+const maskTransition = computed(() => ({
+  duration: quietMotion.value ? 0 : MOTION_SLOW,
+}));
+const panelMotion = computed(() => ({
+  duration: quietMotion.value ? 0 : MOTION_SLOW,
+  ease: [...EASE_OUT],
+}));
 let deactivateTimer: ReturnType<typeof setTimeout> | undefined;
 let restoreFocus: HTMLElement | null = null;
+
+function readStoredWidth(): number {
+  const saved = Number(localStorage.getItem('qp.workspace-inspector.width'));
+  if (
+    Number.isFinite(saved) &&
+    saved >= MIN_STORED_WIDTH &&
+    saved <= MAX_STORED_WIDTH
+  ) {
+    return saved;
+  }
+  return DEFAULT_WIDTH_PX;
+}
+
+function syncWorkspaceDomain() {
+  workspaceDomain.value =
+    document.querySelector<HTMLElement>('.workspace-shell')?.dataset.domain;
+}
+
+function popupContainer(trigger?: HTMLElement) {
+  return panel.value ?? trigger?.parentElement ?? document.body;
+}
 
 function focusAfterClose() {
   const original =
@@ -102,20 +149,29 @@ function setPanelRef(value: ComponentPublicInstance | Element | null) {
 
 function deactivateAfterExit() {
   if (deactivateTimer) clearTimeout(deactivateTimer);
-  const delay = reducedMotion.value ? 0 : 180;
+  const delay = quietMotion.value ? 0 : EXIT_MS;
   deactivateTimer = setTimeout(() => {
-    host.deactivate(surfaceId);
+    host?.deactivate(surfaceId);
+    layerMounted.value = false;
     deactivateTimer = undefined;
   }, delay);
 }
 
+function onEscape(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || !open.value) return;
+  event.preventDefault();
+  close();
+}
+
 watch(
   open,
-  async (visible) => {
+  async (visible, wasOpen) => {
     if (!visible) {
-      deactivateAfterExit();
-      await nextTick();
-      focusAfterClose();
+      if (wasOpen) {
+        deactivateAfterExit();
+        await nextTick();
+        focusAfterClose();
+      }
       return;
     }
 
@@ -124,8 +180,9 @@ watch(
       deactivateTimer = undefined;
     }
     restoreFocus = document.activeElement as HTMLElement | null;
-    host.activate(surfaceId, close);
-    if (!host.desktop.value) return;
+    layerMounted.value = true;
+    syncWorkspaceDomain();
+    host?.activate(surfaceId, close);
     await nextTick();
     await nextTick();
     panel.value?.focus();
@@ -135,97 +192,180 @@ watch(
 
 onBeforeUnmount(() => {
   if (deactivateTimer) clearTimeout(deactivateTimer);
-  host.deactivate(surfaceId);
-  focusAfterClose();
+  host?.deactivate(surfaceId);
+  if (restoreFocus) {
+    focusAfterClose();
+  }
 });
+
+useEventListener(window, 'keydown', onEscape);
 </script>
 
 <template>
-  <Teleport v-if="desktopTarget" :to="host.target.value!">
-    <AnimatePresence :initial="false">
-      <motion.aside
-        v-if="open"
-        :ref="setPanelRef"
-        :aria-label="title"
-        :animate="
-          reducedMotion ? undefined : { opacity: 1, transform: 'translateX(0)' }
-        "
-        class="workspace-inspector-surface"
-        :data-testid="testId"
-        :exit="
-          reducedMotion
-            ? undefined
-            : { opacity: 0, transform: 'translateX(8px)' }
-        "
-        :initial="
-          reducedMotion ? false : { opacity: 0, transform: 'translateX(8px)' }
-        "
-        tabindex="-1"
-        :transition="{ duration: reducedMotion ? 0 : 0.18 }"
-      >
-        <header class="workspace-inspector-toolbar">
-          <span class="workspace-inspector-title">
-            <IconifyIcon aria-hidden="true" icon="lucide:panel-right" />
-            {{ title }}
-          </span>
-          <Button
-            :aria-label="$t('page.common.close')"
-            shape="circle"
-            type="text"
-            @click="close"
-          >
-            <IconifyIcon icon="lucide:x" />
-          </Button>
-        </header>
-        <div class="workspace-inspector-content">
-          <Skeleton v-if="loading" active :paragraph="{ rows: 8 }" />
-          <slot v-else></slot>
-        </div>
-      </motion.aside>
-    </AnimatePresence>
-  </Teleport>
-
-  <Drawer
-    auto-focus
-    class="workspace-inspector-drawer"
-    :keyboard="true"
-    :mask-closable="true"
-    v-else-if="!host.desktop.value"
-    :open="open"
-    placement="right"
-    size="min(100vw, 720px)"
-    :data-testid="testId"
-    :title="title"
-    @close="close"
-  >
-    <div class="workspace-inspector-content">
-      <Skeleton v-if="loading" active :paragraph="{ rows: 8 }" />
-      <slot v-else></slot>
+  <Teleport to="body">
+    <div
+      v-if="layerMounted"
+      class="workspace-inspector-layer"
+      :data-domain="workspaceDomain"
+    >
+      <AnimatePresence :initial="false">
+        <motion.div
+          v-if="open"
+          key="mask"
+          :animate="quietMotion ? undefined : { opacity: 1 }"
+          class="workspace-inspector-mask"
+          :exit="quietMotion ? undefined : { opacity: 0 }"
+          :initial="quietMotion ? false : { opacity: 0 }"
+          :transition="maskTransition"
+          @click="close"
+        />
+        <motion.aside
+          v-if="open"
+          key="panel"
+          :ref="setPanelRef"
+          :animate="
+            quietMotion ? undefined : { opacity: 1, transform: 'translateX(0)' }
+          "
+          aria-modal="true"
+          :aria-label="title"
+          class="workspace-inspector-surface"
+          :data-testid="testId"
+          :exit="
+            quietMotion
+              ? undefined
+              : { opacity: 0, transform: 'translateX(16px)' }
+          "
+          :initial="
+            quietMotion ? false : { opacity: 0, transform: 'translateX(16px)' }
+          "
+          role="dialog"
+          :style="panelStyle"
+          tabindex="-1"
+          :transition="panelMotion"
+        >
+          <ConfigProvider :get-popup-container="popupContainer">
+            <div class="workspace-inspector-frame">
+              <header class="workspace-inspector-toolbar">
+                <span class="workspace-inspector-title">
+                  <IconifyIcon aria-hidden="true" icon="lucide:panel-right" />
+                  {{ title }}
+                </span>
+                <Button
+                  :aria-label="$t('page.common.close')"
+                  shape="circle"
+                  type="text"
+                  @click="close"
+                >
+                  <IconifyIcon icon="lucide:x" />
+                </Button>
+              </header>
+              <div class="workspace-inspector-content">
+                <Skeleton v-if="loading" active :paragraph="{ rows: 8 }" />
+                <slot v-else></slot>
+              </div>
+            </div>
+          </ConfigProvider>
+        </motion.aside>
+      </AnimatePresence>
     </div>
-  </Drawer>
+  </Teleport>
 </template>
 
 <style scoped>
+.workspace-inspector-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--qp-layer-overlay);
+  pointer-events: none;
+}
+
+.workspace-inspector-layer[data-domain='trading'] {
+  --workspace-accent: var(--qp-accent-sky);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet)) 64%,
+    hsl(var(--qp-accent-pink))
+  );
+}
+
+.workspace-inspector-layer[data-domain='execution'] {
+  --workspace-accent: var(--qp-accent-orange);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink)) 58%,
+    hsl(var(--qp-accent-orange))
+  );
+}
+
+.workspace-inspector-layer[data-domain='research'] {
+  --workspace-accent: var(--qp-accent-pink);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink))
+  );
+}
+
+.workspace-inspector-layer[data-domain='governance'] {
+  --workspace-accent: var(--qp-accent-violet);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet))
+  );
+}
+
+.workspace-inspector-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  background: hsl(var(--qp-surface-sunken) / 48%);
+}
+
 .workspace-inspector-surface {
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: var(--qp-inspector-inset);
+  bottom: 0;
+  z-index: var(--qp-layer-raised);
+  display: flex;
+  flex-direction: column;
+  width: min(
+    var(--workspace-inspector-width, 520px),
+    calc(100% - 2 * var(--qp-inspector-inset))
+  );
+  overflow: hidden;
+  color: hsl(var(--qp-text-primary));
+  pointer-events: auto;
+  outline: none;
+  background:
+    linear-gradient(
+        hsl(var(--qp-surface-glass) / 94%),
+        hsl(var(--qp-surface-glass) / 94%)
+      )
+      padding-box,
+    var(--qp-gradient-hairline) border-box;
+  border: 2px solid transparent;
+  border-radius: var(--qp-radius-lg);
+  box-shadow: var(--qp-shadow-medium);
+}
+
+.workspace-inspector-frame {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.workspace-inspector-surface > :deep(*) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
-  color: hsl(var(--qp-text-primary));
-  outline: none;
-  background: hsl(var(--qp-surface-glass) / 94%);
-}
-
-.workspace-inspector-surface::before {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: var(--qp-layer-raised);
-  height: 2px;
-  pointer-events: none;
-  content: '';
-  background: var(--workspace-gradient, var(--qp-gradient-brand));
-  box-shadow: var(--qp-shadow-inspector);
+  min-height: 0;
 }
 
 .workspace-inspector-toolbar {
@@ -265,30 +405,9 @@ onBeforeUnmount(() => {
   overflow-y: auto;
 }
 
-:global(.workspace-inspector-drawer .ant-drawer-content),
-:global(.workspace-inspector-drawer .ant-drawer-wrapper-body),
-:global(.workspace-inspector-drawer .ant-drawer-body) {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-:global(.workspace-inspector-drawer .ant-drawer-body) {
-  padding: 0;
-  overflow: hidden;
-}
-
-:global(.workspace-inspector-drawer .workspace-inspector-content) {
-  width: 100%;
-}
-
 @media (max-width: 640px) {
   .workspace-inspector-content {
     padding: 10px;
-  }
-
-  :global(.workspace-inspector-drawer .ant-drawer-header) {
-    padding: 12px;
   }
 }
 </style>

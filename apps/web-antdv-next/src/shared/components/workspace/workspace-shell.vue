@@ -1,15 +1,7 @@
 <script lang="ts" setup>
 import type { WorkspaceDomain, WorkspaceModule } from './workspace-shell.types';
 
-import {
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  provide,
-  readonly,
-  ref,
-  watch,
-} from 'vue';
+import { computed, onMounted, provide, readonly, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
@@ -37,11 +29,7 @@ const route = useRoute();
 const router = useRouter();
 const reducedMotion = useReducedMotion();
 const inspectorActiveId = ref<null | string>(null);
-const inspectorDesktop = ref(false);
-const inspectorTarget = ref<HTMLElement | null>(null);
-const inspectorWidth = ref(520);
 let activeInspectorClose: (() => void) | undefined;
-let inspectorMedia: MediaQueryList | undefined;
 
 const fallbackModule = computed(() => props.modules[0]);
 const moduleKeys = computed(
@@ -80,16 +68,10 @@ function deactivateInspector(id: string) {
   activeInspectorClose = undefined;
 }
 
-function syncInspectorViewport() {
-  inspectorDesktop.value = inspectorMedia?.matches ?? false;
-}
-
 provide(WORKSPACE_INSPECTOR_HOST_KEY, {
   activeId: readonly(inspectorActiveId),
   activate: activateInspector,
   deactivate: deactivateInspector,
-  desktop: readonly(inspectorDesktop),
-  target: inspectorTarget,
 });
 
 function canonicalizeModule() {
@@ -147,20 +129,8 @@ function canonicalizeInspector() {
 watch(() => route.query.module, canonicalizeModule);
 watch(() => [route.query.entity, route.query.id], canonicalizeInspector);
 onMounted(() => {
-  const savedWidth = Number(
-    localStorage.getItem('qp.workspace-inspector.width'),
-  );
-  if (Number.isFinite(savedWidth) && savedWidth >= 360 && savedWidth <= 760) {
-    inspectorWidth.value = savedWidth;
-  }
-  inspectorMedia = window.matchMedia('(min-width: 1280px)');
-  syncInspectorViewport();
-  inspectorMedia.addEventListener('change', syncInspectorViewport);
   canonicalizeModule();
   canonicalizeInspector();
-});
-onBeforeUnmount(() => {
-  inspectorMedia?.removeEventListener('change', syncInspectorViewport);
 });
 </script>
 
@@ -190,12 +160,7 @@ onBeforeUnmount(() => {
       </TabPane>
     </Tabs>
 
-    <WorkspaceInspectorHost
-      v-model:target="inspectorTarget"
-      v-model:width="inspectorWidth"
-      :active="inspectorActiveId !== null"
-      :desktop="inspectorDesktop"
-    >
+    <WorkspaceInspectorHost>
       <Alert
         v-if="!activeModule"
         :message="$t('page.workspace.invalidModule')"
@@ -225,6 +190,12 @@ onBeforeUnmount(() => {
   --workspace-aurora-strong: 8%;
   --workspace-gradient: var(--qp-gradient-trading);
   --workspace-control: var(--qp-gradient-control);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet)) 64%,
+    hsl(var(--qp-accent-pink))
+  );
   --workspace-hero:
     radial-gradient(
       circle at 8% 0%,
@@ -252,6 +223,12 @@ onBeforeUnmount(() => {
 .workspace-shell[data-domain='execution'] {
   --workspace-accent: var(--qp-accent-orange);
   --workspace-gradient: var(--qp-gradient-execution);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink)) 58%,
+    hsl(var(--qp-accent-orange))
+  );
   --workspace-control: linear-gradient(
     180deg,
     hsl(var(--qp-accent-violet)),
@@ -281,6 +258,11 @@ onBeforeUnmount(() => {
 .workspace-shell[data-domain='research'] {
   --workspace-accent: var(--qp-accent-pink);
   --workspace-gradient: var(--qp-gradient-research);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-violet)),
+    hsl(var(--qp-accent-pink))
+  );
   --workspace-control: linear-gradient(
     180deg,
     hsl(var(--qp-accent-violet)),
@@ -309,6 +291,11 @@ onBeforeUnmount(() => {
 .workspace-shell[data-domain='governance'] {
   --workspace-accent: var(--qp-accent-violet);
   --workspace-gradient: var(--qp-gradient-governance);
+  --qp-gradient-hairline: linear-gradient(
+    90deg,
+    hsl(var(--qp-accent-sky)),
+    hsl(var(--qp-accent-violet))
+  );
   --workspace-control: linear-gradient(
     180deg,
     hsl(var(--qp-accent-sky)),

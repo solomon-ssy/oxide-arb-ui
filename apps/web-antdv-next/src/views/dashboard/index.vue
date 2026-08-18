@@ -45,7 +45,6 @@ import {
   Button,
   Descriptions,
   DescriptionsItem,
-  Drawer,
   Empty,
   Progress,
   Segmented,
@@ -74,6 +73,7 @@ import {
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import KpiCard from '#/shared/components/kpi-card.vue';
 import StatusChip from '#/shared/components/status-chip.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import { useDashboardStatusRefreshKey } from '#/shared/composables/use-dashboard-status-refresh-key';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
@@ -148,6 +148,14 @@ const refreshPending = ref(false);
 const loadError = ref<null | string>(null);
 const feedbackError = ref<null | string>(null);
 const selectedRecommendation = ref<null | QuantRecommendationView>(null);
+const orbitOpen = computed({
+  get: () => selectedRecommendation.value !== null,
+  set: (value: boolean) => {
+    if (!value) {
+      selectedRecommendation.value = null;
+    }
+  },
+});
 const blockersOpen = ref(false);
 const pageActive = ref(false);
 
@@ -1330,16 +1338,14 @@ onBeforeUnmount(() => {
         </template>
       </template>
 
-      <Drawer
-        :open="freshBootDetailOpen"
+      <WorkspaceInspectorSurface
+        v-model:open="freshBootDetailOpen"
+        :loading="freshBootDetailLoading"
         :title="$t('page.dashboard.bootstrap.timelineTitle')"
-        root-class-name="fresh-boot-timeline-drawer"
-        size="large"
-        @close="freshBootDetailOpen = false"
+        width="45rem"
       >
-        <Skeleton v-if="freshBootDetailLoading" active />
         <Alert
-          v-else-if="freshBootDetailError"
+          v-if="freshBootDetailError"
           :message="$t('page.dashboard.bootstrap.timelineError')"
           show-icon
           type="error"
@@ -1416,13 +1422,12 @@ onBeforeUnmount(() => {
             :image="Empty.PRESENTED_IMAGE_SIMPLE"
           />
         </template>
-      </Drawer>
+      </WorkspaceInspectorSurface>
 
-      <Drawer
-        :open="selectedRecommendation !== null"
-        :size="520"
+      <WorkspaceInspectorSurface
+        v-model:open="orbitOpen"
         :title="$t('page.dashboard.orbit.drawerTitle')"
-        @close="selectedRecommendation = null"
+        :width="520"
       >
         <template v-if="selectedRecommendation">
           <Descriptions :column="1" bordered size="small">
@@ -1490,13 +1495,12 @@ onBeforeUnmount(() => {
             {{ $t('page.dashboard.orbit.openDetail') }}
           </Button>
         </template>
-      </Drawer>
+      </WorkspaceInspectorSurface>
 
-      <Drawer
-        :open="blockersOpen"
-        :size="480"
+      <WorkspaceInspectorSurface
+        v-model:open="blockersOpen"
         :title="$t('page.dashboard.bootstrap.reportBlocked')"
-        @close="blockersOpen = false"
+        :width="480"
       >
         <Alert
           :description="$t('page.dashboard.commandCenter.subtitle')"
@@ -1528,7 +1532,7 @@ onBeforeUnmount(() => {
         >
           {{ $t('page.menu.recommendations') }}
         </Button>
-      </Drawer>
+      </WorkspaceInspectorSurface>
 
       <RunReportModalHost />
     </div>
@@ -1725,15 +1729,7 @@ onBeforeUnmount(() => {
   }
 }
 
-:global(.fresh-boot-timeline-drawer .ant-drawer-content-wrapper) {
-  width: min(45rem, 100vw) !important;
-}
-
-:global(.fresh-boot-timeline-drawer .ant-drawer-body) {
-  padding-inline: 1.25rem;
-}
-
-:global(.fresh-boot-timeline-drawer .fresh-boot-run-timeline.ant-timeline) {
+:global(.fresh-boot-run-timeline.ant-timeline) {
   padding-inline: 0;
   margin-inline: 0;
 }

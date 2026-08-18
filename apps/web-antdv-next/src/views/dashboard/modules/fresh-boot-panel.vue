@@ -13,11 +13,9 @@ import {
   Alert,
   Badge,
   Button,
-  Drawer,
   Empty,
   message,
   Progress,
-  Skeleton,
   Tag,
 } from 'antdv-next';
 
@@ -26,6 +24,7 @@ import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import StatusChip from '#/shared/components/status-chip.vue';
+import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 
 import {
   activationPercent,
@@ -571,15 +570,14 @@ async function copyId(value: string) {
       :image="Empty.PRESENTED_IMAGE_SIMPLE"
     />
 
-    <Drawer
+    <WorkspaceInspectorSurface
       v-model:open="quarantineOpen"
-      destroy-on-close
-      root-class-name="fresh-boot-quarantine-drawer"
+      :loading="quarantineLoading && quarantines.length === 0"
       :title="$t('page.dashboard.bootstrap.quarantineTitle')"
+      width="45rem"
     >
-      <Skeleton v-if="quarantineLoading && quarantines.length === 0" active />
       <Alert
-        v-else-if="quarantineError && quarantines.length === 0"
+        v-if="quarantineError && quarantines.length === 0"
         :message="$t('page.dashboard.bootstrap.quarantineError')"
         show-icon
         type="error"
@@ -669,7 +667,7 @@ async function copyId(value: string) {
       >
         {{ $t('page.dashboard.bootstrap.loadMore') }}
       </Button>
-    </Drawer>
+    </WorkspaceInspectorSurface>
   </InsightPanel>
 </template>
 
@@ -854,10 +852,6 @@ async function copyId(value: string) {
   display: grid;
   gap: 0.75rem;
   margin-top: 0.75rem;
-}
-
-:global(.fresh-boot-quarantine-drawer .ant-drawer-content-wrapper) {
-  width: min(45rem, 100vw) !important;
 }
 
 @media (max-width: 1279px) {

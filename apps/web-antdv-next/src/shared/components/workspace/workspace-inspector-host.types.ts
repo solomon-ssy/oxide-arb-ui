@@ -4,8 +4,6 @@ export interface WorkspaceInspectorHostContext {
   activeId: Readonly<Ref<null | string>>;
   activate: (id: string, close: () => void) => void;
   deactivate: (id: string) => void;
-  desktop: Readonly<Ref<boolean>>;
-  target: Ref<HTMLElement | null>;
 }
 
 export const WORKSPACE_INSPECTOR_HOST_KEY: InjectionKey<WorkspaceInspectorHostContext> =
