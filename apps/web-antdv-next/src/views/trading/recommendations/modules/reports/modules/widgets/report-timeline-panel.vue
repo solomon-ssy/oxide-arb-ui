@@ -10,6 +10,7 @@ import { Table, Tag } from 'antdv-next';
 import { getReportTimeline } from '#/api/quant-reports';
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import { centerTableColumns } from '#/shared/table/center-columns';
 import { useQuantReportStore } from '#/store';
 
 defineOptions({ name: 'ReportTimelinePanel' });
@@ -96,7 +97,7 @@ onMounted(() => void load());
 
 <template>
   <Table
-    :columns="columns"
+    :columns="centerTableColumns(columns) ?? columns"
     :data-source="rows"
     data-testid="report-timeline"
     :loading="loading"

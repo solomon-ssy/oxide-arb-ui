@@ -16,6 +16,7 @@ import {
 } from '#/shared/components/format';
 import InlineBar from '#/shared/components/inline-bar.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'BacktestCategoryBreakdown' });
 
@@ -62,7 +63,6 @@ const columns = computed(() => [
     title: $t('page.research.backtests.detail.categoryPanel.category'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'sample_count',
     key: 'sample_count',
     sorter: (a: CategoryRow, b: CategoryRow) => a.sample_count - b.sample_count,
@@ -75,7 +75,6 @@ const columns = computed(() => [
     width: 160,
   },
   {
-    align: 'right' as const,
     dataIndex: 'rank_ic',
     key: 'rank_ic',
     sorter: (a: CategoryRow, b: CategoryRow) =>
@@ -84,13 +83,11 @@ const columns = computed(() => [
     title: $t('page.research.backtests.detail.categoryPanel.rankIc'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'hit_rate',
     key: 'hit_rate',
     title: $t('page.research.backtests.detail.categoryPanel.hitRate'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'mean_realized_bps',
     key: 'mean_realized_bps',
     title: $t('page.research.backtests.detail.categoryPanel.meanRealized'),
@@ -101,7 +98,7 @@ const columns = computed(() => [
 <template>
   <Table
     v-if="rows.length > 0"
-    :columns="columns"
+    :columns="centerTableColumns(columns) ?? columns"
     :data-source="rows"
     :pagination="false"
     :scroll="{ x: 680 }"

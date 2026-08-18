@@ -14,7 +14,7 @@ import { Page, useVbenDrawer } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 
-import { Alert, Button, Card, Flex, message, Statistic } from 'antdv-next';
+import { Alert, Button, Flex, message } from 'antdv-next';
 
 import { retryReportRun } from '#/api/quant-reports';
 import { getReconciliation } from '#/api/reconciliations';
@@ -79,14 +79,6 @@ let controller: AbortController | null = null;
 
 const items = computed(() => page.value?.items ?? []);
 const hasMore = computed(() => page.value?.has_more ?? false);
-const summaryByDomain = computed(() =>
-  Object.fromEntries(
-    (page.value?.summary.by_domain ?? []).map((item) => [
-      item.domain,
-      item.count,
-    ]),
-  ),
-);
 const selectedActivity = ref<null | RuntimeActivityView>(null);
 const taskOpen = ref(false);
 
@@ -424,27 +416,7 @@ onScopeDispose(() => {
         </Flex>
       </section>
 
-      <Flex gap="small" wrap="wrap">
-        <Card class="summary-card" size="small">
-          <Statistic
-            :title="$t('page.runtimeActivity.totalLabel')"
-            :value="page?.summary.total ?? 0"
-          />
-        </Card>
-        <button
-          v-for="value in DOMAIN_FILTERS"
-          :key="value"
-          class="summary-card summary-button"
-          :class="{ active: domain === value }"
-          type="button"
-          @click="domain = domain === value ? undefined : value"
-        >
-          <span>{{ $t(`page.runtimeActivity.domain.${value}`) }}</span>
-          <strong>{{ summaryByDomain[value] ?? 0 }}</strong>
-        </button>
-      </Flex>
-
-      <Card class="activity-surface">
+      <section class="activity-surface">
         <Flex
           class="activity-toolbar"
           gap="small"
@@ -452,6 +424,10 @@ onScopeDispose(() => {
           wrap="wrap"
         >
           <Flex gap="small" wrap="wrap">
+            <span class="activity-total">
+              {{ $t('page.runtimeActivity.totalLabel') }}
+              <strong>{{ page?.summary.total ?? 0 }}</strong>
+            </span>
             <EnumSelect
               v-model:value="domain"
               allow-clear
@@ -502,7 +478,7 @@ onScopeDispose(() => {
             {{ $t('page.runtimeActivity.loadMore') }}
           </Button>
         </Flex>
-      </Card>
+      </section>
     </Flex>
     <JobDrawer />
     <ActivityTaskInspector
@@ -544,37 +520,17 @@ onScopeDispose(() => {
   color: hsl(var(--qp-text-secondary));
 }
 
-.summary-card {
-  flex: 1;
-  min-width: 150px;
-  background: hsl(var(--qp-surface-raised));
-  border-color: hsl(var(--qp-border-subtle));
-}
-
-.summary-button {
-  display: flex;
+.activity-total {
+  display: inline-flex;
+  gap: 8px;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  color: hsl(var(--qp-text-secondary));
-  text-align: start;
-  cursor: pointer;
-  border: 1px solid hsl(var(--qp-border-subtle));
-  border-radius: var(--qp-radius-md);
-  transition:
-    border-color var(--qp-motion-instant) var(--qp-motion-ease-out),
-    background-color var(--qp-motion-instant) var(--qp-motion-ease-out);
+  font-size: 12px;
+  color: hsl(var(--qp-text-muted));
 }
 
-.summary-button:hover,
-.summary-button.active {
-  background: hsl(var(--qp-surface-overlay));
-  border-color: hsl(var(--qp-border-active));
-}
-
-.summary-button strong {
+.activity-total strong {
   font-family: 'JetBrains Mono Variable', monospace;
-  font-size: 20px;
+  font-size: 16px;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--qp-text-primary));
 }
@@ -582,13 +538,9 @@ onScopeDispose(() => {
 .activity-surface {
   overflow: hidden;
   background: hsl(var(--qp-surface-overlay) / 84%);
-  border-color: hsl(var(--qp-border-subtle));
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-lg);
   box-shadow: var(--qp-shadow-low);
-  backdrop-filter: blur(18px);
-}
-
-.activity-surface :deep(.ant-card-body) {
-  padding: 0;
 }
 
 .activity-toolbar {

@@ -26,7 +26,7 @@ interface ExposureRow {
 
 const allocationColumns: TableColumnsType<ExposureRow> = [
   { dataIndex: 'label', ellipsis: true, key: 'label' },
-  { align: 'right', dataIndex: 'value', key: 'value' },
+  { dataIndex: 'value', key: 'value' },
 ];
 
 function toRows(

@@ -21,6 +21,7 @@ import {
   formatScore,
   truncateHexId,
 } from '#/shared/components/format';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'FeedbackDriftPanel' });
 
@@ -131,7 +132,7 @@ function assessmentColor(value: DriftReportView['assessment']) {
     />
     <template v-else>
       <Table
-        :columns="columns"
+        :columns="centerTableColumns(columns) ?? columns"
         :data-source="page.items"
         :loading="loading"
         :pagination="false"

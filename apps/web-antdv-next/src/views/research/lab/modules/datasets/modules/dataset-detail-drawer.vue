@@ -174,12 +174,14 @@ function onTrain() {
       </Button>
     </template>
     <Spin :spinning="loading">
-      <div v-if="dataset" class="flex min-w-0 flex-col gap-4">
-        <EnumTag
-          context="dataset-detail"
-          name="TrainingDatasetStatus"
-          :value="dataset.status"
-        />
+      <div v-if="dataset" class="qp-calm-surface flex min-w-0 flex-col gap-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <EnumTag
+            context="dataset-detail"
+            name="TrainingDatasetStatus"
+            :value="dataset.status"
+          />
+        </div>
 
         <Card size="small" :title="$t('page.research.datasets.detail.summary')">
           <Descriptions :column="1" bordered size="small">

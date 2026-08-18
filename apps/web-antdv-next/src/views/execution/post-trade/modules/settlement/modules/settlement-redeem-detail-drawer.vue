@@ -36,6 +36,7 @@ import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
 import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useDrawerSettlementRevisionRefresh } from '#/shared/composables/use-drawer-settlement-revision-refresh';
 import { positionOpenPath } from '#/shared/routes/execution-plane';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import {
   formatSettlementDeploymentAdvisory,
@@ -505,7 +506,9 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
         >
           <Table
             v-if="inventoryLots.length > 0"
-            :columns="inventoryLotColumns"
+            :columns="
+              centerTableColumns(inventoryLotColumns) ?? inventoryLotColumns
+            "
             :data-source="inventoryLots"
             :pagination="false"
             :scroll="{ x: 1100 }"
@@ -681,7 +684,9 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
         >
           <Table
             v-if="submissions.length > 0"
-            :columns="submissionColumns"
+            :columns="
+              centerTableColumns(submissionColumns) ?? submissionColumns
+            "
             :data-source="submissions"
             :pagination="false"
             row-key="settlement_chain_submission_id"
@@ -832,7 +837,9 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
         >
           <Table
             v-if="redeemedLots.length > 0"
-            :columns="redeemedLotColumns"
+            :columns="
+              centerTableColumns(redeemedLotColumns) ?? redeemedLotColumns
+            "
             :data-source="redeemedLots"
             :pagination="false"
             :scroll="{ x: 1000 }"

@@ -3,6 +3,11 @@ import type { TrainedModelView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import {
+  modelSpecOpenPath,
+  modelVersionOpenPath,
+  trainingDatasetOpenPath,
+} from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Row-action permission gates for the model governance controls. */
@@ -22,7 +27,7 @@ export function useTrainedModelColumns(
         props: {
           mono: true,
           to: (row: TrainedModelView) =>
-            `/research/lab?module=models&entity=model-version&id=${row.model_version_id}`,
+            modelVersionOpenPath(row.model_version_id),
         },
       },
       field: 'model_version_id',
@@ -30,13 +35,19 @@ export function useTrainedModelColumns(
       title: $t('page.research.models.columns.modelVersionId'),
     },
     {
+      cellRender: {
+        name: 'CellEntityRoute',
+        props: {
+          mono: true,
+          to: (row: TrainedModelView) => modelSpecOpenPath(row.model_spec_id),
+        },
+      },
       field: 'model_spec_id',
       minWidth: 140,
-      showOverflow: 'tooltip',
       title: $t('page.research.models.columns.modelSpec'),
     },
     {
-      align: 'right',
+      className: 'font-mono tabular-nums',
       field: 'version',
       title: $t('page.research.models.columns.version'),
       width: 90,
@@ -54,7 +65,7 @@ export function useTrainedModelColumns(
           mono: true,
           to: (row: TrainedModelView) =>
             row.training_dataset_id
-              ? `/research/lab?module=datasets&entity=training-dataset&id=${row.training_dataset_id}`
+              ? trainingDatasetOpenPath(row.training_dataset_id)
               : undefined,
         },
       },
@@ -69,7 +80,6 @@ export function useTrainedModelColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'model_version_id',

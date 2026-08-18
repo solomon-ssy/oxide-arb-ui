@@ -3,6 +3,7 @@ import type { CalibrationArtifactSummaryView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import { calibrationArtifactOpenPath } from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export interface CalibrationArtifactActionAccess {
@@ -20,7 +21,7 @@ export function useCalibrationArtifactColumns(
         props: {
           mono: true,
           to: (row: CalibrationArtifactSummaryView) =>
-            `/research/learning-policy?module=calibration&entity=calibration-artifact&id=${row.artifact_id}`,
+            calibrationArtifactOpenPath(row.artifact_id),
         },
       },
       field: 'artifact_id',
@@ -96,7 +97,6 @@ export function useCalibrationArtifactColumns(
       width: 180,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'artifact_id', onClick: onActionClick },
         name: 'CellOperation',

@@ -36,6 +36,7 @@ import {
 import InsightPanel from '#/shared/components/insight-panel.vue';
 import KpiCard from '#/shared/components/kpi-card.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import EquityChart from './modules/widgets/equity-chart.vue';
 import EquitySnapshotDrawer from './modules/widgets/equity-snapshot-drawer.vue';
@@ -121,27 +122,23 @@ const positionColumns: TableColumnsType<VenuePositionSnapshotView> = [
     width: 140,
   },
   {
-    align: 'right',
     dataIndex: 'size',
     title: $t('page.quantAccount.positions.size'),
     width: 110,
   },
   {
-    align: 'right',
     dataIndex: 'avg_price',
     key: 'avg',
     title: $t('page.quantAccount.positions.avgPrice'),
     width: 110,
   },
   {
-    align: 'right',
     dataIndex: 'cur_price',
     key: 'cur',
     title: $t('page.quantAccount.positions.curPrice'),
     width: 110,
   },
   {
-    align: 'right',
     dataIndex: 'current_value',
     key: 'value',
     title: $t('page.quantAccount.positions.value'),
@@ -193,35 +190,30 @@ const equityColumns: TableColumnsType<EquitySnapshotView> = [
     width: 180,
   },
   {
-    align: 'right',
     dataIndex: 'venue_net_liquidation_usd',
     key: 'netLiq',
     title: $t('page.quantAccount.fields.netLiq'),
     width: 160,
   },
   {
-    align: 'right',
     dataIndex: 'incentive_credit_cumulative_usd',
     key: 'incentiveCredit',
     title: $t('page.quantAccount.fields.incentiveCredit'),
     width: 170,
   },
   {
-    align: 'right',
     dataIndex: 'realized_pnl_cumulative_usd',
     key: 'realized',
     title: $t('page.quantAccount.fields.realizedPnl'),
     width: 160,
   },
   {
-    align: 'right',
     dataIndex: 'unrealized_pnl_usd',
     key: 'unrealized',
     title: $t('page.quantAccount.fields.unrealizedPnl'),
     width: 150,
   },
   {
-    align: 'right',
     dataIndex: 'drawdown_pct',
     key: 'drawdown',
     title: $t('page.quantAccount.fields.drawdown'),
@@ -344,7 +336,7 @@ onBeforeUnmount(() => {
           tone="sky"
         >
           <Table
-            :columns="positionColumns"
+            :columns="centerTableColumns(positionColumns) ?? positionColumns"
             :data-source="positions"
             :loading="accountLoading"
             :pagination="false"
@@ -421,7 +413,7 @@ onBeforeUnmount(() => {
           tone="indigo"
         >
           <Table
-            :columns="equityColumns"
+            :columns="centerTableColumns(equityColumns) ?? equityColumns"
             :data-source="equityDescending"
             :loading="equityLoading"
             :pagination="{ pageSize: 20, size: 'small' }"

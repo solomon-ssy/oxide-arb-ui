@@ -119,7 +119,6 @@ const notApplicableRows = computed<NotApplicableRow[]>(() =>
 const evaluatedColumns = computed(() => [
   { dataIndex: 'gate', key: 'gate', width: '42%' },
   {
-    align: 'right' as const,
     dataIndex: 'metrics',
     key: 'metrics',
     width: '58%',
@@ -129,7 +128,6 @@ const evaluatedColumns = computed(() => [
 const notApplicableColumns = computed(() => [
   { dataIndex: 'gate', key: 'gate', width: '42%' },
   {
-    align: 'right' as const,
     dataIndex: 'detail',
     key: 'detail',
     width: '58%',

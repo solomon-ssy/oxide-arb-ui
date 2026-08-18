@@ -15,6 +15,7 @@ import { MARKET_CATEGORY_UNKNOWN_FILTER } from '@vben/types';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { fetchMarketPage } from '#/api/markets';
 import { $t } from '#/locales';
+import { marketOpenPath } from '#/shared/routes/trading-plane';
 import { useMarketStore } from '#/store';
 
 import { useMarketSearchSchema } from './modules/schemas/search-form';
@@ -108,10 +109,7 @@ watch(
 );
 
 function openDetail(row: MarketView) {
-  void router.push({
-    path: '/trading/market-intelligence',
-    query: { entity: 'market', id: row.market_id, module: 'overview' },
-  });
+  void router.push(marketOpenPath(row.market_id));
 }
 
 function onActionClick({ code, row }: OnActionClickParams<MarketRow>) {

@@ -65,7 +65,7 @@ function copyId(value: string) {
 </script>
 
 <template>
-  <div class="bg-card flex flex-col gap-3 rounded-lg border p-4">
+  <div class="market-detail-header" :class="{ 'is-live': live }">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="flex min-w-0 items-start gap-2">
         <div class="flex min-w-0 flex-col gap-1">
@@ -75,7 +75,7 @@ function copyId(value: string) {
               name="MarketStatus"
               :value="market.status"
             />
-            <Tag v-if="live" color="success">
+            <Tag v-if="live" class="qp-running-motion" color="success">
               {{ $t('page.markets.detail.liveWs') }}
             </Tag>
           </div>
@@ -145,3 +145,25 @@ function copyId(value: string) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.market-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background:
+    linear-gradient(
+        hsl(var(--qp-surface-glass) / 88%),
+        hsl(var(--qp-surface-glass) / 88%)
+      )
+      padding-box,
+    var(--qp-gradient-hairline) border-box;
+  border: 1px solid transparent;
+  border-radius: var(--qp-radius-lg);
+}
+
+.market-detail-header.is-live {
+  box-shadow: var(--qp-glow-realtime);
+}
+</style>

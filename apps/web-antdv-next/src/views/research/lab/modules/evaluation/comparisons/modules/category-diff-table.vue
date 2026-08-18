@@ -14,6 +14,7 @@ import {
 } from '#/shared/components/format';
 import InlineBar from '#/shared/components/inline-bar.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'CategoryDiffTable' });
 
@@ -44,13 +45,11 @@ const columns = computed(() => [
     title: $t('page.research.comparisons.detail.categoryDiffPanel.category'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'baseline_rank_ic',
     key: 'baseline_rank_ic',
     title: $t('page.research.comparisons.detail.categoryDiffPanel.baseline'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'candidate_rank_ic',
     key: 'candidate_rank_ic',
     title: $t('page.research.comparisons.detail.categoryDiffPanel.candidate'),
@@ -70,7 +69,7 @@ const columns = computed(() => [
 <template>
   <Table
     v-if="value.length > 0"
-    :columns="columns"
+    :columns="centerTableColumns(columns) ?? columns"
     :data-source="value"
     :pagination="false"
     row-key="category"

@@ -6,7 +6,6 @@ import type { ComponentPropsMap, ComponentType } from './component';
 import type { DecimalInput } from '#/shared/components/format';
 
 import { h } from 'vue';
-import { RouterLink } from 'vue-router';
 
 import { IconifyIcon } from '@vben/icons';
 import { $te } from '@vben/locales';
@@ -28,6 +27,7 @@ import {
 } from 'antdv-next';
 
 import { $t } from '#/locales';
+import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import {
   decimalSign,
@@ -42,6 +42,8 @@ import {
   parseDecimal,
   truncateHexId,
 } from '#/shared/components/format';
+import { marketOpenPath } from '#/shared/routes/trading-plane';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import { useVbenForm } from './form';
 
@@ -159,7 +161,7 @@ setupVbenVxeTable({
         return h(
           'div',
           {
-            class: 'inline-flex flex-wrap items-center justify-center gap-1',
+            class: 'qp-chip-cluster',
           },
           tagNodes,
         );
@@ -387,7 +389,7 @@ setupVbenVxeTable({
         }
         return h(
           'span',
-          { class: ['font-mono', colorClass] },
+          { class: ['font-mono tabular-nums', colorClass] },
           formatUsd(value),
         );
       },
@@ -397,7 +399,11 @@ setupVbenVxeTable({
     vxeUI.renderer.add('CellPrice', {
       renderTableDefault(_renderOpts, { column, row }) {
         const value = get(row, column.field) as DecimalInput;
-        return h('span', { class: 'font-mono' }, formatPrice(value));
+        return h(
+          'span',
+          { class: 'font-mono tabular-nums' },
+          formatPrice(value),
+        );
       },
     });
 
@@ -422,7 +428,7 @@ setupVbenVxeTable({
         }
         return h(
           'span',
-          { class: ['font-mono', colorClass] },
+          { class: ['font-mono tabular-nums', colorClass] },
           formatBps(value),
         );
       },
@@ -435,7 +441,7 @@ setupVbenVxeTable({
         const fractionDigits = (props as Recordable<any>)?.fractionDigits ?? 1;
         return h(
           'span',
-          { class: 'font-mono' },
+          { class: 'font-mono tabular-nums' },
           formatPercent(value, fractionDigits),
         );
       },
@@ -445,38 +451,56 @@ setupVbenVxeTable({
     vxeUI.renderer.add('CellScore', {
       renderTableDefault(_renderOpts, { column, row }) {
         const value = get(row, column.field) as DecimalInput;
-        return h('span', { class: 'font-mono' }, formatScore(value));
+        return h(
+          'span',
+          { class: 'font-mono tabular-nums' },
+          formatScore(value),
+        );
       },
     });
 
-    // 单元格渲染：MarketId(0x… 66 位截断,hover 全量,点击复制)
+    // 单元格渲染：MarketId(截断 hex 深链到市场详情,旁路复制)
     vxeUI.renderer.add('CellMarketId', {
       renderTableDefault(_renderOpts, { column, row }) {
         const value = get(row, column.field) as null | string | undefined;
         if (!value) {
           return h('span', {}, EMPTY_PLACEHOLDER);
         }
+        const marketId = value;
         async function copy(event: MouseEvent) {
           event.stopPropagation();
           try {
-            await navigator.clipboard.writeText(value as string);
+            await navigator.clipboard.writeText(marketId);
             message.success($t('common.copied'));
           } catch {
             // Clipboard unavailable (insecure context); copy silently fails.
           }
         }
-        return h(
-          Tooltip,
-          { title: value },
-          {
-            default: () =>
-              h(
-                'span',
-                { class: 'cursor-pointer font-mono', onClick: copy },
-                truncateHexId(value),
-              ),
-          },
-        );
+        return h('div', { class: 'qp-chip-cluster' }, [
+          h(
+            Tooltip,
+            { title: marketId },
+            {
+              default: () =>
+                h(EntityRouteLink, {
+                  label: truncateHexId(marketId),
+                  mono: true,
+                  to: marketOpenPath(marketId),
+                }),
+            },
+          ),
+          h(
+            'button',
+            {
+              'aria-label': $t('common.copy'),
+              class:
+                'inline-flex size-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground',
+              onClick: copy,
+              type: 'button',
+            },
+            h(IconifyIcon, { class: 'size-3.5', icon: 'lucide:copy' }),
+          ),
+        ]);
       },
     });
 
@@ -528,8 +552,8 @@ setupVbenVxeTable({
       },
     });
 
-    // 单元格渲染：实体深链(router-link,截断/mono,点击不触发行选中)
-    // props: { to: (row) => string, mono?: boolean }
+    // 单元格渲染：实体深链(EntityRouteLink,截断/mono,点击不触发行选中)
+    // props: { to: (row) => string | undefined, mono?: boolean }
     vxeUI.renderer.add('CellEntityRoute', {
       renderTableDefault({ props }, { column, row }) {
         const value = get(row, column.field) as null | string | undefined;
@@ -538,24 +562,17 @@ setupVbenVxeTable({
         }
         const { mono, to } = (props ?? {}) as {
           mono?: boolean;
-          to?: (row: Recordable<any>) => string;
+          to?: (row: Recordable<any>) => string | undefined;
         };
-        if (!to) {
+        const destination = to?.(row);
+        if (!destination) {
           return h('span', {}, value);
         }
-        return h(
-          RouterLink,
-          {
-            class: [
-              'text-primary hover:underline',
-              mono ? 'font-mono text-xs break-all' : '',
-            ],
-            // Cross-page navigation must not toggle vxe row selection.
-            onClick: (event: MouseEvent) => event.stopPropagation(),
-            to: to(row),
-          },
-          { default: () => value },
-        );
+        return h(EntityRouteLink, {
+          label: value,
+          mono,
+          to: destination,
+        });
       },
     });
 
@@ -615,12 +632,12 @@ export const useVbenVxeGrid = <T extends Record<string, any>>(
 ) => {
   const { gridOptions, ...rest } = options;
   const toolbarConfig = gridOptions?.toolbarConfig;
-
-  return useGrid<T, ComponentType, ComponentPropsMap>({
+  const [Grid, gridApi] = useGrid<T, ComponentType, ComponentPropsMap>({
     ...rest,
     gridOptions: gridOptions
       ? {
           ...gridOptions,
+          columns: centerTableColumns(gridOptions.columns),
           toolbarConfig:
             toolbarConfig?.enabled === false
               ? toolbarConfig
@@ -631,6 +648,18 @@ export const useVbenVxeGrid = <T extends Record<string, any>>(
         }
       : { toolbarConfig: QP_GRID_TOOLBAR_CONFIG },
   });
+  const setGridOptions = gridApi.setGridOptions.bind(gridApi);
+  gridApi.setGridOptions = (next) => {
+    if (!next?.columns) {
+      setGridOptions(next);
+      return;
+    }
+    setGridOptions({
+      ...next,
+      columns: centerTableColumns(next.columns),
+    });
+  };
+  return [Grid, gridApi] as const;
 };
 
 /** Payload delivered by the `CellOperation` renderer to page-level handlers. */

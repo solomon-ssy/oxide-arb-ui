@@ -45,6 +45,7 @@ import {
 } from '#/shared/components/format';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { usePolling } from '#/shared/composables/use-polling';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'StructuralMonitorPage' });
 
@@ -560,7 +561,7 @@ watch(topMarkets, () => {
               </div>
             </template>
             <Table
-              :columns="legColumns"
+              :columns="centerTableColumns(legColumns) ?? legColumns"
               :data-source="event.legs"
               :pagination="false"
               row-key="yes_token_id"
@@ -634,7 +635,9 @@ watch(topMarkets, () => {
           </DescriptionsItem>
         </Descriptions>
         <Table
-          :columns="participantColumns"
+          :columns="
+            centerTableColumns(participantColumns) ?? participantColumns
+          "
           :data-source="detail!.top_participants"
           :pagination="false"
           row-key="participant_address"

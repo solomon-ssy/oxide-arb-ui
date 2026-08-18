@@ -4,7 +4,10 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
 import { EMPTY_PLACEHOLDER, formatShares } from '#/shared/components/format';
-import { executionOrderOpenPath } from '#/shared/routes/execution-plane';
+import {
+  executionOrderOpenPath,
+  orderIntentOpenPath,
+} from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 function formatVenueStatus(value: null | string | undefined): string {
@@ -39,7 +42,7 @@ export function useExecutionOrderColumns(
         props: {
           mono: true,
           to: (row: ExecutionOrderView) =>
-            `/execution/orders?module=intents&entity=order-intent&id=${row.order_intent_id}`,
+            orderIntentOpenPath(row.order_intent_id),
         },
       },
       field: 'order_intent_id',
@@ -87,7 +90,6 @@ export function useExecutionOrderColumns(
       width: 100,
     },
     {
-      align: 'right',
       field: 'shares',
       formatter: ({ cellValue }: { cellValue: string }) =>
         formatShares(cellValue),
@@ -136,7 +138,6 @@ export function useExecutionOrderColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'execution_order_id',

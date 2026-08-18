@@ -110,7 +110,10 @@ function onCreateIntent() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4" data-testid="recommendation-detail-panel">
+  <div
+    class="qp-calm-surface flex flex-col gap-4"
+    data-testid="recommendation-detail-panel"
+  >
     <div class="flex flex-wrap items-center gap-2">
       <span class="text-muted-foreground text-sm">
         #{{ recommendation.rank }}

@@ -3,6 +3,7 @@ import type { FactorDefinitionView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import { factorOpenPath } from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useFactorDefinitionColumns(
@@ -15,7 +16,7 @@ export function useFactorDefinitionColumns(
         props: {
           mono: true,
           to: (row: FactorDefinitionView) =>
-            `/research/lab?module=factors&entity=factor&id=${row.factor_definition_id}`,
+            factorOpenPath(row.factor_definition_id),
         },
       },
       field: 'factor_definition_id',
@@ -44,7 +45,6 @@ export function useFactorDefinitionColumns(
       width: 150,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'factor_definition_id',

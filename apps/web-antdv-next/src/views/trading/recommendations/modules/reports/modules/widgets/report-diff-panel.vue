@@ -33,6 +33,7 @@ import {
   formatScore,
   formatUsd,
 } from '#/shared/components/format';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import { useReportComparePicker } from '../use-report-compare-picker';
 
@@ -63,33 +64,28 @@ const deltaColumns = [
     width: 90,
   },
   {
-    align: 'right' as const,
     dataIndex: ['base', 'rank'],
     key: 'base_rank',
     title: $t('page.quantReports.detail.diff.columns.baseRank'),
     width: 110,
   },
   {
-    align: 'right' as const,
     dataIndex: ['compare', 'rank'],
     key: 'compare_rank',
     title: $t('page.quantReports.detail.diff.columns.compareRank'),
     width: 120,
   },
   {
-    align: 'right' as const,
     key: 'base_robust_net',
     title: $t('page.quantReports.detail.diff.columns.baseRobustNet'),
     width: 120,
   },
   {
-    align: 'right' as const,
     key: 'compare_robust_net',
     title: $t('page.quantReports.detail.diff.columns.compareRobustNet'),
     width: 130,
   },
   {
-    align: 'right' as const,
     dataIndex: 'hard_reserved_cash_usd_delta',
     key: 'hard_reserved_cash_usd_delta',
     title: $t('page.quantReports.detail.diff.columns.delta'),
@@ -344,7 +340,7 @@ onMounted(async () => {
         />
         <Table
           v-else
-          :columns="deltaColumns"
+          :columns="centerTableColumns(deltaColumns) ?? deltaColumns"
           :data-source="group.rows"
           :pagination="false"
           :row-key="deltaRowKey"

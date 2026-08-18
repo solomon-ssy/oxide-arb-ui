@@ -231,7 +231,6 @@ function readStoredWidth(): number {
     calc(100% - 2 * var(--qp-inspector-inset))
   );
   min-width: min(360px, calc(100% - 2 * var(--qp-inspector-inset)));
-  overflow: hidden;
   color: hsl(var(--qp-text-primary));
   pointer-events: none;
   outline: none;
@@ -248,22 +247,27 @@ function readStoredWidth(): number {
 }
 
 .workspace-inspector-frame {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex: 1;
   flex-direction: column;
-  width: 100%;
   min-width: 0;
-  height: 100%;
   min-height: 0;
+  overflow: hidden;
+  border-radius: inherit;
 }
 
-.workspace-inspector-surface > :deep(*) {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  min-height: 0;
+.workspace-inspector-surface :deep(.ant-select-dropdown),
+.workspace-inspector-surface :deep(.ant-dropdown),
+.workspace-inspector-surface :deep(.ant-picker-dropdown),
+.workspace-inspector-surface :deep(.ant-tooltip),
+.workspace-inspector-surface :deep(.ant-popover) {
+  height: auto;
+  max-height: min(20rem, 70%);
+  background: hsl(var(--qp-surface-glass) / 96%);
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-md);
+  box-shadow: var(--qp-shadow-medium);
 }
 
 .workspace-inspector-toolbar {

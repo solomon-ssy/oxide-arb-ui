@@ -28,6 +28,7 @@ import {
   listQuantReportFunnelMarkets,
 } from '#/api/quant-reports';
 import { $t } from '#/locales';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'ReportFunnelPanel' });
 
@@ -240,7 +241,7 @@ onMounted(() => void Promise.all([loadSummary(), loadRows()]));
       </Space>
 
       <Table
-        :columns="columns"
+        :columns="centerTableColumns(columns) ?? columns"
         :data-source="rows"
         :loading="loading"
         data-testid="report-funnel-markets"

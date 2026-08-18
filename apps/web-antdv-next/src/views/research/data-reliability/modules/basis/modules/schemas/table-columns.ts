@@ -3,6 +3,7 @@ import type { BasisAlertView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import { marketLinkageOpenPath } from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export interface BasisAlertActionAccess {
@@ -19,8 +20,7 @@ export function useBasisAlertColumns(
         name: 'CellEntityRoute',
         props: {
           mono: true,
-          to: (row: BasisAlertView) =>
-            `/research/data-reliability?module=linkages&entity=market-linkage&id=${row.market_id}`,
+          to: (row: BasisAlertView) => marketLinkageOpenPath(row.market_id),
         },
       },
       field: 'market_id',
@@ -70,7 +70,6 @@ export function useBasisAlertColumns(
       width: 160,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'alert_id', onClick: onActionClick },
         name: 'CellOperation',

@@ -26,6 +26,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import { vAccessibleTableScroll } from '#/shared/directives/accessible-table-scroll';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'RecommendationPlans' });
 
@@ -100,21 +101,18 @@ const scenarioColumns = [
     width: 130,
   },
   {
-    align: 'right' as const,
     dataIndex: 'maker_rebate_program_day_baseline_usd',
     key: 'maker_rebate_program_day_baseline_usd',
     title: $t('page.quantRecommendations.economicTier.rebateBaseline'),
     width: 160,
   },
   {
-    align: 'right' as const,
     dataIndex: 'maker_rebate_program_day_total_usd',
     key: 'maker_rebate_program_day_total_usd',
     title: $t('page.quantRecommendations.economicTier.rebateDayTotal'),
     width: 160,
   },
   {
-    align: 'right' as const,
     dataIndex: 'maker_rebate_accrual_usd',
     key: 'maker_rebate_accrual_usd',
     title: $t('page.quantRecommendations.economicTier.rebateAccrual'),
@@ -133,21 +131,18 @@ const scenarioColumns = [
     width: 190,
   },
   {
-    align: 'right' as const,
     dataIndex: 'objective_maker_rebate_usd',
     key: 'objective_maker_rebate_usd',
     title: $t('page.quantRecommendations.economicTier.rebateObjective'),
     width: 170,
   },
   {
-    align: 'right' as const,
     dataIndex: 'discounted_net_usd',
     key: 'discounted_net_usd',
     title: $t('page.quantRecommendations.economicTier.discountedNet'),
     width: 150,
   },
   {
-    align: 'right' as const,
     dataIndex: 'risk_net_usd',
     key: 'risk_net_usd',
     title: $t('page.quantRecommendations.economicTier.riskNet'),
@@ -161,7 +156,6 @@ const occupancyColumns = [
     title: $t('page.quantRecommendations.economicTier.bucketEnd'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'reserved_cash_usd',
     key: 'reserved_cash_usd',
     title: $t('page.quantRecommendations.economicTier.reservedCash'),
@@ -543,7 +537,7 @@ function millis(value: number): string {
             v-accessible-table-scroll="
               $t('page.quantRecommendations.economicTier.cashflowScrollLabel')
             "
-            :columns="scenarioColumns"
+            :columns="centerTableColumns(scenarioColumns) ?? scenarioColumns"
             :data-source="tier.scenario_cashflows"
             :pagination="false"
             row-key="scenario_index"
@@ -634,7 +628,7 @@ function millis(value: number): string {
           </Table>
         </div>
         <Table
-          :columns="occupancyColumns"
+          :columns="centerTableColumns(occupancyColumns) ?? occupancyColumns"
           :data-source="tier.hard_reservation_envelope"
           :pagination="false"
           row-key="end_secs"

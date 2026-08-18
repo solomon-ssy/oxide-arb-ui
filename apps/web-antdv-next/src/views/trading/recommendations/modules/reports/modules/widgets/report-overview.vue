@@ -30,6 +30,7 @@ import {
   formatUsd,
 } from '#/shared/components/format';
 import StatusChip from '#/shared/components/status-chip.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 import SubjectParityPanel from '#/views/research/data-reliability/modules/integrity/components/subject-parity-panel.vue';
 
 defineOptions({ name: 'ReportOverview' });
@@ -87,19 +88,16 @@ const routeColumns = [
     title: $t('page.quantReports.detail.routes.model'),
   },
   {
-    align: 'right' as const,
     key: 'eligible',
     title: $t('page.quantReports.detail.routes.eligible'),
     width: 110,
   },
   {
-    align: 'right' as const,
     key: 'candidates',
     title: $t('page.quantReports.detail.routes.candidates'),
     width: 110,
   },
   {
-    align: 'right' as const,
     key: 'selected',
     title: $t('page.quantReports.detail.routes.selected'),
     width: 110,
@@ -110,7 +108,6 @@ const routeColumns = [
     width: 160,
   },
   {
-    align: 'right' as const,
     key: 'detail',
     title: $t('common.detail'),
     width: 90,
@@ -143,7 +140,7 @@ function openDecisionPolicyActivity() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="qp-calm-surface flex flex-col gap-4">
     <Alert
       v-if="factDelivery?.status !== 'verified'"
       :description="
@@ -478,7 +475,7 @@ function openDecisionPolicyActivity() {
       />
       <Table
         v-else
-        :columns="routeColumns"
+        :columns="centerTableColumns(routeColumns) ?? routeColumns"
         :data-source="diagnostics.routes"
         :pagination="false"
         row-key="report_route_run_id"

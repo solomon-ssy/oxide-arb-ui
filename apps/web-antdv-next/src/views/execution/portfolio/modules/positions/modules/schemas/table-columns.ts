@@ -69,7 +69,6 @@ export function usePositionColumns(
       width: 120,
     },
     {
-      align: 'right',
       field: 'shares',
       formatter: ({ cellValue }: { cellValue: string }) =>
         formatShares(cellValue),
@@ -107,7 +106,6 @@ export function usePositionColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'position_id',

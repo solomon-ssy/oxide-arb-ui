@@ -426,6 +426,26 @@ describe('ui fresh-boot clean-break inventory', () => {
     expect(missing).toEqual([]);
   });
 
+  it('does not stretch overlay popups with direct-child layout CSS', () => {
+    const chrome = [
+      'src/shared/components/workspace/workspace-object-stage.vue',
+      'src/shared/components/workspace/workspace-inspector-surface.vue',
+    ].map((relative) => ({
+      relative,
+      content: readFileSync(join(APP_ROOT, relative), 'utf8'),
+    }));
+    const stretched = chrome
+      .filter(
+        ({ content, relative }) =>
+          content.includes(
+            `${relative.includes('inspector') ? '.workspace-inspector-surface' : '.workspace-object-stage'} > :deep(*)`,
+          ) || !content.includes('height: auto'),
+      )
+      .map(({ relative }) => relative);
+
+    expect(stretched).toEqual([]);
+  });
+
   it('hides list pane descendants while object stage is open', () => {
     const content = readFileSync(
       join(

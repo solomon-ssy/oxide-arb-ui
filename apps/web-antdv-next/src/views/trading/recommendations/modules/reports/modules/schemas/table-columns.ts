@@ -67,13 +67,11 @@ export function useReportColumns(
       title: $t('page.quantReports.columns.routes'),
     },
     {
-      align: 'right',
       field: 'top_n',
       title: $t('page.quantReports.columns.topN'),
       width: 90,
     },
     {
-      align: 'right',
       field: 'published_recommendation_count',
       title: $t('page.quantReports.columns.published'),
       width: 110,
@@ -119,7 +117,6 @@ export function useReportColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'recommendation_report_id',

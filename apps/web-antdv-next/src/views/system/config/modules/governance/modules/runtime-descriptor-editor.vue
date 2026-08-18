@@ -377,20 +377,17 @@ function riskColor(risk: RuntimeFieldDescriptor['risk_level']) {
             {{ fieldDescription(field) }}
           </p>
 
-          <dl class="runtime-meta">
-            <div v-if="field.unit">
-              <dt>{{ $t('page.config.editor.unit') }}</dt>
-              <dd>{{ $t(`page.config.unit.${field.unit}`) }}</dd>
-            </div>
-            <div>
-              <dt>{{ $t('page.config.editor.applyEffect') }}</dt>
-              <dd>{{ $t(`page.config.boundary.${field.apply_effect}`) }}</dd>
-            </div>
-            <div v-if="field.read_only">
-              <dt class="sr-only">{{ $t('page.config.editor.access') }}</dt>
-              <dd>{{ $t('page.config.editor.readOnlyField') }}</dd>
-            </div>
-          </dl>
+          <p v-if="field.unit" class="runtime-description">
+            {{ $t('page.config.editor.unit') }}:
+            {{ $t(`page.config.unit.${field.unit}`) }}
+          </p>
+          <p
+            v-if="field.read_only"
+            class="runtime-description"
+            :aria-label="$t('page.config.editor.access')"
+          >
+            {{ $t('page.config.editor.readOnlyField') }}
+          </p>
 
           <div
             v-if="fieldIssues(field).length > 0"
@@ -419,19 +416,17 @@ function riskColor(risk: RuntimeFieldDescriptor['risk_level']) {
 .runtime-field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 12px 1.5rem;
 }
 
 .runtime-field {
   min-width: 0;
-  padding: 0.75rem;
-  background: hsl(var(--muted) / 24%);
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.6rem;
 }
 
 .runtime-field--wide {
   grid-column: 1 / -1;
+  padding-top: 4px;
+  border-top: 1px solid hsl(var(--qp-border-subtle));
 }
 
 .runtime-label-row {
@@ -457,25 +452,7 @@ function riskColor(risk: RuntimeFieldDescriptor['risk_level']) {
   margin-top: 0.45rem;
   font-size: 0.75rem;
   line-height: 1.45;
-  color: hsl(var(--muted-foreground));
-}
-
-.runtime-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.9rem;
-  margin-top: 0.55rem;
-  font-size: 0.6875rem;
-  color: hsl(var(--muted-foreground));
-}
-
-.runtime-meta div {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.runtime-meta dt::after {
-  content: ':';
+  color: hsl(var(--qp-text-muted));
 }
 
 .structured-value {

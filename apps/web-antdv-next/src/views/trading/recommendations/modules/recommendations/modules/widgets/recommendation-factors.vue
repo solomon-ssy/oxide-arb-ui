@@ -12,6 +12,7 @@ import {
   formatPercent,
   formatScore,
 } from '#/shared/components/format';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'RecommendationFactors' });
 
@@ -36,14 +37,12 @@ const columns = [
     width: 110,
   },
   {
-    align: 'right' as const,
     dataIndex: 'raw_value',
     key: 'raw_value',
     title: $t('page.quantRecommendations.factors.columns.raw'),
     width: 110,
   },
   {
-    align: 'right' as const,
     dataIndex: 'normalized_score',
     key: 'normalized_score',
     title: $t('page.quantRecommendations.factors.columns.normalized'),
@@ -56,21 +55,18 @@ const columns = [
     width: 150,
   },
   {
-    align: 'right' as const,
     dataIndex: 'weight',
     key: 'weight',
     title: $t('page.quantRecommendations.factors.columns.weight'),
     width: 90,
   },
   {
-    align: 'right' as const,
     dataIndex: 'contribution',
     key: 'contribution',
     title: $t('page.quantRecommendations.factors.columns.contribution'),
     width: 110,
   },
   {
-    align: 'right' as const,
     dataIndex: 'confidence',
     key: 'confidence',
     title: $t('page.quantRecommendations.factors.columns.confidence'),
@@ -121,7 +117,7 @@ function unscoredLabel(record: FactorBreakdownEntry): string {
   />
   <Table
     v-else
-    :columns="columns"
+    :columns="centerTableColumns(columns) ?? columns"
     :data-source="factors"
     :pagination="false"
     row-key="factor_name"

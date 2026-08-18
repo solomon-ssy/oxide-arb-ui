@@ -6,6 +6,7 @@ import { intentActions } from '@vben/types';
 
 import { $t } from '#/locales';
 import { formatShares, formatUsd } from '#/shared/components/format';
+import { orderIntentOpenPath } from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Which governed actions the current operator is permitted to invoke. */
@@ -26,7 +27,7 @@ export function useIntentColumns(
         props: {
           mono: true,
           to: (row: OrderIntentView) =>
-            `/execution/orders?module=intents&entity=order-intent&id=${row.order_intent_id}`,
+            orderIntentOpenPath(row.order_intent_id),
         },
       },
       field: 'order_intent_id',
@@ -64,7 +65,6 @@ export function useIntentColumns(
       width: 110,
     },
     {
-      align: 'right',
       field: 'entry_order.amount',
       formatter: ({ row }: { row: OrderIntentView }) =>
         row.entry_order.amount.unit === 'cash_budget'
@@ -99,7 +99,6 @@ export function useIntentColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'order_intent_id',

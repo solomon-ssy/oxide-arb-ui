@@ -116,9 +116,12 @@ function removeBucket(index: number) {
   grid-template-columns: 1.75rem minmax(8rem, 1fr) minmax(8rem, 1fr) auto;
   gap: 0.75rem;
   align-items: end;
-  padding: 0.75rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid hsl(var(--qp-border-subtle));
+}
+
+.bucket-row:last-of-type {
+  border-bottom: 0;
 }
 
 .bucket-index {

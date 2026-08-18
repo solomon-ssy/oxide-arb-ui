@@ -81,7 +81,6 @@ export function useReconciliationColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'reconciliation_id',

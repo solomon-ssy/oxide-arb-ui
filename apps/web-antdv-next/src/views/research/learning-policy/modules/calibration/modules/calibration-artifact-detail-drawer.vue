@@ -25,6 +25,7 @@ import { $t } from '#/locales';
 import { formatDateTimeLocal, formatPercent } from '#/shared/components/format';
 import ReliabilityChart from '#/shared/components/reliability-chart.vue';
 import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'CalibrationArtifactDetailDrawer' });
 
@@ -253,7 +254,7 @@ const [, drawerApi] = useVbenDrawer({
             </div>
           </template>
           <Table
-            :columns="binColumns"
+            :columns="centerTableColumns(binColumns) ?? binColumns"
             :data-source="item.curve.bins"
             :pagination="false"
             row-key="price_lo"
@@ -349,7 +350,9 @@ const [, drawerApi] = useVbenDrawer({
           </div>
           <Table
             class="mt-4"
-            :columns="reliabilityBinColumns"
+            :columns="
+              centerTableColumns(reliabilityBinColumns) ?? reliabilityBinColumns
+            "
             :data-source="modelPayload.reliability.bins"
             :pagination="false"
             row-key="predicted_lo"

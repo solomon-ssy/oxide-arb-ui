@@ -18,6 +18,7 @@ import { Alert, Button, Card, Statistic, Tag } from 'antdv-next';
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { listDomainSources } from '#/api/vertical-alpha';
 import { $t } from '#/locales';
+import ChipCluster from '#/shared/components/chip-cluster.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import StatusChip from '#/shared/components/status-chip.vue';
 
@@ -369,8 +370,8 @@ function snapshotStatusTone(status: DomainSourceSnapshotStatus): EnumTone {
         </span>
       </template>
       <template #required="{ row }">
-        <div class="flex flex-wrap gap-1">
-          <Tag :color="row.required ? 'blue' : 'default'">
+        <ChipCluster>
+          <StatusChip :tone="row.required ? 'running' : 'neutral'">
             {{
               $t(
                 row.required
@@ -378,11 +379,11 @@ function snapshotStatusTone(status: DomainSourceSnapshotStatus): EnumTone {
                   : 'page.research.domainSources.optional',
               )
             }}
-          </Tag>
-          <Tag v-if="row.credential_required" color="warning">
+          </StatusChip>
+          <StatusChip v-if="row.credential_required" tone="warning">
             {{ $t('page.research.domainSources.credentialRequired') }}
-          </Tag>
-        </div>
+          </StatusChip>
+        </ChipCluster>
       </template>
       <template #checkpoint="{ row }">
         <div v-if="row.checkpoint" class="font-mono text-xs">

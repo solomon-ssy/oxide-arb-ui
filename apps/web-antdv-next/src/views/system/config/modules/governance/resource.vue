@@ -1053,7 +1053,7 @@ watch(
             />
             <section
               v-if="stage === 'view'"
-              class="bg-card rounded-xl border p-5"
+              class="min-w-0"
               data-testid="config-current-document"
             >
               <div class="mb-4 flex items-start justify-between gap-3">

@@ -10,12 +10,14 @@ withDefaults(
     categoryHue?: number;
     emphasis?: EnumPresentation['emphasis'];
     icon?: string;
+    size?: 'compact' | 'control';
     tone?: EnumPresentation['tone'];
   }>(),
   {
     categoryHue: undefined,
     emphasis: 'subtle',
     icon: undefined,
+    size: 'compact',
     tone: 'neutral',
   },
 );
@@ -26,6 +28,7 @@ withDefaults(
     class="qp-status-chip qp-tone"
     :data-category-hue="categoryHue"
     :data-emphasis="emphasis ?? 'subtle'"
+    :data-size="size"
     :data-tone="tone"
   >
     <IconifyIcon v-if="icon" :icon="icon" />
@@ -38,6 +41,7 @@ withDefaults(
   display: inline-flex;
   gap: 0.35rem;
   align-items: center;
+  width: fit-content;
   max-width: 100%;
   padding-block: 0.125rem;
   padding-inline: 0.5rem;
@@ -65,5 +69,11 @@ withDefaults(
 [data-emphasis='solid'] {
   background: hsl(var(--qp-tone-color) / 14%);
   border-color: hsl(var(--qp-tone-color) / 58%);
+}
+
+[data-size='control'] {
+  justify-content: center;
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
 }
 </style>

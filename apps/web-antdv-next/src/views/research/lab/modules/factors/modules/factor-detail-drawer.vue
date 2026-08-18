@@ -105,7 +105,7 @@ watch(usagePage, () => {
     :title="factor?.name ?? $t('page.research.factors.detail.title')"
   >
     <Spin :spinning="loading">
-      <div v-if="factor" class="flex flex-col gap-4">
+      <div v-if="factor" class="qp-calm-surface flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">
           <EnumTag
             context="factor-detail"

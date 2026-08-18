@@ -1171,7 +1171,7 @@ onBeforeUnmount(() => {
                 <li
                   v-for="profile in feedbackSummary.profiles"
                   :key="profile.profileId"
-                  class="min-w-0 rounded-lg border p-3"
+                  class="dashboard-list-row"
                 >
                   <div class="flex min-w-0 flex-wrap items-center gap-2">
                     <span class="min-w-0 flex-1 truncate font-mono text-xs">
@@ -1292,7 +1292,7 @@ onBeforeUnmount(() => {
               <button
                 v-for="action in actions"
                 :key="action.id"
-                class="hover:bg-accent focus-visible:ring-primary grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border px-3 py-3 text-left focus-visible:ring-2 focus-visible:outline-none"
+                class="dashboard-inbox-row hover:bg-accent focus-visible:ring-primary grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-1 py-3 text-left focus-visible:ring-2 focus-visible:outline-none"
                 type="button"
                 @click="navigate(action.target_route)"
               >
@@ -1466,7 +1466,7 @@ onBeforeUnmount(() => {
               }}
             </DescriptionsItem>
           </Descriptions>
-          <div class="mt-4 rounded-lg border p-3">
+          <div class="mt-4">
             <h3 class="text-sm font-semibold">
               {{ $t('page.dashboard.orbit.evidence') }}
             </h3>
@@ -1608,15 +1608,12 @@ onBeforeUnmount(() => {
 .status-cell {
   width: 100%;
   min-width: 0;
-  padding: 0.65rem 0.75rem;
-  background: hsl(var(--muted) / 48%);
-  border: 1px solid hsl(var(--border) / 72%);
-  border-radius: 0.5rem;
+  padding: 0.15rem 0.25rem;
 }
 
 .status-cell dt {
   margin-bottom: 0.25rem;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--qp-text-muted));
 }
 
 .status-cell dd {
@@ -1632,15 +1629,18 @@ onBeforeUnmount(() => {
 .runtime-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 8px 16px;
 }
 
 .runtime-metrics > div {
   min-width: 0;
-  padding: 12px;
-  background: hsl(var(--qp-surface-inset));
-  border: 1px solid hsl(var(--qp-border-subtle));
-  border-radius: var(--qp-radius-md);
+  padding: 0 12px 0 0;
+  border-right: 1px solid hsl(var(--qp-border-subtle));
+}
+
+.runtime-metrics > div:last-child {
+  padding-right: 0;
+  border-right: 0;
 }
 
 .runtime-metrics dt {
@@ -1658,6 +1658,24 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--qp-text-primary));
+}
+
+.dashboard-list-row {
+  min-width: 0;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid hsl(var(--qp-border-subtle));
+}
+
+.dashboard-list-row:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-inbox-row {
+  border-bottom: 1px solid hsl(var(--qp-border-subtle));
+}
+
+.dashboard-inbox-row:last-child {
+  border-bottom: 0;
 }
 
 .dashboard-equal-row {

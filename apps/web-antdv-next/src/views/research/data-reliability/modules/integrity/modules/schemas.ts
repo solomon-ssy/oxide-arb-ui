@@ -78,7 +78,6 @@ export function useParityRunColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'parity_run_id', onClick: onActionClick },
         name: 'CellOperation',
@@ -184,7 +183,6 @@ export function useParityEventColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'parity_event_id', onClick: onActionClick },
         name: 'CellOperation',

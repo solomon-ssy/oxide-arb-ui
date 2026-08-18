@@ -58,6 +58,7 @@ import {
 import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
 import { enumTimelineColor } from '#/shared/presentation/timeline-tone';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'TradePolicyDetailPage' });
 
@@ -656,7 +657,7 @@ onMounted(load);
         data-testid="trade-policy-validation-runs"
       >
         <Table
-          :columns="validationColumns"
+          :columns="centerTableColumns(validationColumns) ?? validationColumns"
           :data-source="validationRuns"
           :pagination="false"
           :row-key="(row) => row.validation_run_id"
@@ -764,7 +765,9 @@ onMounted(load);
             </Select>
           </div>
           <Table
-            :columns="validationRowColumns"
+            :columns="
+              centerTableColumns(validationRowColumns) ?? validationRowColumns
+            "
             :data-source="validationRows"
             data-testid="trade-policy-validation-rows"
             :pagination="false"
@@ -892,7 +895,9 @@ onMounted(load);
           </Select>
         </div>
         <Table
-          :columns="evidenceRowColumns"
+          :columns="
+            centerTableColumns(evidenceRowColumns) ?? evidenceRowColumns
+          "
           :data-source="evidenceRows"
           data-testid="trade-policy-evidence-rows"
           :pagination="false"
@@ -975,7 +980,9 @@ onMounted(load);
           </DescriptionsItem>
         </Descriptions>
         <Table
-          :columns="sourceObjectColumns"
+          :columns="
+            centerTableColumns(sourceObjectColumns) ?? sourceObjectColumns
+          "
           :data-source="sourceObjects"
           :pagination="false"
           :row-key="(row) => `${row.kind}-${row.byte_hash}`"

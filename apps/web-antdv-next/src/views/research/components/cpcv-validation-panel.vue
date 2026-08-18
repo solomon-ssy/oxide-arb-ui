@@ -22,6 +22,7 @@ import {
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal, formatScore } from '#/shared/components/format';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import SharpeDistributionChart from './sharpe-distribution-chart.vue';
 
@@ -401,7 +402,7 @@ const baselineUpliftMetric = computed(() => {
 
     <Card size="small" :title="$t('page.research.cpcv.paths')">
       <Table
-        :columns="pathColumns"
+        :columns="centerTableColumns(pathColumns) ?? pathColumns"
         :data-source="paths"
         :pagination="false"
         row-key="path_index"

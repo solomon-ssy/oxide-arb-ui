@@ -1,11 +1,15 @@
 <script lang="ts" setup generic="Row extends Record<string, any>">
 import type { TableColumnsType, TableColumnType } from 'antdv-next';
 
+import { computed } from 'vue';
+
 import { Empty, Table } from 'antdv-next';
+
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'CompactDataTable' });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     columns: TableColumnsType<Row>;
     dataSource: readonly Row[];
@@ -24,12 +28,16 @@ defineSlots<{
     record: Row;
   }) => unknown;
 }>();
+
+const centeredColumns = computed(
+  () => centerTableColumns(props.columns) ?? props.columns,
+);
 </script>
 
 <template>
   <Table
     :bordered="false"
-    :columns="columns"
+    :columns="centeredColumns"
     :data-source="dataSource as Row[]"
     :loading="loading"
     :pagination="false"

@@ -15,6 +15,8 @@ import type {
   ResolutionRemediationAction,
 } from '@vben/types';
 
+import type { EnumTone } from '#/shared/presentation/enum-presentation';
+
 import {
   computed,
   nextTick,
@@ -43,7 +45,6 @@ import {
   Statistic,
   TabPane,
   Tabs,
-  Tag,
 } from 'antdv-next';
 
 import {
@@ -66,6 +67,7 @@ import {
 import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import StatusChip from '#/shared/components/status-chip.vue';
 import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
 import { AuthoritativeReadCoordinator } from '#/shared/composables/authoritative-read-coordinator';
 import {
@@ -292,25 +294,23 @@ const feedbackLiveness = computed(() =>
     visible: pageVisible.value,
   }),
 );
-const feedbackLivenessColor = computed(() => {
+const feedbackLivenessTone = computed<EnumTone>(() => {
   switch (feedbackLiveness.value) {
-    case 'connected': {
+    case 'connected':
+    case 'recovered': {
       return 'success';
     }
     case 'connecting': {
-      return 'processing';
+      return 'running';
     }
     case 'polling': {
-      return 'processing';
-    }
-    case 'recovered': {
-      return 'cyan';
+      return 'queued';
     }
     case 'stale': {
       return 'warning';
     }
     default: {
-      return 'default';
+      return 'neutral';
     }
   }
 });
@@ -1403,22 +1403,25 @@ onBeforeUnmount(() => {
             {{ $t('page.research.feedback.description') }}
           </p>
         </div>
-        <div v-if="canRead" class="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Tag
+        <div
+          v-if="canRead"
+          class="flex w-full flex-wrap items-center gap-2 sm:w-auto"
+        >
+          <StatusChip
             :aria-label="
               $t(`page.research.feedback.recovery.liveness.${feedbackLiveness}`)
             "
-            :color="feedbackLivenessColor"
-            class="flex min-h-11 items-center"
             :data-recovery-reason="feedbackStore.recoveryReason ?? undefined"
             data-testid="feedback-liveness"
             :data-transport-health="feedbackHealth"
             :data-transport-status="wsStore.status"
+            size="control"
+            :tone="feedbackLivenessTone"
           >
             {{
               $t(`page.research.feedback.recovery.liveness.${feedbackLiveness}`)
             }}
-          </Tag>
+          </StatusChip>
           <label
             v-if="canTrigger"
             class="sr-only"

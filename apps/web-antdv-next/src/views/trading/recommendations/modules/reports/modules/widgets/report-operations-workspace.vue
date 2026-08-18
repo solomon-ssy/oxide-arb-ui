@@ -20,6 +20,7 @@ import {
 import { $t } from '#/locales';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
+import { centerTableColumns } from '#/shared/table/center-columns';
 import { useQuantReportStore } from '#/store';
 
 defineOptions({ name: 'ReportOperationsWorkspace' });
@@ -293,7 +294,7 @@ onMounted(() => void load());
 
     <Card size="small" :title="$t('page.quantReports.health.schedules')">
       <Table
-        :columns="scheduleColumns"
+        :columns="centerTableColumns(scheduleColumns) ?? scheduleColumns"
         :data-source="health?.schedules ?? []"
         :loading="loading"
         :pagination="false"
@@ -321,7 +322,7 @@ onMounted(() => void load());
 
     <Card size="small" :title="$t('page.quantReports.runs.title')">
       <Table
-        :columns="runColumns"
+        :columns="centerTableColumns(runColumns) ?? runColumns"
         :data-source="runs"
         data-testid="report-run-ledger"
         :loading="loading"
@@ -377,7 +378,7 @@ onMounted(() => void load());
 
     <Card size="small" :title="$t('page.quantReports.health.gaps')">
       <Table
-        :columns="gapColumns"
+        :columns="centerTableColumns(gapColumns) ?? gapColumns"
         :data-source="gaps"
         :loading="loading"
         :pagination="{

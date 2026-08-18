@@ -49,13 +49,11 @@ export function useSettlementRedeemColumns(
       width: 150,
     },
     {
-      align: 'right',
       field: 'inventory_lot_count',
       title: $t('page.quantSettlementRedeems.columns.inventoryLotCount'),
       width: 100,
     },
     {
-      align: 'right',
       field: 'actual_payout_usd',
       formatter: ({ row }) =>
         `${formatUsd(row.actual_payout_usd)} / ${formatUsd(row.expected_payout_usd)}`,
@@ -63,7 +61,6 @@ export function useSettlementRedeemColumns(
       title: $t('page.quantSettlementRedeems.columns.payout'),
     },
     {
-      align: 'right',
       field: 'attempt_count',
       title: $t('page.quantSettlementRedeems.columns.attempts'),
       width: 100,
@@ -93,7 +90,6 @@ export function useSettlementRedeemColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'settlement_redeem_id',

@@ -13,6 +13,13 @@ import {
 import { $t } from '#/locales';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import { enumOptions } from '#/shared/presentation/enum-options';
+import {
+  backtestOpenPath,
+  calibrationArtifactOpenPath,
+  modelVersionOpenPath,
+  tradePolicyOpenPath,
+  trainingDatasetOpenPath,
+} from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 /** Human-readable progress cell: phase + completion percent. */
@@ -59,25 +66,25 @@ export function jobResultRoute(row: ResearchJobView): string | undefined {
       if (!modelVersionId) {
         return undefined;
       }
-      return `/research/lab?module=models&entity=model-version&id=${modelVersionId}&path_set_id=${row.result.id}`;
+      return `${modelVersionOpenPath(modelVersionId)}&path_set_id=${encodeURIComponent(row.result.id)}`;
     }
     case RESEARCH_JOB_RESULT_KINDS.backtestReport: {
-      return `/research/lab?module=evaluation&entity=backtest&id=${row.result.id}`;
+      return backtestOpenPath(row.result.id);
     }
     case RESEARCH_JOB_RESULT_KINDS.calibrationArtifact: {
-      return `/research/learning-policy?module=calibration&entity=calibration-artifact&id=${row.result.id}`;
+      return calibrationArtifactOpenPath(row.result.id);
     }
     case RESEARCH_JOB_RESULT_KINDS.featureParityRun: {
       return `/research/data-reliability?module=feature-integrity&entity=parity-run&id=${row.result.id}`;
     }
     case RESEARCH_JOB_RESULT_KINDS.modelVersion: {
-      return `/research/lab?module=models&entity=model-version&id=${row.result.id}`;
+      return modelVersionOpenPath(row.result.id);
     }
     case RESEARCH_JOB_RESULT_KINDS.tradePolicyArtifact: {
-      return `/research/learning-policy?module=policies&entity=trade-policy&id=${row.result.id}`;
+      return tradePolicyOpenPath(row.result.id);
     }
     case RESEARCH_JOB_RESULT_KINDS.trainingDataset: {
-      return `/research/lab?module=datasets&entity=training-dataset&id=${row.result.id}`;
+      return trainingDatasetOpenPath(row.result.id);
     }
     default: {
       return undefined;
@@ -139,7 +146,6 @@ export function useResearchJobColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'job_id', onClick: onActionClick },
         name: 'CellOperation',

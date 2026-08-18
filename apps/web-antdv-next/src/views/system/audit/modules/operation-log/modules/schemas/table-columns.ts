@@ -74,7 +74,6 @@ export function useOperationLogColumns(
       title: $t('page.operationLog.columns.requestId'),
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'id', onClick: onActionClick },
         name: 'CellOperation',

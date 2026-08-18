@@ -239,9 +239,12 @@ function removeSchedule(index: number) {
 
 <style scoped>
 .schedule-card {
-  padding: 0.875rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.65rem;
+  padding: 0.25rem 0 0.875rem;
+  border-bottom: 1px solid hsl(var(--qp-border-subtle));
+}
+
+.schedule-card:last-of-type {
+  border-bottom: 0;
 }
 
 .schedule-grid {

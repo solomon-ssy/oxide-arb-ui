@@ -36,9 +36,22 @@ export function settlementRedeemsPath(
   return `/execution/post-trade?${search.toString()}`;
 }
 
+/** Open an order-intent detail drawer on the ledger page. */
+export function orderIntentOpenPath(orderIntentId: string): string {
+  const search = new URLSearchParams();
+  search.set('module', 'intents');
+  search.set('entity', 'order-intent');
+  search.set('id', orderIntentId);
+  return `/execution/orders?${search.toString()}`;
+}
+
 /** Open an execution-order detail drawer on the ledger page. */
 export function executionOrderOpenPath(executionOrderId: string): string {
-  return `/execution/orders?module=orders&entity=execution-order&id=${encodeURIComponent(executionOrderId)}`;
+  const search = new URLSearchParams();
+  search.set('module', 'orders');
+  search.set('entity', 'execution-order');
+  search.set('id', executionOrderId);
+  return `/execution/orders?${search.toString()}`;
 }
 
 /** Open a position detail drawer on the ledger page. */

@@ -102,7 +102,6 @@ export function useMarketColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'market_id', onClick: onActionClick },
         name: 'CellOperation',

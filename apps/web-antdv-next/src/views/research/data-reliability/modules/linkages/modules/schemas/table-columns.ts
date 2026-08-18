@@ -3,6 +3,7 @@ import type { MarketLinkageSummaryView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import { marketLinkageOpenPath } from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export interface MarketLinkageActionAccess {
@@ -20,7 +21,7 @@ export function useMarketLinkageColumns(
         props: {
           mono: true,
           to: (row: MarketLinkageSummaryView) =>
-            `/research/data-reliability?module=linkages&entity=market-linkage&id=${row.market_id}`,
+            marketLinkageOpenPath(row.market_id),
         },
       },
       field: 'market_id',
@@ -64,7 +65,6 @@ export function useMarketLinkageColumns(
       width: 180,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: { nameField: 'market_id', onClick: onActionClick },
         name: 'CellOperation',

@@ -36,6 +36,7 @@ import {
 import KpiCard from '#/shared/components/kpi-card.vue';
 import SignedValue from '#/shared/components/signed-value.vue';
 import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import CategoryDiffTable from './modules/category-diff-table.vue';
 
@@ -240,19 +241,16 @@ const metricColumns = computed(() => [
     title: $t('page.research.comparisons.detail.sideBySide.metric'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'baseline',
     key: 'baseline',
     title: $t('page.research.comparisons.detail.sideBySide.baseline'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'candidate',
     key: 'candidate',
     title: $t('page.research.comparisons.detail.sideBySide.candidate'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'delta',
     key: 'delta',
     title: $t('page.research.comparisons.detail.sideBySide.delta'),
@@ -383,7 +381,7 @@ watch(
         >
           <Table
             v-if="metricRows.length > 0"
-            :columns="metricColumns"
+            :columns="centerTableColumns(metricColumns) ?? metricColumns"
             :data-source="metricRows"
             :pagination="false"
             row-key="key"

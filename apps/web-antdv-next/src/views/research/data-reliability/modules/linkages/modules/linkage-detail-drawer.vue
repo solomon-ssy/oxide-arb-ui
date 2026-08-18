@@ -29,6 +29,7 @@ import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import WorkspaceObjectStage from '#/shared/components/workspace/workspace-object-stage.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'LinkageDetailDrawer' });
 
@@ -414,7 +415,9 @@ const [, drawerApi] = useVbenDrawer({
         />
         <Table
           v-else
-          :columns="sourceBindingColumns"
+          :columns="
+            centerTableColumns(sourceBindingColumns) ?? sourceBindingColumns
+          "
           :data-source="detail.source_bindings"
           :pagination="false"
           :scroll="{ x: 920 }"
@@ -606,7 +609,9 @@ const [, drawerApi] = useVbenDrawer({
             />
             <Table
               v-else
-              :columns="groundingColumns"
+              :columns="
+                centerTableColumns(groundingColumns) ?? groundingColumns
+              "
               :data-source="binding.grounding.spans"
               :pagination="false"
               row-key="subject_field"
@@ -671,7 +676,7 @@ const [, drawerApi] = useVbenDrawer({
         />
         <Table
           v-else-if="basisAlertRows.length > 0"
-          :columns="basisAlertColumns"
+          :columns="centerTableColumns(basisAlertColumns) ?? basisAlertColumns"
           :data-source="basisAlertRows"
           :pagination="false"
           size="small"
@@ -718,7 +723,7 @@ const [, drawerApi] = useVbenDrawer({
         />
         <Table
           v-else
-          :columns="historyColumns"
+          :columns="centerTableColumns(historyColumns) ?? historyColumns"
           :data-source="historyRows"
           :pagination="false"
           size="small"

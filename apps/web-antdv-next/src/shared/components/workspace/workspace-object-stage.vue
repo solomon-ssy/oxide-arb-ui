@@ -20,12 +20,14 @@ const props = withDefaults(
     drawerApi?: InspectorDrawerApi;
     eyebrow?: string;
     loading?: boolean;
+    testId?: string;
     title: string;
   }>(),
   {
     drawerApi: undefined,
     eyebrow: undefined,
     loading: false,
+    testId: undefined,
   },
 );
 const emit = defineEmits<{ close: [] }>();
@@ -65,35 +67,37 @@ provideWorkspaceChromeActions(actionsHost);
         :aria-label="title"
         class="workspace-object-stage"
         :data-domain="workspaceDomain"
-        data-testid="workspace-object-stage"
+        :data-testid="testId ?? 'workspace-object-stage'"
         :exit="quietMotion ? undefined : { opacity: 0, y: 8 }"
         :initial="quietMotion ? false : { opacity: 0, y: 8 }"
         tabindex="-1"
         :transition="panelMotion"
       >
         <ConfigProvider :get-popup-container="popupContainer">
-          <header class="workspace-object-stage-toolbar">
-            <button
-              class="workspace-object-stage-back"
-              type="button"
-              @click="close"
-            >
-              <IconifyIcon aria-hidden="true" icon="lucide:arrow-left" />
-              <span>{{ $t('page.common.back') }}</span>
-            </button>
-            <div class="workspace-object-stage-identity">
-              <span v-if="eyebrow" class="workspace-object-stage-eyebrow">
-                {{ eyebrow }}
-              </span>
-              <h1 class="workspace-object-stage-heading">{{ title }}</h1>
+          <div class="workspace-object-stage-frame">
+            <header class="workspace-object-stage-toolbar">
+              <button
+                class="workspace-object-stage-back"
+                type="button"
+                @click="close"
+              >
+                <IconifyIcon aria-hidden="true" icon="lucide:arrow-left" />
+                <span>{{ $t('page.common.back') }}</span>
+              </button>
+              <div class="workspace-object-stage-identity">
+                <span v-if="eyebrow" class="workspace-object-stage-eyebrow">
+                  {{ eyebrow }}
+                </span>
+                <h1 class="workspace-object-stage-heading">{{ title }}</h1>
+              </div>
+              <div ref="actionsHost" class="workspace-object-stage-actions">
+                <slot name="actions"></slot>
+              </div>
+            </header>
+            <div class="workspace-object-stage-content">
+              <Skeleton v-if="loading" active :paragraph="{ rows: 10 }" />
+              <slot v-else></slot>
             </div>
-            <div ref="actionsHost" class="workspace-object-stage-actions">
-              <slot name="actions"></slot>
-            </div>
-          </header>
-          <div class="workspace-object-stage-content">
-            <Skeleton v-if="loading" active :paragraph="{ rows: 10 }" />
-            <slot v-else></slot>
           </div>
         </ConfigProvider>
       </motion.section>
@@ -103,12 +107,12 @@ provideWorkspaceChromeActions(actionsHost);
 
 <style scoped>
 .workspace-object-stage {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
   color: hsl(var(--qp-text-primary));
   outline: none;
   background:
@@ -139,13 +143,28 @@ provideWorkspaceChromeActions(actionsHost);
   --workspace-accent: var(--qp-accent-violet);
 }
 
-.workspace-object-stage > :deep(*) {
+.workspace-object-stage-frame {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  width: 100%;
   min-width: 0;
-  height: 100%;
   min-height: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.workspace-object-stage :deep(.ant-select-dropdown),
+.workspace-object-stage :deep(.ant-dropdown),
+.workspace-object-stage :deep(.ant-picker-dropdown),
+.workspace-object-stage :deep(.ant-tooltip),
+.workspace-object-stage :deep(.ant-popover) {
+  height: auto;
+  max-height: min(20rem, 70%);
+  background: hsl(var(--qp-surface-glass) / 96%);
+  border: 1px solid hsl(var(--qp-border-subtle));
+  border-radius: var(--qp-radius-md);
+  box-shadow: var(--qp-shadow-medium);
 }
 
 .workspace-object-stage-toolbar {

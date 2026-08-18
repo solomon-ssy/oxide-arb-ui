@@ -3,6 +3,7 @@ import type { QuantModelSpecView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import { modelSpecOpenPath } from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function useModelSpecColumns(
@@ -14,8 +15,7 @@ export function useModelSpecColumns(
         name: 'CellEntityRoute',
         props: {
           mono: true,
-          to: (row: QuantModelSpecView) =>
-            `/research/lab?module=specs&entity=model-spec&id=${row.model_spec_id}`,
+          to: (row: QuantModelSpecView) => modelSpecOpenPath(row.model_spec_id),
         },
       },
       field: 'model_spec_id',
@@ -61,7 +61,6 @@ export function useModelSpecColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'name',

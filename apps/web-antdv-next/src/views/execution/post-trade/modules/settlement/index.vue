@@ -38,6 +38,7 @@ import AsyncState from '#/shared/components/async-state.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import RuntimeControlPanel from '#/shared/components/runtime-control-panel.vue';
 import { useWorkspaceInspectorRoute } from '#/shared/composables/use-workspace-inspector-route';
+import { centerTableColumns } from '#/shared/table/center-columns';
 import { useSettlementRedeemStore } from '#/store';
 
 import {
@@ -599,7 +600,9 @@ watch(
         :title="$t('page.quantSettlementRedeems.governed.queueTitle')"
       >
         <Table
-          :columns="governedActionColumns"
+          :columns="
+            centerTableColumns(governedActionColumns) ?? governedActionColumns
+          "
           :data-source="governedActions"
           :loading="governedActionsLoading"
           :pagination="governedActionPagination"

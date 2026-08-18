@@ -117,6 +117,38 @@ test('config lifecycle commits through CAS and remains auditable', async ({
   await expectReleaseQuality(page);
 });
 
+test('workspace overlay select dropdowns size to options instead of the panel', async ({
+  authenticatedPage: page,
+  browserAudit,
+}) => {
+  await page.goto(
+    '/system/config?module=policy&entity=config-resource&id=report_schedule',
+  );
+  await waitForUiReady(page, browserAudit);
+  const workspace = page.getByTestId('config-resource-workspace');
+  await expect(workspace).toBeVisible();
+  await workspace.getByTestId('edit-config-draft').click();
+  const cadence = workspace
+    .locator('.schedule-field')
+    .filter({ hasText: /触发节奏|Cadence/i })
+    .locator('.ant-select')
+    .first();
+  await expect(cadence).toBeVisible();
+  await cadence.click();
+  const dropdown = page.locator('.ant-select-dropdown:visible').first();
+  await expect(dropdown).toBeVisible();
+  const [dropdownBox, panelBox] = await Promise.all([
+    dropdown.boundingBox(),
+    page.locator('.workspace-object-stage').boundingBox(),
+  ]);
+  if (!dropdownBox || !panelBox) {
+    throw new Error('cadence dropdown or object stage has no layout box');
+  }
+  expect(dropdownBox.height).toBeLessThan(320);
+  expect(dropdownBox.height).toBeLessThan(panelBox.height * 0.4);
+  await expectReleaseQuality(page);
+});
+
 test('motion contract preserves timing and collapses under reduced motion', async ({
   authenticatedPage: page,
   browserAudit,

@@ -53,6 +53,7 @@ import {
 import { $t } from '#/locales';
 import { formatDateTimeLocal, formatUsd } from '#/shared/components/format';
 import { useGovernedAction } from '#/shared/composables/use-governed-action';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 import ConditionTemplateNodeEditor from '../policies/modules/condition-template-node-editor.vue';
 
@@ -1426,7 +1427,7 @@ void loadCatalogs();
                 {{ $t('page.research.tradePolicies.workbench.trialLedger') }}
               </h4>
               <Table
-                :columns="trialColumns"
+                :columns="centerTableColumns(trialColumns) ?? trialColumns"
                 :data-source="trialAttempts"
                 :pagination="false"
                 :row-key="(row) => row.trial_attempt_id"

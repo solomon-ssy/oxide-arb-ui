@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   executionOrderOpenPath,
+  orderIntentOpenPath,
   positionOpenPath,
   queryEntityIdMatches,
   reconciliationQueuePath,
@@ -34,6 +35,9 @@ describe('execution-plane routes', () => {
   });
 
   it('builds entity open deep links', () => {
+    expect(orderIntentOpenPath('intent/1')).toBe(
+      '/execution/orders?module=intents&entity=order-intent&id=intent%2F1',
+    );
     expect(executionOrderOpenPath('eo/1')).toBe(
       '/execution/orders?module=orders&entity=execution-order&id=eo%2F1',
     );

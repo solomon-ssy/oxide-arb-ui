@@ -46,9 +46,9 @@ export function useDomainSourceColumns(): VxeTableGridOptions<DomainSourceExpect
     },
     {
       field: 'required',
+      minWidth: 220,
       slots: { default: 'required' },
       title: $t('page.research.domainSources.table.required'),
-      width: 120,
     },
     {
       field: 'status_reason',

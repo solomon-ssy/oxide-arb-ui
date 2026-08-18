@@ -28,6 +28,7 @@ import { $t } from '#/locales';
 import { parseDecimal } from '#/shared/components/format';
 import { themeColors } from '#/shared/components/theme-color';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'FactorCollinearityDrawer' });
 
@@ -68,7 +69,6 @@ const violationColumns = [
     title: $t('page.research.factors.collinearity.columns.right'),
   },
   {
-    align: 'right' as const,
     dataIndex: 'correlation',
     key: 'correlation',
     title: $t('page.research.factors.collinearity.columns.correlation'),
@@ -241,7 +241,7 @@ defineExpose({ open: () => drawerApi.open() });
             show-icon
           />
           <Table
-            :columns="violationColumns"
+            :columns="centerTableColumns(violationColumns) ?? violationColumns"
             :data-source="report.violations"
             :pagination="false"
             row-key="left"

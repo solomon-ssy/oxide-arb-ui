@@ -15,6 +15,7 @@ import {
   truncateHexId,
 } from '#/shared/components/format';
 import InlineBar from '#/shared/components/inline-bar.vue';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'OrderBookSide' });
 
@@ -85,7 +86,6 @@ const bidColumns = computed<TableColumnsType<BookTableRow>>(() => [
     title: $t('page.markets.detail.bidPrice'),
   },
   {
-    align: 'right',
     dataIndex: 'size',
     key: 'size',
     title: $t('page.markets.detail.size'),
@@ -104,7 +104,6 @@ const askColumns = computed<TableColumnsType<BookTableRow>>(() => [
     title: $t('page.markets.detail.askPrice'),
   },
   {
-    align: 'right',
     dataIndex: 'size',
     key: 'size',
     title: $t('page.markets.detail.size'),
@@ -140,7 +139,7 @@ const asksTableLabel = computed(
     <div class="grid grid-cols-2 gap-3">
       <Table
         :aria-label="bidsTableLabel"
-        :columns="bidColumns"
+        :columns="centerTableColumns(bidColumns) ?? bidColumns"
         :data-source="bidRows"
         :pagination="false"
         :show-header="true"
@@ -177,7 +176,7 @@ const asksTableLabel = computed(
       </Table>
       <Table
         :aria-label="asksTableLabel"
-        :columns="askColumns"
+        :columns="centerTableColumns(askColumns) ?? askColumns"
         :data-source="askRows"
         :pagination="false"
         :show-header="true"

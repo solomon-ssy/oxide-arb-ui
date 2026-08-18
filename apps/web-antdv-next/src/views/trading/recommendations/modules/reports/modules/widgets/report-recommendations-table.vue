@@ -12,6 +12,7 @@ import { $t } from '#/locales';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatBps, formatScore, formatUsd } from '#/shared/components/format';
 import { vAccessibleTableScroll } from '#/shared/directives/accessible-table-scroll';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'ReportRecommendationsTable' });
 
@@ -67,7 +68,6 @@ const columns = [
     width: 110,
   },
   {
-    align: 'right' as const,
     dataIndex: 'rank',
     key: 'rank',
     title: $t('page.quantReports.detail.recommendations.columns.rank'),
@@ -85,7 +85,6 @@ const columns = [
     width: 90,
   },
   {
-    align: 'right' as const,
     key: 'profit_probability',
     title: $t(
       'page.quantReports.detail.recommendations.columns.profitProbability',
@@ -93,43 +92,36 @@ const columns = [
     width: 130,
   },
   {
-    align: 'right' as const,
     key: 'robust_net',
     title: $t('page.quantReports.detail.recommendations.columns.robustNet'),
     width: 130,
   },
   {
-    align: 'right' as const,
     key: 'nominal_net',
     title: $t('page.quantReports.detail.recommendations.columns.nominalNet'),
     width: 130,
   },
   {
-    align: 'right' as const,
     key: 'marginal_value',
     title: $t('page.quantReports.detail.recommendations.columns.marginalValue'),
     width: 140,
   },
   {
-    align: 'right' as const,
     key: 'max_loss',
     title: $t('page.quantReports.detail.recommendations.columns.maxLoss'),
     width: 120,
   },
   {
-    align: 'right' as const,
     key: 'cvar',
     title: $t('page.quantReports.detail.recommendations.columns.cvar'),
     width: 120,
   },
   {
-    align: 'right' as const,
     key: 'capital_time',
     title: $t('page.quantReports.detail.recommendations.columns.capitalTime'),
     width: 130,
   },
   {
-    align: 'right' as const,
     key: 'hardReservedCash',
     title: $t(
       'page.quantReports.detail.recommendations.columns.hardReservedCash',
@@ -148,7 +140,6 @@ const columns = [
     width: 130,
   },
   {
-    align: 'right' as const,
     fixed: 'right' as const,
     key: 'open',
     title: $t('page.quantReports.detail.recommendations.columns.open'),
@@ -183,7 +174,7 @@ const columns = [
     v-accessible-table-scroll="
       $t('page.quantReports.detail.recommendations.scrollLabel')
     "
-    :columns="columns"
+    :columns="centerTableColumns(columns) ?? columns"
     :custom-row="rowProps"
     data-testid="global-report-recommendations"
     :data-source="visibleRecommendations"

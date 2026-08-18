@@ -345,8 +345,7 @@ onMounted(() => {
 }
 
 .workspace-tabs :deep(.ant-tabs-tab-active) {
-  background: hsl(var(--workspace-accent) / 6%);
-  border-radius: var(--qp-radius-sm) var(--qp-radius-sm) 0 0;
+  background: transparent;
 }
 
 .workspace-tabs :deep(.ant-tabs-tab:focus-visible) {

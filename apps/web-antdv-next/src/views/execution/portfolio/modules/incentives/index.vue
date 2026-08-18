@@ -42,6 +42,7 @@ import InsightPanel from '#/shared/components/insight-panel.vue';
 import KpiCard from '#/shared/components/kpi-card.vue';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
 import { vAccessibleTableScroll } from '#/shared/directives/accessible-table-scroll';
+import { centerTableColumns } from '#/shared/table/center-columns';
 
 defineOptions({ name: 'PortfolioIncentivesModule' });
 
@@ -109,7 +110,6 @@ const columns: TableColumnsType<VenueIncentiveEventView> = [
     width: 150,
   },
   {
-    align: 'right',
     dataIndex: 'amount_usd',
     key: 'amount_usd',
     title: $t('page.quantAccount.incentives.ledger.amount'),
@@ -381,7 +381,7 @@ onMounted(load);
             v-accessible-table-scroll="
               $t('page.quantAccount.incentives.ledger.scrollLabel')
             "
-            :columns="columns"
+            :columns="centerTableColumns(columns) ?? columns"
             :data-source="events"
             :loading="loading"
             :pagination="{

@@ -3,6 +3,10 @@ import type { TrainingDatasetView } from '@vben/types';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 
 import { $t } from '#/locales';
+import {
+  modelSpecOpenPath,
+  trainingDatasetOpenPath,
+} from '#/shared/routes/research-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 import { canTrainDataset } from '../dataset-action-state';
@@ -18,7 +22,7 @@ export function useTrainingDatasetColumns(
         props: {
           mono: true,
           to: (row: TrainingDatasetView) =>
-            `/research/lab?module=datasets&entity=training-dataset&id=${row.training_dataset_id}`,
+            trainingDatasetOpenPath(row.training_dataset_id),
         },
       },
       field: 'training_dataset_id',
@@ -26,9 +30,16 @@ export function useTrainingDatasetColumns(
       title: $t('page.research.datasets.columns.datasetId'),
     },
     {
+      cellRender: {
+        name: 'CellEntityRoute',
+        props: {
+          mono: true,
+          to: (row: TrainingDatasetView) =>
+            modelSpecOpenPath(row.model_spec_id),
+        },
+      },
       field: 'model_spec_id',
       minWidth: 140,
-      showOverflow: 'tooltip',
       title: $t('page.research.datasets.columns.modelSpec'),
     },
     {
@@ -47,7 +58,7 @@ export function useTrainingDatasetColumns(
       width: 130,
     },
     {
-      align: 'right',
+      className: 'font-mono tabular-nums',
       field: 'sample_count',
       title: $t('page.research.datasets.columns.sampleCount'),
       width: 110,
@@ -71,7 +82,6 @@ export function useTrainingDatasetColumns(
       width: 170,
     },
     {
-      align: 'right',
       cellRender: {
         attrs: {
           nameField: 'training_dataset_id',

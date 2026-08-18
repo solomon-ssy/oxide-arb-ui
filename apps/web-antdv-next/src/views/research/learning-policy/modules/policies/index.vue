@@ -1,10 +1,7 @@
 <script lang="ts" setup>
 import type { TradePolicySummaryView } from '@vben/types';
 
-import type {
-  OnActionClickParams,
-  VxeTableGridOptions,
-} from '#/adapter/vxe-table';
+import type { OnActionClickParams } from '#/adapter/vxe-table';
 
 import { useRouter } from 'vue-router';
 
@@ -17,6 +14,9 @@ import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { listTradePolicies } from '#/api/trade-policies';
 import { $t } from '#/locales';
 import { useQpAccess } from '#/shared/composables/use-qp-access';
+import { tradePolicyOpenPath } from '#/shared/routes/research-plane';
+
+import { useTradePolicyColumns } from './modules/schemas/table-columns';
 
 defineOptions({ name: 'ResearchTradePoliciesPage' });
 
@@ -32,55 +32,9 @@ const emptyPage = {
   total: 0,
 };
 
-const columns: VxeTableGridOptions<TradePolicySummaryView>['columns'] = [
-  {
-    field: 'artifact_id',
-    minWidth: 180,
-    title: $t('page.research.tradePolicies.columns.artifactId'),
-  },
-  {
-    cellRender: { name: 'CellEnumTag', props: { enum: 'TradePolicyStatus' } },
-    field: 'status',
-    width: 120,
-    title: $t('page.research.tradePolicies.columns.status'),
-  },
-  {
-    field: 'source_dataset_id',
-    minWidth: 180,
-    title: $t('page.research.tradePolicies.columns.dataset'),
-  },
-  {
-    field: 'cohort_count',
-    width: 100,
-    title: $t('page.research.tradePolicies.columns.cohorts'),
-  },
-  {
-    field: 'executable_coverage',
-    width: 120,
-    title: $t('page.research.tradePolicies.columns.coverage'),
-  },
-  {
-    cellRender: { name: 'CellDateTime' },
-    field: 'created_at',
-    width: 170,
-    title: $t('page.research.tradePolicies.columns.createdAt'),
-  },
-  {
-    cellRender: {
-      attrs: { nameField: 'artifact_id', onClick: onActionClick },
-      name: 'CellOperation',
-      options: [{ code: 'detail', text: $t('common.detail') }],
-    },
-    field: 'operation',
-    fixed: 'right',
-    title: $t('page.research.tradePolicies.columns.operation'),
-    width: 100,
-  },
-];
-
 const [Grid] = useVbenVxeGrid<TradePolicySummaryView>({
   gridOptions: {
-    columns,
+    columns: useTradePolicyColumns(onActionClick),
     proxyConfig: {
       ajax: {
         query: async ({
@@ -104,14 +58,7 @@ const [Grid] = useVbenVxeGrid<TradePolicySummaryView>({
 async function onActionClick({
   row,
 }: OnActionClickParams<TradePolicySummaryView>) {
-  await router.push({
-    path: '/research/learning-policy',
-    query: {
-      entity: 'trade-policy',
-      id: row.artifact_id,
-      module: 'policies',
-    },
-  });
+  await router.push(tradePolicyOpenPath(row.artifact_id));
 }
 
 function openFit() {
