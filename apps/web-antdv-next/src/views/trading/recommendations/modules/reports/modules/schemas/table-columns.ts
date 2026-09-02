@@ -40,12 +40,6 @@ export function useReportColumns(
       width: 140,
     },
     {
-      cellRender: { name: 'CellEnumTag', props: { enum: 'QuantRuntimeMode' } },
-      field: 'runtime_mode',
-      title: $t('page.quantReports.columns.runtimeMode'),
-      width: 130,
-    },
-    {
       field: 'report_kind',
       formatter: ({ cellValue }: { cellValue: string }) =>
         $t(`enum.reportKind.${cellValue}`),

@@ -167,9 +167,10 @@ function eligibilitySummary(
 ): string {
   if (!snapshot) return EMPTY_PLACEHOLDER;
   const eligibility = snapshot.execution_eligibility;
-  const modes = eligibility.eligible_modes.join(', ') || EMPTY_PLACEHOLDER;
-  const reasons = eligibility.ineligibility_reasons.join(', ');
-  return reasons ? `${modes} · ${reasons}` : modes;
+  const blockers = eligibility.blockers.join(', ');
+  return blockers
+    ? `${eligibility.ceiling} · ${blockers}`
+    : eligibility.ceiling;
 }
 
 async function runDiff() {
@@ -306,19 +307,19 @@ onMounted(async () => {
         >
           <div class="flex flex-wrap gap-3 font-mono text-xs">
             <span>
-              {{ $t('enum.quantRuntimeMode.report_only') }}:
-              {{ diff.base_eligibility.eligible_report_only }} →
-              {{ diff.compare_eligibility.eligible_report_only }}
+              {{ $t('enum.executionAuthorityCeiling.analysis_only') }}:
+              {{ diff.base_eligibility.analysis_only }} →
+              {{ diff.compare_eligibility.analysis_only }}
             </span>
             <span>
-              {{ $t('enum.quantRuntimeMode.semi_auto') }}:
-              {{ diff.base_eligibility.eligible_semi_auto }} →
-              {{ diff.compare_eligibility.eligible_semi_auto }}
+              {{ $t('enum.executionAuthorityCeiling.operator_approval') }}:
+              {{ diff.base_eligibility.operator_approval }} →
+              {{ diff.compare_eligibility.operator_approval }}
             </span>
             <span>
-              {{ $t('enum.quantRuntimeMode.auto_execution') }}:
-              {{ diff.base_eligibility.eligible_auto_execution }} →
-              {{ diff.compare_eligibility.eligible_auto_execution }}
+              {{ $t('enum.executionAuthorityCeiling.policy_automatic') }}:
+              {{ diff.base_eligibility.policy_automatic }} →
+              {{ diff.compare_eligibility.policy_automatic }}
             </span>
           </div>
         </DescriptionsItem>

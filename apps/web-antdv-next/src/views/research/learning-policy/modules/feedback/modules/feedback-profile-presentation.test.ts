@@ -39,7 +39,7 @@ function cryptoProfile(): FeedbackProfileOverviewView {
       model_learning: emptyCohortCounts,
       new_mature_label_count: 64,
       policy_evaluation: emptyCohortCounts,
-      policy_evaluation_count: 240,
+      model_learning_candidate_count: 240,
       reason_code: null,
     },
     latest_cycle: {
@@ -92,7 +92,7 @@ function cryptoProfile(): FeedbackProfileOverviewView {
 
 function weatherProfile(): FeedbackProfileOverviewView {
   return {
-    activation_eligibility: 'semi_auto_candidate',
+    activation_eligibility: 'execution_candidate',
     category: 'weather',
     evaluation_window_days: 90,
     feedback_cadence_secs: 86_400,

@@ -9,7 +9,6 @@ import type {
   MaterializationRunKind,
   MaterializationRunStatus,
   OrderIntentStatus,
-  QuantRuntimeMode,
   RecommendationReportStatus,
   ReconciliationResult,
   ReportKind,
@@ -19,6 +18,7 @@ import type {
   SettlementCaseState,
   SettlementReadinessStatus,
 } from './enums';
+import type { RepresentedRouteSet } from './generated/quant-operator-api';
 import type { MarketBookView, MarketResolvedEvent } from './market';
 import type { SystemControlPlaneStatus } from './system';
 
@@ -91,9 +91,8 @@ export type ReportLifecycleEventKind =
 export interface ReportLifecycleEvent {
   event: ReportLifecycleEventKind;
   recommendation_report_id: UuidString;
-  profile_id: string;
+  represented_routes: RepresentedRouteSet;
   report_kind: ReportKind;
-  runtime_mode: QuantRuntimeMode;
   status: RecommendationReportStatus;
   decision_at: IsoDateTime;
   published_at: IsoDateTime | null;
@@ -134,7 +133,6 @@ export interface IntentLifecycleEvent {
   event: IntentLifecycleEventKind;
   order_intent_id: UuidString;
   recommendation_id: UuidString;
-  runtime_mode: QuantRuntimeMode;
   status: OrderIntentStatus;
   reason: null | string;
   occurred_at: IsoDateTime;

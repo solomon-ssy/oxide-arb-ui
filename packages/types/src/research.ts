@@ -899,8 +899,8 @@ export type GateStatus = 'fail' | 'not_applicable' | 'pass' | 'warn';
 
 /** Which governed transition a gate preview evaluates. */
 export type GatePreviewIntent =
-  | 'auto_execution'
   | 'candidate'
+  | 'policy_automatic'
   | 'route_activation';
 
 /**

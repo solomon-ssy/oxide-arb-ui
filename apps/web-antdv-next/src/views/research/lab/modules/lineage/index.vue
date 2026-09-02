@@ -213,6 +213,7 @@ function openOwningWorkspace() {
         }"
       >
         <VueFlow
+          class="lineage-viewport"
           :edges="edges"
           :fit-view-on-init="true"
           :max-zoom="1.25"
@@ -320,6 +321,11 @@ function openOwningWorkspace() {
   box-shadow: var(--qp-glow-realtime);
 }
 
+/* Vue Flow requires a positive viewport even while its panel is collapsed. */
+.lineage-viewport {
+  min-inline-size: 1px;
+}
+
 @media (width < 768px) {
   .lineage-canvas {
     height: 680px;
@@ -345,11 +351,8 @@ function openOwningWorkspace() {
   border: 1px solid hsl(var(--qp-chart-cat-4) / 58%);
   border-radius: var(--qp-radius-md);
   box-shadow: var(--qp-shadow-featured-pink);
-  animation:
-    lineage-enter 520ms var(--qp-motion-ease-out) both,
-    qp-status-pulse 4.2s var(--qp-motion-ease-out) infinite;
-  animation-delay:
-    calc(var(--lineage-index) * 90ms), calc(520ms + var(--lineage-index) * 90ms);
+  animation: qp-status-pulse 4.2s var(--qp-motion-ease-out) infinite;
+  animation-delay: calc(var(--lineage-index) * 90ms);
 }
 
 .lineage-node > * {
@@ -416,11 +419,6 @@ function openOwningWorkspace() {
 
 .lineage-canvas.is-flowing :deep(.vue-flow__edge.animated path) {
   stroke-dasharray: 5 12;
-  animation: lineage-dash 1.15s linear infinite;
-}
-
-.lineage-canvas.is-live :deep(.vue-flow__edge.animated path) {
-  animation-duration: 0.7s;
 }
 
 :deep(.vue-flow__edge .vue-flow__edge-path) {
@@ -436,22 +434,6 @@ function openOwningWorkspace() {
   padding: 0;
   background: none;
   border: 0;
-}
-
-@keyframes lineage-enter {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes lineage-dash {
-  to {
-    stroke-dashoffset: -48;
-  }
 }
 
 .lineage-canvas.is-quiet .lineage-node,

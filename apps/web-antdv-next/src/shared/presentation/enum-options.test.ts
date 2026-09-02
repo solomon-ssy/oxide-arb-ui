@@ -48,7 +48,6 @@ describe('enum option presentation', () => {
 
   it('never renders failures, errors, denials, or validation failures as positive', () => {
     const negativeFamilies = [
-      'ModeDenialReason.',
       'PolicyValidationCode.',
       'ResolutionProjectionErrorCode.',
       'SettlementFailureCode.',

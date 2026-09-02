@@ -137,8 +137,8 @@ const inventoryLotColumns = [
     title: $t('page.quantSettlementRedeems.inventoryLots.redeemPolicy'),
   },
   {
-    dataIndex: 'position_id',
-    key: 'position_id',
+    dataIndex: 'strategy_position_lot_id',
+    key: 'strategy_position_lot_id',
     title: $t('page.quantSettlementRedeems.inventoryLots.position'),
   },
   {
@@ -175,8 +175,8 @@ const redeemedLotColumns = [
     title: $t('page.quantSettlementRedeems.lots.realizedPnl'),
   },
   {
-    dataIndex: 'position_id',
-    key: 'position_id',
+    dataIndex: 'strategy_position_lot_id',
+    key: 'strategy_position_lot_id',
     title: $t('page.quantSettlementRedeems.lots.position'),
   },
   {
@@ -531,11 +531,11 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
                   {{ formatUsd(record.cost_basis_usd) }}
                 </span>
               </template>
-              <template v-else-if="column.key === 'position_id'">
+              <template v-else-if="column.key === 'strategy_position_lot_id'">
                 <EntityRouteLink
                   mono
-                  :label="record.position_id"
-                  :to="positionOpenPath(record.position_id)"
+                  :label="record.strategy_position_lot_id"
+                  :to="positionOpenPath(record.strategy_position_lot_id)"
                 />
               </template>
               <template v-else-if="column.key === 'order_intent_id'">
@@ -872,11 +872,11 @@ useDrawerSettlementRevisionRefresh(openId, refreshDetail);
                   {{ formatUsd(record.realized_pnl_usd) }}
                 </span>
               </template>
-              <template v-else-if="column.key === 'position_id'">
+              <template v-else-if="column.key === 'strategy_position_lot_id'">
                 <EntityRouteLink
                   mono
-                  :label="record.position_id"
-                  :to="positionOpenPath(record.position_id)"
+                  :label="record.strategy_position_lot_id"
+                  :to="positionOpenPath(record.strategy_position_lot_id)"
                 />
               </template>
               <template v-else-if="column.key === 'order_intent_id'">

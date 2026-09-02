@@ -67,12 +67,12 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
     },
     checked_at: '2026-06-11T12:00:00Z',
     execution_recovery: {
-      auto_execution_blocked: false,
+      policy_automatic_blocked: false,
       has_unresolvable_reconciliation: false,
       kill_switch_requires_ack: false,
       kill_switch_state: 'closed',
       next_steps: [],
-      quant_runtime_mode: 'report_only',
+      entry_authorization_policy: 'operator_approval_required',
       unresolvable_count: 0,
     },
     kill_switch: {
@@ -94,7 +94,7 @@ function systemStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
       },
     },
     operational_phase: { phase: 'operational' },
-    quant_runtime_mode: 'report_only',
+    entry_authorization_policy: 'operator_approval_required',
     uptime_secs: 3600,
     ...overrides,
   };
@@ -184,7 +184,9 @@ describe('dispatchWsEnvelope', () => {
   it('sync snapshot hydrates system status and marks sync', () => {
     const snapshot: SyncSnapshot = { system_status: controlPlaneStatus() };
     dispatchWsEnvelope(envelope('sync', snapshot), hooks());
-    expect(useSystemStore().status?.quant_runtime_mode).toBe('report_only');
+    expect(useSystemStore().status?.entry_authorization_policy).toBe(
+      'operator_approval_required',
+    );
     expect(useWsStore().lastSyncAt).not.toBeNull();
     expect(useWsStore().lastSystemStatusAt).toBe('2026-06-11T12:00:00.000Z');
   });
@@ -208,7 +210,7 @@ describe('dispatchWsEnvelope', () => {
         recommendation_count: 2,
         recommendation_report_id: 'r1',
         report_kind: 'top_n',
-        runtime_mode: 'report_only',
+        represented_routes: { routes: ['weather'] },
         status: 'published',
         status_reason: null,
       }),
@@ -244,8 +246,7 @@ describe('dispatchWsEnvelope', () => {
         order_intent_id: 'i1',
         reason: null,
         recommendation_id: 'rec-1',
-        runtime_mode: 'semi_auto',
-        status: 'pending_approval',
+        status: 'pending_authorization',
       }),
       hooks(),
     );

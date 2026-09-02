@@ -15,12 +15,12 @@ function baseStatus(
     catalog: { state: 'warming' },
     checked_at: '2026-06-17T00:00:00Z',
     execution_recovery: {
-      auto_execution_blocked: false,
+      policy_automatic_blocked: false,
       has_unresolvable_reconciliation: false,
       kill_switch_requires_ack: false,
       kill_switch_state: 'closed',
       next_steps: [],
-      quant_runtime_mode: 'report_only',
+      entry_authorization_policy: 'operator_approval_required',
       unresolvable_count: 0,
     },
     kill_switch: {
@@ -42,7 +42,7 @@ function baseStatus(
       },
     },
     operational_phase,
-    quant_runtime_mode: 'report_only',
+    entry_authorization_policy: 'operator_approval_required',
     uptime_secs: 0,
   };
 }

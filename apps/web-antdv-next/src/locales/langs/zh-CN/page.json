@@ -13,6 +13,7 @@
   "common": {
     "close": "关闭",
     "back": "返回",
+    "copyValue": "复制{label}",
     "yes": "是",
     "no": "否",
     "deepLinkNotFound": "深链记录不存在或已不可用。"
@@ -59,10 +60,10 @@
     "systemConfig": "配置治理",
     "systemAudit": "审计追踪",
     "action": {
-      "switchRuntimeMode": "切换运行模式",
       "halt": "停止执行",
       "resume": "恢复执行",
       "emergencyHalt": "紧急停止",
+      "updateRuntimeControl": "更新运行控制",
       "updateMarket": "订阅或屏蔽市场",
       "runReport": "运行临时报告",
       "revokeReport": "撤销报告",
@@ -367,7 +368,7 @@
       },
       "stage": {
         "admission": "执行准入",
-        "approval": "审批",
+        "authorization": "授权",
         "fill": "成交",
         "intent": "订单意图",
         "position": "持仓",
@@ -515,7 +516,7 @@
         },
         "track": {
           "research_only": "仅研究",
-          "semi_auto_candidate": "半自动候选"
+          "execution_candidate": "执行候选"
         },
         "readiness": {
           "title": "已验证就绪度",
@@ -634,7 +635,7 @@
           "minimum": "最低覆盖率",
           "labels": "成熟标签",
           "newLabels": "新增成熟标签",
-          "policyEvaluations": "策略评估数",
+          "modelLearningCandidates": "模型学习候选数",
           "window": "评估窗口",
           "artifactId": "Artifact ID",
           "artifactUri": "Artifact URI",
@@ -670,7 +671,7 @@
             "models": "冠军 → 挑战者",
             "generation": "路由代次",
             "authority": "受保护权限",
-            "unchanged": "执行模式、资金、funder 与签名权限均未变化"
+            "unchanged": "入场授权策略、资金、funder 与签名权限均未变化"
           },
           "comparison": {
             "title": "同窗口比较",
@@ -901,7 +902,7 @@
           "routeGeneration": "预期路由代次",
           "modelDiff": "当前 Champion → 候选模型",
           "manifest": "候选 Manifest",
-          "runtimeModes": "允许的运行模式",
+          "maximumExecutionAuthority": "最大执行权限",
           "idempotencyKey": "幂等键",
           "notEligible": "请先选择一个成功且 candidate-ready 的周期。",
           "invalidInput": "请选择 5、15、30 或 60 分钟的批准 TTL。",
@@ -924,8 +925,8 @@
           "targetModel": "服务端推导目标模型",
           "routeDiff": "路由代次",
           "authorityInvariant": "受保护权限",
-          "activationInvariant": "激活只改变模型路由；执行模式、资金上限、funder 与签名权限均保持不变。",
-          "executionUnchanged": "执行模式、资金、funder 与签名权限均未变化。",
+          "activationInvariant": "激活只改变模型路由；入场授权策略、资金上限、funder 与签名权限均保持不变。",
+          "executionUnchanged": "入场授权策略、资金、funder 与签名权限均未变化。",
           "activate": "激活路由",
           "activateTitle": "激活候选模型路由",
           "activateSummary": "在单个原子事务中消费此 Permit；服务端会重新校验全部绑定门禁、哈希、运行时修订号和受保护权限。",
@@ -1036,7 +1037,7 @@
         "profile": "研究画像",
         "evaluationTrack": "评估轨道",
         "researchOnly": "仅研究（不可激活）",
-        "semiAutoCandidate": "SemiAuto 候选评估",
+        "executionCandidate": "执行候选评估",
         "profileHash": "画像内容哈希",
         "fitSpan": "固定拟合跨度",
         "horizon": "唯一目标 horizon",
@@ -1751,14 +1752,14 @@
         "action": "建立首个 Champion",
         "actor": "激活操作者",
         "authority": "受保护权限",
-        "authorityUnchanged": "执行模式、资金、签名权限和 funder 权限均不会变化。",
+        "authorityUnchanged": "入场授权策略、资金、签名权限和 funder 权限均不会变化。",
         "failed": "首个 Champion 激活未完成。请刷新权威状态，并以同一意图重试。",
         "gateUnavailable": "无法读取权威 Candidate 质量门，bootstrap 已阻断。",
         "generation": "策略 generation",
         "model": "候选模型",
         "openRouting": "打开 Model Routing 回滚",
-        "prerequisitesFailed": "只有 Buy route 范围、校准、Candidate 质量门、全量 parity、CPCV 证据、ReportOnly 模式和空 route 全部通过后才能 bootstrap。",
-        "prerequisitesHint": "要求符合条件的 Pooled、Crypto 或 Weather Buy 模型已绑定不可变校准、通过 Candidate 质量门、具备 CPCV 与全量 parity 证据、处于 ReportOnly，且目标 route 尚无 Champion。",
+        "prerequisitesFailed": "只有 Buy route 范围、校准、Candidate 质量门、全量 parity、CPCV 证据、ExitOnly 恢复安全和空 route 全部通过后才能 bootstrap。",
+        "prerequisitesHint": "要求符合条件的 Pooled、Crypto 或 Weather Buy 模型已绑定不可变校准、通过 Candidate/CPCV/全量 parity 证据、处于 ExitOnly 且 recovery seal healthy，并且目标 route 尚无 Champion。",
         "receipt": "激活 / 审计 ID",
         "retry": "重试权威读取",
         "rollback": "回滚",
@@ -2577,7 +2578,7 @@
       "syncing": "同步状态…"
     },
     "field": {
-      "mode": "运行模式",
+      "entryAuthorizationPolicy": "入场授权策略",
       "killSwitch": "熔断开关",
       "uptime": "运行时长",
       "activeMarkets": "活跃市场",
@@ -2615,13 +2616,13 @@
       "kill_switch_tightened": "熔断开关已收紧（{state}）",
       "unknown": "未知降级原因"
     },
-    "readonlyHint": "请使用顶栏状态灯切换运行模式或熔断开关。"
+    "readonlyHint": "请使用顶栏状态灯变更入场授权策略或熔断开关。"
   },
   "header": {
-    "modePicker": {
-      "title": "切换运行模式",
-      "unknown": "模式",
-      "preflightTitle": "模式切换预检"
+    "authorizationPicker": {
+      "title": "变更入场授权策略",
+      "unknown": "授权策略",
+      "preflightTitle": "授权策略预检"
     },
     "killSwitchPicker": {
       "title": "设置熔断开关",
@@ -2640,8 +2641,9 @@
       "title": "Quant Pivot",
       "subtitle": "登录量化作战台，审阅报告、证据与运行风险。",
       "pageTitle": "从证据到行动的量化控制面",
-      "pageDescription": "Polymarket 专用的 ReportOnly 优先运营台：账户真值、推荐报告、研究证据与治理操作统一闭环。",
+      "pageDescription": "Polymarket 专用的真实账户运营台：账户真值、推荐报告、研究证据与治理操作统一闭环。",
       "console": "Operator Console",
+      "realAccount": "真实账户",
       "security": "账户真值与操作权限由服务端校验；访问令牌仅保存在内存中，敏感操作需要角色、理由与审计上下文。"
     },
     "primaryAction": {
@@ -2651,7 +2653,7 @@
       "view_blockers": "查看能力阻断"
     },
     "status": {
-      "runtimeMode": "运行模式",
+      "entryAuthorizationPolicy": "入场授权策略",
       "killSwitch": "熔断开关",
       "ws": "实时连接",
       "bookFreshness": "盘口新鲜度",
@@ -2690,6 +2692,7 @@
     "exposure": {
       "title": "风险敞口集中度",
       "aria": "账户按类别聚合的风险敞口树图。",
+      "categoryShareAria": "{category} 占账户总敞口的比例",
       "none": "当前账户没有真实敞口"
     },
     "runtimeActivity": {
@@ -2709,7 +2712,7 @@
       "pending": "待审意图",
       "active": "活跃订单",
       "attention": "需要处理",
-      "empty": "当前窗口没有执行活动。ReportOnly 模式下这是正常状态。"
+      "empty": "当前窗口没有执行活动；尚无推荐获得授权时这是正常状态。"
     },
     "feedback": {
       "title": "反馈与再训练",
@@ -2894,7 +2897,7 @@
         "parity_ready": "特征 parity 通过",
         "scenario_ready": "场景工件绑定",
         "bootstrap_preflight": "激活预检",
-        "bootstrap_committed": "ReportOnly 路由已激活",
+        "bootstrap_committed": "Route 已激活",
         "first_report_queued": "首份报告已排队/生成中",
         "first_report_published": "首份报告已发布"
       },
@@ -2949,7 +2952,7 @@
         "scenario_bound": "场景工件已绑定",
         "bootstrap_prepared": "Bootstrap 预检已封印",
         "preflight_refreshed": "Bootstrap 预检已刷新",
-        "bootstrap_committed": "ReportOnly route 已提交",
+        "bootstrap_committed": "Route 已提交",
         "report_enabled": "首报已启用",
         "report_retried": "首报已重试",
         "report_published": "首报已发布",
@@ -2967,7 +2970,6 @@
         "bootstrap_not_collecting": "研究采集阶段尚未开始",
         "bootstrap_not_active": "系统尚未显式启用",
         "operational_phase_blocks_reports": "当前运行阶段禁止生成报告",
-        "runtime_mode_report_only": "ReportOnly 禁止创建入场意图",
         "kill_switch_blocks_entries": "熔断状态禁止新入场",
         "operational_phase_blocks_submission": "当前运行阶段禁止订单提交",
         "no_serving_evidence": "尚无 serving 证据"
@@ -3005,7 +3007,6 @@
         "delivery_failed": "事实投递失败",
         "revoked": "已撤销",
         "expired": "已过期",
-        "intent_pending_approval": "意图待审批",
         "intent_pending_authorization": "意图待授权",
         "report_run_queued": "报告运行排队",
         "report_run_running": "报告运行中",
@@ -3033,16 +3034,43 @@
       }
     }
   },
+  "accountRecovery": {
+    "title": "严格账户恢复",
+    "loadFailed": "无法读取当前恢复事件，所有恢复动作保持禁用。",
+    "noActiveIncident": "当前没有活动的账户恢复事件。",
+    "incidentId": "事件 ID",
+    "status": "状态",
+    "kind": "事件类型",
+    "reason": "触发原因",
+    "revision": "Revision",
+    "openedAt": "开启时间",
+    "sealHash": "Seal 哈希",
+    "mismatchCount": "最新 Manifest 仍有 {count} 个阻断不一致项。",
+    "pauseOperations": "已确认的暂停 / 恢复操作",
+    "allocation": {
+      "title": "外部卖出显式 Lot 分配",
+      "soldShares": "卖出份额",
+      "shares": "分配份额",
+      "invalidDecimal": "每项分配必须是正数十进制份额。",
+      "totalMismatch": "分配份额之和必须精确等于 {expected}。"
+    },
+    "actions": {
+      "reconcile": "暂停并对账",
+      "reconcileTitle": "暂停账户并对账精确事实",
+      "reconcileSummary": "提交或确认账户暂停，连续捕获两份稳定 venue 快照，核验 finalized 链上事实，并且只应用操作员显式指定的歧义 Lot 分配。",
+      "seal": "封存已收敛 Manifest",
+      "sealTitle": "封存账户恢复事件",
+      "sealSummary": "只封存最新且哈希匹配的已收敛 Manifest，然后准备受治理的恢复账户操作。",
+      "unpause": "恢复并完成事件",
+      "unpauseTitle": "确认恢复账户并完成事件",
+      "unpauseSummary": "所有已配置 Exchange 的恢复账户证据完成 finality 后，才关闭该事件。"
+    }
+  },
   "systemAdmin": {
-    "mode": {
-      "switchTitle": "切换运行模式",
-      "summary": "将运行模式从 {from} 切换到 {to}。",
-      "switched": "运行模式已从 {from} 切换到 {to}",
-      "preflightPassed": "预检通过",
-      "preflightFailed": "预检失败——转换被阻止",
-      "hardCheck": "阻断项",
-      "checkPassed": "通过",
-      "checkFailed": "失败"
+    "entryAuthorizationPolicy": {
+      "switchTitle": "变更入场授权策略",
+      "summary": "将入场授权策略从 {from} 变更为 {to}。",
+      "switched": "入场授权策略已从 {from} 变更为 {to}"
     },
     "killSwitch": {
       "setTitle": "设置熔断开关",
@@ -3229,11 +3257,16 @@
       "incompleteDays": "不完整日期数",
       "oldestIncomplete": "最早",
       "unavailable": "暂无可用对账证据",
+      "loading": "正在读取激励对账证据",
+      "loadError": "激励对账读取失败；如有已加载证据，将保留显示，请重试。",
       "belowThreshold": "Program day {dates} 低于 payout 门槛 {threshold}；不同日期永不滚存，且不能视为可用现金。",
       "overdueProgramDays": "达到门槛的 program day {dates} 在配置的 expected-by 时间后仍未入账。",
       "forbidden": "查看账户激励证据需要账户快照读取权限。",
       "ledger": {
         "title": "不可变激励事件账本",
+        "loading": "正在读取激励事件账本",
+        "loadError": "激励事件读取失败。当前查询结果不可用，请重试。",
+        "empty": "当前筛选范围内没有激励事件。",
         "programDate": "项目日期",
         "kind": "类型",
         "stage": "阶段",
@@ -3266,16 +3299,12 @@
     "listTitle": "订单意图",
     "filters": {
       "status": "状态",
-      "approvalStatus": "审批",
-      "runtimeMode": "运行模式",
       "recommendationId": "推荐 ID",
       "createdAt": "创建时间"
     },
     "columns": {
       "intentId": "意图",
       "status": "状态",
-      "approvalStatus": "审批",
-      "runtimeMode": "模式",
       "side": "方向",
       "limitPrice": "限价",
       "amount": "金额/份额",
@@ -3352,7 +3381,7 @@
       "noExecutionOrders": "暂无执行订单。",
       "sections": {
         "identity": "标识",
-        "approval": "审批与准入",
+        "authorization": "授权与准入",
         "entry": "入场订单",
         "exit": "离场策略",
         "executionOrders": "执行订单"
@@ -3361,16 +3390,14 @@
         "recommendationId": "推荐",
         "decisionPolicySnapshot": "决策策略快照",
         "modelVersion": "模型版本",
-        "policyId": "策略 ID",
-        "policyHash": "策略哈希",
         "riskEnvelopeHash": "风险敞口哈希",
         "createdAt": "创建时间",
         "expiresAt": "过期时间"
       },
-      "approval": {
-        "approvedBy": "审批人",
-        "approvedAt": "审批时间",
-        "approvalReason": "审批理由",
+      "authorization": {
+        "kind": "授权类型",
+        "authorizedAt": "授权时间",
+        "evidence": "授权证据",
         "statusReason": "状态原因",
         "admissionTrace": "准入追踪引用"
       },
@@ -3507,9 +3534,11 @@
       "openedAt": "开仓时间"
     },
     "columns": {
-      "positionId": "持仓",
+      "lotId": "仓位批次",
+      "origin": "来源",
       "positionPlane": "平面",
       "orderIntentId": "意图",
+      "recoveryIncidentId": "恢复事件",
       "market": "市场",
       "token": "Token",
       "state": "状态",
@@ -3527,7 +3556,10 @@
     "detail": {
       "title": "持仓",
       "notFound": "未找到持仓。",
+      "origin": "来源",
       "orderIntentId": "意图",
+      "recoveryIncidentId": "恢复事件",
+      "recommendationId": "推荐",
       "token": "Token",
       "updatedAt": "更新时间",
       "viewOrders": "查看执行订单",
@@ -3674,7 +3706,9 @@
         "wallet_topology_mismatch": "钱包拓扑不匹配（{wallet_kind} / {funder}）：{detail}",
         "collateral_wrapper_role_missing": "pUSD wrapper 角色缺失：adapter {adapter} / {collateral_token}。",
         "credential_missing": "钱包类型 {wallet_kind} 缺少 {required} 凭证。",
-        "chain_observation_not_fresh": "区块 {block_number} 的 canonical 观测已过期（上限 {max_age_seconds}s）。",
+        "settlement_inspection_window_invalid": "结算检查完成于 {inspection_completed_at}，超出以 {request_admitted_at} 为起点的允许窗口（最长 {max_duration_seconds} 秒）。",
+        "chain_observation_stale": "区块 {block_number} 的 canonical 观测已过期：区块时间 {block_timestamp}，检查时间 {checked_at}（时效上限 {max_age_seconds} 秒）。",
+        "chain_observation_future_skew_exceeded": "区块 {block_number} 的 canonical 观测超出验证器允许的未来时钟偏差：区块时间 {block_timestamp}，检查时间 {checked_at}（偏差上限 {max_future_skew_seconds} 秒）。",
         "canonical_block_changed": "高度 {block_number} 的 canonical 哈希已变化：观测 {observed_hash}，当前 {current_hash}。"
       },
       "advisoryMessages": {
@@ -3710,7 +3744,7 @@
       "operatorRevoke": "撤销当前 Adapter 授权",
       "operatorApproveSummary": "确认后只创建精确作用域的异步授权命令；HTTP 不签名、不广播。",
       "operatorRevokeSummary": "确认后只创建精确作用域的异步撤销命令；HTTP 不签名、不广播。",
-      "batchApproveSummary": "批准当前不可变摘要对应的 SemiAuto 结算批次。",
+      "batchApproveSummary": "批准当前不可变摘要对应的操作员授权结算批次。",
       "batchRevokeSummary": "撤销当前不可变摘要对应的未消费批次授权。",
       "batchApproved": "批次授权已批准。",
       "batchRevoked": "批次授权已撤销。",
@@ -3802,7 +3836,7 @@
         "batch": "批次",
         "inventoryLots": "当前冻结库存与策略",
         "balances": "Outcome 余额证据",
-        "authorization": "SemiAuto 批次授权",
+        "authorization": "操作员批次授权",
         "submissions": "持久化链上提交",
         "redeemedLots": "已确认逐仓位赔付"
       }
@@ -3831,14 +3865,12 @@
     "filters": {
       "route": "Route",
       "status": "状态",
-      "kind": "类型",
-      "runtimeMode": "运行模式"
+      "kind": "类型"
     },
     "columns": {
       "reportId": "报告",
       "routes": "覆盖 Route",
       "decisionAt": "决策时间",
-      "runtimeMode": "模式",
       "status": "状态",
       "kind": "类型",
       "triggerKind": "触发",
@@ -3989,7 +4021,6 @@
         "reportId": "报告 ID",
         "kind": "类型",
         "status": "状态",
-        "runtimeMode": "运行模式",
         "routes": "覆盖 Route",
         "routeSetDigest": "Route 集合摘要",
         "scenarioArtifact": "联合场景制品",
@@ -4098,7 +4129,7 @@
           "cvar": "CVaR 贡献",
           "capitalTime": "资本 USD·h",
           "hardReservedCash": "硬现金预留",
-          "eligibility": "可执行模式",
+          "eligibility": "执行权限上限",
           "status": "状态",
           "open": "详情页"
         }
@@ -4346,17 +4377,38 @@
       "portfolioCvarCap": "组合 CVaR 上限",
       "scenarioLossCap": "最大场景损失上限",
       "maxSlippage": "最大滑点",
-      "requiresApproval": "需要审批",
-      "autoExecutionAllowed": "允许全自动",
       "envelopeHash": "边界哈希",
       "notes": "风险备注"
     },
     "eligibility": {
-      "eligibleModes": "可执行模式",
-      "ineligibilityReasons": "不可执行原因",
-      "approvalRequired": "需要审批",
-      "autoPolicy": "自动策略",
+      "ceiling": "执行权限上限",
+      "blockers": "权限阻断项",
+      "policyBinding": "策略绑定",
       "none": "无"
+    },
+    "economicFeedback": {
+      "title": "经济结果、执行对比与 Route 健康度",
+      "outcome": "推荐经济结果",
+      "comparison": "计划与实际执行对比",
+      "routeHealth": "Route 经济健康度",
+      "outcomeUnavailable": "Horizon 结果尚不可用或未通过校验。",
+      "comparisonUnavailable": "尚无哈希完整的实际执行对比。",
+      "healthUnavailable": "尚无 Route 经济健康证据。",
+      "state": "状态",
+      "netPnl": "净损益",
+      "netReturn": "净收益率",
+      "availableAt": "可用时间",
+      "evidenceHash": "证据哈希",
+      "evaluation": "评估",
+      "evaluated": "已评估",
+      "latencyDelta": "实际 - 计划延迟",
+      "priceDelta": "实际 - 计划价格",
+      "fillDelta": "实际 - 计划成交比例",
+      "returnDelta": "实际 - 计划收益",
+      "comparisonHash": "对比哈希",
+      "coverage": "覆盖率 / 观测数",
+      "lowerBound": "收益置信下界",
+      "assessedThrough": "评估截止时间"
     },
     "factors": {
       "empty": "无因子拆解。",
@@ -4450,9 +4502,9 @@
       },
       "disabled": {
         "permission": "你没有 order_intent:create 权限。",
-        "mode": "当前运行模式为 report_only。这不是 dry-run —— 在操作者切换到 semi_auto 或 auto_execution 之前，禁止创建意图。",
+        "authorizationPolicy": "尚未取得入场授权策略，意图创建保持 fail closed。",
         "killSwitch": "熔断开关未处于 closed 状态，当前禁止开新仓。",
-        "eligibility": "该推荐在当前运行模式下不可执行。",
+        "eligibility": "该推荐的权限上限或阻断项不允许在当前授权策略下执行。",
         "riskEnvelope": "风险边界无效（最大仓位或最大亏损不为正）。",
         "validity": "已超出推荐的有效时间窗口。",
         "reportStatus": "父报告已不再是已发布状态。",
@@ -4508,9 +4560,9 @@
         "label": "运行控制",
         "description": "Worker 准入、熔断行为和通知路由。"
       },
-      "executionAutomationPolicy": {
+      "executionAuthorizationPolicy": {
         "label": "执行授权",
-        "description": "Semi-auto 与 Auto-execution 的显式资金授权。"
+        "description": "操作员批准 TTL 与策略自动授权上限。"
       },
       "kind": {
         "recommendation_policy": "推荐策略",
@@ -4518,7 +4570,7 @@
         "model_routing": "模型路由",
         "report_schedule": "报告调度",
         "operations_policy": "运行控制",
-        "execution_automation_policy": "执行授权"
+        "execution_authorization_policy": "执行授权"
       }
     },
     "resource": {
@@ -4695,19 +4747,19 @@
     },
     "operationalControl": {
       "title": "即时运行控制",
-      "description": "运行模式、结算资金写策略与 Kill-switch 共享一个原子 Revision；具备对应权限的管理员可独立操作，每次变更均要求原因并写入不可变审计链。",
+      "description": "入场授权策略、结算资金写策略与 Kill-switch 共享一个原子 Revision；每次变更均要求原因并写入不可变审计链。",
       "unavailable": "当前无法读取权威运行状态；所有控制动作保持关闭。",
       "restricted": "系统当前处于受限运行状态",
       "revision": "Revision",
       "phase": "运行阶段",
-      "quantMode": "Quant 运行模式",
+      "entryAuthorizationPolicy": "入场授权策略",
       "settlementWritePolicy": "结算资金写策略",
       "killSwitch": "Kill-switch",
       "changedBy": "最近操作者",
       "changedAt": "最近变更时间",
       "lastReason": "最近变更原因",
-      "quantModeActions": "Quant 运行模式",
-      "quantModeDescription": "控制报告、半自动执行与自动执行的运行边界；升级会执行后端预检。",
+      "entryAuthorizationActions": "入场授权策略",
+      "entryAuthorizationDescription": "控制每个新入场是否必须由操作员批准，或允许生效策略自动授权；权限升级会执行后端预检。",
       "settlementPolicyActions": "结算资金写策略",
       "settlementPolicyDescription": "控制是否允许构造新的结算链上提交；已有提交始终继续恢复和对账。",
       "killSwitchActions": "紧急运行限制",
@@ -4746,10 +4798,7 @@
       "FixedInterval": "固定间隔",
       "Cron": "Cron 调度",
       "isotonic": "等距回归",
-      "platt": "Platt 缩放",
-      "report_only": "仅报告",
-      "semi_auto": "半自动执行",
-      "auto_execution": "自动执行"
+      "platt": "Platt 缩放"
     },
     "review": {
       "title": "字段级变更复核",
@@ -4793,7 +4842,7 @@
       "model_evaluation_claim": "新模型评估 claim",
       "future_report_run_reconcile": "未 claim 的未来调度",
       "operational_admission": "运行准入门",
-      "execution_automation_policy_admission": "执行授权准入"
+      "execution_authorization_admission": "执行授权准入"
     },
     "consumer": {
       "market_selection": "市场筛选",
@@ -4807,8 +4856,7 @@
       "model_runner": "模型运行器",
       "report_scheduler": "报告调度器",
       "worker_admission": "Worker 准入",
-      "alert_dispatcher": "告警分发",
-      "runtime_mode_gate": "运行模式门"
+      "alert_dispatcher": "告警分发"
     },
     "feedback": {
       "draftSaved": "Draft 已保存",
@@ -4881,21 +4929,19 @@
       "load": "配置资源加载失败，请检查服务状态后重试。"
     },
     "runtimeField": {
-      "execution_automation_policy": {
-        "auto_execution": {
+      "execution_authorization_policy": {
+        "operator_approval_ttl_secs": {
+          "description": "操作员批准的有效期（秒）；过期后必须基于最新账户、市场与政策快照重新准入。",
+          "label": "Operator Approval Ttl Secs"
+        },
+        "policy_automatic_limits": {
           "max_orders_per_report": {
-            "description": "每份已发布报告最多允许自动创建的订单数；超出部分仍可保留为需人工批准的推荐，不得绕过执行准入。",
-            "label": "单报告自动订单上限"
+            "description": "每份已发布报告最多允许策略自动授权的订单数；超出部分只能进入操作员批准路径。",
+            "label": "Max Orders Per Report"
           },
           "max_total_usd_per_report": {
-            "description": "每份报告可自动执行的累计 USD 名义金额硬上限；计算按全局排名顺序累加已授权 tier。",
-            "label": "单报告自动执行上限（USD）"
-          }
-        },
-        "semi_auto": {
-          "approval_ttl_secs": {
-            "description": "半自动执行人工批准的有效期（秒）；过期后必须基于最新账户、市场与政策快照重新准入。",
-            "label": "审批有效期（秒）"
+            "description": "每份报告可由策略自动授权的累计 USD 名义金额硬上限；按全局排名顺序累加已授权 tier。",
+            "label": "Max Total Usd Per Report"
           }
         }
       },
@@ -4972,6 +5018,20 @@
               "description": "开启时仍生成完整再推理审计证据，但抑制“论点失效”退出；强制止损、时间与 trailing 退出继续生效。",
               "label": "Shadow 模式"
             }
+          }
+        },
+        "maker_rebate": {
+          "fallback_lag_from_program_close_secs": {
+            "description": "Maker rebate 计划日结束后，在 venue 尚未发布实际奖励时继续使用保守估值的最长等待时间（秒）；超时后该激励必须按不可用处理。",
+            "label": "Fallback Lag From Program Close Secs"
+          },
+          "observed_p95_min_samples": {
+            "description": "采用历史观测 P95 到账延迟前所需的最小成功样本数；样本不足时必须使用冻结的保守延迟。",
+            "label": "Observed P95 Min Samples"
+          },
+          "payout_threshold_usd": {
+            "description": "只有累计预期 Maker rebate 达到该 USD 阈值后，才允许把预期激励纳入可支付性与经济结果核算。",
+            "label": "Payout Threshold Usd"
           }
         },
         "portfolio": {
@@ -5062,7 +5122,7 @@
         },
         "reconciliation": {
           "enabled": {
-            "description": "是否启用订单与 venue 状态对账；自动或半自动执行能力启用时必须保持开启。",
+            "description": "是否启用订单与 venue 状态对账；任何可执行入场权限启用时必须保持开启。",
             "label": "启用"
           },
           "interval_secs": {
@@ -5245,6 +5305,10 @@
             "description": "限制每轮结果对账在单个处理通道中扫描的 Recommendation 或 OrderIntent 数量，防止无界延迟和内存占用。",
             "label": "候选批次上限"
           },
+          "economic_source_lateness_secs": {
+            "description": "RecommendationEconomicOutcome 在冻结 horizon 后允许等待 L2、费用与被动成交事实补齐的最长时间（秒）；超时后必须以明确 censored/insufficient 状态收口。",
+            "label": "Economic Source Lateness Secs"
+          },
           "enabled": {
             "description": "是否启用已解析市场结果对账，这是 15-stage feedback closure 生成成熟标签的必要条件。",
             "label": "启用"
@@ -5367,14 +5431,15 @@
       }
     },
     "runtimeGroup": {
-      "execution_automation_policy": {
-        "auto_execution": "自动执行授权",
-        "semi_auto": "半自动执行授权"
+      "execution_authorization_policy": {
+        "operator_approval_ttl_secs": "Operator Approval Ttl Secs",
+        "policy_automatic_limits": "Policy Automatic Limits"
       },
       "execution_risk_policy": {
         "breaker": "执行熔断",
         "entry_order_policy": "入场订单策略",
         "exit_monitor": "退出监控",
+        "maker_rebate": "Maker Rebate",
         "portfolio": {
           "admission": "组合 / 候选准入",
           "budget": "组合 / 资金预算",

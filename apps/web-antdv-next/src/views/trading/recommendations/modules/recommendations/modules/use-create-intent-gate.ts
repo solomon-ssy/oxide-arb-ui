@@ -3,18 +3,17 @@
  *
  * The button is enabled only when every production invariant the backend
  * enforces at `POST /quant/intents` holds. The gate is a pure function (no Vue /
- * store access) so the full permission x mode x kill-switch x eligibility x
+ * store access) so the permission x authorization-policy x kill-switch x eligibility x
  * risk-envelope x validity x lifecycle matrix is unit-testable in isolation.
  *
  * It reuses the shared `@vben/types` execution-gate predicates so the checks stay
  * byte-for-byte aligned with the Rust services, and returns the *first* blocking
- * reason so the UI tooltip explains the primary obstacle (notably: `report_only`
- * is credential-gated sizing, never dry-run).
+ * reason so the UI tooltip explains the primary obstacle.
  */
 import type {
+  EntryAuthorizationPolicy,
   KillSwitchState,
   QuantRecommendationView,
-  QuantRuntimeMode,
 } from '@vben/types';
 
 import {
@@ -23,15 +22,14 @@ import {
   isReportActionableForIntent,
   isRiskEnvelopeActionable,
   killSwitchAllowsNewEntry,
-  QUANT_RUNTIME_MODES,
 } from '@vben/types';
 
 /** First blocking reason (maps to `page.quantRecommendations.createIntent.disabled.*`). */
 export type CreateIntentBlockReason =
   | 'activeIntent'
+  | 'authorizationPolicy'
   | 'eligibility'
   | 'killSwitch'
-  | 'mode'
   | 'permission'
   | 'recommendationStatus'
   | 'reportStatus'
@@ -41,8 +39,8 @@ export type CreateIntentBlockReason =
 export interface CreateIntentGateInput {
   /** Holder of `order_intent:create`. */
   canCreate: boolean;
-  /** Live runtime mode (`systemStore.status.quant_runtime_mode`), null before first paint. */
-  runtimeMode: null | QuantRuntimeMode;
+  /** Live entry authorization policy, null before first paint. */
+  entryAuthorizationPolicy: EntryAuthorizationPolicy | null;
   /** Live kill-switch state (`systemStore.status.kill_switch.state`), null before first paint. */
   killSwitchState: KillSwitchState | null;
   recommendation: Omit<
@@ -97,16 +95,15 @@ export function evaluateCreateIntentGate(
     killSwitchState,
     now = Date.now(),
     recommendation,
-    runtimeMode,
+    entryAuthorizationPolicy,
   } = input;
 
   if (!canCreate) {
     return { enabled: false, reason: 'permission' };
   }
 
-  // `report_only` never creates intents — it is real-account sizing, not dry-run.
-  if (runtimeMode === null || runtimeMode === QUANT_RUNTIME_MODES.reportOnly) {
-    return { enabled: false, reason: 'mode' };
+  if (entryAuthorizationPolicy === null) {
+    return { enabled: false, reason: 'authorizationPolicy' };
   }
 
   // Kill-switch must admit new entries (only `closed` does).
@@ -114,7 +111,12 @@ export function evaluateCreateIntentGate(
     return { enabled: false, reason: 'killSwitch' };
   }
 
-  if (!isExecutionEligible(recommendation.execution_eligibility, runtimeMode)) {
+  if (
+    !isExecutionEligible(
+      recommendation.execution_eligibility,
+      entryAuthorizationPolicy,
+    )
+  ) {
     return { enabled: false, reason: 'eligibility' };
   }
 

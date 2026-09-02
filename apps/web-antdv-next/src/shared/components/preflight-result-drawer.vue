@@ -40,7 +40,7 @@ watch(preflightReport, (report) => {
 <template>
   <WorkspaceInspectorSurface
     :drawer-api="drawerApi"
-    :title="$t('page.header.modePicker.preflightTitle')"
+    :title="$t('page.header.authorizationPicker.preflightTitle')"
   >
     <PreflightReportBlock v-if="preflightReport" :report="preflightReport" />
   </WorkspaceInspectorSurface>

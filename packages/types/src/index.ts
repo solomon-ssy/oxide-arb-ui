@@ -5,7 +5,7 @@ export type * from './dashboard';
 export type * from './data-quality';
 export type * from './decision-evidence';
 export type * from './entry-condition';
-// Runtime enum const objects (`QUANT_RUNTIME_MODES`, …) live here alongside types.
+// Runtime enum const objects live here alongside their wire-value types.
 export * from './enums';
 // Pure execution-gate predicates (runtime functions) mirroring backend guards.
 export * from './execution-gate';
@@ -14,12 +14,17 @@ export type * from './execution-recovery';
 export type * from './feedback';
 export * from './generated/enum-catalog';
 export type {
+  AccountRecoveryIncidentView,
+  AccountRecoveryMismatch,
+  AccountRecoverySellAllocation,
   AccountSnapshotView,
+  BuyModelRoute,
   CreateIntentRequest,
   EquitySnapshotView,
   ExitMonitorObservationView,
   ExposureBreakdown,
   FactorBreakdownEntry,
+  FinalizeAccountRecoveryRequest,
   IncentiveReconciliationHealth,
   IncentiveReconciliationView,
   LiveAccountView,
@@ -31,10 +36,15 @@ export type {
   RecommendationChangedFieldView,
   RecommendationDeltaView,
   RecommendationDiffSnapshotView,
+  RecommendationEconomicOutcomeView,
+  RecommendationExecutionComparisonView,
+  ReconcileAccountRecoveryRequest,
   ReportDiffView,
   ReportFactDeliveryView,
   ReportRunView,
+  RouteEconomicHealthView,
   ScaleOutTarget,
+  SealAccountRecoveryRequest,
   ThesisInvalidationPolicy,
   TrailingStopPolicy,
   VenueIncentiveEventView,

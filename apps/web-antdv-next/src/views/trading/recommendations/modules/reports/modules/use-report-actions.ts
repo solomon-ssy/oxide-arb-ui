@@ -1,7 +1,7 @@
 /**
  * Report-plane governed actions. `run` is delegated to the shared
  * {@link useRunReportAction} (dashboard + reports page share one flow); `revoke`
- * is a report-only governed mutation gated by `quant_report:revoke`.
+ * is a report-plane governed mutation gated by `quant_report:revoke`.
  */
 import type { QuantReportView } from '@vben/types';
 

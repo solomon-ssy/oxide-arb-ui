@@ -41,18 +41,6 @@ export function useIntentColumns(
       width: 150,
     },
     {
-      cellRender: { name: 'CellEnumTag', props: { enum: 'ApprovalStatus' } },
-      field: 'approval_status',
-      title: $t('page.quantIntents.columns.approvalStatus'),
-      width: 140,
-    },
-    {
-      cellRender: { name: 'CellEnumTag', props: { enum: 'QuantRuntimeMode' } },
-      field: 'runtime_mode',
-      title: $t('page.quantIntents.columns.runtimeMode'),
-      width: 130,
-    },
-    {
       cellRender: { name: 'CellEnumTag', props: { enum: 'Side' } },
       field: 'entry_order.side',
       title: $t('page.quantIntents.columns.side'),

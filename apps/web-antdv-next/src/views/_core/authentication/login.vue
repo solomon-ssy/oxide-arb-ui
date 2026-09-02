@@ -55,7 +55,9 @@ const formSchema = computed((): VbenFormSchema[] => {
         <template #message>
           <div class="flex items-center gap-2">
             <span>{{ $t('page.dashboard.login.console') }}</span>
-            <Tag color="processing">ReportOnly</Tag>
+            <Tag color="processing">
+              {{ $t('page.dashboard.login.realAccount') }}
+            </Tag>
           </div>
         </template>
         <template #description>

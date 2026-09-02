@@ -41,7 +41,7 @@ export function dashboardWsHealth(
   activityAt: IsoDateTime | null,
   nowMs: number,
 ): DashboardWsHealth {
-  if (status === 'connecting') {
+  if (status === 'connecting' || status === 'reconnecting') {
     return 'connecting';
   }
   if (status !== 'connected') {

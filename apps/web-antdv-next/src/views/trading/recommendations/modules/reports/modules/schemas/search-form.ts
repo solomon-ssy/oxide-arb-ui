@@ -42,15 +42,6 @@ export function useReportSearchSchema(): VbenFormSchema[] {
       label: $t('page.quantReports.filters.route'),
     },
     {
-      component: 'EnumSelect',
-      componentProps: {
-        allowClear: true,
-        options: enumOptions('QuantRuntimeMode'),
-      },
-      fieldName: 'runtime_mode',
-      label: $t('page.quantReports.filters.runtimeMode'),
-    },
-    {
       component: 'RangePicker',
       componentProps: {
         allowClear: true,

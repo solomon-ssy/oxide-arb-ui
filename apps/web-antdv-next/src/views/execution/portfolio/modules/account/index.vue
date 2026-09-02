@@ -269,7 +269,7 @@ onBeforeUnmount(() => {
             </Button>
           </template>
           <div v-if="liveAccount" class="flex flex-col gap-3">
-            <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+            <div class="account-kpi-grid grid gap-3">
               <KpiCard
                 :title="$t('page.quantAccount.fields.netLiq')"
                 :value="formatUsd(liveAccount.venue_net_liquidation_usd)"
@@ -304,10 +304,7 @@ onBeforeUnmount(() => {
               </span>
             </div>
           </div>
-          <div
-            v-else-if="accountLoading"
-            class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5"
-          >
+          <div v-else-if="accountLoading" class="account-kpi-grid grid gap-3">
             <KpiCard
               v-for="field in [
                 'netLiq',
@@ -395,11 +392,16 @@ onBeforeUnmount(() => {
 
       <!-- Equity history (curve + table), gated on equity_snapshot:read -->
       <template v-if="showEquity && canReadEquity">
-        <div class="flex items-center gap-2">
+        <div class="equity-range-field flex items-center gap-2">
           <span class="text-sm font-medium">
             {{ $t('page.quantAccount.equity.range') }}
           </span>
-          <RangePicker v-model:value="range" show-time @change="loadEquity" />
+          <RangePicker
+            v-model:value="range"
+            class="equity-range"
+            show-time
+            @change="loadEquity"
+          />
           <Button :loading="equityLoading" size="small" @click="loadEquity">
             {{ $t('page.quantAccount.refresh') }}
           </Button>
@@ -455,3 +457,21 @@ onBeforeUnmount(() => {
     <SnapshotDrawer />
   </Page>
 </template>
+
+<style scoped>
+.equity-range-field :deep(.ant-picker-clear) {
+  display: grid;
+  place-items: center;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+}
+
+.equity-range-field :deep(.ant-picker-suffix) {
+  justify-content: center;
+  min-inline-size: 24px;
+}
+
+.account-kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+</style>

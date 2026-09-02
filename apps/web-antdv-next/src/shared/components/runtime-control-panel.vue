@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type {
+  EntryAuthorizationPolicy,
   KillSwitchState,
   KillSwitchView,
-  QuantRuntimeMode,
   SettlementWritePolicy,
 } from '@vben/types';
 
@@ -11,8 +11,8 @@ import { computed, onMounted, ref } from 'vue';
 import { IconifyIcon } from '@vben/icons';
 import { useRequestHandler } from '@vben/request/qp';
 import {
+  ENTRY_AUTHORIZATION_POLICIES,
   KILL_SWITCH_STATES,
-  QUANT_RUNTIME_MODES,
   SETTLEMENT_WRITE_POLICIES,
 } from '@vben/types';
 
@@ -20,11 +20,12 @@ import { Alert, Button, Skeleton, Tag } from 'antdv-next';
 
 import { getRuntimeControls, getSystemStatus } from '#/api/system';
 import { $t } from '#/locales';
+import AccountRecoveryPanel from '#/shared/components/account-recovery-panel.vue';
 import EnumTag from '#/shared/components/enum-tag.vue';
 import { formatDateTimeLocal } from '#/shared/components/format';
 import {
+  useEntryAuthorizationPolicyAction,
   useKillSwitchAction,
-  useQuantModeAction,
   useSettlementWritePolicyAction,
 } from '#/shared/composables/use-system-actions';
 import { useSystemStore } from '#/store';
@@ -37,17 +38,15 @@ interface KillSwitchActionDefinition {
   target: KillSwitchState;
 }
 
-const QUANT_MODE_ACTIONS: readonly QuantRuntimeMode[] = [
-  QUANT_RUNTIME_MODES.reportOnly,
-  QUANT_RUNTIME_MODES.semiAuto,
-  QUANT_RUNTIME_MODES.autoExecution,
+const ENTRY_AUTHORIZATION_ACTIONS: readonly EntryAuthorizationPolicy[] = [
+  ENTRY_AUTHORIZATION_POLICIES.operatorApprovalRequired,
+  ENTRY_AUTHORIZATION_POLICIES.policyAutomatic,
 ];
 
 const SETTLEMENT_POLICY_ACTIONS: readonly SettlementWritePolicy[] = [
   SETTLEMENT_WRITE_POLICIES.disabled,
   SETTLEMENT_WRITE_POLICIES.governedCanary,
-  SETTLEMENT_WRITE_POLICIES.semiAuto,
-  SETTLEMENT_WRITE_POLICIES.auto,
+  SETTLEMENT_WRITE_POLICIES.operatorApproval,
 ];
 
 const KILL_SWITCH_ACTIONS: readonly KillSwitchActionDefinition[] = [
@@ -75,11 +74,11 @@ const KILL_SWITCH_ACTIONS: readonly KillSwitchActionDefinition[] = [
 
 const systemStore = useSystemStore();
 const { handleRequest } = useRequestHandler();
-const quantModeAction = useQuantModeAction();
+const entryAuthorizationAction = useEntryAuthorizationPolicyAction();
 const settlementPolicyAction = useSettlementWritePolicyAction();
 const killSwitchAction = useKillSwitchAction();
 const loading = ref(false);
-const transitioningMode = ref<null | QuantRuntimeMode>(null);
+const transitioningAuthorization = ref<EntryAuthorizationPolicy | null>(null);
 const transitioningPolicy = ref<null | SettlementWritePolicy>(null);
 const transitioningKillSwitch = ref<KillSwitchState | null>(null);
 
@@ -120,20 +119,20 @@ async function loadTruth() {
   loading.value = false;
 }
 
-async function transitionMode(target: QuantRuntimeMode) {
-  const current = controls.value?.quant_runtime_mode ?? null;
+async function transitionEntryAuthorization(target: EntryAuthorizationPolicy) {
+  const current = controls.value?.entry_authorization_policy ?? null;
   const expectedRevision = controls.value?.revision;
   if (
-    !quantModeAction.canSwitch ||
+    !entryAuthorizationAction.canSwitch ||
     !current ||
     current === target ||
     expectedRevision === undefined
   ) {
     return;
   }
-  transitioningMode.value = target;
-  await quantModeAction.switchTo(current, target, expectedRevision);
-  transitioningMode.value = null;
+  transitioningAuthorization.value = target;
+  await entryAuthorizationAction.switchTo(current, target, expectedRevision);
+  transitioningAuthorization.value = null;
 }
 
 async function transitionSettlementPolicy(target: SettlementWritePolicy) {
@@ -224,13 +223,13 @@ onMounted(() => void loadTruth());
       >
         <div class="bg-card px-4 py-3">
           <dt class="text-muted-foreground text-xs">
-            {{ $t('page.config.operationalControl.quantMode') }}
+            {{ $t('page.config.operationalControl.entryAuthorizationPolicy') }}
           </dt>
           <dd class="mt-1">
             <EnumTag
               context="runtime-control"
-              name="QuantRuntimeMode"
-              :value="controls.quant_runtime_mode"
+              name="EntryAuthorizationPolicy"
+              :value="controls.entry_authorization_policy"
             />
           </dd>
         </div>
@@ -282,24 +281,26 @@ onMounted(() => void loadTruth());
       <div class="mt-5 grid gap-5 xl:grid-cols-3">
         <section>
           <h3 class="text-sm font-semibold">
-            {{ $t('page.config.operationalControl.quantModeActions') }}
+            {{ $t('page.config.operationalControl.entryAuthorizationActions') }}
           </h3>
           <p class="text-muted-foreground mt-1 text-xs">
-            {{ $t('page.config.operationalControl.quantModeDescription') }}
+            {{
+              $t('page.config.operationalControl.entryAuthorizationDescription')
+            }}
           </p>
           <div class="mt-3 flex flex-wrap gap-2">
             <Button
-              v-for="target in QUANT_MODE_ACTIONS"
+              v-for="target in ENTRY_AUTHORIZATION_ACTIONS"
               :key="target"
-              :danger="target === QUANT_RUNTIME_MODES.autoExecution"
+              :danger="target === ENTRY_AUTHORIZATION_POLICIES.policyAutomatic"
               :disabled="
-                !quantModeAction.canSwitch ||
-                controls.quant_runtime_mode === target
+                !entryAuthorizationAction.canSwitch ||
+                controls.entry_authorization_policy === target
               "
-              :loading="transitioningMode === target"
-              @click="transitionMode(target)"
+              :loading="transitioningAuthorization === target"
+              @click="transitionEntryAuthorization(target)"
             >
-              {{ $t(`enum.quantRuntimeMode.${target}`) }}
+              {{ $t(`enum.entryAuthorizationPolicy.${target}`) }}
             </Button>
           </div>
         </section>
@@ -317,7 +318,7 @@ onMounted(() => void loadTruth());
             <Button
               v-for="target in SETTLEMENT_POLICY_ACTIONS"
               :key="target"
-              :danger="target === SETTLEMENT_WRITE_POLICIES.auto"
+              :danger="target === SETTLEMENT_WRITE_POLICIES.operatorApproval"
               :disabled="
                 !settlementPolicyAction.canSwitch ||
                 controls.settlement_write_policy === target
@@ -372,6 +373,7 @@ onMounted(() => void loadTruth());
           }}
         </span>
       </div>
+      <AccountRecoveryPanel class="mt-5" />
     </template>
   </section>
 </template>

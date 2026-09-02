@@ -29,7 +29,7 @@ test('market intelligence opens the real live-market inspector from the catalog'
   await expect(page).toHaveURL((url) => {
     return (
       url.pathname === '/trading/market-intelligence' &&
-      url.searchParams.get('module') === 'overview' &&
+      url.searchParams.get('module') === 'live' &&
       url.searchParams.get('entity') === 'market' &&
       url.searchParams.get('id') === market.market_id
     );

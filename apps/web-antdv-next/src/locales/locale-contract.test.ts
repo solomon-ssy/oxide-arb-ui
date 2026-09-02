@@ -55,6 +55,11 @@ describe('application locale contract', () => {
     expect(leafKeys(enPage).filter((key) => !chineseKeys.has(key))).toEqual([]);
   });
 
+  it('provides the shared copy-value accessibility label', () => {
+    expect(enPage.common.copyValue).toBe('Copy {label}');
+    expect(zhPage.common.copyValue).toBe('复制{label}');
+  });
+
   it('keeps the English enum catalog free of Chinese copy', () => {
     expect(
       localeLeaves(enEnum).filter(([, value]) => /\p{Script=Han}/u.test(value)),
@@ -66,6 +71,22 @@ describe('application locale contract', () => {
     expect(keys).not.toContain('featureParityStage.domain_crypto');
     expect(keys).not.toContain('featureParityStage.domain_weather');
     expect(keys).not.toContain('resourceType.config_lifecycle');
+    expect(keys.some((key) => key.startsWith('approvalStatus.'))).toBe(false);
+    expect(keys.some((key) => key.startsWith('orderIntentKind.'))).toBe(false);
+  });
+
+  it('keeps policy resource keys equal to the Rust enum catalog', () => {
+    const resourceKinds = [...ENUM_CATALOG.ConfigResourceKind].toSorted();
+    const boundaries = [...ENUM_CATALOG.PolicyApplyBoundary].toSorted();
+
+    expect(Object.keys(enPage.config.resources.kind).toSorted()).toEqual(
+      resourceKinds,
+    );
+    expect(Object.keys(zhPage.config.resources.kind).toSorted()).toEqual(
+      resourceKinds,
+    );
+    expect(Object.keys(enPage.config.boundary).toSorted()).toEqual(boundaries);
+    expect(Object.keys(zhPage.config.boundary).toSorted()).toEqual(boundaries);
   });
 
   it.each([

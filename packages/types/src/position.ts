@@ -8,15 +8,18 @@ import type {
   UuidString,
 } from './common';
 import type { PositionLedgerState, PositionPlane } from './enums';
+import type { EnumValue } from './generated/enum-catalog';
 import type { ExitMonitorObservationView } from './generated/quant-operator-api';
 
 /** `GET /quant/positions/{id}` — a system-lot position ledger row. */
 export interface PositionView {
   position_plane: PositionPlane;
-  position_id: UuidString;
-  order_intent_id: UuidString;
+  strategy_position_lot_id: UuidString;
+  origin_kind: EnumValue<'StrategyPositionOriginKind'>;
+  order_intent_id: null | UuidString;
+  recovery_incident_id: null | UuidString;
   /** Originating recommendation. */
-  recommendation_id: UuidString;
+  recommendation_id: null | UuidString;
   token_id: string;
   market_id: string;
   state: PositionLedgerState;
@@ -30,7 +33,7 @@ export interface PositionView {
 }
 
 export interface PositionDetailView {
-  exit_monitor_observation: ExitMonitorObservationView;
+  exit_monitor_observation?: ExitMonitorObservationView;
   position: PositionView;
 }
 

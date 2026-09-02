@@ -4,7 +4,7 @@
  * verdict (`result`) plus optional observed fill (`filled_shares` / `avg_price`)
  * and a mandatory reason; 403/409/422 fail-closed details surface unmodified.
  * On success the returned execution-recovery next-steps are surfaced so the
- * operator sees whether auto-execution remains blocked.
+ * operator sees whether policy-automatic entry remains blocked.
  */
 import type {
   ReconciliationResult,

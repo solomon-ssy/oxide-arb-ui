@@ -16,7 +16,9 @@ import { $t } from '#/locales';
 import AsyncState from '#/shared/components/async-state.vue';
 import ExitMonitorCard from '#/shared/components/domain/execution/exit-monitor-card.vue';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
+import EnumTag from '#/shared/components/enum-tag.vue';
 import {
+  EMPTY_PLACEHOLDER,
   formatDateTimeLocal,
   formatPrice,
   formatShares,
@@ -26,9 +28,11 @@ import { ObjectInspectorHeader } from '#/shared/components/object-inspector';
 import WorkspaceInspectorSurface from '#/shared/components/workspace/workspace-inspector-surface.vue';
 import { useDrawerIntentRevisionRefresh } from '#/shared/composables/use-drawer-intent-revision-refresh';
 import {
+  orderIntentOpenPath,
   reconciliationQueuePath,
   settlementRedeemsPath,
 } from '#/shared/routes/execution-plane';
+import { recommendationOpenPath } from '#/shared/routes/trading-plane';
 
 defineOptions({ name: 'PositionDetailDrawer' });
 
@@ -39,12 +43,12 @@ interface PositionDrawerData {
 const { handleRequest } = useRequestHandler();
 
 const position = ref<null | PositionView>(null);
-const exitMonitorObservation = ref<
-  null | PositionDetailView['exit_monitor_observation']
->(null);
+const exitMonitorObservation = ref<NonNullable<
+  PositionDetailView['exit_monitor_observation']
+> | null>(null);
 const loading = ref(false);
 const loadError = ref<null | string>(null);
-const openPositionId = ref<null | string>(null);
+const openPositionLotId = ref<null | string>(null);
 
 const notFound = computed(
   () => !position.value && !loading.value && !loadError.value,
@@ -60,11 +64,11 @@ const showLifecycleLinks = computed(() => {
 });
 
 const reconciliationLink = computed(() =>
-  position.value
+  position.value?.order_intent_id
     ? reconciliationQueuePath({
         order_intent_id: position.value.order_intent_id,
       })
-    : reconciliationQueuePath(),
+    : null,
 );
 
 const settlementLink = computed(() =>
@@ -85,7 +89,7 @@ async function refreshPosition(id: string) {
         }
       },
     });
-    if (openPositionId.value === id) {
+    if (openPositionLotId.value === id) {
       position.value = fresh?.position ?? null;
       exitMonitorObservation.value = fresh?.exit_monitor_observation ?? null;
     }
@@ -101,16 +105,16 @@ const [, drawerApi] = useVbenDrawer({
       const data = drawerApi.getData<PositionDrawerData>();
       const initial =
         'position' in data.position ? data.position.position : data.position;
-      openPositionId.value = initial.position_id;
+      openPositionLotId.value = initial.strategy_position_lot_id;
       loadError.value = null;
       position.value = initial;
       exitMonitorObservation.value =
         'position' in data.position
-          ? data.position.exit_monitor_observation
+          ? (data.position.exit_monitor_observation ?? null)
           : null;
-      void refreshPosition(initial.position_id);
+      void refreshPosition(initial.strategy_position_lot_id);
     } else {
-      openPositionId.value = null;
+      openPositionLotId.value = null;
       position.value = null;
       exitMonitorObservation.value = null;
       loadError.value = null;
@@ -118,7 +122,7 @@ const [, drawerApi] = useVbenDrawer({
   },
 });
 
-useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
+useDrawerIntentRevisionRefresh(openPositionLotId, refreshPosition);
 </script>
 
 <template>
@@ -133,7 +137,7 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
       :not-found-text="$t('page.quantPositions.detail.notFound')"
       @retry="
         () => {
-          const id = openPositionId;
+          const id = openPositionLotId;
           if (id) {
             void refreshPosition(id);
           }
@@ -146,13 +150,14 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
         data-testid="position-detail"
       >
         <ObjectInspectorHeader
-          :entity-id="position.position_id"
+          :entity-id="position.strategy_position_lot_id"
           :eyebrow="position.position_plane"
           :statuses="[{ name: 'PositionLedgerState', value: position.state }]"
         >
           <template #actions>
             <RouterLink
-              :to="`/execution/orders?module=orders&order_intent_id=${position.order_intent_id}`"
+              v-if="position.order_intent_id"
+              :to="orderIntentOpenPath(position.order_intent_id)"
             >
               <Button>
                 <IconifyIcon class="mr-1 size-4" icon="lucide:list-ordered" />
@@ -160,14 +165,18 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
               </Button>
             </RouterLink>
             <RouterLink
-              :to="`/trading/recommendations?module=recommendations&entity=recommendation&id=${position.recommendation_id}`"
+              v-if="position.recommendation_id"
+              :to="recommendationOpenPath(position.recommendation_id)"
             >
               <Button>
                 <IconifyIcon class="mr-1 size-4" icon="lucide:git-branch" />
                 {{ $t('page.quantPositions.detail.viewRecommendation') }}
               </Button>
             </RouterLink>
-            <RouterLink v-if="showLifecycleLinks" :to="reconciliationLink">
+            <RouterLink
+              v-if="showLifecycleLinks && reconciliationLink"
+              :to="reconciliationLink"
+            >
               <Button>
                 <IconifyIcon class="mr-1 size-4" icon="lucide:scale" />
                 {{ $t('page.quantPositions.detail.viewReconciliation') }}
@@ -187,21 +196,46 @@ useDrawerIntentRevisionRefresh(openPositionId, refreshPosition);
           :title="$t('page.quantPositions.detail.sections.lot')"
         >
           <Descriptions :column="1" bordered size="small">
-            <DescriptionsItem
-              :label="$t('page.quantPositions.columns.positionId')"
-            >
+            <DescriptionsItem :label="$t('page.quantPositions.columns.lotId')">
               <span class="font-mono text-xs break-all">
-                {{ position.position_id }}
+                {{ position.strategy_position_lot_id }}
               </span>
+            </DescriptionsItem>
+            <DescriptionsItem :label="$t('page.quantPositions.detail.origin')">
+              <EnumTag
+                context="position-detail"
+                name="StrategyPositionOriginKind"
+                :value="position.origin_kind"
+              />
             </DescriptionsItem>
             <DescriptionsItem
               :label="$t('page.quantPositions.detail.orderIntentId')"
             >
               <EntityRouteLink
+                v-if="position.order_intent_id"
                 mono
                 :label="position.order_intent_id"
-                :to="`/execution/orders?module=intents&entity=order-intent&id=${position.order_intent_id}`"
+                :to="orderIntentOpenPath(position.order_intent_id)"
               />
+              <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.quantPositions.detail.recoveryIncidentId')"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ position.recovery_incident_id ?? EMPTY_PLACEHOLDER }}
+              </span>
+            </DescriptionsItem>
+            <DescriptionsItem
+              :label="$t('page.quantPositions.detail.recommendationId')"
+            >
+              <EntityRouteLink
+                v-if="position.recommendation_id"
+                mono
+                :label="position.recommendation_id"
+                :to="recommendationOpenPath(position.recommendation_id)"
+              />
+              <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
             </DescriptionsItem>
             <DescriptionsItem :label="$t('page.quantPositions.columns.market')">
               <EntityRouteLink

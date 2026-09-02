@@ -831,12 +831,14 @@ onBeforeUnmount(() => {
               class="relative mt-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-3 xl:grid-cols-5"
             >
               <div class="status-cell">
-                <dt>{{ $t('page.dashboard.status.runtimeMode') }}</dt>
+                <dt>
+                  {{ $t('page.dashboard.status.entryAuthorizationPolicy') }}
+                </dt>
                 <dd>
                   <EnumTag
                     context="dashboard-status"
-                    name="QuantRuntimeMode"
-                    :value="authority.system.quant_runtime_mode"
+                    name="EntryAuthorizationPolicy"
+                    :value="authority.system.entry_authorization_policy"
                   />
                 </dd>
               </div>

@@ -2,6 +2,8 @@ import type {
   EntryConditionAuditView,
   EntryConditionDetailView,
   QuantEvidenceView,
+  RecommendationEconomicOutcomeView,
+  RecommendationExecutionComparisonView,
 } from '@vben/types';
 
 import { decodeRecommendation } from '#/api/quant-operator-contract';
@@ -15,6 +17,22 @@ export namespace QuantRecommendationApi {
     `/quant/recommendations/${id}/entry-condition`;
   export const entryConditionAudits = (id: string) =>
     `/quant/recommendations/${id}/entry-condition/audits`;
+  export const economicOutcome = (id: string) =>
+    `/quant/recommendations/${id}/economic-outcome`;
+  export const executionComparison = (id: string) =>
+    `/quant/recommendations/${id}/execution-comparison`;
+}
+
+export async function getRecommendationEconomicOutcome(id: string) {
+  return requestClient.get<null | RecommendationEconomicOutcomeView>(
+    QuantRecommendationApi.economicOutcome(id),
+  );
+}
+
+export async function getRecommendationExecutionComparison(id: string) {
+  return requestClient.get<null | RecommendationExecutionComparisonView>(
+    QuantRecommendationApi.executionComparison(id),
+  );
 }
 
 /** Durable recommendation-owned entry condition and immutable artifact. */

@@ -228,7 +228,7 @@ async function copyId(value: string) {
                   class="fresh-boot-action"
                   color="cyan"
                   size="small"
-                  variant="filled"
+                  variant="solid"
                   @click="emit('timeline', profile)"
                 >
                   <template #icon>
@@ -504,7 +504,7 @@ async function copyId(value: string) {
                       class="fresh-boot-action"
                       color="cyan"
                       size="small"
-                      variant="filled"
+                      variant="solid"
                       @click="emit('timeline', profile)"
                     >
                       <template #icon>
@@ -702,6 +702,38 @@ async function copyId(value: string) {
 
 :deep(.fresh-boot-action.ant-btn-color-purple.ant-btn-variant-filled) {
   color: hsl(var(--qp-text-primary));
+}
+
+:deep(.fresh-boot-action.ant-btn-color-cyan.ant-btn-variant-solid) {
+  color: hsl(var(--qp-text-on-accent));
+  background: hsl(var(--qp-action-primary-solid));
+  border-color: hsl(var(--qp-action-primary-solid));
+}
+
+:deep(
+  .fresh-boot-action.ant-btn-color-cyan.ant-btn-variant-solid:not(
+      :disabled
+    ):hover
+) {
+  color: hsl(var(--qp-text-on-accent));
+  background: hsl(var(--qp-action-primary-solid-hover));
+  border-color: hsl(var(--qp-action-primary-solid-hover));
+}
+
+:deep(.fresh-boot-action.ant-btn-color-orange.ant-btn-variant-solid) {
+  color: hsl(var(--qp-text-on-accent));
+  background: hsl(var(--qp-action-warning-solid));
+  border-color: hsl(var(--qp-action-warning-solid));
+}
+
+:deep(
+  .fresh-boot-action.ant-btn-color-orange.ant-btn-variant-solid:not(
+      :disabled
+    ):hover
+) {
+  color: hsl(var(--qp-text-on-accent));
+  background: hsl(var(--qp-action-warning-solid-hover));
+  border-color: hsl(var(--qp-action-warning-solid-hover));
 }
 
 .fresh-boot-action :deep(.ant-btn-icon) {

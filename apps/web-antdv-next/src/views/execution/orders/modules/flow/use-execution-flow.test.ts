@@ -30,11 +30,16 @@ function snapshot(): ExecutionFlowSnapshot {
   return {
     intent: {
       admission_trace_ref: 'admission:1',
-      approval_status: 'approved',
-      approved_at: LATER,
+      authorization_evidence: {
+        authorized_at: LATER,
+        kind: 'operator_approval',
+        operator_id: 'operator-1',
+        reason: 'approved test fixture',
+      },
+      authorization_kind: 'operator_approval',
       created_at: NOW,
       order_intent_id: 'intent-1',
-      status: 'approved',
+      status: 'authorized',
       updated_at: LATER,
     } as OrderIntentView,
     intentCount: 4,
@@ -51,8 +56,8 @@ function snapshot(): ExecutionFlowSnapshot {
     position: {
       market_id: 'market-1',
       opened_at: LATER,
-      position_id: 'position-1',
       state: 'open',
+      strategy_position_lot_id: 'position-lot-1',
       updated_at: LATER,
     } as PositionView,
     positionCount: 1,
@@ -79,7 +84,7 @@ describe('execution flow stage contract', () => {
 
     expect(stages.map((stage) => stage.key)).toEqual([
       'intent',
-      'approval',
+      'authorization',
       'admission',
       'submission',
       'fill',
@@ -91,7 +96,7 @@ describe('execution flow stage contract', () => {
       '/execution/orders?module=intents&entity=order-intent&id=intent-1',
     );
     expect(stages[5]?.route).toBe(
-      '/execution/portfolio?module=positions&entity=position&id=position-1',
+      '/execution/portfolio?module=positions&entity=position&id=position-lot-1',
     );
     expect(stages[7]?.scopeKey).toBe('page.execution.flow.scope.marketBound');
     expect(stages[7]?.route).toBe(

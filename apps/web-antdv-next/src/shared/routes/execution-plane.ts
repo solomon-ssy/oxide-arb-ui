@@ -55,8 +55,8 @@ export function executionOrderOpenPath(executionOrderId: string): string {
 }
 
 /** Open a position detail drawer on the ledger page. */
-export function positionOpenPath(positionId: string): string {
-  return `/execution/portfolio?module=positions&entity=position&id=${encodeURIComponent(positionId)}`;
+export function positionOpenPath(strategyPositionLotId: string): string {
+  return `/execution/portfolio?module=positions&entity=position&id=${encodeURIComponent(strategyPositionLotId)}`;
 }
 
 /** Open a settlement-redeem detail drawer on the batch list page. */

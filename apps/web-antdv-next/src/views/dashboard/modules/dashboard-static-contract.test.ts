@@ -80,7 +80,7 @@ describe('dashboard static contract', () => {
   });
 
   it('paints command-rail enums through EnumTag on a half-width grid', () => {
-    expect(dashboard).toContain('name="QuantRuntimeMode"');
+    expect(dashboard).toContain('name="EntryAuthorizationPolicy"');
     expect(dashboard).toContain('name="KillSwitchState"');
     expect(dashboard).toContain('StatusChip');
     expect(dashboard).not.toContain('enumOption');
@@ -107,5 +107,27 @@ describe('dashboard static contract', () => {
     expect(freshBoot).toContain('position: absolute');
     expect(freshBoot).toContain('inset: 0');
     expect(freshBoot).not.toContain('overscroll-behavior: contain');
+  });
+
+  it('keeps the retry action on an AA dark-orange surface', () => {
+    expect(freshBoot).toContain(
+      'background: hsl(var(--qp-action-warning-solid))',
+    );
+    expect(freshBoot).toContain(
+      'background: hsl(var(--qp-action-warning-solid-hover))',
+    );
+    expect(freshBoot).toContain('color: hsl(var(--qp-text-on-accent))');
+  });
+
+  it('keeps the timeline action on an AA semantic primary surface', () => {
+    expect(freshBoot).toContain('color="cyan"');
+    expect(freshBoot).toContain('variant="solid"');
+    expect(freshBoot).toContain(
+      'background: hsl(var(--qp-action-primary-solid))',
+    );
+    expect(freshBoot).toContain(
+      'background: hsl(var(--qp-action-primary-solid-hover))',
+    );
+    expect(freshBoot).toContain('color: hsl(var(--qp-text-on-accent))');
   });
 });

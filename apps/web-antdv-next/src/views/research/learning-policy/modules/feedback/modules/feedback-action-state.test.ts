@@ -16,7 +16,7 @@ import {
 
 function permit(): PromotionPermitView {
   return {
-    allowed_runtime_modes: ['report_only'],
+    maximum_execution_authority: 'operator_approval',
     candidate_manifest_hash: 'blake3:manifest',
     candidate_manifest_id: 'manifest-1',
     candidate_model_version_id: 'candidate-1',

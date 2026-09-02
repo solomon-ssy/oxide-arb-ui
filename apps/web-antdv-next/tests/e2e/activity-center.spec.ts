@@ -72,24 +72,9 @@ test('activity center cancels a real research job and converges through REST and
 });
 
 test('activity page opens local inspectors without leaving the feed', async ({
-  adminApi,
   authenticatedPage: page,
   browserAudit,
 }) => {
-  const activity = await readApiData<RuntimeActivityPage>(
-    adminApi.context,
-    '/api/runtime/activities?limit=50',
-  );
-  const researchJob = activity.items.find(
-    (item) => item.entity.kind === 'research-job',
-  );
-  const reportRun = activity.items.find(
-    (item) => item.entity.kind === 'report-run',
-  );
-  if (!researchJob && !reportRun) {
-    throw new Error('fresh production fixture has no activity rows');
-  }
-
   await page.goto('/runtime/activity');
   await waitForUiReady(
     page,
@@ -97,15 +82,20 @@ test('activity page opens local inspectors without leaving the feed', async ({
     '[data-testid="runtime-activity-page"][data-ui-ready="true"]',
   );
 
-  async function openKind(target: RuntimeActivity) {
-    await page
-      .locator(`.activity-row[data-activity-id="${target.entity.id}"]`)
-      .click();
+  async function openKind(name: RegExp, kind: string) {
+    const row = page
+      .locator('.activity-row')
+      .filter({ has: page.getByRole('button', { name }) })
+      .first();
+    if ((await row.count()) === 0) return false;
+    const id = await row.getAttribute('data-activity-id');
+    if (!id) throw new Error(`visible ${kind} activity has no entity id`);
+    await row.click();
     await expect(page).toHaveURL((url) => {
       return (
         url.pathname === '/runtime/activity' &&
-        url.searchParams.get('entity') === target.entity.kind &&
-        url.searchParams.get('id') === target.entity.id
+        url.searchParams.get('entity') === kind &&
+        url.searchParams.get('id') === id
       );
     });
     await expect(page.getByTestId('runtime-activity-inspector')).toBeVisible();
@@ -116,13 +106,14 @@ test('activity page opens local inspectors without leaving the feed', async ({
     await expect(
       page.getByTestId('runtime-activity-inspector'),
     ).not.toBeVisible();
+    return true;
   }
 
-  if (researchJob) {
-    await openKind(researchJob);
-  }
-  if (reportRun) {
-    await openKind(reportRun);
-  }
+  const openedResearch = await openKind(
+    /研究任务|Research job/i,
+    'research-job',
+  );
+  const openedReport = await openKind(/报告运行|Report run/i, 'report-run');
+  expect(openedResearch || openedReport).toBe(true);
   await expectReleaseQuality(page);
 });

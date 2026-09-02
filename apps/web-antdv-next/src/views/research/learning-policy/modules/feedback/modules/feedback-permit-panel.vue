@@ -484,13 +484,17 @@ function submitIssue() {
             {{ permit.category }}
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.research.feedback.actions.permit.runtimeModes')"
+            :label="
+              $t(
+                'page.research.feedback.actions.permit.maximumExecutionAuthority',
+              )
+            "
           >
-            {{
-              permit.allowed_runtime_modes
-                .map((mode) => $t(`enum.quantRuntimeMode.${mode}`))
-                .join(', ')
-            }}
+            <EnumTag
+              context="promotion-permit"
+              name="ExecutionAuthorityCeiling"
+              :value="permit.maximum_execution_authority"
+            />
           </DescriptionsItem>
           <DescriptionsItem
             :label="$t('page.research.feedback.actions.permit.serverClock')"

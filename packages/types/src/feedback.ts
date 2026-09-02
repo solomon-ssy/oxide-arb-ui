@@ -1,11 +1,7 @@
 import type { DecimalString, IsoDateTime, PageQuery } from './common';
-import type {
-  DatasetPurpose,
-  MarketCategory,
-  ModelFamily,
-  QuantRuntimeMode,
-} from './enums';
+import type { DatasetPurpose, MarketCategory, ModelFamily } from './enums';
 import type { BuyModelRoute } from './generated/config-api';
+import type { ExecutionAuthorityCeiling } from './generated/quant-operator-api';
 import type { DatasetCohortCounts, QualityGateReportView } from './research';
 import type {
   ResearchEvaluationTrack,
@@ -251,7 +247,7 @@ export interface PromotionPermitView {
   candidate_manifest_id: string;
   candidate_manifest_hash: string;
   promotion_gate_hash: string;
-  allowed_runtime_modes: QuantRuntimeMode[];
+  maximum_execution_authority: ExecutionAuthorityCeiling;
   non_route_policy_hash: string;
   serving_constraints_hash: string;
   preflight_hash: string;
@@ -567,7 +563,7 @@ export interface FeedbackCoverageView {
   artifact_hash: string;
   evaluation_window_start: IsoDateTime;
   label_cutoff: IsoDateTime;
-  policy_evaluation_count: number;
+  model_learning_candidate_count: number;
   mature_label_count: number;
   new_mature_label_count: number;
   minimum_mature_labels: number;

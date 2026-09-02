@@ -236,11 +236,9 @@ const columns = [
       </template>
       <template v-else-if="column.key === 'eligibility'">
         <EnumTag
-          v-for="mode in record.execution_eligibility.eligible_modes"
-          :key="mode"
           context="report-recommendations"
-          name="QuantRuntimeMode"
-          :value="mode"
+          name="ExecutionAuthorityCeiling"
+          :value="record.execution_eligibility.ceiling"
         />
       </template>
       <template v-else-if="column.key === 'status'">

@@ -1,9 +1,74 @@
 {
   "unknownValue": "未知值：{value}",
-  "quantRuntimeMode": {
-    "report_only": "仅报告",
-    "semi_auto": "半自动",
-    "auto_execution": "全自动执行"
+  "accountChainExecutionRole": {
+    "maker": "挂单方",
+    "taker": "吃单方",
+    "self_match": "自成交"
+  },
+  "accountExecutionAssociationKind": {
+    "system_order": "系统订单",
+    "recovery_incident": "恢复事件",
+    "opening_inventory": "启动库存"
+  },
+  "accountPauseOperationKind": {
+    "pause": "暂停",
+    "unpause": "恢复"
+  },
+  "accountPauseOperationState": {
+    "prepared": "已准备",
+    "dispatched": "已派发",
+    "ambiguous": "结果不明确",
+    "confirmed": "已确认",
+    "failed": "失败"
+  },
+  "accountRecoveryIncidentKind": {
+    "unknown_external_execution": "未知外部执行",
+    "break_glass_restart": "紧急重启",
+    "opening_inventory": "启动库存",
+    "account_mismatch": "账户不匹配"
+  },
+  "accountRecoveryIncidentStatus": {
+    "open": "待处理",
+    "reconciling": "对账中",
+    "sealed": "已封存"
+  },
+  "authorizationKind": {
+    "operator_approval": "操作员批准",
+    "active_policy": "生效策略"
+  },
+  "entryAuthorizationPolicy": {
+    "operator_approval_required": "必须操作员批准",
+    "policy_automatic": "策略自动授权"
+  },
+  "executionAuthorityCeiling": {
+    "analysis_only": "仅分析",
+    "operator_approval": "操作员批准",
+    "policy_automatic": "策略自动授权"
+  },
+  "executionComparisonNotEvaluableReasonView": {
+    "planned_entry_unavailable": "计划入场不可用",
+    "planned_economics_censored": "计划经济结果已删失",
+    "actual_baseline_unavailable": "实际执行基线不可用",
+    "identity_mismatch": "Artifact 标识不匹配"
+  },
+  "recommendationEconomicOutcomeState": {
+    "entry_not_triggered": "入场未触发",
+    "entry_unfilled": "入场未成交",
+    "policy_exited": "按策略退出",
+    "horizon_liquidated": "在期限清算",
+    "resolved_before_horizon": "期限前决议",
+    "censored": "已删失"
+  },
+  "routeEconomicHealthState": {
+    "insufficient_evidence": "证据不足",
+    "healthy": "健康",
+    "degraded": "降级",
+    "data_incomplete": "数据不完整"
+  },
+  "strategyPositionOriginKind": {
+    "system_intent": "系统意图",
+    "account_recovery_incident": "账户恢复事件",
+    "opening_inventory": "启动库存"
   },
   "killSwitchState": {
     "closed": "关闭",
@@ -14,8 +79,8 @@
   "settlementWritePolicy": {
     "disabled": "禁用资金写入",
     "governed_canary": "受控 Canary",
-    "semi_auto": "逐批授权",
-    "auto": "自动结算"
+    "operator_approval": "操作员批准",
+    "policy_automatic": "策略自动授权"
   },
   "settlementSubmissionKind": {
     "direct_eoa": "直连 EOA",
@@ -111,8 +176,7 @@
     "portfolio_budget_exhausted": "组合预算耗尽"
   },
   "ineligibilityReason": {
-    "automation_cap_exceeded": "报告自动执行上限已耗尽",
-    "report_only_mode": "仅报告模式"
+    "automation_cap_exceeded": "策略自动授权上限已耗尽"
   },
   "recommendationOutcome": {
     "won": "获胜",
@@ -218,7 +282,7 @@
   "executionRecoveryStep": {
     "resolve_unresolvable_reconciliations": "解决无法自动处理的对账",
     "acknowledge_kill_switch": "确认熔断开关",
-    "verify_mode_preflight": "重新武装前校验模式预检"
+    "verify_authorization_preflight": "重新启用前校验授权预检"
   },
   "exitSettlementMode": {
     "exit_before_resolution": "结算前退出",
@@ -254,27 +318,18 @@
     "manual_required": "需要人工处理"
   },
   "orderIntentStatus": {
-    "draft": "草稿",
-    "pending_approval": "待审批",
-    "approved": "已批准",
-    "approved_by_policy": "策略批准",
+    "pending_authorization": "等待授权",
+    "authorized": "已授权",
     "admission_pending": "准入检查中",
     "admission_rejected": "准入拒绝",
     "submitted": "已提交",
     "partially_filled": "部分成交",
     "filled": "已成交",
-    "rejected": "已拒绝",
+    "authorization_rejected": "授权被拒绝",
     "cancelled": "已取消",
     "failed": "失败",
     "expired": "已过期",
     "invalidated": "已失效"
-  },
-  "approvalStatus": {
-    "not_required": "无需审批",
-    "pending": "待审批",
-    "approved": "已批准",
-    "rejected": "已拒绝",
-    "expired": "已过期"
   },
   "executionOrderState": {
     "planned": "已规划",
@@ -304,9 +359,6 @@
     "cancelled": "已取消",
     "open": "挂单中",
     "expired": "已过期"
-  },
-  "orderIntentKind": {
-    "buy": "买入"
   },
   "positionLedgerState": {
     "open": "持仓中",
@@ -496,8 +548,8 @@
   },
   "gatePreviewIntent": {
     "candidate": "候选",
-    "publish": "发布",
-    "auto_execution": "自动执行"
+    "route_activation": "Route 激活",
+    "policy_automatic": "策略自动授权"
   },
   "linkageStatus": {
     "resolved": "已解析",
@@ -666,23 +718,25 @@
     "recommendation_not_published": "推荐未发布",
     "non_primary_report": "非主报告",
     "outside_frozen_window": "不在冻结窗口内",
-    "report_only_no_execution_authority": "仅报告模式：无执行权限",
     "execution_not_attempted": "未尝试执行"
   },
   "cohortCensorReason": {
     "resolution_unavailable_at_cutoff": "截止时尚无结算事实",
-    "execution_outcome_unavailable_at_cutoff": "截止时尚无执行结果"
+    "execution_outcome_unavailable_at_cutoff": "截止时尚无执行结果",
+    "economic_outcome_unavailable_at_cutoff": "截止时尚无经济结果"
   },
   "admissionCheckId": {
     "intent_state": "意图状态",
     "recommendation_freshness": "推荐新鲜度",
     "report_status": "报告状态",
-    "runtime_mode": "runtime模式",
+    "authorization_policy": "授权策略",
+    "economic_health": "经济健康度",
     "settlement_recovery": "结算恢复",
     "model_route_binding": "模型路由绑定",
     "data_quality": "数据质量",
     "book_freshness": "订单簿新鲜度",
     "venue_metadata": "交易场所元数据",
+    "venue_funding": "交易资金就绪度",
     "entry_condition": "入场条件",
     "risk_envelope_hash": "风险边界哈希",
     "capital_budget": "资金预算",
@@ -743,7 +797,6 @@
     "control_plane_not_ready": "控制平面不就绪",
     "catalog_baseline_missing": "目录基线缺失",
     "operational_phase_blocks_reports": "运行阶段阻断报告",
-    "runtime_mode_report_only": "runtime模式报告仅",
     "kill_switch_blocks_entries": "停机开关阻断入场项",
     "operational_phase_blocks_submission": "运行阶段阻断提交",
     "no_serving_evidence": "否服务证据"
@@ -823,7 +876,7 @@
     "model_routing": "模型路由",
     "report_schedule": "报告计划",
     "operations_policy": "运维策略",
-    "execution_automation_policy": "执行自动化策略"
+    "execution_authorization_policy": "执行授权策略"
   },
   "dataQualityStatus": {
     "fresh": "新鲜",
@@ -1072,13 +1125,6 @@
     "menu": "菜单",
     "button": "按钮"
   },
-  "modeDenialReason": {
-    "report_only": "仅报告",
-    "recommendation_ineligible": "推荐不符合条件",
-    "risk_envelope_invalid": "风险边界无效",
-    "kill_switch_blocks_entry": "停机开关阻断入场",
-    "auto_execution_not_allowed": "自动执行不allowed"
-  },
   "modelGovernanceAction": {
     "bootstrap_route": "引导路由",
     "promote_route": "晋升路由",
@@ -1160,7 +1206,7 @@
     "model_evaluation_claim": "模型评估申领",
     "future_report_run_reconcile": "未来报告运行对账",
     "operational_admission": "运行准入",
-    "execution_automation_policy_admission": "执行自动化策略准入"
+    "execution_authorization_admission": "执行授权准入"
   },
   "policyApprovalDecision": {
     "approved": "已批准",
@@ -1178,8 +1224,7 @@
     "model_runner": "模型运行器",
     "report_scheduler": "报告调度器",
     "worker_admission": "工作器准入",
-    "alert_dispatcher": "告警分发器",
-    "runtime_mode_gate": "runtime模式门禁"
+    "alert_dispatcher": "告警分发器"
   },
   "policyPreflightCheckKind": {
     "typed_schema": "类型化模式",

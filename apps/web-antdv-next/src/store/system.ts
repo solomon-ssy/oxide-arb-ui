@@ -12,7 +12,7 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
 /**
- * Live system status (quant runtime mode / kill-switch / operational phase),
+ * Live system status (entry authorization / kill-switch / operational phase),
  * seeded by REST first paint and kept hot by WS `system.status` pushes +
  * `sync` snapshots. Page tables never live here — status coordination only.
  */

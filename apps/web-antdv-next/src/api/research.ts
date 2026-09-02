@@ -5,6 +5,7 @@ import type {
   BacktestReportListQuery,
   BacktestReportView,
   BuildTrainingDatasetRequest,
+  BuyModelRoute,
   CreateModelSpecRequest,
   FactorCollinearityQuery,
   FactorCollinearityView,
@@ -30,6 +31,7 @@ import type {
   QualityGateReportView,
   ResearchJobListQuery,
   ResearchJobView,
+  RouteEconomicHealthView,
   RunBacktestRequest,
   RunCpcvBacktestRequest,
   RunFullFeatureParityRequest,
@@ -75,6 +77,7 @@ export namespace ResearchApi {
   export const modelRouteCandidates = '/research/models/route-candidates';
   export const modelSpecs = '/research/model-specs';
   export const featureContract = '/research/feature-contract';
+  export const economicHealth = '/research/economic-health';
   export const modelSpec = (id: string) => `/research/model-specs/${id}`;
   export const trainModel = '/research/models/train';
   export const model = (id: string) => `/research/models/${id}`;
@@ -106,6 +109,17 @@ export namespace ResearchApi {
   export const runFullFeatureParity = '/research/feature-integrity/runs/full';
   export const acknowledgeFeatureParityLatch =
     '/research/feature-integrity/latch/acknowledge';
+}
+
+export async function listRouteEconomicHealth(query: {
+  page?: number;
+  route: BuyModelRoute;
+  size?: number;
+}) {
+  return requestClient.get<Paginated<RouteEconomicHealthView>>(
+    ResearchApi.economicHealth,
+    { params: query },
+  );
 }
 
 /** `GET /research/feature-contract` — active hash-bound model-input catalog. */

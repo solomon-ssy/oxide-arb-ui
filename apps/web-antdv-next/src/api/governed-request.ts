@@ -15,11 +15,11 @@ export function buildGovernedHeaders(
 }
 
 /**
- * Governed contracts carry either the legacy domain `reason` field or the
- * explicit governance pair `reason_code` + `note`. Concrete request types are
- * structurally assignable and retain all additional typed wire fields.
+ * Current governed domain contracts use one of three explicit reason shapes.
+ * Concrete request types remain structurally assignable and retain every
+ * additional typed wire field owned by their endpoint.
  */
-type GovernedBody =
+type GovernedMutationBody =
   | { note: string; reason_code: string }
   | { operator_note: string; reason_code: string }
   | { reason: string };
@@ -29,7 +29,7 @@ const GOVERNED_CONFIG = withSilentError({});
 
 export async function governedPost<T>(
   url: string,
-  body: GovernedBody,
+  body: GovernedMutationBody,
   ctx: GovernedContext,
 ) {
   return requestClient.post<T>(url, body, {
@@ -40,7 +40,7 @@ export async function governedPost<T>(
 
 export async function governedPut<T>(
   url: string,
-  body: GovernedBody,
+  body: GovernedMutationBody,
   ctx: GovernedContext,
 ) {
   return requestClient.put<T>(url, body, {
@@ -51,7 +51,7 @@ export async function governedPut<T>(
 
 export async function governedDelete<T>(
   url: string,
-  body: GovernedBody,
+  body: GovernedMutationBody,
   ctx: GovernedContext,
 ) {
   return requestClient.delete<T>(url, {

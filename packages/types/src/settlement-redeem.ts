@@ -92,7 +92,7 @@ export interface SettlementInventoryLotView {
   intent_version_at: IsoDateTime;
   inventory_digest: string;
   order_intent_id: UuidString;
-  position_id: UuidString;
+  strategy_position_lot_id: UuidString;
   position_version_at: IsoDateTime;
   redeem_policy: RedeemPolicy;
   settlement_inventory_lot_id: UuidString;
@@ -109,7 +109,7 @@ export interface SettlementRedeemLotView {
   created_at: IsoDateTime;
   order_intent_id: UuidString;
   payout_usd: UsdString;
-  position_id: UuidString;
+  strategy_position_lot_id: UuidString;
   realized_pnl_usd: UsdString;
   settlement_redeem_id: UuidString;
   settlement_redeem_lot_id: UuidString;
@@ -314,14 +314,14 @@ export type SettlementGovernedAction =
   | 'operator_revocation';
 
 export type SettlementGovernedActionBlockReason =
+  | 'authorization_policy_mismatch'
   | 'canary_payout_limit_exceeded'
   | 'deployment_not_ready'
   | 'execution_not_quiescent'
   | 'manual_only_inventory'
   | 'operator_approval_already_satisfied'
   | 'operator_approval_required'
-  | 'runtime_mode_not_semi_auto'
-  | 'runtime_mode_write_policy_mismatch'
+  | 'operator_authorization_required'
   | 'settlement_authorization_not_approved'
   | 'settlement_case_not_found'
   | 'settlement_case_scope_mismatch'

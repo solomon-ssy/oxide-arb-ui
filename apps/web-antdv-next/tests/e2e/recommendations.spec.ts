@@ -1,5 +1,8 @@
 import type {
   QuantRecommendationView,
+  RecommendationEconomicOutcomeView,
+  RecommendationExecutionComparisonView,
+  RouteEconomicHealthView,
   SystemControlPlaneStatus,
 } from '@vben/types';
 
@@ -19,6 +22,10 @@ interface RecommendationRow {
 
 type EntryRoute = 'aggressive' | 'passive';
 
+function contentHash(byte: string) {
+  return `blake3:${byte.repeat(64)}`;
+}
+
 function actionableRecommendation(
   source: QuantRecommendationView,
   route: EntryRoute,
@@ -35,8 +42,9 @@ function actionableRecommendation(
   recommendation.active_order_intent_id = null;
   recommendation.execution_eligibility = {
     ...recommendation.execution_eligibility,
-    eligible_modes: ['report_only', 'semi_auto'],
-    ineligibility_reasons: [],
+    blockers: [],
+    ceiling: 'operator_approval',
+    policy_binding: null,
   };
   recommendation.report_status = 'published';
   recommendation.status = 'published';
@@ -213,6 +221,167 @@ test('recommendation workspace preserves revoked report evidence and owning deta
   await expectReleaseQuality(page);
 });
 
+test('recommendation detail renders MTM outcome, execution comparison, and route health', async ({
+  adminApi,
+  authenticatedPage: page,
+  browserAudit,
+}) => {
+  const missingRecommendation = '00000000-0000-0000-0000-000000000000';
+  for (const resource of ['economic-outcome', 'execution-comparison']) {
+    const response = await adminApi.context.get(
+      `/api/quant/recommendations/${missingRecommendation}/${resource}`,
+    );
+    expect(response.status()).toBe(404);
+  }
+  const report = await readFirstApiItem<ReportRow>(
+    adminApi.context,
+    '/api/quant/reports?page=1&size=100&status=revoked',
+    ({ status }) => status === 'revoked',
+  );
+  const recommendationRows = await readApiData<RecommendationRow[]>(
+    adminApi.context,
+    `/api/quant/reports/${report.recommendation_report_id}/recommendations`,
+  );
+  const row = recommendationRows[0];
+  if (!row) throw new Error('seeded revoked report has no recommendation');
+  const recommendation = await readApiData<QuantRecommendationView>(
+    adminApi.context,
+    `/api/quant/recommendations/${row.recommendation_id}`,
+  );
+  const now = new Date().toISOString();
+  const economicHash = contentHash('a');
+  const outcome: RecommendationEconomicOutcomeView = {
+    available_at: now,
+    created_at: now,
+    decision_at: recommendation.created_at,
+    decision_policy_snapshot_id: '11111111-1111-7111-8111-111111111111',
+    economic_tier_id: recommendation.economic_tier_id,
+    evidence_hash: economicHash,
+    horizon_at: now,
+    model_version_id: '22222222-2222-7222-8222-222222222222',
+    payload: {
+      amounts: {
+        entry_cost_usd: '25',
+        entry_filled_shares: '40',
+        execution_fee_usd: '1',
+        exit_proceeds_usd: '31.25',
+        exited_shares: '40',
+        expected_maker_rebate_usd: '0',
+        net_pnl_usd: '6.25',
+        net_return_bps: '2500',
+        resolution_payout_usd: '0',
+      },
+      detail: {
+        entered_at: recommendation.created_at,
+        kind: 'horizon_liquidated',
+        liquidated_at: now,
+      },
+      evidence: {
+        exit_evidence_kind: 'full_bid_ladder',
+        fee_covered: true,
+        full_l2_covered: true,
+        passive_trade_covered: true,
+        replay_input_hash: contentHash('b'),
+        replay_output_hash: contentHash('c'),
+      },
+    },
+    recommendation_id: recommendation.recommendation_id,
+    recommendation_report_id: recommendation.recommendation_report_id,
+    replay_kernel_version: 'policy-replay-v1',
+    report_route_run_id: recommendation.report_route_run_id,
+    research_profile_artifact_id: contentHash('d'),
+    source_available_until: now,
+    state: 'horizon_liquidated',
+    trade_policy_artifact_id: contentHash('e'),
+  };
+  const comparison: RecommendationExecutionComparisonView = {
+    comparison_hash: contentHash('f'),
+    economic_outcome_hash: economicHash,
+    evaluation: {
+      actual_entry_latency_ms: 1125,
+      actual_entry_price: '0.61',
+      actual_fee_usd: '1',
+      actual_fill_ratio: '1',
+      actual_net_return_bps: '2500',
+      actual_vs_planned_price_bps: '100',
+      fee_delta_usd: '0',
+      fill_ratio_delta: '0',
+      latency_delta_ms: 125,
+      planned_entry_latency_ms: 1000,
+      planned_entry_price: '0.60',
+      planned_fee_usd: '1',
+      planned_fill_ratio: '1',
+      planned_net_return_bps: '2200',
+      policy_missed_return_bps: '50',
+      return_delta_bps: '300',
+      status: 'evaluated',
+    },
+    policy_counterfactual_hash: contentHash('1'),
+    recommendation_id: recommendation.recommendation_id,
+    trajectory_artifact_hash: contentHash('2'),
+  };
+  const health: RouteEconomicHealthView = {
+    assessed_through: now,
+    available_at: now,
+    coverage: '0.8',
+    created_at: now,
+    due_observation_count: 10,
+    effective_sample_size: '8',
+    evidence: {
+      methodology_version: 'route-economic-health-v1',
+      observation_hash: contentHash('3'),
+      uniqueness_weight_hash: contentHash('4'),
+    },
+    evidence_hash: contentHash('5'),
+    feedback_policy_hash: contentHash('6'),
+    lower_confidence_return_bps: '175',
+    research_profile_artifact_id: contentHash('d'),
+    route: recommendation.route,
+    route_identity_hash: contentHash('7'),
+    state: 'healthy',
+    usable_observation_count: 8,
+    weighted_mean_return_bps: '250',
+    window_start: recommendation.created_at,
+  };
+
+  await page.route(
+    `**/api/quant/recommendations/${recommendation.recommendation_id}/economic-outcome`,
+    (route) =>
+      route.fulfill({ json: { code: 200, data: outcome, message: 'OK' } }),
+  );
+  await page.route(
+    `**/api/quant/recommendations/${recommendation.recommendation_id}/execution-comparison`,
+    (route) =>
+      route.fulfill({
+        json: { code: 200, data: comparison, message: 'OK' },
+      }),
+  );
+  await page.route('**/api/research/economic-health?*', (route) =>
+    route.fulfill({
+      json: {
+        code: 200,
+        data: { has_next: false, items: [health], page: 1, size: 1, total: 1 },
+        message: 'OK',
+      },
+    }),
+  );
+
+  await page.goto(
+    `/trading/recommendations?module=queue&entity=recommendation&id=${recommendation.recommendation_id}`,
+  );
+  await waitForUiReady(page, browserAudit);
+  const feedback = page.getByTestId('recommendation-economic-feedback');
+  await expect(feedback).toBeVisible();
+  await expect(feedback).toContainText(/在期限清算|Horizon Liquidated/i);
+  await expect(feedback).toContainText(/\$6\.25/);
+  await expect(feedback).toContainText(/2,?500 bps/);
+  await expect(feedback).toContainText(/125 ms/);
+  await expect(feedback).toContainText(/健康|Healthy/i);
+  await expect(feedback).toContainText(/8\/10/);
+  await expect(feedback).toContainText(economicHash);
+  await expectReleaseQuality(page);
+});
+
 test('create-intent confirmation preserves aggressive and passive economics', async ({
   adminApi,
   authenticatedPage: page,
@@ -241,7 +410,7 @@ test('create-intent confirmation preserves aggressive and passive economics', as
   const actionableStatus: SystemControlPlaneStatus = {
     ...status,
     kill_switch: { ...status.kill_switch, state: 'closed' },
-    quant_runtime_mode: 'semi_auto',
+    entry_authorization_policy: 'operator_approval_required',
   };
   let activeRoute: EntryRoute = 'aggressive';
 

@@ -13,6 +13,7 @@
   "common": {
     "close": "Close",
     "back": "Back",
+    "copyValue": "Copy {label}",
     "yes": "Yes",
     "no": "No",
     "deepLinkNotFound": "The linked record was not found or is no longer available."
@@ -59,10 +60,10 @@
     "systemConfig": "Configuration Governance",
     "systemAudit": "Audit Trail",
     "action": {
-      "switchRuntimeMode": "Switch runtime mode",
       "halt": "Halt execution",
       "resume": "Resume execution",
       "emergencyHalt": "Emergency halt",
+      "updateRuntimeControl": "Update runtime control",
       "updateMarket": "Subscribe or block market",
       "runReport": "Run ad-hoc report",
       "revokeReport": "Revoke report",
@@ -367,7 +368,7 @@
       },
       "stage": {
         "admission": "Admission",
-        "approval": "Approval",
+        "authorization": "Authorization",
         "fill": "Fill",
         "intent": "Intent",
         "position": "Position",
@@ -515,7 +516,7 @@
         },
         "track": {
           "research_only": "Research only",
-          "semi_auto_candidate": "Semi-auto candidate"
+          "execution_candidate": "Execution candidate"
         },
         "readiness": {
           "title": "Verified readiness",
@@ -634,7 +635,7 @@
           "minimum": "Minimum coverage",
           "labels": "Mature labels",
           "newLabels": "New mature labels",
-          "policyEvaluations": "Policy evaluations",
+          "modelLearningCandidates": "Model-learning candidates",
           "window": "Evaluation window",
           "artifactId": "Artifact ID",
           "artifactUri": "Artifact URI",
@@ -670,7 +671,7 @@
             "models": "Champion → challenger",
             "generation": "Route generation",
             "authority": "Protected authority",
-            "unchanged": "Execution mode, capital, funder, and signing authority unchanged"
+            "unchanged": "Entry authorization policy, capital, funder, and signing authority unchanged"
           },
           "comparison": {
             "title": "Same-window comparison",
@@ -901,7 +902,7 @@
           "routeGeneration": "Expected route generation",
           "modelDiff": "Current champion → candidate",
           "manifest": "Candidate manifest",
-          "runtimeModes": "Allowed runtime modes",
+          "maximumExecutionAuthority": "Maximum execution authority",
           "idempotencyKey": "Idempotency key",
           "notEligible": "Select a succeeded candidate-ready cycle before issuing a permit.",
           "invalidInput": "Select an approved 5, 15, 30, or 60 minute TTL.",
@@ -924,8 +925,8 @@
           "targetModel": "Server-derived target model",
           "routeDiff": "Route generation",
           "authorityInvariant": "Protected authority",
-          "activationInvariant": "Activation changes only the model route. Execution mode, capital limits, funder, and signing authority remain unchanged.",
-          "executionUnchanged": "Execution mode, capital, funder, and signing authority are unchanged.",
+          "activationInvariant": "Activation changes only the model route. Entry authorization policy, capital limits, funder, and signing authority remain unchanged.",
+          "executionUnchanged": "Entry authorization policy, capital, funder, and signing authority are unchanged.",
           "activate": "Activate route",
           "activateTitle": "Activate candidate model route",
           "activateSummary": "Consume this permit in one atomic route transaction. Every bound gate, hash, runtime revision, and protected authority is revalidated server-side.",
@@ -1036,7 +1037,7 @@
         "profile": "Research profile",
         "evaluationTrack": "Evaluation track",
         "researchOnly": "Research only (not activatable)",
-        "semiAutoCandidate": "SemiAuto candidate evaluation",
+        "executionCandidate": "Execution candidate evaluation",
         "profileHash": "Profile content hash",
         "fitSpan": "Fixed fit span",
         "horizon": "Single target horizon",
@@ -1751,14 +1752,14 @@
         "action": "Establish first champion",
         "actor": "Activation actor",
         "authority": "Protected authority",
-        "authorityUnchanged": "Execution mode, capital, signing authority, and funder authority remain unchanged.",
+        "authorityUnchanged": "Entry authorization policy, capital, signing authority, and funder authority remain unchanged.",
         "failed": "The first-champion activation did not complete. Refresh the authoritative state and retry with the same intent.",
         "gateUnavailable": "The authoritative Candidate quality gate could not be loaded; bootstrap is blocked.",
         "generation": "Policy generation",
         "model": "Candidate model",
         "openRouting": "Open Model Routing rollback",
-        "prerequisitesFailed": "Bootstrap is blocked until the Buy route scope, calibration, Candidate quality gate, full parity, CPCV evidence, ReportOnly mode, and empty route all pass.",
-        "prerequisitesHint": "Requires an eligible Pooled, Crypto, or Weather Buy model with immutable calibration, a passing Candidate gate, CPCV and full-parity evidence, ReportOnly mode, and no existing champion on that route.",
+        "prerequisitesFailed": "Bootstrap is blocked until the Buy route scope, calibration, Candidate quality gate, full parity, CPCV evidence, ExitOnly recovery safety, and empty route all pass.",
+        "prerequisitesHint": "Requires an eligible Pooled, Crypto, or Weather Buy model with immutable calibration, passing Candidate/CPCV/full-parity evidence, ExitOnly with a healthy recovery seal, and no existing champion on that route.",
         "receipt": "Activation / audit IDs",
         "retry": "Retry authoritative read",
         "rollback": "Rollback",
@@ -2577,7 +2578,7 @@
       "syncing": "Syncing status…"
     },
     "field": {
-      "mode": "Runtime Mode",
+      "entryAuthorizationPolicy": "Entry Authorization Policy",
       "killSwitch": "Kill Switch",
       "uptime": "Uptime",
       "activeMarkets": "Active Markets",
@@ -2615,13 +2616,13 @@
       "kill_switch_tightened": "Kill switch tightened ({state})",
       "unknown": "Unknown degrade reason"
     },
-    "readonlyHint": "Use the header state lights to change runtime mode or kill switch."
+    "readonlyHint": "Use the header state lights to change entry authorization policy or kill switch."
   },
   "header": {
-    "modePicker": {
-      "title": "Switch Runtime Mode",
-      "unknown": "Mode",
-      "preflightTitle": "Mode Transition Preflight"
+    "authorizationPicker": {
+      "title": "Change Entry Authorization Policy",
+      "unknown": "Authorization Policy",
+      "preflightTitle": "Authorization Policy Preflight"
     },
     "killSwitchPicker": {
       "title": "Set Kill Switch",
@@ -2640,8 +2641,9 @@
       "title": "Quant Pivot",
       "subtitle": "Sign in to the command center to review reports, evidence and runtime risk.",
       "pageTitle": "A quantitative control plane from evidence to action",
-      "pageDescription": "A Polymarket-only, ReportOnly-first operator console unifying account truth, recommendations, research evidence and governed actions.",
+      "pageDescription": "A Polymarket-only, real-account operator console unifying account truth, recommendations, research evidence and governed actions.",
       "console": "Operator Console",
+      "realAccount": "Real account",
       "security": "Account truth and authorization are enforced server-side. Access tokens stay in memory; consequential actions require role, reason and audit context."
     },
     "primaryAction": {
@@ -2651,7 +2653,7 @@
       "view_blockers": "View Capability Blockers"
     },
     "status": {
-      "runtimeMode": "Runtime Mode",
+      "entryAuthorizationPolicy": "Entry Authorization Policy",
       "killSwitch": "Kill Switch",
       "ws": "Realtime",
       "bookFreshness": "Book Freshness",
@@ -2690,6 +2692,7 @@
     "exposure": {
       "title": "Exposure Concentration",
       "aria": "Account risk exposure aggregated by category as a treemap.",
+      "categoryShareAria": "{category} share of total account exposure",
       "none": "The live account has no real exposure"
     },
     "runtimeActivity": {
@@ -2709,7 +2712,7 @@
       "pending": "Pending intents",
       "active": "Active orders",
       "attention": "Needs attention",
-      "empty": "No execution activity exists in this window. This is expected in ReportOnly mode."
+      "empty": "No execution activity exists in this window. This is expected when no recommendation has been authorized."
     },
     "feedback": {
       "title": "Feedback & Retraining",
@@ -2894,7 +2897,7 @@
         "parity_ready": "Feature parity passed",
         "scenario_ready": "Scenario artifact bound",
         "bootstrap_preflight": "Activation preflight",
-        "bootstrap_committed": "ReportOnly route activated",
+        "bootstrap_committed": "Route activated",
         "first_report_queued": "First report queued / generating",
         "first_report_published": "First report published"
       },
@@ -2949,7 +2952,7 @@
         "scenario_bound": "Scenario artifact bound",
         "bootstrap_prepared": "Bootstrap preflight sealed",
         "preflight_refreshed": "Bootstrap preflight refreshed",
-        "bootstrap_committed": "ReportOnly route committed",
+        "bootstrap_committed": "Route committed",
         "report_enabled": "First report enabled",
         "report_retried": "First report retried",
         "report_published": "First report published",
@@ -2967,7 +2970,6 @@
         "bootstrap_not_collecting": "Research capture phase has not started",
         "bootstrap_not_active": "System has not been explicitly activated",
         "operational_phase_blocks_reports": "Current operational phase blocks reports",
-        "runtime_mode_report_only": "ReportOnly blocks entry intents",
         "kill_switch_blocks_entries": "Kill switch blocks new entries",
         "operational_phase_blocks_submission": "Current operational phase blocks order submission",
         "no_serving_evidence": "No serving evidence exists yet"
@@ -3005,7 +3007,6 @@
         "delivery_failed": "Delivery failed",
         "revoked": "Revoked",
         "expired": "Expired",
-        "intent_pending_approval": "Intent approval",
         "intent_pending_authorization": "Intent authorization",
         "report_run_queued": "Report run queued",
         "report_run_running": "Report run running",
@@ -3033,16 +3034,43 @@
       }
     }
   },
+  "accountRecovery": {
+    "title": "Strict account recovery",
+    "loadFailed": "The active recovery incident could not be loaded. All recovery actions remain disabled.",
+    "noActiveIncident": "No active account recovery incident.",
+    "incidentId": "Incident ID",
+    "status": "Status",
+    "kind": "Incident kind",
+    "reason": "Trigger reason",
+    "revision": "Revision",
+    "openedAt": "Opened at",
+    "sealHash": "Seal hash",
+    "mismatchCount": "The latest manifest has {count} blocking mismatch(es).",
+    "pauseOperations": "Finalized pause / unpause operations",
+    "allocation": {
+      "title": "Explicit external SELL lot allocation",
+      "soldShares": "Sold shares",
+      "shares": "Allocated shares",
+      "invalidDecimal": "Every allocation must be a positive decimal share value.",
+      "totalMismatch": "Allocation shares must sum exactly to {expected}."
+    },
+    "actions": {
+      "reconcile": "Pause and reconcile",
+      "reconcileTitle": "Pause account and reconcile exact truth",
+      "reconcileSummary": "This submits or confirms account pauses, captures two stable venue snapshots, verifies finalized chain truth, and applies only explicit ambiguous lot allocations.",
+      "seal": "Seal converged manifest",
+      "sealTitle": "Seal account recovery incident",
+      "sealSummary": "Seal only the latest hash-matched converged manifest, then prepare governed unpause operations.",
+      "unpause": "Unpause and finalize",
+      "unpauseTitle": "Confirm unpause and finalize recovery",
+      "unpauseSummary": "Confirm finalized unpause evidence for every configured exchange before closing the incident."
+    }
+  },
   "systemAdmin": {
-    "mode": {
-      "switchTitle": "Switch Runtime Mode",
-      "summary": "Switch runtime mode from {from} to {to}.",
-      "switched": "Runtime mode switched from {from} to {to}",
-      "preflightPassed": "Preflight passed",
-      "preflightFailed": "Preflight failed — transition blocked",
-      "hardCheck": "Blocking",
-      "checkPassed": "Passed",
-      "checkFailed": "Failed"
+    "entryAuthorizationPolicy": {
+      "switchTitle": "Change Entry Authorization Policy",
+      "summary": "Change entry authorization policy from {from} to {to}.",
+      "switched": "Entry authorization policy changed from {from} to {to}"
     },
     "killSwitch": {
       "setTitle": "Set Kill Switch",
@@ -3229,11 +3257,16 @@
       "incompleteDays": "Incomplete Days",
       "oldestIncomplete": "Oldest",
       "unavailable": "No reconciliation evidence is available",
+      "loading": "Loading incentive reconciliation evidence",
+      "loadError": "Unable to load incentive reconciliation. Previously loaded evidence remains visible; retry to refresh it.",
       "belowThreshold": "Program day(s) {dates} are below the {threshold} payout threshold; dates never roll over and this is not available cash.",
       "overdueProgramDays": "Threshold-qualified program day(s) {dates} remain uncredited past their configured expected-by time.",
       "forbidden": "Account incentive evidence requires account snapshot read access.",
       "ledger": {
         "title": "Immutable Incentive Event Ledger",
+        "loading": "Loading incentive event ledger",
+        "loadError": "Unable to load incentive events. Results for the current query are unavailable; retry to load them.",
+        "empty": "No incentive events match the current filters.",
         "programDate": "Program date",
         "kind": "Kind",
         "stage": "Stage",
@@ -3266,16 +3299,12 @@
     "listTitle": "Order Intents",
     "filters": {
       "status": "Status",
-      "approvalStatus": "Approval",
-      "runtimeMode": "Runtime Mode",
       "recommendationId": "Recommendation ID",
       "createdAt": "Created"
     },
     "columns": {
       "intentId": "Intent",
       "status": "Status",
-      "approvalStatus": "Approval",
-      "runtimeMode": "Mode",
       "side": "Side",
       "limitPrice": "Limit",
       "amount": "Amount",
@@ -3352,7 +3381,7 @@
       "noExecutionOrders": "No execution orders yet.",
       "sections": {
         "identity": "Identity",
-        "approval": "Approval & Admission",
+        "authorization": "Authorization & Admission",
         "entry": "Entry Order",
         "exit": "Exit Policy",
         "executionOrders": "Execution Orders"
@@ -3361,16 +3390,14 @@
         "recommendationId": "Recommendation",
         "decisionPolicySnapshot": "Decision Policy Snapshot",
         "modelVersion": "Model Version",
-        "policyId": "Policy ID",
-        "policyHash": "Policy Hash",
         "riskEnvelopeHash": "Risk Envelope Hash",
         "createdAt": "Created",
         "expiresAt": "Expires"
       },
-      "approval": {
-        "approvedBy": "Approved By",
-        "approvedAt": "Approved At",
-        "approvalReason": "Approval Reason",
+      "authorization": {
+        "kind": "Authorization Kind",
+        "authorizedAt": "Authorized At",
+        "evidence": "Authorization Evidence",
         "statusReason": "Status Reason",
         "admissionTrace": "Admission Trace Ref"
       },
@@ -3507,9 +3534,11 @@
       "openedAt": "Opened"
     },
     "columns": {
-      "positionId": "Position",
+      "lotId": "Position Lot",
+      "origin": "Origin",
       "positionPlane": "Plane",
       "orderIntentId": "Intent",
+      "recoveryIncidentId": "Recovery Incident",
       "market": "Market",
       "token": "Token",
       "state": "State",
@@ -3527,7 +3556,10 @@
     "detail": {
       "title": "Position",
       "notFound": "Position not found.",
+      "origin": "Origin",
       "orderIntentId": "Intent",
+      "recoveryIncidentId": "Recovery Incident",
+      "recommendationId": "Recommendation",
       "token": "Token",
       "updatedAt": "Updated",
       "viewOrders": "View execution orders",
@@ -3674,7 +3706,9 @@
         "wallet_topology_mismatch": "Wallet topology mismatch for {wallet_kind} / {funder}: {detail}",
         "collateral_wrapper_role_missing": "pUSD wrapper role missing for adapter {adapter} on {collateral_token}.",
         "credential_missing": "Missing {required} credentials for wallet kind {wallet_kind}.",
-        "chain_observation_not_fresh": "Canonical observation at block {block_number} is stale (age limit {max_age_seconds}s).",
+        "settlement_inspection_window_invalid": "Settlement inspection completed at {inspection_completed_at}, outside the allowed window beginning at {request_admitted_at} (maximum duration {max_duration_seconds}s).",
+        "chain_observation_stale": "Canonical observation at block {block_number} is stale: block time {block_timestamp}, checked at {checked_at} (age limit {max_age_seconds}s).",
+        "chain_observation_future_skew_exceeded": "Canonical observation at block {block_number} is too far ahead of the verifier clock: block time {block_timestamp}, checked at {checked_at} (future-skew limit {max_future_skew_seconds}s).",
         "canonical_block_changed": "Canonical block hash changed at height {block_number}: observed {observed_hash}, current {current_hash}."
       },
       "advisoryMessages": {
@@ -3710,7 +3744,7 @@
       "operatorRevoke": "Revoke Current Adapter Approval",
       "operatorApproveSummary": "Confirmation only journals an exact asynchronous approval command; HTTP never signs or broadcasts.",
       "operatorRevokeSummary": "Confirmation only journals an exact asynchronous revocation command; HTTP never signs or broadcasts.",
-      "batchApproveSummary": "Approve the SemiAuto batch bound to the current immutable digest.",
+      "batchApproveSummary": "Approve the operator-authorized batch bound to the current immutable digest.",
       "batchRevokeSummary": "Revoke the unconsumed batch authorization bound to the current immutable digest.",
       "batchApproved": "Batch authorization approved.",
       "batchRevoked": "Batch authorization revoked.",
@@ -3802,7 +3836,7 @@
         "batch": "Batch",
         "inventoryLots": "Current Frozen Inventory and Policy",
         "balances": "Outcome Balance Evidence",
-        "authorization": "SemiAuto Batch Authorization",
+        "authorization": "Operator Batch Authorization",
         "submissions": "Durable Chain Submissions",
         "redeemedLots": "Confirmed Per-lot Payouts"
       }
@@ -3831,14 +3865,12 @@
     "filters": {
       "route": "Route",
       "status": "Status",
-      "kind": "Kind",
-      "runtimeMode": "Runtime Mode"
+      "kind": "Kind"
     },
     "columns": {
       "reportId": "Report",
       "routes": "Represented Routes",
       "decisionAt": "Decision Time",
-      "runtimeMode": "Mode",
       "status": "Status",
       "kind": "Kind",
       "triggerKind": "Trigger",
@@ -3989,7 +4021,6 @@
         "reportId": "Report ID",
         "kind": "Kind",
         "status": "Status",
-        "runtimeMode": "Runtime Mode",
         "routes": "Represented Routes",
         "routeSetDigest": "Route-set Digest",
         "scenarioArtifact": "Joint Scenario Artifact",
@@ -4098,7 +4129,7 @@
           "cvar": "CVaR Contribution",
           "capitalTime": "Capital USD·h",
           "hardReservedCash": "Hard Reserved Cash",
-          "eligibility": "Eligible Modes",
+          "eligibility": "Execution Authority Ceiling",
           "status": "Status",
           "open": "Full Page"
         }
@@ -4346,17 +4377,38 @@
       "portfolioCvarCap": "Portfolio CVaR Cap",
       "scenarioLossCap": "Maximum Scenario-loss Cap",
       "maxSlippage": "Max Slippage",
-      "requiresApproval": "Requires Approval",
-      "autoExecutionAllowed": "Auto Execution Allowed",
       "envelopeHash": "Envelope Hash",
       "notes": "Risk Notes"
     },
     "eligibility": {
-      "eligibleModes": "Eligible Modes",
-      "ineligibilityReasons": "Ineligibility Reasons",
-      "approvalRequired": "Approval Required",
-      "autoPolicy": "Auto Policy",
+      "ceiling": "Execution Authority Ceiling",
+      "blockers": "Authority Blockers",
+      "policyBinding": "Policy Binding",
       "none": "None"
+    },
+    "economicFeedback": {
+      "title": "Economic outcome, execution comparison, and Route health",
+      "outcome": "Recommendation economic outcome",
+      "comparison": "Planned vs actual execution",
+      "routeHealth": "Route economic health",
+      "outcomeUnavailable": "The horizon outcome is not available yet or failed verification.",
+      "comparisonUnavailable": "No hash-complete actual execution comparison is available.",
+      "healthUnavailable": "No Route economic-health evidence is available.",
+      "state": "State",
+      "netPnl": "Net PnL",
+      "netReturn": "Net return",
+      "availableAt": "Available at",
+      "evidenceHash": "Evidence hash",
+      "evaluation": "Evaluation",
+      "evaluated": "Evaluated",
+      "latencyDelta": "Actual - planned latency",
+      "priceDelta": "Actual - planned price",
+      "fillDelta": "Actual - planned fill ratio",
+      "returnDelta": "Actual - planned return",
+      "comparisonHash": "Comparison hash",
+      "coverage": "Coverage / observations",
+      "lowerBound": "Lower confidence return",
+      "assessedThrough": "Assessed through"
     },
     "factors": {
       "empty": "No factor breakdown available.",
@@ -4450,9 +4502,9 @@
       },
       "disabled": {
         "permission": "You lack the order_intent:create permission.",
-        "mode": "Current runtime mode is report_only. This is not dry-run — intent creation is disabled until the operator switches to semi_auto or auto_execution.",
+        "authorizationPolicy": "Entry authorization policy is unavailable, so intent creation fails closed.",
         "killSwitch": "The kill-switch is not closed; new entries are blocked.",
-        "eligibility": "This recommendation is not eligible for execution in the current runtime mode.",
+        "eligibility": "This recommendation's authority ceiling or blockers deny execution under the current authorization policy.",
         "riskEnvelope": "The risk envelope is invalid (max position or max loss is not positive).",
         "validity": "Outside the recommendation validity window.",
         "reportStatus": "The parent report is no longer published.",
@@ -4508,9 +4560,9 @@
         "label": "Operational Control",
         "description": "Worker admission, halt behavior, and notification routing."
       },
-      "executionAutomationPolicy": {
+      "executionAuthorizationPolicy": {
         "label": "Execution Authorization",
-        "description": "Explicit Semi-auto and Auto-execution capital authorization."
+        "description": "Operator-approval TTL and policy-automatic authorization limits."
       },
       "kind": {
         "recommendation_policy": "Recommendation Policy",
@@ -4518,7 +4570,7 @@
         "model_routing": "Model Routing",
         "report_schedule": "Report Schedule",
         "operations_policy": "Operational Control",
-        "execution_automation_policy": "Execution Authorization"
+        "execution_authorization_policy": "Execution Authorization"
       }
     },
     "resource": {
@@ -4695,19 +4747,19 @@
     },
     "operationalControl": {
       "title": "Immediate operational control",
-      "description": "Runtime mode, settlement write policy, and the kill switch share one atomic Revision. An authorized administrator can act independently; every transition requires a reason and appends immutable audit evidence.",
+      "description": "Entry authorization policy, settlement write policy, and the kill switch share one atomic Revision. Every transition requires a reason and appends immutable audit evidence.",
       "unavailable": "Authoritative runtime state is unavailable, so every control action remains disabled.",
       "restricted": "The system is operating under a restriction",
       "revision": "Revision",
       "phase": "Operational phase",
-      "quantMode": "Quant Runtime Mode",
+      "entryAuthorizationPolicy": "Entry Authorization Policy",
       "settlementWritePolicy": "Settlement Write Policy",
       "killSwitch": "Kill Switch",
       "changedBy": "Last operator",
       "changedAt": "Last changed",
       "lastReason": "Last change reason",
-      "quantModeActions": "Quant Runtime Mode",
-      "quantModeDescription": "Controls report-only, semi-automatic, and automatic execution boundaries. Upgrades run backend preflight.",
+      "entryAuthorizationActions": "Entry Authorization Policy",
+      "entryAuthorizationDescription": "Controls whether every new entry requires operator approval or an active policy may authorize it. Authority upgrades run backend preflight.",
       "settlementPolicyActions": "Settlement Write Policy",
       "settlementPolicyDescription": "Controls creation of new settlement chain submissions. Existing submissions always continue recovery and reconciliation.",
       "killSwitchActions": "Emergency Runtime Restrictions",
@@ -4729,7 +4781,6 @@
     "enumValue": {
       "Cron": "Cron schedule",
       "FixedInterval": "Fixed interval",
-      "auto_execution": "Auto execution",
       "crypto": "Crypto",
       "culture": "Culture",
       "economics": "Economics",
@@ -4743,8 +4794,6 @@
       "platt": "Platt scaling",
       "politics": "Politics",
       "reject_stale_required": "Reject stale required features",
-      "report_only": "Report only",
-      "semi_auto": "Semi-auto execution",
       "sports": "Sports",
       "store_and_notify": "Store and notify",
       "store_only": "Store only",
@@ -4793,7 +4842,7 @@
       "model_evaluation_claim": "New model evaluation claim",
       "future_report_run_reconcile": "Unclaimed future schedules",
       "operational_admission": "Operational admission gate",
-      "execution_automation_policy_admission": "Execution authorization admission"
+      "execution_authorization_admission": "Execution authorization admission"
     },
     "consumer": {
       "market_selection": "Market Selection",
@@ -4807,8 +4856,7 @@
       "model_runner": "Model Runner",
       "report_scheduler": "Report Scheduler",
       "worker_admission": "Worker Admission",
-      "alert_dispatcher": "Alert Dispatcher",
-      "runtime_mode_gate": "Runtime Mode Gate"
+      "alert_dispatcher": "Alert Dispatcher"
     },
     "feedback": {
       "draftSaved": "Draft saved",
@@ -4881,21 +4929,19 @@
       "load": "The config resource could not be loaded. Check service health and retry."
     },
     "runtimeField": {
-      "execution_automation_policy": {
-        "auto_execution": {
+      "execution_authorization_policy": {
+        "operator_approval_ttl_secs": {
+          "description": "Maximum lifetime, in seconds, of an operator approval before admission must be repeated against fresh account, market, and policy evidence.",
+          "label": "Operator Approval Ttl Secs"
+        },
+        "policy_automatic_limits": {
           "max_orders_per_report": {
-            "description": "Maximum orders auto-created per report.",
+            "description": "Maximum automatically authorized orders per report.",
             "label": "Max Orders Per Report"
           },
           "max_total_usd_per_report": {
-            "description": "Maximum total USD auto-executed per report.",
+            "description": "Maximum total USD automatically authorized per report.",
             "label": "Max Total Usd Per Report"
-          }
-        },
-        "semi_auto": {
-          "approval_ttl_secs": {
-            "description": "Approval time-to-live in seconds.",
-            "label": "Approval Ttl Secs"
           }
         }
       },
@@ -4972,6 +5018,20 @@
               "description": "When true, re-inference runs and is audited, but thesis-invalidation exits are suppressed (fail-safe hold; SL/time/trailing still apply).",
               "label": "Shadow Mode"
             }
+          }
+        },
+        "maker_rebate": {
+          "fallback_lag_from_program_close_secs": {
+            "description": "Conservative lag from UTC program-day close while observed history is insufficient.",
+            "label": "Fallback Lag From Program Close Secs"
+          },
+          "observed_p95_min_samples": {
+            "description": "Complete venue-reported-accrual to wallet-credit program days required for p95.",
+            "label": "Observed P95 Min Samples"
+          },
+          "payout_threshold_usd": {
+            "description": "Day-local minimum venue-calculated accrual required for payout.",
+            "label": "Payout Threshold Usd"
           }
         },
         "portfolio": {
@@ -5245,6 +5305,10 @@
             "description": "Maximum recommendations or intents processed by each lane per pass.",
             "label": "Candidate Batch Size"
           },
+          "economic_source_lateness_secs": {
+            "description": "Maximum arrival lag admitted before a horizon outcome seals typed censor evidence.",
+            "label": "Economic Source Lateness Secs"
+          },
           "enabled": {
             "description": "Whether the outcome reconciliation worker is enabled.",
             "label": "Enabled"
@@ -5367,14 +5431,15 @@
       }
     },
     "runtimeGroup": {
-      "execution_automation_policy": {
-        "auto_execution": "Auto Execution",
-        "semi_auto": "Semi Auto"
+      "execution_authorization_policy": {
+        "operator_approval_ttl_secs": "Operator Approval Ttl Secs",
+        "policy_automatic_limits": "Policy Automatic Limits"
       },
       "execution_risk_policy": {
         "breaker": "Breaker",
         "entry_order_policy": "Entry Order Policy",
         "exit_monitor": "Exit Monitor",
+        "maker_rebate": "Maker Rebate",
         "portfolio": {
           "admission": "Portfolio / Admission",
           "budget": "Portfolio / Budget",

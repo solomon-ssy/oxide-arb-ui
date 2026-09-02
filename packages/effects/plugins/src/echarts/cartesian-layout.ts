@@ -5,7 +5,8 @@ import type { EChartsOption } from 'echarts';
  * `bottom: tokens.size.m` (15px). Cartesian charts written against the v5
  * default kept `grid.bottom` sized only for axis labels, so the legend now
  * paints on top of the x-axis. This helper is the layout contract: pin an
- * unpositioned legend to the top, keep it on one scrollable row, and reserve
+ * legend without an explicit position to the top, keep it on one scrollable
+ * row, and reserve
  * grid insets with `containLabel` so axis labels never share that band.
  */
 export const CARTESIAN_LEGEND_ROW = 36;

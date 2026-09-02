@@ -33,6 +33,7 @@ import {
   useMixedMenu,
 } from './menu';
 import { LayoutTabbar } from './tabbar';
+import { useSidebarCollapse } from './use-sidebar-collapse';
 
 defineOptions({ name: 'BasicLayout' });
 
@@ -49,9 +50,15 @@ const {
   isHeaderSidebarNav,
   layout,
   preferencesButtonPosition,
-  sidebarCollapsed,
   theme,
 } = usePreferences();
+const sidebarCollapsed = useSidebarCollapse(
+  isMobile,
+  computed({
+    get: () => preferences.sidebar.collapsed,
+    set: (collapsed: boolean) => updatePreferences({ sidebar: { collapsed } }),
+  }),
+);
 const accessStore = useAccessStore();
 const timezoneStore = useTimezoneStore();
 const { refresh } = useRefresh();
@@ -246,7 +253,7 @@ const headerSlots = computed(() => {
     :is-mobile="preferences.app.isMobile"
     :layout="layout"
     :sidebar-draggable="preferences.sidebar.draggable"
-    :sidebar-collapse="preferences.sidebar.collapsed"
+    :sidebar-collapse="sidebarCollapsed"
     :sidebar-collapse-show-title="preferences.sidebar.collapsedShowTitle"
     :sidebar-enable="sidebarVisible"
     :sidebar-collapsed-button="preferences.sidebar.collapsedButton"
@@ -265,9 +272,7 @@ const headerSlots = computed(() => {
     :z-index="preferences.app.zIndex"
     @side-mouse-leave="handleSideMouseLeave"
     @toggle-sidebar="toggleSidebar"
-    @update:sidebar-collapse="
-      (value: boolean) => updatePreferences({ sidebar: { collapsed: value } })
-    "
+    @update:sidebar-collapse="(value: boolean) => (sidebarCollapsed = value)"
     @update:sidebar-enable="
       (value: boolean) => updatePreferences({ sidebar: { enable: value } })
     "
@@ -351,7 +356,7 @@ const headerSlots = computed(() => {
     <template #menu>
       <LayoutMenu
         :accordion="preferences.navigation.accordion"
-        :collapse="preferences.sidebar.collapsed"
+        :collapse="sidebarCollapsed"
         :collapse-show-title="preferences.sidebar.collapsedShowTitle"
         :default-active="sidebarActive"
         :menus="wrapperMenus(sidebarMenus)"

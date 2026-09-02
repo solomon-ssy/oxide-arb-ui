@@ -61,6 +61,9 @@ const loadingOrders = ref(false);
 const fsm = computed(() => intentActions(props.intent.status));
 const entry = computed(() => props.intent.entry_order);
 const exit = computed(() => props.intent.exit_policy);
+const authorizationEvidence = computed(
+  () => props.intent.authorization_evidence ?? null,
+);
 const invalidationReasons = new Set<string>(ENUM_CATALOG.ApprovalInvalidation);
 const statusReason = computed(() => {
   const reason = props.intent.status_reason;
@@ -116,19 +119,10 @@ onMounted(() => void loadExecutionOrders());
             :value="intent.status"
           />
           <EnumTag
+            v-if="intent.authorization_kind"
             context="intent-detail"
-            name="ApprovalStatus"
-            :value="intent.approval_status"
-          />
-          <EnumTag
-            context="intent-detail"
-            name="QuantRuntimeMode"
-            :value="intent.runtime_mode"
-          />
-          <EnumTag
-            context="intent-detail"
-            name="OrderIntentKind"
-            :value="intent.intent_kind"
+            name="AuthorizationKind"
+            :value="intent.authorization_kind"
           />
         </div>
         <span
@@ -217,18 +211,6 @@ onMounted(() => void loadExecutionOrders());
             </span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.identity.policyId')"
-          >
-            {{ intent.policy_id ?? EMPTY_PLACEHOLDER }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantIntents.detail.identity.policyHash')"
-          >
-            <span class="font-mono text-xs break-all">
-              {{ intent.policy_hash ?? EMPTY_PLACEHOLDER }}
-            </span>
-          </DescriptionsItem>
-          <DescriptionsItem
             :label="$t('page.quantIntents.detail.identity.riskEnvelopeHash')"
           >
             <span class="font-mono text-xs break-all">
@@ -261,33 +243,48 @@ onMounted(() => void loadExecutionOrders());
       <Card
         class="order-2"
         size="small"
-        :title="$t('page.quantIntents.detail.sections.approval')"
+        :title="$t('page.quantIntents.detail.sections.authorization')"
       >
         <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.approval.approvedBy')"
+            :label="$t('page.quantIntents.detail.authorization.kind')"
           >
-            <span
-              class="font-mono text-xs break-all"
-              data-screenshot-volatile="true"
-            >
-              {{ intent.approved_by ?? EMPTY_PLACEHOLDER }}
-            </span>
+            <EnumTag
+              v-if="intent.authorization_kind"
+              context="intent-detail"
+              name="AuthorizationKind"
+              :value="intent.authorization_kind"
+            />
+            <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.approval.approvedAt')"
+            :label="$t('page.quantIntents.detail.authorization.authorizedAt')"
           >
             <span data-screenshot-volatile="true">
-              {{ formatDateTimeLocal(intent.approved_at) }}
+              {{ formatDateTimeLocal(authorizationEvidence?.authorized_at) }}
             </span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.approval.approvalReason')"
+            :label="$t('page.quantIntents.detail.authorization.evidence')"
           >
-            {{ intent.approval_reason ?? EMPTY_PLACEHOLDER }}
+            <template
+              v-if="authorizationEvidence?.kind === 'operator_approval'"
+            >
+              <span class="font-mono text-xs break-all">
+                {{ authorizationEvidence.operator_id }}
+              </span>
+              · {{ authorizationEvidence.reason }}
+            </template>
+            <span
+              v-else-if="authorizationEvidence?.kind === 'active_policy'"
+              class="font-mono text-xs break-all"
+            >
+              {{ authorizationEvidence.policy_hash }}
+            </span>
+            <span v-else>{{ EMPTY_PLACEHOLDER }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.approval.statusReason')"
+            :label="$t('page.quantIntents.detail.authorization.statusReason')"
           >
             <EnumTag
               v-if="statusReason.kind === 'enum'"
@@ -304,7 +301,7 @@ onMounted(() => void loadExecutionOrders());
             </span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="$t('page.quantIntents.detail.approval.admissionTrace')"
+            :label="$t('page.quantIntents.detail.authorization.admissionTrace')"
           >
             <span class="font-mono text-xs break-all">
               {{ intent.admission_trace_ref ?? EMPTY_PLACEHOLDER }}

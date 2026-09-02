@@ -1,7 +1,7 @@
 import type {
+  EntryAuthorizationPolicy,
   ExecutionRecoveryStep,
   KillSwitchState,
-  QuantRuntimeMode,
 } from './enums';
 
 /** Safety-state rollup shared by system status and reconciliation responses. */
@@ -10,7 +10,7 @@ export interface ExecutionRecoverySummary {
   unresolvable_count: number;
   kill_switch_requires_ack: boolean;
   kill_switch_state: KillSwitchState;
-  quant_runtime_mode: QuantRuntimeMode;
-  auto_execution_blocked: boolean;
+  entry_authorization_policy: EntryAuthorizationPolicy;
+  policy_automatic_blocked: boolean;
   next_steps: ExecutionRecoveryStep[];
 }

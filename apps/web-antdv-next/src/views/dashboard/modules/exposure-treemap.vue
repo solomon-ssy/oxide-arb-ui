@@ -83,6 +83,11 @@ watch([categories, reducedMotion], render, { deep: true, immediate: true });
         >
           <span class="truncate">{{ item.name }}</span>
           <Progress
+            :aria-label="
+              $t('page.dashboard.exposure.categoryShareAria', {
+                category: item.name,
+              })
+            "
             :percent="total > 0 ? Math.round((item.value / total) * 100) : 0"
             :show-info="false"
             size="small"

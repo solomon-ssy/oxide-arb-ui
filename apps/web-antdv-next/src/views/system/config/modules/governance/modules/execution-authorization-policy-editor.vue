@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type {
-  ExecutionAutomationPolicy,
+  ExecutionAuthorizationPolicy,
   RuntimeFieldDescriptor,
 } from '@vben/types/config-api';
 
@@ -8,23 +8,23 @@ import type { PolicyClientValidationIssue } from './policy-schema';
 
 import RuntimeDescriptorEditor from './runtime-descriptor-editor.vue';
 
-defineOptions({ name: 'ExecutionAutomationPolicyEditor' });
+defineOptions({ name: 'ExecutionAuthorizationPolicyEditor' });
 
 withDefaults(
   defineProps<{
     disabled?: boolean;
     fields: RuntimeFieldDescriptor[];
     issues?: PolicyClientValidationIssue[];
-    modelValue: ExecutionAutomationPolicy;
+    modelValue: ExecutionAuthorizationPolicy;
   }>(),
   { disabled: false, issues: () => [] },
 );
 
 defineEmits<{
-  'update:modelValue': [value: ExecutionAutomationPolicy];
+  'update:modelValue': [value: ExecutionAuthorizationPolicy];
 }>();
 
-const groupOrder = ['semi_auto', 'auto_execution'];
+const groupOrder = ['policy_automatic_limits'];
 </script>
 
 <template>
@@ -34,9 +34,9 @@ const groupOrder = ['semi_auto', 'auto_execution'];
     :group-order="groupOrder"
     :issues="issues"
     :model-value="modelValue"
-    resource="execution_automation_policy"
+    resource="execution_authorization_policy"
     @update:model-value="
-      $emit('update:modelValue', $event as ExecutionAutomationPolicy)
+      $emit('update:modelValue', $event as ExecutionAuthorizationPolicy)
     "
   />
 </template>

@@ -1,3 +1,4 @@
+import { isAbsolute } from 'node:path';
 import process from 'node:process';
 
 import { defineConfig, devices } from 'playwright/test';
@@ -14,22 +15,64 @@ process.env.NO_PROXY = noProxy;
 process.env.no_proxy = noProxy;
 
 const externalServers = process.env.PLAYWRIGHT_EXTERNAL_SERVERS === 'true';
+const completionPath = process.env.PLAYWRIGHT_BACKEND_COMPLETION_PATH;
+const completionNonce = process.env.PLAYWRIGHT_BACKEND_COMPLETION_NONCE;
+if (Boolean(completionPath) !== Boolean(completionNonce)) {
+  throw new Error(
+    'Backend completion path and nonce must be supplied together',
+  );
+}
+if (!completionPath || !completionNonce) {
+  throw new Error(
+    'Playwright requires the managed runner or an external backend completion nonce/path pair',
+  );
+}
+if (!isAbsolute(completionPath)) {
+  throw new Error('Backend completion requires an absolute proof path');
+}
+if (
+  !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/.test(
+    completionNonce,
+  )
+) {
+  throw new Error('Backend completion nonce must be a UUID');
+}
+const completionArgs = ` --completion-report '${completionPath.replaceAll("'", String.raw`'\''`)}' --verification-nonce ${completionNonce}`;
 const evidenceRun = process.env.PLAYWRIGHT_EVIDENCE_RUN;
 const productionFixture =
   process.env.PLAYWRIGHT_PRODUCTION_FIXTURE ?? 'governed-feedback';
 const backendPort = 8088;
 const backendReadinessPort = 8089;
 const minute = 60_000;
-// This is an outer orchestration watchdog, not a model or backtest SLO. The
-// Rust fixture fails closed at 60 minutes from Trigger to ShadowBind, then
-// owns a five-minute production shadow and a three-minute CandidateReady
-// budget. The remaining 22 minutes cover cold build/bootstrap/fixture seeding
-// (13 minutes in the measured debug cold-start) without racing that contract.
+// This outer orchestration watchdog covers the serial BrowserEvidence readiness
+// path in `production-stack serve`; every Rust stage keeps its own stricter gate.
+// Cold-build/bootstrap/seed headroom is an allocation, not a timing guarantee.
+// The readiness allowance covers startup, operational/catalog/history checks,
+// trigger requests, final source checks, and bounded polling overhead. Do not add
+// Verification-only activation, report, report-parity, or N+1 work to this path.
+const closureStartupBudgets = {
+  candidateReadySettlement: 3 * minute,
+  coldBootstrapHeadroom: 22 * minute,
+  historicalEconomicWarmup: 30 * minute,
+  readinessChecksHeadroom: 15 * minute,
+  runtimeParity: 42 * minute,
+  shadowBindWait: 60 * minute,
+  shadowWindow: 15 * minute,
+};
+// Recovery adds fault-point discovery (10m), crash wait (30s), restart startup
+// (1m), and durable lease recovery (3m), rounded up without changing their gates.
+const closureRecoveryHeadroom = 15 * minute;
 const backendStartupTimeout = productionFixture.startsWith('feedback-closure')
-  ? (60 + 5 + 3 + 22) * minute
+  ? Object.values(closureStartupBudgets).reduce(
+      (total, budget) => total + budget,
+      0,
+    ) +
+    (productionFixture === 'feedback-closure-recovery'
+      ? closureRecoveryHeadroom
+      : 0)
   : 10 * minute;
 
-if (evidenceRun && !/^[a-z0-9-]+$/.test(evidenceRun)) {
+if (!evidenceRun || !/^[a-z0-9-]+$/.test(evidenceRun)) {
   throw new Error('PLAYWRIGHT_EVIDENCE_RUN must contain only a-z, 0-9, and -');
 }
 if (
@@ -44,12 +87,8 @@ if (
   );
 }
 
-const outputDir = evidenceRun ? `test-results/${evidenceRun}` : 'test-results';
-const reportDir = evidenceRun
-  ? `playwright-report/${evidenceRun}`
-  : 'playwright-report';
-const retainBackendArtifacts =
-  evidenceRun || process.env.CI === 'true' ? ' --retain-artifacts' : '';
+const outputDir = `test-results/${evidenceRun}`;
+const reportDir = `playwright-report/${evidenceRun}`;
 const visualLaunchOptions = {
   args: [
     '--disable-gpu',
@@ -135,6 +174,7 @@ export default defineConfig({
   retries: 0,
   testDir: './apps/web-antdv-next/tests/e2e',
   timeout: 60_000,
+  updateSnapshots: 'none',
   use: {
     actionTimeout: 10_000,
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:6099',
@@ -148,7 +188,7 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command: `cargo build -p quant-pivot-xtask -p quant-pivot-bin && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port ${backendPort} --readiness-port ${backendReadinessPort} --fixture ${productionFixture}${retainBackendArtifacts}`,
+          command: `cargo build -p quant-pivot-xtask && exec ../target/debug/quant-pivot-xtask production-stack serve --listen-port ${backendPort} --readiness-port ${backendReadinessPort} --fixture ${productionFixture} --retain-artifacts${completionArgs}`,
           gracefulShutdown: { signal: 'SIGTERM', timeout: 2 * minute },
           reuseExistingServer: false,
           stderr: 'pipe',

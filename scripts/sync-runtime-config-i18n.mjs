@@ -16,7 +16,7 @@ const localePaths = {
   ),
 };
 const resources = {
-  execution_automation_policy: 'ExecutionAutomationPolicy',
+  execution_authorization_policy: 'ExecutionAuthorizationPolicy',
   execution_risk_policy: 'ExecutionRiskPolicy',
   model_routing: 'ModelRouting',
   operations_policy: 'OperationsPolicy',
@@ -117,6 +117,8 @@ const enDescriptions = {
     'Minimum conservative profit-probability lower bound, in basis points; it is an admission constraint, never an objective weight.',
   model_version_id:
     'Exact immutable model-version UUID; no cross-version fallback is allowed.',
+  operator_approval_ttl_secs:
+    'Maximum lifetime, in seconds, of an operator approval before admission must be repeated against fresh account, market, and policy evidence.',
   schedules:
     'Complete governed report schedule list. Each item freezes cadence, timezone, TopN, knowledge lag, and enabled state.',
   shadow:
@@ -124,12 +126,12 @@ const enDescriptions = {
 };
 
 const zhScopedDescriptions = {
-  'execution_automation_policy:/auto_execution/max_orders_per_report':
-    '每份已发布报告最多允许自动创建的订单数；超出部分仍可保留为需人工批准的推荐，不得绕过执行准入。',
-  'execution_automation_policy:/auto_execution/max_total_usd_per_report':
-    '每份报告可自动执行的累计 USD 名义金额硬上限；计算按全局排名顺序累加已授权 tier。',
-  'execution_automation_policy:/semi_auto/approval_ttl_secs':
-    '半自动执行人工批准的有效期（秒）；过期后必须基于最新账户、市场与政策快照重新准入。',
+  'execution_authorization_policy:/operator_approval_ttl_secs':
+    '操作员批准的有效期（秒）；过期后必须基于最新账户、市场与政策快照重新准入。',
+  'execution_authorization_policy:/policy_automatic_limits/max_orders_per_report':
+    '每份已发布报告最多允许策略自动授权的订单数；超出部分只能进入操作员批准路径。',
+  'execution_authorization_policy:/policy_automatic_limits/max_total_usd_per_report':
+    '每份报告可由策略自动授权的累计 USD 名义金额硬上限；按全局排名顺序累加已授权 tier。',
   'execution_risk_policy:/breaker/cooldown_secs':
     'Venue 在无新失败的情况下从 Degraded 自恢复为 Healthy 所需的连续时间（秒）。',
   'execution_risk_policy:/breaker/daily_realized_loss_cap_usd':
@@ -162,6 +164,12 @@ const zhScopedDescriptions = {
     '是否为开放 lot 启用模型支持的论点再推理，以检测信号失效。',
   'execution_risk_policy:/exit_monitor/signal_reinference/shadow_mode':
     '开启时仍生成完整再推理审计证据，但抑制“论点失效”退出；强制止损、时间与 trailing 退出继续生效。',
+  'execution_risk_policy:/maker_rebate/fallback_lag_from_program_close_secs':
+    'Maker rebate 计划日结束后，在 venue 尚未发布实际奖励时继续使用保守估值的最长等待时间（秒）；超时后该激励必须按不可用处理。',
+  'execution_risk_policy:/maker_rebate/observed_p95_min_samples':
+    '采用历史观测 P95 到账延迟前所需的最小成功样本数；样本不足时必须使用冻结的保守延迟。',
+  'execution_risk_policy:/maker_rebate/payout_threshold_usd':
+    '只有累计预期 Maker rebate 达到该 USD 阈值后，才允许把预期激励纳入可支付性与经济结果核算。',
   'execution_risk_policy:/portfolio/budget/total_budget_usd':
     '策略允许治理的账户总资本上限（USD）；实际可用金额仍以冻结的真实 AccountSnapshot 为准。',
   'execution_risk_policy:/portfolio/exposure_limits/max_category_exposure_usd':
@@ -173,7 +181,7 @@ const zhScopedDescriptions = {
   'execution_risk_policy:/portfolio/exposure_limits/max_single_recommendation_usd':
     '单条 Recommendation 允许分配的最大 USD 本金，在真实 L2 walk 产生的离散 sizing tier 上强制执行。',
   'execution_risk_policy:/reconciliation/enabled':
-    '是否启用订单与 venue 状态对账；自动或半自动执行能力启用时必须保持开启。',
+    '是否启用订单与 venue 状态对账；任何可执行入场权限启用时必须保持开启。',
   'execution_risk_policy:/reconciliation/interval_secs':
     '执行对账 worker 轮询未终态订单与资本保留状态的周期（秒）。',
   'execution_risk_policy:/reconciliation/stale_open_secs':
@@ -208,6 +216,8 @@ const zhScopedDescriptions = {
     '自动紧急清算允许的最大滑点（基点）；即使已触发 kill-switch，也不允许无价格保护下单。',
   'operations_policy:/notifications/report_published':
     '是否在完整 RecommendationReport 事务发布成功后通知操作员；失败 run 和部分结果不得伪装为发布通知。',
+  'operations_policy:/outcome_reconciliation/economic_source_lateness_secs':
+    'RecommendationEconomicOutcome 在冻结 horizon 后允许等待 L2、费用与被动成交事实补齐的最长时间（秒）；超时后必须以明确 censored/insufficient 状态收口。',
   'operations_policy:/outcome_reconciliation/enabled':
     '是否启用已解析市场结果对账，这是 15-stage feedback closure 生成成熟标签的必要条件。',
   'operations_policy:/outcome_reconciliation/sweep_secs':
@@ -217,7 +227,6 @@ const zhScopedDescriptions = {
 };
 
 const zhGroups = {
-  auto_execution: '自动执行授权',
   breaker: '执行熔断',
   capital: '执行资本准入',
   data_quality: '数据质量',
@@ -240,7 +249,6 @@ const zhGroups = {
   reports: '报告策略',
   schedules: '报告调度',
   selection: '市场筛选',
-  semi_auto: '半自动执行授权',
 };
 
 const check = process.argv.includes('--check');
@@ -290,24 +298,24 @@ if (check) {
 }
 
 for (const [locale, document] of Object.entries(locales)) {
+  if (document.config?.policyField !== undefined) {
+    throw new Error(
+      `${locale}: leaf-only policyField translations are forbidden`,
+    );
+  }
   const existing = flattenRuntimeFields(document.config?.runtimeField);
-  const legacy = document.config?.policyField ?? {};
   const next = {};
   for (const item of inventory) {
     const key = fieldKey(item.resource, item.pointer);
     const current = existing.get(key);
     const leaf = item.pointer.split('/').at(-1);
-    const legacyValue = legacy[leaf];
     const englishTitle = schemaTitle(item.schema, leaf);
     const label =
       current?.label ??
-      (locale === 'zh-CN'
-        ? (legacyValue?.label ?? zhLabels[leaf] ?? englishTitle)
-        : englishTitle);
+      (locale === 'zh-CN' ? (zhLabels[leaf] ?? englishTitle) : englishTitle);
     const generatedDescription =
       locale === 'zh-CN'
         ? (zhScopedDescriptions[key] ??
-          legacyValue?.description ??
           zhDescriptions[leaf] ??
           `配置“${label}”。提交前必须复核字段单位、约束、风险等级与精确生效边界。`)
         : (enDescriptions[leaf] ?? schemaDescription(item.schema, label));
@@ -321,7 +329,6 @@ for (const [locale, document] of Object.entries(locales)) {
   }
   document.config.runtimeField = next;
   document.config.runtimeGroup = groupTranslations(inventory, locale);
-  delete document.config.policyField;
   fs.writeFileSync(
     localePaths[locale],
     `${JSON.stringify(document, null, 2)}\n`,

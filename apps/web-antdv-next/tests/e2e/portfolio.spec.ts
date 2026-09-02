@@ -33,6 +33,21 @@ test('portfolio renders venue account truth and keeps semantic module boundaries
     ).not.toHaveCount(0);
   }
 
+  await page.setViewportSize({ height: 844, width: 390 });
+  const accountValues = page.locator('.account-kpi-grid .kpi-value');
+  await expect(accountValues).toHaveCount(5);
+  await expect
+    .poll(() =>
+      accountValues.evaluateAll((elements) =>
+        elements.every(
+          (element) => element.scrollWidth <= element.clientWidth + 1,
+        ),
+      ),
+    )
+    .toBe(true);
+  await expectReleaseQuality(page);
+  await page.setViewportSize({ height: 900, width: 1440 });
+
   await page.getByRole('tab', { name: /Exposure|敞口/i }).click();
   await expect(page).toHaveURL(
     (url) => url.searchParams.get('module') === 'exposure',
@@ -77,7 +92,7 @@ test('incentive ledger exposes populated daily lineage at 390px', async ({
         available_at: observedAt,
         created_at: observedAt,
         evidence_hash: `blake3:${'1'.repeat(64)}`,
-        execution_fill_id: '00000000-0000-7000-8000-000000000011',
+        clob_trade_observation_id: '00000000-0000-7000-8000-000000000011',
         kind: 'maker_rebate',
         market_id: '0xmarket',
         observed_at: observedAt,

@@ -7,7 +7,7 @@
  * reject:
  *
  * - {@link intentActions}.canApprove / canReject ↔ `approve_at` /
- *   `reject_at` (`status == PendingApproval`)
+ *   `reject_at` (`status == PendingAuthorization`)
  * - {@link intentActions}.canCancel ↔ `cancel_at` ("not-yet-submitted intent")
  * Approved states are dispatcher-owned: approval arms future automatic
  * submission, so the client exposes no manual submit predicate.
@@ -26,16 +26,12 @@ export interface IntentActionAvailability {
 }
 
 /**
- * States an operator may still cancel — the not-yet-submitted set. `draft` is
- * the enum default (never produced by creation) but stays cancelable for
- * completeness; `admission_pending` is a transient dispatcher-owned claim and is
- * intentionally excluded to avoid racing submission.
+ * States an operator may still cancel. `admission_pending` is a transient
+ * dispatcher-owned claim and is excluded to avoid racing submission.
  */
 const CANCELABLE_STATUSES = new Set<OrderIntentStatus>([
-  ORDER_INTENT_STATUSES.approved,
-  ORDER_INTENT_STATUSES.approvedByPolicy,
-  ORDER_INTENT_STATUSES.draft,
-  ORDER_INTENT_STATUSES.pendingApproval,
+  ORDER_INTENT_STATUSES.authorized,
+  ORDER_INTENT_STATUSES.pendingAuthorization,
 ]);
 
 /**
@@ -45,12 +41,12 @@ const CANCELABLE_STATUSES = new Set<OrderIntentStatus>([
  */
 export const INTENT_TERMINAL_STATUSES: readonly OrderIntentStatus[] = [
   ORDER_INTENT_STATUSES.admissionRejected,
+  ORDER_INTENT_STATUSES.authorizationRejected,
   ORDER_INTENT_STATUSES.cancelled,
   ORDER_INTENT_STATUSES.expired,
   ORDER_INTENT_STATUSES.failed,
   ORDER_INTENT_STATUSES.filled,
   ORDER_INTENT_STATUSES.invalidated,
-  ORDER_INTENT_STATUSES.rejected,
 ];
 
 const TERMINAL_STATUSES = new Set<OrderIntentStatus>(INTENT_TERMINAL_STATUSES);
@@ -59,7 +55,7 @@ const TERMINAL_STATUSES = new Set<OrderIntentStatus>(INTENT_TERMINAL_STATUSES);
 export function intentActions(
   status: OrderIntentStatus,
 ): IntentActionAvailability {
-  const pending = status === ORDER_INTENT_STATUSES.pendingApproval;
+  const pending = status === ORDER_INTENT_STATUSES.pendingAuthorization;
   return {
     canApprove: pending,
     canReject: pending,

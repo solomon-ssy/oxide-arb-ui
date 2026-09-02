@@ -40,7 +40,6 @@ const STAGE_ORDER = [
   'report_run_failed',
   'report_run_abandoned',
   'intent_pending_authorization',
-  'intent_pending_approval',
   'execution_submitted',
   'execution_partially_filled',
   'execution_ambiguous',

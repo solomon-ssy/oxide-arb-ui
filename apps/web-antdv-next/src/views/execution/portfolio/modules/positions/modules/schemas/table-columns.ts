@@ -5,7 +5,10 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import { $t } from '#/locales';
 import { formatShares } from '#/shared/components/format';
 import { categoryOptions } from '#/shared/presentation/enum-options';
-import { positionOpenPath } from '#/shared/routes/execution-plane';
+import {
+  orderIntentOpenPath,
+  positionOpenPath,
+} from '#/shared/routes/execution-plane';
 import { iconOp } from '#/shared/table/cell-operation-presets';
 
 export function usePositionColumns(
@@ -17,12 +20,22 @@ export function usePositionColumns(
         name: 'CellEntityRoute',
         props: {
           mono: true,
-          to: (row: PositionView) => positionOpenPath(row.position_id),
+          to: (row: PositionView) =>
+            positionOpenPath(row.strategy_position_lot_id),
         },
       },
-      field: 'position_id',
+      field: 'strategy_position_lot_id',
       minWidth: 150,
-      title: $t('page.quantPositions.columns.positionId'),
+      title: $t('page.quantPositions.columns.lotId'),
+    },
+    {
+      cellRender: {
+        name: 'CellEnumTag',
+        props: { enum: 'StrategyPositionOriginKind' },
+      },
+      field: 'origin_kind',
+      title: $t('page.quantPositions.columns.origin'),
+      width: 170,
     },
     {
       cellRender: {
@@ -39,12 +52,20 @@ export function usePositionColumns(
         props: {
           mono: true,
           to: (row: PositionView) =>
-            `/execution/orders?module=intents&entity=order-intent&id=${row.order_intent_id}`,
+            row.order_intent_id
+              ? orderIntentOpenPath(row.order_intent_id)
+              : undefined,
         },
       },
       field: 'order_intent_id',
       minWidth: 150,
       title: $t('page.quantPositions.columns.orderIntentId'),
+    },
+    {
+      cellRender: { name: 'CellCopy' },
+      field: 'recovery_incident_id',
+      minWidth: 160,
+      title: $t('page.quantPositions.columns.recoveryIncidentId'),
     },
     {
       cellRender: { name: 'CellMarketId' },
@@ -108,7 +129,7 @@ export function usePositionColumns(
     {
       cellRender: {
         attrs: {
-          nameField: 'position_id',
+          nameField: 'strategy_position_lot_id',
           onClick: onActionClick,
         },
         name: 'CellOperation',

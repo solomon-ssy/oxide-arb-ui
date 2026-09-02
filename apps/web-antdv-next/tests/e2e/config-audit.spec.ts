@@ -1,18 +1,15 @@
-import type { Locator, Page } from 'playwright/test';
+import type { APIRequestContext, Page } from 'playwright/test';
 
-import type { RuntimeActivityPageView } from '@vben/types';
-import type { CurrentPolicyResourceView } from '@vben/types/config-api';
+import type {
+  EquitySnapshotView,
+  Paginated,
+  RuntimeActivityPageView,
+} from '@vben/types';
 
 import type { ReleaseScenario } from './release-closure';
 
-import {
-  expect,
-  installWebSocketAudit,
-  readApiData,
-  readFirstApiItem,
-  test,
-} from './fixtures';
-import { confirmGovernedAction } from './governed-action-driver';
+import { RELEASE_SCENARIOS } from '../../../../scripts/ui-release-contract';
+import { expect, readApiData, readFirstApiItem, test } from './fixtures';
 import {
   captureReleaseEvidence,
   expectReleaseQuality,
@@ -31,89 +28,87 @@ interface EntityRow {
   status?: string;
 }
 
-async function openConfigResource(page: Page) {
-  await page.goto(
-    '/system/config?module=policy&entity=config-resource&id=recommendation_policy',
+async function selectHistoricalEquity(page: Page, api: APIRequestContext) {
+  const history = await readApiData<Paginated<EquitySnapshotView>>(
+    api,
+    '/api/quant/account/equity-snapshots?page=1&size=100',
   );
-  const workspace = page.getByTestId('config-resource-workspace');
-  await expect(workspace).toBeVisible();
-  return workspace;
-}
-
-async function editAndSave(page: Page) {
-  const workspace = await openConfigResource(page);
-  await workspace.getByTestId('edit-config-draft').click();
-  const input = workspace
-    .locator('.ant-input-number-input:not([disabled])')
-    .first();
-  const original = Number(await input.inputValue());
-  if (!Number.isFinite(original)) {
-    throw new TypeError('recommendation policy fixture has no numeric control');
-  }
-  await input.fill(String(original > 1 ? original - 1 : original + 1));
-  await page.keyboard.press('Tab');
-  await workspace.getByTestId('save-config-draft').click();
-  await confirmGovernedAction(page, 'ui release closure creates policy draft');
-  await expect(workspace.getByTestId('config-review')).toBeVisible();
-  return workspace;
-}
-
-async function validateApproveActivate(page: Page, workspace: Locator) {
-  await workspace.getByTestId('validate-config-draft').click();
-  await confirmGovernedAction(page, 'ui release closure validates policy');
-  await expect(workspace.getByTestId('config-validation-result')).toContainText(
-    /通过|Passed/i,
+  const historical = history.items
+    .filter(
+      (row) =>
+        row.account_snapshot_ref !== null &&
+        row.account_snapshot_ref !== undefined,
+    )
+    .toSorted((left, right) => left.as_of.localeCompare(right.as_of));
+  expect(historical).toHaveLength(2);
+  const [earlier, later] = historical;
+  if (!earlier || !later)
+    throw new Error('report-bound equity history is absent');
+  // RangePicker submits seconds; the repository uses the half-open [from, to)
+  // interval. Include both precise report times without admitting live ticks.
+  const from = new Date(
+    Math.floor(Date.parse(earlier.as_of) / 1000) * 1000,
+  ).toISOString();
+  const to = new Date(
+    (Math.floor(Date.parse(later.as_of) / 1000) + 1) * 1000,
+  ).toISOString();
+  const filteredResponse = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      url.pathname === '/api/quant/account/equity-snapshots' &&
+      url.searchParams.get('from') === from &&
+      url.searchParams.get('to') === to
+    );
+  });
+  const inputs = page.locator('.ant-picker-range input');
+  await expect(inputs).toHaveCount(2);
+  await inputs.nth(0).fill(from.slice(0, 19).replace('T', ' '));
+  await inputs.nth(0).press('Enter');
+  await inputs.nth(1).fill(to.slice(0, 19).replace('T', ' '));
+  await inputs.nth(1).press('Enter');
+  await page.keyboard.press('Escape');
+  const response = await filteredResponse;
+  expect(response.ok()).toBe(true);
+  const payload = (await response.json()) as {
+    data: Paginated<EquitySnapshotView>;
+  };
+  expect(payload.data.total).toBe(2);
+  expect(
+    payload.data.items.map((row) => row.equity_snapshot_id).toSorted(),
+  ).toEqual(historical.map((row) => row.equity_snapshot_id).toSorted());
+  await expect(page.locator('.ant-table-tbody > tr[data-row-key]')).toHaveCount(
+    2,
   );
-  await workspace.getByTestId('approve-config-draft').click();
-  await confirmGovernedAction(page, 'ui release closure approves policy');
-  await workspace.getByTestId('activate-config-draft').click();
-  await confirmGovernedAction(page, 'ui release closure activates policy');
-  await expect(
-    workspace.getByTestId('config-activation-success'),
-  ).toBeVisible();
+  const chart = page.locator('[data-equity-series-points]');
+  await expect(chart).toHaveAttribute('data-equity-series-points', '2');
+  await expect(chart).toHaveAttribute('data-echarts-ready', 'true');
+  await inputs.evaluateAll((elements) => {
+    for (const element of elements) {
+      (element as HTMLElement).dataset.screenshotVolatile = 'true';
+    }
+  });
 }
 
-test('config lifecycle commits through CAS and remains auditable', async ({
+test('equity history range selects only report-bound snapshots', async ({
   adminApi,
   authenticatedPage: page,
   browserAudit,
 }) => {
-  test.setTimeout(300_000);
-  const wire = installWebSocketAudit(page);
-  const original = await readApiData<CurrentPolicyResourceView>(
-    adminApi.context,
-    '/api/config/recommendation_policy/current',
-  );
-  const originalRevision = original.revision?.policy_revision_id;
-  if (!originalRevision) {
-    throw new Error('fresh fixture has no active recommendation policy');
-  }
-  const baselineFrames = wire.received.length;
-
-  const workspace = await editAndSave(page);
-  await validateApproveActivate(page, workspace);
-  const activated = await readApiData<CurrentPolicyResourceView>(
-    adminApi.context,
-    '/api/config/recommendation_policy/current',
-  );
-  expect(activated.revision?.policy_revision_id).not.toBe(originalRevision);
-  await expect.poll(() => wire.received.length).toBeGreaterThan(baselineFrames);
-
-  await workspace.getByTestId('finish-config-workflow').click();
-  await workspace
-    .locator(`tr[data-revision-id="${originalRevision}"]`)
-    .getByTestId('review-config-rollback')
-    .click();
-  await validateApproveActivate(page, workspace);
-  const restored = await readApiData<CurrentPolicyResourceView>(
-    adminApi.context,
-    '/api/config/recommendation_policy/current',
-  );
-  expect(restored.revision?.policy_revision_id).toBe(originalRevision);
-
-  await page.goto('/system/audit?module=receipts');
+  await page.goto('/execution/portfolio?module=equity');
   await waitForUiReady(page, browserAudit);
-  await expect(page.getByText(/Receipts|治理回执|回执/i).first()).toBeVisible();
+  await selectHistoricalEquity(page, adminApi.context);
+  await waitForUiReady(page, browserAudit);
+  const clear = page.locator('.equity-range .ant-picker-clear');
+  await expect(clear).toBeVisible();
+  const [clearBox, inputBox] = await Promise.all([
+    clear.boundingBox(),
+    page.locator('.equity-range input').last().boundingBox(),
+  ]);
+  if (!clearBox || !inputBox)
+    throw new Error('equity range controls have no layout box');
+  expect(clearBox.width).toBeGreaterThanOrEqual(24);
+  expect(clearBox.height).toBeGreaterThanOrEqual(24);
+  expect(clearBox.x).toBeGreaterThanOrEqual(inputBox.x + inputBox.width);
   await expectReleaseQuality(page);
 });
 
@@ -131,7 +126,7 @@ test('workspace overlay select dropdowns size to options instead of the panel', 
   const cadence = workspace
     .locator('.schedule-field')
     .filter({ hasText: /触发节奏|Cadence/i })
-    .locator('.ant-select')
+    .locator('.ant-select:not(.ant-select-disabled)')
     .first();
   await expect(cadence).toBeVisible();
   await cadence.click();
@@ -233,6 +228,10 @@ test('@visual release closure captures the platform state matrix', async ({
   });
   const theme = releaseTheme(testInfo);
   const project = testInfo.project.name;
+  if (!(project in RELEASE_SCENARIOS))
+    throw new Error('Unreviewed release project');
+  const expectedScenarios =
+    RELEASE_SCENARIOS[project as keyof typeof RELEASE_SCENARIOS];
 
   const baseScenarios: ReleaseScenario[] = [
     { name: 'page-dashboard', path: '/dashboard' },
@@ -271,6 +270,9 @@ test('@visual release closure captures the platform state matrix', async ({
     project === 'visual-tablet-dark'
       ? baseScenarios.filter(({ name }) => name === 'page-dashboard')
       : baseScenarios;
+  expect(visualScenarios.map(({ name }) => name)).toEqual(
+    expectedScenarios.filter((name) => name.startsWith('page-')),
+  );
   for (const scenario of visualScenarios) {
     await captureReleaseEvidence({
       audit: browserAudit,
@@ -288,7 +290,7 @@ test('@visual release closure captures the platform state matrix', async ({
   const [market, report, intent, modelSpec] = await Promise.all([
     readFirstApiItem<EntityRow>(
       adminApi.context,
-      '/api/markets?page=1&size=100',
+      '/api/markets?page=1&size=100&subscribed=true',
     ),
     readFirstApiItem<EntityRow>(
       adminApi.context,
@@ -364,6 +366,8 @@ test('@visual release closure captures the platform state matrix', async ({
     {
       name: 'state-portfolio-equity',
       path: '/execution/portfolio?module=equity',
+      prepare: (currentPage) =>
+        selectHistoricalEquity(currentPage, adminApi.context),
     },
     {
       name: 'state-settlement-ledger',
@@ -401,6 +405,9 @@ test('@visual release closure captures the platform state matrix', async ({
       path: '/system/config?module=policy&entity=config-resource&id=recommendation_policy',
     },
   ];
+  expect(
+    [...visualScenarios, ...criticalScenarios].map(({ name }) => name),
+  ).toEqual(expectedScenarios);
   for (const scenario of criticalScenarios) {
     await captureReleaseEvidence({
       audit: browserAudit,

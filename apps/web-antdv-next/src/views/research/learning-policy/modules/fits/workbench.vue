@@ -189,7 +189,7 @@ const factors = ref<FactorDefinitionView[]>([]);
 const selectedProfileHash = ref('');
 const pitCutoffInput = ref('');
 const selectedCandidateId = ref('conditional-1');
-const evaluationTrack = ref<ResearchEvaluationTrack>('semi_auto_candidate');
+const evaluationTrack = ref<ResearchEvaluationTrack>('execution_candidate');
 const preflight = ref<null | TradePolicyFitPreflightView>(null);
 const fitJob = ref<null | ResearchJobView>(null);
 const trialAttempts = ref<TradePolicyTrialAttemptView[]>([]);
@@ -251,11 +251,11 @@ const evaluationTrackOptions = computed(() => {
     },
   ];
   if (
-    selectedProfile.value?.spec.activation_eligibility === 'semi_auto_candidate'
+    selectedProfile.value?.spec.activation_eligibility === 'execution_candidate'
   ) {
     options.push({
-      label: $t('page.research.tradePolicies.workbench.semiAutoCandidate'),
-      value: 'semi_auto_candidate',
+      label: $t('page.research.tradePolicies.workbench.executionCandidate'),
+      value: 'execution_candidate',
     });
   }
   return options;
@@ -751,8 +751,8 @@ async function loadCatalogs() {
 watch(selectedProfile, (next, prior) => {
   if (next && (!prior || !profileMatches(next, prior))) {
     evaluationTrack.value =
-      next.spec.activation_eligibility === 'semi_auto_candidate'
-        ? 'semi_auto_candidate'
+      next.spec.activation_eligibility === 'execution_candidate'
+        ? 'execution_candidate'
         : 'research_only';
     invalidatePreflight();
   }

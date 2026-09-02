@@ -12,3 +12,12 @@ export function marketOpenPath(marketId: string): string {
   search.set('id', marketId);
   return `/trading/market-intelligence?${search.toString()}`;
 }
+
+/** Open a recommendation object stage on the canonical queue module. */
+export function recommendationOpenPath(recommendationId: string): string {
+  const search = new URLSearchParams();
+  search.set('module', 'queue');
+  search.set('entity', 'recommendation');
+  search.set('id', recommendationId);
+  return `/trading/recommendations?${search.toString()}`;
+}

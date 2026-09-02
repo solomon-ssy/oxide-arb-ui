@@ -207,7 +207,8 @@ const bootstrapPrerequisitesReady = computed(() => {
     bootstrapRoute.value !== null &&
     routedModelId.value === null &&
     gate.value?.passed === true &&
-    runtimeControls.value?.quant_runtime_mode === 'report_only' &&
+    runtimeControls.value?.entry_authorization_policy ===
+      'operator_approval_required' &&
     detail?.serving_contract.bindings.model.calibration !== null &&
     configResources.value !== null &&
     routingResource.value?.revision !== null &&

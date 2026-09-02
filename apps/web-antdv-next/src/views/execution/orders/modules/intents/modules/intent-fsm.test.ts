@@ -7,8 +7,8 @@ import {
 import { describe, expect, it } from 'vitest';
 
 describe('intentActions FSM predicates', () => {
-  it('pending_approval allows approve / reject / cancel', () => {
-    const actions = intentActions(ORDER_INTENT_STATUSES.pendingApproval);
+  it('pending_authorization allows approve / reject / cancel', () => {
+    const actions = intentActions(ORDER_INTENT_STATUSES.pendingAuthorization);
     expect(actions).toEqual({
       canApprove: true,
       canCancel: true,
@@ -16,19 +16,13 @@ describe('intentActions FSM predicates', () => {
     });
   });
 
-  it('approved allows cancel, not approve / reject', () => {
-    const actions = intentActions(ORDER_INTENT_STATUSES.approved);
+  it('authorized allows cancel, not approve / reject', () => {
+    const actions = intentActions(ORDER_INTENT_STATUSES.authorized);
     expect(actions).toEqual({
       canApprove: false,
       canCancel: true,
       canReject: false,
     });
-  });
-
-  it('approved_by_policy is cancelable but not approvable', () => {
-    const actions = intentActions(ORDER_INTENT_STATUSES.approvedByPolicy);
-    expect(actions.canCancel).toBe(true);
-    expect(actions.canApprove).toBe(false);
   });
 
   it('admission_pending exposes no operator action (dispatcher-owned)', () => {
@@ -49,7 +43,7 @@ describe('intentActions FSM predicates', () => {
   it('terminal statuses expose no action and report terminal', () => {
     const terminals = [
       ORDER_INTENT_STATUSES.filled,
-      ORDER_INTENT_STATUSES.rejected,
+      ORDER_INTENT_STATUSES.authorizationRejected,
       ORDER_INTENT_STATUSES.cancelled,
       ORDER_INTENT_STATUSES.failed,
       ORDER_INTENT_STATUSES.expired,

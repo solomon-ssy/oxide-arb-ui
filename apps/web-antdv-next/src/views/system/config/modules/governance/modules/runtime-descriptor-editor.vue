@@ -8,9 +8,10 @@ import type { PolicyClientValidationIssue } from './policy-schema';
 
 import { computed, toRaw } from 'vue';
 
-import { Checkbox, Input, InputNumber, Select, Tag, Tooltip } from 'antdv-next';
+import { Checkbox, Input, InputNumber, Select, Tooltip } from 'antdv-next';
 
 import { $t } from '#/locales';
+import StatusChip from '#/shared/components/status-chip.vue';
 
 import CapitalTimeBucketsControl from './capital-time-buckets-control.vue';
 import {
@@ -188,19 +189,19 @@ function validationMessage(issue: PolicyClientValidationIssue) {
   });
 }
 
-function riskColor(risk: RuntimeFieldDescriptor['risk_level']) {
+function riskTone(risk: RuntimeFieldDescriptor['risk_level']) {
   switch (risk) {
     case 'critical': {
-      return 'error';
+      return 'danger';
     }
     case 'high': {
       return 'warning';
     }
     case 'low': {
-      return 'default';
+      return 'neutral';
     }
     case 'medium': {
-      return 'processing';
+      return 'running';
     }
   }
 }
@@ -257,13 +258,15 @@ function riskColor(risk: RuntimeFieldDescriptor['risk_level']) {
               </p>
             </div>
             <div class="flex shrink-0 flex-wrap justify-end gap-1">
-              <Tag :color="riskColor(field.risk_level)">
+              <StatusChip :tone="riskTone(field.risk_level)">
                 {{ $t(`page.config.riskLevel.${field.risk_level}`) }}
-              </Tag>
+              </StatusChip>
               <Tooltip
                 :title="$t(`page.config.boundary.${field.apply_effect}`)"
               >
-                <Tag>{{ $t('page.config.editor.applyEffect') }}</Tag>
+                <StatusChip>
+                  {{ $t('page.config.editor.applyEffect') }}
+                </StatusChip>
               </Tooltip>
             </div>
           </div>

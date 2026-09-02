@@ -828,22 +828,6 @@ function millis(value: number): string {
           {{ formatBps(risk.max_slippage_bps) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantRecommendations.riskEnvelope.requiresApproval')"
-        >
-          <Tag :color="boolTagColor(risk.requires_approval)">
-            {{ boolLabel(risk.requires_approval) }}
-          </Tag>
-        </DescriptionsItem>
-        <DescriptionsItem
-          :label="
-            $t('page.quantRecommendations.riskEnvelope.autoExecutionAllowed')
-          "
-        >
-          <Tag :color="boolTagColor(risk.auto_execution_allowed)">
-            {{ boolLabel(risk.auto_execution_allowed) }}
-          </Tag>
-        </DescriptionsItem>
-        <DescriptionsItem
           :label="$t('page.quantRecommendations.riskEnvelope.envelopeHash')"
         >
           <span class="font-mono text-xs break-all">{{

@@ -1,9 +1,74 @@
 {
   "unknownValue": "Unknown: {value}",
-  "quantRuntimeMode": {
-    "report_only": "Report Only",
-    "semi_auto": "Semi Auto",
-    "auto_execution": "Auto Execution"
+  "accountChainExecutionRole": {
+    "maker": "Maker",
+    "taker": "Taker",
+    "self_match": "Self Match"
+  },
+  "accountExecutionAssociationKind": {
+    "system_order": "System Order",
+    "recovery_incident": "Recovery Incident",
+    "opening_inventory": "Opening Inventory"
+  },
+  "accountPauseOperationKind": {
+    "pause": "Pause",
+    "unpause": "Unpause"
+  },
+  "accountPauseOperationState": {
+    "prepared": "Prepared",
+    "dispatched": "Dispatched",
+    "ambiguous": "Ambiguous",
+    "confirmed": "Confirmed",
+    "failed": "Failed"
+  },
+  "accountRecoveryIncidentKind": {
+    "unknown_external_execution": "Unknown External Execution",
+    "break_glass_restart": "Break-glass Restart",
+    "opening_inventory": "Opening Inventory",
+    "account_mismatch": "Account Mismatch"
+  },
+  "accountRecoveryIncidentStatus": {
+    "open": "Open",
+    "reconciling": "Reconciling",
+    "sealed": "Sealed"
+  },
+  "authorizationKind": {
+    "operator_approval": "Operator Approval",
+    "active_policy": "Active Policy"
+  },
+  "entryAuthorizationPolicy": {
+    "operator_approval_required": "Operator Approval Required",
+    "policy_automatic": "Policy Automatic"
+  },
+  "executionAuthorityCeiling": {
+    "analysis_only": "Analysis Only",
+    "operator_approval": "Operator Approval",
+    "policy_automatic": "Policy Automatic"
+  },
+  "executionComparisonNotEvaluableReasonView": {
+    "planned_entry_unavailable": "Planned entry unavailable",
+    "planned_economics_censored": "Planned economics censored",
+    "actual_baseline_unavailable": "Actual execution baseline unavailable",
+    "identity_mismatch": "Artifact identity mismatch"
+  },
+  "recommendationEconomicOutcomeState": {
+    "entry_not_triggered": "Entry Not Triggered",
+    "entry_unfilled": "Entry Unfilled",
+    "policy_exited": "Policy Exited",
+    "horizon_liquidated": "Horizon Liquidated",
+    "resolved_before_horizon": "Resolved Before Horizon",
+    "censored": "Censored"
+  },
+  "routeEconomicHealthState": {
+    "insufficient_evidence": "Insufficient Evidence",
+    "healthy": "Healthy",
+    "degraded": "Degraded",
+    "data_incomplete": "Data Incomplete"
+  },
+  "strategyPositionOriginKind": {
+    "system_intent": "System Intent",
+    "account_recovery_incident": "Account Recovery Incident",
+    "opening_inventory": "Opening Inventory"
   },
   "killSwitchState": {
     "closed": "Closed",
@@ -14,8 +79,8 @@
   "settlementWritePolicy": {
     "disabled": "Writes Disabled",
     "governed_canary": "Governed Canary",
-    "semi_auto": "Per-batch Authorization",
-    "auto": "Automatic Settlement"
+    "operator_approval": "Operator Approval",
+    "policy_automatic": "Policy Automatic"
   },
   "settlementSubmissionKind": {
     "direct_eoa": "Direct EOA",
@@ -111,8 +176,7 @@
     "portfolio_budget_exhausted": "Portfolio budget exhausted"
   },
   "ineligibilityReason": {
-    "automation_cap_exceeded": "Report automation cap exceeded",
-    "report_only_mode": "Report-only mode"
+    "automation_cap_exceeded": "Policy-automatic cap exceeded"
   },
   "recommendationOutcome": {
     "won": "Won",
@@ -218,7 +282,7 @@
   "executionRecoveryStep": {
     "resolve_unresolvable_reconciliations": "Resolve unresolvable reconciliations",
     "acknowledge_kill_switch": "Acknowledge the kill switch",
-    "verify_mode_preflight": "Verify mode preflight before re-arming"
+    "verify_authorization_preflight": "Verify authorization preflight before re-arming"
   },
   "exitSettlementMode": {
     "exit_before_resolution": "Exit before resolution",
@@ -254,27 +318,18 @@
     "manual_required": "Manual Action Required"
   },
   "orderIntentStatus": {
-    "draft": "Draft",
-    "pending_approval": "Pending Approval",
-    "approved": "Approved",
-    "approved_by_policy": "Approved by Policy",
+    "pending_authorization": "Pending Authorization",
+    "authorized": "Authorized",
     "admission_pending": "Admission Pending",
     "admission_rejected": "Admission Rejected",
     "submitted": "Submitted",
     "partially_filled": "Partially Filled",
     "filled": "Filled",
-    "rejected": "Rejected",
+    "authorization_rejected": "Authorization Rejected",
     "cancelled": "Cancelled",
     "failed": "Failed",
     "expired": "Expired",
     "invalidated": "Invalidated"
-  },
-  "approvalStatus": {
-    "not_required": "Not Required",
-    "pending": "Pending",
-    "approved": "Approved",
-    "rejected": "Rejected",
-    "expired": "Expired"
   },
   "executionOrderState": {
     "planned": "Planned",
@@ -304,9 +359,6 @@
     "cancelled": "Cancelled",
     "open": "Open",
     "expired": "Expired"
-  },
-  "orderIntentKind": {
-    "buy": "Buy"
   },
   "positionLedgerState": {
     "open": "Open",
@@ -496,8 +548,8 @@
   },
   "gatePreviewIntent": {
     "candidate": "Candidate",
-    "publish": "Publish",
-    "auto_execution": "Auto-Execution"
+    "route_activation": "Route Activation",
+    "policy_automatic": "Policy Automatic"
   },
   "linkageStatus": {
     "resolved": "Resolved",
@@ -666,23 +718,25 @@
     "recommendation_not_published": "Recommendation not published",
     "non_primary_report": "Non-primary report",
     "outside_frozen_window": "Outside frozen window",
-    "report_only_no_execution_authority": "Report-only: no execution authority",
     "execution_not_attempted": "Execution not attempted"
   },
   "cohortCensorReason": {
     "resolution_unavailable_at_cutoff": "Resolution unavailable at cutoff",
-    "execution_outcome_unavailable_at_cutoff": "Execution outcome unavailable at cutoff"
+    "execution_outcome_unavailable_at_cutoff": "Execution outcome unavailable at cutoff",
+    "economic_outcome_unavailable_at_cutoff": "Economic outcome unavailable at cutoff"
   },
   "admissionCheckId": {
     "intent_state": "Intent State",
     "recommendation_freshness": "Recommendation Freshness",
     "report_status": "Report Status",
-    "runtime_mode": "Runtime Mode",
+    "authorization_policy": "Authorization Policy",
+    "economic_health": "Economic Health",
     "settlement_recovery": "Settlement Recovery",
     "model_route_binding": "Model Route Binding",
     "data_quality": "Data Quality",
     "book_freshness": "Book Freshness",
     "venue_metadata": "Venue Metadata",
+    "venue_funding": "Venue Funding",
     "entry_condition": "Entry Condition",
     "risk_envelope_hash": "Risk Envelope Hash",
     "capital_budget": "Capital Budget",
@@ -743,7 +797,6 @@
     "control_plane_not_ready": "Control Plane Not Ready",
     "catalog_baseline_missing": "Catalog Baseline Missing",
     "operational_phase_blocks_reports": "Operational Phase Blocks Reports",
-    "runtime_mode_report_only": "Runtime Mode Report Only",
     "kill_switch_blocks_entries": "Kill Switch Blocks Entries",
     "operational_phase_blocks_submission": "Operational Phase Blocks Submission",
     "no_serving_evidence": "No Serving Evidence"
@@ -823,7 +876,7 @@
     "model_routing": "Model Routing",
     "report_schedule": "Report Schedule",
     "operations_policy": "Operations Policy",
-    "execution_automation_policy": "Execution Automation Policy"
+    "execution_authorization_policy": "Execution Authorization Policy"
   },
   "dataQualityStatus": {
     "fresh": "Fresh",
@@ -1072,13 +1125,6 @@
     "menu": "Menu",
     "button": "Button"
   },
-  "modeDenialReason": {
-    "report_only": "Report Only",
-    "recommendation_ineligible": "Recommendation Ineligible",
-    "risk_envelope_invalid": "Risk Envelope Invalid",
-    "kill_switch_blocks_entry": "Kill Switch Blocks Entry",
-    "auto_execution_not_allowed": "Auto Execution Not Allowed"
-  },
   "modelGovernanceAction": {
     "bootstrap_route": "Bootstrap Route",
     "promote_route": "Promote Route",
@@ -1160,7 +1206,7 @@
     "model_evaluation_claim": "Model Evaluation Claim",
     "future_report_run_reconcile": "Future Report Run Reconcile",
     "operational_admission": "Operational Admission",
-    "execution_automation_policy_admission": "Execution Automation Policy Admission"
+    "execution_authorization_admission": "Execution Authorization Admission"
   },
   "policyApprovalDecision": {
     "approved": "Approved",
@@ -1178,8 +1224,7 @@
     "model_runner": "Model Runner",
     "report_scheduler": "Report Scheduler",
     "worker_admission": "Worker Admission",
-    "alert_dispatcher": "Alert Dispatcher",
-    "runtime_mode_gate": "Runtime Mode Gate"
+    "alert_dispatcher": "Alert Dispatcher"
   },
   "policyPreflightCheckKind": {
     "typed_schema": "Typed Schema",

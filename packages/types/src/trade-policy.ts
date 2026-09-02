@@ -28,9 +28,9 @@ import type {
 export type TradePolicyStatus = 'draft' | 'published' | 'retired' | 'validated';
 export type TradePolicyGovernanceAction = 'publish' | 'retire' | 'validate';
 export type VerticalActivationTarget =
-  | 'auto_execution'
-  | 'research_only'
-  | 'semi_auto';
+  | 'operator_approval'
+  | 'policy_automatic'
+  | 'research_only';
 export type VerticalGateKind =
   | 'crypto_binance_continuity'
   | 'crypto_chainlink_resolution'

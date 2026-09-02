@@ -18,16 +18,27 @@
   --qp-accent-violet: 263 70% 50%;
   --qp-accent-pink: 330 81% 52%;
   --qp-accent-orange: 24 95% 50%;
+  --qp-action-primary-solid: 189 100% 27%;
+  --qp-action-primary-solid-hover: 189 100% 22%;
+  --qp-action-warning-solid: 29.2208 100% 30.1961%;
+  --qp-action-warning-solid-hover: 29.2913 100% 24.902%;
   --qp-accent-command: var(--qp-accent-violet);
   --qp-accent-research: var(--qp-accent-pink);
   --qp-accent-realtime: var(--qp-accent-sky);
   --qp-status-success: 145 52% 38%;
+  --qp-status-success-ink: 145 52% 28%;
   --qp-status-running: 199 89% 42%;
+  --qp-status-running-ink: 199 89% 28%;
   --qp-status-queued: 263 62% 48%;
+  --qp-status-queued-ink: var(--qp-status-queued);
   --qp-status-warning: 38 88% 42%;
+  --qp-status-warning-ink: 38 88% 27%;
   --qp-status-danger: 352 72% 48%;
+  --qp-status-danger-ink: 352 72% 39%;
   --qp-status-neutral: 215 16% 43%;
+  --qp-status-neutral-ink: 215 16% 37%;
   --qp-status-paused: 24 88% 46%;
+  --qp-status-paused-ink: 24 88% 31%;
   --qp-status-success-soft: 145 52% 42% / 10%;
   --qp-status-running-soft: 199 89% 48% / 10%;
   --qp-status-queued-soft: 263 62% 52% / 10%;
@@ -193,16 +204,27 @@
   --qp-accent-violet: 258 90% 66%;
   --qp-accent-pink: 330 81% 64%;
   --qp-accent-orange: 27 96% 61%;
+  --qp-action-primary-solid: 189 100% 27%;
+  --qp-action-primary-solid-hover: 189 100% 22%;
+  --qp-action-warning-solid: 29.2208 100% 30.1961%;
+  --qp-action-warning-solid-hover: 29.2913 100% 24.902%;
   --qp-accent-command: var(--qp-accent-violet);
   --qp-accent-research: var(--qp-accent-pink);
   --qp-accent-realtime: var(--qp-accent-sky);
   --qp-status-success: 145 58% 58%;
+  --qp-status-success-ink: var(--qp-status-success);
   --qp-status-running: 198 93% 64%;
+  --qp-status-running-ink: var(--qp-status-running);
   --qp-status-queued: 258 86% 72%;
+  --qp-status-queued-ink: 258 86% 76%;
   --qp-status-warning: 38 92% 60%;
+  --qp-status-warning-ink: var(--qp-status-warning);
   --qp-status-danger: 352 82% 70%;
+  --qp-status-danger-ink: var(--qp-status-danger);
   --qp-status-neutral: 215 16% 68%;
+  --qp-status-neutral-ink: var(--qp-status-neutral);
   --qp-status-paused: 27 96% 64%;
+  --qp-status-paused-ink: var(--qp-status-paused);
   --qp-status-success-soft: 145 58% 62% / 12%;
   --qp-status-running-soft: 198 93% 64% / 12%;
   --qp-status-queued-soft: 258 86% 72% / 12%;
@@ -271,36 +293,59 @@ body {
   color: hsl(var(--qp-text-primary)) !important;
 }
 
+/* An open single-select remains enabled. Antdv fades its entire value wrapper,
+   including the combobox input, to 25% opacity. Keep the current value readable
+   while the list is open; its separate search-value visibility rule is intact. */
+.ant-select-single.ant-select-open:not(
+    .ant-select-disabled,
+    .ant-select-customize
+  )
+  .ant-select-content-has-value:not(.ant-select-content-has-search-value) {
+  opacity: 1;
+}
+
 .qp-tone {
   --qp-tone-color: var(--qp-status-neutral);
+  --qp-tone-ink: var(--qp-status-neutral-ink);
 }
 
 .qp-tone[data-tone='success'] {
   --qp-tone-color: var(--qp-status-success);
+  --qp-tone-ink: var(--qp-status-success-ink);
 }
 
 .qp-tone[data-tone='running'] {
   --qp-tone-color: var(--qp-status-running);
+  --qp-tone-ink: var(--qp-status-running-ink);
 }
 
 .qp-tone[data-tone='queued'] {
   --qp-tone-color: var(--qp-status-queued);
+  --qp-tone-ink: var(--qp-status-queued-ink);
 }
 
 .qp-tone[data-tone='warning'] {
   --qp-tone-color: var(--qp-status-warning);
+  --qp-tone-ink: var(--qp-status-warning-ink);
 }
 
 .qp-tone[data-tone='danger'] {
   --qp-tone-color: var(--qp-status-danger);
+  --qp-tone-ink: var(--qp-status-danger-ink);
 }
 
 .qp-tone[data-tone='paused'] {
   --qp-tone-color: var(--qp-status-paused);
+  --qp-tone-ink: var(--qp-status-paused-ink);
 }
 
 .qp-tone[data-tone='neutral'] {
   --qp-tone-color: var(--qp-status-neutral);
+  --qp-tone-ink: var(--qp-status-neutral-ink);
+}
+
+.qp-tone[data-tone='category'] {
+  --qp-tone-ink: var(--qp-text-primary);
 }
 
 .qp-tone[data-category-hue='1'] {

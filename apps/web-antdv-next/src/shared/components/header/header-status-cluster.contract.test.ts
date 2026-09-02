@@ -40,7 +40,7 @@ describe('header status cluster contract', () => {
   it('renders runtime glyphs as one equally sized icon row', () => {
     expect(layout).toContain('<WsStatusBadge />');
     expect(layout).toContain('<SystemStatusIndicator />');
-    expect(layout).toContain('<RuntimeModeIndicator />');
+    expect(layout).toContain('<EntryAuthorizationPolicyIndicator />');
     expect(layout).toContain('<KillSwitchIndicator />');
     expect(layout).toContain('hidden items-center md:flex');
     expect(layout).not.toContain('header-right-20');
@@ -59,6 +59,7 @@ describe('header status cluster contract', () => {
   });
 
   it('paints content tags as outlined chips', () => {
+    expect(chip).toContain('color: hsl(var(--qp-tone-ink))');
     expect(chip).toContain('border: 1px solid hsl(var(--qp-tone-color) / 46%)');
     expect(chip).toContain('background: hsl(var(--qp-tone-color) / 10%)');
     expect(chip).toContain('qp-status-chip__label');

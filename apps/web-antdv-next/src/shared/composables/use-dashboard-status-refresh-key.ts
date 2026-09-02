@@ -17,9 +17,9 @@ export interface DashboardStatusRefreshKeys {
    * `loadOverview` → MotionGroup re-enter → visible flicker.
    */
   overviewRefreshKey: ComputedRef<string>;
-  /** Pipeline counters depend on phase + auto-execution / reconciliation rollup. */
+  /** Pipeline counters depend on phase + entry authorization / reconciliation rollup. */
   pipelineRefreshKey: ComputedRef<string>;
-  /** Recovery depends on the full recovery rollup + kill-switch + runtime mode. */
+  /** Recovery depends on the full recovery rollup + kill-switch + runtime-control revision. */
   recoveryRefreshKey: ComputedRef<string>;
 }
 
@@ -33,7 +33,7 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
     }
     const killSwitch = status.kill_switch;
     return [
-      status.quant_runtime_mode,
+      status.entry_authorization_policy,
       status.operational_phase.phase,
       killSwitch.state,
       killSwitch.requires_operator_ack,
@@ -50,7 +50,7 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
     const recovery = status.execution_recovery;
     return [
       status.operational_phase.phase,
-      recovery.auto_execution_blocked,
+      recovery.policy_automatic_blocked,
       recovery.unresolvable_count,
       recovery.next_steps.join(','),
     ].join('|');
@@ -64,7 +64,7 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
     const recovery = status.execution_recovery;
     const killSwitch = status.kill_switch;
     return [
-      recovery.auto_execution_blocked,
+      recovery.policy_automatic_blocked,
       recovery.has_unresolvable_reconciliation,
       recovery.unresolvable_count,
       recovery.kill_switch_requires_ack,
@@ -72,7 +72,7 @@ export function useDashboardStatusRefreshKey(): DashboardStatusRefreshKeys {
       recovery.next_steps.join(','),
       killSwitch.state,
       killSwitch.requires_operator_ack,
-      status.quant_runtime_mode,
+      status.entry_authorization_policy,
     ].join('|');
   });
 

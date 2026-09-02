@@ -1,8 +1,8 @@
 import type { CreateIntentGateInput } from './use-create-intent-gate';
 
 import {
+  ENTRY_AUTHORIZATION_POLICIES,
   KILL_SWITCH_STATES,
-  QUANT_RUNTIME_MODES,
   RECOMMENDATION_REPORT_STATUSES,
   RECOMMENDATION_STATUSES,
 } from '@vben/types';
@@ -19,13 +19,9 @@ function recommendation(
   return {
     active_order_intent_id: null,
     execution_eligibility: {
-      approval_required: false,
-      auto_policy_id: null,
-      eligible_modes: [
-        QUANT_RUNTIME_MODES.semiAuto,
-        QUANT_RUNTIME_MODES.autoExecution,
-      ],
-      ineligibility_reasons: [],
+      blockers: [],
+      ceiling: 'policy_automatic',
+      policy_binding: 'policy-v1',
     },
     report_status: RECOMMENDATION_REPORT_STATUSES.published,
     trade_plan: {
@@ -46,10 +42,11 @@ function input(
 ): CreateIntentGateInput {
   return {
     canCreate: true,
+    entryAuthorizationPolicy:
+      ENTRY_AUTHORIZATION_POLICIES.operatorApprovalRequired,
     killSwitchState: KILL_SWITCH_STATES.closed,
     now: NOW,
     recommendation: recommendation(),
-    runtimeMode: QUANT_RUNTIME_MODES.semiAuto,
     ...overrides,
   };
 }
@@ -68,18 +65,11 @@ describe('evaluateCreateIntentGate', () => {
     );
   });
 
-  it('blocks in report_only mode (not dry-run)', () => {
+  it('blocks before the authorization policy is known', () => {
     expect(
-      evaluateCreateIntentGate(
-        input({ runtimeMode: QUANT_RUNTIME_MODES.reportOnly }),
-      ).reason,
-    ).toBe('mode');
-  });
-
-  it('blocks before the runtime mode is known', () => {
-    expect(evaluateCreateIntentGate(input({ runtimeMode: null })).reason).toBe(
-      'mode',
-    );
+      evaluateCreateIntentGate(input({ entryAuthorizationPolicy: null }))
+        .reason,
+    ).toBe('authorizationPolicy');
   });
 
   it('blocks when the kill-switch is not closed', () => {
@@ -96,61 +86,56 @@ describe('evaluateCreateIntentGate', () => {
     ).toBe('killSwitch');
   });
 
-  it('blocks when the current mode is not eligible', () => {
+  it('blocks when the recommendation is analysis only', () => {
     const rec = recommendation({
       execution_eligibility: {
-        approval_required: false,
-        auto_policy_id: null,
-        eligible_modes: [QUANT_RUNTIME_MODES.autoExecution],
-        ineligibility_reasons: [],
+        blockers: [],
+        ceiling: 'analysis_only',
+        policy_binding: null,
       },
     });
     expect(
       evaluateCreateIntentGate(
         input({
           recommendation: rec,
-          runtimeMode: QUANT_RUNTIME_MODES.semiAuto,
         }),
       ).reason,
     ).toBe('eligibility');
   });
 
-  it('blocks auto_execution when ineligibility reasons are present', () => {
+  it('blocks policy automatic authorization when blockers are present', () => {
     const rec = recommendation({
       execution_eligibility: {
-        approval_required: false,
-        auto_policy_id: null,
-        eligible_modes: [
-          QUANT_RUNTIME_MODES.semiAuto,
-          QUANT_RUNTIME_MODES.autoExecution,
-        ],
-        ineligibility_reasons: ['automation_cap_exceeded'],
+        blockers: ['automation_cap_exceeded'],
+        ceiling: 'policy_automatic',
+        policy_binding: 'policy-v1',
       },
     });
     expect(
       evaluateCreateIntentGate(
         input({
           recommendation: rec,
-          runtimeMode: QUANT_RUNTIME_MODES.autoExecution,
+          entryAuthorizationPolicy:
+            ENTRY_AUTHORIZATION_POLICIES.policyAutomatic,
         }),
       ).reason,
     ).toBe('eligibility');
   });
 
-  it('allows semi_auto even when ineligibility reasons are present', () => {
+  it('allows operator approval below a policy-automatic ceiling', () => {
     const rec = recommendation({
       execution_eligibility: {
-        approval_required: true,
-        auto_policy_id: null,
-        eligible_modes: [QUANT_RUNTIME_MODES.semiAuto],
-        ineligibility_reasons: ['automation_cap_exceeded'],
+        blockers: ['automation_cap_exceeded'],
+        ceiling: 'policy_automatic',
+        policy_binding: 'policy-v1',
       },
     });
     expect(
       evaluateCreateIntentGate(
         input({
           recommendation: rec,
-          runtimeMode: QUANT_RUNTIME_MODES.semiAuto,
+          entryAuthorizationPolicy:
+            ENTRY_AUTHORIZATION_POLICIES.operatorApprovalRequired,
         }),
       ).enabled,
     ).toBe(true);

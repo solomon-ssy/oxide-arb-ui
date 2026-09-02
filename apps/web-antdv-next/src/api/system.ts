@@ -1,17 +1,21 @@
 import type {
+  AccountRecoveryIncidentView,
   ActionEligibilityView,
+  EntryAuthorizationTransitionReport,
   ExchangeHistoryQuarantinePageView,
   ExchangeHistoryQuarantineQuery,
+  FinalizeAccountRecoveryRequest,
   FreshBootProgressView,
   FreshBootRunDetailView,
   FreshBootRunProgressView,
   KillSwitchView,
-  QuantModeTransitionReport,
+  ReconcileAccountRecoveryRequest,
   RetryFreshBootRunRequest,
   RuntimeControlSnapshot,
+  SealAccountRecoveryRequest,
+  SetEntryAuthorizationPolicyRequest,
   SetKillSwitchRequest,
   SupersedeFreshBootRunRequest,
-  SwitchQuantModeRequest,
   SwitchSettlementWritePolicyRequest,
   SystemControlPlaneStatus,
 } from '@vben/types';
@@ -28,9 +32,60 @@ export namespace SystemApi {
   export const freshBoot = `${base}/fresh-boot`;
   export const exchangeHistoryQuarantines = `${base}/exchange-history/quarantines`;
   export const runtimeControls = `${base}/runtime-controls`;
-  export const quantMode = `${runtimeControls}/quant-mode`;
+  export const entryAuthorizationPolicy = `${runtimeControls}/entry-authorization-policy`;
   export const settlementWritePolicy = `${runtimeControls}/settlement-write-policy`;
   export const killSwitch = `${runtimeControls}/kill-switch`;
+  export const recoveryIncident = (id: string) =>
+    `${base}/execution-recovery/incidents/${id}`;
+  export const activeRecoveryIncident = `${base}/execution-recovery/incidents/active`;
+}
+
+export async function getAccountRecoveryIncident(id: string) {
+  return requestClient.get<AccountRecoveryIncidentView>(
+    SystemApi.recoveryIncident(id),
+  );
+}
+
+export async function getActiveAccountRecoveryIncident() {
+  return requestClient.get<AccountRecoveryIncidentView | null>(
+    SystemApi.activeRecoveryIncident,
+  );
+}
+
+export async function pauseAndReconcileAccountRecovery(
+  id: string,
+  body: ReconcileAccountRecoveryRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<AccountRecoveryIncidentView>(
+    `${SystemApi.recoveryIncident(id)}/pause-and-reconcile`,
+    body,
+    ctx,
+  );
+}
+
+export async function sealAccountRecoveryIncident(
+  id: string,
+  body: SealAccountRecoveryRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<AccountRecoveryIncidentView>(
+    `${SystemApi.recoveryIncident(id)}/seal`,
+    body,
+    ctx,
+  );
+}
+
+export async function unpauseAndFinalizeAccountRecovery(
+  id: string,
+  body: FinalizeAccountRecoveryRequest,
+  ctx: GovernedContext,
+) {
+  return governedPost<AccountRecoveryIncidentView>(
+    `${SystemApi.recoveryIncident(id)}/unpause-and-finalize`,
+    body,
+    ctx,
+  );
 }
 
 /** `GET /system/status` — the operator system snapshot. */
@@ -104,15 +159,15 @@ export async function getRuntimeControls() {
 }
 
 /**
- * `POST /system/quant-mode` — governed runtime mode hot-swap. Callers should
+ * Governed entry-authorization transition. Callers should
  * wait for the WS `system.status` echo instead of optimistic local updates.
  */
-export async function switchQuantMode(
-  body: SwitchQuantModeRequest,
+export async function setEntryAuthorizationPolicy(
+  body: SetEntryAuthorizationPolicyRequest,
   ctx: GovernedContext,
 ) {
-  return governedPost<QuantModeTransitionReport>(
-    SystemApi.quantMode,
+  return governedPost<EntryAuthorizationTransitionReport>(
+    SystemApi.entryAuthorizationPolicy,
     body,
     ctx,
   );

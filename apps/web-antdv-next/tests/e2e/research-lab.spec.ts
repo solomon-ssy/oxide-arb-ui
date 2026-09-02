@@ -1,5 +1,64 @@
 import { expect, readFirstApiItem, test } from './fixtures';
 import { expectReleaseQuality, waitForUiReady } from './release-closure';
+import { flushVisualFrame } from './stable-screenshot';
+
+test('lineage retains a valid viewport across a collapsed panel', async ({
+  authenticatedPage: page,
+  browserAudit,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/research/lab?module=lineage');
+  await waitForUiReady(page, browserAudit);
+  const viewport = page.locator('.lineage-viewport');
+  await expect(page.locator('.lineage-node')).toHaveCount(6);
+  await expect
+    .poll(async () =>
+      viewport.evaluate(
+        (element) => element.clientWidth > 0 && element.clientHeight > 0,
+      ),
+    )
+    .toBe(true);
+  // Data can be ready while a route transition still moves an ancestor.
+  await expect
+    .poll(() =>
+      viewport.evaluate((element) => {
+        for (
+          let ancestor: Element | null = element;
+          ancestor;
+          ancestor = ancestor.parentElement
+        ) {
+          if (
+            ancestor
+              .getAnimations()
+              .some(
+                (animation) =>
+                  animation.pending || animation.playState === 'running',
+              )
+          )
+            return false;
+        }
+        return true;
+      }),
+    )
+    .toBe(true);
+  await flushVisualFrame(page);
+  const original = await viewport.boundingBox();
+  expect(original).not.toBeNull();
+  await page.setViewportSize({ width: 1, height: 1 });
+  await expect
+    .poll(async () =>
+      viewport.evaluate(
+        (element) => element.clientWidth > 0 && element.clientHeight > 0,
+      ),
+    )
+    .toBe(true);
+  await expect(page.locator('.lineage-node')).toHaveCount(6);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(async () => viewport.boundingBox()).toEqual(original);
+  await expect(page.locator('.lineage-node')).toHaveCount(6);
+  await waitForUiReady(page, browserAudit);
+  await expectReleaseQuality(page);
+});
 
 interface ModelSpecRow {
   model_spec_id: string;

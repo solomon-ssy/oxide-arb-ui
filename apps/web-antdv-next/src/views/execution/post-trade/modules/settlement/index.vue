@@ -345,7 +345,8 @@ watch(
                     :color="
                       readiness.settlement_write_policy === 'disabled'
                         ? 'error'
-                        : readiness.settlement_write_policy === 'auto'
+                        : readiness.settlement_write_policy ===
+                            'policy_automatic'
                           ? 'success'
                           : 'warning'
                     "

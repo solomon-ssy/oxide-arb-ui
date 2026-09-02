@@ -42,7 +42,7 @@ const emptyPage = {
 const [Grid, gridApi] = useVbenVxeGrid<OrderIntentView>({
   formOptions: {
     schema: useIntentSearchSchema({
-      approval_status: approvalQueue.value ? 'pending' : undefined,
+      status: approvalQueue.value ? 'pending_authorization' : undefined,
     }),
   },
   gridOptions: {
@@ -60,13 +60,11 @@ const [Grid, gridApi] = useVbenVxeGrid<OrderIntentView>({
           const range = Array.isArray(formValues.range) ? formValues.range : [];
           const result = await handleRequest(() =>
             listOrderIntents({
-              approval_status: (formValues.approval_status as any) || undefined,
               from: (range[0] as string | undefined) || undefined,
               page: page.currentPage,
               recommendation_id:
                 (formValues.recommendation_id as string | undefined) ||
                 undefined,
-              runtime_mode: (formValues.runtime_mode as any) || undefined,
               size: page.pageSize,
               status: (formValues.status as any) || undefined,
               to: (range[1] as string | undefined) || undefined,

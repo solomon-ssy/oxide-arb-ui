@@ -68,7 +68,6 @@ const [Grid, gridApi] = useVbenVxeGrid<QuantReportView>({
               kind: (formValues.kind as any) || undefined,
               page: page.currentPage,
               route: (formValues.route as any) || undefined,
-              runtime_mode: (formValues.runtime_mode as any) || undefined,
               size: page.pageSize,
               status: (formValues.status as any) || undefined,
               to: (range[1] as string | undefined) || undefined,

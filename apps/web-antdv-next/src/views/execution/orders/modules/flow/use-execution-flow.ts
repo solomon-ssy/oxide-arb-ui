@@ -1,5 +1,4 @@
 import type {
-  ApprovalStatus,
   EnumName,
   ExecutionOrderState,
   ExecutionOrderView,
@@ -24,7 +23,7 @@ import { formatDurationSecs } from '#/shared/components/format';
 
 export type ExecutionFlowStageKey =
   | 'admission'
-  | 'approval'
+  | 'authorization'
   | 'fill'
   | 'intent'
   | 'position'
@@ -65,14 +64,12 @@ export interface ExecutionFlowSnapshot {
 }
 
 const ACTIVE_INTENT = new Set<OrderIntentStatus>([
-  'approved',
-  'approved_by_policy',
-  'draft',
+  'admission_pending',
+  'authorized',
   'partially_filled',
-  'pending_approval',
+  'pending_authorization',
   'submitted',
 ]);
-const ACTIVE_APPROVAL = new Set<ApprovalStatus>(['pending']);
 const ACTIVE_ORDER = new Set<ExecutionOrderState>([
   'accepted',
   'cancel_requested',
@@ -127,7 +124,7 @@ export function buildExecutionFlowStages(
   const { intent, order, position, reconciliation, settlement } = snapshot;
   const intentId = intent?.order_intent_id;
   const orderId = order?.execution_order_id;
-  const positionId = position?.position_id;
+  const positionLotId = position?.strategy_position_lot_id;
   const reconciliationId = reconciliation?.reconciliation_id;
   const settlementId = settlement?.settlement_redeem_id;
 
@@ -153,15 +150,18 @@ export function buildExecutionFlowStages(
       workspace: '/execution/orders',
     },
     {
-      active: !!intent && ACTIVE_APPROVAL.has(intent.approval_status),
+      active: intent?.status === 'pending_authorization',
       count: intent ? 1 : 0,
-      duration: durationBetween(intent?.created_at, intent?.approved_at),
+      duration: durationBetween(
+        intent?.created_at,
+        intent?.authorization_evidence?.authorized_at,
+      ),
       entity: 'order-intent',
       entityId: intentId,
-      key: 'approval',
-      labelKey: 'page.execution.flow.stage.approval',
+      key: 'authorization',
+      labelKey: 'page.execution.flow.stage.authorization',
       module: 'approvals',
-      occurredAt: intent?.approved_at,
+      occurredAt: intent?.authorization_evidence?.authorized_at,
       route: entityRoute(
         '/execution/orders',
         'approvals',
@@ -169,14 +169,14 @@ export function buildExecutionFlowStages(
         intentId,
       ),
       scopeKey: 'page.execution.flow.scope.intentBound',
-      status: { name: 'ApprovalStatus', value: intent?.approval_status },
+      status: { name: 'OrderIntentStatus', value: intent?.status },
       workspace: '/execution/orders',
     },
     {
       active: !!intent && ACTIVE_INTENT.has(intent.status) && !order,
       count: intent?.admission_trace_ref ? 1 : 0,
       duration: durationBetween(
-        intent?.approved_at ?? intent?.created_at,
+        intent?.authorization_evidence?.authorized_at ?? intent?.created_at,
         order?.created_at ?? intent?.updated_at,
       ),
       entity: 'order-intent',
@@ -246,7 +246,7 @@ export function buildExecutionFlowStages(
         position?.closed_at ?? position?.updated_at,
       ),
       entity: 'position',
-      entityId: positionId,
+      entityId: positionLotId,
       key: 'position',
       labelKey: 'page.execution.flow.stage.position',
       module: 'positions',
@@ -255,7 +255,7 @@ export function buildExecutionFlowStages(
         '/execution/portfolio',
         'positions',
         'position',
-        positionId,
+        positionLotId,
       ),
       scopeKey: 'page.execution.flow.scope.intentBound',
       status: { name: 'PositionLedgerState', value: position?.state },

@@ -14,7 +14,7 @@ function controls(
     changed_by: 'system-admin',
     kill_switch_requires_ack: false,
     kill_switch_state: 'closed',
-    quant_runtime_mode: 'report_only',
+    entry_authorization_policy: 'operator_approval_required',
     reason: 'test fixture',
     revision,
     settlement_write_policy: 'disabled',
@@ -32,8 +32,8 @@ describe('useSystemStore runtime controls', () => {
     store.applyRuntimeControls(controls(4));
     store.applyRuntimeControls(
       controls(3, {
-        quant_runtime_mode: 'auto_execution',
-        settlement_write_policy: 'auto',
+        entry_authorization_policy: 'policy_automatic',
+        settlement_write_policy: 'operator_approval',
       }),
     );
 

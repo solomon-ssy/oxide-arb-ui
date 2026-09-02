@@ -34,6 +34,7 @@ import { useSystemStore } from '#/store';
 
 import { useCreateIntentAction } from './use-create-intent-action';
 import { evaluateCreateIntentGate } from './use-create-intent-gate';
+import RecommendationEconomicFeedback from './widgets/recommendation-economic-feedback.vue';
 import RecommendationEvidence from './widgets/recommendation-evidence.vue';
 import RecommendationFactors from './widgets/recommendation-factors.vue';
 import RecommendationPlans from './widgets/recommendation-plans.vue';
@@ -90,9 +91,10 @@ const entryPrice = computed(() =>
 const gate = computed(() =>
   evaluateCreateIntentGate({
     canCreate,
+    entryAuthorizationPolicy:
+      systemStore.status?.entry_authorization_policy ?? null,
     killSwitchState: systemStore.status?.kill_switch.state ?? null,
     recommendation: props.recommendation,
-    runtimeMode: systemStore.status?.quant_runtime_mode ?? null,
   }),
 );
 
@@ -530,30 +532,21 @@ function onCreateIntent() {
       >
         <Descriptions :column="1" bordered size="small">
           <DescriptionsItem
-            :label="$t('page.quantRecommendations.eligibility.eligibleModes')"
+            :label="$t('page.quantRecommendations.eligibility.ceiling')"
           >
-            <template v-if="eligibility.eligible_modes.length > 0">
-              <EnumTag
-                v-for="mode in eligibility.eligible_modes"
-                :key="mode"
-                context="recommendation-detail"
-                name="QuantRuntimeMode"
-                :value="mode"
-              />
-            </template>
-            <span v-else>{{
-              $t('page.quantRecommendations.eligibility.none')
-            }}</span>
+            <EnumTag
+              context="recommendation-detail"
+              name="ExecutionAuthorityCeiling"
+              :value="eligibility.ceiling"
+            />
           </DescriptionsItem>
           <DescriptionsItem
-            :label="
-              $t('page.quantRecommendations.eligibility.ineligibilityReasons')
-            "
+            :label="$t('page.quantRecommendations.eligibility.blockers')"
           >
             <BulletList
-              v-if="eligibility.ineligibility_reasons.length > 0"
+              v-if="eligibility.blockers.length > 0"
               :items="
-                eligibility.ineligibility_reasons.map((reason) =>
+                eligibility.blockers.map((reason) =>
                   $t(`enum.ineligibilityReason.${reason}`),
                 )
               "
@@ -563,24 +556,20 @@ function onCreateIntent() {
             }}</span>
           </DescriptionsItem>
           <DescriptionsItem
-            :label="
-              $t('page.quantRecommendations.eligibility.approvalRequired')
-            "
-          >
-            {{
-              eligibility.approval_required ? $t('common.yes') : $t('common.no')
-            }}
-          </DescriptionsItem>
-          <DescriptionsItem
-            :label="$t('page.quantRecommendations.eligibility.autoPolicy')"
+            :label="$t('page.quantRecommendations.eligibility.policyBinding')"
           >
             <span class="font-mono text-xs">
-              {{ eligibility.auto_policy_id ?? EMPTY_PLACEHOLDER }}
+              {{ eligibility.policy_binding ?? EMPTY_PLACEHOLDER }}
             </span>
           </DescriptionsItem>
         </Descriptions>
       </Card>
     </div>
+
+    <RecommendationEconomicFeedback
+      :recommendation-id="recommendation.recommendation_id"
+      :route="recommendation.route"
+    />
 
     <Card
       size="small"

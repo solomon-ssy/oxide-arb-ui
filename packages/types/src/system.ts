@@ -1,7 +1,7 @@
 import type { IsoDateTime } from './common';
 import type {
+  EntryAuthorizationPolicy,
   KillSwitchState,
-  QuantRuntimeMode,
   SettlementWritePolicy,
   TrainingDatasetStatus,
 } from './enums';
@@ -458,7 +458,7 @@ export interface ExchangeHistoryQuarantineQuery {
 
 /** `GET /system/status` — the operator system snapshot. */
 export interface SystemStatus {
-  quant_runtime_mode: QuantRuntimeMode;
+  entry_authorization_policy: EntryAuthorizationPolicy;
   uptime_secs: number;
   active_markets: number;
   catalog: CatalogState;
@@ -475,8 +475,7 @@ export type CapabilityReason =
   | 'kill_switch_blocks_entries'
   | 'no_serving_evidence'
   | 'operational_phase_blocks_reports'
-  | 'operational_phase_blocks_submission'
-  | 'runtime_mode_report_only';
+  | 'operational_phase_blocks_submission';
 
 export interface CapabilityView {
   enabled: boolean;
@@ -515,7 +514,7 @@ export interface SystemControlPlaneStatus extends SystemStatus {
 
 /** Coherent singleton returned by `GET /system/runtime-controls`. */
 export interface RuntimeControlSnapshot {
-  quant_runtime_mode: QuantRuntimeMode;
+  entry_authorization_policy: EntryAuthorizationPolicy;
   settlement_write_policy: SettlementWritePolicy;
   kill_switch_state: KillSwitchState;
   kill_switch_requires_ack: boolean;
@@ -536,28 +535,28 @@ export interface PreflightCheck {
   detail: string;
 }
 
-/** Preflight evidence for an upgrade mode transition. */
+/** Preflight evidence for an entry-authorization policy upgrade. */
 export interface PreflightReport {
-  target: QuantRuntimeMode;
+  target: EntryAuthorizationPolicy;
   checks: PreflightCheck[];
   /** `true` when every hard check passed (the transition may proceed). */
   passed: boolean;
 }
 
 /**
- * `POST /system/quant-mode` result (governed mode hot-swap). `preflight` is
+ * Governed entry-authorization transition result. `preflight` is
  * `null` for no-ops and downgrades, which skip business preflight.
  */
-export interface QuantModeTransitionReport {
-  from: QuantRuntimeMode;
-  to: QuantRuntimeMode;
+export interface EntryAuthorizationTransitionReport {
+  from: EntryAuthorizationPolicy;
+  to: EntryAuthorizationPolicy;
   preflight: null | PreflightReport;
 }
 
-/** `POST /system/quant-mode` request body. */
-export interface SwitchQuantModeRequest {
+/** Entry-authorization policy transition request body. */
+export interface SetEntryAuthorizationPolicyRequest {
   expected_revision: number;
-  mode: QuantRuntimeMode;
+  policy: EntryAuthorizationPolicy;
   reason: string;
 }
 

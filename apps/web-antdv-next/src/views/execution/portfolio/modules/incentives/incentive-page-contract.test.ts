@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { createApp, h, nextTick } from 'vue';
+
+import Select from 'antdv-next/dist/select/index';
 import { describe, expect, it } from 'vitest';
 
 const incentives = readFileSync(
@@ -39,8 +42,41 @@ describe('maker rebate UI closure', () => {
   it('keeps mobile controls single-column and state text explicit', () => {
     expect(incentives).toContain('grid-cols-1');
     expect(incentives).toContain('sm:flex-row');
+    expect(incentives).toContain('table-layout="fixed"');
     expect(incentives).toContain('reconciliation.health');
     expect(incentives).toContain('retraction');
+  });
+
+  it.each(['kind', 'stage', 'programDate'])(
+    'names the %s filter independently of its selected value',
+    (field) => {
+      expect(incentives).toContain(
+        `:aria-label="$t('page.quantAccount.incentives.ledger.${field}')"`,
+      );
+    },
+  );
+
+  it('forwards the select label to the actual combobox input', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const app = createApp({
+      render: () =>
+        h(Select, {
+          'aria-label': 'Incentive stage',
+          options: [{ label: 'Wallet credited', value: 'wallet_credited' }],
+          value: 'wallet_credited',
+        }),
+    });
+    try {
+      app.mount(host);
+      await nextTick();
+      expect(
+        host.querySelector('input[role=combobox]')?.getAttribute('aria-label'),
+      ).toBe('Incentive stage');
+    } finally {
+      app.unmount();
+      host.remove();
+    }
   });
 
   it('shows nominal, objective, terms, threshold, and risk separately', () => {

@@ -256,7 +256,7 @@ function policyDocument(
   payload: PolicyPayload,
 ): PolicyDocument {
   switch (kind) {
-    case 'execution_automation_policy': {
+    case 'execution_authorization_policy': {
       return { document: payload, resource_kind: kind } as PolicyDocument;
     }
     case 'execution_risk_policy': {
@@ -656,7 +656,7 @@ async function activateRevision() {
       confirmWord: rollbackMode.value
         ? $t('page.config.workflow.rollbackConfirmWord')
         : undefined,
-      danger: rollbackMode.value || kind === 'execution_automation_policy',
+      danger: rollbackMode.value || kind === 'execution_authorization_policy',
       details: [
         {
           label: $t('page.config.resource.expectedGeneration'),

@@ -4,9 +4,7 @@ import type { WorkspaceDomain, WorkspaceModule } from './workspace-shell.types';
 import { computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { IconifyIcon } from '@vben/icons';
-
-import { Alert, Flex, TabPane, Tabs } from 'antdv-next';
+import { Alert, Flex } from 'antdv-next';
 import { AnimatePresence, motion, useReducedMotion } from 'motion-v';
 
 import { $t } from '#/locales';
@@ -18,6 +16,7 @@ import {
   isLandingModule,
   resolveWorkspaceModule,
 } from './workspace-landing';
+import WorkspaceTabs from './workspace-tabs.vue';
 
 defineOptions({ name: 'WorkspaceShell' });
 
@@ -140,36 +139,31 @@ onMounted(() => {
       <p>{{ $t(description) }}</p>
     </header>
 
-    <Tabs v-model:active-key="tabKey" class="workspace-tabs">
-      <TabPane v-for="item in landingModules" :key="item.key">
-        <template #tab>
-          <span class="workspace-tab">
-            <IconifyIcon :icon="item.icon" />
-            {{ $t(item.label) }}
-          </span>
-        </template>
-      </TabPane>
-    </Tabs>
-
-    <WorkspaceInspectorHost>
-      <Alert
-        v-if="!activeModule"
-        :message="$t('page.workspace.invalidModule')"
-        show-icon
-        type="error"
-      />
-      <AnimatePresence v-else :initial="false" mode="wait">
-        <motion.div
-          :key="activeModule.key"
-          :animate="reducedMotion ? undefined : { y: 0 }"
-          :exit="reducedMotion ? undefined : { y: -4 }"
-          :initial="reducedMotion ? false : { y: 8 }"
-          :transition="{ duration: reducedMotion ? 0 : 0.18 }"
-        >
-          <component :is="activeModule.component" />
-        </motion.div>
-      </AnimatePresence>
-    </WorkspaceInspectorHost>
+    <WorkspaceTabs
+      v-model="tabKey"
+      :label="$t(title)"
+      :modules="landingModules"
+    >
+      <WorkspaceInspectorHost>
+        <Alert
+          v-if="!activeModule"
+          :message="$t('page.workspace.invalidModule')"
+          show-icon
+          type="error"
+        />
+        <AnimatePresence v-else :initial="false" mode="wait">
+          <motion.div
+            :key="activeModule.key"
+            :animate="reducedMotion ? undefined : { y: 0 }"
+            :exit="reducedMotion ? undefined : { y: -4 }"
+            :initial="reducedMotion ? false : { y: 8 }"
+            :transition="{ duration: reducedMotion ? 0 : 0.18 }"
+          >
+            <component :is="activeModule.component" />
+          </motion.div>
+        </AnimatePresence>
+      </WorkspaceInspectorHost>
+    </WorkspaceTabs>
   </Flex>
 </template>
 
@@ -208,6 +202,8 @@ onMounted(() => {
 
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   max-width: 1600px;
   min-height: calc(100dvh - var(--vben-header-height, 48px));
   padding: 16px 16px 28px;
@@ -348,26 +344,6 @@ onMounted(() => {
   color: hsl(var(--qp-text-secondary));
 }
 
-.workspace-tabs {
-  margin-bottom: -16px;
-}
-
-.workspace-tabs :deep(.ant-tabs-ink-bar) {
-  height: 2px;
-  background: var(--workspace-gradient);
-  box-shadow: var(--qp-shadow-workspace);
-}
-
-.workspace-tabs :deep(.ant-tabs-tab-active) {
-  background: transparent;
-}
-
-.workspace-tabs :deep(.ant-tabs-tab:focus-visible) {
-  outline: 2px solid hsl(var(--workspace-accent));
-  outline-offset: 2px;
-  box-shadow: var(--qp-shadow-focus);
-}
-
 .workspace-shell :deep(.ant-btn-primary:not(.ant-btn-dangerous)),
 .workspace-shell
   :deep(.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-dangerous)) {
@@ -385,29 +361,9 @@ onMounted(() => {
   box-shadow: var(--qp-shadow-focus);
 }
 
-.workspace-tab {
-  display: inline-flex;
-  gap: 7px;
-  align-items: center;
-}
-
 @media (max-width: 640px) {
   .workspace-shell {
     padding-inline: 8px;
-  }
-
-  .workspace-tab svg {
-    display: none;
-  }
-
-  .workspace-tabs :deep(.ant-tabs-nav-wrap) {
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scrollbar-width: thin;
-  }
-
-  .workspace-tabs :deep(.ant-tabs-nav-list) {
-    flex: none;
   }
 }
 </style>

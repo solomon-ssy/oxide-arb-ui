@@ -2,13 +2,19 @@ import type { RunBacktestRequest } from '@vben/types';
 
 export type BacktestRequestBody = Omit<RunBacktestRequest, 'reason'>;
 
-/**
- * Build the only bindings an Evaluation replay may emit. Unknown legacy form
- * fields are deliberately ignored instead of being forwarded to the wire.
- */
+const BACKTEST_FIELDS = new Set([
+  'comparison_model_version_id',
+  'decision_policy_snapshot_id',
+  'evaluation_dataset_id',
+]);
+
+/** Build the exact current bindings an Evaluation replay may emit. */
 export function backtestRequestBody(
   values: Record<string, unknown>,
 ): BacktestRequestBody | null {
+  if (Object.keys(values).some((key) => !BACKTEST_FIELDS.has(key))) {
+    return null;
+  }
   const evaluationDatasetId = values.evaluation_dataset_id;
   const decisionPolicySnapshotId = values.decision_policy_snapshot_id;
   const comparisonModelVersionId = values.comparison_model_version_id;

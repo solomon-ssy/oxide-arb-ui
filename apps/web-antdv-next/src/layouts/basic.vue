@@ -17,8 +17,8 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { $t } from '#/locales';
 import ActivityCenter from '#/shared/components/header/activity-center.vue';
 import CommandPalette from '#/shared/components/header/command-palette.vue';
+import EntryAuthorizationPolicyIndicator from '#/shared/components/header/entry-authorization-policy-indicator.vue';
 import KillSwitchIndicator from '#/shared/components/header/kill-switch-indicator.vue';
-import RuntimeModeIndicator from '#/shared/components/header/runtime-mode-indicator.vue';
 import SystemStatusIndicator from '#/shared/components/header/system-status-indicator.vue';
 import WsStatusBadge from '#/shared/components/header/ws-status-badge.vue';
 import PreflightResultDrawer from '#/shared/components/preflight-result-drawer.vue';
@@ -169,7 +169,7 @@ watch(
       <div class="hidden items-center md:flex">
         <WsStatusBadge />
         <SystemStatusIndicator />
-        <RuntimeModeIndicator />
+        <EntryAuthorizationPolicyIndicator />
         <KillSwitchIndicator />
       </div>
     </template>

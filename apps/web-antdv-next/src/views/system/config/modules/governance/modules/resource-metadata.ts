@@ -38,11 +38,11 @@ export const CONFIG_RESOURCE_META = {
     labelKey: 'page.config.resources.operationsPolicy.label',
     tone: 'violet',
   },
-  execution_automation_policy: {
+  execution_authorization_policy: {
     descriptionKey:
-      'page.config.resources.executionAutomationPolicy.description',
+      'page.config.resources.executionAuthorizationPolicy.description',
     icon: 'lucide:key-round',
-    labelKey: 'page.config.resources.executionAutomationPolicy.label',
+    labelKey: 'page.config.resources.executionAuthorizationPolicy.label',
     tone: 'sky',
   },
 } as const satisfies Record<ConfigResourceKind, ConfigResourceMeta>;

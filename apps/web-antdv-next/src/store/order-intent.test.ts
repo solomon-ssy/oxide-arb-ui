@@ -14,8 +14,7 @@ describe('useOrderIntentStore ws toast suppression', () => {
     order_intent_id: 'intent-1',
     reason: null,
     recommendation_id: 'rec-1',
-    runtime_mode: 'semi_auto' as const,
-    status: 'approved' as const,
+    status: 'authorized' as const,
   };
 
   it('shows WS toast by default', () => {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { TabsEmits, TabsProps } from './types';
 
+import { useTemplateRef } from 'vue';
+
 import { useForwardPropsEmits } from '@vben-core/composables';
 import { ChevronsLeft, ChevronsRight } from '@vben-core/icons';
 import { VbenScrollbar } from '@vben-core/shadcn-ui';
@@ -25,6 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<TabsEmits>();
 
 const forward = useForwardPropsEmits(props, emit);
+const tabsHostRef = useTemplateRef<HTMLElement>('tabsHost');
 
 const {
   handleScrollAt,
@@ -35,7 +38,7 @@ const {
   scrollIsAtLeft,
   scrollIsAtRight,
   showScrollButton,
-} = useTabsViewScroll(props);
+} = useTabsViewScroll(props, tabsHostRef);
 
 function onWheel(e: WheelEvent) {
   if (props.wheelable) {
@@ -49,7 +52,7 @@ useTabsDrag(props, emit);
 </script>
 
 <template>
-  <div class="flex h-full flex-1 overflow-hidden">
+  <div ref="tabsHost" class="flex h-full flex-1 overflow-hidden">
     <!-- 左侧滚动按钮 -->
     <span
       v-show="showScrollButton"

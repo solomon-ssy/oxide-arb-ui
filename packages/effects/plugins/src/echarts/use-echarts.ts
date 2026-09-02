@@ -23,6 +23,7 @@ import { usePreferences } from '@vben/preferences';
 import {
   tryOnUnmounted,
   useDebounceFn,
+  usePreferredReducedMotion,
   useResizeObserver,
   useWindowSize,
 } from '@vueuse/core';
@@ -38,9 +39,11 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
   let chartInstance: echarts.ECharts | null = null;
   let cacheOptions: EChartsOption = {};
   let cacheClear = true;
+  let awaitingRender = false;
   const isActiveRef = ref(false);
 
   const { isDark } = usePreferences();
+  const reducedMotion = usePreferredReducedMotion();
   const { height, width } = useWindowSize();
   const resizeHandler: () => void = useDebounceFn(resize, 200);
 
@@ -79,10 +82,12 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
     if (!el) {
       return;
     }
-    chartInstance = echarts.init(el, t ?? (isDark.value ? 'dark' : null));
+    const instance = echarts.init(el, t ?? (isDark.value ? 'dark' : null));
+    chartInstance = instance;
     el.dataset.echartsReady = 'false';
-    chartInstance.on('finished', () => {
-      if (chartInstance?.getDom() === el) {
+    instance.on('finished', () => {
+      if (awaitingRender && chartInstance === instance) {
+        awaitingRender = false;
         el.dataset.echartsReady = 'true';
       }
     });
@@ -90,11 +95,25 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
     return chartInstance;
   };
 
-  const layoutOptions = (options: EChartsOption): EChartsOption =>
-    applyCartesianLayout({
+  const layoutOptions = (options: EChartsOption): EChartsOption => {
+    const layout = applyCartesianLayout({
       ...options,
       ...getOptions.value,
     });
+    if (reducedMotion.value !== 'reduce') return layout;
+    const motion = {
+      animation: false,
+      animationDuration: 0,
+      animationDurationUpdate: 0,
+    };
+    return {
+      ...layout,
+      ...motion,
+      series: Array.isArray(layout.series)
+        ? layout.series.map((series) => ({ ...series, ...motion }))
+        : layout.series && { ...layout.series, ...motion },
+    };
+  };
 
   const paint = (clear: boolean): echarts.ECharts | null => {
     const el = getChartEl();
@@ -109,10 +128,15 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
       }
       chartInstance = instance;
     }
+    awaitingRender = false;
     chartInstance.getDom().dataset.echartsReady = 'false';
     if (clear) {
       chartInstance.clear();
     }
+    // clear() can synchronously emit finished for the discarded chart. Only
+    // the following option submission may complete this readiness cycle.
+    awaitingRender = true;
+    chartInstance.getDom().dataset.echartsReady = 'false';
     chartInstance.setOption(layoutOptions(cacheOptions));
     return chartInstance;
   };
@@ -153,6 +177,7 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
 
         const finalOption = layoutOptions(option);
 
+        awaitingRender = true;
         chartInstance.getDom().dataset.echartsReady = 'false';
         chartInstance.setOption(finalOption, {
           notMerge,
@@ -175,9 +200,11 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
       }
       return;
     }
+    awaitingRender = true;
+    chartInstance.getDom().dataset.echartsReady = 'false';
     chartInstance.resize({
       animation: {
-        duration: 300,
+        duration: reducedMotion.value === 'reduce' ? 0 : 300,
         easing: 'quadraticIn',
       },
     });
@@ -188,6 +215,12 @@ function useEcharts(chartRef: Ref<EchartsUIType>) {
   });
 
   useResizeObserver(chartRef as never, resizeHandler);
+
+  watch(reducedMotion, () => {
+    if (Object.keys(cacheOptions).length > 0) {
+      void renderEcharts(cacheOptions, cacheClear);
+    }
+  });
 
   watch([isDark, isActiveRef], () => {
     if (!unref(isActiveRef) || Object.keys(cacheOptions).length === 0) return;

@@ -32,11 +32,11 @@ const resources: ConfigResourceKind[] = [
   'model_routing',
   'report_schedule',
   'operations_policy',
-  'execution_automation_policy',
+  'execution_authorization_policy',
 ];
 
 const firstGroup: Record<ConfigResourceKind, string> = {
-  execution_automation_policy: 'semi_auto',
+  execution_authorization_policy: 'policy_automatic_limits',
   execution_risk_policy: 'portfolio/budget',
   model_routing: 'model/buy_routes',
   operations_policy: 'outcome_reconciliation',
@@ -67,16 +67,56 @@ function descriptor(
   };
 }
 
+function editorFixture(
+  props: InstanceType<typeof RuntimeResourceEditor>['$props'],
+) {
+  const host = document.createElement('div');
+  document.body.append(host);
+  return { app: createApp(RuntimeResourceEditor, { ...props }), host };
+}
+
 describe('runtime resource descriptor coverage', () => {
+  it('renders risk levels through canonical semantic chips', async () => {
+    const riskTones = {
+      critical: 'danger',
+      high: 'warning',
+      low: 'neutral',
+      medium: 'running',
+    } as const;
+    const fields = Object.keys(riskTones).map((level, index) => ({
+      ...descriptor(`/${level}`, index, 'selection'),
+      risk_level: level as RuntimeFieldDescriptor['risk_level'],
+    }));
+    const { app, host } = editorFixture({
+      fields,
+      modelValue: {} as PolicyDocument['document'],
+      resource: 'recommendation_policy',
+    });
+
+    try {
+      app.mount(host);
+      await nextTick();
+
+      for (const [level, tone] of Object.entries(riskTones)) {
+        const field = host.querySelector(`[data-config-pointer="/${level}"]`);
+        const chip = field?.querySelector<HTMLElement>('.qp-status-chip');
+        expect(chip?.dataset.tone).toBe(tone);
+        expect(chip?.textContent).toBe(`page.config.riskLevel.${level}`);
+        expect(field?.querySelector('.ant-tag')).toBeNull();
+      }
+    } finally {
+      app.unmount();
+      host.remove();
+    }
+  });
+
   for (const resource of resources) {
     it(`renders every ${resource} pointer exactly once`, async () => {
-      const host = document.createElement('div');
-      document.body.append(host);
       const fields = [
         descriptor('/alpha', 0, firstGroup[resource]),
         descriptor('/beta', 1, firstGroup[resource]),
       ];
-      const app = createApp(RuntimeResourceEditor, {
+      const { app, host } = editorFixture({
         fields,
         modelValue: {
           alpha: 'a',

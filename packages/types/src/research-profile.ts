@@ -13,7 +13,7 @@ export interface ResearchProfileRef {
   version: number;
 }
 
-export type ResearchEvaluationTrack = 'research_only' | 'semi_auto_candidate';
+export type ResearchEvaluationTrack = 'execution_candidate' | 'research_only';
 
 export type ResearchInformationRegime =
   | 'crypto_price'
@@ -61,8 +61,8 @@ export type ResearchAvailabilityPolicy =
   | { basis: 'ingestion_observed' };
 
 export type ServingAuthority =
-  | 'execution_eligible'
-  | 'report_only_with_live_l2';
+  | 'analysis_only_with_live_l2'
+  | 'execution_eligible';
 
 export interface ResearchProfileQualityGate {
   max_ambiguous_touch_rate: DecimalString;

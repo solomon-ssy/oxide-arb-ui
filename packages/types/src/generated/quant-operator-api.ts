@@ -3,10 +3,101 @@
  * Run `pnpm generate:quant-operator-api`; do not edit it by hand.
  */
 
+export type AccountRecoveryIncidentKind =
+  | 'account_mismatch'
+  | 'break_glass_restart'
+  | 'opening_inventory'
+  | 'unknown_external_execution';
+export type AccountRecoveryIncidentStatus = 'open' | 'reconciling' | 'sealed';
 /**
  * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
  */
 export type Usd = string;
+/**
+ * Number of shares (condition tokens).
+ */
+export type Shares = string;
+/**
+ * Typed reason an account recovery manifest cannot be sealed.
+ */
+export type AccountRecoveryMismatch =
+  | {
+      account_chain_execution_id: string;
+      candidate_lot_ids: string[];
+      kind: 'lot_allocation_required';
+      sold_shares: Shares;
+      token_id: string;
+    }
+  | {
+      account_chain_execution_id: string;
+      kind: 'clean_funder_required';
+      role: AccountChainExecutionRole;
+    }
+  | {
+      account_chain_execution_id: string;
+      kind: 'incident_execution_incomplete';
+    }
+  | {
+      account_chain_execution_id: string;
+      kind: 'lot_allocation_invalid';
+    }
+  | {
+      chain_shares: Shares;
+      data_api_shares: Shares;
+      kind: 'position_source_mismatch';
+      token_id: string;
+    }
+  | {
+      chain_usd: Usd;
+      clob_usd: Usd;
+      kind: 'collateral_mismatch';
+    }
+  | {
+      count: number;
+      kind: 'pending_settlement';
+    }
+  | {
+      expected_shares: Shares;
+      kind: 'position_ledger_mismatch';
+      token_id: string;
+      venue_shares: Shares;
+    }
+  | {
+      kind: 'open_orders_present';
+      order_ids: string[];
+    }
+  | {
+      kind: 'pause_incomplete';
+    }
+  | {
+      kind: 'reserved_capital_present';
+      reserved_usd: Usd;
+    }
+  | {
+      kind: 'token_metadata_missing';
+      token_id: string;
+    }
+  | {
+      kind: 'venue_snapshot_unstable';
+    };
+/**
+ * Whether the account-owned order was resting, active, or self-matched.
+ */
+export type AccountChainExecutionRole = 'maker' | 'self_match' | 'taker';
+export type AccountPauseOperationKind = 'pause' | 'unpause';
+export type AccountPauseOperationState =
+  | 'ambiguous'
+  | 'confirmed'
+  | 'dispatched'
+  | 'failed'
+  | 'prepared';
+/**
+ * Transport and identity domain of a chain submission.
+ */
+export type SettlementSubmissionKind =
+  | 'direct_eoa'
+  | 'externally_observed'
+  | 'relayer';
 /**
  * Polymarket event category for business selection and model cohorts.
  */
@@ -31,14 +122,42 @@ export type MarketCategory =
  */
 export type AccountSource = 'historical_replay' | 'polymarket';
 /**
- * Human or policy approval state attached to an order intent.
+ * Basis points (1 bps = 0.01%).
  */
-export type ApprovalStatus =
-  | 'approved'
-  | 'expired'
-  | 'not_required'
-  | 'pending'
-  | 'rejected';
+export type Bps = string;
+/**
+ * Exact Buy-side route represented by one report and one durable model run.
+ *
+ * `Pooled` may contain only non-vertical market categories. `Crypto` and
+ * `Weather` are isolated category routes because their `ResearchProfile`,
+ * domain-source, factor-plane, and serving-contract preimages are distinct.
+ */
+export type BuyModelRoute = 'crypto' | 'pooled' | 'weather';
+export type RouteEconomicHealthState =
+  | 'data_incomplete'
+  | 'degraded'
+  | 'healthy'
+  | 'insufficient_evidence';
+/**
+ * Immutable provenance that granted an intent permission to submit.
+ */
+export type AuthorizationEvidence =
+  | {
+      authorized_at: string;
+      decision_policy_snapshot_id: string;
+      kind: 'active_policy';
+      policy_hash: string;
+    }
+  | {
+      authorized_at: string;
+      kind: 'operator_approval';
+      operator_id: string;
+      reason: string;
+    };
+/**
+ * Immutable source from which an entry intent may receive authority.
+ */
+export type AuthorizationKind = 'active_policy' | 'operator_approval';
 /**
  * Durable state of a recommendation-level entry condition instance.
  */
@@ -107,17 +226,9 @@ export type ConditionUnavailableReason =
       source_id: string;
     };
 /**
- * Number of shares (condition tokens).
- */
-export type Shares = string;
-/**
  * Price per share in a prediction market. Range \[0, 1\].
  */
 export type Price = string;
-/**
- * Basis points (1 bps = 0.01%).
- */
-export type Bps = string;
 /**
  * Statistical probability, confidence, or model weight stored losslessly.
  */
@@ -157,28 +268,21 @@ export type ExitState =
   | 'order_submitted'
   | 'partially_exited'
   | 'triggered';
-export type OrderIntentKind = 'buy';
-/**
- * Governed runtime mode for report generation and optional execution.
- */
-export type QuantRuntimeMode = 'auto_execution' | 'report_only' | 'semi_auto';
 /**
  * Governed execution-intent lifecycle state.
  */
 export type OrderIntentStatus =
   | 'admission_pending'
   | 'admission_rejected'
-  | 'approved'
-  | 'approved_by_policy'
+  | 'authorization_rejected'
+  | 'authorized'
   | 'cancelled'
-  | 'draft'
   | 'expired'
   | 'failed'
   | 'filled'
   | 'invalidated'
   | 'partially_filled'
-  | 'pending_approval'
-  | 'rejected'
+  | 'pending_authorization'
   | 'submitted';
 export type VenueIncentiveKind = 'maker_rebate' | 'taker_rebate';
 /**
@@ -194,6 +298,95 @@ export type IncentiveReconciliationHealth =
   | 'incomplete'
   | 'stale'
   | 'unavailable';
+export type RecommendationEconomicStateDetail =
+  | {
+      censored_at: string;
+      kind: 'censored';
+      reason: EconomicOutcomeCensorReason;
+    }
+  | {
+      entered_at: string;
+      exit_reason: ExitReason;
+      exited_at: string;
+      kind: 'policy_exited';
+    }
+  | {
+      entered_at: string;
+      kind: 'horizon_liquidated';
+      liquidated_at: string;
+    }
+  | {
+      entered_at?: null | string;
+      kind: 'resolved_before_horizon';
+      payout_ratio: PayoutRatio;
+      resolved_at: string;
+    }
+  | {
+      kind: 'entry_not_triggered';
+    }
+  | {
+      kind: 'entry_unfilled';
+      triggered_at: string;
+    };
+/**
+ * Redemption value of one resolved outcome token, in collateral units.
+ *
+ * Unlike the historical unconstrained [`Probability`] and [`Price`] wrappers,
+ * this type validates every untrusted boundary. A corrupt database value or
+ * wire payload outside the closed interval `0..=1` is rejected rather than
+ * becoming a training label. Split resolutions such as `0.5` are preserved.
+ */
+export type PayoutRatio = string;
+export type EconomicOutcomeCensorReason =
+  | 'book_stale'
+  | 'book_unavailable'
+  | 'contract_mismatch'
+  | 'fee_unavailable'
+  | 'passive_trade_coverage_unavailable'
+  | 'replay_gap'
+  | 'source_late'
+  | 'source_unavailable';
+export type EconomicExitEvidenceKind =
+  | 'full_bid_ladder'
+  | 'none'
+  | 'policy_fill'
+  | 'resolution_payout';
+export type RecommendationEconomicOutcomeState =
+  | 'censored'
+  | 'entry_not_triggered'
+  | 'entry_unfilled'
+  | 'horizon_liquidated'
+  | 'policy_exited'
+  | 'resolved_before_horizon';
+export type ExecutionComparisonEvaluationView =
+  | {
+      actual_entry_latency_ms: number;
+      actual_entry_price: Price;
+      actual_fee_usd: Usd;
+      actual_fill_ratio: string;
+      actual_net_return_bps: Bps;
+      actual_vs_planned_price_bps: Bps;
+      fee_delta_usd: string;
+      fill_ratio_delta: string;
+      latency_delta_ms: number;
+      planned_entry_latency_ms: number;
+      planned_entry_price: Price;
+      planned_fee_usd: Usd;
+      planned_fill_ratio: string;
+      planned_net_return_bps: Bps;
+      policy_missed_return_bps?: Bps | null;
+      return_delta_bps: Bps;
+      status: 'evaluated';
+    }
+  | {
+      reason: ExecutionComparisonNotEvaluableReasonView;
+      status: 'not_evaluable';
+    };
+export type ExecutionComparisonNotEvaluableReasonView =
+  | 'actual_baseline_unavailable'
+  | 'identity_mismatch'
+  | 'planned_economics_censored'
+  | 'planned_entry_unavailable';
 /**
  * Time-weighted capital occupancy in USD-hours.
  */
@@ -310,14 +503,6 @@ export type MakerRebateValuationHealth =
  */
 export type OutcomeSide = 'no' | 'yes';
 /**
- * Exact Buy-side route represented by one report and one durable model run.
- *
- * `Pooled` may contain only non-vertical market categories. `Crypto` and
- * `Weather` are isolated category routes because their `ResearchProfile`,
- * domain-source, factor-plane, and serving-contract preimages are distinct.
- */
-export type BuyModelRoute = 'crypto' | 'pooled' | 'weather';
-/**
  * Entry state selected jointly with one promoted market-outcome scenario.
  */
 export type ScenarioEntryExecution =
@@ -347,11 +532,16 @@ export type MakerRebateScenarioCreditStatus =
   | 'no_accrual'
   | 'not_applicable';
 /**
- * Why a recommendation is ineligible for execution in a given mode.
+ * Why a recommendation cannot receive its maximum execution authority.
  */
-export type IneligibilityReason =
-  | 'automation_cap_exceeded'
-  | 'report_only_mode';
+export type IneligibilityReason = 'automation_cap_exceeded';
+/**
+ * Maximum entry authority frozen on a recommendation or governance scope.
+ */
+export type ExecutionAuthorityCeiling =
+  | 'analysis_only'
+  | 'operator_approval'
+  | 'policy_automatic';
 /**
  * Why a factor produced **no** normalized score (never a silent neutral).
  */
@@ -534,6 +724,113 @@ export type RecommendationChangedFieldView =
   | 'robust_expected_net_usd'
   | 'sizing'
   | 'validity';
+export type ReportFunnelReason =
+  | 'category_disabled'
+  | 'executable_entry_unavailable'
+  | 'execution_economics_unavailable'
+  | 'existing_structural_conflict'
+  | 'feature_data_quality_rejected'
+  | 'ingest_lag_exceeded'
+  | 'insufficient_liquidity'
+  | 'insufficient_live_depth'
+  | 'liquidity_buffer_insufficient'
+  | 'low_confidence'
+  | 'manually_blocked'
+  | 'missing_model_output'
+  | 'model_feature_unavailable'
+  | 'no_positive_signal'
+  | 'nominal_expected_net_below_floor'
+  | 'not_open'
+  | 'not_selected_by_global_optimum'
+  | 'probability_interval_too_wide'
+  | 'profit_probability_below_floor'
+  | 'published'
+  | 'resolution_ambiguous'
+  | 'robust_expected_net_below_floor'
+  | 'route_not_activated'
+  | 'scenario_exit_capacity_insufficient'
+  | 'score_below_floor'
+  | 'single_recommendation_exposure_exceeded'
+  | 'spread_too_wide'
+  | 'stale_book';
+/**
+ * Closed, reason-specific diagnostics for one terminal report-funnel row.
+ *
+ * This document crosses the `ClickHouse` boundary as canonical JSON text, but
+ * its schema is fully owned by this system. `None` is explicit so callers do
+ * not overload `{}` with several incompatible meanings.
+ */
+export type ReportFunnelDiagnostics =
+  | {
+      detail: string;
+      kind: 'planner_rejection';
+    }
+  | {
+      economic_tier_id: string;
+      kind: 'profit_probability_floor';
+      lower_profit_probability_bps: number;
+      maximum_probability_interval_width_bps: number;
+      minimum_profit_probability_bps: number;
+      nominal_expected_net_usd: Usd;
+      nominal_profit_probability_bps: Bps;
+      probability_interval_width_bps: number;
+      robust_expected_net_usd: Usd;
+      scenario_artifact_hash: string;
+      scenario_artifact_id: string;
+    }
+  | {
+      features: string[];
+      kind: 'missing_model_features';
+    }
+  | {
+      kind: 'feature_data_quality';
+      missing_required: MissingFeatureDiagnostic[];
+      status: DataQualityStatus;
+    }
+  | {
+      kind: 'insufficient_live_depth';
+      limit_price: Price;
+      required_usd: Usd;
+      visible_usd: Usd;
+    }
+  | {
+      kind: 'none';
+    };
+/**
+ * Why a feature value is absent. Missing values are never silently zero.
+ */
+export type NullReason =
+  | 'domain_source_unavailable'
+  | 'finalized_execution_unavailable'
+  | 'insufficient_execution_history'
+  | 'insufficient_history'
+  | 'insufficient_role_coverage'
+  | 'leg_book_missing'
+  | 'linkage_unresolved'
+  | 'not_applicable'
+  | 'out_of_valid_range'
+  | 'source_unavailable'
+  | 'stale_beyond_policy';
+/**
+ * Point-in-time data quality classification.
+ */
+export type DataQualityStatus =
+  | 'acceptable'
+  | 'degraded'
+  | 'fresh'
+  | 'insufficient'
+  | 'stale';
+export type ReportFunnelStage =
+  | 'business_eligible'
+  | 'catalog_visible'
+  | 'executable_data_eligible'
+  | 'feature_ready'
+  | 'model_gate_passed'
+  | 'model_scored'
+  | 'policy_ready'
+  | 'portfolio_funded'
+  | 'published'
+  | 'sizing_eligible';
 
 /**
  * Schema-only envelope used to generate frontend wire types and boundary validators.
@@ -543,17 +840,181 @@ export type RecommendationChangedFieldView =
  * parallel operator contract.
  */
 export interface QuantOperatorApiContractSchema {
+  account_recovery_incident_response: AccountRecoveryIncidentView;
   account_snapshot_response: AccountSnapshotView;
   create_intent_request: CreateIntentRequest;
+  economic_health_response: RouteEconomicHealthView;
   equity_snapshot_response: EquitySnapshotView;
   execution_confirmation_response: OrderIntentView;
+  finalize_account_recovery_request: FinalizeAccountRecoveryRequest;
   incentive_event_response: VenueIncentiveEventView;
   incentive_reconciliation_response: IncentiveReconciliationView;
   live_account_response: LiveAccountView;
+  recommendation_economic_outcome_response: RecommendationEconomicOutcomeView;
+  recommendation_execution_comparison_response: RecommendationExecutionComparisonView;
   recommendation_response: QuantRecommendationView;
+  reconcile_account_recovery_request: ReconcileAccountRecoveryRequest;
   report_detail_response: QuantReportDetailView;
   report_diff_response: ReportDiffView;
+  report_funnel_market_response: ReportFunnelMarketView;
+  report_funnel_response: QuantReportFunnelView;
   report_list_row_response: QuantReportView;
+  seal_account_recovery_request: SealAccountRecoveryRequest;
+}
+export interface AccountRecoveryIncidentView {
+  incident: AccountRecoveryIncidentInfo;
+  latest_manifest?: AccountRecoveryManifestView | null;
+  pause_operations: AccountPauseOperationView[];
+}
+export interface AccountRecoveryIncidentInfo {
+  account_recovery_incident_id: string;
+  created_at: string;
+  execution_account_id: string;
+  kind: AccountRecoveryIncidentKind;
+  opened_at: string;
+  reason: string;
+  revision: number;
+  seal_hash?: null | string;
+  sealed_at?: null | string;
+  sealed_by?: null | string;
+  status: AccountRecoveryIncidentStatus;
+  trigger_chain_execution_id?: null | string;
+  updated_at: string;
+}
+export interface AccountRecoveryManifestView {
+  account_recovery_manifest_id: string;
+  assessment: AccountRecoveryAssessment;
+  attempt_no: number;
+  converged: boolean;
+  created_at: string;
+  evidence_hash: string;
+  finalized_block_hash: string;
+  finalized_block_number: number;
+  input: AccountRecoveryAssessmentInput;
+  observed_at: string;
+}
+/**
+ * Deterministic assessment persisted as the account recovery manifest payload.
+ */
+export interface AccountRecoveryAssessment {
+  allocations: AccountRecoveryLotAllocation[];
+  created_lots: AccountRecoveryCreatedLot[];
+  evidence_hash: string;
+  mismatches: AccountRecoveryMismatch[];
+}
+/**
+ * Deterministic post-recovery quantity assigned to one existing lot.
+ */
+export interface AccountRecoveryLotAllocation {
+  after_cost_usd: Usd;
+  after_shares: Shares;
+  before_cost_usd: Usd;
+  before_shares: Shares;
+  closed_at?: null | string;
+  realized_pnl_delta_usd: Usd;
+  strategy_position_lot_id: string;
+  token_id: string;
+}
+/**
+ * Remaining shares from one incident BUY that must become a recovery-origin lot.
+ */
+export interface AccountRecoveryCreatedLot {
+  account_chain_execution_id: string;
+  acquired_cost_usd: Usd;
+  acquired_shares: Shares;
+  closed_at?: null | string;
+  realized_pnl_delta_usd: Usd;
+  remaining_cost_usd: Usd;
+  remaining_shares: Shares;
+  strategy_position_lot_id: string;
+  token_id: string;
+}
+/**
+ * Fully materialized, source-independent input to deterministic recovery assessment.
+ */
+export interface AccountRecoveryAssessmentInput {
+  chain_collateral_usd: Usd;
+  chain_positions: AccountRecoveryTokenBalance[];
+  chain_snapshot_hash: string;
+  clean_funder_blocker?: AccountCleanFunderBlockerEvidence | null;
+  clob_collateral_usd: Usd;
+  clob_snapshot_hash: string;
+  data_api_positions: AccountRecoveryTokenBalance[];
+  data_api_snapshot_hash: string;
+  execution_account_id: string;
+  explicit_sell_allocations: AccountRecoverySellAllocation[];
+  finalized_block_hash: string;
+  finalized_block_number: number;
+  incident_executions: AccountRecoveryExecutionDelta[];
+  invalid_execution_ids: string[];
+  observed_at: string;
+  open_lots: AccountRecoveryLotBalance[];
+  open_order_ids: string[];
+  pause_confirmed: boolean;
+  pending_settlement_count: number;
+  recovery_incident_id: string;
+  reserved_usd: Usd;
+  settlement_snapshot_hash: string;
+  unmapped_token_ids: string[];
+  venue_snapshot_stable: boolean;
+}
+/**
+ * One venue or finalized-chain token balance used by account recovery.
+ */
+export interface AccountRecoveryTokenBalance {
+  shares: Shares;
+  token_id: string;
+}
+export interface AccountCleanFunderBlockerEvidence {
+  account_chain_execution_id: string;
+  evidence_hash: string;
+  role: AccountChainExecutionRole;
+}
+/**
+ * Operator-owned allocation for one ambiguous external SELL across open lots.
+ */
+export interface AccountRecoverySellAllocation {
+  account_chain_execution_id: string;
+  shares: Shares;
+  strategy_position_lot_id: string;
+}
+/**
+ * Finalized incident execution needed to explain a position delta.
+ */
+export interface AccountRecoveryExecutionDelta {
+  account_chain_execution_id: string;
+  available_at: string;
+  exact_fee_usd: Usd;
+  principal_usd: Usd;
+  shares_delta: string;
+  token_id: string;
+}
+/**
+ * Open internal lot state before incident execution allocation.
+ */
+export interface AccountRecoveryLotBalance {
+  cost_usd: Usd;
+  opened_at: string;
+  shares: Shares;
+  strategy_position_lot_id: string;
+  token_id: string;
+}
+export interface AccountPauseOperationView {
+  account_pause_operation_id: string;
+  confirmation_block_hash?: null | string;
+  confirmation_block_number?: null | number;
+  confirmed_at?: null | string;
+  created_at: string;
+  dispatched_at?: null | string;
+  effective_block?: null | number;
+  exchange_address: string;
+  failure_detail?: null | string;
+  operation_kind: AccountPauseOperationKind;
+  requested_block: number;
+  state: AccountPauseOperationState;
+  submission_kind: SettlementSubmissionKind;
+  transaction_hash?: null | string;
+  updated_at: string;
 }
 /**
  * Persisted decision-time venue account snapshot (immutable audit evidence).
@@ -574,7 +1035,7 @@ export interface AccountSnapshotView {
  * Net USD exposure aggregated by market, event, and category.
  *
  * The planner uses this as the starting point for `exposure_after` projections
- * and cap-room checks. Built from [`PositionSnapshot`]s via
+ * and cap-room checks. Built from [`VenuePositionSnapshot`]s via
  * [`ExposureBreakdown::from_positions`].
  */
 export interface ExposureBreakdown {
@@ -628,6 +1089,30 @@ export interface CreateIntentRequest {
   reason: string;
   recommendation_id: string;
 }
+export interface RouteEconomicHealthView {
+  assessed_through: string;
+  available_at: string;
+  coverage: string;
+  created_at: string;
+  due_observation_count: number;
+  effective_sample_size?: null | string;
+  evidence: RouteEconomicHealthEvidenceDocument;
+  evidence_hash: string;
+  feedback_policy_hash: string;
+  lower_confidence_return_bps?: Bps | null;
+  research_profile_artifact_id: string;
+  route: BuyModelRoute;
+  route_identity_hash: string;
+  state: RouteEconomicHealthState;
+  usable_observation_count: number;
+  weighted_mean_return_bps?: Bps | null;
+  window_start?: null | string;
+}
+export interface RouteEconomicHealthEvidenceDocument {
+  methodology_version: string;
+  observation_hash: string;
+  uniqueness_weight_hash?: null | string;
+}
 /**
  * Persisted strategy-capital equity curve snapshot.
  */
@@ -655,10 +1140,8 @@ export interface EquitySnapshotView {
  */
 export interface OrderIntentView {
   admission_trace_ref?: null | string;
-  approval_reason?: null | string;
-  approval_status: ApprovalStatus;
-  approved_at?: null | string;
-  approved_by?: null | string;
+  authorization_evidence?: AuthorizationEvidence | null;
+  authorization_kind?: AuthorizationKind | null;
   condition_instance_id: string;
   created_at: string;
   decision_policy_snapshot_id: string;
@@ -672,18 +1155,14 @@ export interface OrderIntentView {
   exit_reason?: ExitReason | null;
   exit_state: ExitState;
   expires_at: string;
-  intent_kind: OrderIntentKind;
   last_signal_recheck_at?: null | string;
   latest_reinference?: ExitReinferenceObservation | null;
   model_version_id: string;
   next_check_at?: null | string;
   order_intent_id: string;
   peak_mark_price?: null | Price;
-  policy_hash?: null | string;
-  policy_id?: null | string;
   recommendation_id: string;
   risk_envelope_hash: string;
-  runtime_mode: QuantRuntimeMode;
   scale_out_state: ScaleOutState;
   status: OrderIntentStatus;
   status_reason?: null | string;
@@ -752,7 +1231,7 @@ export interface EntryOrderSpec {
         state: 'aggressive_not_applicable';
       };
   /**
-   * Maximum tolerated slippage from the reference price.
+   * Basis points (1 bps = 0.01%).
    */
   max_slippage_bps: string;
   /**
@@ -1017,15 +1496,19 @@ export interface PendingScaleOut {
    */
   target_id?: null | string;
 }
+export interface FinalizeAccountRecoveryRequest {
+  expected_revision: number;
+  reason: string;
+}
 /**
  * One immutable incentive ledger event, including zero-amount retractions.
  */
 export interface VenueIncentiveEventView {
   amount_usd: Usd;
   available_at: string;
+  clob_trade_observation_id?: null | string;
   created_at: string;
   evidence_hash: string;
-  execution_fill_id?: null | string;
   kind: VenueIncentiveKind;
   market_id?: null | string;
   observed_at: string;
@@ -1070,6 +1553,57 @@ export interface LiveAccountView {
   reserved_usd: Usd;
   source: AccountSource;
   venue_net_liquidation_usd: Usd;
+}
+export interface RecommendationEconomicOutcomeView {
+  available_at: string;
+  created_at: string;
+  decision_at: string;
+  decision_policy_snapshot_id: string;
+  economic_tier_id: string;
+  evidence_hash: string;
+  horizon_at: string;
+  model_version_id: string;
+  payload: RecommendationEconomicOutcomePayload;
+  recommendation_id: string;
+  recommendation_report_id: string;
+  replay_kernel_version: string;
+  report_route_run_id: string;
+  research_profile_artifact_id: string;
+  source_available_until: string;
+  state: RecommendationEconomicOutcomeState;
+  trade_policy_artifact_id: string;
+}
+export interface RecommendationEconomicOutcomePayload {
+  amounts: RecommendationEconomicAmounts;
+  detail: RecommendationEconomicStateDetail;
+  evidence: RecommendationEconomicEvidence;
+}
+export interface RecommendationEconomicAmounts {
+  entry_cost_usd: Usd;
+  entry_filled_shares: Shares;
+  execution_fee_usd: Usd;
+  exit_proceeds_usd: Usd;
+  exited_shares: Shares;
+  expected_maker_rebate_usd: Usd;
+  net_pnl_usd?: null | Usd;
+  net_return_bps?: null | string;
+  resolution_payout_usd: Usd;
+}
+export interface RecommendationEconomicEvidence {
+  exit_evidence_kind: EconomicExitEvidenceKind;
+  fee_covered: boolean;
+  full_l2_covered: boolean;
+  passive_trade_covered?: boolean | null;
+  replay_input_hash: string;
+  replay_output_hash: string;
+}
+export interface RecommendationExecutionComparisonView {
+  comparison_hash: string;
+  economic_outcome_hash: string;
+  evaluation: ExecutionComparisonEvaluationView;
+  policy_counterfactual_hash: string;
+  recommendation_id: string;
+  trajectory_artifact_hash: string;
 }
 /**
  * Full outbound projection of one actionable recommendation.
@@ -1246,29 +1780,12 @@ export interface ScenarioCapitalOccupancySlice {
   locked_cash_usd: Usd;
 }
 /**
- * Per-recommendation execution eligibility across runtime modes.
- *
- * Computed and persisted with the recommendation. The create-intent and
- * admission flow consumes it. `eligible_modes` always contains
- * [`QuantRuntimeMode::ReportOnly`] (a report is the report-only artifact).
+ * Per-recommendation execution authority ceiling and immutable blockers.
  */
 export interface ExecutionEligibility {
-  /**
-   * Whether human approval is required.
-   */
-  approval_required: boolean;
-  /**
-   * Auto-execution policy id, when applicable.
-   */
-  auto_policy_id?: null | string;
-  /**
-   * Runtime modes in which this recommendation is eligible for execution.
-   */
-  eligible_modes: QuantRuntimeMode[];
-  /**
-   * Reasons the recommendation is ineligible (empty when fully eligible).
-   */
-  ineligibility_reasons: IneligibilityReason[];
+  blockers: IneligibilityReason[];
+  ceiling: ExecutionAuthorityCeiling;
+  policy_binding?: null | string;
 }
 /**
  * One factor's signed contribution to a recommendation's composite score.
@@ -1524,7 +2041,7 @@ export interface ThesisInvalidationPolicy1 {
   require_route_gate_eligibility: boolean;
 }
 /**
- * Honest report-only exit guidance for an L2-free bootstrap model.
+ * Honest analysis-only exit guidance for an L2-free bootstrap model.
  *
  * This intentionally contains no synthetic take-profit, stop-loss, trailing,
  * or opportunistic-exit thresholds. It is not accepted by execution paths.
@@ -1570,10 +2087,6 @@ export interface ResearchProfileRef {
  */
 export interface RiskEnvelope {
   /**
-   * Whether auto-execution is permitted by this envelope.
-   */
-  auto_execution_allowed: boolean;
-  /**
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
   cvar_contribution_usd: string;
@@ -1617,10 +2130,6 @@ export interface RiskEnvelope {
    * USD-denominated monetary amount (Polymarket V2 pUSD on Polygon).
    */
   portfolio_cvar_cap_usd: string;
-  /**
-   * Whether human approval is required before execution.
-   */
-  requires_approval: boolean;
   /**
    * Free-form risk notes for the report.
    */
@@ -1710,6 +2219,11 @@ export interface SizingPlan {
    */
   sizing_reason: string;
 }
+export interface ReconcileAccountRecoveryRequest {
+  expected_revision: number;
+  reason: string;
+  sell_allocations: AccountRecoverySellAllocation[];
+}
 /**
  * Full report header projection: lifecycle + account base + replay handles +
  * the report-level [`ReportSummary`].
@@ -1735,7 +2249,6 @@ export interface QuantReportDetailView {
   represented_routes: RepresentedRouteSet;
   revoked_at?: null | string;
   run?: null | ReportRunView;
-  runtime_mode: QuantRuntimeMode;
   scenario_artifact_hash?: null | string;
   scenario_artifact_id?: null | string;
   status: RecommendationReportStatus;
@@ -1997,18 +2510,9 @@ export interface DataQualitySummary {
  * Execution-eligibility roll-up.
  */
 export interface EligibilitySummary {
-  /**
-   * Eligible under auto-execution.
-   */
-  eligible_auto_execution: number;
-  /**
-   * Eligible under report-only.
-   */
-  eligible_report_only: number;
-  /**
-   * Eligible under semi-auto.
-   */
-  eligible_semi_auto: number;
+  analysis_only: number;
+  operator_approval: number;
+  policy_automatic: number;
 }
 /**
  * One rejection-reason tally.
@@ -2075,18 +2579,48 @@ export interface RecommendationDiffSnapshotView {
  * Execution-eligibility roll-up across published recommendations.
  */
 export interface EligibilitySummary1 {
-  /**
-   * Eligible under auto-execution.
-   */
-  eligible_auto_execution: number;
-  /**
-   * Eligible under report-only.
-   */
-  eligible_report_only: number;
-  /**
-   * Eligible under semi-auto.
-   */
-  eligible_semi_auto: number;
+  analysis_only: number;
+  operator_approval: number;
+  policy_automatic: number;
+}
+export interface ReportFunnelMarketView {
+  decision_policy_snapshot_id: string;
+  event_id: string;
+  feature_vector_id?: null | string;
+  market_id: string;
+  market_selection_id: string;
+  model_run_id?: null | string;
+  model_version_id?: null | string;
+  primary_reason: ReportFunnelReason;
+  primary_token_id: string;
+  recommendation_id?: null | string;
+  recommendation_report_id: string;
+  report_route_run_id?: null | string;
+  route?: BuyModelRoute | null;
+  row_hash: string;
+  secondary_diagnostics: ReportFunnelDiagnostics;
+  signal_candidate_id?: null | string;
+  terminal_stage: ReportFunnelStage;
+}
+/**
+ * One required feature rejected by the governed data-quality policy.
+ */
+export interface MissingFeatureDiagnostic {
+  feature_name: string;
+  reason: NullReason;
+}
+export interface QuantReportFunnelView {
+  catalog_visible_count: number;
+  conserved: boolean;
+  published_count: number;
+  recommendation_report_id: string;
+  stages: ReportFunnelStageView[];
+}
+export interface ReportFunnelStageView {
+  excluded_count: number;
+  input_count: number;
+  output_count: number;
+  stage: ReportFunnelStage;
 }
 /**
  * List-row projection of a recommendation report (header + summary roll-up).
@@ -2105,7 +2639,6 @@ export interface QuantReportView {
   report_kind: ReportKind;
   represented_routes: RepresentedRouteSet;
   revoked_at?: null | string;
-  runtime_mode: QuantRuntimeMode;
   scenario_artifact_id?: null | string;
   status: RecommendationReportStatus;
   status_reason?: null | string;
@@ -2114,4 +2647,9 @@ export interface QuantReportView {
   top_n: number;
   total_hard_reserved_cash_usd: Usd;
   valid_until?: null | string;
+}
+export interface SealAccountRecoveryRequest {
+  account_recovery_manifest_id: string;
+  expected_revision: number;
+  reason: string;
 }

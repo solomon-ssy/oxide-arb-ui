@@ -5,7 +5,7 @@ import type {
 
 export type SettlementAuthorizationAction = 'approve' | 'revoke';
 
-/** Exact SemiAuto authorization action visible for the current case state. */
+/** Exact operator authorization action visible for the current case state. */
 export function settlementAuthorizationAction(
   redeem: null | SettlementRedeemView,
 ): null | SettlementAuthorizationAction {

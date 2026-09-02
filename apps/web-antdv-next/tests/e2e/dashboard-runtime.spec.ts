@@ -6,7 +6,7 @@ interface DashboardOverview {
     state: string;
     value: null | {
       system: {
-        quant_runtime_mode: string;
+        entry_authorization_policy: string;
       };
     };
   };
@@ -24,8 +24,8 @@ test('dashboard switches an authoritative runtime window without stale state', a
   );
   expect(overview.revision).not.toBe('');
   expect(['ready', 'stale']).toContain(overview.authority.state);
-  expect(overview.authority.value?.system.quant_runtime_mode).toBe(
-    'report_only',
+  expect(overview.authority.value?.system.entry_authorization_policy).toBe(
+    'operator_approval_required',
   );
 
   await page.goto('/dashboard');
@@ -35,7 +35,7 @@ test('dashboard switches an authoritative runtime window without stale state', a
     '[data-testid="dashboard-command-center"][data-ui-ready="true"]',
   );
   await expect(page.getByTestId('dashboard-command-center')).toContainText(
-    /仅报告|Report Only/i,
+    /必须操作员批准|Operator Approval/i,
   );
 
   const refreshed = page.waitForResponse((response) => {

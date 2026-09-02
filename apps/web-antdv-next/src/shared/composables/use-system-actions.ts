@@ -1,6 +1,6 @@
 /**
  * Governed system control actions shared by the Command Center and the
- * header runtime-mode / kill-switch state lights.
+ * header authorization-policy / kill-switch state lights.
  *
  * Both flows wrap the singleton governed-action modal (acting role + reason,
  * danger confirm words for emergency-grade transitions) and refresh the shared
@@ -13,18 +13,18 @@
  */
 import type { ApiError } from '@vben/request/qp';
 import type {
+  EntryAuthorizationPolicy,
+  EntryAuthorizationTransitionReport,
   KillSwitchState,
   KillSwitchView,
-  QuantModeTransitionReport,
-  QuantRuntimeMode,
   RuntimeControlSnapshot,
   SettlementWritePolicy,
 } from '@vben/types';
 
 import { useRequestHandler } from '@vben/request/qp';
 import {
+  ENTRY_AUTHORIZATION_POLICIES,
   KILL_SWITCH_STATES,
-  QUANT_RUNTIME_MODES,
   SETTLEMENT_WRITE_POLICIES,
 } from '@vben/types';
 
@@ -33,8 +33,8 @@ import { message } from 'antdv-next';
 import {
   getRuntimeControls,
   getSystemStatus,
+  setEntryAuthorizationPolicy,
   setKillSwitch,
-  switchQuantMode,
   switchSettlementWritePolicy,
 } from '#/api/system';
 import { $t } from '#/locales';
@@ -75,15 +75,15 @@ export function requiredKillSwitchPermission(
     : 'system:halt';
 }
 
-export interface QuantModeActionApi {
-  /** Whether the actor may switch modes at all (`system:switch_mode`). */
+export interface EntryAuthorizationPolicyActionApi {
+  /** Whether the actor may change entry authorization policy. */
   canSwitch: boolean;
   /** Run the governed switch flow; resolves `null` on cancel/failure. */
   switchTo: (
-    current: null | QuantRuntimeMode,
-    target: QuantRuntimeMode,
+    current: EntryAuthorizationPolicy | null,
+    target: EntryAuthorizationPolicy,
     expectedRevision: number,
-  ) => Promise<null | QuantModeTransitionReport>;
+  ) => Promise<EntryAuthorizationTransitionReport | null>;
 }
 
 export interface KillSwitchActionApi {
@@ -146,29 +146,28 @@ function refreshOnCasConflict(
   return 'keep_open';
 }
 
-/** Governed quant runtime mode switch (header indicator + dashboard). */
-export function useQuantModeAction(): QuantModeActionApi {
+/** Governed entry-authorization-policy transition. */
+export function useEntryAuthorizationPolicyAction(): EntryAuthorizationPolicyActionApi {
   const { governed } = useGovernedAction();
   const { hasAccessByCodes } = useQpAccess();
   const refresh = useSystemTruthRefresh();
 
-  const canSwitch = hasAccessByCodes(['system:switch_mode']);
+  const canSwitch = hasAccessByCodes(['system:update_runtime_control']);
 
   async function switchTo(
-    current: null | QuantRuntimeMode,
-    target: QuantRuntimeMode,
+    current: EntryAuthorizationPolicy | null,
+    target: EntryAuthorizationPolicy,
     expectedRevision: number,
-  ): Promise<null | QuantModeTransitionReport> {
-    const modeLabel = (mode: null | QuantRuntimeMode) =>
-      mode ? $t(`enum.quantRuntimeMode.${mode}`) : '—';
-    // Enabling unattended execution is the highest-consequence upgrade.
-    const danger = target === QUANT_RUNTIME_MODES.autoExecution;
+  ): Promise<EntryAuthorizationTransitionReport | null> {
+    const policyLabel = (policy: EntryAuthorizationPolicy | null) =>
+      policy ? $t(`enum.entryAuthorizationPolicy.${policy}`) : '—';
+    const danger = target === ENTRY_AUTHORIZATION_POLICIES.policyAutomatic;
     const result = await governed(
       async (ctx) =>
-        switchQuantMode(
+        setEntryAuthorizationPolicy(
           {
             expected_revision: expectedRevision,
-            mode: target,
+            policy: target,
             reason: ctx.reason,
           },
           ctx,
@@ -176,19 +175,19 @@ export function useQuantModeAction(): QuantModeActionApi {
       {
         confirmWord: danger ? 'AUTO' : undefined,
         danger,
-        summary: $t('page.systemAdmin.mode.summary', {
-          from: modeLabel(current),
-          to: modeLabel(target),
+        summary: $t('page.systemAdmin.entryAuthorizationPolicy.summary', {
+          from: policyLabel(current),
+          to: policyLabel(target),
         }),
-        title: $t('page.systemAdmin.mode.switchTitle'),
+        title: $t('page.systemAdmin.entryAuthorizationPolicy.switchTitle'),
         onError: (error) => refreshOnCasConflict(error, refresh),
       },
     );
     if (result) {
       message.success(
-        $t('page.systemAdmin.mode.switched', {
-          from: modeLabel(result.from),
-          to: modeLabel(result.to),
+        $t('page.systemAdmin.entryAuthorizationPolicy.switched', {
+          from: policyLabel(result.from),
+          to: policyLabel(result.to),
         }),
       );
       await refresh();
@@ -273,7 +272,7 @@ export function useSettlementWritePolicyAction(): SettlementWritePolicyActionApi
   const { governed } = useGovernedAction();
   const { hasAccessByCodes } = useQpAccess();
   const refresh = useSystemTruthRefresh();
-  const canSwitch = hasAccessByCodes(['system:switch_mode']);
+  const canSwitch = hasAccessByCodes(['system:update_runtime_control']);
 
   async function switchTo(
     current: null | SettlementWritePolicy,
@@ -282,7 +281,7 @@ export function useSettlementWritePolicyAction(): SettlementWritePolicyActionApi
   ): Promise<null | RuntimeControlSnapshot> {
     const policyLabel = (policy: null | SettlementWritePolicy) =>
       policy ? $t(`enum.settlementWritePolicy.${policy}`) : '—';
-    const danger = target === SETTLEMENT_WRITE_POLICIES.auto;
+    const danger = target === SETTLEMENT_WRITE_POLICIES.operatorApproval;
     const result = await governed(
       async (ctx) =>
         switchSettlementWritePolicy(
@@ -294,7 +293,7 @@ export function useSettlementWritePolicyAction(): SettlementWritePolicyActionApi
           ctx,
         ),
       {
-        confirmWord: danger ? 'SETTLEMENT AUTO' : undefined,
+        confirmWord: danger ? 'SETTLEMENT WRITE' : undefined,
         danger,
         onError: (error) => refreshOnCasConflict(error, refresh),
         summary: $t('page.systemAdmin.settlementWritePolicy.summary', {

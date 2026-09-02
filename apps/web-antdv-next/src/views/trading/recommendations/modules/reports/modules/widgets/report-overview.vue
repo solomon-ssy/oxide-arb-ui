@@ -392,15 +392,6 @@ function openDecisionPolicyActivity() {
           {{ $t(`enum.reportKind.${report.report_kind}`) }}
         </DescriptionsItem>
         <DescriptionsItem
-          :label="$t('page.quantReports.detail.overview.runtimeMode')"
-        >
-          <EnumTag
-            context="report-overview"
-            name="QuantRuntimeMode"
-            :value="report.runtime_mode"
-          />
-        </DescriptionsItem>
-        <DescriptionsItem
           :label="$t('page.quantReports.detail.overview.decisionAt')"
         >
           {{ formatDateTimeLocal(report.decision_at) }}

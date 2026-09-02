@@ -4,18 +4,24 @@ import type { BrowserFailureAudit } from './browser-failure-audit';
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
 import process from 'node:process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
+import { RELEASE_SCENARIO_KEYS } from '../../../../scripts/ui-release-contract';
 import {
   expect,
   expectAccessible,
   readApiData,
   waitForShell,
 } from './fixtures';
+import {
+  captureSemanticScreenshot,
+  flushVisualFrame,
+} from './stable-screenshot';
 
 export type ReleaseTheme = 'dark' | 'light';
 
@@ -35,6 +41,9 @@ interface EvidenceEntry {
   raw_sha256: string;
   scenario: string;
   screenshot: string;
+  semantic_evidence: string;
+  semantic_guard: 'verified-fault-clean-capture';
+  semantic_sha256: string;
   sha256: string;
   theme: ReleaseTheme;
   timezone: string;
@@ -43,6 +52,7 @@ interface EvidenceEntry {
 
 interface EvidenceManifest {
   backend_build_id: string;
+  backend_verification_nonce: string;
   entries: EvidenceEntry[];
   frontend_build_id: string;
   git_hash: string;
@@ -71,11 +81,13 @@ const EVIDENCE_ROOT = resolve(
 const VISUAL_STABILITY_STYLE_ID = 'playwright-visual-stability';
 const SEED_STABILITY_MS = 10_000;
 const SEED_STABILITY_TIMEOUT_MS = 90_000;
-const RUN_ID = process.env.PLAYWRIGHT_EVIDENCE_RUN ?? 'local';
+const evidenceRun = process.env.PLAYWRIGHT_EVIDENCE_RUN;
+const BACKEND_NONCE = process.env.PLAYWRIGHT_BACKEND_COMPLETION_NONCE;
 
-if (!/^[a-z0-9-]+$/.test(RUN_ID)) {
+if (!evidenceRun || !/^[a-z0-9-]+$/.test(evidenceRun)) {
   throw new Error('PLAYWRIGHT_EVIDENCE_RUN must contain only a-z, 0-9, and -');
 }
+const RUN_ID = evidenceRun;
 
 function gitHash(cwd: string): string {
   return execFileSync('git', ['rev-parse', 'HEAD'], {
@@ -101,15 +113,31 @@ function manifestPath(): string {
 }
 
 async function readManifest(seedRevision: number): Promise<EvidenceManifest> {
+  if (
+    !BACKEND_NONCE ||
+    !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/.test(BACKEND_NONCE)
+  )
+    throw new Error(
+      'Release capture requires the actual backend verification nonce',
+    );
   try {
-    return JSON.parse(
+    const manifest: EvidenceManifest = JSON.parse(
       await readFile(manifestPath(), 'utf8'),
-    ) as EvidenceManifest;
+    );
+    if (
+      manifest.run_id !== RUN_ID ||
+      manifest.backend_verification_nonce !== BACKEND_NONCE
+    )
+      throw new Error(
+        'Existing release manifest belongs to another invocation',
+      );
+    return manifest;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
   return {
     backend_build_id: gitHash(REPOSITORY_ROOT),
+    backend_verification_nonce: BACKEND_NONCE,
     entries: [],
     frontend_build_id: gitHash(UI_ROOT),
     git_hash: gitHash(REPOSITORY_ROOT),
@@ -197,9 +225,24 @@ async function setReleaseLayout(page: Page): Promise<void> {
 
   const toggle = page.getByTestId('sidebar-collapse-toggle');
   await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute('data-collapsed')) === 'true') {
-    await toggle.click();
-  }
+  // Capture setup is an idempotent preference change, not a user pointer
+  // action. Pin the sidebar through its public owner so modal masks and hover
+  // transitions cannot toggle it back after the layout assertion.
+  await page.evaluate(
+    async (moduleUrl) => {
+      const preferencesModule = (await import(
+        /* @vite-ignore */ moduleUrl
+      )) as {
+        updatePreferences: (value: {
+          sidebar: { collapsed: boolean; expandOnHover: boolean };
+        }) => void;
+      };
+      preferencesModule.updatePreferences({
+        sidebar: { collapsed: false, expandOnHover: true },
+      });
+    },
+    `/@fs${resolve(UI_ROOT, 'packages/preferences/src/index.ts')}`,
+  );
   await expect(toggle).toHaveAttribute('data-collapsed', 'false');
 }
 
@@ -237,17 +280,6 @@ async function normalizeRuntimeEvidence(page: Page): Promise<void> {
       }
     }
   });
-}
-
-async function flushVisualFrame(page: Page): Promise<void> {
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolveFrame) => {
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => resolveFrame()),
-        );
-      }),
-  );
 }
 
 export async function setEvidenceMedia(
@@ -347,6 +379,7 @@ export async function waitForUiReady(
   await waitForShell(page);
   await expect(page.locator(root).first()).toBeVisible({ timeout: 30_000 });
   await audit.drainHttp(page);
+  await audit.dismissExpectedAlerts(page, performance.now() + 10_000);
   await expect(page.locator('.ant-skeleton, .ant-spin-spinning')).toHaveCount(
     0,
     {
@@ -402,43 +435,115 @@ export async function captureReleaseEvidence({
   testInfo,
   theme,
 }: CaptureOptions): Promise<void> {
+  const reviewedSnapshot =
+    testInfo.config.updateSnapshots === 'none' &&
+    testInfo.project.ignoreSnapshots === false;
+  if (
+    !BACKEND_NONCE ||
+    !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/.test(BACKEND_NONCE)
+  )
+    throw new Error(
+      'Release capture requires the actual backend verification nonce',
+    );
+  if (
+    !RELEASE_SCENARIO_KEYS.includes(`${testInfo.project.name}/${scenario.name}`)
+  )
+    throw new Error(
+      'Release capture is outside the reviewed scenario contract',
+    );
+  await audit.dismissExpectedAlerts(page, performance.now() + 10_000);
   await page.goto(scenario.path);
   await disableVisualMotion(page);
   await setReleaseTheme(page, theme);
   await waitForUiReady(page, audit, scenario.root);
-  await setReleaseLayout(page);
   await scenario.prepare?.(page);
   await waitForUiReady(page, audit, scenario.root);
-  await expectReleaseQuality(page, scenario.root ?? 'main');
   await page.mouse.move(0, 0);
+  await setReleaseLayout(page);
+  await waitForUiReady(page, audit, scenario.root);
+  await expectReleaseQuality(page, scenario.root ?? 'main');
+  // Axe finishes its analysis in a temporary page. Re-activate the audited
+  // page before taking the visual evidence.
+  await page.bringToFront();
+  await waitForUiReady(page, audit, scenario.root);
   await normalizeRuntimeEvidence(page);
   await page.evaluate(() => window.scrollTo({ left: 0, top: 0 }));
   await flushVisualFrame(page);
 
   const volatile = page.locator('[data-screenshot-volatile="true"]');
   const maskColor = theme === 'dark' ? '#1f2937' : '#e5e7eb';
-  const screenshot = await page.screenshot({
-    animations: 'disabled',
-    caret: 'hide',
-    fullPage: true,
-    mask: [volatile],
-    maskColor,
-    scale: 'css',
-  });
+  const captureDeadline = performance.now() + 10_000;
+  const { image: screenshot, notice_witness: noticeWitness } =
+    await captureSemanticScreenshot(
+      page,
+      {
+        animations: 'disabled',
+        caret: 'hide',
+        fullPage: true,
+        mask: [volatile],
+        maskColor,
+        scale: 'css',
+      },
+      audit,
+      captureDeadline,
+    );
+  const artifactScenario = reviewedSnapshot
+    ? scenario.name
+    : `${scenario.name}.candidate`;
+  const path = evidencePath(testInfo.project.name, artifactScenario);
+  const rawPath = rawEvidencePath(testInfo.project.name, artifactScenario);
+  const semanticPath = path.replace(/\.png$/, '.semantic.json');
+  const rawHash = createHash('sha256').update(screenshot).digest('hex');
+  const semantic = `${JSON.stringify(
+    {
+      backend_verification_nonce: BACKEND_NONCE,
+      evidence: audit.semanticEvidence(),
+      guard: reviewedSnapshot
+        ? 'verified-fault-clean-capture'
+        : 'candidate-not-release-evidence',
+      notice_witness: noticeWitness,
+      project: testInfo.project.name,
+      raw_sha256: rawHash,
+      run_id: RUN_ID,
+      scenario: scenario.name,
+      snapshot_policy: {
+        update_snapshots: testInfo.config.updateSnapshots,
+        ignore_snapshots: testInfo.project.ignoreSnapshots,
+      },
+    },
+    null,
+    2,
+  )}\n`;
+  await mkdir(dirname(path), { recursive: true });
+  // Preserve qualified raw evidence even when the golden assertion fails.
+  // Only a successful comparison may enter the release manifest.
+  await writeFile(rawPath, screenshot);
+  await writeFile(semanticPath, semantic);
   expect(screenshot).toMatchSnapshot(`${scenario.name}.png`, {
     maxDiffPixelRatio: 0.002,
     threshold: 0.2,
   });
+  if (!reviewedSnapshot) {
+    if (
+      !testInfo.annotations.some(
+        ({ type }) => type === 'candidate-not-release-evidence',
+      )
+    ) {
+      testInfo.annotations.push({
+        type: 'candidate-not-release-evidence',
+        description: `Snapshot policy update=${testInfo.config.updateSnapshots}, ignore=${testInfo.project.ignoreSnapshots}; no reviewed release entries were published`,
+      });
+    }
+    await testInfo.attach(`${scenario.name}-candidate-only`, {
+      path: semanticPath,
+      contentType: 'application/json',
+    });
+    return;
+  }
   const canonical = await readFile(
     testInfo.snapshotPath(`${scenario.name}.png`),
   );
-  const path = evidencePath(testInfo.project.name, scenario.name);
-  const rawPath = rawEvidencePath(testInfo.project.name, scenario.name);
-  await mkdir(dirname(path), { recursive: true });
-  await Promise.all([
-    writeFile(path, canonical),
-    writeFile(rawPath, screenshot),
-  ]);
+  await writeFile(path, canonical);
   const viewport = page.viewportSize();
   if (!viewport) throw new Error('release evidence requires a fixed viewport');
   await recordEvidence(
@@ -448,9 +553,12 @@ export async function captureReleaseEvidence({
       locale: 'zh-CN',
       project: testInfo.project.name,
       raw_screenshot: rawPath.slice(UI_ROOT.length + 1),
-      raw_sha256: createHash('sha256').update(screenshot).digest('hex'),
+      raw_sha256: rawHash,
       scenario: scenario.name,
       screenshot: path.slice(UI_ROOT.length + 1),
+      semantic_evidence: semanticPath.slice(UI_ROOT.length + 1),
+      semantic_guard: 'verified-fault-clean-capture',
+      semantic_sha256: createHash('sha256').update(semantic).digest('hex'),
       sha256: createHash('sha256').update(canonical).digest('hex'),
       theme,
       timezone: 'UTC',
@@ -464,7 +572,7 @@ export function releaseTheme(testInfo: TestInfo): ReleaseTheme {
   return projectTheme(testInfo.project.name);
 }
 
-export default async function resetReleaseEvidence(): Promise<void> {
-  if (!process.env.PLAYWRIGHT_EVIDENCE_RUN) return;
-  await rm(resolve(EVIDENCE_ROOT, RUN_ID), { force: true, recursive: true });
+export default async function initializeReleaseEvidence(): Promise<void> {
+  await mkdir(EVIDENCE_ROOT, { recursive: true });
+  await mkdir(resolve(EVIDENCE_ROOT, RUN_ID));
 }

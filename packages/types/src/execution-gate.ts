@@ -1,10 +1,11 @@
 import type {
+  EntryAuthorizationPolicy,
   KillSwitchState,
-  QuantRuntimeMode,
   RecommendationReportStatus,
   RecommendationStatus,
 } from './enums';
 import type {
+  ExecutionAuthorityCeiling,
   ExecutionEligibility,
   RiskEnvelope,
 } from './generated/quant-operator-api';
@@ -20,39 +21,38 @@ import type {
  * - {@link killSwitchAllowsNewEntry} ↔ `KillSwitchState::allows_new_entry`
  * - {@link isRecommendationActionableForIntent} ↔ `RecommendationStatus::is_actionable_for_intent`
  * - {@link isReportActionableForIntent} ↔ the report-side create guard (`published` only)
- * - {@link isRiskEnvelopeActionable} ↔ the mode-gate risk-envelope positivity check
+ * - {@link isRiskEnvelopeActionable} ↔ the intent-creation risk-envelope positivity check
  *
  * All monetary parsing goes through `decimal.js` — never `number` / `parseFloat`.
  */
 import Decimal from 'decimal.js';
 
 import {
+  ENTRY_AUTHORIZATION_POLICIES,
   KILL_SWITCH_STATES,
-  QUANT_RUNTIME_MODES,
   RECOMMENDATION_REPORT_STATUSES,
   RECOMMENDATION_STATUSES,
 } from './enums';
 
 /**
- * Whether the recommendation is eligible for execution in `mode`.
+ * Whether the recommendation ceiling admits the live authorization policy.
  *
- * Mirrors Rust `ExecutionEligibility::is_eligible`: the mode must be listed, and
- * `auto_execution` additionally requires an empty `ineligibility_reasons` set.
+ * Mirrors Rust `ExecutionEligibility::is_eligible`: operator authorization may
+ * use either executable ceiling, while policy automatic additionally requires
+ * the maximum ceiling and an empty blocker set.
  */
 export function isExecutionEligible(
-  eligibility: Pick<
-    ExecutionEligibility,
-    'eligible_modes' | 'ineligibility_reasons'
-  >,
-  mode: QuantRuntimeMode,
+  eligibility: Pick<ExecutionEligibility, 'blockers' | 'ceiling'>,
+  policy: EntryAuthorizationPolicy,
 ): boolean {
-  if (!eligibility.eligible_modes.includes(mode)) {
+  const ceiling: ExecutionAuthorityCeiling = eligibility.ceiling;
+  if (ceiling === 'analysis_only') {
     return false;
   }
-  return (
-    mode !== QUANT_RUNTIME_MODES.autoExecution ||
-    eligibility.ineligibility_reasons.length === 0
-  );
+  if (policy === ENTRY_AUTHORIZATION_POLICIES.operatorApprovalRequired) {
+    return ceiling === 'operator_approval' || ceiling === 'policy_automatic';
+  }
+  return ceiling === 'policy_automatic' && eligibility.blockers.length === 0;
 }
 
 /** Whether new entries may be opened — only the `closed` kill-switch state admits them. */
@@ -84,7 +84,7 @@ export function isRecommendationActionableForIntent(
 
 /**
  * Whether the risk envelope is usable: both the position and loss caps must be
- * strictly positive (mirrors the mode gate's `RiskEnvelopeInvalid` guard).
+ * strictly positive (mirrors the intent-creation `RiskEnvelopeInvalid` guard).
  */
 export function isRiskEnvelopeActionable(
   envelope: Pick<RiskEnvelope, 'max_loss_usd' | 'max_position_usd'>,

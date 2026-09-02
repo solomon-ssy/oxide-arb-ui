@@ -241,8 +241,8 @@ export function validateFeedbackCycleDetail(
       throw new TypeError('feedback coverage decision is unknown');
     }
     assertCount(
-      coverage.policy_evaluation_count,
-      'coverage.policy_evaluation_count',
+      coverage.model_learning_candidate_count,
+      'coverage.model_learning_candidate_count',
     );
     assertCount(coverage.mature_label_count, 'coverage.mature_label_count');
     assertCount(

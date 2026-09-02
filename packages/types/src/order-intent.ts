@@ -4,11 +4,7 @@ import type {
   TimeRangeQuery,
   UuidString,
 } from './common';
-import type {
-  ApprovalStatus,
-  OrderIntentStatus,
-  QuantRuntimeMode,
-} from './enums';
+import type { OrderIntentStatus } from './enums';
 import type { EntryOrderSpec } from './generated/quant-operator-api';
 
 type OrderAmount = EntryOrderSpec['amount'];
@@ -16,14 +12,8 @@ type OrderAmount = EntryOrderSpec['amount'];
 /** Filter + pagination for `GET /quant/intents`. */
 export interface OrderIntentListQuery extends PageQuery, TimeRangeQuery {
   status?: OrderIntentStatus;
-  /**
-   * Comma-separated multi-status queue preset (e.g. `approved,approved_by_policy`).
-   * When present the backend ignores `status`. Sent as a single CSV field
-   * because the query string cannot carry repeated keys.
-   */
+  /** Comma-separated multi-status queue preset. */
   statuses?: string;
-  approval_status?: ApprovalStatus;
-  runtime_mode?: QuantRuntimeMode;
   recommendation_id?: UuidString;
 }
 

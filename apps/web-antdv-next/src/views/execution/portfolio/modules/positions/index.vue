@@ -79,14 +79,14 @@ const [Grid, gridApi] = useVbenVxeGrid<PositionView>({
         },
       },
     },
-    rowConfig: { keyField: 'position_id' },
+    rowConfig: { keyField: 'strategy_position_lot_id' },
     toolbarConfig: { refresh: { code: 'query' } },
   },
 });
 
 function onActionClick({ code, row }: OnActionClickParams<PositionView>) {
   if (code === 'detail') {
-    openInspector(row.position_id);
+    openInspector(row.strategy_position_lot_id);
   }
 }
 

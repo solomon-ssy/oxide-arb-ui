@@ -95,7 +95,7 @@ export const OPERATIONS = {
   revoke: 'revoke',
   rollback: 'rollback',
   submit: 'submit',
-  switchMode: 'switch_mode',
+  updateRuntimeControl: 'update_runtime_control',
   update: 'update',
 } as const;
 
@@ -103,20 +103,21 @@ export type Operation = WireEnum<typeof OPERATIONS>;
 
 // ── Runtime governance ──────────────────────────────────────────────────────
 
-/** Quant runtime mode — the only runtime-mode axis (no dry-run/paper/live). */
-export const QUANT_RUNTIME_MODES = {
-  autoExecution: 'auto_execution',
-  reportOnly: 'report_only',
-  semiAuto: 'semi_auto',
+/** Runtime authority for creating and authorizing new entry intents. */
+export const ENTRY_AUTHORIZATION_POLICIES = {
+  operatorApprovalRequired: 'operator_approval_required',
+  policyAutomatic: 'policy_automatic',
 } as const;
 
-export type QuantRuntimeMode = WireEnum<typeof QUANT_RUNTIME_MODES>;
+export type EntryAuthorizationPolicy = WireEnum<
+  typeof ENTRY_AUTHORIZATION_POLICIES
+>;
 
-export const QUANT_RUNTIME_MODE_OPTIONS: readonly QuantRuntimeMode[] = [
-  QUANT_RUNTIME_MODES.reportOnly,
-  QUANT_RUNTIME_MODES.semiAuto,
-  QUANT_RUNTIME_MODES.autoExecution,
-];
+export const ENTRY_AUTHORIZATION_POLICY_OPTIONS: readonly EntryAuthorizationPolicy[] =
+  [
+    ENTRY_AUTHORIZATION_POLICIES.operatorApprovalRequired,
+    ENTRY_AUTHORIZATION_POLICIES.policyAutomatic,
+  ];
 
 /** Operational kill-switch state (mirrors Rust `KillSwitchState`). */
 export const KILL_SWITCH_STATES = {
@@ -130,10 +131,10 @@ export type KillSwitchState = WireEnum<typeof KILL_SWITCH_STATES>;
 
 /** Runtime authority for creating new settlement writes. */
 export const SETTLEMENT_WRITE_POLICIES = {
-  auto: 'auto',
   disabled: 'disabled',
   governedCanary: 'governed_canary',
-  semiAuto: 'semi_auto',
+  operatorApproval: 'operator_approval',
+  policyAutomatic: 'policy_automatic',
 } as const;
 
 export type SettlementWritePolicy = WireEnum<typeof SETTLEMENT_WRITE_POLICIES>;
@@ -142,7 +143,7 @@ export type SettlementWritePolicy = WireEnum<typeof SETTLEMENT_WRITE_POLICIES>;
 export const EXECUTION_RECOVERY_STEPS = {
   acknowledgeKillSwitch: 'acknowledge_kill_switch',
   resolveUnresolvableReconciliations: 'resolve_unresolvable_reconciliations',
-  verifyModePreflight: 'verify_mode_preflight',
+  verifyAuthorizationPreflight: 'verify_authorization_preflight',
 } as const;
 
 export type ExecutionRecoveryStep = WireEnum<typeof EXECUTION_RECOVERY_STEPS>;
@@ -403,10 +404,9 @@ export const FACTOR_VALUE_STATES = {
 
 export type FactorValueState = WireEnum<typeof FACTOR_VALUE_STATES>;
 
-/** Why a recommendation is ineligible for execution in a given mode. */
+/** Why a recommendation cannot receive its maximum execution authority. */
 export const INELIGIBILITY_REASONS = {
   automationCapExceeded: 'automation_cap_exceeded',
-  reportOnlyMode: 'report_only_mode',
 } as const;
 
 export type IneligibilityReason = WireEnum<typeof INELIGIBILITY_REASONS>;
@@ -427,37 +427,19 @@ export type EmptyReportReason = WireEnum<typeof EMPTY_REPORT_REASONS>;
 export const ORDER_INTENT_STATUSES = {
   admissionPending: 'admission_pending',
   admissionRejected: 'admission_rejected',
-  approved: 'approved',
-  approvedByPolicy: 'approved_by_policy',
+  authorizationRejected: 'authorization_rejected',
+  authorized: 'authorized',
   cancelled: 'cancelled',
-  draft: 'draft',
   expired: 'expired',
   failed: 'failed',
   filled: 'filled',
   invalidated: 'invalidated',
   partiallyFilled: 'partially_filled',
-  pendingApproval: 'pending_approval',
-  rejected: 'rejected',
+  pendingAuthorization: 'pending_authorization',
   submitted: 'submitted',
 } as const;
 
 export type OrderIntentStatus = WireEnum<typeof ORDER_INTENT_STATUSES>;
-
-export const APPROVAL_STATUSES = {
-  approved: 'approved',
-  expired: 'expired',
-  notRequired: 'not_required',
-  pending: 'pending',
-  rejected: 'rejected',
-} as const;
-
-export type ApprovalStatus = WireEnum<typeof APPROVAL_STATUSES>;
-
-export const ORDER_INTENT_KINDS = {
-  buy: 'buy',
-} as const;
-
-export type OrderIntentKind = WireEnum<typeof ORDER_INTENT_KINDS>;
 
 export const EXECUTION_ORDER_STATES = {
   accepted: 'accepted',
@@ -783,7 +765,6 @@ export const COHORT_EXCLUSION_REASONS = {
   nonPrimaryReport: 'non_primary_report',
   outsideFrozenWindow: 'outside_frozen_window',
   recommendationNotPublished: 'recommendation_not_published',
-  reportOnlyNoExecutionAuthority: 'report_only_no_execution_authority',
 } as const;
 
 export type CohortExclusionReason = WireEnum<typeof COHORT_EXCLUSION_REASONS>;

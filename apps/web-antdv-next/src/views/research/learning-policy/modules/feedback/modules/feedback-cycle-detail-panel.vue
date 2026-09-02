@@ -1042,11 +1042,13 @@ function driftColor(assessment: FeedbackDriftAssessment) {
           </DescriptionsItem>
           <DescriptionsItem
             :label="
-              $t('page.research.feedback.detail.coverage.policyEvaluations')
+              $t(
+                'page.research.feedback.detail.coverage.modelLearningCandidates',
+              )
             "
           >
             <span class="font-mono tabular-nums">
-              {{ detail.coverage.policy_evaluation_count }}
+              {{ detail.coverage.model_learning_candidate_count }}
             </span>
           </DescriptionsItem>
           <DescriptionsItem

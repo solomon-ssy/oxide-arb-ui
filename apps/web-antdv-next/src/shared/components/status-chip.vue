@@ -48,7 +48,7 @@ withDefaults(
   font-size: 0.75rem;
   font-weight: 560;
   line-height: 1.25;
-  color: hsl(var(--qp-tone-color));
+  color: hsl(var(--qp-tone-ink));
   background: hsl(var(--qp-tone-color) / 10%);
   border: 1px solid hsl(var(--qp-tone-color) / 46%);
   border-radius: var(--qp-radius-sm);

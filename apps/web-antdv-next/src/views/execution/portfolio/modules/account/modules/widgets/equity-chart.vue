@@ -102,6 +102,10 @@ watch(
     icon="lucide:line-chart"
     @resize="resize"
   >
-    <EchartsUI ref="chartRef" height="100%" />
+    <EchartsUI
+      ref="chartRef"
+      :data-equity-series-points="snapshots.length"
+      height="100%"
+    />
   </ChartPanel>
 </template>

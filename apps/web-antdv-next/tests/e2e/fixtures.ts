@@ -1,16 +1,38 @@
 import type { Buffer } from 'node:buffer';
 import type { APIRequestContext, Page, WebSocket } from 'playwright/test';
 
+import type {
+  FeatureIntegritySummaryView,
+  QuantReportDetailView,
+  ReportScheduleHealthView,
+  SystemAlertEvent,
+} from '@vben/types';
+
+import type { AlertWitness } from './browser-failure-audit';
+
+import { performance } from 'node:perf_hooks';
 import process from 'node:process';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import AxeBuilder from '@axe-core/playwright';
 import { test as base, expect, request } from 'playwright/test';
 
-import { BrowserFailureAudit } from './browser-failure-audit';
+import { BrowserFailureAudit, remainingBudget } from './browser-failure-audit';
 
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'system-test-bootstrap-admin';
+const CONTAINED_REPORT_ALERT: SystemAlertEvent = {
+  affects_trading: true,
+  category: 'trading_safety',
+  dedupe_secs: 900,
+  idempotency_key: 'quant-report-health:no-current',
+  level: 'critical',
+  message:
+    'No global current Published authority exists; new entry is unavailable.',
+  source: 'scheduler',
+  title: 'No current recommendation report',
+  visible_toast: true,
+};
 
 interface AuthenticatedApi {
   context: APIRequestContext;
@@ -21,14 +43,6 @@ interface ApiEnvelope<T> {
   code: number;
   data: T;
   message: string;
-}
-
-interface FeedbackSchedulerList {
-  items: Array<{
-    pause_revision: number;
-    paused: boolean;
-    research_profile_id: string;
-  }>;
 }
 
 interface ApiPage<T> {
@@ -95,25 +109,63 @@ export const test = base.extend<BrowserFixtures, WorkerFixtures>({
     },
     { scope: 'worker' },
   ],
-  authenticatedPage: async (
-    { adminApi, browserAudit, page },
-    use,
-    testInfo,
-  ) => {
-    if (testInfo.project.name === 'functional-chromium') {
-      await resumeFeedbackSchedulers(adminApi.context);
-    }
+  authenticatedPage: async ({ browserAudit, page }, use) => {
     await browserAudit.track(page);
     await login(page);
     await use(page);
   },
   browserAudit: [
-    async ({ page }, use) => {
+    async ({ adminApi, page }, use, testInfo) => {
       const audit = new BrowserFailureAudit();
-      await audit.track(page);
-      await use(audit);
-      await audit.settle();
-      expect(audit.failures, audit.failures.join('\n')).toEqual([]);
+      const run = async () => {
+        await audit.track(page);
+        await use(audit);
+        try {
+          await audit.settle();
+          await audit.dismissExpectedAlerts(page, performance.now() + 10_000);
+          await audit.revalidatePendingAlerts(performance.now() + 10_000);
+        } finally {
+          await testInfo.attach('browser-semantic-audit', {
+            body: JSON.stringify(audit.semanticEvidence(), null, 2),
+            contentType: 'application/json',
+          });
+        }
+        expect(audit.failures, audit.failures.join('\n')).toEqual([]);
+      };
+      if (
+        (process.env.PLAYWRIGHT_PRODUCTION_FIXTURE ?? 'governed-feedback') ===
+        'governed-feedback'
+      ) {
+        let baseline: AlertWitness | undefined;
+        await audit.withExpectedAlert(
+          CONTAINED_REPORT_ALERT,
+          async (deadline) => {
+            const current = await readBrowserContainment(
+              adminApi.context,
+              deadline,
+            );
+            if (baseline) {
+              for (const key of [
+                'report_id',
+                'sampled_run_id',
+                'latch_run_id',
+                'report_status_reason',
+              ]) {
+                if (current[key] !== baseline[key])
+                  throw new Error(
+                    `Browser expected-fault identity changed: ${key}`,
+                  );
+              }
+            } else {
+              baseline = current;
+            }
+            return current;
+          },
+          run,
+        );
+      } else {
+        await run();
+      }
     },
     { auto: true },
   ],
@@ -130,29 +182,6 @@ export const test = base.extend<BrowserFixtures, WorkerFixtures>({
     { scope: 'worker' },
   ],
 });
-
-async function resumeFeedbackSchedulers(context: APIRequestContext) {
-  const schedulers = await readApiData<FeedbackSchedulerList>(
-    context,
-    '/api/research/feedback-schedulers',
-  );
-  for (const scheduler of schedulers.items) {
-    if (!scheduler.paused) continue;
-    const response = await context.post(
-      `/api/research/feedback-schedulers/${encodeURIComponent(scheduler.research_profile_id)}/resume`,
-      {
-        data: {
-          expected_pause_revision: scheduler.pause_revision,
-          note: 'Functional Playwright scenarios exercise the real autonomous scheduler.',
-          reason_code: 'playwright_functional_scheduler',
-        },
-        headers: { 'x-acting-role': 'super_admin' },
-      },
-    );
-    const body = await response.text();
-    expect(response.ok(), body).toBeTruthy();
-  }
-}
 
 export { expect } from 'playwright/test';
 
@@ -234,11 +263,14 @@ export async function readFirstApiItem<T>(
 export async function readApiData<T>(
   context: APIRequestContext,
   path: string,
+  deadline = performance.now() + 30_000,
 ): Promise<T> {
   let response;
   for (let attempt = 0; ; attempt += 1) {
     try {
-      response = await context.get(path);
+      response = await context.get(path, {
+        timeout: remainingBudget(deadline),
+      });
       break;
     } catch (error) {
       if (
@@ -248,10 +280,11 @@ export async function readApiData<T>(
       ) {
         throw error;
       }
-      await delay(100 * (attempt + 1));
+      await delay(Math.min(100 * (attempt + 1), remainingBudget(deadline)));
     }
   }
   const body = await response.text();
+  remainingBudget(deadline);
   if (!response.ok()) {
     throw new Error(`GET ${path} failed with ${response.status()}: ${body}`);
   }
@@ -262,4 +295,78 @@ export async function readApiData<T>(
     );
   }
   return envelope.data;
+}
+
+export async function readBrowserContainment(
+  context: APIRequestContext,
+  deadline: number,
+): Promise<AlertWitness> {
+  const [integrity, health] = await Promise.all([
+    readApiData<FeatureIntegritySummaryView>(
+      context,
+      '/api/research/feature-integrity/summary',
+      deadline,
+    ),
+    readApiData<ReportScheduleHealthView>(
+      context,
+      '/api/quant/report-schedules/health',
+      deadline,
+    ),
+  ]);
+  const sampled = integrity.last_sampled_run;
+  if (
+    !sampled?.report_id ||
+    sampled.kind !== 'sampled' ||
+    !['failed', 'mismatched'].includes(sampled.status) ||
+    !sampled.containment_completed_at
+  ) {
+    throw new Error(
+      'Browser expected-fault evidence requires a contained unsafe sampled report run',
+    );
+  }
+  const cause = [sampled, integrity.last_full_run].find(
+    (run) => run?.parity_run_id === integrity.latch.blocking_run_id,
+  );
+  if (
+    !integrity.latch.open ||
+    !cause ||
+    !['failed', 'mismatched'].includes(cause.status)
+  ) {
+    throw new Error(
+      'Browser expected-fault evidence requires the exact open unsafe parity latch',
+    );
+  }
+  const report = await readApiData<QuantReportDetailView>(
+    context,
+    `/api/quant/reports/${sampled.report_id}`,
+    deadline,
+  );
+  const reason = `feature parity containment for run ${sampled.parity_run_id}`;
+  if (
+    report.status !== 'revoked' ||
+    report.status_reason !== reason ||
+    !report.revoked_at ||
+    report.recommendation_report_id !== sampled.report_id ||
+    health.current_reports.length > 0
+  ) {
+    throw new Error(
+      'Browser expected-fault evidence lost its exact revoked report or no-current authority state',
+    );
+  }
+  remainingBudget(deadline);
+  return {
+    current_published_reports: 0,
+    kind: 'browser_parity_containment',
+    latch_open: true,
+    latch_run_id: cause.parity_run_id,
+    latch_run_status: cause.status,
+    observed_at: health.observed_at,
+    report_id: report.recommendation_report_id,
+    report_status: report.status,
+    report_status_reason: reason,
+    revoked_at: report.revoked_at,
+    sampled_containment_completed_at: sampled.containment_completed_at,
+    sampled_run_id: sampled.parity_run_id,
+    sampled_status: sampled.status,
+  };
 }

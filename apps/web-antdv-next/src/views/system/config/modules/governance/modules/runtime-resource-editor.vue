@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type {
   ConfigResourceKind,
-  ExecutionAutomationPolicy,
+  ExecutionAuthorizationPolicy,
   ExecutionRiskPolicy,
   ModelRouting,
   OperationsPolicy,
@@ -15,7 +15,7 @@ import type { PolicyClientValidationIssue } from './policy-schema';
 
 import { computed } from 'vue';
 
-import ExecutionAutomationPolicyEditor from './execution-automation-policy-editor.vue';
+import ExecutionAuthorizationPolicyEditor from './execution-authorization-policy-editor.vue';
 import ExecutionRiskPolicyEditor from './execution-risk-policy-editor.vue';
 import ModelRoutingEditor from './model-routing-editor.vue';
 import OperationsPolicyEditor from './operations-policy-editor.vue';
@@ -46,8 +46,8 @@ const executionRisk = computed(() => props.modelValue as ExecutionRiskPolicy);
 const modelRouting = computed(() => props.modelValue as ModelRouting);
 const reportSchedule = computed(() => props.modelValue as ReportSchedule);
 const operations = computed(() => props.modelValue as OperationsPolicy);
-const executionAutomation = computed(
-  () => props.modelValue as ExecutionAutomationPolicy,
+const executionAuthorization = computed(
+  () => props.modelValue as ExecutionAuthorizationPolicy,
 );
 </script>
 
@@ -92,12 +92,12 @@ const executionAutomation = computed(
     :model-value="operations"
     @update:model-value="emit('update:modelValue', $event)"
   />
-  <ExecutionAutomationPolicyEditor
-    v-else-if="resource === 'execution_automation_policy'"
+  <ExecutionAuthorizationPolicyEditor
+    v-else-if="resource === 'execution_authorization_policy'"
     :disabled="disabled"
     :fields="fields"
     :issues="issues"
-    :model-value="executionAutomation"
+    :model-value="executionAuthorization"
     @update:model-value="emit('update:modelValue', $event)"
   />
 </template>

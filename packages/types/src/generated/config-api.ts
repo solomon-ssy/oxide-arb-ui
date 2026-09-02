@@ -14,7 +14,7 @@ export type PolicyActivationKind =
   | 'promote'
   | 'rollback';
 export type ConfigResourceKind =
-  | 'execution_automation_policy'
+  | 'execution_authorization_policy'
   | 'execution_risk_policy'
   | 'model_routing'
   | 'operations_policy'
@@ -30,8 +30,8 @@ export type ConfigResourceKind =
  */
 export type PolicyDocument =
   | {
-      document: ExecutionAutomationPolicy;
-      resource_kind: 'execution_automation_policy';
+      document: ExecutionAuthorizationPolicy;
+      resource_kind: 'execution_authorization_policy';
     }
   | {
       document: ExecutionRiskPolicy;
@@ -212,10 +212,9 @@ export type PolicyConsumer =
   | 'recommendation_composer'
   | 'report_coordinator'
   | 'report_scheduler'
-  | 'runtime_mode_gate'
   | 'worker_admission';
 export type PolicyApplyBoundary =
-  | 'execution_automation_policy_admission'
+  | 'execution_authorization_admission'
   | 'future_report_run_reconcile'
   | 'model_evaluation_claim'
   | 'operational_admission'
@@ -524,6 +523,7 @@ export interface ExecutionRiskPolicy {
   breaker: ExecutionBreakerConfig;
   entry_order_policy: EntryOrderPolicy;
   exit_monitor: ExitMonitorPolicy;
+  maker_rebate: MakerRebatePolicy;
   portfolio: PortfolioConfig;
   reconciliation: ReconciliationPolicy;
   /**
@@ -646,6 +646,23 @@ export interface ExitSignalReinferencePolicy {
    * exits are suppressed (fail-safe hold; SL/time/trailing still apply).
    */
   shadow_mode: boolean;
+}
+/**
+ * Frozen account-level policy for valuing delayed maker rebates.
+ */
+export interface MakerRebatePolicy {
+  /**
+   * Conservative lag from UTC program-day close while observed history is insufficient.
+   */
+  fallback_lag_from_program_close_secs: number;
+  /**
+   * Complete venue-reported-accrual to wallet-credit program days required for p95.
+   */
+  observed_p95_min_samples: number;
+  /**
+   * Day-local minimum venue-calculated accrual required for payout.
+   */
+  payout_threshold_usd: string;
 }
 /**
  * Portfolio policy expressed entirely as hard economic constraints.
@@ -1100,6 +1117,10 @@ export interface OutcomeReconciliationPolicy {
    */
   candidate_batch_size: number;
   /**
+   * Maximum arrival lag admitted before a horizon outcome seals typed censor evidence.
+   */
+  economic_source_lateness_secs: number;
+  /**
    * Whether the outcome reconciliation worker is enabled.
    */
   enabled: boolean;
@@ -1113,10 +1134,15 @@ export interface OutcomeReconciliationPolicy {
   sweep_secs: number;
 }
 /**
- * Explicit authorization for semi-automatic and automatic execution.
+ * Explicit authorization policy for recommendation entry intents.
  */
-export interface ExecutionAutomationPolicy {
-  auto_execution: AutoExecutionConfig;
+export interface ExecutionAuthorizationPolicy {
+  /**
+   * Seconds an operator authorization remains valid before admission must
+   * obtain fresh account, market, policy, and economic-health evidence.
+   */
+  operator_approval_ttl_secs: number;
+  policy_automatic_limits: PolicyAutomaticLimits;
   /**
    * A monotonic schema version for feature / factor / label / config schemas.
    *
@@ -1126,29 +1152,19 @@ export interface ExecutionAutomationPolicy {
    * values are validated through [`SchemaVersion::try_new`].
    */
   schema_version: number;
-  semi_auto: SemiAutoConfig;
 }
 /**
- * Auto-execution policy.
+ * Limits for policy-automatic authorization.
  */
-export interface AutoExecutionConfig {
+export interface PolicyAutomaticLimits {
   /**
-   * Maximum orders auto-created per report.
+   * Maximum automatically authorized orders per report.
    */
   max_orders_per_report: number;
   /**
-   * Maximum total USD auto-executed per report.
+   * Maximum total USD automatically authorized per report.
    */
   max_total_usd_per_report: string;
-}
-/**
- * Semi-auto approval policy.
- */
-export interface SemiAutoConfig {
-  /**
-   * Approval time-to-live in seconds.
-   */
-  approval_ttl_secs: number;
 }
 /**
  * Typed validation evidence persisted with a validated policy revision.
@@ -1207,7 +1223,7 @@ export interface PolicyValidationSubject {
  * Revision identities frozen at a decision boundary.
  */
 export interface PolicyRevisionBundle {
-  execution_automation_policy?: null | string;
+  execution_authorization_policy?: null | string;
   execution_risk_policy?: null | string;
   model_routing?: null | string;
   operations_policy?: null | string;

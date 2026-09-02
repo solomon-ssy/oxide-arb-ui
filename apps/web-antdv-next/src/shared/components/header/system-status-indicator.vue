@@ -86,7 +86,9 @@ const label = computed(
   () => startingDetail.value ?? $t(`page.system.indicator.${indicator.value}`),
 );
 
-const runtimeMode = computed(() => status.value?.quant_runtime_mode ?? null);
+const entryAuthorizationPolicy = computed(
+  () => status.value?.entry_authorization_policy ?? null,
+);
 const killSwitch = computed(() => status.value?.kill_switch ?? null);
 
 const marketDataReady = computed(
@@ -142,13 +144,13 @@ function degradeReasonLabel(reason: OperationalDegradeReason): string {
       >
         <div class="grid grid-cols-2 gap-x-3 gap-y-2">
           <span class="text-muted-foreground">
-            {{ $t('page.system.field.mode') }}
+            {{ $t('page.system.field.entryAuthorizationPolicy') }}
           </span>
           <div class="flex justify-end">
             <EnumTag
               context="header-system"
-              name="QuantRuntimeMode"
-              :value="runtimeMode"
+              name="EntryAuthorizationPolicy"
+              :value="entryAuthorizationPolicy"
             />
           </div>
           <span class="text-muted-foreground text-xs col-span-2">

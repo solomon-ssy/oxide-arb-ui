@@ -4,17 +4,40 @@
  */
 
 export const ENUM_CATALOG = {
+  AccountChainExecutionRole: ['maker', 'taker', 'self_match'],
+  AccountExecutionAssociationKind: [
+    'system_order',
+    'recovery_incident',
+    'opening_inventory',
+  ],
+  AccountPauseOperationKind: ['pause', 'unpause'],
+  AccountPauseOperationState: [
+    'prepared',
+    'dispatched',
+    'ambiguous',
+    'confirmed',
+    'failed',
+  ],
+  AccountRecoveryIncidentKind: [
+    'unknown_external_execution',
+    'break_glass_restart',
+    'opening_inventory',
+    'account_mismatch',
+  ],
+  AccountRecoveryIncidentStatus: ['open', 'reconciling', 'sealed'],
   AccountSource: ['polymarket', 'historical_replay'],
   AdmissionCheckId: [
     'intent_state',
     'recommendation_freshness',
     'report_status',
-    'runtime_mode',
+    'authorization_policy',
+    'economic_health',
     'settlement_recovery',
     'model_route_binding',
     'data_quality',
     'book_freshness',
     'venue_metadata',
+    'venue_funding',
     'entry_condition',
     'risk_envelope_hash',
     'capital_budget',
@@ -45,13 +68,6 @@ export const ENUM_CATALOG = {
     'intent_expired',
     'operator_cancelled',
   ],
-  ApprovalStatus: [
-    'not_required',
-    'pending',
-    'approved',
-    'rejected',
-    'expired',
-  ],
   AttributionArtifactKind: [
     'prediction_explanation',
     'decision_intervention_replay',
@@ -61,6 +77,7 @@ export const ENUM_CATALOG = {
     'policy_counterfactual_outcome',
   ],
   AttributionCohort: ['training', 'evaluation', 'shadow'],
+  AuthorizationKind: ['operator_approval', 'active_policy'],
   CalibrationKind: [
     'model_score',
     'market_price_bias',
@@ -80,7 +97,6 @@ export const ENUM_CATALOG = {
     'control_plane_not_ready',
     'catalog_baseline_missing',
     'operational_phase_blocks_reports',
-    'runtime_mode_report_only',
     'kill_switch_blocks_entries',
     'operational_phase_blocks_submission',
     'no_serving_evidence',
@@ -124,12 +140,12 @@ export const ENUM_CATALOG = {
   CohortCensorReason: [
     'resolution_unavailable_at_cutoff',
     'execution_outcome_unavailable_at_cutoff',
+    'economic_outcome_unavailable_at_cutoff',
   ],
   CohortExclusionReason: [
     'recommendation_not_published',
     'non_primary_report',
     'outside_frozen_window',
-    'report_only_no_execution_authority',
     'execution_not_attempted',
   ],
   ConfigAuditAction: [
@@ -145,7 +161,7 @@ export const ENUM_CATALOG = {
     'model_routing',
     'report_schedule',
     'operations_policy',
-    'execution_automation_policy',
+    'execution_authorization_policy',
   ],
   DataQualityStatus: [
     'fresh',
@@ -174,6 +190,7 @@ export const ENUM_CATALOG = {
     'available_cash_exhausted',
     'no_positive_signal',
   ],
+  EntryAuthorizationPolicy: ['operator_approval_required', 'policy_automatic'],
   EntryConditionAuditAction: [
     'created',
     'evaluated',
@@ -204,6 +221,11 @@ export const ENUM_CATALOG = {
     'unfilled',
     'partially_filled',
     'fully_filled',
+  ],
+  ExecutionAuthorityCeiling: [
+    'analysis_only',
+    'operator_approval',
+    'policy_automatic',
   ],
   ExecutionOrderPhase: ['entry', 'exit'],
   ExecutionOrderState: [
@@ -310,11 +332,6 @@ export const ENUM_CATALOG = {
     'governed_acknowledge',
   ],
   FeeLiquidityRole: ['taker', 'maker'],
-  FeeMeasurementStage: [
-    'prepared_expected',
-    'authenticated_trade_derived',
-    'on_chain_settled',
-  ],
   FeedbackCohort: [
     'model_learning',
     'model_score_learning',
@@ -474,7 +491,7 @@ export const ENUM_CATALOG = {
     'superseded',
     'succeeded',
   ],
-  IneligibilityReason: ['report_only_mode', 'automation_cap_exceeded'],
+  IneligibilityReason: ['automation_cap_exceeded'],
   KillSwitchState: [
     'closed',
     'execution_halted',
@@ -512,13 +529,6 @@ export const ENUM_CATALOG = {
     'delisted',
   ],
   MenuKind: ['directory', 'menu', 'button'],
-  ModeDenialReason: [
-    'report_only',
-    'recommendation_ineligible',
-    'risk_envelope_invalid',
-    'kill_switch_blocks_entry',
-    'auto_execution_not_allowed',
-  ],
   ModelFamily: [
     'weighted_factor',
     'classical_logistic_regression',
@@ -572,18 +582,15 @@ export const ENUM_CATALOG = {
   ],
   OperationHttpMethod: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'SYSTEM'],
   OperationOutcome: ['success', 'failure', 'denied'],
-  OrderIntentKind: ['buy'],
   OrderIntentStatus: [
-    'draft',
-    'pending_approval',
-    'approved',
-    'approved_by_policy',
+    'pending_authorization',
+    'authorized',
     'admission_pending',
     'admission_rejected',
     'submitted',
     'partially_filled',
     'filled',
-    'rejected',
+    'authorization_rejected',
     'cancelled',
     'failed',
     'expired',
@@ -615,7 +622,7 @@ export const ENUM_CATALOG = {
     'model_evaluation_claim',
     'future_report_run_reconcile',
     'operational_admission',
-    'execution_automation_policy_admission',
+    'execution_authorization_admission',
   ],
   PolicyApprovalDecision: ['approved', 'rejected'],
   PolicyConsumer: [
@@ -631,7 +638,6 @@ export const ENUM_CATALOG = {
     'report_scheduler',
     'worker_admission',
     'alert_dispatcher',
-    'runtime_mode_gate',
   ],
   PolicyPreflightCheckKind: [
     'typed_schema',
@@ -665,7 +671,14 @@ export const ENUM_CATALOG = {
   PositionLedgerState: ['open', 'closing', 'closed', 'settled'],
   PriceComparison: ['at_or_above', 'at_or_below'],
   ProfileArtifactKind: ['feature', 'scoring', 'domain', 'research_method'],
-  QuantRuntimeMode: ['report_only', 'semi_auto', 'auto_execution'],
+  RecommendationEconomicOutcomeState: [
+    'entry_not_triggered',
+    'entry_unfilled',
+    'policy_exited',
+    'horizon_liquidated',
+    'resolved_before_horizon',
+    'censored',
+  ],
   RecommendationReportStatus: [
     'prepared',
     'published',
@@ -839,6 +852,12 @@ export const ENUM_CATALOG = {
   ],
   RoleKind: ['builtin', 'custom'],
   RoleStatus: ['enabled', 'disabled'],
+  RouteEconomicHealthState: [
+    'insufficient_evidence',
+    'healthy',
+    'degraded',
+    'data_incomplete',
+  ],
   RuntimeActivityActionKind: [
     'cancel_research_job',
     'retry_research_job',
@@ -936,11 +955,21 @@ export const ENUM_CATALOG = {
     'confirmed',
     'failed',
   ],
-  SettlementWritePolicy: ['disabled', 'governed_canary', 'semi_auto', 'auto'],
+  SettlementWritePolicy: [
+    'disabled',
+    'governed_canary',
+    'operator_approval',
+    'policy_automatic',
+  ],
   ShadowBindingStatus: ['active', 'rejected', 'promoted', 'cancelled'],
   Side: ['BUY', 'SELL'],
   SourceSliceStatus: ['materializing', 'ready', 'failed'],
   StalenessLevel: ['fresh', 'acceptable', 'stale', 'expired'],
+  StrategyPositionOriginKind: [
+    'system_intent',
+    'account_recovery_incident',
+    'opening_inventory',
+  ],
   TickSize: ['0.1', '0.01', '0.005', '0.0025', '0.001', '0.0001'],
   TradePolicyGovernanceAction: ['validate', 'publish', 'retire'],
   TradePolicyStatus: ['draft', 'validated', 'published', 'retired'],
@@ -975,6 +1004,30 @@ export const ENUM_CATALOG = {
 } as const;
 
 export const ENUM_METADATA = {
+  AccountChainExecutionRole: {
+    kind: 'postgres',
+    module: 'execution',
+  },
+  AccountExecutionAssociationKind: {
+    kind: 'postgres',
+    module: 'execution',
+  },
+  AccountPauseOperationKind: {
+    kind: 'postgres',
+    module: 'execution',
+  },
+  AccountPauseOperationState: {
+    kind: 'postgres',
+    module: 'execution',
+  },
+  AccountRecoveryIncidentKind: {
+    kind: 'postgres',
+    module: 'execution',
+  },
+  AccountRecoveryIncidentStatus: {
+    kind: 'postgres',
+    module: 'execution',
+  },
   AccountSource: {
     kind: 'postgres',
     module: 'quant',
@@ -991,15 +1044,15 @@ export const ENUM_METADATA = {
     kind: 'wire',
     module: 'execution',
   },
-  ApprovalStatus: {
-    kind: 'postgres',
-    module: 'quant',
-  },
   AttributionArtifactKind: {
     kind: 'postgres',
     module: 'quant',
   },
   AttributionCohort: {
+    kind: 'postgres',
+    module: 'quant',
+  },
+  AuthorizationKind: {
     kind: 'postgres',
     module: 'quant',
   },
@@ -1111,6 +1164,10 @@ export const ENUM_METADATA = {
     kind: 'wire',
     module: 'quant',
   },
+  EntryAuthorizationPolicy: {
+    kind: 'postgres',
+    module: 'quant',
+  },
   EntryConditionAuditAction: {
     kind: 'postgres',
     module: 'quant',
@@ -1128,6 +1185,10 @@ export const ENUM_METADATA = {
     module: 'quant',
   },
   ExecutionAttemptTerminalState: {
+    kind: 'postgres',
+    module: 'quant',
+  },
+  ExecutionAuthorityCeiling: {
     kind: 'postgres',
     module: 'quant',
   },
@@ -1208,10 +1269,6 @@ export const ENUM_METADATA = {
     module: 'quant',
   },
   FeeLiquidityRole: {
-    kind: 'postgres',
-    module: 'fee',
-  },
-  FeeMeasurementStage: {
     kind: 'postgres',
     module: 'fee',
   },
@@ -1323,10 +1380,6 @@ export const ENUM_METADATA = {
     kind: 'postgres',
     module: 'rbac',
   },
-  ModeDenialReason: {
-    kind: 'wire',
-    module: 'execution',
-  },
   ModelFamily: {
     kind: 'postgres',
     module: 'model',
@@ -1374,10 +1427,6 @@ export const ENUM_METADATA = {
   OperationOutcome: {
     kind: 'postgres',
     module: 'operation_log',
-  },
-  OrderIntentKind: {
-    kind: 'postgres',
-    module: 'execution',
   },
   OrderIntentStatus: {
     kind: 'postgres',
@@ -1451,7 +1500,7 @@ export const ENUM_METADATA = {
     kind: 'postgres',
     module: 'runtime_config',
   },
-  QuantRuntimeMode: {
+  RecommendationEconomicOutcomeState: {
     kind: 'postgres',
     module: 'quant',
   },
@@ -1551,6 +1600,10 @@ export const ENUM_METADATA = {
     kind: 'postgres',
     module: 'rbac',
   },
+  RouteEconomicHealthState: {
+    kind: 'postgres',
+    module: 'quant',
+  },
   RuntimeActivityActionKind: {
     kind: 'wire',
     module: 'runtime_activity',
@@ -1630,6 +1683,10 @@ export const ENUM_METADATA = {
   StalenessLevel: {
     kind: 'wire',
     module: 'common',
+  },
+  StrategyPositionOriginKind: {
+    kind: 'postgres',
+    module: 'execution',
   },
   TickSize: {
     kind: 'postgres',

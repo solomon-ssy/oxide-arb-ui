@@ -10,7 +10,7 @@ import type {
   VenueIncentiveStage,
 } from '@vben/types';
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onScopeDispose, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 import { useRequestHandler } from '@vben/request/qp';
@@ -22,6 +22,7 @@ import {
   Empty,
   message,
   Select,
+  Skeleton,
   Table,
   Tag,
 } from 'antdv-next';
@@ -31,6 +32,7 @@ import {
   listIncentiveEvents,
 } from '#/api/incentives';
 import { $t } from '#/locales';
+import { LatestRequestOwner } from '#/shared/async/latest-request-owner';
 import EntityRouteLink from '#/shared/components/entity-route-link.vue';
 import {
   EMPTY_PLACEHOLDER,
@@ -53,6 +55,9 @@ const canRead = hasAccessByCodes(['account_snapshot:read']);
 const reconciliation = ref<IncentiveReconciliationView | null>(null);
 const events = ref<VenueIncentiveEventView[]>([]);
 const loading = ref(false);
+const loaded = ref(false);
+const failed = ref({ health: false, ledger: false });
+const requestOwner = new LatestRequestOwner();
 const page = ref(1);
 const size = ref(20);
 const total = ref(0);
@@ -122,8 +127,8 @@ const columns: TableColumnsType<VenueIncentiveEventView> = [
     width: 160,
   },
   {
-    dataIndex: 'execution_fill_id',
-    key: 'execution_fill_id',
+    dataIndex: 'clob_trade_observation_id',
+    key: 'clob_trade_observation_id',
     title: $t('page.quantAccount.incentives.ledger.fill'),
     width: 160,
   },
@@ -149,6 +154,7 @@ const columns: TableColumnsType<VenueIncentiveEventView> = [
 
 async function load() {
   if (!canRead) return;
+  const request = requestOwner.begin();
   loading.value = true;
   const query: VenueIncentiveEventQuery = {
     kind: kind.value,
@@ -161,10 +167,18 @@ async function load() {
     handleRequest(getIncentiveReconciliation),
     handleRequest(() => listIncentiveEvents(query)),
   ]);
-  reconciliation.value = health ?? null;
-  events.value = ledger?.items ?? [];
-  total.value = ledger?.total ?? 0;
-  loading.value = false;
+  request.commit(() => {
+    if (health !== null) reconciliation.value = health;
+    events.value = ledger?.items ?? [];
+    total.value = ledger?.total ?? 0;
+    if (ledger !== null) {
+      page.value = ledger.page;
+      size.value = ledger.size;
+    }
+    failed.value = { health: health === null, ledger: ledger === null };
+    loaded.value = true;
+    loading.value = false;
+  });
 }
 
 function applyFilters() {
@@ -197,8 +211,8 @@ function referenceValue(
   key: string,
 ): null | string | undefined {
   switch (key) {
-    case 'execution_fill_id': {
-      return record.execution_fill_id;
+    case 'clob_trade_observation_id': {
+      return record.clob_trade_observation_id;
     }
     case 'market_id': {
       return record.market_id;
@@ -220,6 +234,7 @@ function isZeroAmount(value: string): boolean {
 }
 
 onMounted(load);
+onScopeDispose(() => requestOwner.invalidate());
 </script>
 
 <template>
@@ -249,8 +264,30 @@ onMounted(load);
             }}
           </Tag>
         </template>
+        <Alert
+          v-if="failed.health"
+          :message="$t('page.quantAccount.incentives.loadError')"
+          data-testid="incentive-reconciliation-error"
+          show-icon
+          type="error"
+        >
+          <template #action>
+            <Button :loading="loading" size="small" @click="load">
+              {{ $t('page.shared.asyncState.retry') }}
+            </Button>
+          </template>
+        </Alert>
+        <Skeleton
+          v-if="!loaded"
+          :aria-label="$t('page.quantAccount.incentives.loading')"
+          active
+          aria-busy="true"
+          data-testid="incentive-reconciliation-loading"
+          :paragraph="{ rows: 4 }"
+          role="status"
+        />
         <div
-          v-if="reconciliation"
+          v-else-if="reconciliation"
           class="flex flex-col gap-3"
           data-testid="incentive-reconciliation"
         >
@@ -333,7 +370,7 @@ onMounted(load);
           />
         </div>
         <Empty
-          v-else
+          v-else-if="!failed.health"
           :description="$t('page.quantAccount.incentives.unavailable')"
           :image="Empty.PRESENTED_IMAGE_SIMPLE"
         />
@@ -351,6 +388,7 @@ onMounted(load);
           <Select
             v-model:value="kind"
             allow-clear
+            :aria-label="$t('page.quantAccount.incentives.ledger.kind')"
             class="w-full sm:w-48"
             :options="kindOptions"
             :placeholder="$t('page.quantAccount.incentives.ledger.kind')"
@@ -358,12 +396,14 @@ onMounted(load);
           <Select
             v-model:value="stage"
             allow-clear
+            :aria-label="$t('page.quantAccount.incentives.ledger.stage')"
             class="w-full sm:w-52"
             :options="stageOptions"
             :placeholder="$t('page.quantAccount.incentives.ledger.stage')"
           />
           <DatePicker
             v-model:value="programDate"
+            :aria-label="$t('page.quantAccount.incentives.ledger.programDate')"
             class="w-full sm:w-auto"
             :placeholder="$t('page.quantAccount.incentives.ledger.programDate')"
           />
@@ -376,7 +416,30 @@ onMounted(load);
             </Button>
           </div>
         </div>
-        <div class="min-w-0">
+        <Alert
+          v-if="failed.ledger"
+          :message="$t('page.quantAccount.incentives.ledger.loadError')"
+          class="mb-3"
+          data-testid="incentive-ledger-error"
+          show-icon
+          type="error"
+        >
+          <template #action>
+            <Button :loading="loading" size="small" @click="load">
+              {{ $t('page.shared.asyncState.retry') }}
+            </Button>
+          </template>
+        </Alert>
+        <Skeleton
+          v-if="!loaded || (loading && events.length === 0)"
+          :aria-label="$t('page.quantAccount.incentives.ledger.loading')"
+          active
+          aria-busy="true"
+          data-testid="incentive-ledger-loading"
+          :paragraph="{ rows: 4 }"
+          role="status"
+        />
+        <div v-else-if="events.length > 0" class="min-w-0">
           <Table
             v-accessible-table-scroll="
               $t('page.quantAccount.incentives.ledger.scrollLabel')
@@ -395,6 +458,7 @@ onMounted(load);
             "
             :scroll="{ x: 1400 }"
             size="small"
+            table-layout="fixed"
             @change="onTableChange"
           >
             <template #bodyCell="{ column, record }">
@@ -428,7 +492,7 @@ onMounted(load);
               <template
                 v-else-if="
                   [
-                    'execution_fill_id',
+                    'clob_trade_observation_id',
                     'transaction_hash',
                     'source_terms_hash',
                   ].includes(String(column.key))
@@ -461,6 +525,12 @@ onMounted(load);
             </template>
           </Table>
         </div>
+        <Empty
+          v-else-if="!failed.ledger"
+          :description="$t('page.quantAccount.incentives.ledger.empty')"
+          :image="Empty.PRESENTED_IMAGE_SIMPLE"
+          data-testid="incentive-ledger-empty"
+        />
       </InsightPanel>
     </div>
   </Page>

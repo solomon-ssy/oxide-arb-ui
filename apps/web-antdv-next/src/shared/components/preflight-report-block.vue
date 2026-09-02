@@ -8,7 +8,7 @@ import { $t } from '#/locales';
 defineOptions({ name: 'PreflightReportBlock' });
 
 defineProps<{
-  /** Preflight evidence returned by the last governed mode transition. */
+  /** Preflight evidence returned by the last governed entry-authorization transition. */
   report: PreflightReport;
 }>();
 </script>
